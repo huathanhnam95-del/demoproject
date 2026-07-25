@@ -203,9 +203,7 @@
       { sourceId: 'length-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 3 },
       { sourceId: 'difficulty-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 4 }
     ],
-    inPlaceControls: [
-      { sourceId: 'adaptive-toggle-container-speak', level: 'advanced' }
-    ],
+    inPlaceControls: [],
     advancedSettings: [
       {
         key: 'adaptive-mode',
@@ -255,9 +253,7 @@
       { sourceId: 'length-filter-container-type', slot: 'advanced-setting', level: 'advanced', order: 3 },
       { sourceId: 'difficulty-filter-container-type', slot: 'advanced-setting', level: 'advanced', order: 4 }
     ],
-    inPlaceControls: [
-      { sourceId: 'adaptive-toggle-container-type', level: 'advanced' }
-    ],
+    inPlaceControls: [],
     advancedSettings: [
       {
         key: 'adaptive-mode',
@@ -287,7 +283,8 @@
 
   // Wave 4A: Read Aloud picker/settings shell. Recording assessment and
   // results remain owned by read-aloud-mode.js; the shared controller only
-  // adopts the stable navigation, audio, filter, and guide controls.
+  // adopts the stable navigation and in-place guide controls.
+  // Practice target, audio player, and history are now in the Settings sheet.
   controller.register({
     modeId: 'read-aloud',
     enabledScopes: ['pte', 'english'],
@@ -298,18 +295,8 @@
       next: () => { try { window.ReadAloudMode?.loadNextPrompt?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } }
     },
     controls: [
-      { sourceId: 'header-ra-play-audio-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'header-ra-play-recording-btn', slot: 'media', level: 'basic', order: 2 },
-      { sourceId: 'ra-record-btn', slot: 'attempt', level: 'basic', order: 1 },
-      { sourceId: 'ra-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
-      { sourceId: 'ra-play-recording-btn', slot: 'attempt', level: 'basic', order: 3 },
-      { sourceId: 'ra-user-recording-audio', slot: 'attempt', level: 'basic', order: 3.5 },
-      { sourceId: 'ra-check-btn', slot: 'attempt', level: 'basic', order: 4 },
-      { sourceId: 'ra-retry-btn', slot: 'attempt', level: 'basic', order: 5 },
-      { sourceId: 'ra-practice-target-toggle', slot: 'advanced-action', level: 'advanced', order: 1 },
-      { sourceId: 'ra-history-action-host', slot: 'advanced-action', level: 'advanced', order: 2 },
-      { sourceId: 'ra-practice-target-drawer', slot: 'advanced-setting', level: 'advanced', order: 1 },
-      { sourceId: 'ra-audio-player', slot: 'advanced-setting', level: 'advanced', order: 2 }
+      // All advanced controls now live in the Settings sheet (side panel).
+      // No SPC slot adoption needed.
     ],
     inPlaceControls: [
       { sourceId: 'ra-prompt-guides-group', level: 'advanced' }

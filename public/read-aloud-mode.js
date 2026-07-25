@@ -74,6 +74,7 @@ class ReadAloudMode {
     this.hasLoadedManifest = false;
     this.sampleAudioFilter = 'all';
     this.promptFeatureFilter = 'all';
+    this.difficultyFilter = 'all';
     this.voiceDropdownOpen = false;
     this.promptFeatureIndex = new Map();
     this.promptFeatureIndexReady = false;
@@ -86,6 +87,7 @@ class ReadAloudMode {
     this.featuredPromptIndexError = null;
     this.featuredPromptIndexVersion = '';
     this.practiceTargetDrawerOpen = false;
+    this.settingsSheet = null;
 
     // Recording state
     this.mediaRecorder = null;
@@ -124,6 +126,18 @@ class ReadAloudMode {
     if (candidate === 'v2_reduced_words') return 'reduced_words';
     if (candidate === 'v3_sound_changes') return 'sound_changes';
     return 'off';
+  }
+
+  getEffectiveViewMode() {
+    if (window.SpeakingPracticeController?.getPreferredView) {
+      const preferred = window.SpeakingPracticeController.getPreferredView();
+      if (preferred === 'basic' || preferred === 'advanced') {
+        return preferred;
+      }
+    }
+    const modePanel = document.getElementById('mode-read-aloud');
+    const controller = modePanel?.querySelector('.spc-controller');
+    return modePanel?.dataset?.spcView || controller?.dataset?.spcView || 'basic';
   }
 
   getLegacyConnectedSpeechLevel(mode = this.connectedSpeechLevel) {
@@ -186,6 +200,7 @@ class ReadAloudMode {
     document.getElementById('ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
     document.getElementById('ra-check-btn')?.addEventListener('click', () => this.handleCheckResult());
     document.getElementById('ra-retry-btn')?.addEventListener('click', () => this.retryCurrentPrompt());
+    document.getElementById('ra-show-advanced-btn')?.addEventListener('click', () => this.toggleAdvancedAnalysisView());
 
     document.getElementById('ra-voice-male')?.addEventListener('click', () => this.setGender('male'));
     document.getElementById('ra-voice-female')?.addEventListener('click', () => this.setGender('female'));
@@ -196,7 +211,37 @@ class ReadAloudMode {
     document.getElementById('ra-speed-100')?.addEventListener('click', () => this.setSpeed('100'));
     document.getElementById('ra-speed-80')?.addEventListener('click', () => this.setSpeed('80'));
     document.getElementById('ra-play-audio-btn')?.addEventListener('click', () => this.playAudio());
-    document.getElementById('ra-practice-target-toggle')?.addEventListener('click', () => this.togglePracticeTargetDrawer());
+    // Settings: toggle / events open Settings sheet
+    document.getElementById('ra-practice-target-toggle')?.addEventListener('click', () => this.openSettingsSheet());
+
+    window.addEventListener('spc-open-settings', (e) => {
+      if (!e.detail?.modeId || e.detail?.modeId === 'read-aloud') {
+        this.openSettingsSheet();
+      }
+    });
+
+    const handleViewChange = () => {
+      const isRaVisible = document.getElementById('mode-read-aloud')?.style.display !== 'none';
+      if (this.isActive || isRaVisible) {
+        if (typeof this.renderPromptForCurrentView === 'function') {
+          this.renderPromptForCurrentView();
+        }
+        const viewMode = this.getEffectiveViewMode();
+        if (this.state === 'RESULTS') {
+          if (viewMode === 'basic') {
+            this.hideConnectedSpeechPanel();
+          } else if (this.lastAssessmentPayload?.connectedSpeech) {
+            this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
+              transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
+              sessionViewMode: viewMode,
+              sessionConnectedSpeechLevel: this.lastAssessmentSession?.sessionConnectedSpeechLevel || this.connectedSpeechLevel
+            });
+          }
+        }
+      }
+    };
+    window.addEventListener('spc-view-change', handleViewChange);
+    window.addEventListener('spc-view-changed', handleViewChange);
 
     document.getElementById('ra-question-select')?.addEventListener('change', (event) => {
       if (event.target.value === 'random') {
@@ -229,12 +274,10 @@ class ReadAloudMode {
     document.getElementById('header-ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
 
     document.getElementById('ra-toggle-chunking-btn')?.addEventListener('click', () => this.togglePromptGuide('chunking'));
-    document.getElementById('ra-toggle-connected-off-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('off'));
-    document.getElementById('ra-toggle-linking-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('linking'));
-    document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('reduced_words'));
-    document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('sound_changes'));
+    document.getElementById('ra-toggle-linking-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('linking'));
+    document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('reduced_words'));
+    document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('sound_changes'));
     document.getElementById('ra-toggle-chunking-btn')?.addEventListener('keydown', (event) => this.handlePromptGuideKeydown(event, 'chunking'));
-    document.getElementById('ra-toggle-connected-off-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'off'));
     document.getElementById('ra-toggle-linking-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'linking'));
     document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'reduced_words'));
     document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'sound_changes'));
@@ -247,6 +290,16 @@ class ReadAloudMode {
     document.getElementById('ra-linking-fallback-list')?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
     document.getElementById('ra-linking-fallback-list')?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
     document.getElementById('ra-speech-coach-toggle')?.addEventListener('click', () => this.toggleSpeechCoachVisibility());
+    document.getElementById('ra-layer-level1')?.addEventListener('click', () => this.setSpeechCoachLayerFilter('linking'));
+    document.getElementById('ra-layer-level2')?.addEventListener('click', () => this.setSpeechCoachLayerFilter('all'));
+    document.getElementById('ra-connected-speech-box')?.addEventListener('click', (e) => {
+      const infoBtn = e.target.closest('.sc-info-tip');
+      if (infoBtn) {
+        e.stopPropagation();
+        const type = infoBtn.dataset.scInfo || 'general';
+        this.showSpeechCoachInfoModal(type);
+      }
+    });
 
     document.getElementById('ra-filter-all')?.addEventListener('click', () => this.setSampleAudioFilter('all'));
     document.getElementById('ra-filter-available')?.addEventListener('click', () => this.setSampleAudioFilter('available'));
@@ -543,6 +596,13 @@ class ReadAloudMode {
     this.refreshFilterControls();
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
+
+    // Initialize Settings sheet — moves inline controls into side panel.
+    // Deferred to next frame because SPC.activate() runs AFTER onEnter() in switchToMode(),
+    // so .spc-row--primary doesn't exist until after this method returns.
+    requestAnimationFrame(() => {
+      try { this.initSettingsSheet(); } catch (e) { console.error('[RA] Settings sheet init failed:', e); }
+    });
 
     try {
       await this.loadManifest();
@@ -849,7 +909,90 @@ class ReadAloudMode {
       filtered = filtered.filter((row) => this.matchesPromptFeatureFilter(row, this.promptFeatureFilter));
     }
 
+    if (this.difficultyFilter !== 'all') {
+      filtered = filtered.filter((row) => {
+        const itemLevel = this.classifyPromptDifficulty(row);
+        return String(itemLevel) === String(this.difficultyFilter);
+      });
+    }
+
     return filtered;
+  }
+
+  /**
+   * Multi-Factor Read Aloud Difficulty Classifier
+   * Evaluates passage difficulty (Level 1: Easy, Level 2: Medium, Level 3: Hard)
+   * based on:
+   * 1. Explicit database Level/Difficulty column (if present)
+   * 2. Academic vocabulary density (infrequent & multisyllabic academic words)
+   * 3. Syntactic complexity (average sentence length & clause structure)
+   * 4. Phonetic & articulation challenge (consonant cluster density, syllable complexity)
+   * 5. Passage length & pacing demands
+   */
+  classifyPromptDifficulty(row) {
+    if (!row) return '2';
+    // 1. Explicit database column (Level, level, Difficulty, difficulty, Tier)
+    const rawLevel = row.Level || row.level || row.Difficulty || row.difficulty || row.Tier || row.tier;
+    if (rawLevel !== undefined && rawLevel !== null && rawLevel !== '') {
+      const str = String(rawLevel).trim();
+      if (str === '1' || str.toLowerCase().includes('easy') || str.toLowerCase().includes('level 1')) return '1';
+      if (str === '2' || str.toLowerCase().includes('med') || str.toLowerCase().includes('level 2')) return '2';
+      if (str === '3' || str.toLowerCase().includes('hard') || str.toLowerCase().includes('adv') || str.toLowerCase().includes('level 3')) return '3';
+    }
+
+    // 2. Multi-factor classifier calculation
+    const text = String(row['ANSWER FOR COMPARE OR TRANSCRIPT'] || row.ANSWER || '').trim();
+    if (!text) return '2';
+
+    const words = text.split(/\s+/).filter(Boolean);
+    const wordCount = words.length;
+
+    // Feature A: Complex & Academic Vocabulary (3+ syllables or >=8 letters)
+    const complexWords = words.filter(w => {
+      const clean = w.replace(/[^a-zA-Z]/g, '');
+      return clean.length >= 8 || this.countWordSyllables(clean) >= 3;
+    });
+    const complexRatio = complexWords.length / Math.max(1, wordCount);
+
+    // Feature B: Syntactic & Sentence Structure
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = wordCount / Math.max(1, sentences.length);
+    const clauseMarkers = (text.match(/;|:|--|—|whereas|although|nevertheless|consequently|subsequently|furthermore|notwithstanding/gi) || []).length;
+
+    // Feature C: Phonetic Cluster & Articulation Density
+    const clusterWords = words.filter(w => /[bcdfghjklmnpqrstvwxyz]{3,}/i.test(w));
+    const clusterRatio = clusterWords.length / Math.max(1, wordCount);
+
+    // Multi-factor composite rating
+    let score = 0;
+
+    if (wordCount > 65) score += 3.0;
+    else if (wordCount >= 48) score += 2.0;
+    else score += 1.0;
+
+    if (complexRatio > 0.28) score += 3.0;
+    else if (complexRatio >= 0.18) score += 2.0;
+    else score += 1.0;
+
+    if (avgSentenceLength > 24 || clauseMarkers >= 2) score += 3.0;
+    else if (avgSentenceLength >= 16 || clauseMarkers === 1) score += 2.0;
+    else score += 1.0;
+
+    if (clusterRatio > 0.12) score += 3.0;
+    else if (clusterRatio >= 0.05) score += 2.0;
+    else score += 1.0;
+
+    if (score >= 9.2) return '3';
+    if (score >= 6.2) return '2';
+    return '1';
+  }
+
+  countWordSyllables(word) {
+    const w = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!w) return 0;
+    if (w.length <= 3) return 1;
+    const matches = w.replace(/(?:[^laeiouy]es|ed|e)$/i, '').match(/[aeiouy]{1,2}/g);
+    return matches ? matches.length : 1;
   }
 
   getPreferredFilteredPromptRow(filteredDb = this.getFilteredDatabase(), options = {}) {
@@ -1267,6 +1410,11 @@ class ReadAloudMode {
   }
 
   togglePracticeTargetDrawer(forceOpen = null) {
+    // Redirects to Settings sheet if available
+    if (this.settingsSheet) {
+      this.openSettingsSheet('practice-target');
+      return;
+    }
     const toggle = document.getElementById('ra-practice-target-toggle');
     const drawer = document.getElementById('ra-practice-target-drawer');
     if (!toggle || !drawer) return;
@@ -1283,9 +1431,190 @@ class ReadAloudMode {
     this.practiceTargetDrawerOpen = shouldOpen;
   }
 
+  /** Create the Settings sheet using SPC's createSheet infrastructure */
+  initSettingsSheet() {
+    if (this.settingsSheet) return;
+    if (!window.SpeakingPracticeController?.createSheet) {
+      console.warn('[RA] SPC.createSheet not ready — retrying initSettingsSheet');
+      setTimeout(() => this.initSettingsSheet(), 150);
+      return;
+    }
+
+    try {
+      this.settingsSheet = window.SpeakingPracticeController.createSheet({
+        id: 'ra-settings-sheet',
+        title: 'Settings',
+        className: 'ra-settings-sheet'
+      });
+    } catch (e) {
+      console.error('[RA] Failed to create Settings sheet:', e);
+      return;
+    }
+
+
+
+    const body = this.settingsSheet.body;
+
+    // Build tabbed navigation
+    const tabs = document.createElement('div');
+    tabs.className = 'spc-sheet-tabs';
+    tabs.setAttribute('role', 'tablist');
+    tabs.innerHTML = `
+      <button class="spc-sheet-tab active" role="tab" aria-selected="true" data-tab="practice-target" type="button">🎯 Practice Target</button>
+      <button class="spc-sheet-tab" role="tab" aria-selected="false" data-tab="listen" type="button">🔊 Listen</button>
+      <button class="spc-sheet-tab" role="tab" aria-selected="false" data-tab="history" type="button">📋 History</button>
+    `;
+    body.appendChild(tabs);
+
+    // Tab panels container
+    const panelsContainer = document.createElement('div');
+    panelsContainer.className = 'ra-settings-panels';
+
+    // Panel 1: Practice Target
+    const targetPanel = document.createElement('div');
+    targetPanel.className = 'spc-sheet-tab-panel active';
+    targetPanel.dataset.tab = 'practice-target';
+    targetPanel.setAttribute('role', 'tabpanel');
+
+    // Move existing filter elements into this panel (move, not clone, to avoid duplicate IDs)
+    const practiceTargetDrawer = document.getElementById('ra-practice-target-drawer');
+    if (practiceTargetDrawer) {
+      const filters = practiceTargetDrawer.querySelectorAll('.read-aloud-filters');
+      const statusEl = document.getElementById('ra-filter-feature-status');
+      filters.forEach(f => targetPanel.appendChild(f));
+      if (statusEl) targetPanel.appendChild(statusEl);
+      // Hide the now-empty drawer
+      practiceTargetDrawer.setAttribute('hidden', '');
+    }
+
+    // Difficulty / Word Length filter section
+    const diffSection = document.createElement('div');
+    diffSection.className = 'read-aloud-filters';
+    diffSection.style.marginTop = '12px';
+    diffSection.innerHTML = `
+      <span class="read-aloud-filter-label">📊 Difficulty Level:</span>
+      <div class="read-aloud-filter-buttons" role="group" aria-label="Difficulty filter">
+        <button id="ra-diff-all" class="read-aloud-filter-btn active" type="button" data-diff="all">Recommended</button>
+        <button id="ra-diff-1" class="read-aloud-filter-btn" type="button" data-diff="1">🟢 Level 1 (Easy)</button>
+        <button id="ra-diff-2" class="read-aloud-filter-btn" type="button" data-diff="2">🟡 Level 2 (Medium)</button>
+        <button id="ra-diff-3" class="read-aloud-filter-btn" type="button" data-diff="3">🔴 Level 3 (Hard)</button>
+      </div>
+    `;
+    targetPanel.appendChild(diffSection);
+
+    diffSection.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-diff]');
+      if (!btn) return;
+      const diff = btn.dataset.diff;
+      this.difficultyFilter = diff;
+      diffSection.querySelectorAll('.read-aloud-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.diff === diff);
+      });
+      const filtered = this.getFilteredDatabase();
+      const preferredRow = this.getPreferredFilteredPromptRow(filtered, { preferLastPrompt: true });
+      this.syncQuestionPickerOptions(filtered, preferredRow);
+    });
+    panelsContainer.appendChild(targetPanel);
+
+    // Panel 2: Listen / TTS
+    const listenPanel = document.createElement('div');
+    listenPanel.className = 'spc-sheet-tab-panel';
+    listenPanel.dataset.tab = 'listen';
+    listenPanel.setAttribute('role', 'tabpanel');
+
+    // Move the audio player content into this panel
+    const audioPlayer = document.getElementById('ra-audio-player');
+    if (audioPlayer) {
+      listenPanel.appendChild(audioPlayer);
+      audioPlayer.style.display = '';
+      audioPlayer.style.marginBottom = '0';
+    }
+    panelsContainer.appendChild(listenPanel);
+
+    // Panel 3: History
+    const historyPanel = document.createElement('div');
+    historyPanel.className = 'spc-sheet-tab-panel';
+    historyPanel.dataset.tab = 'history';
+    historyPanel.setAttribute('role', 'tabpanel');
+
+    // Move history hosts into this panel
+    const historyActionHost = document.getElementById('ra-history-action-host');
+    const historyContentHost = document.getElementById('ra-history-content-host');
+    if (historyActionHost) historyPanel.appendChild(historyActionHost);
+    if (historyContentHost) historyPanel.appendChild(historyContentHost);
+    panelsContainer.appendChild(historyPanel);
+
+    body.appendChild(panelsContainer);
+
+    // Wire tab switching
+    tabs.addEventListener('click', (e) => {
+      const tab = e.target.closest('.spc-sheet-tab');
+      if (!tab) return;
+      const tabId = tab.dataset.tab;
+
+      // Update tab states
+      tabs.querySelectorAll('.spc-sheet-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+
+      // Update panel visibility
+      panelsContainer.querySelectorAll('.spc-sheet-tab-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.tab === tabId);
+      });
+    });
+
+    console.log('[RA] Settings sheet initialized with', {
+      filters: !!practiceTargetDrawer,
+      audio: !!audioPlayer,
+      history: !!(historyActionHost || historyContentHost)
+    });
+  }
+
+  /** Open the Settings sheet, optionally switching to a specific tab */
+  openSettingsSheet(tabId = null) {
+    if (!this.settingsSheet) {
+      this.initSettingsSheet();
+    }
+    if (!this.settingsSheet) return;
+
+    if (tabId) {
+      const tabs = this.settingsSheet.body.querySelector('.spc-sheet-tabs');
+      const panels = this.settingsSheet.body.querySelector('.ra-settings-panels');
+      if (tabs && panels) {
+        tabs.querySelectorAll('.spc-sheet-tab').forEach(t => {
+          const isTarget = t.dataset.tab === tabId;
+          t.classList.toggle('active', isTarget);
+          t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        });
+        panels.querySelectorAll('.spc-sheet-tab-panel').forEach(p => {
+          p.classList.toggle('active', p.dataset.tab === tabId);
+        });
+      }
+    }
+
+    this.settingsSheet.open();
+  }
+
+  /** Close the Settings sheet */
+  closeSettingsSheet() {
+    console.log('[RA] closeSettingsSheet execution fired!');
+    if (this.settingsSheet && typeof this.settingsSheet.close === 'function') {
+      this.settingsSheet.close();
+    }
+    const sheetEl = document.getElementById('ra-settings-sheet');
+    if (sheetEl) {
+      sheetEl.classList.remove('is-active');
+      console.log('[RA] sheetEl is-active removed:', !sheetEl.classList.contains('is-active'));
+    }
+    const backdrop = document.querySelector('.spc-sheet-backdrop[data-spc-sheet-id="ra-settings-sheet"]');
+    if (backdrop) backdrop.classList.remove('is-active');
+  }
+
   updatePromptGuideButtons() {
     const chunkBtn = document.getElementById('ra-toggle-chunking-btn');
-    const offBtn = document.getElementById('ra-toggle-connected-off-btn');
     const linkingBtn = document.getElementById('ra-toggle-linking-btn');
     const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
     const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
@@ -1295,7 +1624,6 @@ class ReadAloudMode {
     // Color map: each guide button has a unique active color
     const colorMap = new Map([
       [chunkBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
-      [offBtn, { bg: '#6b7280', shadow: 'rgba(107, 114, 128, 0.25)' }],
       [linkingBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
       [reducedWordsBtn, { bg: '#d97706', shadow: 'rgba(217, 119, 6, 0.25)' }],
       [soundChangesBtn, { bg: '#b45309', shadow: 'rgba(180, 83, 9, 0.25)' }]
@@ -1303,7 +1631,6 @@ class ReadAloudMode {
 
     [
       [chunkBtn, this.chunkingEnabled, chunkAvailable],
-      [offBtn, level === 'off', true],
       [linkingBtn, level === 'linking', true],
       [reducedWordsBtn, level === 'reduced_words', true],
       [soundChangesBtn, level === 'sound_changes', true]
@@ -1328,8 +1655,6 @@ class ReadAloudMode {
       button.style.opacity = available ? '1' : '0.45';
       if (button === chunkBtn) {
         button.title = available ? 'Show semantic chunking markers.' : 'Chunking unavailable for this prompt.';
-      } else if (button === offBtn) {
-        button.title = 'Hide connected speech hints.';
       } else if (button === linkingBtn) {
         button.title = 'Show connected speech linking hints.';
       } else if (button === soundChangesBtn) {
@@ -1338,6 +1663,43 @@ class ReadAloudMode {
         button.title = 'Show connected speech reduced words.';
       }
     });
+
+    const viewMode = this.getEffectiveViewMode();
+    const instructionEl = document.getElementById('ra-guide-instruction') || document.getElementById('ra-prompt-instruction-text');
+    if (instructionEl) {
+      if (viewMode === 'basic') {
+        instructionEl.textContent = 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
+      } else {
+        const activeGuides = [];
+        if (this.chunkingEnabled && chunkAvailable) activeGuides.push('chunking');
+        if (level === 'linking') activeGuides.push('linking');
+        if (level === 'reduced_words') activeGuides.push('reduced_words');
+        if (level === 'sound_changes') activeGuides.push('sound_changes');
+
+        if (activeGuides.length === 0) {
+          instructionEl.textContent = 'Select a guide mode below to highlight pause groups, linking, reduced words, or sound changes.';
+        } else if (activeGuides.length === 1) {
+          const mode = activeGuides[0];
+          if (mode === 'chunking') {
+            instructionEl.textContent = 'Chunking mode: Displays natural pause groups and phrase breaks to help you pace your reading smoothly.';
+          } else if (mode === 'linking') {
+            instructionEl.textContent = 'Linking mode: Highlights word boundaries where ending consonants blend into starting vowels.';
+          } else if (mode === 'reduced_words') {
+            instructionEl.textContent = 'Reduced words mode: Marks function words (e.g. to, and, of) pronounced with weak schwa sounds.';
+          } else if (mode === 'sound_changes') {
+            instructionEl.textContent = 'Sound changes mode: Shows assimilation, elision, and connected speech sound transformations.';
+          }
+        } else {
+          const labels = activeGuides.map(m => {
+            if (m === 'chunking') return 'Chunking (pause groups)';
+            if (m === 'linking') return 'Linking (consonant-vowel joins)';
+            if (m === 'reduced_words') return 'Reduced Words (weak forms)';
+            return 'Sound Changes';
+          });
+          instructionEl.textContent = `Active guides: ${labels.join(' + ')}.`;
+        }
+      }
+    }
   }
 
   announceLinkingStatus(message) {
@@ -1362,6 +1724,16 @@ class ReadAloudMode {
       return;
     }
 
+    const viewMode = this.getEffectiveViewMode();
+    const instText = document.getElementById('ra-prompt-instruction-text');
+    if (instText) {
+      if (viewMode === 'advanced') {
+        instText.textContent = 'Use chunking for pause groups and connected speech for linking, reduced words, and sound changes.';
+      } else {
+        instText.textContent = 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
+      }
+    }
+
     this.restorePlainTextVisibility();
     this.setPromptText(this.currentPromptPlainText, this.currentPromptChunkedText);
     this.updatePromptGuideButtons();
@@ -1369,7 +1741,7 @@ class ReadAloudMode {
       this.clearConnectedSpeechResults();
     }
 
-    if (!window.ReadAloudLinking || this.connectedSpeechLevel === 'off') {
+    if (viewMode === 'basic' || !window.ReadAloudLinking || this.connectedSpeechLevel === 'off') {
       return;
     }
 
@@ -1424,10 +1796,10 @@ class ReadAloudMode {
       }
 
       const wordMap = this.currentPromptRenderState?.wordMap || new Map();
-      if (typeof window.ReadAloudLinking.applyTokenAnnotations === 'function') {
-        window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis);
-      }
       const focusFamily = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
+      if (typeof window.ReadAloudLinking.applyTokenAnnotations === 'function') {
+        window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis, { focusFamily });
+      }
       const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, { focusFamily });
       summary.textContent = summaryText;
       this.renderPromptGuideExplanations(filteredAnalysis);
@@ -1440,39 +1812,22 @@ class ReadAloudMode {
         ));
       let renderedCount = 0;
 
+      fallbackList.style.display = 'none';
+      fallbackList.innerHTML = '';
+
       if (useFallback) {
         badgeLayer.style.display = 'none';
         badgeLayer.innerHTML = '';
-        if (hasBoundaryVisuals) {
-          fallbackList.style.display = 'flex';
-          renderedCount = window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, { focusFamily });
-        } else {
-          fallbackList.style.display = 'none';
-        }
         overlay.style.display = 'none';
       } else {
-        const overlayResult = window.ReadAloudLinking.renderOverlay(overlay, promptStage, filteredAnalysis, wordMap);
+        const overlayResult = window.ReadAloudLinking.renderOverlay(overlay, promptStage, filteredAnalysis, wordMap, { focusFamily });
         const badgeResult = typeof window.ReadAloudLinking.renderAssimilationBadges === 'function'
           ? window.ReadAloudLinking.renderAssimilationBadges(badgeLayer, promptStage, filteredAnalysis, wordMap)
           : { renderedCount: 0 };
         renderedCount = overlayResult.renderedCount + (badgeResult.renderedCount || 0);
-        if (overlayResult.hiddenBoundaries?.length) {
-          fallbackList.style.display = 'flex';
-          window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, {
-            boundaries: overlayResult.hiddenBoundaries,
-            focusFamily
-          });
-        } else if (renderedCount === 0) {
-          if (hasBoundaryVisuals) {
-            fallbackList.style.display = 'flex';
-            window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, { focusFamily });
-            overlay.style.display = 'none';
-            badgeLayer.style.display = 'none';
-          } else {
-            fallbackList.style.display = 'none';
-            overlay.style.display = 'none';
-            badgeLayer.style.display = 'none';
-          }
+        if (renderedCount === 0) {
+          overlay.style.display = 'none';
+          badgeLayer.style.display = 'none';
         }
       }
 
@@ -1522,7 +1877,13 @@ class ReadAloudMode {
   handleConnectedSpeechKeydown(event, level) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
-    this.setConnectedSpeechLevel(level);
+    this.toggleConnectedSpeechLevel(level);
+  }
+
+  toggleConnectedSpeechLevel(level, options = {}) {
+    const normalizedLevel = this.normalizeConnectedSpeechMode(level);
+    const targetLevel = (this.connectedSpeechLevel === normalizedLevel) ? 'off' : normalizedLevel;
+    this.setConnectedSpeechLevel(targetLevel, options);
   }
 
   setConnectedSpeechLevel(level, options = {}) {
@@ -1656,9 +2017,13 @@ class ReadAloudMode {
     const feedbackElement = document.getElementById('ra-transcript-feedback');
     const checkBtn = document.getElementById('ra-check-btn');
     const retryBtn = document.getElementById('ra-retry-btn');
+    const showAdvContainer = document.getElementById('ra-show-advanced-container');
+    const showAdvBtn = document.getElementById('ra-show-advanced-btn');
     if (resultBox) resultBox.style.display = 'none';
     if (accuracyElement) accuracyElement.textContent = '--';
     if (feedbackElement) feedbackElement.innerHTML = '';
+    if (showAdvContainer) showAdvContainer.style.display = 'none';
+    if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
     if (checkBtn) {
       checkBtn.style.display = 'none';
       checkBtn.textContent = 'Check';
@@ -1875,6 +2240,11 @@ class ReadAloudMode {
     const checkBtn = document.getElementById('ra-check-btn');
     const retryBtn = document.getElementById('ra-retry-btn');
 
+    const isRecordingActive = (this.state === 'REQUESTING_MIC' || this.state === 'RECORDING' || this.state === 'STOPPING_RECORDING');
+    if (window.SpeakingPracticeController?.setViewToggleDisabled) {
+      window.SpeakingPracticeController.setViewToggleDisabled(isRecordingActive);
+    }
+
     if (this.state === 'PREP') {
       if (prepTimerBox) prepTimerBox.style.opacity = '1';
       if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
@@ -2035,7 +2405,10 @@ class ReadAloudMode {
       promptToken: this.promptLifecycleToken,
       referenceText: this.currentPromptPlainText,
       questionId: this.currentQuestionId || null,
-      phase: 'requesting-mic'
+      phase: 'requesting-mic',
+      sessionViewMode: this.getEffectiveViewMode(),
+      sessionChunkingEnabled: !!this.chunkingEnabled,
+      sessionConnectedSpeechLevel: this.connectedSpeechLevel || 'off'
     };
     this.recordingRequestId = recordingSession.id;
     this.currentRecordingSession = recordingSession;
@@ -2476,9 +2849,26 @@ class ReadAloudMode {
       }
     }
 
-    this.renderConnectedSpeechResults(payload.connectedSpeech, {
-      transcriptText: payload.recognizedText || this.currentPromptPlainText
-    });
+    this.lastAssessmentPayload = payload;
+    this.lastAssessmentSession = recordingSession;
+
+    const sessionView = recordingSession?.sessionViewMode || this.getEffectiveViewMode();
+    const sessionLevel = recordingSession?.sessionConnectedSpeechLevel || this.connectedSpeechLevel;
+    const showAdvContainer = document.getElementById('ra-show-advanced-container');
+    const showAdvBtn = document.getElementById('ra-show-advanced-btn');
+
+    if (sessionView === 'basic') {
+      if (showAdvContainer) showAdvContainer.style.display = 'block';
+      if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
+      this.hideConnectedSpeechPanel();
+    } else {
+      if (showAdvContainer) showAdvContainer.style.display = 'none';
+      this.renderConnectedSpeechResults(payload.connectedSpeech, {
+        transcriptText: payload.recognizedText || this.currentPromptPlainText,
+        sessionViewMode: sessionView,
+        sessionConnectedSpeechLevel: sessionLevel
+      });
+    }
 
     window.PTEAttemptArchive?.saveAttempt?.({
       practiceMode: 'read-aloud',
@@ -2534,6 +2924,7 @@ class ReadAloudMode {
     const list = document.getElementById('ra-connected-speech-list');
     const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
+    const paragraph = document.getElementById('ra-connected-speech-paragraph');
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
@@ -2541,10 +2932,34 @@ class ReadAloudMode {
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
     if (box) box.style.display = 'none';
+    if (paragraph) paragraph.innerHTML = '';
     if (label) label.textContent = 'Speech Coach';
     if (list) list.innerHTML = '';
     if (meta) meta.textContent = 'Preview';
     if (summary) summary.textContent = '';
+  }
+
+  toggleAdvancedAnalysisView() {
+    const box = document.getElementById('ra-connected-speech-box');
+    const btn = document.getElementById('ra-show-advanced-btn');
+    if (!box || !btn) return;
+
+    const isHidden = box.style.display === 'none' || !box.style.display;
+    if (isHidden) {
+      if (this.lastAssessmentPayload?.connectedSpeech) {
+        this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
+          transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
+          sessionViewMode: 'advanced',
+          sessionConnectedSpeechLevel: 'sound_changes'
+        });
+      }
+      box.style.display = 'block';
+      btn.textContent = 'Hide Advanced Analysis';
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      this.hideConnectedSpeechPanel();
+      btn.textContent = '✨ Show Advanced Analysis';
+    }
   }
 
   toggleSpeechCoachVisibility() {
@@ -2757,7 +3172,8 @@ class ReadAloudMode {
     const summary = document.getElementById('ra-connected-speech-summary');
     if (!box || !label || !list || !meta || !summary) return;
 
-    if (!connectedSpeech || connectedSpeech.status === 'not_applicable') {
+    const viewMode = options.sessionViewMode || this.lastAssessmentSession?.sessionViewMode || this.getEffectiveViewMode();
+    if (viewMode === 'basic' || !connectedSpeech || connectedSpeech.status === 'not_applicable') {
       this.hideConnectedSpeechPanel();
       return;
     }
@@ -2771,7 +3187,7 @@ class ReadAloudMode {
     meta.textContent = 'Feedback';
     list.innerHTML = '';
 
-    const wrapper = document.getElementById('ra-transcript-feedback');
+    const wrapper = document.getElementById('ra-connected-speech-paragraph') || document.getElementById('ra-connected-speech-list');
 
     const detectedCount = Number(connectedSpeech?.summary?.detectedCount || 0);
     const notDetectedCount = Number(connectedSpeech?.summary?.notDetectedCount || 0);
@@ -2839,13 +3255,22 @@ class ReadAloudMode {
 
     this.bindSpeechCoachAccordions(list);
     this.bindSpeechCoachInteractions(list);
+
+    const activeSpeechLevel = options.sessionConnectedSpeechLevel || this.lastAssessmentSession?.sessionConnectedSpeechLevel || this.connectedSpeechLevel;
+    const initialFilter = (activeSpeechLevel === 'linking') ? 'linking' : (activeSpeechLevel === 'reduced_words') ? 'reduced' : (this.speechCoachLayerFilter || 'all');
+    this.setSpeechCoachLayerFilter(initialFilter);
   }
 
 
   /** Delegated accordion handler for Speech Coach results */
   bindSpeechCoachAccordions(container) {
     if (!container) return;
+    if (container.dataset.scAccordionBound) return;
+    container.dataset.scAccordionBound = 'true';
+
     container.addEventListener('click', (event) => {
+      if (event.target.closest('.sc-play-word-btn')) return;
+
       const toggle = event.target.closest('[data-sc-accordion-toggle]');
       if (!toggle) return;
       const targetId = toggle.dataset.scAccordionToggle;
@@ -2854,9 +3279,12 @@ class ReadAloudMode {
       const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!isExpanded));
       content.hidden = isExpanded;
-      const chevron = toggle.querySelector('.sc-chevron');
-      if (chevron) {
-        chevron.classList.toggle('sc-chevron--open', !isExpanded);
+      const card = toggle.closest('.sc-accordion-card');
+      if (card) {
+        const chevron = card.querySelector('.sc-chevron');
+        if (chevron) {
+          chevron.classList.toggle('sc-chevron--open', !isExpanded);
+        }
       }
     });
   }
@@ -2871,7 +3299,7 @@ class ReadAloudMode {
       if (target) {
         const evIdx = target.dataset.eventIndex;
         // Highlight corresponding spans
-        document.querySelectorAll(`#ra-transcript-feedback [data-event-index]`).forEach(span => {
+        document.querySelectorAll(`#ra-connected-speech-box [data-event-index]`).forEach(span => {
           const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
           if (indexes.includes(evIdx)) {
             span.classList.add('sc-token--hovered');
@@ -2887,7 +3315,7 @@ class ReadAloudMode {
         const childInstances = groupHeader.querySelectorAll('[data-event-index]');
         childInstances.forEach(inst => {
           const evIdx = inst.dataset.eventIndex;
-          document.querySelectorAll(`#ra-transcript-feedback [data-event-index]`).forEach(span => {
+          document.querySelectorAll(`#ra-connected-speech-box [data-event-index]`).forEach(span => {
             const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
             if (indexes.includes(evIdx)) {
               span.classList.add('sc-token--hovered');
@@ -2899,7 +3327,7 @@ class ReadAloudMode {
 
     container.addEventListener('mouseout', (e) => {
       // Remove all hovered highlights
-      document.querySelectorAll('#ra-transcript-feedback .sc-token--hovered').forEach(span => {
+      document.querySelectorAll('#ra-connected-speech-box .sc-token--hovered').forEach(span => {
         span.classList.remove('sc-token--hovered');
       });
     });
@@ -2924,7 +3352,7 @@ class ReadAloudMode {
     });
 
     // Bidirectional Hover (hovering over word spans highlights cards)
-    const feedbackWrapper = document.getElementById('ra-transcript-feedback');
+    const feedbackWrapper = document.getElementById('ra-connected-speech-box');
     if (feedbackWrapper && !feedbackWrapper.dataset.scBidirectionalBound) {
       feedbackWrapper.dataset.scBidirectionalBound = 'true';
       
@@ -3172,6 +3600,47 @@ class ReadAloudMode {
     return usedTokenAnnotation;
   }
 
+  _getReducedWordIpaInfo(phrase) {
+    const clean = String(phrase || '').toLowerCase().trim().replace(/[^a-z]/g, '');
+    const dict = {
+      'for':   { strong: '/fɔːr/',   reduced: '/fər/' },
+      'to':    { strong: '/tuː/',    reduced: '/tə/' },
+      'and':   { strong: '/ænd/',   reduced: '/ənd/' },
+      'of':    { strong: '/ɒv/',    reduced: '/əv/' },
+      'that':  { strong: '/ðæt/',   reduced: '/ðət/' },
+      'can':   { strong: '/kæn/',   reduced: '/kən/' },
+      'have':  { strong: '/hæv/',   reduced: '/həv/' },
+      'has':   { strong: '/hæz/',   reduced: '/həz/' },
+      'had':   { strong: '/hæd/',   reduced: '/həd/' },
+      'was':   { strong: '/wɒz/',   reduced: '/wəz/' },
+      'were':  { strong: '/wɜːr/',  reduced: '/wər/' },
+      'from':  { strong: '/frɒm/',  reduced: '/frəm/' },
+      'some':  { strong: '/sʌm/',   reduced: '/səm/' },
+      'as':    { strong: '/æz/',    reduced: '/əz/' },
+      'at':    { strong: '/æt/',    reduced: '/ət/' },
+      'than':  { strong: '/ðæn/',   reduced: '/ðən/' },
+      'but':   { strong: '/bʌt/',   reduced: '/bət/' },
+      'or':    { strong: '/ɔːr/',   reduced: '/ər/' },
+      'are':   { strong: '/ɑːr/',   reduced: '/ər/' },
+      'you':   { strong: '/juː/',   reduced: '/jə/' },
+      'your':  { strong: '/jɔːr/',  reduced: '/jər/' },
+      'them':  { strong: '/ðem/',   reduced: '/ðəm/' },
+      'his':   { strong: '/hɪz/',   reduced: '/ɪz/' },
+      'her':   { strong: '/hɜːr/',  reduced: '/hər/' },
+      'a':     { strong: '/eɪ/',    reduced: '/ə/' },
+      'an':    { strong: '/æn/',    reduced: '/ən/' },
+      'the':   { strong: '/ðiː/',   reduced: '/ðə/' },
+      'do':    { strong: '/duː/',    reduced: '/də/' },
+      'does':  { strong: '/dʌz/',   reduced: '/dəz/' },
+      'must':  { strong: '/mʌst/',  reduced: '/məst/' },
+      'should':{ strong: '/ʃʊd/',   reduced: '/ʃəd/' },
+      'would': { strong: '/wʊd/',   reduced: '/wəd/' },
+      'could': { strong: '/kʊd/',   reduced: '/kəd/' },
+      'us':    { strong: '/ʌs/',    reduced: '/əs/' }
+    };
+    return dict[clean] || null;
+  }
+
   /** Build "Reduced Words" section with accordion cards and single-occurrence grid */
   _buildReducedWordsSection(groupedReduced, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
@@ -3180,7 +3649,7 @@ class ReadAloudMode {
 
     const header = document.createElement('h4');
     header.className = 'sc-section-header';
-    header.innerHTML = 'Reduced Words <span class="sc-info-tip" title="In natural speech, common words like &ldquo;to&rdquo;, &ldquo;and&rdquo;, &ldquo;of&rdquo; are pronounced shorter and lighter. This section checks whether you did that.">ⓘ</span>';
+    header.innerHTML = 'Reduced Words <span class="sc-info-tip" data-sc-info="reduced" title="Click for info on Reduced Words" style="cursor:pointer;">ⓘ</span>';
     section.appendChild(header);
 
     const singles = [];
@@ -3197,7 +3666,7 @@ class ReadAloudMode {
         const successCount = group.items.filter((i) => i.status === 'detected').length;
         const issuesCount = totalCount - successCount;
         const statusClass = issuesCount === 0 ? 'sc-border--success' : issuesCount === totalCount ? 'sc-border--error' : 'sc-border--mixed';
-        const accordionId = `sc-accordion-${groupIdx}`;
+        const accordionId = `sc-accordion-red-${groupIdx}`;
 
         const card = document.createElement('div');
         card.className = `sc-accordion-card ${statusClass}`;
@@ -3208,9 +3677,12 @@ class ReadAloudMode {
         cardHeader.setAttribute('aria-controls', accordionId);
         cardHeader.dataset.scAccordionToggle = accordionId;
 
+        const ipaInfo = this._getReducedWordIpaInfo(group.phrase);
+        const ipaHtml = ipaInfo ? ` <span style="font-size: 0.75rem; font-family: ui-monospace, monospace; color: #059669; font-weight: 500;">(${ipaInfo.strong} ➔ ${ipaInfo.reduced})</span>` : '';
+
         const labelSide = document.createElement('div');
         labelSide.className = 'sc-accordion-label';
-        labelSide.innerHTML = `<strong class="sc-word-title">${escapeHtml(group.phrase)}</strong><span class="sc-count-badge">${totalCount}x</span>`;
+        labelSide.innerHTML = `<strong class="sc-word-title">${escapeHtml(group.phrase)}</strong>${ipaHtml}<span class="sc-count-badge">${totalCount}x</span>`;
 
         const dotSide = document.createElement('div');
         dotSide.className = 'sc-accordion-dots';
@@ -3257,7 +3729,11 @@ class ReadAloudMode {
             `;
           }
 
-          instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}${timeText}</span>${playButtonHtml}</div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || 'No detailed coaching tips provided for this instance.')}</div>`;
+          const defaultFeedback = ipaInfo
+            ? `Weak form reduction: Pronounce "${group.phrase}" as ${ipaInfo.reduced} rather than the stressed full form ${ipaInfo.strong}.`
+            : 'No detailed coaching tips provided for this instance.';
+
+          instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}${timeText}</span>${playButtonHtml}</div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || defaultFeedback)}</div>`;
           cardContent.appendChild(instance);
         });
         card.appendChild(cardContent);
@@ -3280,7 +3756,16 @@ class ReadAloudMode {
         if (evIndex !== -1) {
           card.dataset.eventIndex = String(evIndex);
         }
-        card.title = item.feedbackText || '';
+        
+        const ipaInfo = this._getReducedWordIpaInfo(group.phrase);
+        const ipaHtml = ipaInfo ? `
+          <div style="font-size: 0.72rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+            <span style="color: #9ca3af; text-decoration: line-through; font-size: 0.68rem;">${ipaInfo.strong}</span>
+            <span style="color: #059669; font-weight: 600;">➔ ${ipaInfo.reduced}</span>
+          </div>
+        ` : '';
+
+        card.title = item.feedbackText || (ipaInfo ? `Weak form: ${ipaInfo.strong} ➔ ${ipaInfo.reduced}` : '');
         
         const hasTimestamps = typeof item.startMs === 'number' && typeof item.endMs === 'number';
         const timeText = hasTimestamps ? ` [${(item.startMs / 1000).toFixed(2)}s]` : '';
@@ -3297,10 +3782,13 @@ class ReadAloudMode {
         }
 
         card.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px;">
-            <div style="display: flex; align-items: center; min-width: 0; flex-shrink: 1;">
-              <strong class="sc-word-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">${escapeHtml(group.phrase)}</strong>
-              <span style="font-size: 0.72rem; color: #9ca3af; margin-left: 4px; white-space: nowrap;">${timeText}</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; padding: 2px 0;">
+            <div style="display: flex; flex-direction: column; min-width: 0; flex-shrink: 1;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <strong class="sc-word-title" style="white-space: nowrap; font-size: 0.98rem; font-weight: 600;">${escapeHtml(group.phrase)}</strong>
+                <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
+              </div>
+              ${ipaHtml}
             </div>
             <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
               ${playButtonHtml}
@@ -3316,6 +3804,76 @@ class ReadAloudMode {
     return section;
   }
 
+  /** Get IPA breakdown & formula for a linked word pair */
+  _getLinkingIpaDetails(w1, w2, event) {
+    const cleanW1 = String(w1 || '').replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const cleanW2 = String(w2 || '').replace(/[^a-zA-Z]/g, '').toLowerCase();
+
+    // Dictionary of high-frequency linking IPA pronunciations
+    const commonIpa = {
+      is: '/ɪz/', one: '/wʌn/', a: '/ə/', an: '/ən/', the: '/ðə/', to: '/tə/', of: '/əv/',
+      in: '/ɪn/', it: '/ɪt/', at: '/æt/', on: '/ɒn/', up: '/ʌp/', out: '/aʊt/', off: '/ɒf/',
+      us: '/əs/', are: '/ɑːr/', all: '/ɔːl/', and: '/ænd/', for: '/fər/', check: '/tʃek/',
+      did: '/dɪd/', you: '/juː/', want: '/wɑːnt/', black: '/blæk/', cat: '/kæt/', bad: '/bæd/',
+      dog: '/dɒɡ/', can: '/kən/', take: '/teɪk/', make: '/meɪk/', have: '/hæv/', has: '/hæz/',
+      had: '/həd/', was: '/wɒz/', were: '/wər/', see: '/siː/', go: '/ɡoʊ/', do: '/duː/',
+      she: '/ʃiː/', he: '/hiː/', we: '/wiː/', my: '/maɪ/', so: '/soʊ/', no: '/noʊ/',
+      two: '/tuː/', three: '/θriː/', four: '/fɔːr/', five: '/faɪv/', six: '/sɪks/',
+      seven: '/sev.ən/', eight: '/eɪt/', nine: '/naɪn/', ten: '/ten/'
+    };
+
+    let ipa1 = commonIpa[cleanW1] || '';
+    let ipa2 = commonIpa[cleanW2] || '';
+
+    if (window.Phonetics && typeof window.Phonetics._cache !== 'undefined') {
+      const cache = window.Phonetics._cache;
+      if (!ipa1 && cache.has(cleanW1)) {
+        const val = cache.get(cleanW1);
+        ipa1 = typeof val === 'object' ? val.ipa : val;
+      }
+      if (!ipa2 && cache.has(cleanW2)) {
+        const val = cache.get(cleanW2);
+        ipa2 = typeof val === 'object' ? val.ipa : val;
+      }
+    }
+
+    if (!ipa1) ipa1 = '/' + (cleanW1 || 'word1') + '/';
+    if (!ipa2) ipa2 = '/' + (cleanW2 || 'word2') + '/';
+
+    const norm1 = ipa1.replace(/^\/|\/$/g, '').trim();
+    const norm2 = ipa2.replace(/^\/|\/$/g, '').trim();
+
+    const w1EndsInIY = /(y|ee|e|ie|ea|ey|i)$/i.test(cleanW1) || /[iːeɪaɪɔɪ]$/.test(norm1);
+    const w1EndsInUW = /(o|oo|ow|ew|u|ue)$/i.test(cleanW1) || /[uːaʊoʊəʊ]$/.test(norm1);
+    const isCoalescentDJ = cleanW1.endsWith('d') && cleanW2.startsWith('y');
+    const isCoalescentTJ = cleanW1.endsWith('t') && cleanW2.startsWith('y');
+    const isSameConsonant = norm1.slice(-1) && norm1.slice(-1) === norm2.slice(0, 1);
+
+    let linkedIPA = '';
+    if (isCoalescentDJ) {
+      linkedIPA = '/' + norm1.slice(0, -1) + 'dʒ' + norm2.slice(1) + '/';
+    } else if (isCoalescentTJ) {
+      linkedIPA = '/' + norm1.slice(0, -1) + 'tʃ' + norm2.slice(1) + '/';
+    } else if (w1EndsInIY && /^[aeiouɪʌæɒəei]/i.test(cleanW2)) {
+      linkedIPA = '/' + norm1 + '.j' + norm2.replace(/^[ˈˌ]/, '') + '/';
+    } else if (w1EndsInUW && /^[aeiouɪʌæɒəei]/i.test(cleanW2)) {
+      linkedIPA = '/' + norm1 + '.w' + norm2.replace(/^[ˈˌ]/, '') + '/';
+    } else if (isSameConsonant) {
+      linkedIPA = '/' + norm1 + ' ‿ ' + norm2 + '/';
+    } else {
+      linkedIPA = '/' + norm1 + '.' + norm2.replace(/^[ˈˌ]/, '') + '/';
+    }
+
+    const formula = `/${norm1}/ + /${norm2}/ ➔ ${linkedIPA}`;
+
+    return {
+      ipa1: `/${norm1}/`,
+      ipa2: `/${norm2}/`,
+      linkedIPA,
+      formula
+    };
+  }
+
   /** Build "Needs Attention" section with issue cards */
   _buildLinkingIssuesSection(linkingIssues, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
@@ -3324,7 +3882,7 @@ class ReadAloudMode {
 
     const header = document.createElement('h4');
     header.className = 'sc-section-header';
-    header.innerHTML = 'Needs Attention <span class="sc-info-tip" title="These are places where words should flow together smoothly, but the link wasn\'t detected in your speech. Try saying them closer together.">ⓘ</span>';
+    header.innerHTML = 'Needs Attention <span class="sc-info-tip" data-sc-info="issues" title="Click for info on Needs Attention Links" style="cursor:pointer;">ⓘ</span>';
     section.appendChild(header);
 
     const issueStack = document.createElement('div');
@@ -3341,16 +3899,22 @@ class ReadAloudMode {
       return { categoryLabel: label };
     };
 
-    linkingIssues.forEach((event) => {
+    linkingIssues.forEach((event, idx) => {
       const evIndex = events ? events.indexOf(event) : -1;
       const { categoryLabel } = resolveCategory(event);
       const borderCls = event.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
+      const accordionId = `sc-issue-acc-${idx}`;
+
       const card = document.createElement('div');
-      card.className = `sc-issue-card ${borderCls}`;
+      card.className = `sc-accordion-card ${borderCls}`;
       if (evIndex !== -1) {
         card.dataset.eventIndex = String(evIndex);
       }
       
+      const phrase = String(event.phrase || 'Word pair').trim();
+      const pWords = phrase.split(/\s+/);
+      const ipaDetails = this._getLinkingIpaDetails(pWords[0], pWords[1], event);
+
       const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
       const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
       let playButtonHtml = '';
@@ -3365,18 +3929,55 @@ class ReadAloudMode {
       }
       
       const badgeCls = event.status === 'not_detected' ? 'sc-badge--error' : 'sc-badge--uncertain';
-      card.innerHTML = `
-        <div class="sc-issue-header">
-          <strong class="sc-issue-phrase">${escapeHtml(event.phrase || event.eventId || 'Event')}</strong>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
-            ${playButtonHtml}
-            <span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span>
+
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'sc-accordion-header';
+      cardHeader.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff5f5; border-bottom: 1px solid #fee2e2; border-radius: 8px 8px 0 0; user-select: none;';
+
+      cardHeader.innerHTML = `
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;">
+          <strong class="sc-word-title" style="font-size: 0.98rem; color: #111827;">${escapeHtml(phrase)}</strong>
+          <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
+          <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          ${playButtonHtml}
+          <span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span>
+          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details" style="background: transparent; border: none; padding: 2px 4px; cursor: pointer; display: flex; align-items: center; color: #9ca3af;">
+            <span class="sc-chevron"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
+          </button>
+        </div>
+      `;
+      card.appendChild(cardHeader);
+
+      const cardContent = document.createElement('div');
+      cardContent.className = 'sc-accordion-content';
+      cardContent.id = accordionId;
+      cardContent.hidden = true;
+
+      const reasonExplanation = this._getNeedsAttentionReasonText(event);
+
+      cardContent.innerHTML = `
+        <div class="sc-instance" style="padding-top: 10px;">
+          <div style="font-size: 0.76rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+            Category: ${escapeHtml(categoryLabel)}
+          </div>
+          <div class="sc-instance-feedback" style="color: #991b1b; font-weight: 500;">
+            ${escapeHtml(reasonExplanation.reason)}
+          </div>
+
+          <div style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 8px 12px; border-radius: 6px; margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: #b91c1c; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Target IPA:</span>
+            <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #dc2626; margin: 0 4px;">➔</strong> <strong style="color: #b91c1c; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
+          </div>
+
+          <div style="font-size: 0.84rem; color: #374151; margin-top: 8px; background: #fff5f5; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
+            <strong>How to fix:</strong> ${escapeHtml(reasonExplanation.tip)}
           </div>
         </div>
-        <div class="sc-issue-category">${escapeHtml(categoryLabel)}</div>
-        <div class="sc-issue-feedback">${escapeHtml(event.feedbackText || '')}</div>
       `;
+
+      card.appendChild(cardContent);
       issueStack.appendChild(card);
     });
 
@@ -3384,7 +3985,7 @@ class ReadAloudMode {
     return section;
   }
 
-  /** Build "Successful Links" section with green pill tags */
+  /** Build "Successful Links" section with expandable accordion cards and explanations */
   _buildSuccessPillsSection(linkingSuccesses, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
     const section = document.createElement('div');
@@ -3392,47 +3993,308 @@ class ReadAloudMode {
 
     const header = document.createElement('h4');
     header.className = 'sc-section-header';
-    header.innerHTML = 'Successful Links <span class="sc-info-tip" title="These word pairs flowed together naturally in your speech. Nice work!">ⓘ</span>';
+    header.innerHTML = 'Successful Links <span class="sc-info-tip" data-sc-info="success" title="Click for info on Successful Links" style="cursor:pointer;">ⓘ</span>';
     section.appendChild(header);
 
-    const pillWrap = document.createElement('div');
-    pillWrap.className = 'sc-pill-wrap';
+    const stackContainer = document.createElement('div');
+    stackContainer.className = 'sc-accordion-stack';
 
-    linkingSuccesses.forEach((event) => {
+    linkingSuccesses.forEach((event, idx) => {
       const evIndex = events ? events.indexOf(event) : -1;
-      const pill = document.createElement('span');
-      pill.className = 'sc-success-pill';
+      const accordionId = `sc-success-acc-${idx}`;
+
+      const card = document.createElement('div');
+      card.className = 'sc-accordion-card sc-border--success';
       if (evIndex !== -1) {
-        pill.dataset.eventIndex = String(evIndex);
+        card.dataset.eventIndex = String(evIndex);
       }
-      
+
+      const phrase = String(event.phrase || 'Word pair').trim();
+      const pWords = phrase.split(/\s+/);
+      const ipaDetails = this._getLinkingIpaDetails(pWords[0], pWords[1], event);
+
       const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
       const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
       let playButtonHtml = '';
       if (hasTimestamps) {
         playButtonHtml = `
-          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only" style="width: 18px; height: 18px; margin-left: 4px; margin-right: 0;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="width: 10px; height: 10px;">
+          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           </button>
         `;
       }
-      
-      pill.title = event.feedbackText || '';
-      pill.innerHTML = `
-        <svg class="sc-check-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-        ${escapeHtml(event.phrase || 'Word')}
-        <span style="font-size: 0.68rem; opacity: 0.7; margin-left: 4px; white-space: nowrap;">${timeText}</span>
-        ${playButtonHtml}
+
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'sc-accordion-header';
+      cardHeader.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ecfdf5; border-bottom: 1px solid #d1fae5; border-radius: 8px 8px 0 0; user-select: none;';
+
+      cardHeader.innerHTML = `
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;">
+          <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink: 0;">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          <strong class="sc-word-title" style="font-size: 0.98rem; color: #065f46;">${escapeHtml(phrase)}</strong>
+          <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
+          <span style="font-size: 0.72rem; color: #6b7280; white-space: nowrap;">${timeText}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          ${playButtonHtml}
+          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details" style="background: transparent; border: none; padding: 2px 4px; cursor: pointer; display: flex; align-items: center; color: #065f46;">
+            <span class="sc-chevron"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
+          </button>
+        </div>
       `;
-      pillWrap.appendChild(pill);
+      card.appendChild(cardHeader);
+
+      const cardContent = document.createElement('div');
+      cardContent.className = 'sc-accordion-content';
+      cardContent.id = accordionId;
+      cardContent.hidden = true;
+
+      const reasonExplanation = this._getSuccessLinkReasonText(event);
+
+      cardContent.innerHTML = `
+        <div class="sc-instance" style="padding-top: 10px;">
+          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #047857; margin-bottom: 4px;">
+            ✓ Seamless Link Connected
+          </div>
+          <div class="sc-instance-feedback" style="color: #111827; font-weight: 500;">
+            ${escapeHtml(reasonExplanation.reason)}
+          </div>
+
+          <div style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 8px 12px; border-radius: 6px; margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: #15803d; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">IPA Style:</span>
+            <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #047857; margin: 0 4px;">➔</strong> <strong style="color: #047857; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
+          </div>
+
+          <div style="font-size: 0.84rem; color: #065f46; margin-top: 8px; background: #ecfdf5; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #10b981;">
+            <strong>Why you nailed it:</strong> ${escapeHtml(reasonExplanation.tip)}
+          </div>
+        </div>
+      `;
+
+      card.appendChild(cardContent);
+      stackContainer.appendChild(card);
     });
 
-    section.appendChild(pillWrap);
+    section.appendChild(stackContainer);
     return section;
+  }
+
+  _getSuccessLinkReasonText(event) {
+    const phrase = String(event.phrase || 'Word pair').trim();
+    const words = phrase.split(/\s+/);
+    const w1 = words[0] || 'first word';
+    const w2 = words[1] || 'second word';
+
+    const cleanW1 = w1.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const cleanW2 = w2.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const ipaDetails = this._getLinkingIpaDetails(cleanW1, cleanW2, event);
+
+    const w1EndsInIY = /(y|ee|e|ie|ea|ey|i)$/i.test(cleanW1);
+    const w1EndsInUW = /(o|oo|ow|ew|u|ue)$/i.test(cleanW1);
+    const w2StartsWithVowel = /^[aeiou]/i.test(cleanW2);
+
+    if (w2StartsWithVowel) {
+      if (w1EndsInIY) {
+        return {
+          reason: `Vowel-to-vowel link (linking /j/): The ending vowel sound in "${w1}" glides smoothly into "${w2}" with an intrusive /j/ sound (${ipaDetails.formula}).`,
+          tip: `Gliding from "${w1}" into "${w2}" using /j/ (${ipaDetails.linkedIPA}) creates a seamless transition without inserting a harsh glottal stop.`
+        };
+      }
+
+      if (w1EndsInUW) {
+        return {
+          reason: `Vowel-to-vowel link (linking /w/): The rounded vowel ending in "${w1}" glides smoothly into "${w2}" with an intrusive /w/ sound (${ipaDetails.formula}).`,
+          tip: `Gliding from the rounded vowel in "${w1}" into "${w2}" (${ipaDetails.linkedIPA}) keeps your vocal airflow fluid for PTE Oral Fluency.`
+        };
+      }
+
+      const isVoicedFricative = /(s|z|ve|se|ze)$/i.test(cleanW1);
+      const isVoicelessStop = /(t|p|k|ck|tt)$/i.test(cleanW1);
+      const isNasal = /(m|n|ng)$/i.test(cleanW1);
+
+      if (isVoicedFricative) {
+        return {
+          reason: `Consonant-to-vowel link (voiced fricative): The ending consonant of "${w1}" merged directly into "${w2}" (${ipaDetails.formula}).`,
+          tip: `Carrying the voiced vibration from "${w1}" straight into "${w2}" (${ipaDetails.linkedIPA}) prevents unnatural vocal drops between words.`
+        };
+      }
+
+      if (isVoicelessStop) {
+        return {
+          reason: `Consonant-to-vowel link (resyllabification): The final stop consonant in "${w1}" shifted to become the initial onset of "${w2}" (${ipaDetails.formula}).`,
+          tip: `Resyllabifying "${w1}" into "${w2}" (${ipaDetails.linkedIPA}) eliminates robotic micro-pauses.`
+        };
+      }
+
+      if (isNasal) {
+        return {
+          reason: `Consonant-to-vowel link (nasal flow): The nasal consonant in "${w1}" connected smoothly into "${w2}" (${ipaDetails.formula}).`,
+          tip: `Continuing vocal airflow through the nasal sound into "${w2}" (${ipaDetails.linkedIPA}) ensures rhythmic academic speech.`
+        };
+      }
+
+      return {
+        reason: `Consonant-to-vowel link (${ipaDetails.formula}): The ending consonant of "${w1}" merged smoothly into the initial vowel sound of "${w2}".`,
+        tip: `Merging final consonants into initial vowels (${ipaDetails.linkedIPA}) maintains steady pacing and native-like rhythm.`
+      };
+    }
+
+    return {
+      reason: event.feedbackText || `You connected "${w1}" and "${w2}" smoothly (${ipaDetails.linkedIPA}) without an artificial pause.`,
+      tip: `Maintaining continuous speech between "${w1}" and "${w2}" (${ipaDetails.linkedIPA}) directly improves your PTE Oral Fluency score.`
+    };
+  }
+
+  _getNeedsAttentionReasonText(event) {
+    const phrase = String(event.phrase || 'Word pair').trim();
+    const words = phrase.split(/\s+/);
+    const w1 = words[0] || 'first word';
+    const w2 = words[1] || 'second word';
+
+    const cleanW1 = w1.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const cleanW2 = w2.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const ipaDetails = this._getLinkingIpaDetails(cleanW1, cleanW2, event);
+
+    const w1EndsInIY = /(y|ee|e|ie|ea|ey|i)$/i.test(cleanW1);
+    const w1EndsInUW = /(o|oo|ow|ew|u|ue)$/i.test(cleanW1);
+    const w2StartsWithVowel = /^[aeiou]/i.test(cleanW2);
+
+    let reason = event.feedbackText || `An unnatural pause or break was detected between "${w1}" and "${w2}" (${ipaDetails.formula}).`;
+    let tip = `Try pronouncing "${w1} ${w2}" in one continuous breath as ${ipaDetails.linkedIPA} without taking a pause.`;
+
+    if (w2StartsWithVowel) {
+      if (w1EndsInIY) {
+        reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a vowel sound and "${w2}" opens with a vowel, but an unnatural break or glottal stop was detected.`;
+        tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /j/ transition: Target ${ipaDetails.linkedIPA}.`;
+      } else if (w1EndsInUW) {
+        reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a rounded vowel sound and "${w2}" opens with a vowel, but speech was interrupted.`;
+        tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /w/ transition: Target ${ipaDetails.linkedIPA}.`;
+      } else {
+        reason = `Missed consonant-to-vowel link (${ipaDetails.formula}): Speech Coach detected a hesitation between the final sound of "${w1}" and opening vowel of "${w2}".`;
+        tip = `Attach the ending consonant of "${w1}" directly to "${w2}" to pronounce it smoothly as ${ipaDetails.linkedIPA}.`;
+      }
+    }
+
+    return { reason, tip };
+  }
+
+  showSpeechCoachInfoModal(type) {
+    let title = 'Speech Coach Guide';
+    let bodyHtml = '';
+
+    if (type === 'reduced') {
+      title = 'Reduced Words Guide';
+      bodyHtml = `
+        <p><strong>What are Reduced Words?</strong> In natural spoken English, functional words (like <em>to, and, of, have, for, can</em>) are pronounced in their weak form with lighter, shorter vowel sounds (e.g. schwa /ə/).</p>
+        <p><strong>Why it matters:</strong> Reducing functional words gives English its characteristic rhythm and emphasizes key content words.</p>
+        <p><strong>PTE Fluency:</strong> Natural word reductions make your speech sound fluid and native-like instead of overly rigid.</p>
+      `;
+    } else if (type === 'success') {
+      title = 'Successful Links Guide';
+      bodyHtml = `
+        <p><strong>What are Successful Links?</strong> In fluent speech, words do not stand isolated. Word boundaries blend smoothly into one another.</p>
+        <p><strong>Common Link Types:</strong></p>
+        <ul style="margin: 6px 0 12px 20px; font-size: 0.9rem; line-height: 1.6;">
+          <li><strong>Consonant → Vowel:</strong> e.g., <em>"cancer is"</em> → pronounced <em>can-ce-ris</em></li>
+          <li><strong>Smooth Transition:</strong> Airflow is maintained across word boundaries without glottal stops.</li>
+        </ul>
+        <p><strong>PTE Impact:</strong> Smooth linking boosts your Oral Fluency score!</p>
+      `;
+    } else if (type === 'issues') {
+      title = 'Needs Attention Links Guide';
+      bodyHtml = `
+        <p><strong>What does Needs Attention mean?</strong> Speech Coach detected an artificial pause, break, or glottal stop between these words where fluent speech links them.</p>
+        <p><strong>How to improve:</strong></p>
+        <ul style="margin: 6px 0 12px 20px; font-size: 0.9rem; line-height: 1.6;">
+          <li>Click the <strong>▶ Play</strong> button on any card to hear your recording for that segment.</li>
+          <li>Click the card to read the coaching tip on how to join the words.</li>
+          <li>Practice linking the two words together in a single breath unit.</li>
+        </ul>
+      `;
+    }
+
+    let modalOverlay = document.getElementById('sc-info-modal-overlay');
+    if (!modalOverlay) {
+      modalOverlay = document.createElement('div');
+      modalOverlay.id = 'sc-info-modal-overlay';
+      modalOverlay.style.cssText = 'position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(2px);';
+      document.body.appendChild(modalOverlay);
+    }
+
+    modalOverlay.innerHTML = `
+      <div style="background:#fff; border-radius:12px; max-width:480px; width:100%; padding:20px 24px; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative; font-family:inherit;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid #f3f4f6; padding-bottom:10px;">
+          <h3 style="margin:0; font-size:1.15rem; color:#111827; font-weight:700;">${title}</h3>
+          <button type="button" id="sc-info-modal-close" style="border:none; background:transparent; font-size:1.4rem; color:#6b7280; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div style="font-size:0.92rem; color:#374151; line-height:1.55;">
+          ${bodyHtml}
+        </div>
+        <div style="margin-top:18px; text-align:right;">
+          <button type="button" id="sc-info-modal-ok" style="padding:8px 18px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Got it</button>
+        </div>
+      </div>
+    `;
+
+    modalOverlay.style.display = 'flex';
+
+    const closeModal = () => {
+      modalOverlay.style.display = 'none';
+    };
+
+    document.getElementById('sc-info-modal-close')?.addEventListener('click', closeModal);
+    document.getElementById('sc-info-modal-ok')?.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+  }
+
+  setSpeechCoachLayerFilter(filterMode) {
+    this.speechCoachLayerFilter = filterMode; // 'linking' or 'all'
+    const btn1 = document.getElementById('ra-layer-level1');
+    const btn2 = document.getElementById('ra-layer-level2');
+    
+    if (filterMode === 'linking') {
+      if (btn1) {
+        btn1.style.background = '#ffffff';
+        btn1.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btn1.style.color = '#1d4ed8';
+        btn1.classList.add('active');
+      }
+      if (btn2) {
+        btn2.style.background = 'transparent';
+        btn2.style.boxShadow = 'none';
+        btn2.style.color = '#1f2937';
+        btn2.classList.remove('active');
+      }
+    } else {
+      if (btn2) {
+        btn2.style.background = '#ffffff';
+        btn2.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btn2.style.color = '#1d4ed8';
+        btn2.classList.add('active');
+      }
+      if (btn1) {
+        btn1.style.background = 'transparent';
+        btn1.style.boxShadow = 'none';
+        btn1.style.color = '#1f2937';
+        btn1.classList.remove('active');
+      }
+    }
+
+    const leftCol = document.querySelector('#ra-connected-speech-list .sc-grid-left');
+    const listGrid = document.getElementById('ra-connected-speech-list');
+
+    if (leftCol) {
+      leftCol.style.display = filterMode === 'linking' ? 'none' : 'flex';
+    }
+    if (listGrid) {
+      listGrid.style.gridTemplateColumns = filterMode === 'linking' ? '1fr' : '1fr 1fr';
+    }
   }
 
   handleGuideTargetKeydown(event) {
@@ -3597,7 +4459,7 @@ class ReadAloudMode {
     if (!audioEl) return;
     const filename = this._resolveAudioFilename();
     if (filename) {
-      audioEl.src = `/database/RA/Voice/audio/${this.currentQuestionId}/${filename}`;
+      audioEl.src = `/database/RA/Voice/audio/Audio by folder/${this.currentQuestionId}/${filename}`;
       audioEl.load();
     }
   }

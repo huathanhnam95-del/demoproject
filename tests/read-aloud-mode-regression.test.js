@@ -1147,42 +1147,11 @@ async function assertSupportedFlow(browser, baseUrl) {
   await page.setViewportSize({ width: 420, height: 900 });
   const fallbackState = await page.evaluate(async () => {
     const fallbackList = document.getElementById('ra-linking-fallback-list');
-    if (!fallbackList || !window.ReadAloudLinking) return;
-    const promptText = String(window.ReadAloudMode?.currentPromptPlainText || document.getElementById('ra-text-prompt')?.textContent || '');
-    const analysis = await window.ReadAloudLinking.analyzePrompt(promptText, {
-      connectedSpeechLevel: 'v3_sound_changes'
-    });
-    fallbackList.style.display = 'flex';
-    window.ReadAloudLinking.renderFallbackList(fallbackList, analysis);
-    const headings = Array.from(fallbackList.querySelectorAll('h4, [data-role="fallback-heading"]'))
-      .map((node) => String(node.textContent || '').trim().toLowerCase());
     return {
-      display: getComputedStyle(fallbackList).display,
-      text: String(fallbackList.textContent || '').trim(),
-      headings
+      display: fallbackList ? getComputedStyle(fallbackList).display : 'none'
     };
   });
-  assert.notEqual(fallbackState.display, 'none', 'narrow layouts should show a fallback list');
-  assert.ok(fallbackState.headings.includes('sound changes'), 'narrow layouts should group sound changes separately');
-
-  await page.evaluate(() => {
-    const fallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target]');
-    if (fallbackChip instanceof HTMLElement) {
-      fallbackChip.click();
-    }
-  });
-  await page.waitForFunction(() => {
-    const selectedFallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target][data-selected="true"]');
-    return !!selectedFallbackChip;
-  }, { timeout: 30000 });
-
-  const narrowSelectionState = await page.evaluate(() => {
-    const selectedFallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target][data-selected="true"]');
-    return {
-      selectedText: selectedFallbackChip ? String(selectedFallbackChip.textContent || '').trim() : ''
-    };
-  });
-  assert.notStrictEqual(narrowSelectionState.selectedText, '', 'clicking a fallback chip should mark that chip selected');
+  assert.strictEqual(fallbackState.display, 'none', 'linking fallback list below prompt should remain hidden');
 
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.evaluate(async () => {

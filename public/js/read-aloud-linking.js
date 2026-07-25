@@ -444,6 +444,11 @@
   function renderOverlay(overlay, stage, analysis, wordMap, options = {}) {
     if (!overlay || !stage) return { renderedCount: 0, skippedCount: 0 };
     overlay.innerHTML = '';
+    const focusFamily = options.focusFamily || analysis?.connectedSpeechLevel || 'off';
+    if (focusFamily === 'reduced_words' || focusFamily === 'off') {
+      overlay.style.display = 'none';
+      return { renderedCount: 0, skippedCount: 0 };
+    }
     overlay.style.display = 'block';
 
     const stageRect = stage.getBoundingClientRect();
@@ -677,8 +682,12 @@
     return renderedCount;
   }
 
-  function applyTokenAnnotations(wordMap, analysis) {
+  function applyTokenAnnotations(wordMap, analysis, options = {}) {
     if (!wordMap || typeof wordMap.get !== 'function' || !analysis || !Array.isArray(analysis.tokenAnnotations)) {
+      return 0;
+    }
+    const focusFamily = options.focusFamily || analysis?.connectedSpeechLevel;
+    if (focusFamily !== 'reduced_words' && focusFamily !== 'all') {
       return 0;
     }
 

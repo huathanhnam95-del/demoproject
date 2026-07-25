@@ -107,7 +107,8 @@ for (const signature of [
   'POST /dev/save-corpus-sample',
   'GET /dev/corpus-samples',
   'GET /dev/corpus-samples/:sampleId',
-  'GET /dev/corpus-samples/:sampleId/audio'
+  'GET /dev/corpus-samples/:sampleId/audio',
+  'DELETE /dev/corpus-samples/:sampleId'
 ]) {
   assert(routes.includes(signature), `Expected production corpus route ${signature}.`);
 }

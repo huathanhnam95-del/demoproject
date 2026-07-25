@@ -7572,6 +7572,47 @@ textarea:focus {
 }
 
 /* ============================================
+   Read Aloud — Unified Card Style
+   ============================================ */
+
+.ra-card {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-light, #dadce0);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  padding: 20px;
+}
+
+.ra-card--results {
+  text-align: center;
+}
+
+.ra-card--results[style*="display: none"] {
+  /* Allow JS display toggle to work */
+}
+
+.ra-card--coach {
+  text-align: left;
+}
+
+/* ============================================
+   Read Aloud — Settings Gear Button (SPC row)
+   ============================================ */
+
+.ra-settings-gear {
+  /* Inherits .spc-view-toggle-btn base from the class already applied */
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted, #5f6368);
+  transition: color 0.2s, background 0.2s;
+}
+
+.ra-settings-gear:hover {
+  color: var(--primary, #1a73e8);
+  background: rgba(26, 115, 232, 0.08);
+}
+
+/* ============================================
    Grammar Warning Modal
    ============================================ */
 
@@ -18963,6 +19004,10 @@ body.readingjourney-active #readingjourney-root {
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 #mode-read-aloud #ra-prompt-card-header {
@@ -19364,7 +19409,7 @@ body.readingjourney-active #readingjourney-root {
 /* ── Single-occurrence reduced word grid ── */
 .sc-singles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
   margin-top: 8px;
 }

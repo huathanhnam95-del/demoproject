@@ -1318,7 +1318,7 @@
     const panels = {
       essay: { startBtnId: 'start-essay-btn', panelId: 'mode-essay', skill: 'writing' },
       swt: { startBtnId: 'start-swt-btn', panelId: 'mode-swt', skill: 'writing' },
-      'read-aloud': { startBtnId: 'ra-next-btn', panelId: 'mode-read-aloud', skill: 'speaking' }
+      'read-aloud': { startBtnId: 'ra-record-btn', panelId: 'mode-read-aloud', skill: 'speaking' }
     };
     const config = panels[mode];
     if (!config) return;

@@ -14,7 +14,8 @@ const SHELL_URLS = [
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',
-  '/arpabet-ipa-map.js'
+  '/arpabet-ipa-map.js',
+  '/ipa-dict.json'
 ];
 
 self.addEventListener('install', (event) => {

@@ -408,6 +408,32 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 415,2026-07-23,Deploy release V1.8.26 to Firebase Hosting production & run live browser verification,Done,2026-07-23\r
 416,2026-07-23,Clean up messy practice page UI — reduce visual clutter and improve information hierarchy,Done,2026-07-24
 417,2026-07-24,Deploy release V1.8.27 to Firebase Hosting production & run live browser verification,Done,2026-07-24
+418,2026-07-24,Redesign Read Aloud practice mode UX flow — fix broken buttons + logical control layout + visible filters,Done,2026-07-24
+419,2026-07-24,Read Aloud Phase 2 — Settings side panel + visual consistency + button harmonization,Done,2026-07-24
+420,2026-07-24,Adjust picker nav max-width + prominent circular Back/Next buttons + remove duplicate Next Prompt button,Done,2026-07-24
+421,2026-07-24,Wire Advanced toggle and Settings button to natively open Settings sheet with all practice target filter options,Done,2026-07-24
+422,2026-07-25,Fix settings button click handler so clicking Settings or Advanced reliably opens Settings sheet under all URL routing states,Done,2026-07-25
+423,2026-07-25,Fix Speech Coach Feedback UI bugs (expand arrows word truncation link reasons tooltips and tab stuck issue),Done,2026-07-25
+424,2026-07-25,Move Adaptive/Manual difficulty manager, question count totals, and filter controls into mode Settings side panel across all practice modes,Done,2026-07-25
+425,2026-07-25,Fix Repeat Sentence 1st question audio text mismatch,Done,2026-07-25
+426,2026-07-25,Distinguish Basic vs Advanced view on main canvas and add Read Aloud difficulty filter chips to Settings side panel,Done,2026-07-25
+427,2026-07-25,Clean up Read Aloud prompt box border remove Off button add dedicated instruction text per mode,Done,2026-07-25
+428,2026-07-25,Implement multi-factor difficulty classifier for Read Aloud matching RL/SST classification model (Level 1 Easy, Level 2 Medium, Level 3 Hard),Done,2026-07-25
+429,2026-07-25,Fix guide button untick and toggle handlers so chunking and linking/reduced words can be toggled off,Done,2026-07-25
+430,2026-07-25,Fix Speech Coach feedback bugs (separate play button from accordion toggle classify merely-a as Vowel-to-Vowel link and generate dynamic non-templated phonetic explanations),Done,2026-07-25
+431,2026-07-25,Add IPA strong-to-weak form reduction transformation mapping (e.g. for /fɔːr/ -> /fər/) on Reduced Words cards and accordions,Done,2026-07-25
+432,2026-07-25,Fix Basic mode display and score analysis feedback logic,Done,2026-07-25
+433,2026-07-25,Integrate ipa-dict (Wiktionary) dataset as primary IPA source with symbol normalization,Done,2026-07-25
+434,2026-07-25,Disable Basic/Advanced view mode toggle during active recording session,Done,2026-07-25
+435,2026-07-25,Implement and run E2E browser test for ipa-dict dataset edge cases and pipeline stability,Done,2026-07-25
+436,2026-07-25,Fix CRM sample analysis status mismatch and primary stress display,Done,2026-07-25
+437,2026-07-25,Fix corpus sample analysis expected count parameter and add delete sample endpoint and button,Done,2026-07-25
+438,2026-07-25,Fix Basic mode speech feature feedback leak and restore attempt recognized text transcript display,Done,2026-07-25
+439,2026-07-25,Snapshot practice mode and advanced guide settings at recording start to filter post-recording results accordingly,Done,2026-07-25
+440,2026-07-25,Add Show Advanced Analysis button to reveal Speech Coach results when practicing in Basic mode,Done,2026-07-25
+441,2026-07-25,Display clear IPA style pronunciation in Speech Coach feedback explanation cards,Done,2026-07-25
+442,2026-07-25,Bump crm-admin.js asset cache buster in crm-admin.html and structure sample row action buttons,Done,2026-07-25
+443,2026-07-25,Deploy release V1.8.28 to Firebase Hosting and Cloud Functions,In Progress,
 
 
 

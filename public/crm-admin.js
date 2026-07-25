@@ -7226,19 +7226,22 @@
       const targetCount = Number(sample.targetSyllableCount || 0);
       const expectedCount = Number(sample.expectedObservedCount ?? targetCount);
       const observedCount = Number(analysis?.observed?.syllableCount || 0);
-      const rateable = analysis?.quality?.rateable !== false && analysis?.observed?.stressEvidence?.rateable !== false;
+      const audioRateable = analysis?.quality?.rateable !== false;
+      const stressRateable = analysis?.observed?.stressEvidence?.rateable !== false;
       const category = String(sample.category || 'clean').toLowerCase();
 
       if (category === 'unrateable') {
-        return rateable
+        return audioRateable
           ? { label: 'Needs review · audio was rateable', color: '#991b1b' }
           : { label: 'Verified · unrateable condition matched', color: '#166534' };
       }
-      if (!rateable) return { label: 'Needs review · unrateable audio', color: '#92400e' };
+      if (!audioRateable) return { label: 'Needs review · unrateable audio', color: '#92400e' };
       if (category === 'clean' && observedCount === targetCount) return { label: 'Verified · clean target matched', color: '#166534' };
       if (category === 'omission' && observedCount === expectedCount && observedCount < targetCount) return { label: 'Verified · omission target matched', color: '#166534' };
       if (category === 'insertion' && observedCount === expectedCount && observedCount > targetCount) return { label: 'Verified · insertion target matched', color: '#166534' };
       if (category === 'accented' && observedCount === expectedCount) return { label: 'Count verified · review stress/accent', color: '#92400e' };
+      if (observedCount !== expectedCount) return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
+      if (!stressRateable) return { label: 'Needs review · stress evidence unrateable', color: '#92400e' };
       return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
     }
 
@@ -7272,11 +7275,16 @@
       resultContainer.appendChild(status);
 
       const observedCount = Number(analysis.observed?.syllableCount || 0);
+      const primaryStressIdx = analysis.observed?.primaryStress;
+      const primaryStressStr = (primaryStressIdx !== null && primaryStressIdx !== undefined && Number(primaryStressIdx) >= 0)
+        ? `syllable ${Number(primaryStressIdx) + 1}`
+        : 'N/A';
+
       appendAnalysisLine(resultContainer, 'Counts', `${Number(sample.targetSyllableCount || 0)} target · ${Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0)} expected observed`);
       appendAnalysisLine(resultContainer, 'Observed', `${observedCount} syllables`);
       appendAnalysisLine(resultContainer, 'Quality', `${analysis.quality?.rateable === false ? 'unrateable' : 'rateable'} · confidence ${Number(analysis.quality?.confidence ?? 0).toFixed(2)}`);
       appendAnalysisLine(resultContainer, 'Segmentation', `${analysis.segmentation?.method || 'unknown'} · confidence ${Number(analysis.segmentation?.confidence ?? 0).toFixed(2)}`);
-      appendAnalysisLine(resultContainer, 'Primary stress', `syllable ${Number(analysis.observed?.primaryStress ?? -1) + 1} · confidence ${Number(analysis.observed?.stressEvidence?.confidence ?? 0).toFixed(2)}`);
+      appendAnalysisLine(resultContainer, 'Primary stress', `${primaryStressStr} · confidence ${Number(analysis.observed?.stressEvidence?.confidence ?? 0).toFixed(2)}`);
 
       const syllables = document.createElement('div');
       syllables.style.marginTop = '6px';
@@ -7309,7 +7317,8 @@
         const audioBlob = await audioResponse.blob();
         const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?corpus-analysis=${encodeURIComponent(sampleId)}`);
         const api = new PraatAPI();
-        const analysis = await api.analyze(audioBlob, Number(sample.targetSyllableCount || sample.expectedObservedCount || 0), {
+        const expectedSyllables = Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0);
+        const analysis = await api.analyze(audioBlob, expectedSyllables, {
           targetWord: sample.targetWord || ''
         });
         analysisBySampleId.set(sampleId, { analysis });
@@ -7337,6 +7346,10 @@
       row.appendChild(label);
 
       const sampleId = String(sample.id || sample.sampleId || '').trim();
+      const actionsContainer = document.createElement('div');
+      actionsContainer.className = 'corpus-sample-actions';
+      actionsContainer.style.cssText = 'display:flex; align-items:center; gap:8px; margin-left:auto;';
+
       const analyzeButton = document.createElement('button');
       analyzeButton.type = 'button';
       analyzeButton.className = 'crm-btn crm-btn-primary btn-corpus-analyze';
@@ -7348,7 +7361,7 @@
       analyzeButton.addEventListener('click', () => {
         analyzeSavedSample(sample, resultContainer, analyzeButton);
       });
-      row.appendChild(analyzeButton);
+      actionsContainer.appendChild(analyzeButton);
 
       if (sample.audioUrl) {
         const link = document.createElement('a');
@@ -7357,8 +7370,34 @@
         link.rel = 'noopener noreferrer';
         link.className = 'crm-btn crm-btn-secondary';
         link.textContent = 'Open audio';
-        row.appendChild(link);
+        actionsContainer.appendChild(link);
       }
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'crm-btn crm-btn-secondary btn-corpus-delete';
+      deleteButton.style.cssText = 'color:#991b1b; border-color:#fca5a5;';
+      deleteButton.textContent = 'Remove sample';
+      deleteButton.addEventListener('click', async () => {
+        if (!confirm(`Are you sure you want to remove this ${sample.category || ''} sample for "${sample.targetWord || 'this word'}"?`)) return;
+        deleteButton.disabled = true;
+        deleteButton.textContent = 'Removing…';
+        try {
+          await apiFetchJson(`/api/admin/dev/corpus-samples/${encodeURIComponent(sampleId)}`, { method: 'DELETE' });
+          row.remove();
+          analysisBySampleId.delete(sampleId);
+          if (typeof loadSavedSamples === 'function') {
+            loadSavedSamples();
+          }
+        } catch (err) {
+          alert(`Failed to remove sample: ${err?.message || err}`);
+          deleteButton.disabled = false;
+          deleteButton.textContent = 'Remove sample';
+        }
+      });
+      actionsContainer.appendChild(deleteButton);
+
+      row.appendChild(actionsContainer);
       row.appendChild(resultContainer);
       renderSampleAnalysis(sample, resultContainer, analysisBySampleId.get(sampleId));
       return row;

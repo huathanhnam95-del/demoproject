@@ -23,6 +23,7 @@ const Phonetics = (function () {
 
     // === CONFIGURATION ===
     const CONFIG = {
+        ipaDictUrl: 'ipa-dict.json',
         cmuDictUrl: 'cmudict.json',
         // Free Dictionary API - provides IPA from Wiktionary data
         dictionaryApiBase: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
@@ -31,10 +32,69 @@ const Phonetics = (function () {
     };
 
     // === STATE ===
+    let ipaDict = null;
+    let ipaDictLoading = null;
     let cmuDict = null;
     let cmuDictLoading = null;
-    // Cache stores { ipa: string, source: 'dictionary'|'cmu'|null }
+    // Cache stores { ipa: string, alternatives: string[], source: 'ipa-dict'|'dictionary'|'cmu'|null }
     const ipaCache = new Map();
+
+    // === IPA-DICT (PRIMARY SOURCE) ===
+
+    /**
+     * Load ipa-dict Dictionary (lazy loading)
+     */
+    async function loadIpaDict() {
+        if (ipaDict) return ipaDict;
+        if (ipaDictLoading) return ipaDictLoading;
+
+        ipaDictLoading = (async () => {
+            try {
+                const response = await fetch(CONFIG.ipaDictUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ipa-dict: ${response.status}`);
+                }
+                ipaDict = await response.json();
+                log(`ipa-dict loaded: ${Object.keys(ipaDict).length} entries`);
+                return ipaDict;
+            } catch (error) {
+                console.error('[Phonetics] ipa-dict load failed:', error);
+                ipaDict = {}; // Empty fallback
+                return ipaDict;
+            }
+        })();
+
+        return ipaDictLoading;
+    }
+
+    /**
+     * Lookup word in ipa-dict Dataset
+     * @param {string} word 
+     * @returns {string[]|null} Array of IPA variants or null
+     */
+    async function lookupIpaDict(word) {
+        const dict = await loadIpaDict();
+        const normalized = (word || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[’]/g, "'")
+            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+
+        if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) return null;
+
+        if (dict[normalized]) {
+            const entry = dict[normalized];
+            return Array.isArray(entry) ? entry : [entry];
+        }
+
+        const noApostrophe = normalized.replace(/'/g, '');
+        if (dict[noApostrophe]) {
+            const entry = dict[noApostrophe];
+            return Array.isArray(entry) ? entry : [entry];
+        }
+
+        return null;
+    }
 
     // === CMU DICTIONARY (FALLBACK) ===
 
@@ -97,20 +157,16 @@ const Phonetics = (function () {
         return null;
     }
 
-    // === FREE DICTIONARY API (PRIMARY SOURCE) ===
+    // === FREE DICTIONARY API (LEGACY/UNUSED) ===
 
     /**
      * Fetch IPA from Free Dictionary API (dictionaryapi.dev)
-     * This is the PRIMARY source - returns authoritative dictionary IPA
-     * Data is sourced from Wiktionary
-     * 
-     * Prefers US pronunciation when audio is available (indicates US source)
+     * Suppressed to avoid CORS/network errors
      * 
      * @param {string} word 
      * @returns {string|null} IPA transcription or null
      */
     async function lookupDictionary(word) {
-        // Suppress failing external API to avoid CORS errors in console
         return null;
     }
 
@@ -120,7 +176,7 @@ const Phonetics = (function () {
      * Get IPA transcription for a word
      * 
      * Strategy (order matters!):
-     * 1. PRIMARY: Wiktionary (authoritative dictionary IPA)
+     * 1. PRIMARY: ipa-dict (Wiktionary dataset (~126k entries))
      * 2. FALLBACK: CMU Dictionary (computed/approximate IPA)
      * 
      * @param {string} word - The word to transcribe
@@ -147,13 +203,16 @@ const Phonetics = (function () {
         }
 
         let ipa = '';
+        let alternatives = [];
         let source = null;
 
-        // 1. PRIMARY: Try Free Dictionary API first (authoritative dictionary IPA)
-        ipa = await lookupDictionary(normalized);
-        if (ipa) {
-            source = 'dictionary';
-            log(`Dictionary (authoritative): "${normalized}" → ${ipa}`);
+        // 1. PRIMARY: Try ipa-dict dataset first (~126K Wiktionary entries)
+        const ipaDictResult = await lookupIpaDict(normalized);
+        if (ipaDictResult && ipaDictResult.length > 0) {
+            ipa = ipaDictResult[0];
+            alternatives = ipaDictResult.slice(1);
+            source = 'ipa-dict';
+            log(`ipa-dict (primary): "${normalized}" → ${ipa} (alts: ${alternatives.join(', ')})`);
         }
 
         // 2. FALLBACK: Try CMU Dictionary (computed/approximate IPA)
@@ -171,14 +230,14 @@ const Phonetics = (function () {
             }
         }
 
-        // Normalize IPA: replace ɹ (turned r) with regular r for easier reading
+        // Safety normalization: replace ɹ (turned r) with regular r for easier reading
         if (ipa) {
             ipa = ipa.replace(/ɹ/g, 'r');
         }
 
-        // Cache result with source metadata
+        // Cache result with source metadata and alternatives
         if (CONFIG.cacheEnabled) {
-            ipaCache.set(normalized, { ipa: ipa || '', source });
+            ipaCache.set(normalized, { ipa: ipa || '', alternatives, source });
         }
 
         return ipa || '';
@@ -203,7 +262,7 @@ const Phonetics = (function () {
      * Useful for debugging or showing approximate markers
      * 
      * @param {string} word - The word to transcribe
-     * @returns {Promise<{ipa: string, source: 'wiktionary'|'cmu'|null, isApproximate: boolean}>}
+     * @returns {Promise<{ipa: string, alternatives: string[], source: 'ipa-dict'|'wiktionary'|'cmu'|null, isApproximate: boolean}>}
      */
     async function getIPAWithSource(word) {
         const normalized = (word || '')
@@ -213,7 +272,7 @@ const Phonetics = (function () {
             .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
 
         if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) {
-            return { ipa: '', source: null, isApproximate: false };
+            return { ipa: '', alternatives: [], source: null, isApproximate: false };
         }
 
         // Ensure word is looked up (populates cache)
@@ -224,19 +283,20 @@ const Phonetics = (function () {
         if (cached && typeof cached === 'object') {
             return {
                 ipa: cached.ipa,
+                alternatives: cached.alternatives || [],
                 source: cached.source,
                 isApproximate: cached.source === 'cmu'
             };
         }
 
-        return { ipa: '', source: null, isApproximate: false };
+        return { ipa: '', alternatives: [], source: null, isApproximate: false };
     }
 
     /**
-     * Preload CMU Dictionary
+     * Preload IPA Dictionaries (ipa-dict + CMU)
      */
     async function preload() {
-        await loadCMUDict();
+        await Promise.all([loadIpaDict(), loadCMUDict()]);
     }
 
     /**
@@ -264,6 +324,7 @@ const Phonetics = (function () {
         clearCache,
 
         // For debugging
+        _lookupIpaDict: lookupIpaDict,
         _lookupCMU: lookupCMU,
         _lookupDictionary: lookupDictionary,
         _cache: ipaCache,

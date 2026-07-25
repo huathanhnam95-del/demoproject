@@ -354,6 +354,30 @@ function registerPronunciationCorpusRoutes(router, deps) {
       return sendError(res, 500, 'CORPUS_SAMPLE_GET_ERROR', 'Failed to retrieve corpus sample.');
     }
   });
+
+  router.delete('/dev/corpus-samples/:sampleId', ...requireAdminHandlers, async (req, res) => {
+    try {
+      const sampleId = String(req.params.sampleId || '').trim();
+      if (!SAMPLE_ID_RE.test(sampleId)) return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid sampleId.');
+      const snapshot = await deps.db.collection(COLLECTION).doc(sampleId).get();
+      if (!snapshot.exists) return sendError(res, 404, 'NOT_FOUND', 'Corpus sample not found.');
+
+      const sample = serializeSample(snapshot);
+      const bucket = await deps.getStorageBucket();
+      if (bucket && sample.storagePath) {
+        try {
+          await bucket.file(sample.storagePath).delete();
+        } catch (_storageErr) {
+          // Best effort storage file cleanup
+        }
+      }
+
+      await snapshot.ref.delete();
+      return sendSuccess(res, { deleted: true, sampleId });
+    } catch (error) {
+      return sendError(res, 500, 'CORPUS_SAMPLE_DELETE_ERROR', 'Failed to delete corpus sample.');
+    }
+  });
 }
 
 module.exports = registerPronunciationCorpusRoutes;

@@ -1,3 +1,14 @@
+## [V1.8.28] - 2026-07-25
+
+### Fixed & Added
+- **CRM Pronunciation Corpus Sample Analysis & Deletion**:
+  - Fixed syllable count parameter bug in `analyzeSavedSample`: now prioritizes `expectedObservedCount` (e.g. 3 for omission) over target syllable count, allowing target-aligned acoustic feedback to measure omission recordings correctly.
+  - Resolved status banner mismatch in CRM sample verification display (decoupled overall audio rateability from stress rateability to prevent false "unrateable audio" banners).
+  - Cleaned primary stress fallback display: renders `N/A` instead of `syllable 0` when stress is unassigned.
+  - Added `DELETE /dev/corpus-samples/:sampleId` API route in backend (`pronunciation-corpus.js`) for deleting Firestore sample metadata and Cloud Storage audio WAV files.
+  - Added red **Remove sample** button in CRM Admin UI (`crm-admin.js`) with modal confirmation and automatic list refresh.
+  - Bumped shared CRM asset cache buster in `crm-admin.html` to `v=20260725-v1.8.28`.
+
 ## [V1.8.25] - 2026-07-23
 
 ### Added & Refactored

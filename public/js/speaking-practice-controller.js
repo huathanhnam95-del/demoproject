@@ -624,7 +624,8 @@
     prevBtn.className = 'spc-picker-prev';
     prevBtn.type = 'button';
     prevBtn.setAttribute('aria-label', 'Previous question');
-    prevBtn.textContent = '\u2039';
+    prevBtn.setAttribute('title', 'Previous question');
+    prevBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
 
     const pill = document.createElement('button');
     pill.className = 'spc-picker-pill';
@@ -650,7 +651,8 @@
     nextBtn.className = 'spc-picker-next';
     nextBtn.type = 'button';
     nextBtn.setAttribute('aria-label', 'Next question');
-    nextBtn.textContent = '\u203a';
+    nextBtn.setAttribute('title', 'Next question');
+    nextBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
 
     pickerNav.appendChild(prevBtn);
     pickerNav.appendChild(pill);
@@ -666,6 +668,7 @@
     basicBtn.className = 'spc-view-toggle-btn';
     basicBtn.type = 'button';
     basicBtn.dataset.view = 'basic';
+    basicBtn.setAttribute('data-view', 'basic');
     basicBtn.setAttribute('aria-pressed', 'true');
     basicBtn.textContent = 'Basic';
 
@@ -673,11 +676,20 @@
     advancedBtn.className = 'spc-view-toggle-btn';
     advancedBtn.type = 'button';
     advancedBtn.dataset.view = 'advanced';
+    advancedBtn.setAttribute('data-view', 'advanced');
     advancedBtn.setAttribute('aria-pressed', 'false');
     advancedBtn.textContent = 'Advanced';
 
+    const settingsBtn = document.createElement('button');
+    settingsBtn.className = 'spc-view-toggle-btn spc-settings-btn';
+    settingsBtn.type = 'button';
+    settingsBtn.title = 'Open practice settings';
+    settingsBtn.setAttribute('aria-label', 'Settings');
+    settingsBtn.innerHTML = '⚙ Settings';
+
     toggle.appendChild(basicBtn);
     toggle.appendChild(advancedBtn);
+    toggle.appendChild(settingsBtn);
 
     row1.appendChild(pickerNav);
     row1.appendChild(toggle);
@@ -721,7 +733,7 @@
     return {
       controller, row1, row2, row3,
       pickerNav, prevBtn, pill, pillId, pillLabel, pillArrow, nextBtn,
-      toggle, basicBtn, advancedBtn,
+      toggle, basicBtn, advancedBtn, settingsBtn,
       slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
       activeChip
     };
@@ -891,6 +903,12 @@
 
     // Update active chip
     updateActiveChip(controllerState);
+
+    try {
+      window.dispatchEvent(new CustomEvent('spc-view-changed', {
+        detail: { view, modeId: config?.modeId }
+      }));
+    } catch (_) { /* guard */ }
   }
 
   function hasAdvancedCapability(config) {
@@ -922,26 +940,191 @@
     const dom = controllerState.dom;
 
     function handleToggle(view) {
+      if (controllerState.isViewDisabled) return;
       // Close any open sheet when switching to basic
       if (view === 'basic') {
         if (controllerState.pickerSheet && controllerState.pickerSheet.isOpen()) {
           controllerState.pickerSheet.close();
         }
       }
-
       setPreferredView(view);
+    }
+
+    function openSettings() {
+      if (controllerState.isViewDisabled) return;
+      handleToggle('advanced');
+      window.dispatchEvent(new CustomEvent('spc-open-settings', {
+        detail: { modeId: controllerState.config.modeId }
+      }));
+      if (controllerState.config.modeId === 'read-aloud' && window.ReadAloudMode) {
+        try { window.ReadAloudMode.openSettingsSheet(); } catch (e) { console.error('[SPC] openSettingsSheet error:', e); }
+      } else {
+        openModeSettingsSheet(controllerState);
+      }
     }
 
     dom.basicBtn.addEventListener('click', () => handleToggle('basic'));
     dom.advancedBtn.addEventListener('click', () => handleToggle('advanced'));
+    if (dom.settingsBtn) {
+      dom.settingsBtn.addEventListener('click', () => openSettings());
+    }
 
-    // Active chip: click switches to Advanced
-    dom.activeChip.addEventListener('click', () => handleToggle('advanced'));
+    // Active chip: click opens settings
+    dom.activeChip.addEventListener('click', () => openSettings());
     dom.activeChip.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        handleToggle('advanced');
+        openSettings();
       }
+    });
+  }
+
+  function openModeSettingsSheet(controllerState) {
+    if (!controllerState.settingsSheet) {
+      initModeSettingsSheet(controllerState);
+    }
+    if (controllerState.settingsSheet) {
+      controllerState.settingsSheet.open();
+    }
+  }
+
+  function initModeSettingsSheet(controllerState) {
+    if (controllerState.settingsSheet) return;
+    const modeId = controllerState.modeId;
+    const panel = controllerState.panel;
+
+    try {
+      controllerState.settingsSheet = createSheet({
+        id: 'spc-settings-sheet-' + modeId,
+        title: 'Settings',
+        className: 'spc-mode-settings-sheet'
+      });
+    } catch (e) {
+      console.error('[SPC] Failed to create settings sheet for mode ' + modeId + ':', e);
+      return;
+    }
+
+    const body = controllerState.settingsSheet.body;
+
+    // Build tabbed navigation
+    const tabs = document.createElement('div');
+    tabs.className = 'spc-sheet-tabs';
+    tabs.setAttribute('role', 'tablist');
+    tabs.innerHTML = `
+      <button class="spc-sheet-tab active" role="tab" aria-selected="true" data-tab="difficulty-target" type="button">🎯 Target & Difficulty</button>
+      <button class="spc-sheet-tab" role="tab" aria-selected="false" data-tab="history" type="button">📋 History</button>
+    `;
+    body.appendChild(tabs);
+
+    const panelsContainer = document.createElement('div');
+    panelsContainer.className = 'spc-settings-panels';
+
+    // Panel 1: Target & Difficulty
+    const targetPanel = document.createElement('div');
+    targetPanel.className = 'spc-sheet-tab-panel active';
+    targetPanel.dataset.tab = 'difficulty-target';
+    targetPanel.setAttribute('role', 'tabpanel');
+
+    // Section 1: Difficulty Engine (Adaptive / Manual)
+    const diffSection = document.createElement('div');
+    diffSection.className = 'spc-settings-section';
+    diffSection.innerHTML = '<h4 class="spc-settings-section-title">🤖 Difficulty Engine</h4>';
+
+    const adaptiveContainer = panel ? (
+      panel.querySelector('#adaptive-toggle-container-' + modeId) ||
+      panel.querySelector('.adaptive-toggle-container')
+    ) : null;
+
+    if (adaptiveContainer) {
+      diffSection.appendChild(adaptiveContainer);
+      adaptiveContainer.style.display = 'flex';
+    }
+
+    const questionTotal = panel ? (
+      panel.querySelector('.question-total') ||
+      panel.querySelector('.question-count-info')
+    ) : null;
+
+    if (questionTotal) {
+      diffSection.appendChild(questionTotal);
+      questionTotal.style.display = 'block';
+    }
+
+    targetPanel.appendChild(diffSection);
+
+    // Section 2: Question Filters
+    const filterSection = document.createElement('div');
+    filterSection.className = 'spc-settings-section';
+    filterSection.innerHTML = '<h4 class="spc-settings-section-title">🎯 Question Filters</h4>';
+
+    const statusFilter = panel ? (
+      panel.querySelector('#status-filter-container-' + modeId) ||
+      panel.querySelector('.status-filter-dropdown')
+    ) : null;
+    if (statusFilter) filterSection.appendChild(statusFilter);
+
+    const lengthFilter = panel ? (
+      panel.querySelector('#length-filter-container-' + modeId) ||
+      panel.querySelector('.length-filter-dropdown')
+    ) : null;
+    if (lengthFilter) filterSection.appendChild(lengthFilter);
+
+    const diffFilter = panel ? (
+      panel.querySelector('#difficulty-filter-container-' + modeId) ||
+      panel.querySelector('.difficulty-filter-dropdown')
+    ) : null;
+    if (diffFilter) filterSection.appendChild(diffFilter);
+
+    const filtersRow = panel ? panel.querySelector('.question-filters-row') : null;
+    if (filtersRow && filtersRow.children.length > 0) {
+      filterSection.appendChild(filtersRow);
+    }
+
+    const recControls = panel ? (
+      panel.querySelector('#recommendation-controls-' + modeId) ||
+      panel.querySelector('.recommendation-controls')
+    ) : null;
+    if (recControls) filterSection.appendChild(recControls);
+
+    targetPanel.appendChild(filterSection);
+    panelsContainer.appendChild(targetPanel);
+
+    // Panel 2: History
+    const historyPanel = document.createElement('div');
+    historyPanel.className = 'spc-sheet-tab-panel';
+    historyPanel.dataset.tab = 'history';
+    historyPanel.setAttribute('role', 'tabpanel');
+
+    const historyActionHost = panel ? panel.querySelector('#' + modeId + '-history-action-host') : null;
+    const historyContentHost = panel ? panel.querySelector('#' + modeId + '-history-content-host') : null;
+    const historyContainer = panel ? (
+      panel.querySelector('.attempts-history-container') ||
+      panel.querySelector('.history-section')
+    ) : null;
+
+    if (historyActionHost) historyPanel.appendChild(historyActionHost);
+    if (historyContentHost) historyPanel.appendChild(historyContentHost);
+    if (historyContainer && !historyContentHost) historyPanel.appendChild(historyContainer);
+
+    panelsContainer.appendChild(historyPanel);
+    body.appendChild(panelsContainer);
+
+    // Tab switching listener
+    tabs.addEventListener('click', (e) => {
+      const tab = e.target.closest('.spc-sheet-tab');
+      if (!tab) return;
+      const tabId = tab.dataset.tab;
+
+      tabs.querySelectorAll('.spc-sheet-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+
+      panelsContainer.querySelectorAll('.spc-sheet-tab-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.tab === tabId);
+      });
     });
   }
 
@@ -1044,6 +1227,13 @@
 
     // Apply view
     applyView(state);
+
+    // Initialize mode settings sheet (moves difficulty manager & filters into side panel)
+    if (modeId === 'read-aloud' && window.ReadAloudMode) {
+      try { window.ReadAloudMode.initSettingsSheet(); } catch (_) {}
+    } else {
+      try { initModeSettingsSheet(state); } catch (_) {}
+    }
   }
 
   function unmount(modeId) {
@@ -1080,6 +1270,41 @@
     activeControllers.delete(modeId);
   }
 
+  function setViewToggleDisabled(disabled) {
+    const isDisable = !!disabled;
+    for (const [, state] of activeControllers) {
+      state.isViewDisabled = isDisable;
+      if (!state?.dom) continue;
+      const dom = state.dom;
+      if (dom.basicBtn) {
+        dom.basicBtn.disabled = isDisable;
+        dom.basicBtn.style.pointerEvents = isDisable ? 'none' : '';
+        dom.basicBtn.style.opacity = isDisable ? '0.5' : '';
+      }
+      if (dom.advancedBtn) {
+        dom.advancedBtn.disabled = isDisable;
+        dom.advancedBtn.style.pointerEvents = isDisable ? 'none' : '';
+        dom.advancedBtn.style.opacity = isDisable ? '0.5' : '';
+      }
+      if (dom.settingsBtn) {
+        dom.settingsBtn.disabled = isDisable;
+        dom.settingsBtn.style.pointerEvents = isDisable ? 'none' : '';
+        dom.settingsBtn.style.opacity = isDisable ? '0.5' : '';
+      }
+      if (dom.activeChip) {
+        dom.activeChip.style.pointerEvents = isDisable ? 'none' : '';
+        dom.activeChip.style.opacity = isDisable ? '0.5' : '';
+      }
+    }
+
+    const toggleBtns = document.querySelectorAll('.spc-view-toggle-btn, .spc-settings-btn, #spc-view-basic, #spc-view-advanced');
+    toggleBtns.forEach(btn => {
+      btn.disabled = isDisable;
+      btn.style.pointerEvents = isDisable ? 'none' : '';
+      btn.style.opacity = isDisable ? '0.5' : '';
+    });
+  }
+
   /* ═══════════════════════════ EXPOSE ═══════════════════════════ */
 
   window.SpeakingPracticeController = {
@@ -1088,8 +1313,10 @@
     sync: function (modeId) { syncController(modeId); },
     getPreferredView: getPreferredView,
     setPreferredView: setPreferredView,
+    setViewToggleDisabled: setViewToggleDisabled,
     unmount: unmount,
-    isV2Active: isV2Active
+    isV2Active: isV2Active,
+    createSheet: createSheet
   };
 
 })();

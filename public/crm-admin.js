@@ -6930,6 +6930,10 @@
     const recordingTimerEl = document.getElementById('corpus-recording-timer');
     const timerValueEl = document.getElementById('corpus-timer-value');
     const autoAdvanceToggle = document.getElementById('corpus-auto-advance-toggle');
+    const rapidStreamToggle = document.getElementById('corpus-rapid-stream-toggle');
+    const streamBanner = document.getElementById('corpus-stream-banner');
+    const streamCountdownText = document.getElementById('corpus-stream-countdown-text');
+    const btnPauseStream = document.getElementById('btn-corpus-pause-stream');
     const cohortCustomRow = document.getElementById('corpus-cohort-custom-row');
     const cohortCustomInput = document.getElementById('corpus-cohort-custom-input');
     const progressTotalEl = document.getElementById('corpus-total-count');
@@ -6948,6 +6952,11 @@
     let currentVersionIndex = 0;
     let currentVersionSaved = false;
     let audioBlob = null;
+    let rapidStreamActive = false;
+    let streamCountdownId = null;
+    let vadSpeechDetected = false;
+    let vadSilenceStart = 0;
+    let isRecordingActive = false;
     let audioContext = null;
     let mediaStream = null;
     let animationFrameId = null;
@@ -7627,10 +7636,57 @@
       if (recordingTimerEl) recordingTimerEl.classList.remove('active');
     }
 
+    function clearStreamCountdown() {
+      if (streamCountdownId) {
+        clearInterval(streamCountdownId);
+        streamCountdownId = null;
+      }
+      if (streamBanner) streamBanner.style.display = 'none';
+    }
+
+    function startStreamCountdown(onComplete) {
+      if (!rapidStreamActive) return;
+      if (streamBanner) streamBanner.style.display = 'flex';
+      let remaining = 1.5;
+      if (streamCountdownText) streamCountdownText.textContent = `Get ready to speak in ${remaining.toFixed(1)}s...`;
+      clearStreamCountdown();
+      if (streamBanner) streamBanner.style.display = 'flex';
+      const startTime = Date.now();
+      streamCountdownId = setInterval(() => {
+        if (!rapidStreamActive) {
+          clearStreamCountdown();
+          return;
+        }
+        const elapsed = (Date.now() - startTime) / 1000;
+        const left = Math.max(0, 1.5 - elapsed);
+        if (streamCountdownText) streamCountdownText.textContent = `Get ready to speak in ${left.toFixed(1)}s...`;
+        if (left <= 0) {
+          clearStreamCountdown();
+          onComplete();
+        }
+      }, 100);
+    }
+
     async function startRecording() {
+      if (scriptProcessor) {
+        try { scriptProcessor.disconnect(); scriptProcessor.onaudioprocess = null; } catch (err) { console.debug('[Audio Teardown] scriptProcessor:', err); }
+        scriptProcessor = null;
+      }
+      if (mediaStream) {
+        try { mediaStream.getTracks().forEach(track => track.stop()); } catch (err) { console.debug('[Audio Teardown] mediaStream:', err); }
+        mediaStream = null;
+      }
+      if (audioContext && audioContext.state !== 'closed') {
+        try { audioContext.close(); } catch (err) { console.debug('[Audio Teardown] audioContext:', err); }
+        audioContext = null;
+      }
+
       rawSamples = [];
       audioBlob = null;
       currentVersionSaved = false;
+      isRecordingActive = true;
+      vadSpeechDetected = false;
+      vadSilenceStart = 0;
       setSaveButtonState(false);
       if (btnNextWord) btnNextWord.disabled = true;
       updateVersionButtons();
@@ -7649,10 +7705,42 @@
         scriptProcessor.onaudioprocess = (e) => {
           const inputBuffer = e.inputBuffer.getChannelData(0);
           rawSamples.push(new Float32Array(inputBuffer));
+
+          if (isRecordingActive) {
+            let chunkSumSq = 0;
+            let chunkPeak = 0;
+            for (let i = 0; i < inputBuffer.length; i++) {
+              const mag = Math.abs(inputBuffer[i]);
+              if (mag > chunkPeak) chunkPeak = mag;
+              chunkSumSq += mag * mag;
+            }
+            const chunkRms = Math.sqrt(chunkSumSq / inputBuffer.length);
+
+            if (chunkPeak > 0.03 || chunkRms > 0.01) {
+              vadSpeechDetected = true;
+              vadSilenceStart = 0;
+            } else if (vadSpeechDetected) {
+              if (chunkPeak < 0.012 && chunkRms < 0.005) {
+                if (!vadSilenceStart) {
+                  vadSilenceStart = Date.now();
+                } else if (Date.now() - vadSilenceStart > 600) {
+                  isRecordingActive = false;
+                  setTimeout(() => stopRecording(), 50);
+                }
+              } else {
+                vadSilenceStart = 0;
+              }
+            }
+
+            if (recordingStartTime && (Date.now() - recordingStartTime > 3500)) {
+              isRecordingActive = false;
+              setTimeout(() => stopRecording(), 50);
+            }
+          }
         };
         startRecordingTimer();
         if (micStatus) {
-          micStatus.textContent = "Status: Recording...";
+          micStatus.textContent = rapidStreamActive ? "Status: ⚡ Rapid Recording (VAD active)..." : "Status: Recording...";
           micStatus.style.color = "var(--status-danger)";
         }
         if (btnRecord) btnRecord.disabled = true;
@@ -7660,12 +7748,21 @@
         if (btnRedo) btnRedo.disabled = true;
       } catch (err) {
         console.error('Failed to start recording:', err);
-        showToast('Could not access microphone.', 'error');
+        if (rapidStreamActive) {
+          rapidStreamActive = false;
+          if (rapidStreamToggle) rapidStreamToggle.checked = false;
+          clearStreamCountdown();
+          showToast('Rapid Stream stopped due to microphone access error.', 'error');
+        } else {
+          showToast('Could not access microphone.', 'error');
+        }
         if (micStatus) micStatus.textContent = "Status: Mic Error";
       }
     }
+
     function stopRecording() {
       if (!mediaStream) return;
+      isRecordingActive = false;
       stopRecordingTimer();
       if (micStatus) {
         micStatus.textContent = "Status: Processing Audio...";
@@ -7717,6 +7814,9 @@
         setSaveButtonState(false);
         setStepGuidance(`Step 3: No speech detected. Click Redo, say “${currentWord}” clearly, and click Stop.`);
         showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
+        if (rapidStreamActive) {
+          startStreamCountdown(() => startRecording());
+        }
         return;
       }
       audioBlob = encodeWAV(mergedSamples, sampleRate);
@@ -7732,6 +7832,10 @@
       updateVersionButtons();
       setStepGuidance(`Step 4: Play the ${CORPUS_VERSIONS[currentVersionIndex].label} recording to verify it, then click Save Attempt.`);
       showToast('Audio captured successfully.', 'success');
+
+      if (rapidStreamActive && audioBlob) {
+        setTimeout(() => saveToCorpus(), 200);
+      }
     }
     function encodeWAV(samples, sampleRate) {
       const buffer = new ArrayBuffer(44 + samples.length * 2);
@@ -7818,7 +7922,18 @@
 
         // Auto-advance logic
         const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
-        if (shouldAutoAdvance) {
+        if (rapidStreamActive) {
+          if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
+            setStepGuidance(`Saved ✓ — Rapid streaming to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
+            moveToVersion(currentVersionIndex + 1);
+            startStreamCountdown(() => startRecording());
+          } else {
+            setStepGuidance(`All 5 versions complete for "${currentWord}"! Rapid streaming to next word…`);
+            showToast(`All versions complete for "${currentWord}"!`, 'success');
+            if (btnNextWord) btnNextWord.click();
+            startStreamCountdown(() => startRecording());
+          }
+        } else if (shouldAutoAdvance) {
           if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
             setStepGuidance(`Saved ✓ — Auto-advancing to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
             setTimeout(() => moveToVersion(currentVersionIndex + 1), 800);
@@ -7835,11 +7950,26 @@
         }
       } catch (err) {
         console.error('Failed to save corpus sample:', err);
+        if (rapidStreamActive) {
+          rapidStreamActive = false;
+          if (rapidStreamToggle) rapidStreamToggle.checked = false;
+          clearStreamCountdown();
+        }
         if (consoleOutput) consoleOutput.textContent = `Error: ${err.message}`;
         showToast(`Save failed: ${err.message}`, 'error');
         setSaveButtonState(true);
       }
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && rapidStreamActive) {
+        rapidStreamActive = false;
+        if (rapidStreamToggle) rapidStreamToggle.checked = false;
+        clearStreamCountdown();
+        showToast('Rapid Stream Mode paused because tab was hidden.', 'info');
+      }
+    });
+
     if (btnRecord) btnRecord.addEventListener('click', startRecording);
     if (btnStop) btnStop.addEventListener('click', stopRecording);
     if (btnRedo) btnRedo.addEventListener('click', redoRecording);
@@ -7870,6 +8000,37 @@
       updateSampleId();
     });
 
+    function toggleRapidStreamPause() {
+      if (!rapidStreamToggle) return;
+      rapidStreamToggle.checked = !rapidStreamToggle.checked;
+      rapidStreamActive = rapidStreamToggle.checked;
+      if (rapidStreamActive) {
+        if (autoAdvanceToggle) autoAdvanceToggle.checked = true;
+        showToast('⚡ Rapid Stream Mode active. Get ready to speak!', 'info');
+        startStreamCountdown(() => startRecording());
+      } else {
+        if (streamCountdownId) clearInterval(streamCountdownId);
+        if (streamBanner) streamBanner.style.display = 'none';
+        showToast('Rapid Stream Mode paused.', 'info');
+      }
+    }
+
+    if (rapidStreamToggle) {
+      rapidStreamToggle.addEventListener('change', () => {
+        rapidStreamActive = rapidStreamToggle.checked;
+        if (rapidStreamActive) {
+          if (autoAdvanceToggle) autoAdvanceToggle.checked = true;
+          showToast('⚡ Rapid Stream Mode active. Get ready to speak!', 'info');
+          startStreamCountdown(() => startRecording());
+        } else {
+          if (streamCountdownId) clearInterval(streamCountdownId);
+          if (streamBanner) streamBanner.style.display = 'none';
+          showToast('Rapid Stream Mode paused.', 'info');
+        }
+      });
+    }
+    if (btnPauseStream) btnPauseStream.addEventListener('click', toggleRapidStreamPause);
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       const panel = document.querySelector('[data-panel="pronunciation-samples"]');
@@ -7879,11 +8040,27 @@
       if (key === 'r' || key === 'R') {
         if (btnRecord && !btnRecord.disabled) { e.preventDefault(); btnRecord.click(); }
       } else if (key === ' ') {
-        if (btnStop && !btnStop.disabled) { e.preventDefault(); btnStop.click(); }
+        e.preventDefault();
+        if (isRecordingActive) {
+          stopRecording();
+        } else if (rapidStreamActive) {
+          toggleRapidStreamPause();
+        } else if (btnStop && !btnStop.disabled) {
+          btnStop.click();
+        }
       } else if (key === 'Enter') {
         if (btnSave && !btnSave.disabled) { e.preventDefault(); btnSave.click(); }
       } else if (key === 'Backspace') {
         if (btnRedo && !btnRedo.disabled) { e.preventDefault(); btnRedo.click(); }
+      } else if (key === 'Escape') {
+        if (rapidStreamActive) {
+          e.preventDefault();
+          rapidStreamToggle.checked = false;
+          rapidStreamActive = false;
+          if (streamCountdownId) clearInterval(streamCountdownId);
+          if (streamBanner) streamBanner.style.display = 'none';
+          showToast('Rapid Stream Mode stopped.', 'info');
+        }
       } else if (key === 'ArrowRight') {
         if (btnNextVersion && !btnNextVersion.disabled) { e.preventDefault(); btnNextVersion.click(); }
       } else if (key === 'ArrowLeft') {
@@ -7897,3 +8074,4 @@
     loadSavedSamples();
   }
 })();
+

@@ -7100,31 +7100,133 @@
         "blankId": "q31-b1",
         "index": 0,
         "answer": "thought",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a singular countable noun because it is preceded by the article 'a' and the adjective 'frightening.' Semantically, De Quincey’s statement presents the idea of total forgetfulness as an abstract realization. 'Thought' perfectly completes this conceptual unit ('a frightening thought'), signifying that the concept itself—the inability to forget—is what he finds alarming.",
+        "syntaxRequirement": "Singular Countable Noun",
+        "collocationCohesionClue": "The structure 'a rather frightening' demands a singular noun to complete this descriptive phrase.",
+        "coherenceCue": "The structure (a + adjective + Noun) dictates a noun, and the topic (memory/psychology) points specifically to an abstract concept like 'thought'.",
+        "vocabGrammarCue": "Nouns are required after descriptive adjectives; specifically, 'frightening' acts as an adjective modifying the missing noun.",
+        "contextNote": "The structure is: '...no such thing as forgetting — a rather frightening [Noun].'",
+        "distractorNotes": [
+          {
+            "option": "theory",
+            "reason": "While grammatically possible, 'thought' is the more natural and idiomatic collocation when discussing personal realizations or abstract ideas in this specific context."
+          },
+          {
+            "option": "information",
+            "reason": "This word cannot fit the singular structure ('a...') and functions as a mass noun, typically requiring pluralization or a different prepositional phrase (e.g., 'pieces of information')."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q31-b2",
         "index": 1,
         "answer": "mention",
-        "explanation": null
+        "explanation": "This blank requires a specific verb form because it completes the common English idiom, 'not to mention.' This structure functions rhetorically to emphasize that the items listed after the phrase (those we feel ashamed about) are only an example of the things making life unbearable. Grammatically, the construction demands a base verb following the infinitive marker ('to'), making 'mention' the only option that correctly completes this established idiomatic pattern.",
+        "syntaxRequirement": "Base Form Verb (Infinitive Marker)",
+        "collocationCohesionClue": "The fixed idiomatic phrase 'not to mention' is used to introduce additional points or examples that add emphasis to the preceding statement.",
+        "coherenceCue": "The phrase signals to the reader that additional examples or points of difficulty are about to be introduced, expanding on the initial idea.",
+        "vocabGrammarCue": "Requires a base verb form to complete the fixed idiom 'not to mention.'",
+        "contextNote": "Use 'not to mention [X]' when you want to add emphasis or list further examples after already listing some items.",
+        "distractorNotes": [
+          {
+            "option": "thought",
+            "reason": "This is a noun and cannot grammatically start the infinitive phrase 'not to thought.'"
+          },
+          {
+            "option": "ashamed",
+            "reason": "This is an adjective and does not fit the required verb slot in the idiom."
+          },
+          {
+            "option": "others",
+            "reason": "This is a pronoun/determiner and cannot function as the introductory verb needed for this fixed idiom."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q31-b3",
         "index": 2,
         "answer": "ashamed",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands an adjective to complete the clause: 'we feel [ADJ] or guilty about...' Semantically, the passage discusses the psychological burden of remembering moral failings. 'Ashamed' perfectly captures this sense of deep regret and embarrassment, making it the only word that is both grammatically correct and contextually appropriate alongside 'guilty.'",
+        "syntaxRequirement": "Adjective (Predicative adjective following the verb 'feel')",
+        "collocationCohesionClue": "The phrase requires an adjective that describes a negative emotional state, maintaining parallel structure with 'guilty.'",
+        "coherenceCue": "The overall theme is the unbearable weight of memory, focusing specifically on memories related to emotional or moral shortcomings (shame/guilt).",
+        "vocabGrammarCue": "Requires an adjective describing a state of feeling or emotional regret.",
+        "contextNote": "If we could remember everything all the time, not to mention those things we feel ashamed or guilty about...",
+        "distractorNotes": [
+          {
+            "option": "thought",
+            "reason": "This is a noun and cannot grammatically follow 'feel' in this structure."
+          },
+          {
+            "option": "mention",
+            "reason": "This is a verb, failing to maintain the required adjective slot parallel to 'guilty.'"
+          },
+          {
+            "option": "others",
+            "reason": "While grammatically possible as an object pronoun, it makes no sense semantically in relation to feeling guilt or shame."
+          },
+          {
+            "option": "information",
+            "reason": "This is a noun and cannot grammatically follow 'feel' in this structure."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q31-b4",
         "index": 3,
         "answer": "others",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires an indefinite plural pronoun because it completes a comparison ('better than...'). Semantically, the sentence compares dramatic events to all other unspecified items. 'Others' functions as a general plural pronoun meaning 'other things,' making it the only choice that maintains both grammatical agreement (plural) and logical flow within the comparative clause.",
+        "syntaxRequirement": "Indefinite Plural Pronoun",
+        "collocationCohesionClue": "The comparative phrase 'better than any others' requires a plural pronoun to maintain grammatical parallelism and refer generally to other types of events.",
+        "coherenceCue": "The passage is listing categories of memory; this blank completes the comparison group by referring to all non-dramatic events.",
+        "vocabGrammarCue": "Pronoun usage following determiners in a comparative clause.",
+        "contextNote": "Naturally, we remember shocking and dramatic events better than any others.",
+        "distractorNotes": [
+          {
+            "option": "information",
+            "reason": "This is a mass noun. The structure 'better than any...' requires a plural pronoun to function correctly in this specific comparative clause."
+          },
+          {
+            "option": "thought",
+            "reason": "This option is singular. The context necessitates a plural reference ('other things' or 'other events'), making the plural form 'others' mandatory for agreement."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q31-b5",
         "index": 4,
         "answer": "information",
-        "explanation": null
+        "explanation": "Grammatically, the structure demands an uncountable noun to maintain parallel listing (names, numbers, dates, [NOUN], and things...). Semantically, the passage is discussing common types of easily forgotten facts. 'Information' serves as the most appropriate collective term because it encompasses general data points or knowledge, fitting perfectly alongside specific factual categories like names and numbers.",
+        "syntaxRequirement": "Uncountable Noun",
+        "collocationCohesionClue": "The blank requires a general, collective noun that functions as a category of factual data, maintaining grammatical parallelism with 'names,' 'numbers,' and 'dates.'",
+        "coherenceCue": "Listing common examples of forgettable academic or personal data.",
+        "vocabGrammarCue": "Noun required for grammatical parallelism in a list of abstract concepts (names, numbers, dates).",
+        "contextNote": "The passage establishes a pattern by listing various types of factual data that people tend to forget.",
+        "distractorNotes": [
+          {
+            "option": "theory",
+            "reason": "While 'theory' is grammatically correct as a noun, it refers specifically to an abstract hypothesis or systematic explanation. This meaning does not fit the context of basic, forgotten factual data types (names, numbers, dates)."
+          },
+          {
+            "option": "know-how",
+            "reason": "'Know-how' refers to practical skills, expertise, or methods. Although it is a noun, it is semantically distinct from the list of objective, forgettable facts and does not fit the context."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -7236,25 +7338,121 @@
         "blankId": "q32-b1",
         "index": 0,
         "answer": "aim",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a singular noun following the definite article 'The main.' Semantically, the sentence establishes the core function of advertising. While synonyms like 'purpose' are possible, 'aim' is the most precise choice here because it denotes the specific, targeted goal or intention that the rest of the passage elaborates upon. It clearly defines what advertising seeks to achieve in its primary scope.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The collocation 'main [noun]' typically refers to the primary objective or intended outcome.",
+        "coherenceCue": "The sentence requires a word that defines the ultimate objective or central function of advertising.",
+        "vocabGrammarCue": "Requires a noun meaning 'goal' or 'primary intention.'",
+        "contextNote": "The main aim of advertising is to sell products...",
+        "distractorNotes": [
+          {
+            "option": "products",
+            "reason": "This is a plural noun, but it cannot function as the abstract goal; the structure requires an abstract concept (e.g., 'the main aim,' not 'the main products')."
+          },
+          {
+            "option": "purpose",
+            "reason": "Although grammatically correct and semantically close, 'aim' is preferred in this context as it specifies the intended target or objective more precisely than the general term 'purpose.'"
+          },
+          {
+            "option": "shows",
+            "reason": "This is a verb form (third-person singular present tense) and cannot fill the required noun slot."
+          },
+          {
+            "option": "delivers",
+            "reason": "This is also a verb form, making it grammatically incompatible with the structure defining the goal."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q32-b2",
         "index": 1,
         "answer": "products",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a plural countable noun because it serves as the direct object of 'sell' and is subsequently referenced by the pronoun 'them'. Semantically, advertising deals with commercial transactions. Therefore, the term must collectively refer to physical or abstract commodities offered for sale. 'Products' is the standard, precise vocabulary used in marketing and commerce literature to fulfill both the grammatical (plurality) and contextual (goods sold) requirements.",
+        "syntaxRequirement": "Plural Count Noun (Direct Object of the verb 'sell')",
+        "collocationCohesionClue": "The structure 'sell [X] by getting them known' mandates a plural noun that represents marketable goods or items.",
+        "coherenceCue": "The passage establishes advertising's commercial function, requiring a general term that encompasses all items of trade.",
+        "vocabGrammarCue": "The verb 'sell' governs a plural noun object which must be capable of being referred back to by the pronoun 'them'.",
+        "contextNote": "The main aim... is to sell [Blank #2] by getting them known...",
+        "distractorNotes": [
+          {
+            "option": "aim",
+            "reason": "Incorrect semantic fit. While grammatically singular, the context requires a concrete object (goods), not an abstract concept or goal."
+          },
+          {
+            "option": "purpose",
+            "reason": "Incorrect semantic and grammatical mismatch. 'Purpose' is an abstract noun referring to intent, not physical items that can be sold or made known."
+          },
+          {
+            "option": "shows",
+            "reason": "Incorrect Part of Speech (PoS). 'Shows' cannot function as the direct object of 'sell'; it is either a plural noun or a third-person singular verb."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q32-b3",
         "index": 2,
         "answer": "purpose",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands a singular abstract noun following the definite article 'the.' Semantically, the sentence discusses the underlying function of advertising ideas. While other nouns like 'aim' denote goals, 'purpose' is the most natural and robust collocation in this specific context. The phrase 'serve the purpose' perfectly conveys that the sensational ideas fulfill or achieve a defined objective for the advertiser.",
+        "syntaxRequirement": "Singular Abstract Noun",
+        "collocationCohesionClue": "The fixed and highly idiomatic collocation 'serve the purpose' is key here. The context requires an abstract noun representing a goal or objective.",
+        "coherenceCue": "The sentence establishes that advertising elements (ideas) have an underlying goal or function.",
+        "vocabGrammarCue": "Requires a singular, abstract noun to complete the common phrase 'serve the purpose.'",
+        "contextNote": "Ideas may often serve the purpose [of promoting/selling].",
+        "distractorNotes": [
+          {
+            "option": "aim",
+            "reason": "While grammatically possible (Noun), 'purpose' is a significantly stronger and more established collocation when discussing the ultimate objective or function of an activity."
+          },
+          {
+            "option": "products",
+            "reason": "This is a plural noun that fails both semantically and syntactically; ideas do not 'serve' physical products as an abstract goal."
+          },
+          {
+            "option": "shows",
+            "reason": "This word functions primarily as a verb or plural noun, making it grammatically inappropriate for naming the abstract objective required by the article 'the'."
+          },
+          {
+            "option": "delivers",
+            "reason": "This is a transitive verb and cannot follow the definite article 'the' to name an objective."
+          },
+          {
+            "option": "limit",
+            "reason": "Although it can be a noun, 'purpose' is semantically superior because of its established use in the idiomatic structure 'serve the purpose,' which denotes intended function."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q32-b4",
         "index": 3,
         "answer": "shows",
-        "explanation": null
+        "explanation": "Grammatically, the subject ('One of the most famous posters') is singular, requiring a third-person singular present tense verb ending in -s. Semantically, 'shows' is the precise and idiomatic choice for describing what a piece of art visually presents or depicts. It establishes that the poster itself is the agent performing the action of visual representation.",
+        "syntaxRequirement": "Simple Present Tense Third Person Singular Verb",
+        "collocationCohesionClue": "The standard collocation when discussing what static artwork or visual media depicts.",
+        "coherenceCue": "The subject (poster) must perform a visual action on the object (Lord Kitchener).",
+        "vocabGrammarCue": "Requires an appropriate transitive verb related to depiction, display, or representation.",
+        "contextNote": "The poster is the agent; it visually presents Lord Kitchener and the scene described.",
+        "distractorNotes": [
+          {
+            "option": "delivers",
+            "reason": "This word implies physical transfer or handing over an object, which does not fit the context of a static piece of art depicting a person."
+          },
+          {
+            "option": "produces",
+            "reason": "While 'produce' relates to creation, it is typically used for tangible goods (products) or abstract concepts, not idiomatically describing what an artwork visually depicts."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -7370,31 +7568,173 @@
         "blankId": "q33-b1",
         "index": 0,
         "answer": "key",
-        "explanation": null
+        "explanation": "Grammatically, an adjective is required to modify the noun 'center.' Semantically, the word must convey fundamental or crucial significance. 'Key' functions perfectly as a vital adjective (meaning central or essential), reinforcing the idea established in the first sentence: that universities are not merely *a* center, but a critically important one for intellectual life and criticism.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The phrase 'a [adjective] center' requires a strong adjective that emphasizes essential importance, maintaining cohesion with the concept of universities being primary intellectual hubs.",
+        "coherenceCue": "The preceding statement establishes universities as primary centers of intellectual activity; therefore, the blank requires an intensifier adjective to maintain this high degree of significance.",
+        "vocabGrammarCue": "Adjective modifying 'center' (Noun).",
+        "contextNote": "Therefore, they are a key center of criticism...",
+        "distractorNotes": [
+          {
+            "option": "trends",
+            "reason": "This is a plural noun and cannot grammatically modify the singular count noun 'center'."
+          },
+          {
+            "option": "staff",
+            "reason": "While sometimes used attributively, it lacks the specific semantic weight of 'essential' or 'crucial' required to link back to the concept of primary importance."
+          },
+          {
+            "option": "role",
+            "reason": "Although 'role' can be used attributively, it does not carry the necessary semantic force of 'fundamental importance' that 'key' provides in this context."
+          },
+          {
+            "option": "found",
+            "reason": "This is a past participle/verb form and cannot function as an adjective modifying 'center'."
+          },
+          {
+            "option": "semester",
+            "reason": "This noun refers to time, possessing no grammatical or semantic connection to the concept of a central hub for criticism."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q33-b2",
         "index": 1,
         "answer": "trends",
-        "explanation": null
+        "explanation": "Semantically, the passage discusses intellectual criticism directed at society and its political structures. The word 'trends' refers to prevailing tendencies or directions of change. It is the ideal choice because it forms a standard collocation ('dominant trends') used in academic discourse when analyzing major, observable patterns that are subject to critique. Grammatically, 'trends' is a plural count noun, fitting perfectly after the determiner 'the dominant.'",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The phrase 'dominant [BLANK] in it' requires a plural noun that denotes observable, large-scale patterns or shifts within a system (society/politics).",
+        "coherenceCue": "The passage establishes criticism as focusing on abstract societal developments and evolving political movements.",
+        "vocabGrammarCue": "Requires a plural noun describing overarching patterns or shifts (e.g., social trends, economic trends).",
+        "contextNote": "The university is criticized for its role in analyzing 'society and of the dominant trends in it.'",
+        "distractorNotes": [
+          {
+            "option": "key",
+            "reason": "While a noun, 'dominant key' does not form an idiomatic or semantically appropriate phrase to describe systemic societal patterns."
+          },
+          {
+            "option": "staff",
+            "reason": "This is a collective noun referring to people. The blank requires an abstract concept or pattern of change (e.g., political trends), not the personnel themselves."
+          },
+          {
+            "option": "role",
+            "reason": "Although 'dominant role' is grammatically possible, 'trends' is the standard and most idiomatic collocation when discussing prevailing societal shifts or academic critique of politics."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q33-b3",
         "index": 2,
         "answer": "staff",
-        "explanation": null
+        "explanation": "The passage identifies the sources of intellectual critique within a university setting. The phrase requires naming two distinct groups: students and other personnel. 'Staff' functions as a collective noun referring to academic or administrative employees, making it the only logical choice. It completes the parallel structure ('both staff and student bodies') while maintaining semantic coherence regarding who is engaging in critical discourse.",
+        "syntaxRequirement": "Collective Noun (must refer to a group of people/employees)",
+        "collocationCohesionClue": "The structure 'both X and Y' demands two parallel, countable sources of criticism. Since 'student bodies' represents one group (students), the blank must name the complementary institutional group.",
+        "coherenceCue": "The passage establishes two distinct groups involved in critical discourse: students and university personnel.",
+        "vocabGrammarCue": "Requires a collective noun that denotes academic or administrative employees.",
+        "contextNote": "The phrase 'sections of both the staff and the student bodies' clearly identifies the two primary, institutional sources of criticism.",
+        "distractorNotes": [
+          {
+            "option": "trends",
+            "reason": "While grammatically a plural noun, it refers to abstract patterns or ideas, not a countable group of people who participate in criticism."
+          },
+          {
+            "option": "role",
+            "reason": "This is singular and does not fit the required parallel structure 'both the [noun] and the student bodies' as a countable collective group."
+          },
+          {
+            "option": "participation",
+            "reason": "This is an abstract noun (a concept) and cannot function grammatically or semantically as a collective group of people alongside 'student bodies'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q33-b4",
         "index": 3,
         "answer": "role",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a noun following the adjective 'critical.' Semantically, the passage establishes that universities have a profound intellectual purpose. 'Role' perfectly captures this meaning by signifying the specific functional part or contribution the university makes to society—its critical function in generating and supporting ideas.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The collocation 'critical role' is standard academic English used to define an institution's essential function or societal capacity.",
+        "coherenceCue": "The sentence defines the core function/purpose of the university within modern society.",
+        "vocabGrammarCue": "Adjective + Noun structure; 'role' refers to a functional capacity or part played by an entity.",
+        "contextNote": "This critical [BLANK] of the university...",
+        "distractorNotes": [
+          {
+            "option": "key",
+            "reason": "'Critical key' is grammatically awkward and less idiomatic than 'critical role.' The context demands a noun describing function, not merely an important element."
+          },
+          {
+            "option": "trends",
+            "reason": "Using 'trends' would shift the focus of the sentence to discussing critical patterns rather than defining the university’s inherent functional capacity."
+          },
+          {
+            "option": "staff",
+            "reason": "This option narrows the subject too much, shifting the focus from the institution (university) itself to its personnel, which is inappropriate for the general context."
+          },
+          {
+            "option": "found",
+            "reason": "This is a past tense verb and violates the required Part of Speech (PoS mismatch). A noun is needed here."
+          },
+          {
+            "option": "semester",
+            "reason": "This refers to a specific time period, which has no semantic connection to discussing the university's long-term societal function or purpose."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q33-b5",
         "index": 4,
         "answer": "found",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a Past Participle (V3) because it follows the auxiliary verb 'is,' forming the passive construction ('support is found'). Semantically, 'found' completes the fixed idiom 'is found among.' This usage confirms that the student body acts as the source or origin point for critical support, making the sentence flow logically and idiomatically.",
+        "syntaxRequirement": "Past Participle Verb (V3) used in a passive construction.",
+        "collocationCohesionClue": "The phrase 'is found among' is a standard English collocation. It specifically indicates the source, origin, or location of an abstract concept (like support or resources), requiring a V3 form to complete the passive voice structure.",
+        "coherenceCue": "The context establishes the university not just as a place where ideas are born, but also where intellectual support *exists* (i.e., is located).",
+        "vocabGrammarCue": "Requires a V3 form that collocates specifically with 'support' and 'among.'",
+        "contextNote": "The sentence structure implies that the critical role of the university persists because its necessary backing—the support for criticism—is sourced from the students.",
+        "distractorNotes": [
+          {
+            "option": "key",
+            "reason": "It is an adjective/noun and cannot function as the main verb in this passive structure."
+          },
+          {
+            "option": "trends",
+            "reason": "It is a plural noun, failing to meet the required grammatical role (V3) of the predicate complement."
+          },
+          {
+            "option": "staff",
+            "reason": "It is a common noun and cannot function as the main verb in this passive structure."
+          },
+          {
+            "option": "role",
+            "reason": "It is a noun, failing to meet the required grammatical role (V3) of the predicate complement."
+          },
+          {
+            "option": "semester",
+            "reason": "It is a time-based noun with no semantic or grammatical connection to 'support for criticism.'"
+          },
+          {
+            "option": "revealed",
+            "reason": "While grammatically possible (V3), 'found' is the established and idiomatic collocation used when discussing the *source* of abstract support, making it semantically superior."
+          },
+          {
+            "option": "participation",
+            "reason": "It is a noun, failing to meet the required grammatical role (V3) of the predicate complement."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -7516,31 +7856,145 @@
         "blankId": "q34-b1",
         "index": 0,
         "answer": "financed",
-        "explanation": null
+        "explanation": "The sentence requires a main verb in its past participle form to complete the passive construction ('was V3'). The subject, 'expansion,' is receiving the action of funding. Semantically, the passage discusses economic growth and money; therefore, a word meaning 'provided funds' (like 'financed') is both grammatically necessary (PoS fit) and contextually appropriate (meaning fit). This structure clearly identifies the source ('by gold').",
+        "syntaxRequirement": "Past Participle (V3) of a Transitive Verb, mandatory for forming the Passive Voice.",
+        "collocationCohesionClue": "The structure 'was [BLANK]... by gold' mandates a verb that describes how something was supported or paid for.",
+        "coherenceCue": "The sentence establishes the primary financial mechanism used to support the massive economic expansion described in the passage.",
+        "vocabGrammarCue": "The combination of the passive auxiliary 'was' and the prepositional phrase 'by gold' requires a strong transitive verb that specifically relates to financial backing or funding.",
+        "contextNote": "The core clue is: 'the enormous expansion... was [BLANK] mainly by gold.'",
+        "distractorNotes": [
+          {
+            "option": "notes",
+            "reason": "This is a plural noun and cannot function as the main verb in this passive construction."
+          },
+          {
+            "option": "rate",
+            "reason": "While it can be a verb, 'rate' does not fit the required meaning of financial support or funding source within the passive structure."
+          },
+          {
+            "option": "supplies",
+            "reason": "A plural noun; it cannot complete the grammatical structure 'was [BLANK]...'"
+          },
+          {
+            "option": "means",
+            "reason": "This is a noun (or collective noun) and lacks the necessary verb form to sustain the passive voice construction."
+          },
+          {
+            "option": "cash",
+            "reason": "A singular noun; it cannot function as the main verb in this context."
+          },
+          {
+            "option": "amounts",
+            "reason": "A plural noun; it is grammatically incompatible with the required passive verb structure."
+          },
+          {
+            "option": "sample",
+            "reason": "This is a singular noun and cannot serve as the main verb to complete the sentence's grammatical requirement."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q34-b2",
         "index": 1,
         "answer": "notes",
-        "explanation": null
+        "explanation": "In historical finance, 'notes' is the precise technical term for banknotes or paper money issued by banking institutions. The structure requires a plural noun that functions as the subject and can be modified by the participle 'issued.' While other terms refer to money generally, 'notes' provides the specific semantic fit required when discussing bank-backed currency in 19th-century economic texts, making it the most accurate choice.",
+        "syntaxRequirement": "Plural Noun",
+        "collocationCohesionClue": "The collocation 'issued by the banks' combined with the concept of gold convertibility points specifically to bank-backed paper currency.",
+        "coherenceCue": "The passage establishes gold as the primary medium of exchange but notes its insufficient supply, requiring an alternative form of circulating currency (bank notes) for continued trade growth.",
+        "vocabGrammarCue": "Requires a plural noun that collocates with 'issued by banks' and denotes a specific type of monetary instrument.",
+        "contextNote": "Even the notes issued by the banks were fully convertible to gold on demand...",
+        "distractorNotes": [
+          {
+            "option": "cash",
+            "reason": "Although a general term for currency, 'notes' is the more specific and technical vocabulary used in historical economic writing when referring exclusively to bank-issued paper money."
+          },
+          {
+            "option": "amounts",
+            "reason": "This word refers to quantities or sums of money (abstract measure), not the physical unit or instrument of currency itself. It fails both grammatically and semantically in this context."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q34-b3",
         "index": 2,
         "answer": "rate",
-        "explanation": null
+        "explanation": "The blank requires a noun that measures velocity to facilitate a direct comparison. The structure 'expanding at X than Y' mandates that both sides of the comparison must measure the same type of quantity—in this case, speed or rate of change. 'Rate' is the standard collocation used in English to quantify how quickly an activity (like expansion) occurs, maintaining both grammatical integrity and semantic coherence.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "Quantifying speed or pace using 'at a faster [NOUN] than'",
+        "coherenceCue": "The comparative conjunction 'than' necessitates that both measured quantities represent a measurable pace or speed.",
+        "vocabGrammarCue": "Collocation: 'at a rate of.'",
+        "contextNote": "The sentence establishes a contrast between two processes (expansion vs. discovery), requiring a common unit of measurement for comparison.",
+        "distractorNotes": [
+          {
+            "option": "means",
+            "reason": "'Means' refers to method or way, not the measurable speed or pace required by the comparative structure 'at a faster... than.' The context demands a measure of velocity."
+          },
+          {
+            "option": "supplies",
+            "reason": "'Supplies' is a noun related to goods. Using it here ('expanding at faster supplies') changes the meaning and fails to grammatically or semantically fit the required measurement of speed/pace in this comparative clause."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q34-b4",
         "index": 3,
         "answer": "supplies",
-        "explanation": null
+        "explanation": "This passage highlights an imbalance: rapid growth vs. limited resources. 'Supplies' correctly refers to the physical availability or stock of gold, which is the core concept being discussed. Grammatically, the structure requires a plural noun that can function as the subject complement in the comparison ('than new supplies... were being discovered'). This choice maintains semantic coherence by focusing on the finite nature of natural resource influx.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The standard economic collocation 'supplies of [resource]' is necessary to describe the available stock or provision of a commodity.",
+        "coherenceCue": "The passage establishes a critical contrast between accelerating economic demand (trade/production) and insufficient natural resource supply (gold).",
+        "vocabGrammarCue": "A plural noun is required to complete the subject phrase 'new ___ of gold', referring to physical reserves.",
+        "contextNote": "Production and trade were expanding at a faster rate than new supplies of gold were being discovered.",
+        "distractorNotes": [
+          {
+            "option": "amounts",
+            "reason": "'Supplies' is the more precise and idiomatic term in economic writing when discussing physical reserves or stock, making it superior to 'amounts'."
+          },
+          {
+            "option": "cash",
+            "reason": "While related to finance, 'cash' refers specifically to liquid currency (a monetary asset) and does not fit the structure describing a continuous, natural resource flow ('supplies of gold')."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q34-b5",
         "index": 4,
         "answer": "means",
-        "explanation": null
+        "explanation": "Semantically, the blank requires an abstract noun that denotes a process or mechanism. 'Means,' when preceded by 'a' and followed by 'of [something],' functions idiomatically to mean 'way' or 'method.' This usage is critical because the passage discusses economic systems and alternative payment methods, not physical objects. The word correctly completes the idea that if gold was insufficient, another commodity must serve as a conceptual substitute system.",
+        "syntaxRequirement": "Abstract Noun (Singular)",
+        "collocationCohesionClue": "The fixed collocation 'a means of exchange' is standard English for referring to a method, medium, or system used in trade.",
+        "coherenceCue": "The passage establishes gold as the primary medium of exchange but introduces a problem (scarcity), necessitating a logical solution: an alternative method or commodity.",
+        "vocabGrammarCue": "Focus on the idiomatic structure 'a means of,' which is used to define an abstract concept, system, or mechanism rather than describing a physical item.",
+        "contextNote": "The core context revolves around economic necessity; the growing rate of trade required a substitute commodity/system because gold supplies could not keep pace with demand.",
+        "distractorNotes": [
+          {
+            "option": "cash",
+            "reason": "'Cash' is too specific and often refers to physical currency. The phrase requires a broader conceptual noun describing the method, making 'a cash of exchange' grammatically unsuitable."
+          },
+          {
+            "option": "amounts",
+            "reason": "This word denotes quantity or volume (e.g., amounts of money) and does not fit the required grammatical structure to define a system or method of trade."
+          },
+          {
+            "option": "sample",
+            "reason": "A 'sample' refers only to a small selection or example, which is semantically irrelevant when discussing large-scale global economic systems and alternative currencies."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -7652,25 +8106,129 @@
         "blankId": "q35-b1",
         "index": 0,
         "answer": "associate",
-        "explanation": null
+        "explanation": "The sentence requires a main action verb (V1) that describes the current perception of the subject ('we'). 'Associate' fits perfectly because it means to mentally connect or link ideas. This usage establishes an academic relationship, which is appropriate for the tone of the passage. It is the precise term used when discussing how one concept (fables) is linked to another (childhood).",
+        "syntaxRequirement": "Base form Transitive Verb",
+        "collocationCohesionClue": "The fixed academic collocation 'associate X with Y' is used to establish a mental link or connection between two abstract concepts.",
+        "coherenceCue": "The sentence structure requires a verb that formally establishes a conceptual relationship between two elements (A and B).",
+        "vocabGrammarCue": "Requires a base form transitive verb capable of governing the prepositional phrase 'with childhood.'",
+        "contextNote": "The passage is setting up a contrast: modern perception links fables to childhood, while historical context suggests otherwise.",
+        "distractorNotes": [
+          {
+            "option": "responsible",
+            "reason": "This word functions as an adjective or predicate noun and cannot serve as the main action verb following 'we'."
+          },
+          {
+            "option": "translations",
+            "reason": "This is a plural noun, which does not fit the grammatical slot requiring a base form verb."
+          },
+          {
+            "option": "despite",
+            "reason": "This is a preposition used to introduce contrast; it cannot function as an action verb."
+          },
+          {
+            "option": "relate",
+            "reason": "While grammatically possible, 'associate' is the more idiomatic and standard collocation in academic writing when linking abstract concepts like art forms and themes."
+          },
+          {
+            "option": "stories",
+            "reason": "This is a noun and cannot function as the main action verb required by the sentence structure."
+          },
+          {
+            "option": "blamed",
+            "reason": "This past participle requires an auxiliary verb (e.g., 'were blamed') to form a correct tense, making it grammatically incorrect here."
+          },
+          {
+            "option": "though",
+            "reason": "This is a conjunction or adverb used for contrast and cannot serve as the primary action verb of the clause."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q35-b2",
         "index": 1,
         "answer": "responsible",
-        "explanation": null
+        "explanation": "Grammatically, 'responsible' functions as an adjective modifying the subject (Victorians) following the linking verb 'are'. Semantically, the passage requires a term that denotes active agency. Since the text argues that the Victorians were the primary historical force behind changing Aesop’s perception from political to childlike, 'responsible' is the most precise choice, signifying direct causation rather than mere association or accusation.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The fixed prepositional phrase 'responsible for' is a strong indicator of causation, authorship, or accountability.",
+        "coherenceCue": "The context shifts from general knowledge (the fables) to identifying the specific historical group (Victorians) and their role in altering the text's meaning.",
+        "vocabGrammarCue": "Understanding the collocation 'responsible for' is crucial, as it must be used with an adjective to convey who authored or caused a specific outcome or state.",
+        "contextNote": "The sentence establishes that the Victorians are identified as the party whose actions fundamentally changed the perception and cultural association of Aesop’s fables.",
+        "distractorNotes": [
+          {
+            "option": "blamed",
+            "reason": "While grammatically possible, 'responsible' suggests direct authorship or causation of a historical shift (agency), which is stronger and more fitting for the academic tone than merely being accused ('blamed')."
+          },
+          {
+            "option": "associate",
+            "reason": "This word is primarily a verb or noun. It cannot function as an adjective to complete the required structure 'are largely [BLANK] for that'."
+          },
+          {
+            "option": "translations",
+            "reason": "This is a plural noun and does not fit grammatically in this position, which requires an adjective."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q35-b3",
         "index": 2,
         "answer": "translations",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a countable plural noun to maintain parallelism with 'retellings.' Semantically, the passage discusses the academic process of adapting texts. While 'stories' is plausible, 'translations' is superior because it precisely refers to converting the source material into different versions or languages, matching the historical context of textual adaptation in the 19th century.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The phrase 'or retellings' establishes a parallel structure, requiring another plural noun that describes an adaptation of the original text.",
+        "coherenceCue": "The need for a plural noun describing an intellectual/textual transformation (adaptation).",
+        "vocabGrammarCue": "Requires a countable, plural noun that fits the theme of literary conversion or academic adaptation.",
+        "contextNote": "There were at least seven separate... or retellings in the 19th century...",
+        "distractorNotes": [
+          {
+            "option": "stories",
+            "reason": "Although 'stories' is a plural noun (PoS match), 'translations' is semantically superior because it describes the specific, academic act of textual conversion, which is more precise than the general term 'stories.'"
+          },
+          {
+            "option": "relate",
+            "reason": "This is a verb and cannot function as the required noun subject complement following 'seven separate.' (PoS mismatch)"
+          },
+          {
+            "option": "blamed",
+            "reason": "This is an adjective/past participle and does not fit the required countable plural noun structure. (PoS mismatch)"
+          },
+          {
+            "option": "though",
+            "reason": "This is a conjunction or adverb and cannot function as a countable noun in this list. (PoS mismatch)"
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q35-b4",
         "index": 3,
         "answer": "despite",
-        "explanation": null
+        "explanation": "\"Despite\" is a versatile preposition used to introduce a concession—a contrast between two ideas. It means 'in spite of.' Grammatically, it must be followed by a noun or gerund (e.g., *despite the rain*, *despite knowing*). Here, it correctly introduces the contrasting features ('the talking animals...'), establishing that these seemingly childish elements did not alter the tales' actual political significance in antiquity.",
+        "syntaxRequirement": "Preposition (must be followed by a Noun Phrase or Gerund)",
+        "collocationCohesionClue": "The structure requires a concessive preposition that introduces a contrasting noun phrase, signaling 'in spite of.'",
+        "coherenceCue": "The passage shifts focus from modern, child-centric interpretations to ancient, serious realities, necessitating a strong contrast marker.",
+        "vocabGrammarCue": "Requires a prepositional phrase structure (Preposition + Noun/Gerund) to grammatically introduce the concession.",
+        "contextNote": "The sentence contrasts the perceived lighthearted nature of Aesop's tales with their actual political and serious significance in ancient times.",
+        "distractorNotes": [
+          {
+            "option": "though",
+            "reason": "Though is a subordinating conjunction that requires a full clause (Subject + Verb) following it, not just a noun phrase."
+          },
+          {
+            "option": "stories",
+            "reason": "This is a plural noun. It cannot grammatically introduce the concession in this prepositional structure; a preposition is required."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

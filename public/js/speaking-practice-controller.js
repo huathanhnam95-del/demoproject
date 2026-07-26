@@ -881,6 +881,25 @@
     }
   }
 
+  // Settings sheets move mode-owned nodes out of their original containers.
+  // Keep restoration anchors for those nodes just like adopted controls so a
+  // mode switch cannot strand controls in a detached sheet.
+  function restoreSettingsNodes(controllerState) {
+    const moved = controllerState.settingsMovedNodes || [];
+    moved.forEach(record => {
+      const { element, anchor } = record;
+      if (!element) return;
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(element, anchor.nextSibling);
+        anchor.remove();
+      }
+      if (record.originalDisplay !== undefined) {
+        element.style.display = record.originalDisplay;
+      }
+    });
+    controllerState.settingsMovedNodes = [];
+  }
+
   /* ═══════════════════════════ VIEW MANAGEMENT ═══════════════════════════ */
 
   function applyView(controllerState) {
@@ -1007,6 +1026,20 @@
 
     const body = controllerState.settingsSheet.body;
 
+    const moveToSettings = (element, destination) => {
+      if (!element || !element.parentNode || controllerState.settingsMovedNodes.some(record => record.element === element)) {
+        return;
+      }
+      const anchor = document.createComment('spc-settings-anchor:' + (element.id || element.className || 'node'));
+      element.parentNode.insertBefore(anchor, element);
+      controllerState.settingsMovedNodes.push({
+        element,
+        anchor,
+        originalDisplay: element.style.display
+      });
+      destination.appendChild(element);
+    };
+
     // Build tabbed navigation
     const tabs = document.createElement('div');
     tabs.className = 'spc-sheet-tabs';
@@ -1037,7 +1070,7 @@
     ) : null;
 
     if (adaptiveContainer) {
-      diffSection.appendChild(adaptiveContainer);
+      moveToSettings(adaptiveContainer, diffSection);
       adaptiveContainer.style.display = 'flex';
     }
 
@@ -1047,7 +1080,7 @@
     ) : null;
 
     if (questionTotal) {
-      diffSection.appendChild(questionTotal);
+      moveToSettings(questionTotal, diffSection);
       questionTotal.style.display = 'block';
     }
 
@@ -1062,30 +1095,30 @@
       panel.querySelector('#status-filter-container-' + modeId) ||
       panel.querySelector('.status-filter-dropdown')
     ) : null;
-    if (statusFilter) filterSection.appendChild(statusFilter);
+    if (statusFilter) moveToSettings(statusFilter, filterSection);
 
     const lengthFilter = panel ? (
       panel.querySelector('#length-filter-container-' + modeId) ||
       panel.querySelector('.length-filter-dropdown')
     ) : null;
-    if (lengthFilter) filterSection.appendChild(lengthFilter);
+    if (lengthFilter) moveToSettings(lengthFilter, filterSection);
 
     const diffFilter = panel ? (
       panel.querySelector('#difficulty-filter-container-' + modeId) ||
       panel.querySelector('.difficulty-filter-dropdown')
     ) : null;
-    if (diffFilter) filterSection.appendChild(diffFilter);
+    if (diffFilter) moveToSettings(diffFilter, filterSection);
 
     const filtersRow = panel ? panel.querySelector('.question-filters-row') : null;
     if (filtersRow && filtersRow.children.length > 0) {
-      filterSection.appendChild(filtersRow);
+      moveToSettings(filtersRow, filterSection);
     }
 
     const recControls = panel ? (
       panel.querySelector('#recommendation-controls-' + modeId) ||
       panel.querySelector('.recommendation-controls')
     ) : null;
-    if (recControls) filterSection.appendChild(recControls);
+    if (recControls) moveToSettings(recControls, filterSection);
 
     targetPanel.appendChild(filterSection);
     panelsContainer.appendChild(targetPanel);
@@ -1103,9 +1136,9 @@
       panel.querySelector('.history-section')
     ) : null;
 
-    if (historyActionHost) historyPanel.appendChild(historyActionHost);
-    if (historyContentHost) historyPanel.appendChild(historyContentHost);
-    if (historyContainer && !historyContentHost) historyPanel.appendChild(historyContainer);
+    if (historyActionHost) moveToSettings(historyActionHost, historyPanel);
+    if (historyContentHost) moveToSettings(historyContentHost, historyPanel);
+    if (historyContainer && !historyContentHost) moveToSettings(historyContainer, historyPanel);
 
     panelsContainer.appendChild(historyPanel);
     body.appendChild(panelsContainer);
@@ -1197,6 +1230,7 @@
       panel: panel,
       adoptedNodes: [],
       inPlaceNodes: [],
+      settingsMovedNodes: [],
       sourceSelect: null,
       srcPrevBtn: null,
       srcNextBtn: null,
@@ -1246,6 +1280,14 @@
     // Close sheets
     if (state.pickerSheet) {
       state.pickerSheet.destroy();
+    }
+
+    // Restore mode-owned nodes before removing the settings sheet that hosts
+    // them, then destroy the sheet to prevent duplicate IDs on remount.
+    restoreSettingsNodes(state);
+    if (state.settingsSheet) {
+      state.settingsSheet.destroy();
+      state.settingsSheet = null;
     }
 
     // Restore adopted controls

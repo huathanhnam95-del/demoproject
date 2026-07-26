@@ -566,6 +566,14 @@ body {
   background-color: var(--crm-primary-hover);
 }
 
+.crm-btn-primary:disabled {
+  background-color: #d1d5db !important;
+  border-color: #9ca3af !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
 .crm-btn-secondary {
   background-color: #e2e8f0;
   color: var(--crm-text-main);

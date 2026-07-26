@@ -721,6 +721,24 @@
         }
       }
 
+      // Syntax & Cohesion Badges
+      if (res.blank.syntaxRequirement || res.blank.collocationCohesionClue) {
+        const badgesDiv = document.createElement('div');
+        badgesDiv.style.margin = '10px 0';
+        badgesDiv.style.display = 'flex';
+        badgesDiv.style.flexWrap = 'wrap';
+        badgesDiv.style.gap = '8px';
+        let badgesHtml = '';
+        if (res.blank.syntaxRequirement) {
+          badgesHtml += `<span style="background: rgba(99, 102, 241, 0.12); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">📌 ${escapeHtml(res.blank.syntaxRequirement)}</span>`;
+        }
+        if (res.blank.collocationCohesionClue) {
+          badgesHtml += `<span style="background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 500;">💡 Clue: ${escapeHtml(res.blank.collocationCohesionClue)}</span>`;
+        }
+        badgesDiv.innerHTML = badgesHtml;
+        body.appendChild(badgesDiv);
+      }
+
       // Explanation
       if (res.blank.explanation) {
         const expDiv = document.createElement('div');

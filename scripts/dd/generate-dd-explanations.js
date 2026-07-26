@@ -12,38 +12,86 @@ const targetQuestionId = parseInt(args.find((_, i, a) => a[i - 1] === '--questio
 
 function buildPrompt(question, blank) {
   const optionsText = question.options.map(o => o.text).join(', ');
-  return `You are an expert English language teacher preparing material for a PTE Academic Practice test.
-Analyze this passage and explain why the word "${blank.answer}" is the correct choice for the blank (correct answer: "${blank.answer}").
+  const allCorrectAnswers = question.blanks.map(b => b.answer);
+  const extraDistractors = question.options
+    .map(o => o.text)
+    .filter(t => !allCorrectAnswers.includes(t));
+
+  return `You are an expert English language teacher preparing material for a PTE Academic Reading Practice test (Drag & Drop / Fill in the Blanks).
+
+Analyze this passage and explain why the word "${blank.answer}" is the correct choice for Blank #${blank.index + 1} (correct answer: "${blank.answer}").
 
 Passage:
 ${question.plainText}
 
-Available options (word bank):
+Full Word Bank (Shared Pool):
 [${optionsText}]
 
-For the blank (correct answer: "${blank.answer}"), generate a clear explanation in JSON format.
-Ensure you address:
-1. "explanation": Explain why the correct answer is the right choice (coherence, cohesion, vocabulary fit, grammar, syntax). Keep it under 130 words.
-2. "coherenceCue": Provide a short cue about how the context/coherence leads to this answer.
-3. "vocabGrammarCue": Provide a short cue explaining why this word works grammatically or collocations.
-4. "contextNote": Highlight a specific context clue or clue word from the passage.
-5. "distractorNotes": An array of objects with "option" and "reason" explaining why other options are incorrect.
+Target Answers for other blanks in this passage (for context):
+${question.blanks.map((b, idx) => `Blank #${idx + 1}: "${b.answer}"`).join('\n')}
 
-Return ONLY a JSON object matching this schema exactly, with no markdown formatting or wrapper around it:
+Unused Extra Distractor Words in pool:
+[${extraDistractors.join(', ')}]
+
+For Blank #${blank.index + 1} (correct answer: "${blank.answer}"), generate a clear, pedagogical explanation in JSON format.
+
+Ensure your explanation addresses:
+1. "syntaxRequirement": The required Part of Speech (Noun, Verb, Adjective, etc.) and grammatical form (e.g. Past Tense Transitive Verb) for this blank.
+2. "collocationCohesionClue": The specific collocations, discourse markers, or context clues that indicate this choice.
+3. "explanation": A concise explanation (under 130 words) explaining why "${blank.answer}" is correct grammatically and semantically.
+4. "competingOptionNotes": Array of objects with "option" and "reason" explaining why competing options in the pool are incorrect for THIS blank (distinguishing between same-PoS traps and PoS mismatches).
+5. "coherenceCue": Short cue summarizing how context leads to this answer.
+6. "vocabGrammarCue": Short cue on grammar/collocation fit.
+7. "contextNote": Key sentence clue.
+
+Return ONLY a JSON object matching this schema exactly, with no markdown code fences or extra text around it:
 {
+  "syntaxRequirement": "...",
+  "collocationCohesionClue": "...",
   "explanation": "...",
   "coherenceCue": "...",
   "vocabGrammarCue": "...",
   "contextNote": "...",
-  "distractorNotes": [
-    { "option": "incorrect_word", "reason": "why it doesn't fit" }
+  "competingOptionNotes": [
+    { "option": "word", "reason": "why it does not fit this blank" }
+  ]
+}`;
+}
+
+function buildReviewPrompt(question, blank, initialDraft) {
+  return `You are a Senior PTE English Language Master Editor auditing and refining AI-generated practice test explanations.
+
+Passage:
+${question.plainText}
+
+Target Blank: Blank #${blank.index + 1} (Correct Answer: "${blank.answer}")
+
+Draft Explanation to Review:
+${JSON.stringify(initialDraft, null, 2)}
+
+Audit Rubric:
+1. "syntaxRequirement": Ensure the Part of Speech and grammatical form (e.g. Past Tense Transitive Verb) is 100% accurate.
+2. "collocationCohesionClue": Verify the collocation or sentence context cue is concise, natural, and helpful for B1-B2 learners.
+3. "explanation": Edit the explanation to be crystal clear, professional, pedagogical, and under 120 words. Eliminate any repetitive phrases.
+4. "competingOptionNotes": Review each distractor reason. Ensure reasons are accurate (correctly distinguishing PoS mismatches from same-PoS traps).
+
+Return ONLY the final, polished JSON object matching the schema below, with no markdown wrappers:
+{
+  "syntaxRequirement": "...",
+  "collocationCohesionClue": "...",
+  "explanation": "...",
+  "coherenceCue": "...",
+  "vocabGrammarCue": "...",
+  "contextNote": "...",
+  "competingOptionNotes": [
+    { "option": "word", "reason": "why it does not fit this blank" }
   ]
 }`;
 }
 
 async function run() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('  Drag & Drop Explanation Generator (Ollama)');
+  console.log('  Drag & Drop Explanation Generator (2-Pass Ollama / Gemma AI)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`  File: ${QUESTIONS_JSON_PATH}`);
   console.log(`  Resume: ${resume}`);
@@ -79,26 +127,25 @@ async function run() {
     for (let j = 0; j < q.blanks.length; j++) {
       const blank = q.blanks[j];
 
-      if (resume && blank.explanation && typeof blank.explanation === 'string' && blank.explanation.trim().length > 0) {
+      if (resume && blank.explanation && typeof blank.explanation === 'string' && blank.explanation.trim().length > 0 && blank.reviewPass === true) {
         continue;
       }
 
       needsUpdate = true;
-      console.log(`Generating explanation for Q#${q.id} "${q.title}" -> Blank #${j + 1} (${blank.answer})...`);
+      console.log(`[Pass 1: Generate] Q#${q.id} "${q.title}" -> Blank #${j + 1} (${blank.answer})...`);
 
       const prompt = buildPrompt(q, blank);
       const messages = [{ role: 'user', content: prompt }];
 
       try {
+        // Pass 1: Generate initial explanation
         const rawResponse = await callOllamaChatJson(messages);
         let parsed;
         try {
-          // Strip any markdown code fence wrappers
           let cleaned = rawResponse.trim();
           cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
           parsed = JSON.parse(cleaned);
         } catch (e) {
-          // Try regex fallback to find first JSON block
           const match = rawResponse.match(/\{[\s\S]*?\}/);
           if (match) {
             parsed = JSON.parse(match[0]);
@@ -107,23 +154,48 @@ async function run() {
           }
         }
 
-        blank.explanation = parsed.explanation || '';
-        blank.coherenceCue = parsed.coherenceCue || '';
-        blank.vocabGrammarCue = parsed.vocabGrammarCue || '';
-        blank.contextNote = parsed.contextNote || '';
-        blank.distractorNotes = parsed.distractorNotes || [];
+        // Pass 2: Review & Edit with local Gemma AI
+        console.log(`  [Pass 2: Review & Edit] Q#${q.id} Blank #${j + 1}...`);
+        const reviewPrompt = buildReviewPrompt(q, blank, parsed);
+        const reviewMessages = [{ role: 'user', content: reviewPrompt }];
+        const rawReviewResponse = await callOllamaChatJson(reviewMessages);
+        
+        let reviewed;
+        try {
+          let cleanedRev = rawReviewResponse.trim();
+          cleanedRev = cleanedRev.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+          reviewed = JSON.parse(cleanedRev);
+        } catch (e) {
+          const matchRev = rawReviewResponse.match(/\{[\s\S]*?\}/);
+          if (matchRev) {
+            reviewed = JSON.parse(matchRev[0]);
+          } else {
+            // Fallback to Pass 1 if Pass 2 JSON parsing fails
+            reviewed = parsed;
+          }
+        }
+
+        blank.explanation = reviewed.explanation || parsed.explanation || '';
+        blank.syntaxRequirement = reviewed.syntaxRequirement || parsed.syntaxRequirement || '';
+        blank.collocationCohesionClue = reviewed.collocationCohesionClue || parsed.collocationCohesionClue || '';
+        blank.coherenceCue = reviewed.coherenceCue || parsed.coherenceCue || '';
+        blank.vocabGrammarCue = reviewed.vocabGrammarCue || parsed.vocabGrammarCue || '';
+        blank.contextNote = reviewed.contextNote || parsed.contextNote || '';
+        blank.distractorNotes = reviewed.competingOptionNotes || reviewed.distractorNotes || parsed.competingOptionNotes || [];
         blank.model = 'gemma4:latest';
+        blank.reviewPass = true;
         blank.status = 'generated';
 
         successCount++;
       } catch (err) {
-        console.error(`  ❌ Failed to generate explanation for Q#${q.id} Blank #${j + 1}: ${err.message}`);
+        console.error(`  ❌ Failed to generate/review explanation for Q#${q.id} Blank #${j + 1}: ${err.message}`);
         blank.explanation = null;
         blank.status = 'generation_failed';
         blank.error = err.message;
         failCount++;
       }
     }
+
 
     if (needsUpdate) {
       processedCount++;

@@ -392,6 +392,12 @@ async function main() {
     const saveRequest = requestLog.find(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST');
     assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent.');
 
+    // 8. Test Next Word button navigation
+    const nextWordBtn = page.locator('#btn-corpus-next-word');
+    assert.strictEqual(await nextWordBtn.isDisabled(), false, 'Next Word button should be enabled for navigation.');
+    await nextWordBtn.click();
+    await expectText(page.locator('#corpus-display-word'), /photography/i);
+
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     assert.strictEqual(consoleErrors.length, 0, `Unexpected console errors:\n${consoleErrors.join('\n')}`);
 

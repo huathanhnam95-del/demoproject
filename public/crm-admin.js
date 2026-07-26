@@ -7039,8 +7039,7 @@
         const versions = savedVersionsByWord.get(word) || new Set();
         const count = versions.size;
         button.classList.toggle('has-sample', count > 0);
-        const existing = button.querySelector('.corpus-sample-badge');
-        if (existing) existing.remove();
+        button.querySelectorAll('.corpus-sample-badge, .corpus-version-badge').forEach((b) => b.remove());
         const badge = document.createElement('span');
         badge.className = count >= 5 ? 'corpus-version-badge complete' : count > 0 ? 'corpus-version-badge' : 'corpus-sample-badge';
         badge.textContent = count >= 5 ? '✓ 5/5' : count > 0 ? `${count}/5` : '• needed';
@@ -7526,12 +7525,18 @@
     if (btnNextWord) btnNextWord.addEventListener('click', () => {
       if (!confirmVersionNavigation()) return;
       const filter = sampleFilter?.value || 'all';
+      const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
       const filtered = wordBtns.filter((button) => {
-        const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
-        return filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const word = String(button.dataset.word || '').toLowerCase();
+        const hasSample = savedWordSet.has(word);
+        const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const matchesSearch = !searchTerm || word.includes(searchTerm);
+        return matchesFilter && matchesSearch;
       });
+      if (!filtered.length) return;
       const currentIndex = filtered.findIndex((button) => button.classList.contains('active'));
-      const nextButton = filtered[(currentIndex + 1) % filtered.length];
+      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % filtered.length;
+      const nextButton = filtered[nextIndex];
       if (!nextButton) return;
       nextButton.click();
       currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
@@ -7698,7 +7703,7 @@
         if (btnRecord) btnRecord.disabled = true;
         if (btnStop) btnStop.disabled = true;
         if (btnRedo) btnRedo.disabled = false;
-        if (btnNextWord) btnNextWord.disabled = true;
+        if (btnNextWord) btnNextWord.disabled = false;
         setSaveButtonState(false);
         setStepGuidance(`Step 3: No speech detected. Click Redo, say “${currentWord}” clearly, and click Stop.`);
         showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
@@ -7760,7 +7765,7 @@
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = true;
       setSaveButtonState(false);
-      if (btnNextWord) btnNextWord.disabled = true;
+      if (btnNextWord) btnNextWord.disabled = false;
       updateVersionButtons();
       setStepGuidance(`Step 3: Ready to record “${currentWord}”. Click Record to begin.`);
       if (consoleOutput) consoleOutput.textContent = "No changes pending.";

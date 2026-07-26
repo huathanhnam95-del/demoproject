@@ -788,10 +788,25 @@ async function runTest() {
             results.speakCheckAdopted = !!speakController?.querySelector('#check-btn-speak');
             results.speakRetryAdopted = !!speakController?.querySelector('#retry-btn-speak');
             results.speakRecommendedAdopted = !!speakController?.querySelector('#recommended-btn-speak');
-            results.speakStatusFilterAdopted = !!speakController?.querySelector('#status-filter-container-speak');
-            results.speakLengthFilterAdopted = !!speakController?.querySelector('#length-filter-container-speak');
-            results.speakDifficultyFilterAdopted = !!speakController?.querySelector('#difficulty-filter-container-speak');
+            const speakSettingsSheet = document.querySelector('#spc-settings-sheet-speak');
+            results.speakStatusFilterAdopted = !!speakSettingsSheet?.querySelector('#status-filter-container-speak');
+            results.speakLengthFilterAdopted = !!speakSettingsSheet?.querySelector('#length-filter-container-speak');
+            results.speakDifficultyFilterAdopted = !!speakSettingsSheet?.querySelector('#difficulty-filter-container-speak');
             results.speakHasAdvanced = !!speakController && !speakController.hasAttribute('data-spc-no-toggle');
+            // Settings sheets own moved controls and must be fully cleaned up
+            // when the mode unmounts, so repeated mode switches cannot strand
+            // controls or create duplicate IDs.
+            results.speakSettingsSheetCreated = document.querySelectorAll('#spc-settings-sheet-speak').length === 1;
+            results.speakAdaptiveMovedToSettings = !!document.querySelector('#spc-settings-sheet-speak #adaptive-toggle-container-speak');
+            SPC.unmount('speak');
+
+            results.speakSettingsSheetRemovedOnUnmount = document.querySelectorAll('#spc-settings-sheet-speak').length === 0;
+            results.speakAdaptiveRestoredToPanel = !!speakPanel?.querySelector('#adaptive-toggle-container-speak');
+            SPC.activate('speak', { scope: 'pte' });
+            const remountedSpeakSheet = document.querySelector('#spc-settings-sheet-speak');
+            results.speakRemountHasSingleSettingsSheet = document.querySelectorAll('#spc-settings-sheet-speak').length === 1;
+            results.speakRemountRestoresAdaptive = !!remountedSpeakSheet?.querySelector('#adaptive-toggle-container-speak');
+            results.speakRemountRestoresQuestionTotal = !!remountedSpeakSheet?.querySelector('.question-total');
             SPC.unmount('speak');
 
             const raPanel = document.getElementById('mode-read-aloud');
@@ -799,15 +814,16 @@ async function runTest() {
             const raController = raPanel?.querySelector('.spc-controller');
             results.raMounted = !!raController;
             results.raPickerAdopted = !!raController?.querySelector('#spc-picker-read-aloud');
-            results.raSampleListenAdopted = !!raController?.querySelector('#header-ra-play-audio-btn');
-            results.raRecordAdopted = !!raController?.querySelector('#ra-record-btn');
-            results.raStopAdopted = !!raController?.querySelector('#ra-stop-btn');
-            results.raPlaybackAdopted = !!raController?.querySelector('#ra-play-recording-btn');
-            results.raCheckAdopted = !!raController?.querySelector('#ra-check-btn');
-            results.raRetryAdopted = !!raController?.querySelector('#ra-retry-btn');
+            const raSettingsSheet = document.querySelector('#ra-settings-sheet');
+            results.raSampleListenAdopted = !!raSettingsSheet?.querySelector('#ra-play-audio-btn');
+            results.raRecordAdopted = !!raPanel?.querySelector('#ra-record-btn');
+            results.raStopAdopted = !!raPanel?.querySelector('#ra-stop-btn');
+            results.raPlaybackAdopted = !!raPanel?.querySelector('#ra-play-recording-btn');
+            results.raCheckAdopted = !!raPanel?.querySelector('#ra-check-btn');
+            results.raRetryAdopted = !!raPanel?.querySelector('#ra-retry-btn');
             results.raFilterActionRemoved = !document.getElementById('ra-v7-filters-btn');
-            results.raFilterDrawerAdopted = !!raController?.querySelector('#ra-practice-target-drawer');
-            results.raAudioSettingsAdopted = !!raController?.querySelector('#ra-audio-player');
+            results.raFilterDrawerAdopted = !!raSettingsSheet?.querySelector('#ra-filter-all');
+            results.raAudioSettingsAdopted = !!raSettingsSheet?.querySelector('#ra-audio-player');
             results.raGuidesRemainInPanel = !!raPanel?.querySelector('#ra-prompt-guides-group[data-spc-level="advanced"]');
             const raLegacyPicker = document.getElementById('ra-v7-picker-bar');
             results.raLegacyPickerHidden = !raLegacyPicker || raLegacyPicker.style.display === 'none';
@@ -817,12 +833,12 @@ async function runTest() {
             if (results.raArchiveApiAvailable) {
                 await window.PTEAttemptArchive.updateHistoryUI('read-aloud', '1');
             }
-            results.raHistoryActionHostAdopted = !!raController?.querySelector('#ra-history-action-host');
+            results.raHistoryActionHostAdopted = !!raSettingsSheet?.querySelector('#ra-history-action-host');
             results.raHistoryToggleUsesDedicatedHost = !!document.querySelector('#ra-history-action-host #read-aloud-history-toggle');
             results.raHistoryContentUsesDedicatedHost = !!document.querySelector('#ra-history-content-host #read-aloud-history-container');
             SPC.unmount('read-aloud');
             results.raLegacyPickerRestored = !raLegacyPicker || raLegacyPicker.style.display !== 'none';
-            results.raHistoryActionHostHiddenAfterUnmount = getComputedStyle(document.getElementById('ra-history-action-host')).display === 'none';
+            results.raHistoryActionHostHiddenAfterUnmount = document.getElementById('ra-settings-sheet')?.getAttribute('aria-hidden') === 'true';
             return results;
         });
 
@@ -860,6 +876,13 @@ async function runTest() {
         assert('Speak length filter is adopted', productionAdapterResults.speakLengthFilterAdopted);
         assert('Speak difficulty filter is adopted', productionAdapterResults.speakDifficultyFilterAdopted);
         assert('Speak exposes Advanced view', productionAdapterResults.speakHasAdvanced);
+        assert('Speak settings sheet is created once', productionAdapterResults.speakSettingsSheetCreated);
+        assert('Speak adaptive controls move into settings', productionAdapterResults.speakAdaptiveMovedToSettings);
+        assert('Speak settings sheet is removed on unmount', productionAdapterResults.speakSettingsSheetRemovedOnUnmount);
+        assert('Speak adaptive controls restore to panel on unmount', productionAdapterResults.speakAdaptiveRestoredToPanel);
+        assert('Speak remount keeps one settings sheet', productionAdapterResults.speakRemountHasSingleSettingsSheet);
+        assert('Speak remount restores adaptive controls', productionAdapterResults.speakRemountRestoresAdaptive);
+        assert('Speak remount restores question total', productionAdapterResults.speakRemountRestoresQuestionTotal);
         assert('Read Aloud production adapter mounts', productionAdapterResults.raMounted);
         assert('Read Aloud shared picker is present', productionAdapterResults.raPickerAdopted);
         assert('Read Aloud sample Listen is adopted', productionAdapterResults.raSampleListenAdopted);

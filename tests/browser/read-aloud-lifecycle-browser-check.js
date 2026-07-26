@@ -197,8 +197,19 @@ async function waitForReadAloudState(page, state) {
     assert.ok(recorded.audioSrc, 'Recorded playback has a blob URL');
     assert.strictEqual(recorded.pendingBlob, true, 'Captured audio is staged before Check');
 
-    await page.locator('#header-ra-play-recording-btn').click();
-    assert.strictEqual(await page.evaluate(() => !!window.ReadAloudMode.userRecordingUrl), true, 'Playback control is wired to captured audio');
+    const playbackControl = await page.evaluate(() => {
+      const audio = document.getElementById('ra-user-recording-audio');
+      return {
+        visible: !!audio && getComputedStyle(audio).display !== 'none',
+        controls: !!audio?.controls,
+        src: audio?.src || '',
+        recordingUrl: window.ReadAloudMode?.userRecordingUrl || ''
+      };
+    });
+    assert.strictEqual(playbackControl.visible, true, 'Native recording playback control is visible');
+    assert.strictEqual(playbackControl.controls, true, 'Native recording playback controls are enabled');
+    assert.ok(playbackControl.src, 'Native recording playback has a blob URL');
+    assert.strictEqual(playbackControl.recordingUrl, playbackControl.src, 'Playback control is wired to captured audio');
 
     await page.locator('#ra-check-btn').click();
     try {

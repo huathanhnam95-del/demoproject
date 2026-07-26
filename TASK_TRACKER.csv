@@ -635,5 +635,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 447,2026-07-25,Deploy release V1.8.29 to Firebase Hosting and Cloud Functions,Done,2026-07-25
 448,2026-07-26,Audit missing audio files across all Speaking modes,Done,2026-07-26
 449,2026-07-26,Analyze Reading Drag and Drop DD questions and design gemma explanation structure,Done,2026-07-26
-450,2026-07-26,Generate missing Kokoro audio for speak and ASQ modes and check Reading audio,In Progress,
+450,2026-07-26,Generate missing Kokoro audio for speak and ASQ modes and check Reading audio,Done,2026-07-26
 451,2026-07-26,Add code comments for Read Aloud settings sheet dual branching & push V1.8.30 to production,Done,2026-07-26
+452,2026-07-26,Batch generate explanations for Reading Drag and Drop DD questions using local Gemma AI,In Progress,
+453,2026-07-26,Review generated audio files and verify playback across modes,Done,2026-07-26
+454,2026-07-26,Fix Next Word button disabled bug and search filter matching in CRM admin pronunciation corpus,Done,2026-07-26
+455,2026-07-26,Fix duplicate corpus badge accumulation and spilling layout bug in CRM admin,Done,2026-07-26

@@ -398,6 +398,18 @@ async function main() {
     await nextWordBtn.click();
     await expectText(page.locator('#corpus-display-word'), /photography/i);
 
+    // Click Next Word again: photography -> banana
+    await nextWordBtn.click();
+    await expectText(page.locator('#corpus-display-word'), /banana/i);
+
+    // Click Next Word again: banana -> camera
+    await nextWordBtn.click();
+    await expectText(page.locator('#corpus-display-word'), /camera/i);
+
+    // Click Next Word again: camera -> university
+    await nextWordBtn.click();
+    await expectText(page.locator('#corpus-display-word'), /university/i);
+
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     assert.strictEqual(consoleErrors.length, 0, `Unexpected console errors:\n${consoleErrors.join('\n')}`);
 

@@ -7528,15 +7528,25 @@
       const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
       const filtered = wordBtns.filter((button) => {
         const word = String(button.dataset.word || '').toLowerCase();
-        const hasSample = savedWordSet.has(word);
+        const hasSample = savedWordSet.has(word) || (savedVersionsByWord.get(word)?.size > 0);
         const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
         const matchesSearch = !searchTerm || word.includes(searchTerm);
         return matchesFilter && matchesSearch;
       });
       if (!filtered.length) return;
-      const currentIndex = filtered.findIndex((button) => button.classList.contains('active'));
-      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % filtered.length;
-      const nextButton = filtered[nextIndex];
+      const currWordLower = String(currentWord || '').trim().toLowerCase();
+      let currentIndex = filtered.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
+      let nextButton = null;
+      if (currentIndex >= 0) {
+        nextButton = filtered[(currentIndex + 1) % filtered.length];
+      } else {
+        const fullIndex = wordBtns.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
+        if (fullIndex >= 0) {
+          nextButton = filtered.find((button) => wordBtns.indexOf(button) > fullIndex) || filtered[0];
+        } else {
+          nextButton = filtered[0];
+        }
+      }
       if (!nextButton) return;
       nextButton.click();
       currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;

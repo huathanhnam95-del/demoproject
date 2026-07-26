@@ -5547,25 +5547,129 @@
         "blankId": "q25-b1",
         "index": 0,
         "answer": "known",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires an adjective to modify the noun 'explosive.' Semantically, the passage discusses the historical limitations of scientific knowledge. 'Known' functions as a past participle acting adjectivally, meaning 'that which was recognized or discovered by people.' Using 'the only known...' establishes that up until that time, no other chemical explosive had been documented or available to them.",
+        "syntaxRequirement": "Adjective (specifically, a Past Participle functioning adjectivally)",
+        "collocationCohesionClue": "The structure 'the only [ADJ]' demands an adjective specifying the scope or availability of the object in question.",
+        "coherenceCue": "Establishing the historical limits of scientific knowledge.",
+        "vocabGrammarCue": "Adjective required to modify and restrict the meaning of the noun 'explosive.'",
+        "contextNote": "Gunpowder... was the only [BLANK] chemical explosive until the mid-nineteenth century.",
+        "distractorNotes": [
+          {
+            "option": "contains",
+            "reason": "This is a main verb and requires a subject (e.g., 'It contains...') to form a complete clause, not an adjective."
+          },
+          {
+            "option": "academic",
+            "reason": "While it is an adjective, its meaning relates specifically to scholarly consensus, failing to describe the physical nature or historical availability of the explosive itself."
+          },
+          {
+            "option": "led",
+            "reason": "This is a verb (past tense/participle) that requires a subject and context; it cannot function as an adjective modifying 'explosive' in this manner."
+          },
+          {
+            "option": "includes",
+            "reason": "This is a main verb, requiring a subject. It does not fit the grammatical slot of an adjective modifying 'explosive'."
+          },
+          {
+            "option": "caused",
+            "reason": "This is a main verb, requiring a subject. It cannot function as an adjective describing the explosive."
+          },
+          {
+            "option": "unique",
+            "reason": "Although it is an adjective, 'the only unique' is grammatically redundant because 'unique' already implies singularity (only one of its kind). 'Known' better addresses the context of historical discovery."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q25-b2",
         "index": 1,
         "answer": "contains",
-        "explanation": null
+        "explanation": "Grammatically, the subject 'It' (referring to Gunpowder) necessitates a simple present tense verb ending in -s. Semantically, the sentence is defining the chemical makeup of gunpowder. 'Contains' is the most precise and natural-sounding academic choice for listing specific constituent parts or ingredients of a material, making it superior to general synonyms.",
+        "syntaxRequirement": "Simple Present Tense Transitive Verb (3rd person singular)",
+        "collocationCohesionClue": "The context requires a verb that defines the physical composition or ingredients of a substance, forming the standard academic collocation 'X contains Y'.",
+        "coherenceCue": "The passage shifts from providing historical context about gunpowder to detailing its specific chemical components.",
+        "vocabGrammarCue": "Requires a verb indicating physical composition or inclusion (e.g., contains, comprises).",
+        "contextNote": "It [Blank #2] potassium nitrate... and a combination of charcoal and sulphur...",
+        "distractorNotes": [
+          {
+            "option": "includes",
+            "reason": "While semantically similar, 'contains' is the standard, highly specific academic collocation preferred when listing precise chemical components or ingredients."
+          },
+          {
+            "option": "caused",
+            "reason": "This word denotes causation (A caused B) and does not fit the meaning of describing physical contents or composition."
+          },
+          {
+            "option": "led",
+            "reason": "The passage describes general, timeless facts about gunpowder, requiring the simple present tense rather than a past tense verb."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q25-b3",
         "index": 2,
         "answer": "academic",
-        "explanation": null
+        "explanation": "The blank requires an adjective to modify the noun 'consensus.' Since the passage discusses historical theories (the invention of gunpowder), the modifier must specify that this collective agreement originates from rigorous study. 'Academic' perfectly fulfills this role by indicating that the consensus is based on expert, university-level research, making it the most precise and appropriate choice.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The phrase 'academic consensus' is a fixed and highly common collocation in formal writing, specifically referring to agreement reached through scholarly research.",
+        "coherenceCue": "The context requires a descriptor specifying the source or nature of the collective agreement (consensus).",
+        "vocabGrammarCue": "Adjective modifying 'consensus' (an [Adj] consensus).",
+        "contextNote": "There is an academic consensus that gunpowder was initially invented in China...",
+        "distractorNotes": [
+          {
+            "option": "known",
+            "reason": "While grammatically correct, 'known consensus' is too general. The context demands a specific descriptor of the *source* or *nature* of the agreement (scholarly), which 'academic' provides."
+          },
+          {
+            "option": "contains",
+            "reason": "This is a transitive verb and cannot modify a noun; it is a Parts-of-Speech mismatch."
+          },
+          {
+            "option": "includes",
+            "reason": "This is a transitive verb and cannot modify a noun; it is a Parts-of-Speech mismatch."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q25-b4",
         "index": 3,
         "answer": "led",
-        "explanation": null
+        "explanation": "Grammatically, the sentence requires a past tense verb because the passage narrates historical events. Semantically, the structure demands a strong causal link. The idiom 'led to' perfectly completes this relationship, meaning 'resulted in.' This phrasing is standard academic English for establishing cause-and-effect chains (invention $\\rightarrow$ application). Choosing 'led' ensures both grammatical accuracy and natural flow while maintaining the formal tone required for discussing historical facts.",
+        "syntaxRequirement": "Past Tense Causal/Transitive Verb",
+        "collocationCohesionClue": "The fixed idiomatic phrase 'led to' is a high-frequency discourse marker used in academic writing to signal direct consequence, result, or development from the preceding fact.",
+        "coherenceCue": "Causality: The sentence must link a stated historical fact (the invention of gunpowder) directly to its subsequent, inevitable applications (use in fireworks/weapons).",
+        "vocabGrammarCue": "Requires a past tense verb that governs the prepositional phrase 'to its use.'",
+        "contextNote": "The passage is establishing the direct consequence and historical trajectory stemming from gunpowder's initial invention.",
+        "distractorNotes": [
+          {
+            "option": "caused",
+            "reason": "While semantically similar, 'led to' is generally preferred in academic discourse for describing gradual or complex historical development/consequence, making it the more idiomatic choice."
+          },
+          {
+            "option": "known",
+            "reason": "This is an adjective/past participle and cannot function as the main transitive verb required to initiate the causal link."
+          },
+          {
+            "option": "academic",
+            "reason": "This is purely an adjective. It lacks the grammatical function of a linking or transitive verb necessary in this position."
+          },
+          {
+            "option": "includes",
+            "reason": "The structure 'includes to' is ungrammatical, and furthermore, the context requires a past tense form ('led'), not the present tense."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -5671,25 +5775,145 @@
         "blankId": "q26-b1",
         "index": 0,
         "answer": "researcher",
-        "explanation": null
+        "explanation": "The passage details Marion Dorset's scientific career. Grammatically, the structure 'working as a [Noun]' demands a singular countable noun defining his employment status. 'Researcher' perfectly fulfills this requirement, establishing him as an individual employed by the Department of Agriculture specifically for conducting scientific investigation. It is the most precise and contextually appropriate term to describe his initial professional role in biochemistry.",
+        "syntaxRequirement": "Singular Countable Noun (Job Title/Profession)",
+        "collocationCohesionClue": "The phrase 'working as a...' requires a specific noun that defines an occupation or professional role.",
+        "coherenceCue": "The passage describes a chronological progression of a professional career within the field of science.",
+        "vocabGrammarCue": "A specific noun must follow 'as a' to define an individual's occupation or primary function.",
+        "contextNote": "He began working as a [profession] for the U.S. Department of Agriculture...",
+        "distractorNotes": [
+          {
+            "option": "division",
+            "reason": "This is a noun referring to a department or section, not an individual's job title."
+          },
+          {
+            "option": "inspection",
+            "reason": "This refers to a process or action (a gerund/noun), not the name of an occupation."
+          },
+          {
+            "option": "serum",
+            "reason": "This is a physical substance, irrelevant to his professional identity at the start of his career."
+          },
+          {
+            "option": "leader",
+            "reason": "While 'leader' is a person, 'researcher' is far more specific and accurate given the scientific context (biochemistry)."
+          },
+          {
+            "option": "fluid",
+            "reason": "This is a physical substance and has no connection to his professional role."
+          },
+          {
+            "option": "consumption",
+            "reason": "This refers to usage or eating, making it semantically irrelevant to the passage's topic of scientific work."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q26-b2",
         "index": 1,
         "answer": "division",
-        "explanation": null
+        "explanation": "The passage details Dorset's professional advancement within a government agency. The structure 'chief of the [BLANK]' mandates a word representing a formal departmental area or structural subdivision. 'Division' perfectly fulfills this role, as it names a major organizational unit (the biochemical division). Grammatically, it functions as the object of the preposition 'of,' defining the specific scope of his leadership role.",
+        "syntaxRequirement": "Noun (Singular Countable)",
+        "collocationCohesionClue": "The phrase 'chief of the...' requires a noun that denotes an organizational unit, department, or specialized section within a larger institution.",
+        "coherenceCue": "The passage tracks professional advancement within a structured government department, requiring precise institutional terminology.",
+        "vocabGrammarCue": "'Chief of' requires an abstract or concrete noun that defines the structural boundaries or specialized focus area of a department.",
+        "contextNote": "He worked his way up to become chief of the biochemical division in 1904.",
+        "distractorNotes": [
+          {
+            "option": "researcher",
+            "reason": "This is an occupation title (a person), not a structural unit. 'Chief of the researcher' is structurally incorrect."
+          },
+          {
+            "option": "inspection",
+            "reason": "While a noun, it typically requires a modifier (e.g., 'inspection department') or different phrasing ('chief inspector'). It does not naturally follow 'chief of the'."
+          },
+          {
+            "option": "serum",
+            "reason": "This is a physical substance and cannot define the scope of an organizational head's leadership role."
+          },
+          {
+            "option": "leader",
+            "reason": "Using 'chief of the leader' is redundant and nonsensical in defining a department's structure."
+          },
+          {
+            "option": "fluid",
+            "reason": "This refers to a liquid substance, lacking any connection to departmental or organizational structure."
+          },
+          {
+            "option": "consumption",
+            "reason": "This noun describes an action or usage rate, not a structural department within a scientific agency."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q26-b3",
         "index": 2,
         "answer": "inspection",
-        "explanation": null
+        "explanation": "Semantically and grammatically, 'inspection' is ideal because it refers to the formal act of examining goods (like meat) for safety, quality, or compliance. The structure 'pioneering work in...' establishes the scientific field or process being studied. Given that Dorset worked on animal diseases, this context strongly points to food safety protocols, making 'inspection' the precise and appropriate term.",
+        "syntaxRequirement": "Abstract Noun (specifically, a noun describing a systematic process or activity)",
+        "collocationCohesionClue": "The phrase 'pioneering work in the [BLANK] of meat products' requires a noun that denotes an official, structured examination procedure.",
+        "coherenceCue": "The passage transitions from general biochemical discoveries (toxins) to specific applied research focused on public health and food safety standards.",
+        "vocabGrammarCue": "Requires a Noun that specifies an investigative or regulatory procedure (e.g., 'examination,' 'review').",
+        "contextNote": "He conducted pioneering work in the inspection of meat products.",
+        "distractorNotes": [
+          {
+            "option": "researcher",
+            "reason": "This is a person (a noun referring to an occupation), but the blank requires a noun describing the type of 'work' or process."
+          },
+          {
+            "option": "division",
+            "reason": "This refers to an organizational department or section, lacking any semantic connection to the physical act of checking food products."
+          },
+          {
+            "option": "serum",
+            "reason": "This is a substance (a liquid solution) used later in the passage; it cannot describe the process of examining meat safety."
+          },
+          {
+            "option": "leader",
+            "reason": "Similar to 'researcher,' this refers to a person in charge and is grammatically inappropriate for describing scientific work or methodology."
+          },
+          {
+            "option": "fluid",
+            "reason": "This is too general. While meat contains fluids, 'inspection' specifies the *action* (the checking process) taken on the product, not just its composition."
+          },
+          {
+            "option": "consumption",
+            "reason": "This refers to the act of eating or using up a product. The context requires the preventative action—checking safety *before* consumption."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q26-b4",
         "index": 3,
         "answer": "serum",
-        "explanation": null
+        "explanation": "The passage establishes a scientific narrative: discovery (the virus) followed by prevention. 'Serum' is the precise, technical term used in biochemistry and medicine for a biological fluid containing antibodies, which is exactly what Marion Dorset would develop. It provides the necessary specificity required when discussing advanced medical countermeasures, making it the only word that maintains the high academic tone of the text.",
+        "syntaxRequirement": "Singular Countable Noun",
+        "collocationCohesionClue": "Developed a [NOUN] to prevent it.",
+        "coherenceCue": "The context transitions logically from identifying a pathogen (virus) to developing an effective countermeasure.",
+        "vocabGrammarCue": "Requires a specific, countable noun representing a biological or medicinal substance developed for preventative use.",
+        "contextNote": "He co-discovered the virus... and subsequently developed a serum to prevent it.",
+        "distractorNotes": [
+          {
+            "option": "fluid",
+            "reason": "While grammatically correct, 'fluid' is overly general. The scientific context demands a specific medical substance, which 'serum' accurately provides."
+          },
+          {
+            "option": "consumption",
+            "reason": "This noun refers to the act of using or eating something (a process), not a physical medicinal product. It fails both the semantic and contextual requirements."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -5805,31 +6029,185 @@
         "blankId": "q27-b1",
         "index": 0,
         "answer": "individual",
-        "explanation": null
+        "explanation": "This sentence uses a list structure (Workshops, seminars, and [BLANK] tutorials). The word required must be an adjective that modifies the plural noun 'tutorials.' 'Individual' is the precise and standard collocation used in academic English to describe separate, one-on-one instructional sessions. It maintains grammatical parallelism with 'workshops' and 'seminars,' ensuring a smooth and natural flow.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The blank must function as an adjective placed directly before 'tutorials' to specify their format or nature.",
+        "coherenceCue": "The parallel list structure (Noun 1, Noun 2, and [ADJECTIVE] Noun 3) demands an adjective that specifies the format of the final noun.",
+        "vocabGrammarCue": "Attributive Adjective: Used to modify a plural noun and specify its discrete nature or format.",
+        "contextNote": "Through workshops, seminars, and individual tutorials...",
+        "distractorNotes": [
+          {
+            "option": "offers",
+            "reason": "This is a verb (V3/Present Simple) and cannot modify the noun 'tutorials.' It requires a subject to complete the clause."
+          },
+          {
+            "option": "understanding",
+            "reason": "While it can function as an adjective, using it here breaks the parallel structure of listing distinct learning formats. Furthermore, its primary role is needed later in the passage (Blank #3)."
+          },
+          {
+            "option": "necessary",
+            "reason": "This word functions best as a predicate adjective (e.g., 'The tutorials are necessary'). Placing it directly before the noun without restructuring the sentence is grammatically awkward and less precise than using 'individual.'"
+          },
+          {
+            "option": "field",
+            "reason": "This is a common noun, not an adjective. It cannot modify 'tutorials.' Nouns must be used to describe career areas later in the passage."
+          },
+          {
+            "option": "single",
+            "reason": "Although grammatically possible, 'individual' is the established and more sophisticated collocation when listing academic components alongside 'workshops' and 'seminars.'"
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q27-b2",
         "index": 1,
         "answer": "offers",
-        "explanation": null
+        "explanation": "\"Offers\" is grammatically necessary because the slot demands an active, transitive main verb. Semantically, 'to offer' perfectly captures the idea that the institution provides or makes available specific resources (practical expertise) to its students. Using any other word would create a structural gap, as the sentence requires a clear action linking the course to the benefits it grants. This establishes the core function of the academic program.",
+        "syntaxRequirement": "Third-person singular Present Tense Transitive Verb",
+        "collocationCohesionClue": "The sentence structure requires a main verb that connects the subject (The course) to the action of providing benefits (expertise) to the indirect object (students).",
+        "coherenceCue": "The passage is defining and detailing the practical resources and skills that the educational course provides to its participants.",
+        "vocabGrammarCue": "A main verb must be used here to establish the causal relationship: Subject (Course) $\rightarrow$ Action (Verb) $\rightarrow$ Object/Benefit (Expertise).",
+        "contextNote": "The phrase 'The course offers students...' establishes a clear pattern of provision.",
+        "distractorNotes": [
+          {
+            "option": "individual",
+            "reason": "This is an adjective or noun, not a main verb. It cannot grammatically perform the action required by the sentence structure."
+          },
+          {
+            "option": "understanding",
+            "reason": "This is a gerund/noun form and lacks the grammatical function of a primary linking verb for the subject 'The course'."
+          },
+          {
+            "option": "necessary",
+            "reason": "This is an adjective. It modifies a noun but cannot serve as the central action (verb) connecting the subject to the object."
+          },
+          {
+            "option": "field",
+            "reason": "This is a common noun and does not fit the required main verb slot; it names a concept, rather than describing an action."
+          },
+          {
+            "option": "single",
+            "reason": "This is an adjective or determiner. It modifies other nouns but cannot function as the primary action of the clause."
+          },
+          {
+            "option": "wanted",
+            "reason": "While 'want' can be a verb, its usage here would create an awkward and ungrammatical structure. 'Offers' is the precise vocabulary required to denote provision in this context."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q27-b3",
         "index": 2,
         "answer": "understanding",
-        "explanation": null
+        "explanation": "This sentence structure relies on parallel listing (parallelism). Since 'researching' and 'structuring' are gerunds detailing skills, the word in Blank #3 must also be a gerund or noun to maintain grammatical balance. Semantically, an academic program teaches both technical abilities and conceptual grasp; thus, 'understanding' functions perfectly as the third parallel skill listed.",
+        "syntaxRequirement": "Gerund (V-ing form) or Noun. It must maintain grammatical parallelism with 'researching' and 'structuring,' which are all gerunds.",
+        "collocationCohesionClue": "The blank completes a list of abstract academic processes/skills, requiring a verb in the -ing form to match the preceding elements.",
+        "coherenceCue": "Parallel listing of intellectual/academic competencies acquired through the writing program.",
+        "vocabGrammarCue": "Requires a gerund form (V-ing) to match the grammatical pattern established by the preceding list items ('researching and structuring').",
+        "contextNote": "The blank completes a tripartite list detailing specific, high-level academic skills students will acquire.",
+        "distractorNotes": [
+          {
+            "option": "individual",
+            "reason": "This is an adjective or noun that breaks the required gerund structure and does not fit the context of listing abstract intellectual skills."
+          },
+          {
+            "option": "offers",
+            "reason": "This is a main verb. It cannot function as a parallel item in this list of activities; it would require its own subject."
+          },
+          {
+            "option": "necessary",
+            "reason": "This is an adjective and cannot start the phrase or maintain parallelism with 'researching' (e.g., '...and necessary traditions...' is grammatically incorrect)."
+          },
+          {
+            "option": "field",
+            "reason": "This noun does not fit the gerund structure, nor does it possess the semantic weight required to parallel the listed actions of research and structuring."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q27-b4",
         "index": 3,
         "answer": "necessary",
-        "explanation": null
+        "explanation": "Semantically, the sentence lists essential skills needed for professional success. Grammatically, 'necessary' functions as an adjective modifying 'proficiencies,' completing the structural requirement: [Proficiencies] + [are] + necessary + [for/to develop]. This usage is highly common in academic and formal writing to state prerequisites or mandatory conditions. The word must grammatically link the noun (proficiencies) to its required purpose.",
+        "syntaxRequirement": "Adjective (functioning as a complement or modifier to establish prerequisite condition)",
+        "collocationCohesionClue": "The structure requires an adjective that establishes a necessary condition or prerequisite for the subsequent action (developing a career).",
+        "coherenceCue": "The text builds toward listing specific skills, making the concept of 'prerequisites' essential for maintaining coherence.",
+        "vocabGrammarCue": "Requires an adjective that links a core skill (proficiencies) directly to its intended outcome or requirement (to develop).",
+        "contextNote": "The course provides proficiencies [necessary] for developing a career.",
+        "distractorNotes": [
+          {
+            "option": "individual",
+            "reason": "While an adjective, it only modifies quantity/scope and fails to convey the required meaning of 'prerequisite' or 'essential condition'."
+          },
+          {
+            "option": "offers",
+            "reason": "This is a verb (V) and cannot function as an adjectival complement in this structural position."
+          },
+          {
+            "option": "understanding",
+            "reason": "This is a noun (N), creating a grammatical error because the slot requires an adjective to modify 'proficiencies'."
+          },
+          {
+            "option": "field",
+            "reason": "This is a noun (N) and cannot grammatically link the proficiencies to their required purpose."
+          },
+          {
+            "option": "single",
+            "reason": "Although it is an adjective, its meaning ('one') does not fulfill the semantic requirement of establishing professional or academic necessity."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q27-b5",
         "index": 4,
         "answer": "field",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands a noun following the preposition 'in.' Semantically, the passage is discussing career trajectories and areas of expertise. The term 'field' (as in 'field of study' or 'professional field') perfectly completes this academic context. It indicates that the student can pursue their professional life not only in creative writing but also within related subject domains.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The preposition 'in' preceding 'career' requires a noun that specifies an academic or professional domain, making 'related field' the standard and natural collocation.",
+        "coherenceCue": "The sentence defines the broad scope and potential domain for a graduate’s professional opportunity (career path).",
+        "vocabGrammarCue": "A noun is required after the preposition 'in' to specify a subject area, industry, or field of study.",
+        "contextNote": "The structure 'develop a career in X or in Y' establishes that both X and Y must represent professional scopes or domains.",
+        "distractorNotes": [
+          {
+            "option": "individual",
+            "reason": "Although a noun, it fails the semantic test; one does not pursue a career 'in an individual,' as this phrase lacks the necessary meaning of a broad domain."
+          },
+          {
+            "option": "offers",
+            "reason": "This is a verb and violates the grammatical requirement (Part of Speech mismatch)."
+          },
+          {
+            "option": "understanding",
+            "reason": "While grammatically possible, it is semantically awkward; 'related understanding' does not function as a professional domain or scope."
+          },
+          {
+            "option": "necessary",
+            "reason": "This is an adjective and fails the grammatical requirement (Part of Speech mismatch)."
+          },
+          {
+            "option": "single",
+            "reason": "This adjective does not fit the context, as the blank requires a noun that denotes a broad professional area or scope."
+          },
+          {
+            "option": "wanted",
+            "reason": "This is an adjective/participle and fails both the grammatical requirement (PoS mismatch) and the semantic need for a domain name."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -5936,25 +6314,121 @@
         "blankId": "q28-b1",
         "index": 0,
         "answer": "comes",
-        "explanation": null
+        "explanation": "This blank requires a main verb that establishes the wave's minimum dangerous threshold. The phrase 'comes up to' functions idiomatically, meaning 'reaches.' Since the subject ('a wave') is singular and the passage discusses general scientific facts (present tense), the third-person singular form, 'comes,' is grammatically mandatory for correct subject-verb agreement.",
+        "syntaxRequirement": "Third-person singular present tense verb",
+        "collocationCohesionClue": "The phrasal verb 'comes up to' is a natural and common collocation used when describing something reaching a specific height or level.",
+        "coherenceCue": "The sentence establishes a conditional threshold ('Even if...') regarding the minimum height required for the danger to begin, necessitating a verb of measurement or arrival.",
+        "vocabGrammarCue": "Requires an active main verb that collocates naturally with prepositions of height (e.g., 'up to').",
+        "contextNote": "The clause specifies the minimal level at which the wave's physical force becomes dangerous, regardless of its overall size.",
+        "distractorNotes": [
+          {
+            "option": "force",
+            "reason": "This is a noun and cannot function as the main verb required by the sentence structure."
+          },
+          {
+            "option": "objects",
+            "reason": "This is a plural noun and does not fit grammatically or semantically in this position."
+          },
+          {
+            "option": "debris",
+            "reason": "This is a singular/mass noun and cannot function as the main verb required by the sentence structure."
+          },
+          {
+            "option": "impedance",
+            "reason": "This is a technical physics noun that does not fit the general, descriptive language of wave movement here."
+          },
+          {
+            "option": "materials",
+            "reason": "This is a plural noun and cannot function as the main verb required by the sentence structure."
+          },
+          {
+            "option": "rises",
+            "reason": "While grammatically possible, 'comes up to' is the superior idiomatic choice in this context when describing something reaching a specific, measured level."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q28-b2",
         "index": 1,
         "answer": "force",
-        "explanation": null
+        "explanation": "Semantically, the passage focuses on the destructive potential and momentum of fast-moving water. The blank requires a noun that encapsulates this raw, physical strength. 'Force' is the only option that successfully names this inherent power or energy source (the wave itself), making it the logical subject performing the action ('can knock'). It is grammatically sound because 'force' functions correctly as an abstract noun representing momentum.",
+        "syntaxRequirement": "Abstract Noun (Uncountable), functioning as the grammatical subject of the clause.",
+        "collocationCohesionClue": "The structure 'the [blank] can knock' requires an abstract noun that represents inherent physical power or energy.",
+        "coherenceCue": "The passage transitions from describing the physical movement of water to detailing its destructive capacity and impact on people and structures.",
+        "vocabGrammarCue": "An uncountable noun is required immediately following the determiner 'the' and preceding the modal verb 'can.'",
+        "contextNote": "Even if a wave only comes up to the knees, the [blank] can knock a person down.",
+        "distractorNotes": [
+          {
+            "option": "comes",
+            "reason": "This is a verb (third-person singular present tense) and cannot function as the subject noun representing the physical power of the water."
+          },
+          {
+            "option": "objects",
+            "reason": "While 'objects' is a noun, it refers to inanimate items that are acted upon by the water, not the abstract force doing the knocking."
+          },
+          {
+            "option": "debris",
+            "reason": "This term specifically denotes scattered pieces of remains. It fails to capture the overall, inherent energy or momentum of the entire wave system."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q28-b3",
         "index": 2,
         "answer": "objects",
-        "explanation": null
+        "explanation": "\"Objects\" is the optimal choice because it functions as a precise plural noun describing tangible, solid items (like walls) that water impacts. Grammatically, it completes the descriptive phrase 'large objects.' Semantically, it maintains focus on general physical obstacles encountered during a powerful natural event like a tsunami, making it both accurate and highly natural in context.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The phrase 'such as walls' immediately following the blank necessitates a general, plural noun that refers to physical structures or solid impediments.",
+        "coherenceCue": "The passage requires a broad term for large, solid impediments that are physically located in the path of rapidly flowing water.",
+        "vocabGrammarCue": "A plural noun is required immediately following the adjective 'large' to complete the description of impact targets.",
+        "contextNote": "Water flows around some obstacles, while slamming into large objects , such as walls...",
+        "distractorNotes": [
+          {
+            "option": "force",
+            "reason": "Incorrect semantic fit. Although 'force' is a noun, it describes the *power* of the water, not the physical things that are being struck or impacted."
+          },
+          {
+            "option": "debris",
+            "reason": "While grammatically correct (plural noun), 'debris' typically refers specifically to scattered wreckage or fragments, whereas the context requires a term for larger, more defined structures like walls."
+          },
+          {
+            "option": "impedance",
+            "reason": "Incorrect meaning and part of speech mismatch. This is a technical term referring to resistance (a concept), not a physical object that water can strike."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q28-b4",
         "index": 3,
         "answer": "debris",
-        "explanation": null
+        "explanation": "Semantically, the passage describes powerful water flow collecting items after a destructive event. 'Debris' is the precise technical term for scattered wreckage or remains—exactly what rocks and trees become when swept away by floodwaters. It functions as the direct object of the verb 'gathers.' Choosing 'debris' ensures high contextual specificity, reinforcing the theme of natural destruction.",
+        "syntaxRequirement": "Mass Noun (A non-count noun used to describe scattered pieces of wreckage or remnants)",
+        "collocationCohesionClue": "The phrase 'like rocks and trees' immediately follows the blank, functioning as an appositive list that specifies the physical nature of the collected material.",
+        "coherenceCue": "The passage requires a noun that describes physical remnants collected by powerful water flow.",
+        "vocabGrammarCue": "Requires a concrete, mass noun describing waste or wreckage resulting from force.",
+        "contextNote": "Water 'gathers' items; these items are exemplified by rocks and trees.",
+        "distractorNotes": [
+          {
+            "option": "materials",
+            "reason": "While grammatically correct (a noun), it is overly general. The context demands a word that specifically implies wreckage resulting from destruction, which 'debris' provides."
+          },
+          {
+            "option": "impedance",
+            "reason": "This word means resistance or obstruction and does not fit the semantic requirement of physical items being collected ('like rocks and trees'). It is a complete mismatch in meaning."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -6070,31 +6544,161 @@
         "blankId": "q29-b1",
         "index": 0,
         "answer": "grains",
-        "explanation": null
+        "explanation": "The blank requires a plural noun that specifies the physical unit of material. 'Grains' is the precise and common term in English for small, measurable particles (like sand). It functions as a collective noun modifying 'sand,' establishing both the grammatical count and the semantic scale necessary for wind-blown movement. This choice ensures natural, idiomatic English usage.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The standard idiomatic collocation 'grains of sand' is required to quantify or describe minute, particulate matter.",
+        "coherenceCue": "The context describes small, mobile, particulate matter originating from dunes.",
+        "vocabGrammarCue": "Requires a plural noun that denotes granular units of material.",
+        "contextNote": "Wind-blown grains of sand...",
+        "distractorNotes": [
+          {
+            "option": "fertile",
+            "reason": "This is an adjective and cannot function as the subject noun describing the physical particles."
+          },
+          {
+            "option": "planting",
+            "reason": "This is a gerund/noun referring to the action of planting, not the material itself."
+          },
+          {
+            "option": "nourishment",
+            "reason": "This abstract noun refers to sustenance and lacks physical relevance to sand particles."
+          },
+          {
+            "option": "surface",
+            "reason": "While a noun, 'surface' is too general; it describes an area or plane, not the small units of material that constitute the sand."
+          },
+          {
+            "option": "summit",
+            "reason": "This refers to a high point or peak and has no connection to granular materials like sand."
+          },
+          {
+            "option": "fallow",
+            "reason": "This is an adjective describing unused land, making it grammatically incompatible with the required noun structure."
+          },
+          {
+            "option": "clouds",
+            "reason": "Although related to wind, 'clouds' refers to atmospheric vapor formations, not the specific unit term for sand particles."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q29-b2",
         "index": 1,
         "answer": "fertile",
-        "explanation": null
+        "explanation": "This blank requires an adjective to describe the quality of the 'land.' The passage describes a dramatic environmental decline—the transformation from a supportive ecosystem into desert. 'Fertile' means capable of producing abundant vegetation or crops, which perfectly establishes this crucial contrast in the narrative flow. It is grammatically necessary and semantically ideal for conveying the scale of the ecological damage.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The phrase 'fertile land' establishes a strong contrast between a rich, productive environment and a barren one (desert), requiring an adjective denoting high biological potential.",
+        "coherenceCue": "The transition from productive land to unproductive desert necessitates an adjective that conveys richness or life-giving potential.",
+        "vocabGrammarCue": "Adjective modifying 'land' (N). Must convey inherent quality, productivity, or richness.",
+        "contextNote": "Drifting sands... transform fertile land into desert.",
+        "distractorNotes": [
+          {
+            "option": "grains",
+            "reason": "This is a plural noun and cannot function as an adjective to modify 'land' in this context."
+          },
+          {
+            "option": "planting",
+            "reason": "This is a gerund/noun, describing an action, not the inherent quality or potential of the land itself."
+          },
+          {
+            "option": "nourishment",
+            "reason": "This is a noun (the substance or act of feeding) and cannot serve as an adjective here."
+          },
+          {
+            "option": "summit",
+            "reason": "This is a noun referring to the peak of a mountain, which is irrelevant when describing flat, agricultural land."
+          },
+          {
+            "option": "fallow",
+            "reason": "While 'fallow' (uncultivated) is grammatically correct, 'fertile' better captures the general concept of rich, life-giving potential needed to create a powerful and necessary contrast with 'desert'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q29-b3",
         "index": 2,
         "answer": "planting",
-        "explanation": null
+        "explanation": "The blank demands a noun to name the specific human intervention used for stabilization. Since the context describes an *action* taken by humans (an ecological technique), the word must be a nominalized verb—a gerund acting as a noun. 'Planting' perfectly names this process, making the phrase grammatically sound and semantically precise for describing how dunes are stabilized.",
+        "syntaxRequirement": "Gerund/Noun (Nominalized action)",
+        "collocationCohesionClue": "The structure 'artificial [BLANK] of [Plant Name]' requires a noun that specifies an ongoing process or method.",
+        "coherenceCue": "The passage transitions from discussing natural environmental threats (erosion) to proposing a deliberate, artificial solution (stabilization).",
+        "vocabGrammarCue": "Collocation: 'Artificial [Process] of [Plant Name]' requires the noun form of an action verb.",
+        "contextNote": "Dunes can be made more stable by the artificial planting of marram grass...",
+        "distractorNotes": [
+          {
+            "option": "grains",
+            "reason": "This is a plural common noun referring to physical objects, not an action or process."
+          },
+          {
+            "option": "fertile",
+            "reason": "This is an adjective and cannot function as the head noun in this phrase ('the artificial fertile of...')."
+          },
+          {
+            "option": "nourishment",
+            "reason": "While a noun, it refers to sustenance or food supply, not the act of establishing plants."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q29-b4",
         "index": 3,
         "answer": "nourishment",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires an uncountable noun to function as the direct object of the verb 'find.' Semantically, the passage emphasizes the plant's ability to survive and thrive despite harsh conditions. Therefore, the word must denote vital life support or food source. 'Nourishment' perfectly captures this meaning—the provision of essential elements needed for growth—making it the only logical choice that maintains both grammatical structure and contextual coherence.",
+        "syntaxRequirement": "Uncountable Noun",
+        "collocationCohesionClue": "The collocation 'find [NOUN] even in sand' demands a term that signifies essential resources or sustenance necessary for biological survival.",
+        "coherenceCue": "The passage focuses on the plant’s survival mechanism in an adverse, resource-poor environment (sand), requiring a word to explain its source of life or energy.",
+        "vocabGrammarCue": "A noun is required after 'find,' and this noun must specifically relate to biological sustenance, resources, or growth elements.",
+        "contextNote": "The sentence establishes the plant’s resilience by stating what it can acquire ('find nourishment') despite poor soil quality ('even in sand').",
+        "distractorNotes": [
+          {
+            "option": "summit",
+            "reason": "While grammatically a noun, 'summit' refers to a peak or high point and has no semantic connection to the concept of biological sustenance or resource acquisition for a plant."
+          },
+          {
+            "option": "fallow",
+            "reason": "Although related to agriculture, 'fallow' describes unused land (a state), not an abstract resource. A plant cannot 'find fallow,' and the meaning does not relate to internal sustenance or growth resources."
+          },
+          {
+            "option": "clouds",
+            "reason": "Using 'find clouds' is grammatically awkward in this context of sustained life. Furthermore, 'nourishment' refers specifically to the *resource* derived from the environment (the food/elements), not the environmental object itself."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q29-b5",
         "index": 4,
         "answer": "surface",
-        "explanation": null
+        "explanation": "\"Surface\" is the optimal choice as it precisely refers to the outermost, visible plane of an object (the dune). Grammatically, the structure 'over the surface of...' correctly establishes location. Semantically, since the grass spreads across the entire available area, 'surface' accurately captures this comprehensive physical coverage, making it the most appropriate and natural descriptor for the process described.",
+        "syntaxRequirement": "Noun (Mandatory for specifying a physical area or outer layer)",
+        "collocationCohesionClue": "The phrase 'spreads over the [BLANK] of the dune' requires a noun that denotes the general, exposed top layer of a geological feature.",
+        "coherenceCue": "The verb 'spreading' necessitates a general term that describes the full extent or outer covering of the ground where the action takes place.",
+        "vocabGrammarCue": "A noun is required immediately following the definite article 'the' to specify the geographical area being covered by the grass.",
+        "contextNote": "The sentence focuses on describing the physical process and scope of coverage of the dune by the marram grass.",
+        "distractorNotes": [
+          {
+            "option": "grains",
+            "reason": "While a noun, 'grains' refers only to individual particles. The phrase 'over the grains' is too specific and fails to describe the entire continuous area where the grass spreads."
+          },
+          {
+            "option": "summit",
+            "reason": "This word means the peak or highest point. It is too narrow in scope; the passage implies coverage of the whole top layer, not just the single highest point."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -6216,31 +6820,165 @@
         "blankId": "q30-b1",
         "index": 0,
         "answer": "scheme",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands a noun to complete the list of structured employee perks (A or B [Noun]). Semantically, 'scheme' is the standard and fixed collocation used in English for describing formalized financial plans, such as retirement funds. This usage ('pension scheme') perfectly completes the parallel structure established by 'health insurance,' making it the most natural fit.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The structure 'health insurance or company pension' requires a noun that denotes an organized, formal system of benefits.",
+        "coherenceCue": "Listing specific types of formal benefits or structured plans.",
+        "vocabGrammarCue": "Requires a noun to maintain grammatical parallelism in the list structure (A or B [Noun]).",
+        "contextNote": "The phrase is listing concrete examples of employee perks: 'membership... or company pension scheme.'",
+        "distractorNotes": [
+          {
+            "option": "ensure",
+            "reason": "This word is a verb and cannot grammatically complete the list of nouns."
+          },
+          {
+            "option": "treatment",
+            "reason": "While a noun, 'pension treatment' is not a standard collocation; 'scheme' is the established term for structured benefit programs."
+          },
+          {
+            "option": "consideration",
+            "reason": "This abstract noun refers to thought or careful planning and does not fit the context of listing concrete financial or medical benefits."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q30-b2",
         "index": 1,
         "answer": "ensure",
-        "explanation": null
+        "explanation": "Semantically, the context establishes a legal mandate regarding fairness. The employer must actively *guarantee* equitable treatment to avoid discrimination. 'Ensure' perfectly captures this sense of positive obligation and required outcome—they must make certain that their actions maintain equity. Grammatically, it is a transitive verb following the modal auxiliary 'must,' requiring its base form. Using 'ensure' maintains the formal, legal tone necessary for the passage.",
+        "syntaxRequirement": "Transitive Verb (Base Form)",
+        "collocationCohesionClue": "The modal auxiliary 'must' combined with the structure '[verb] that...' necessitates a verb of obligation, certainty, or guarantee.",
+        "coherenceCue": "The necessity of guaranteeing equitable treatment to prevent legal issues.",
+        "vocabGrammarCue": "A strong, formal verb used after a modal auxiliary ('must') to express mandatory guarantee.",
+        "contextNote": "If they do, they must ensure that they are fair in providing these benefits...",
+        "distractorNotes": [
+          {
+            "option": "avoid",
+            "reason": "While grammatically possible, 'must avoid' shifts the meaning from a positive obligation (guaranteeing fairness) to merely preventing an outcome. The passage requires stating the mandatory action of guaranteeing equity."
+          },
+          {
+            "option": "allows",
+            "reason": "This verb suggests permission or capability. The sentence demands a strong mandate of responsibility and guarantee ('must ensure'), not simply the ability or right to permit something."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q30-b3",
         "index": 2,
         "answer": "avoid",
-        "explanation": null
+        "explanation": "Grammatically, the structure 'in order to [verb]' requires an infinitive form. Semantically, the passage establishes a legal obligation: employers must be fair *for the purpose* of preventing illegal actions. 'Avoid' perfectly fulfills this function by meaning 'to keep away from or prevent,' thus completing the logical flow that fairness is necessary to mitigate discrimination.",
+        "syntaxRequirement": "Base form Verb (Infinitive)",
+        "collocationCohesionClue": "The fixed phrase 'in order to' mandates a verb that expresses purpose, linking the action of being fair directly to the prevention of discrimination.",
+        "coherenceCue": "The passage establishes a clear cause-and-effect relationship: maintaining fairness (cause) is required to preempt legal issues and discrimination (effect).",
+        "vocabGrammarCue": "'In order to' signals a purpose clause, demanding an action verb that describes the goal or mitigation strategy.",
+        "contextNote": "The primary function of providing benefits must be framed as a preventative measure against potential discriminatory claims.",
+        "distractorNotes": [
+          {
+            "option": "scheme",
+            "reason": "This is a Noun and cannot grammatically follow the infinitive marker 'to' in this structure."
+          },
+          {
+            "option": "treatment",
+            "reason": "This is also a Noun, making it grammatically impossible to complete the required verbal phrase ('in order to treatment')."
+          },
+          {
+            "option": "ensure",
+            "reason": "While a verb, using 'to ensure' creates semantic redundancy. The structure implies that fairness leads *to* avoiding discrimination, not that they are ensuring the avoidance itself."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q30-b4",
         "index": 3,
         "answer": "includes",
-        "explanation": null
+        "explanation": "Grammatically, the sentence structure demands a third-person singular present tense verb to agree with the subject 'an employer.' Semantically, the action involves stating that certain benefits are contained within the contract. 'Includes' is the most precise choice because it means 'to contain as part of,' effectively linking the employer (the source) to the entitlement (the benefit listed in the contract). This maintains both grammatical agreement and contextual meaning.",
+        "syntaxRequirement": "Present Tense Transitive Verb (Third Person Singular)",
+        "collocationCohesionClue": "The blank requires a transitive verb that establishes a direct relationship between the subject (employer) and the object (entitlement), indicating containment or listing.",
+        "coherenceCue": "The verb must function as a bridge, defining what specific benefits are incorporated into the terms set by the employer.",
+        "vocabGrammarCue": "Requires a transitive verb that naturally collocates with 'an entitlement' when describing inclusion or containment within a formal document.",
+        "contextNote": "Since the passage details listing contractual perks, an action of incorporation (includes) is necessary to show that the benefit is part of the agreement.",
+        "distractorNotes": [
+          {
+            "option": "scheme",
+            "reason": "This is a noun and cannot function as the main verb starting the conditional clause."
+          },
+          {
+            "option": "ensure",
+            "reason": "While a verb, it requires an explicit complement (e.g., 'that...') or different grammatical structure to follow the subject in this specific context."
+          },
+          {
+            "option": "avoid",
+            "reason": "This is a verb that typically governs gerunds or nouns of action and does not fit the direct object 'an entitlement' in this construction."
+          },
+          {
+            "option": "treatment",
+            "reason": "This is a noun and cannot function as the main verb starting the conditional clause."
+          },
+          {
+            "option": "consideration",
+            "reason": "This is a noun and cannot function as the main verb starting the conditional clause."
+          },
+          {
+            "option": "allegation",
+            "reason": "This is a noun and cannot function as the main verb starting the conditional clause."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q30-b5",
         "index": 4,
         "answer": "treatment",
-        "explanation": null
+        "explanation": "Grammatically, the structure 'on the basis of [BLANK]' requires an abstract noun. Semantically, in the context of employment law and discrimination claims, the standard and precise phrase is 'unequal treatment.' This collocation signifies that the core issue being litigated is the differential way employees are handled or treated by the employer, making it the only choice that maintains both legal accuracy and grammatical flow.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The fixed legal collocation 'unequal treatment' is mandatory, referring specifically to differential or unfair handling of rights/benefits.",
+        "coherenceCue": "The passage establishes a scenario of potential discrimination, leading to legal action (taking court) based on perceived unfairness regarding benefits.",
+        "vocabGrammarCue": "Requires an abstract noun following 'basis of' to define the specific nature or quality of the alleged discrimination.",
+        "contextNote": "The phrase 'unequal treatment' is a critical and fixed collocation used in anti-discrimination law globally.",
+        "distractorNotes": [
+          {
+            "option": "scheme",
+            "reason": "While an abstract noun, it refers to a specific plan or system (like pension scheme) and cannot represent the general concept of unfair handling."
+          },
+          {
+            "option": "ensure",
+            "reason": "This is a transitive verb and does not fit the required complement noun slot following 'basis of'."
+          },
+          {
+            "option": "avoid",
+            "reason": "This is an infinitive/verb form and cannot function as the abstract noun defining the basis for legal action."
+          },
+          {
+            "option": "includes",
+            "reason": "This is a present tense verb and is grammatically incompatible with the required noun slot."
+          },
+          {
+            "option": "consideration",
+            "reason": "Although an abstract noun, it typically relates to legal exchange or thought process; 'unequal consideration' is not the standard terminology for discrimination in this context."
+          },
+          {
+            "option": "allegation",
+            "reason": "This refers only to the claim itself (the accusation). The sentence requires the *subject matter* of the unfairness—the differential treatment received, not just the act of claiming it."
+          },
+          {
+            "option": "allows",
+            "reason": "This is a verb form and cannot function as the complement noun following 'basis of'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

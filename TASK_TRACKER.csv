@@ -641,3 +641,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 453,2026-07-26,Review generated audio files and verify playback across modes,Done,2026-07-26
 454,2026-07-26,Fix Next Word button disabled bug and search filter matching in CRM admin pronunciation corpus,Done,2026-07-26
 455,2026-07-26,Fix duplicate corpus badge accumulation and spilling layout bug in CRM admin,Done,2026-07-26
+456,2026-07-26,Harden Next Word navigation to resolve index lookup and filter transition edge cases,Done,2026-07-26

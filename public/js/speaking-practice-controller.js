@@ -956,6 +956,7 @@
       window.dispatchEvent(new CustomEvent('spc-open-settings', {
         detail: { modeId: controllerState.config.modeId }
       }));
+      // Note: Read Aloud takes an intentional separate code path because ReadAloudMode manages its own mode-owned settings sheet.
       if (controllerState.config.modeId === 'read-aloud' && window.ReadAloudMode) {
         try { window.ReadAloudMode.openSettingsSheet(); } catch (e) { console.error('[SPC] openSettingsSheet error:', e); }
       } else {
@@ -1228,7 +1229,9 @@
     // Apply view
     applyView(state);
 
-    // Initialize mode settings sheet (moves difficulty manager & filters into side panel)
+    // Initialize mode settings sheet (moves difficulty manager & filters into side panel).
+    // Note: Read Aloud takes an intentional separate code path because ReadAloudMode manages its own
+    // settings sheet setup and unmount cleanup. Other practice modes use the generic controller sheet.
     if (modeId === 'read-aloud' && window.ReadAloudMode) {
       try { window.ReadAloudMode.initSettingsSheet(); } catch (_) {}
     } else {

@@ -7848,8 +7848,8 @@
         mediaStream.getTracks().forEach(track => track.stop());
       }
       const sampleRate = audioContext ? audioContext.sampleRate : 44100;
-      if (audioContext) {
-        audioContext.close();
+      if (audioContext && audioContext.state !== 'closed') {
+        try { audioContext.close(); } catch (err) { console.debug('[Audio Teardown] audioContext:', err); }
       }
       analyserNode = null;
       let totalLength = 0;
@@ -7923,6 +7923,7 @@
       }
 
       let analysisMatched = true;
+      let isAudioUnrateable = false;
       let observedSyllables = expectedSyllables;
       let analysisSummaryText = '';
 
@@ -7934,18 +7935,25 @@
         const api = new _cachedPraatAPI();
         const analysis = await api.analyze(blob, expectedSyllables, { targetWord: snapWord });
         if (analysis) {
-          observedSyllables = Number(analysis.observedSyllableCount ?? (analysis.syllables ? analysis.syllables.length : expectedSyllables));
-          if (!isUnrateable && expectedSyllables > 0) {
-            analysisMatched = (observedSyllables === expectedSyllables);
+          const audioRateable = analysis.quality?.rateable !== false;
+          observedSyllables = Number(analysis.observed?.syllableCount ?? analysis.observedSyllableCount ?? (analysis.syllables ? analysis.syllables.length : 0));
+          
+          if (!isUnrateable) {
+            if (!audioRateable) {
+              analysisMatched = false;
+              isAudioUnrateable = true;
+            } else if (expectedSyllables > 0) {
+              analysisMatched = (observedSyllables === expectedSyllables);
+            }
           }
-          analysisSummaryText = ` (Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
+          analysisSummaryText = ` (${isAudioUnrateable ? 'Unrateable audio · ' : ''}Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
         }
       } catch (err) {
         console.debug('[Auto Analysis] Praat API offline or bypassed:', err);
         analysisMatched = true;
       }
 
-      if (analysisMatched || isUnrateable) {
+      if (analysisMatched) {
         if (micStatus) {
           micStatus.textContent = `Status: ✓ Audio Matched${analysisSummaryText}`;
           micStatus.style.color = "#15803d";
@@ -7953,6 +7961,21 @@
         showToast(`✓ Recording matched "${snapWord}"! Auto-saving...`, 'success');
         setSaveButtonState(true);
         saveToCorpus();
+      } else if (isAudioUnrateable) {
+        if (micStatus) {
+          micStatus.textContent = `Status: ⚠️ Unrateable Audio${analysisSummaryText}`;
+          micStatus.style.color = "#b45309";
+        }
+        showToast(`⚠️ Unrateable audio for "${snapWord}". Please speak clearly into the microphone.`, 'warning');
+        setSaveButtonState(true);
+        setStepGuidance(`Step 4: Unrateable audio detected for "${snapWord}". Click Redo or Save Attempt.`);
+
+        if (rapidStreamActive) {
+          showToast(`Rapid Stream paused due to unrateable audio on "${snapWord}".`, 'info');
+          if (rapidStreamToggle) rapidStreamToggle.checked = false;
+          rapidStreamActive = false;
+          clearStreamCountdown();
+        }
       } else {
         if (micStatus) {
           micStatus.textContent = `Status: ⚠️ Syllable Mismatch${analysisSummaryText}`;

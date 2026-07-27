@@ -650,4 +650,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 462,2026-07-27,Implement post-recording auto-analysis and auto-save on match in CRM admin,Done,2026-07-27
 463,2026-07-27,Review debug and refactor CRM pronunciation corpus recording changes (8 bugs),Done,2026-07-27
 464,2026-07-27,Add Vietnamese translation Phase 4 to RFIB 3-model revision pipeline using Qwen3,Done,2026-07-27
-465,2026-07-27,Deploy release V1.8.37 to production and verify deployment,Done,2026-07-27
+465,2026-07-27,Review CRM pronunciation corpus recording and RFIB Qwen3 translation changes,Done,2026-07-27
+466,2026-07-27,Execute RFIB Vietnamese translation plan (Tasks 1-5 quality gate),In Progress,
+467,2026-07-27,Fix unrateable audio auto-save bypass and AudioContext teardown console error in CRM admin,Done,2026-07-27

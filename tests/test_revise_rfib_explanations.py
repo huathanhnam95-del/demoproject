@@ -269,5 +269,159 @@ class TestRevisionPipelineCore(unittest.TestCase):
         self.assertNotIn('"format"', source)
 
 
+class TestTranslationContracts(unittest.TestCase):
+    def test_translation_prompt_utf8_no_mojibake(self):
+        exp = "The correct answer is 'received'."
+        prompt = script.build_translation_prompt(exp)
+        self.assertIn("Tóm lại", prompt)
+        self.assertIn("em", prompt)
+        self.assertNotIn("TÃ³m", prompt)
+        self.assertNotIn("láº¡i", prompt)
+        self.assertIn("PARAPHRASE", prompt)
+        self.assertIn(exp, prompt)
+
+    @patch("scripts.revise_rfib_explanations.requests.post")
+    def test_query_ollama_text_payload_and_nothink_prefix(self, mock_post):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"response": "<think>some internal thought</think>Tóm lại, em cần ghi nhớ..."}
+        mock_post.return_value = mock_resp
+
+        res = script.query_ollama_text("qwen3:14b", "Test prompt")
+        self.assertEqual(res, "Tóm lại, em cần ghi nhớ...")
+        mock_post.assert_called_once()
+        payload = mock_post.call_args[1]["json"]
+        self.assertNotIn("format", payload)
+        self.assertTrue(payload["prompt"].startswith("/no_think\n\n"))
+
+    @patch("scripts.revise_rfib_explanations.query_ollama_text")
+    def test_translate_blanks_adds_all_four_vi_fields_and_preserves_raw(self, mock_query):
+        mock_query.return_value = "Tóm lại, em nhớ chọn 'received' nhé."
+
+        blank = {
+            "blank_index": 1,
+            "correct_answer": "received",
+            "grammar_tag": "Past Simple",
+            "final_explanation": "The correct answer is 'received'.",
+            "concise_explanation": "Past Simple.",
+            "confidence": "high",
+            "confidence_flags": [],
+        }
+        record = {
+            "id": 1,
+            "blanks": [blank],
+            "raw_artifacts": {"dr_raw": "raw1", "qw_raw": "raw2", "gm_raw": "raw3"}
+        }
+
+        updated_record, ok_idx, fail_idx = script.translate_blanks(record)
+        b = updated_record["blanks"][0]
+
+        # Check all 4 fields added
+        self.assertEqual(b["vi_explanation"], "Tóm lại, em nhớ chọn 'received' nhé.")
+        self.assertEqual(b["vi_raw"], "Tóm lại, em nhớ chọn 'received' nhé.")
+        self.assertEqual(b["vi_model"], "qwen3:14b")
+        self.assertTrue("vi_timestamp" in b)
+        self.assertEqual(ok_idx, [1])
+        self.assertEqual(fail_idx, [])
+
+        # Check Phase 1-3 byte-for-byte unchanged
+        self.assertEqual(b["final_explanation"], "The correct answer is 'received'.")
+        self.assertEqual(b["concise_explanation"], "Past Simple.")
+        self.assertEqual(b["confidence"], "high")
+        self.assertEqual(record["raw_artifacts"]["gm_raw"], "raw3")
+
+    @patch("scripts.revise_rfib_explanations.query_ollama_text")
+    def test_translate_blanks_resume_skips_complete_and_translates_missing(self, mock_query):
+        mock_query.return_value = "Tóm lại, em chọn 'reform'."
+
+        b1 = {
+            "blank_index": 1,
+            "final_explanation": "Exp 1",
+            "vi_explanation": "Tóm lại, em chọn 'proposal'.",
+            "vi_raw": "Tóm lại, em chọn 'proposal'.",
+            "vi_model": "qwen3:14b",
+            "vi_timestamp": "2026-07-27T00:00:00+00:00"
+        }
+        b2 = {
+            "blank_index": 2,
+            "final_explanation": "Exp 2"
+        }
+        record = {"id": 10, "blanks": [b1, b2]}
+
+        # In resume mode (no_resume=False)
+        updated_record, ok_idx, fail_idx = script.translate_blanks(record, no_resume=False)
+
+        # Ollama queried only for blank 2
+        mock_query.assert_called_once()
+        self.assertEqual(b1["vi_explanation"], "Tóm lại, em chọn 'proposal'.") # Untouched
+        self.assertEqual(b2["vi_explanation"], "Tóm lại, em chọn 'reform'.")
+        self.assertEqual(ok_idx, [2])
+        self.assertEqual(fail_idx, [])
+
+    @patch("scripts.revise_rfib_explanations.query_ollama_text")
+    def test_translate_blanks_no_resume_retranslates_existing(self, mock_query):
+        mock_query.side_effect = [
+            "Tóm lại, new 1.",
+            "Tóm lại, new 2."
+        ]
+
+        b1 = {
+            "blank_index": 1,
+            "final_explanation": "Exp 1",
+            "vi_explanation": "Old 1",
+            "vi_raw": "Old 1",
+            "vi_model": "qwen3:14b",
+            "vi_timestamp": "2026-07-27T00:00:00+00:00"
+        }
+        b2 = {
+            "blank_index": 2,
+            "final_explanation": "Exp 2",
+            "vi_explanation": "Old 2",
+            "vi_raw": "Old 2",
+            "vi_model": "qwen3:14b",
+            "vi_timestamp": "2026-07-27T00:00:00+00:00"
+        }
+        record = {"id": 10, "blanks": [b1, b2]}
+
+        updated_record, ok_idx, fail_idx = script.translate_blanks(record, no_resume=True)
+
+        self.assertEqual(mock_query.call_count, 2)
+        self.assertEqual(b1["vi_explanation"], "Tóm lại, new 1.")
+        self.assertEqual(b2["vi_explanation"], "Tóm lại, new 2.")
+        self.assertEqual(ok_idx, [1, 2])
+
+    @patch("scripts.revise_rfib_explanations.load_sidecar")
+    @patch("scripts.revise_rfib_explanations.load_workbook_data")
+    def test_cli_missing_ids_exits_code_2(self, mock_load_wb, mock_load_sidecar):
+        mock_load_wb.return_value = {1: {"id": 1}}
+        mock_load_sidecar.return_value = {1: {"id": 1, "blanks": []}}
+
+        test_args = ["script", "--translate", "--ids", "1,999"]
+        with patch.object(sys, "argv", test_args):
+            with self.assertRaises(SystemExit) as cm:
+                script.main()
+            self.assertEqual(cm.exception.code, 2)
+
+    @patch("scripts.revise_rfib_explanations.query_ollama_text")
+    @patch("scripts.revise_rfib_explanations.load_sidecar")
+    @patch("scripts.revise_rfib_explanations.load_workbook_data")
+    @patch("scripts.revise_rfib_explanations.save_sidecar_atomic")
+    def test_cli_failed_blank_exits_code_1(self, mock_save, mock_load_wb, mock_load_sidecar, mock_query):
+        mock_load_wb.return_value = {1: {"id": 1}}
+        mock_load_sidecar.return_value = {
+            1: {
+                "id": 1,
+                "blanks": [{"blank_index": 1, "final_explanation": "Exp 1"}]
+            }
+        }
+        mock_query.return_value = None # Failure
+
+        test_args = ["script", "--translate", "--ids", "1"]
+        with patch.object(sys, "argv", test_args):
+            with self.assertRaises(SystemExit) as cm:
+                script.main()
+            self.assertEqual(cm.exception.code, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

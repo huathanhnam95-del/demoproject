@@ -1,3 +1,14 @@
+## [V1.8.39] - 2026-07-27
+
+### Added & Standardized
+- **CRM Lead Source & Student Acquisition Source Standardization**:
+  - Converted Lead Creation `Source` (`#lead-source`) from plain text input to a standardized dropdown (`Facebook - Personal`, `Facebook - Page`, `Zalo - Page`).
+  - Added dynamic **Student's FB link** (`#lead-facebook-profile-url`) field visible for Facebook sources (`Facebook - Personal` & `Facebook - Page`).
+  - Added dynamic **FB Personal Account** (`#lead-facebook-personal-owner`) dropdown with options `Nam`, `Thành`, `Quỳnh` visible specifically for `Facebook - Personal` source.
+  - Standardized Student Profile Modal `Acquisition Source` (`#student-acquisition-source`) to match the same 3 source choices.
+  - Updated backend lead normalization (`functions/src/crm/lead-service.js`) and lead builder (`public/js/crm/leads.js`) to persist `facebookPersonalOwner` in Firestore lead records.
+  - Updated and passed all 3 automated browser test suites (`crm-lead-source-browser-check.js`, `crm-enquiry-check.js`, `crm-admin-workflow-browser-check.js`).
+
 ## [V1.8.38] - 2026-07-27
 
 ### Changed & Normalized

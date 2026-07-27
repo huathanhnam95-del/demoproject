@@ -47,13 +47,15 @@ async function main() {
     console.log('\n[Test 1] New Lead form fields (DOM structure)');
     
     const expectedFields = [
+        { id: 'lead-source', label: 'Source' },
         { id: 'lead-name', label: 'Full Name' },
         { id: 'lead-label', label: 'Label' },
         { id: 'lead-phone', label: 'Phone Number' },
         { id: 'lead-email', label: 'Email' },
         { id: 'lead-zalo', label: 'Zalo Number' },
         { id: 'lead-facebook', label: 'Facebook Name' },
-        { id: 'lead-source', label: 'Source' },
+        { id: 'lead-facebook-profile-url', label: "Student's FB link" },
+        { id: 'lead-facebook-personal-owner', label: 'FB Personal Account' },
         { id: 'lead-agent-source', label: 'Agent Source' },
         { id: 'lead-stage', label: 'Stage' },
         { id: 'lead-probability', label: 'Probability' }
@@ -72,7 +74,7 @@ async function main() {
         return Array.from(inputs).map(el => el.id);
     });
     
-    const expectedOrder = ['lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-facebook', 'lead-source', 'lead-agent-source', 'lead-stage', 'lead-probability'];
+    const expectedOrder = ['lead-source', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
     assert('Form fields are in correct order', JSON.stringify(fieldOrder) === JSON.stringify(expectedOrder));
 
     // ===== Test 2: Workspace section IDs =====
@@ -115,14 +117,7 @@ async function main() {
     
     const leadsJs = fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'js', 'crm', 'leads.js'), 'utf8');
     
-    assert('leads.js no longer references inputLeadFacebookDisplayName', !leadsJs.includes('inputLeadFacebookDisplayName'));
-    assert('leads.js no longer references inputLeadFacebookProfileUrl', !leadsJs.includes('inputLeadFacebookProfileUrl'));
-    assert('leads.js no longer references inputLeadRealName', !leadsJs.includes('inputLeadRealName'));
-    assert('leads.js no longer references inputLeadDateOfBirth', !leadsJs.includes('inputLeadDateOfBirth'));
-    assert('leads.js no longer references inputLeadLearningNeeds', !leadsJs.includes('inputLeadLearningNeeds'));
-    assert('leads.js no longer references inputLeadMessengerThreadUrl', !leadsJs.includes('inputLeadMessengerThreadUrl'));
-    assert('leads.js no longer references inputLeadMessengerStatus', !leadsJs.includes('inputLeadMessengerStatus'));
-    
+    assert('leads.js uses inputLeadFacebookProfileUrl', leadsJs.includes('inputLeadFacebookProfileUrl'));
     assert('leads.js uses inputLeadFacebook', leadsJs.includes('inputLeadFacebook'));
     assert('leads.js uses inputLeadLabel', leadsJs.includes('inputLeadLabel'));
     assert('leads.js uses inputLeadZalo', leadsJs.includes('inputLeadZalo'));

@@ -41,6 +41,7 @@ window.CrmLeads = (function () {
             facebook: facebook || null,
             facebookDisplayName: facebook || null,
             facebookProfileUrl: getValue(elements.inputLeadFacebookProfileUrl) || null,
+            facebookPersonalOwner: getValue(elements.inputLeadFacebookPersonalOwner) || null,
             realName: getValue(elements.inputLeadRealName) || null,
             dateOfBirth: getValue(elements.inputLeadDateOfBirth) || null,
             learningNeeds: getValue(elements.inputLeadLearningNeeds) || null,

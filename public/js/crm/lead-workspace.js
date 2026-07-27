@@ -50,6 +50,33 @@ window.CrmLeadWorkspace = (function () {
             return pieces.join(' / ');
         }
 
+        function updateLeadSourceVisibility() {
+            const inputLeadSource = elements.inputLeadSource || document.getElementById('lead-source');
+            const groupUrl = elements.leadFacebookProfileUrlGroup || document.getElementById('lead-facebook-profile-url-group');
+            const inputUrl = elements.inputLeadFacebookProfileUrl || document.getElementById('lead-facebook-profile-url');
+            const groupOwner = elements.leadFacebookPersonalOwnerGroup || document.getElementById('lead-facebook-personal-owner-group');
+            const inputOwner = elements.inputLeadFacebookPersonalOwner || document.getElementById('lead-facebook-personal-owner');
+
+            const val = String(inputLeadSource?.value || '').trim();
+            const isFacebook = val.startsWith('Facebook');
+            const isFacebookPersonal = val === 'Facebook - Personal';
+
+            if (groupUrl) {
+                groupUrl.style.display = isFacebook ? '' : 'none';
+            }
+            if (!isFacebook && inputUrl) {
+                inputUrl.value = '';
+            }
+
+            if (groupOwner) {
+                groupOwner.style.display = isFacebookPersonal ? '' : 'none';
+            }
+            if (!isFacebookPersonal && inputOwner) {
+                inputOwner.value = 'Nam';
+            }
+        }
+        window.updateLeadSourceVisibility = updateLeadSourceVisibility;
+
         function resetLeadComposer() {
             const inputs = [
                 elements.inputLeadName,
@@ -58,16 +85,23 @@ window.CrmLeadWorkspace = (function () {
                 elements.inputLeadPhone,
                 elements.inputLeadZalo,
                 elements.inputLeadFacebook,
-                elements.inputLeadSource,
+                elements.inputLeadFacebookProfileUrl,
                 elements.inputLeadAgentSource,
                 elements.inputLeadProbability
             ];
             inputs.forEach((input) => {
                 if (input) input.value = '';
             });
+            if (elements.inputLeadSource) {
+                elements.inputLeadSource.value = 'Facebook - Personal';
+            }
+            if (elements.inputLeadFacebookPersonalOwner) {
+                elements.inputLeadFacebookPersonalOwner.value = 'Nam';
+            }
             if (elements.inputLeadStage) {
                 elements.inputLeadStage.value = 'new';
             }
+            updateLeadSourceVisibility();
             if (elements.btnSaveLead) {
                 elements.btnSaveLead.disabled = false;
                 elements.btnSaveLead.textContent = 'Save Lead';
@@ -624,6 +658,11 @@ window.CrmLeadWorkspace = (function () {
 
         function setupLeadComposer() {
             if (!elements.leadComposer) return;
+
+            if (elements.inputLeadSource) {
+                elements.inputLeadSource.addEventListener('change', updateLeadSourceVisibility);
+                updateLeadSourceVisibility();
+            }
 
             if (elements.btnNewLead) {
                 elements.btnNewLead.addEventListener('click', () => {

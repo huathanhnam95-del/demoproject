@@ -655,7 +655,9 @@ async function main() {
     await page.fill('#lead-name', 'Lead One');
     await page.fill('#lead-email', 'lead.one@example.com');
     await page.fill('#lead-phone', '0900000001');
-    await page.fill('#lead-source', 'facebook');
+    await page.selectOption('#lead-source', 'Facebook - Personal');
+    await page.fill('#lead-facebook-profile-url', 'https://facebook.com/lead.one');
+    await page.selectOption('#lead-facebook-personal-owner', 'Thành');
     await page.selectOption('#lead-agent-source', 'agent-source-1');
     await page.selectOption('#lead-stage', 'contacted');
     await page.fill('#lead-probability', '55');
@@ -669,9 +671,13 @@ async function main() {
     );
     assert.strictEqual(leadCreateRequest.body.agentSourceId, 'agent-source-1');
     assert.strictEqual(leadCreateRequest.body.stage, 'contacted');
+    assert.strictEqual(leadCreateRequest.body.source, 'Facebook - Personal');
+    assert.strictEqual(leadCreateRequest.body.facebookProfileUrl, 'https://facebook.com/lead.one');
+    assert.strictEqual(leadCreateRequest.body.facebookPersonalOwner, 'Thành');
 
     await page.click('.crm-lead-link[data-lead-id="lead-1"]');
     await page.waitForSelector('#lead-workspace', { state: 'visible' });
+
     await page.selectOption('#lead-entrance-test-type', 'segmental_screening_v1');
     await page.click('#btn-add-lead-entrance-test');
     await page.waitForFunction(() => /token-test-1/.test(document.getElementById('lead-entrance-test-link')?.value || ''));

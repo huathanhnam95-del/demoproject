@@ -78,6 +78,9 @@ function normalizeLeadCore(input, fallback = {}) {
         facebookProfileUrl: Object.prototype.hasOwnProperty.call(source, 'facebookProfileUrl')
             ? cleanOptionalString(source.facebookProfileUrl)
             : (base.facebookProfileUrl ?? null),
+        facebookPersonalOwner: Object.prototype.hasOwnProperty.call(source, 'facebookPersonalOwner')
+            ? cleanOptionalString(source.facebookPersonalOwner)
+            : (base.facebookPersonalOwner ?? null),
         crmId: Object.prototype.hasOwnProperty.call(source, 'crmId')
             ? cleanOptionalString(source.crmId)
             : (base.crmId ?? null),

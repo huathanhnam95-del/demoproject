@@ -7776,11 +7776,11 @@
             }
             const chunkRms = Math.sqrt(chunkSumSq / inputBuffer.length);
 
-            if (chunkPeak > 0.03 || chunkRms > 0.01) {
+            if (chunkPeak > 0.012 || chunkRms > 0.003) {
               vadSpeechDetected = true;
               vadSilenceStart = 0;
             } else if (vadSpeechDetected) {
-              if (chunkPeak < 0.012 && chunkRms < 0.005) {
+              if (chunkPeak < 0.008 && chunkRms < 0.002) {
                 if (!vadSilenceStart) {
                   vadSilenceStart = Date.now();
                 } else if (Date.now() - vadSilenceStart > 600) {
@@ -7859,7 +7859,7 @@
       const rms = mergedSamples.length ? Math.sqrt(sumSquares / mergedSamples.length) : 0;
       const allowSilentBrowserFixture = window.__CRM_BROWSER_TEST__ === true;
       const allowUnrateableRecording = currentCategory === 'unrateable';
-      if (!allowSilentBrowserFixture && !allowUnrateableRecording && (!mergedSamples.length || peak < 0.01 || rms < 0.002)) {
+      if (!allowSilentBrowserFixture && !allowUnrateableRecording && (!mergedSamples.length || peak < 0.004 || rms < 0.0008)) {
         audioBlob = null;
         if (playbackContainer) playbackContainer.style.display = 'none';
         if (micStatus) {
@@ -7872,8 +7872,8 @@
         if (btnRedo) btnRedo.disabled = false;
         if (btnNextWord) btnNextWord.disabled = false;
         setSaveButtonState(false);
-        setStepGuidance(`Step 3: No speech detected. Click Redo, say “${currentWord}” clearly, and click Stop.`);
-        showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
+        setStepGuidance(`Step 3: No speech detected for “${currentWord}”. Click Redo or speak louder.`);
+        showToast(`No speech detected for "${currentWord}". Please speak clearly into the microphone.`, 'error');
         if (rapidStreamActive) {
           startStreamCountdown(() => startRecording());
         }
@@ -7894,7 +7894,7 @@
       showToast('Audio captured successfully.', 'success');
 
       if (rapidStreamActive && audioBlob) {
-        setTimeout(() => saveToCorpus(), 200);
+        saveToCorpus();
       }
     }
     function encodeWAV(samples, sampleRate) {
@@ -7975,10 +7975,17 @@
         }
         showToast('Successfully saved to cloud storage.', 'success');
         currentVersionSaved = true;
+        const savedW = String(currentWord || '').trim().toLowerCase();
+        const savedCat = String(categoryValue || '').trim().toLowerCase();
+        savedWordSet.add(savedW);
+        if (!savedVersionsByWord.has(savedW)) savedVersionsByWord.set(savedW, new Set());
+        savedVersionsByWord.get(savedW).add(savedCat);
+        updateWordBadges();
         await loadSavedSamples();
         redoRecording();
         currentVersionSaved = true;
         updateVersionButtons();
+
 
         // Auto-advance logic
         const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;

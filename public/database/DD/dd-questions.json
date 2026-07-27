@@ -67061,37 +67061,193 @@
         "blankId": "q291-b1",
         "index": 0,
         "answer": "wellbeing",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands an Abstract Noun to complete a list of benefits alongside 'health.' Semantically, 'wellbeing' refers to overall quality of life—a comprehensive state encompassing physical, mental, and emotional welfare. This concept forms a highly natural and standard collocation with 'health' in academic health discourse, emphasizing holistic care.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The fixed and common collocation 'health and wellbeing' requires a parallel abstract noun structure.",
+        "coherenceCue": "The pairing requires an abstract noun that denotes general human welfare or overall state of being.",
+        "vocabGrammarCue": "Requires an Abstract Noun to describe the comprehensive quality of life, rather than just a physical condition.",
+        "contextNote": "The sentence establishes a broad scope of benefits, linking physical activity not only to bodily health but also to general emotional and mental welfare.",
+        "distractorNotes": [
+          {
+            "option": "physical",
+            "reason": "This is an adjective (e.g., 'physical activity') and cannot function as a standalone noun in this parallel list structure."
+          },
+          {
+            "option": "chronic",
+            "reason": "This is an adjective (e.g., 'chronic disease') and does not fit the required noun slot following the prepositional phrase."
+          },
+          {
+            "option": "recommends",
+            "reason": "This is a verb, which violates the grammatical structure of listing nouns in this context."
+          },
+          {
+            "option": "preferably",
+            "reason": "This is an adverb and cannot function as a noun to maintain the parallel list structure."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q291-b2",
         "index": 1,
         "answer": "physical",
-        "explanation": null
+        "explanation": "\"Physical\" functions as an adjective, modifying the noun 'activity.' It specifically refers to movement involving the body. In the context of medical guidelines and general wellness discourse, 'physical activity' is the universally recognized and most natural collocation. Using this phrase ensures both grammatical precision (Adjective + Noun) and topical coherence regarding health benefits.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The standard collocation 'physical activity' is essential for discussing bodily movement and health.",
+        "coherenceCue": "The passage discusses bodily health, exercise, and disease prevention.",
+        "vocabGrammarCue": "Requires an adjective to modify the noun 'activity'.",
+        "contextNote": "The phrase 'Regular physical activity' sets the topic of the entire sentence.",
+        "distractorNotes": [
+          {
+            "option": "recruits",
+            "reason": "This is a verb and cannot grammatically function as an adjective modifying 'activity'."
+          },
+          {
+            "option": "exploit",
+            "reason": "This is also a verb, failing to meet the required adjectival slot before 'activity'."
+          },
+          {
+            "option": "medicine",
+            "reason": "Although it is a noun, using it creates an incorrect and unnatural collocation (e.g., 'medicine activity')."
+          },
+          {
+            "option": "affordably",
+            "reason": "This is an adverb; adverbs modify verbs or adjectives, but cannot directly modify the noun 'activity'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q291-b3",
         "index": 2,
         "answer": "chronic",
-        "explanation": null
+        "explanation": "This blank requires an adjective to modify the noun 'diseases.' The passage discusses lifestyle changes aimed at mitigating risks associated with persistent health issues. 'Chronic' means lasting for a long time or persisting over an extended period, making it the precise and natural descriptor for conditions like heart disease and diabetes. Using this term establishes the specific medical context of ongoing, long-term illness.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The list of examples (heart disease, stroke) requires an adjective that specifies a condition's duration or persistence. 'Chronic' is the standard medical term for long-lasting diseases.",
+        "coherenceCue": "The list of examples (heart disease, stroke) dictates that the missing adjective must refer to persistence or duration.",
+        "vocabGrammarCue": "An adjective is needed immediately before 'diseases' to specify their nature (long-term).",
+        "contextNote": "Regular physical activity is important in reducing the risk of [ADJECTIVE] diseases...",
+        "distractorNotes": [
+          {
+            "option": "recruits",
+            "reason": "This is a verb and cannot grammatically modify the noun 'diseases'."
+          },
+          {
+            "option": "exploit",
+            "reason": "This is a verb and does not fit the required adjectival function."
+          },
+          {
+            "option": "medicine",
+            "reason": "This is a noun. While related to health, it cannot function as an adjective modifying 'diseases' in this context."
+          },
+          {
+            "option": "affordably",
+            "reason": "This is an adverb and modifies verbs or adjectives; it cannot serve as the primary descriptive adjective for 'diseases'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q291-b4",
         "index": 3,
         "answer": "recommends",
-        "explanation": null
+        "explanation": "This blank requires a main verb to complete the clause, describing what the 'National Physical Activity Guidelines' do. Semantically, guidelines are authoritative sources of public health advice, making 'recommends' the perfect fit. Grammatically, since 'Guidelines' is treated as a singular entity (a single set of rules), the third-person singular present tense form (-s ending) is mandatory for subject-verb agreement.",
+        "syntaxRequirement": "Third-Person Singular Present Tense Verb",
+        "collocationCohesionClue": "The subject ('Guidelines') is an official, advisory body. The required verb must therefore be a formal action that describes the issuance of advice or rules.",
+        "coherenceCue": "The sentence structure demands an action verb that defines the directive or advice provided by the guidelines.",
+        "vocabGrammarCue": "Requires a transitive verb (a main verb) to link the authoritative source (subject) to the specific health actions they advise (object).",
+        "contextNote": "The Guidelines are the subject performing the action of advising, establishing them as the source of the directive.",
+        "distractorNotes": [
+          {
+            "option": "recruits",
+            "reason": "This verb relates to enlistment or hiring people and has no semantic connection to issuing public health advice."
+          },
+          {
+            "option": "exploit",
+            "reason": "This verb carries a negative connotation (to use unfairly) and is semantically inappropriate for describing official, positive public health recommendations."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q291-b5",
         "index": 4,
         "answer": "preferably",
-        "explanation": null
+        "explanation": "The word 'preferably' functions as an adverb meaning 'ideally' or 'if possible.' In this context, it is used by health guidelines to transition from a minimum requirement (30 minutes) to the most beneficial schedule. It maintains the authoritative and advisory tone of the text by suggesting the optimal frequency for achieving maximum health benefits.",
+        "syntaxRequirement": "Adverbial Modifier (Modifying frequency or ideal condition)",
+        "collocationCohesionClue": "The phrase '30 minutes... [adverb] every day of the week' requires an adverb that introduces an optimal, preferred timing.",
+        "coherenceCue": "The passage shifts logically from stating a baseline minimum requirement to offering an ideal, recommended practice, necessitating an adverb like 'preferably.'",
+        "vocabGrammarCue": "Requires an adverbial phrase to modify the frequency and timing indicated by the time marker ('every day of the week').",
+        "contextNote": "The National Physical Activity Guidelines for Adults recommends at least 30 minutes of moderate-intensity physical activity, preferably every day of the week...",
+        "distractorNotes": [
+          {
+            "option": "recruits",
+            "reason": "This is a verb (V) and cannot grammatically or semantically modify the frequency of activity."
+          },
+          {
+            "option": "exploit",
+            "reason": "This is also a verb (V) that has no logical connection to health guidelines or optimal physical timing."
+          },
+          {
+            "option": "medicine",
+            "reason": "This is a noun (N). The blank requires an adverbial modifier, not a countable object."
+          },
+          {
+            "option": "affordably",
+            "reason": "While grammatically an adverb, it relates solely to cost ('affordable') and does not fit the semantic context of optimal activity frequency or timing."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q291-b6",
         "index": 5,
         "answer": "obtain",
-        "explanation": null
+        "explanation": "The structure requires a verb to complete the purpose clause, introduced by the infinitive marker 'to.' The phrase 'health benefits' functions as an abstract noun object. 'Obtain' is the most precise and natural choice here because it means to acquire or secure something (like health advantages). It fits perfectly both grammatically—as a transitive verb—and contextually, establishing that activity is done *in order to* achieve these specific outcomes.",
+        "syntaxRequirement": "Base Form Transitive Verb",
+        "collocationCohesionClue": "Acquiring abstract advantages or benefits; common collocation with 'health' and 'benefits'",
+        "coherenceCue": "The purpose clause ('to...') establishes the action taken in order to achieve the stated outcome.",
+        "vocabGrammarCue": "A verb is needed to complete the sequence: Activity -> Purpose -> [Verb] + Object (benefits).",
+        "contextNote": "The guidelines recommend activity 'to obtain health benefits.'",
+        "distractorNotes": [
+          {
+            "option": "wellbeing",
+            "reason": "This is a noun and cannot function as the main verb following 'to'."
+          },
+          {
+            "option": "physical",
+            "reason": "This is an adjective, which modifies nouns (e.g., physical activity) but cannot serve as the action verb here."
+          },
+          {
+            "option": "chronic",
+            "reason": "This is an adjective used earlier in the passage; it does not fit grammatically or semantically as a verb."
+          },
+          {
+            "option": "recommends",
+            "reason": "While a verb, using 'to recommends' changes the meaning and structure unnecessarily. The focus must be on the *recipient* of the benefits, not advising others to recommend them."
+          },
+          {
+            "option": "recruits",
+            "reason": "This verb relates specifically to enrolling or hiring people (e.g., military recruits) and has no semantic connection to health advantages."
+          },
+          {
+            "option": "exploit",
+            "reason": "Although grammatically possible, 'obtain' is the more natural and precise collocation in scientific/guideline contexts for acquiring benefits; 'exploit' often carries negative connotations of misuse or over-use."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

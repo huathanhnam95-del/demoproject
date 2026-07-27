@@ -330,9 +330,9 @@ const essayAiAdminRouter = createEssayAiAdminRouter({
     sendError
 });
 
+app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
-app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);

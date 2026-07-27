@@ -103,6 +103,16 @@ function registerLocalOnlyRoutes(router, deps) {
         console.warn('[Admin] Prod → Emulator sync routes mounted.');
     }
 
+    const createEssayAiAdminRouter = require('../../functions/src/essay-ai/admin-routes');
+    const essayAiAdminRouter = createEssayAiAdminRouter({
+        db: localDb,
+        authMiddleware: localAuthMiddleware,
+        adminMiddleware: (req, res, next) => next(),
+        sendSuccess: localSendSuccess,
+        sendError: localSendError
+    });
+    router.use('/essay-ai', essayAiAdminRouter);
+
     router.post('/sync-database', localAuthMiddleware, async (req, res) => {
         const type = String(req.body?.type || '').trim();
 

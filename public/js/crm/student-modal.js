@@ -61,6 +61,7 @@ window.CrmStudentModal = (function () {
                 elements.inputStudentZalo,
                 elements.inputStudentFacebook,
                 elements.inputStudentFacebookProfileUrl,
+                elements.inputStudentFacebookPersonalOwner,
                 elements.inputStudentAcquisitionSource,
                 elements.inputStudentAgentSource,
                 elements.inputScoreOverall,

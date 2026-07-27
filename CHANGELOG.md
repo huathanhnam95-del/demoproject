@@ -1,3 +1,12 @@
+## [V1.8.40] - 2026-07-27
+
+### Added & Verified
+- **Student Management FB Link & Personal Owner Dropdown**:
+  - Added **Student's FB link** (`#student-facebook-profile-url`) and **FB Personal Account** (`#student-facebook-personal-owner` with options `Nam`, `Thành`, `Quỳnh`) to the Student Profile Modal (`#crm-student-modal`) under the Info tab.
+  - Implemented dynamic visibility behavior (`updateStudentSourceVisibility()`): `Facebook - Personal` shows both fields, `Facebook - Page` shows FB link, `Zalo - Page` hides both fields.
+  - Updated frontend payload builder (`public/js/crm/students.js`) and backend normalization (`functions/src/crm/student-service.js`) to persist both fields.
+  - Added automated browser test `crm-student-source-browser-check.js` (PASSED).
+
 ## [V1.8.39] - 2026-07-27
 
 ### Added & Standardized

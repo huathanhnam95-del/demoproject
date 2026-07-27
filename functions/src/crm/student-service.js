@@ -134,6 +134,9 @@ function normalizeStudentCore(input, fallback = {}) {
         facebookProfileUrl: Object.prototype.hasOwnProperty.call(source, 'facebookProfileUrl')
             ? cleanOptionalString(source.facebookProfileUrl)
             : (looksLikeUrl(base.facebookProfileUrl) ? cleanOptionalString(base.facebookProfileUrl) : (looksLikeUrl(base.facebook) ? cleanOptionalString(base.facebook) : (base.facebookProfileUrl ?? null))),
+        facebookPersonalOwner: Object.prototype.hasOwnProperty.call(source, 'facebookPersonalOwner')
+            ? cleanOptionalString(source.facebookPersonalOwner)
+            : (base.facebookPersonalOwner ?? null),
         crmId: Object.prototype.hasOwnProperty.call(source, 'crmId') ? cleanOptionalString(source.crmId) : (base.crmId ?? null),
         lifecycleStage: Object.prototype.hasOwnProperty.call(source, 'lifecycleStage')
             ? normalizeLifecycleStage(source.lifecycleStage)

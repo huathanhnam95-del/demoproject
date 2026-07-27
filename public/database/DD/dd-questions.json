@@ -90966,25 +90966,121 @@
         "blankId": "q400-b1",
         "index": 0,
         "answer": "debate",
-        "explanation": null
+        "explanation": "Grammatically, the blank must be filled by a noun to maintain parallel structure with 'discussion.' Semantically, 'debate' refers to formal argument and intense exchange of ideas. This concept perfectly complements 'discussion,' establishing that the student union is designed for high-level intellectual engagement—a key function in an academic/political setting. The pairing signifies both general talk and structured argumentation.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The structure 'forum for X and for discussion' requires two parallel, abstract nouns that represent intellectual activities or topics of conversation.",
+        "coherenceCue": "The collocation 'forum for debate' establishes the primary, formal function of the student union as a center for reasoned intellectual exchange.",
+        "vocabGrammarCue": "Noun form required; essential collocation: 'forum for debate.'",
+        "contextNote": "The passage emphasizes that university life, particularly through student unions, is centered on political and academic discourse.",
+        "distractorNotes": [
+          {
+            "option": "agreement",
+            "reason": "This word denotes an *outcome* (a consensus or agreement reached), not the active process of discussion or argument that takes place in a forum."
+          },
+          {
+            "option": "complaints",
+            "reason": "While complaints are possible, 'debate' is a more formal and encompassing term suitable for describing the expected level of intellectual exchange at this institutional level."
+          },
+          {
+            "option": "disparity",
+            "reason": "This noun refers to a difference or imbalance (a gap) between things. It does not fit the semantic role of an activity listed alongside 'discussion.'"
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q400-b2",
         "index": 1,
         "answer": "accommodation",
-        "explanation": null
+        "explanation": "\"Accommodation\" is the standard term for suitable living quarters or lodging. Grammatically, it functions as the subject of this clause and must be a singular countable noun. Semantically, since the sentence describes where students 'want to live,' only a word related to physical residence makes sense. This link establishes that the type of housing directly reflects the student's personal ideals.",
+        "syntaxRequirement": "Singular Countable Noun (Grammatical Subject)",
+        "collocationCohesionClue": "The structure 'in which students want to live in' demands a noun referring specifically to housing, lodging, or residential quarters.",
+        "coherenceCue": "The phrase 'in which students want to live' establishes a strong semantic requirement for a word denoting physical dwelling or residence.",
+        "vocabGrammarCue": "Requires a specific noun meaning 'housing arrangement,' 'lodging,' or 'residence.'",
+        "contextNote": "The passage links the physical living environment to personal values and ideals, making the choice of housing critical to the theme.",
+        "distractorNotes": [
+          {
+            "option": "district",
+            "reason": "While 'district' refers broadly to a geographical area, 'accommodation' is the precise term used when discussing specific housing or lodging provided for residents."
+          },
+          {
+            "option": "complaints",
+            "reason": "This noun refers to grievances or complaints and has no semantic connection whatsoever to physical living space or dwelling."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q400-b3",
         "index": 2,
         "answer": "ideals",
-        "explanation": null
+        "explanation": "Semantically, this blank demands a plural abstract noun that represents deeply held beliefs or aspirational goals. The structure 'reflect their [Noun]' necessitates a concept of high standards or personal values. 'Ideals' perfectly fulfills both the grammatical requirement (plural abstract noun) and the contextual meaning, establishing a direct link between students' internal aspirations and their living choices.",
+        "syntaxRequirement": "Plural Abstract Noun",
+        "collocationCohesionClue": "The verb 'reflect' requires a concept representing deep personal values or aspirations, making 'ideals' the natural collocate.",
+        "coherenceCue": "The connection between desired living arrangements and core personal aspirations.",
+        "vocabGrammarCue": "Nouns related to values or beliefs are required after 'reflect their'.",
+        "contextNote": "The accommodation... is one that reflects their ideals.",
+        "distractorNotes": [
+          {
+            "option": "debate",
+            "reason": "While a noun, it refers to an action or discussion topic, not the core personal values that determine housing choice."
+          },
+          {
+            "option": "opportunity",
+            "reason": "This word means chance or possibility; students reflect their beliefs (ideals), not merely opportunities."
+          },
+          {
+            "option": "complaints",
+            "reason": "These are negative statements, which contradicts the positive, aspirational nature implied by the sentence's context."
+          },
+          {
+            "option": "parties",
+            "reason": "This refers to social gatherings or groups and has no semantic connection to personal housing standards or values."
+          },
+          {
+            "option": "agreement",
+            "reason": "It implies mutual consent between people, whereas the blank requires an internal, individual set of beliefs (aspirations)."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q400-b4",
         "index": 3,
         "answer": "opportunity",
-        "explanation": null
+        "explanation": "Semantically, the sentence discusses the vast scope of growth and experiences available in a university. The structure 'There is so much...' mandates an uncountable noun. 'Opportunity' perfectly fits this context because it functions as an abstract concept representing numerous chances for self-development and academic pursuit. It is grammatically sound and conveys the intended meaning of potential.",
+        "syntaxRequirement": "Uncountable Noun (Mass Noun)",
+        "collocationCohesionClue": "The quantifier 'so much' requires an abstract, uncountable noun that denotes potential chances or possibilities.",
+        "coherenceCue": "The passage shifts from describing student life/ideals to quantifying the overall potential growth available within academia.",
+        "vocabGrammarCue": "Requires an abstract, uncountable noun following 'so much' that relates specifically to chances or possibilities for advancement.",
+        "contextNote": "The phrase 'for students to pursue their interests' establishes the necessary meaning: positive, developmental chances.",
+        "distractorNotes": [
+          {
+            "option": "debate",
+            "reason": "It is a topic or action (a discussion), not an abstract quantity that can be measured by 'so much'."
+          },
+          {
+            "option": "accommodation",
+            "reason": "This refers to a physical place and cannot represent the abstract idea of potential chances."
+          },
+          {
+            "option": "ideals",
+            "reason": "It is a plural noun referring to beliefs, not the general concept of available opportunities. Furthermore, it was used earlier in the passage."
+          },
+          {
+            "option": "complaints",
+            "reason": "The meaning is incorrect; 'complaints' refers to grievances, which contradicts the positive tone of pursuing interests."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -91090,19 +91186,109 @@
         "blankId": "q401-b1",
         "index": 0,
         "answer": "hunters",
-        "explanation": null
+        "explanation": "The blank demands a plural noun to complete the descriptive phrase ('cunning South American [NOUN]'). Semantically, the passage establishes the eels as powerful attackers capable of delivering 'debilitating blows.' Therefore, the missing word must define their active, predatory nature. 'Hunters' perfectly fulfills this role, providing both grammatical accuracy (plural countable noun) and strong contextual coherence by identifying them as specialized predators.",
+        "syntaxRequirement": "Plural Noun",
+        "collocationCohesionClue": "The blank requires a plural noun that functions as an appositive, describing the subject's primary role or function (predator).",
+        "coherenceCue": "The entire paragraph focuses on the eel's hunting methods and electrical attacks on prey.",
+        "vocabGrammarCue": "Requires a plural noun that defines an animal’s function or role in its ecosystem (predator).",
+        "contextNote": "The phrase 'can deliver debilitating blows' strongly establishes the subject as active, predatory hunters.",
+        "distractorNotes": [
+          {
+            "option": "hunts",
+            "reason": "This is a verb form and fails to fit the required noun slot in the descriptive noun phrase."
+          },
+          {
+            "option": "tail",
+            "reason": "While a body part, it is too specific; the blank requires a general descriptor of their overall function or role, not just anatomy."
+          },
+          {
+            "option": "current",
+            "reason": "This abstract noun refers to electricity flow and cannot function as the subject describing the eels themselves."
+          },
+          {
+            "option": "objects",
+            "reason": "Too generic; it lacks the specific semantic connection to predation that 'hunters' provides, making it contextually weak."
+          },
+          {
+            "option": "limb",
+            "reason": "This is singular and general. It fails both the plural subject structure and the required semantic link to predatory behavior."
+          },
+          {
+            "option": "engine",
+            "reason": "This word belongs to a mechanical domain and has no semantic or biological connection to electric eels or predation."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q401-b2",
         "index": 1,
         "answer": "tail",
-        "explanation": null
+        "explanation": "Grammatically, the sentence establishes a list of two physical components: '[Adjective] head and [Noun]'. Semantically, since the passage details the biological mechanism of the electric eel, only its own body part fits. The text explicitly mentions that the eels manipulate their head and tail to generate power, making 'tail' both the precise anatomical term and the necessary contextual fit.",
+        "syntaxRequirement": "Noun (specifically, a body appendage)",
+        "collocationCohesionClue": "The blank requires an anatomical noun that maintains parallel structure with 'head' when describing the eel's physical parts.",
+        "coherenceCue": "The sentence establishes a list of physical parts (head... and [BLANK]) belonging to the eel.",
+        "vocabGrammarCue": "The structure demands an anatomical noun that complements 'head'.",
+        "contextNote": "Electric eels bring their positively charged head and negatively charged tail closer together...",
+        "distractorNotes": [
+          {
+            "option": "hunters",
+            "reason": "This is a general plural noun referring to people or animals, not an anatomical part of the eel."
+          },
+          {
+            "option": "current",
+            "reason": "While 'current' is a noun, it refers to the electrical flow (the result), not the physical body part being brought together with the head. It is reserved for Blank #3."
+          },
+          {
+            "option": "objects",
+            "reason": "This word is too general and lacks the specific biological terminology required when describing an eel's anatomy."
+          },
+          {
+            "option": "limb",
+            "reason": "Although 'limb' is an anatomical noun, 'tail' is the precise and specific term used for the posterior appendage of an eel in this context."
+          },
+          {
+            "option": "engine",
+            "reason": "This refers to a mechanical device or power source, not a biological body part."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q401-b3",
         "index": 2,
         "answer": "current",
-        "explanation": null
+        "explanation": "This passage is rooted in scientific terminology. The action—bringing positive and negative charges closer—is the physical mechanism for generating electricity. In both biology and physics, the controlled flow of electrical charge is precisely defined as 'current.' Using this term ensures that the explanation maintains a high level of technical accuracy, making it the only word that completes the scientific concept being discussed.",
+        "syntaxRequirement": "Noun (specifically, a measure of electrical flow or energy)",
+        "collocationCohesionClue": "The phrase 'generate a more powerful [BLANK]' requires a highly specific noun related to physics and electrical output.",
+        "coherenceCue": "The passage builds a detailed, technical argument about biological electricity; the blank must complete this specialized scientific idea.",
+        "vocabGrammarCue": "Requires a noun following 'powerful' to describe an electrical flow (e.g., powerful current).",
+        "contextNote": "Last year, Vanderbilt University biologist Kenneth Catania revealed electric eels bring their positively charged head and negatively charged tail closer together to generate a more powerful current.",
+        "distractorNotes": [
+          {
+            "option": "hunters",
+            "reason": "This is a plural noun referring to organisms that hunt. It does not fit the context of electrical generation or scientific measurement."
+          },
+          {
+            "option": "objects",
+            "reason": "A general plural noun; it lacks the specific, technical meaning required when discussing electricity generated by biological charges."
+          },
+          {
+            "option": "limb",
+            "reason": "This is a body part (e.g., arm or leg). It does not relate to the concept of electrical energy or flow."
+          },
+          {
+            "option": "engine",
+            "reason": "While an engine generates power, it refers to a mechanical device. 'Current' is the specific scientific term needed here to describe biological electrical output."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

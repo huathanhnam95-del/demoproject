@@ -659,3 +659,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 471,2026-07-27,Add personal Facebook owner dropdown (Nam/Thành/Quỳnh) when Facebook Personal source chosen,Done,2026-07-27
 472,2026-07-27,Convert student acquisition source input to standardized dropdown,Done,2026-07-27
 473,2026-07-27,Deploy release V1.8.39 to Firebase Hosting and Cloud Functions,Done,2026-07-27
+474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar,In Progress,
+475,2026-07-27,Add Student FB link and Personal FB Owner dropdown to Student Management modal,Done,2026-07-27
+476,2026-07-27,Deploy release V1.8.40 to Firebase Hosting and Cloud Functions,Done,2026-07-27

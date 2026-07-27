@@ -39,6 +39,7 @@ window.CrmStudents = (function () {
             zalo: getValue(elements.inputStudentZalo),
             facebook: getValue(elements.inputStudentFacebook),
             facebookProfileUrl: getValue(elements.inputStudentFacebookProfileUrl),
+            facebookPersonalOwner: getValue(elements.inputStudentFacebookPersonalOwner),
             acquisitionSource: getValue(elements.inputStudentAcquisitionSource),
             agentSourceId: getValue(elements.inputStudentAgentSource),
             learningProfile: {
@@ -95,7 +96,9 @@ window.CrmStudents = (function () {
             elements.inputStudentFacebookProfileUrl.value = facebookLink;
         }
         if (elements.inputStudentAcquisitionSource) elements.inputStudentAcquisitionSource.value = String(student?.acquisitionSource || 'Facebook - Personal');
+        if (elements.inputStudentFacebookPersonalOwner) elements.inputStudentFacebookPersonalOwner.value = String(student?.facebookPersonalOwner || 'Nam');
         if (elements.inputStudentAgentSource) elements.inputStudentAgentSource.value = String(student?.agentSourceId || '');
+        if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
         if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';
         if (elements.inputScoreListening) elements.inputScoreListening.value = learning.listening ?? '';
         if (elements.inputScoreReading) elements.inputScoreReading.value = learning.reading ?? '';

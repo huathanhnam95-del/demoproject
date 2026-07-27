@@ -399,6 +399,9 @@
     elements.inputStudentZalo = document.getElementById('student-zalo');
     elements.inputStudentFacebook = document.getElementById('student-facebook');
     elements.inputStudentFacebookProfileUrl = document.getElementById('student-facebook-profile-url');
+    elements.studentFacebookProfileUrlGroup = document.getElementById('student-facebook-profile-url-group');
+    elements.inputStudentFacebookPersonalOwner = document.getElementById('student-facebook-personal-owner');
+    elements.studentFacebookPersonalOwnerGroup = document.getElementById('student-facebook-personal-owner-group');
     elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source');
     elements.inputStudentAgentSource = document.getElementById('student-agent-source');
     elements.inputScoreOverall = document.getElementById('score-overall');
@@ -2175,6 +2178,33 @@
     }
   }
   window.updateLeadSourceVisibility = updateLeadSourceVisibility;
+
+  function updateStudentSourceVisibility() {
+    const inputStudentSource = elements.inputStudentAcquisitionSource || document.getElementById('student-acquisition-source');
+    const groupUrl = elements.studentFacebookProfileUrlGroup || document.getElementById('student-facebook-profile-url-group');
+    const inputUrl = elements.inputStudentFacebookProfileUrl || document.getElementById('student-facebook-profile-url');
+    const groupOwner = elements.studentFacebookPersonalOwnerGroup || document.getElementById('student-facebook-personal-owner-group');
+    const inputOwner = elements.inputStudentFacebookPersonalOwner || document.getElementById('student-facebook-personal-owner');
+
+    const val = String(inputStudentSource?.value || '').trim();
+    const isFacebook = val.startsWith('Facebook');
+    const isFacebookPersonal = val === 'Facebook - Personal';
+
+    if (groupUrl) {
+      groupUrl.style.display = isFacebook ? '' : 'none';
+    }
+    if (!isFacebook && inputUrl) {
+      inputUrl.value = '';
+    }
+
+    if (groupOwner) {
+      groupOwner.style.display = isFacebookPersonal ? '' : 'none';
+    }
+    if (!isFacebookPersonal && inputOwner) {
+      inputOwner.value = 'Nam';
+    }
+  }
+  window.updateStudentSourceVisibility = updateStudentSourceVisibility;
 
   function resetLeadComposer() {
     const inputs = [

@@ -164,34 +164,46 @@ def build_translation_prompt(final_explanation: str) -> str:
     )
 
 
-def translate_blanks(record: dict) -> dict:
-    """Add vi_explanation to each blank in the record using Qwen3."""
-    qid = record["id"]
-    blanks = record["blanks"]
+def translate_blanks(record: dict, no_resume: bool = False) -> tuple[dict, list[int], list[int]]:
+    """Add vi_explanation, vi_raw, vi_model, vi_timestamp to each blank in the record using Qwen3."""
+    qid = record.get("id")
+    blanks = record.get("blanks", [])
     translate_model = MODELS["qw"]
-    translated_count = 0
+    ok_indexes = []
+    failed_indexes = []
 
     for i, blank in enumerate(blanks):
         final_exp = blank.get("final_explanation", "")
+        b_idx = blank.get("blank_index", i + 1)
         if not final_exp:
             continue
 
-        b_idx = blank.get("blank_index", i + 1)
+        if not no_resume:
+            has_exp = bool(blank.get("vi_explanation"))
+            has_raw = bool(blank.get("vi_raw"))
+            has_model = bool(blank.get("vi_model"))
+            has_ts = bool(blank.get("vi_timestamp"))
+            if has_exp and has_raw and has_model and has_ts:
+                continue
+
         logging.info(f"  Translating blank {b_idx} for Question {qid} ...")
 
         prompt = build_translation_prompt(final_exp)
-        vi_text = query_ollama_text(translate_model, prompt, temperature=0.3)
+        raw_text = query_ollama_text(translate_model, prompt, temperature=0.3)
 
-        if vi_text:
-            blank["vi_explanation"] = vi_text
+        if raw_text:
+            cleaned_text = clean_model_response(raw_text)
+            blank["vi_explanation"] = cleaned_text
+            blank["vi_raw"] = raw_text
             blank["vi_model"] = translate_model
             blank["vi_timestamp"] = datetime.now(timezone.utc).isoformat()
-            translated_count += 1
-            logging.info(f"  Translated blank {b_idx} OK ({len(vi_text)} chars)")
+            ok_indexes.append(b_idx)
+            logging.info(f"  Translated blank {b_idx} OK ({len(cleaned_text)} chars)")
         else:
+            failed_indexes.append(b_idx)
             logging.warning(f"  Translation FAILED for blank {b_idx} of Question {qid}")
 
-    return record
+    return record, ok_indexes, failed_indexes
 
 
 def compute_objective_confidence(
@@ -805,9 +817,69 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if args.reset_sidecar and os.path.exists(args.out):
+        os.remove(args.out)
+
+    sidecar_records = load_sidecar(args.out)
+
+    if args.translate:
+        logging.info("=== Phase 4: Vietnamese Translation Enrichment ===")
+        if not os.path.exists(args.out) or not sidecar_records:
+            logging.error(f"Sidecar file '{args.out}' does not exist or is empty. Cannot run translation mode.")
+            sys.exit(2)
+
+        if args.ids is not None:
+            id_list = [int(x.strip()) for x in args.ids.split(",") if x.strip()]
+            missing_ids = [qid for qid in id_list if qid not in sidecar_records]
+            if missing_ids:
+                logging.error(f"Requested translation IDs missing from sidecar '{args.out}': {missing_ids}")
+                sys.exit(2)
+            target_ids = id_list
+        elif args.test is not None:
+            target_ids = [qid for qid in CURATED_QUALITY_GATE_IDS[:args.test] if qid in sidecar_records]
+        elif args.start is not None:
+            all_sidecar_ids = sorted(sidecar_records.keys())
+            end = args.start + (args.limit or len(all_sidecar_ids))
+            target_ids = all_sidecar_ids[args.start:end]
+        else:
+            all_sidecar_ids = sorted(sidecar_records.keys())
+            target_ids = all_sidecar_ids[:(args.limit or len(all_sidecar_ids))]
+
+        translate_count = 0
+        failed_records = []
+        failed_blanks_details = []
+
+        for qid in target_ids:
+            rec = sidecar_records[qid]
+            logging.info(f"--- Translating Question {qid}: {len(rec.get('blanks', []))} blanks ---")
+
+            rec, ok_idx, fail_idx = translate_blanks(rec, no_resume=args.no_resume)
+            sidecar_records[qid] = rec
+
+            if fail_idx:
+                failed_records.append(qid)
+                failed_blanks_details.append((qid, fail_idx))
+                logging.error(f"Question {qid} failed translation on blank indexes: {fail_idx}")
+
+            if ok_idx:
+                translate_count += len(ok_idx)
+
+            if (target_ids.index(qid) + 1) % max(1, args.save_every) == 0:
+                save_sidecar_atomic(args.out, sidecar_records)
+
+        save_sidecar_atomic(args.out, sidecar_records)
+        logging.info(f"Translation phase finished. Blanks translated: {translate_count}, Failed records: {len(failed_records)}")
+
+        if failed_records:
+            failed_str = ",".join(map(str, failed_records))
+            logging.error(f"Translation batch failed for {len(failed_records)} records: {failed_blanks_details}")
+            logging.info(f"Rerun command to retry failed records:\n  python scripts/revise_rfib_explanations.py --translate --out \"{args.out}\" --ids {failed_str}")
+            sys.exit(1)
+        sys.exit(0)
+
+    # --- Phase 1–3 Execution ---
     questions = load_workbook_data(args.input)
     existing = load_existing_explanations(args.existing)
-
     all_ids = sorted(questions.keys())
 
     if args.test is not None:
@@ -820,11 +892,6 @@ def main():
         selected_ids = all_ids[args.start:end]
     else:
         selected_ids = all_ids[: (args.limit or len(all_ids))]
-
-    if args.reset_sidecar and os.path.exists(args.out):
-        os.remove(args.out)
-
-    sidecar_records = load_sidecar(args.out)
 
     succeeded = 0
     failed_ids = []
@@ -849,38 +916,6 @@ def main():
             save_sidecar_atomic(args.out, sidecar_records)
 
     save_sidecar_atomic(args.out, sidecar_records)
-
-    # --- Phase 4: Vietnamese Translation (if --translate or after full pipeline) ---
-    if args.translate:
-        logging.info("=== Phase 4: Vietnamese Translation Enrichment ===")
-        translate_count = 0
-        translate_failed = 0
-        for qid, rec in sidecar_records.items():
-            # Skip records that already have vi_explanation on all blanks (unless --no-resume)
-            if not args.no_resume:
-                all_translated = all(b.get("vi_explanation") for b in rec.get("blanks", []))
-                if all_translated:
-                    continue
-
-            # Filter by --ids if specified
-            if args.ids is not None:
-                id_list = [int(x.strip()) for x in args.ids.split(",") if x.strip()]
-                if qid not in id_list:
-                    continue
-
-            logging.info(f"--- Translating Question {qid}: {len(rec.get('blanks', []))} blanks ---")
-            try:
-                translate_blanks(rec)
-                translate_count += 1
-            except Exception as e:
-                logging.error(f"Translation error for Question {qid}: {e}")
-                translate_failed += 1
-
-            if translate_count % max(1, args.save_every) == 0:
-                save_sidecar_atomic(args.out, sidecar_records)
-
-        save_sidecar_atomic(args.out, sidecar_records)
-        logging.info(f"Translation done. Translated: {translate_count}, Failed: {translate_failed}")
 
     logging.info(f"Done. Succeeded: {succeeded}, Failed: {len(failed_ids)}")
     if failed_ids:

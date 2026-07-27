@@ -246,7 +246,7 @@ class TestRevisionPipelineCore(unittest.TestCase):
         }
 
         original_keys = set(record["blanks"][0].keys())
-        result = script.translate_blanks(record)
+        result, ok_idx, fail_idx = script.translate_blanks(record)
 
         # Verify new fields added
         self.assertIn("vi_explanation", result["blanks"][0])

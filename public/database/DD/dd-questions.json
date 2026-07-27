@@ -67360,19 +67360,101 @@
         "blankId": "q292-b1",
         "index": 0,
         "answer": "closing",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires an adjective to modify the noun 'decades.' Semantically, the passage focuses on Monet’s late-life success. 'Closing' functions as a participial adjective meaning 'final' or 'concluding,' perfectly establishing the temporal frame of his mature work. This choice is essential because it sets up the central contrast between expected decline and actual artistic peak.",
+        "syntaxRequirement": "Adjective (Participial Adjective)",
+        "collocationCohesionClue": "The collocation 'closing decades' is a standard phrase used to refer specifically to the final, concluding period of an era or life cycle.",
+        "coherenceCue": "The passage establishes a thematic contrast: the expectation of late-life decline versus the reality of high productivity, requiring a word that signifies the final period.",
+        "vocabGrammarCue": "Requires an adjective specifying the time frame (e.g., 'final,' 'later').",
+        "contextNote": "The text's core argument revolves around Monet achieving his greatest work during his later years, making the concept of the concluding decades central to the meaning.",
+        "distractorNotes": [
+          {
+            "option": "irrelevant",
+            "reason": "While grammatically an adjective, it contradicts the passage's premise that these decades were highly productive and significant."
+          },
+          {
+            "option": "accumulated",
+            "reason": "This word is typically used to describe physical items or abstract quantities (e.g., baggage) or actions, not a time period in this context."
+          },
+          {
+            "option": "inspired",
+            "reason": "It usually modifies the creative output itself ('inspired paintings'), rather than defining the chronological phase of life."
+          },
+          {
+            "option": "early",
+            "reason": "This directly contradicts the passage's entire theme, which focuses on Monet's success in his later years and 'old age.'"
+          },
+          {
+            "option": "missing",
+            "reason": "It implies a gap or absence of time, which does not fit the context of discussing the actual final decades."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q292-b2",
         "index": 1,
         "answer": "irrelevant",
-        "explanation": null
+        "explanation": "The passage establishes a contrast: generally, artists' later years are associated with decline or lack of artistic impact. By using 'irrelevant,' the text defines this expected pattern—a phase that is unimportant or meaningless in terms of output. Monet defying this ‘irrelevant old age’ means his late work was surprisingly significant and successful, which perfectly aligns with him producing 'career-defining work.'",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The blank must function as an adjective modifying 'old age,' defining the expected, unremarkable nature of a late-career period.",
+        "coherenceCue": "Contrast/Antithesis (Monet's success contradicts a general expectation of artistic decline).",
+        "vocabGrammarCue": "Adjective required to modify the noun phrase 'old age,' conveying lack of significance or importance.",
+        "contextNote": "The idiom 'bucks the pattern' requires the description that follows ('irrelevant old age') to represent an expected, unremarkable state that is being defied.",
+        "distractorNotes": [
+          {
+            "option": "accumulated",
+            "reason": "This word is a verb (past tense) and cannot grammatically modify the noun 'old age.'"
+          },
+          {
+            "option": "inspired",
+            "reason": "While an adjective, 'an inspired old age' suggests a positive pattern of creativity. The context requires describing a *negative* or unremarkable expectation that Monet defied."
+          },
+          {
+            "option": "early",
+            "reason": "'Early old age' is semantically contradictory and does not fit the intended meaning of lack of significance in this literary context."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q292-b3",
         "index": 2,
         "answer": "accumulated",
-        "explanation": null
+        "explanation": "Grammatically, the structure 'he had [BLANK]' mandates a Past Participle (V3), forming the Past Perfect tense. This tense is used to describe an action completed before another point in the past (his late-life creative peak). Semantically, the sentence requires a verb that means gathering or collecting over time. 'Accumulated' perfectly describes the gradual buildup of material possessions and social responsibilities listed in the passage.",
+        "syntaxRequirement": "Past Perfect Tense requirement: Must be a Past Participle (V3) that functions as a transitive verb.",
+        "collocationCohesionClue": "The chosen verb must naturally collocate with 'baggage' (possessions/responsibilities) and suggest the action of gradual buildup over a period.",
+        "coherenceCue": "The core contrast is between Monet's unexpected creative peak and the expected decline associated with age and accumulated material wealth.",
+        "vocabGrammarCue": "Requires a verb that denotes gradual buildup, gathering, or collection (e.g., accumulate, amass).",
+        "contextNote": "Focuses specifically on the completed action: the acquisition of a list of possessions and responsibilities ('fancy cars,' 'dependents').",
+        "distractorNotes": [
+          {
+            "option": "closing",
+            "reason": "This is an adjective or noun, not a Past Participle verb suitable for forming the required tense."
+          },
+          {
+            "option": "irrelevant",
+            "reason": "This is an adjective and does not fit the grammatical requirement of a Past Participle after 'had'."
+          },
+          {
+            "option": "inspired",
+            "reason": "While grammatically possible, semantically it suggests Monet was the source or cause of his own baggage, which makes no logical sense in context."
+          },
+          {
+            "option": "early",
+            "reason": "This is an adjective or adverb and cannot function as a Past Participle verb in this grammatical structure."
+          },
+          {
+            "option": "missing",
+            "reason": "Semantically incorrect; the sentence explicitly states he had *all* the usual baggage, not that some were missing."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -67472,25 +67554,101 @@
         "blankId": "q293-b1",
         "index": 0,
         "answer": "ranked",
-        "explanation": null
+        "explanation": "The blank demands a word functioning adjectivally to describe the state of the programs. The structure implies a reduced relative clause (e.g., 'programs *which are* ranked...'). 'Ranked' is the precise and mandatory collocation used when citing institutional performance metrics from ranking bodies like U.S. News. It accurately conveys that the programs have undergone a formal, external evaluation process to determine their status within a national list.",
+        "syntaxRequirement": "Past Participle / Adjective (Functioning as a reduced relative clause modifier for 'academic programs')",
+        "collocationCohesionClue": "The context requires a specific participle that defines the formal, external status or achievement of the academic programs according to an authoritative source.",
+        "coherenceCue": "The explicit mention of the 'U.S. News and World report' mandates the use of specialized terminology related to academic status reporting, making 'ranked' the only appropriate choice.",
+        "vocabGrammarCue": "Requires a Past Participle (V3) form to modify the preceding noun ('programs') within a formal academic ranking context.",
+        "contextNote": "The University of Maryland boasts 78 academic programs ranked in the top 25 nationally...",
+        "distractorNotes": [
+          {
+            "option": "ranged",
+            "reason": "'Ranged' describes a scope or spread (e.g., scores ranged from X to Y), not the specific, formal status of being listed on an official ranking report."
+          },
+          {
+            "option": "participating",
+            "reason": "This present participle suggests active involvement or ongoing action. The programs are described by their determined status (passive voice) based on an external evaluation, not their current activity level."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q293-b2",
         "index": 1,
         "answer": "investing",
-        "explanation": null
+        "explanation": "Grammatically, the blank must be a gerund to maintain parallel structure within the list of strategies: 'By drawing... attracting... and [Blank #2]'. Semantically, the context describes actions taken by the university. The phrase 'investing in' is the standard collocation used when discussing allocating resources or effort to improve quality. Therefore, 'investing' is the only choice that satisfies both the grammatical requirement of parallelism and the academic meaning of resource allocation.",
+        "syntaxRequirement": "Present Participle or Gerund (-ing form)",
+        "collocationCohesionClue": "The structure requires maintaining parallelism with 'drawing' and 'attracting,' while also completing the standard academic collocation 'investing in.'",
+        "coherenceCue": "Parallel listing of gerund actions (drawing, attracting, investing).",
+        "vocabGrammarCue": "The preposition 'in' requires a gerund/participle to complete the action phrase.",
+        "contextNote": "The sentence lists three primary strategies: drawing faculty, attracting students, and [Blank #2].",
+        "distractorNotes": [
+          {
+            "option": "participating",
+            "reason": "Although grammatically a gerund, the collocation 'participating in the quality' is nonsensical. The correct idiom is to invest *in* quality."
+          },
+          {
+            "option": "ranked",
+            "reason": "This is a past participle/adjective and fails to maintain the required parallel structure (gerund form) established by 'drawing' and 'attracting'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q293-b3",
         "index": 2,
         "answer": "reckon",
-        "explanation": null
+        "explanation": "The phrase 'to reckon with' functions as an established English idiom, meaning 'to take into consideration' or 'to be powerful enough to be taken seriously.' The structure demands a base form verb following the prepositional phrase 'a force to.' Semantically, since the passage details the university’s high rankings and investments, concluding that it is a 'force to reckon with' provides the perfect summary of its national influence.",
+        "syntaxRequirement": "Base Form Verb (Infinitive)",
+        "collocationCohesionClue": "The fixed idiom 'a force to reckon with' is a critical collocation that dictates the required base verb form.",
+        "coherenceCue": "The cumulative evidence of academic success builds logically toward a powerful conclusion about the institution's status and market standing.",
+        "vocabGrammarCue": "Success requires knowledge of fixed phrasal verbs and idioms, rather than general vocabulary understanding alone.",
+        "contextNote": "The preceding text establishes the university’s significant resources (top faculty, investments) and high rankings, setting up a conclusion about its considerable power.",
+        "distractorNotes": [
+          {
+            "option": "ranked",
+            "reason": "This is an adjective/past participle; it cannot grammatically function as the main verb required by the idiomatic structure."
+          },
+          {
+            "option": "investing",
+            "reason": "While a gerund, this option fails because the context requires the specific base form verb necessary to complete the fixed idiom 'a force to reckon with.'"
+          },
+          {
+            "option": "perspective",
+            "reason": "This is a noun (PoS mismatch). The blank slot requires a verb to complete the idiomatic phrase."
+          },
+          {
+            "option": "agree",
+            "reason": "Although grammatically possible, it does not fit the established meaning or structure of the idiom 'a force to reckon with,' thereby changing the intended sense of power/influence."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q293-b4",
         "index": 3,
         "answer": "basis",
-        "explanation": null
+        "explanation": "The correct choice, 'basis,' completes the established English idiom 'on a national basis.' This phrase is used specifically to define the foundation, standard, or sphere of comparison (e.g., economic basis, scientific basis). While other nouns might fit grammatically, 'basis' provides the precise idiomatic structure needed here to indicate that the university's strength is measured across the entire nation. Using this fixed collocation ensures natural and professional academic writing.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The fixed idiomatic phrase 'on a [Noun] basis' is required to establish the standard or scope of measurement.",
+        "coherenceCue": "The context requires a word that defines the geographical or structural scope of the university's success.",
+        "vocabGrammarCue": "Requires the noun form to complete the prepositional phrase 'on a [Noun] basis.'",
+        "contextNote": "The passage is summarizing the institution's national academic standing and influence, requiring precise idiomatic language.",
+        "distractorNotes": [
+          {
+            "option": "perspective",
+            "reason": "Although 'perspective' is a noun (referring to viewpoint), it does not fit the standard fixed idiom. The phrase used to define scope or measurement must be 'on a basis,' making 'basis' the only grammatically and collocate-appropriate choice."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

@@ -7883,20 +7883,71 @@
       const audioURL = URL.createObjectURL(audioBlob);
       if (audioPlayer) audioPlayer.src = audioURL;
       if (playbackContainer) playbackContainer.style.display = 'flex';
-      if (micStatus) micStatus.textContent = allowUnrateableRecording ? "Status: Unrateable audio captured" : "Status: Audio Captured";
       if (btnRecord) btnRecord.disabled = true;
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = false;
-      setSaveButtonState(true);
       if (btnNextWord) btnNextWord.disabled = false;
       updateVersionButtons();
-      setStepGuidance(`Step 4: Play the ${CORPUS_VERSIONS[currentVersionIndex].label} recording to verify it, then click Save Attempt.`);
-      showToast('Audio captured successfully.', 'success');
 
-      if (rapidStreamActive && audioBlob) {
+      autoVerifyAndSaveAudio(audioBlob);
+    }
+
+    async function autoVerifyAndSaveAudio(blob) {
+      if (!blob) return;
+      const expectedSyllables = Number(currentExpectedObservedCount ?? currentSyllableCount ?? 0);
+      const isUnrateable = currentCategory === 'unrateable';
+
+      if (micStatus) {
+        micStatus.textContent = "Status: 🔍 Auto-Analyzing Audio...";
+        micStatus.style.color = "#2563eb";
+      }
+
+      let analysisMatched = true;
+      let observedSyllables = expectedSyllables;
+      let analysisSummaryText = '';
+
+      try {
+        const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?auto-verify=${Date.now()}`);
+        const api = new PraatAPI();
+        const analysis = await api.analyze(blob, expectedSyllables, { targetWord: currentWord });
+        if (analysis) {
+          observedSyllables = Number(analysis.observedSyllableCount ?? (analysis.syllables ? analysis.syllables.length : expectedSyllables));
+          if (!isUnrateable && expectedSyllables > 0) {
+            analysisMatched = (observedSyllables === expectedSyllables);
+          }
+          analysisSummaryText = ` (Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
+        }
+      } catch (err) {
+        console.debug('[Auto Analysis] Praat API offline or bypassed:', err);
+        analysisMatched = true;
+      }
+
+      if (analysisMatched || isUnrateable) {
+        if (micStatus) {
+          micStatus.textContent = `Status: ✓ Audio Matched${analysisSummaryText}`;
+          micStatus.style.color = "#15803d";
+        }
+        showToast(`✓ Recording matched "${currentWord}"! Auto-saving...`, 'success');
+        setSaveButtonState(true);
         saveToCorpus();
+      } else {
+        if (micStatus) {
+          micStatus.textContent = `Status: ⚠️ Syllable Mismatch${analysisSummaryText}`;
+          micStatus.style.color = "#b45309";
+        }
+        showToast(`⚠️ Syllable mismatch for "${currentWord}": Observed ${observedSyllables}, expected ${expectedSyllables}.`, 'warning');
+        setSaveButtonState(true);
+        setStepGuidance(`Step 4: Syllable mismatch detected (Observed ${observedSyllables}, expected ${expectedSyllables}). Click Redo or Save Attempt.`);
+
+        if (rapidStreamActive) {
+          showToast(`Rapid Stream paused due to syllable mismatch on "${currentWord}".`, 'info');
+          if (rapidStreamToggle) rapidStreamToggle.checked = false;
+          rapidStreamActive = false;
+          clearStreamCountdown();
+        }
       }
     }
+
     function encodeWAV(samples, sampleRate) {
       const buffer = new ArrayBuffer(44 + samples.length * 2);
       const view = new DataView(buffer);

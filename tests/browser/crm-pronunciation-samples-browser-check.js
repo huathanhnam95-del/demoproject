@@ -364,33 +364,16 @@ async function main() {
     // Let fake mic run for 500ms
     await page.waitForTimeout(500);
 
-    // 6. Stop Recording
+    // 6. Stop Recording (triggers auto-verification & auto-save on match)
     await page.click('#btn-corpus-stop');
 
-    // Wait for Stop operation and encoding processing
-    await page.waitForFunction(() => {
-      const saveBtn = document.getElementById('btn-corpus-save');
-      return saveBtn && !saveBtn.disabled;
-    });
-
-    let navigationPrompted = false;
-    page.once('dialog', async (dialog) => {
-      navigationPrompted = true;
-      await dialog.dismiss();
-    });
-    await page.click('#btn-corpus-next-version');
-    assert.strictEqual(navigationPrompted, true, 'Moving versions with an unsaved recording should require confirmation.');
-    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
-
-    // 7. Save the attempt
-    await page.click('#btn-corpus-save');
-
-    // Wait for the success toast to appear
+    // Wait for auto-save success toast to appear
     await page.waitForSelector('.crm-toast.success', { state: 'visible' });
 
-    // Assert API call was tracked
+    // Assert API call was tracked automatically
     const saveRequest = requestLog.find(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST');
-    assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent.');
+    assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent automatically upon auto-verify.');
+
 
     // 8. Test Next Word button navigation
     const nextWordBtn = page.locator('#btn-corpus-next-word');

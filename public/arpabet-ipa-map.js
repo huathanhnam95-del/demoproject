@@ -102,9 +102,9 @@ function getVowelIPA(base, stress) {
         return stress === 0 ? 'ə' : 'ʌ';
     }
 
-    // Special case: ER0 = ɚ (unstressed rhotic), ER1/ER2 = ɝ
+    // Special case: ER phoneme -> Oxford/Cambridge IPA 'ər'
     if (base === 'ER') {
-        return stress === 0 ? 'ɚ' : 'ɝ';
+        return 'ər';
     }
 
     return ARPABET_VOWELS[base] || '';

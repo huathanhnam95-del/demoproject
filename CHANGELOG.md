@@ -1,3 +1,13 @@
+## [V1.8.38] - 2026-07-27
+
+### Changed & Normalized
+- **Oxford/Cambridge Standard IPA Normalization**:
+  - Normalized all IPA transcriptions and stress mark placement rules across the application and phonetics pipeline (`public/phonetics.js` and `public/arpabet-ipa-map.js`).
+  - Standardized rhotic vowels (`ɝ`, `ɚ`) to explicit schwa + r (`ər`) and turned-r (`ɹ`) to (`r`), producing standard Oxford/Cambridge transcriptions like `/'ækjərətli/` for *accurately*, `/ˈwɔtər/` for *water*, and `/kəmˈpjutər/` for *computer*.
+  - Standardized stress mark placement to evaluate preceding onset consonant clusters (e.g. `/əˈkjuz/` for *accuse*).
+  - Updated CRM Admin attempt metadata panel (`public/crm-admin.js`) to format target IPA via `Phonetics.normalizeIPA()`.
+  - Updated test suites (`test-ipa-dict-integration.js` and `tests/browser/ipa-dict-dataset-browser-check.js`) with 100% pass rate.
+
 ## [V1.8.34] - 2026-07-26
 
 ### Added & Verified

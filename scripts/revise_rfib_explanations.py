@@ -58,7 +58,7 @@ def clean_model_response(raw: str) -> str:
 
 
 def query_ollama(model: str, prompt: str, temperature: float = 0.1,
-                 max_retries: int = 5, timeout: int = 300) -> str | None:
+                 max_retries: int = 5, timeout: int = 450) -> str | None:
     effective_prompt = prompt
     if "qwen3" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
@@ -72,8 +72,8 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
             "stream": False,
             "options": {
                 "temperature": temp,
-                "num_predict": 2048,
-                "num_ctx": 4096,
+                "num_predict": 4096,
+                "num_ctx": 8192,
             },
         }
         try:

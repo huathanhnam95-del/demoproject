@@ -7228,8 +7228,11 @@
 
     function updateDisplay() {
       if (!displayWord || !displayIpaCount) return;
-      displayWord.textContent = currentWord;
-      displayIpaCount.textContent = `/${currentIpa}/ (${currentSyllableCount} syllables)`;
+      const rawIpaClean = String(currentIpa || '').replace(/^\/+|\/+$/g, '');
+      const normalizedIpa = typeof Phonetics !== 'undefined' && Phonetics.normalizeIPA 
+        ? Phonetics.normalizeIPA(rawIpaClean) 
+        : rawIpaClean.replace(/[ɝɚ]/g, 'ər').replace(/ɹ/g, 'r').replace(/\/+/g, '/');
+      displayIpaCount.textContent = `/${normalizedIpa.replace(/^\/+|\/+$/g, '')}/ (${currentSyllableCount} syllables)`;
       if (expectedObservedCountInput) {
         expectedObservedCountInput.value = currentExpectedObservedCount;
       }

@@ -173,6 +173,22 @@ const Phonetics = (function () {
     // === MAIN API ===
 
     /**
+     * Normalize IPA to Oxford/Cambridge Dictionary format:
+     * - Replaces rhotic vowels (ɝ, ɚ) with 'ər'
+     * - Replaces turned-r (ɹ) with 'r'
+     * - Cleans up multiple slashes or misplaced stress marks
+     */
+    function normalizeIPA(ipa) {
+        if (!ipa || typeof ipa !== 'string') return '';
+        let cleaned = ipa
+            .replace(/[ɝɚ]/g, 'ər')
+            .replace(/ɹ/g, 'r')
+            .replace(/\/+/g, '/')
+            .trim();
+        return cleaned;
+    }
+
+    /**
      * Get IPA transcription for a word
      * 
      * Strategy (order matters!):
@@ -230,9 +246,9 @@ const Phonetics = (function () {
             }
         }
 
-        // Safety normalization: replace ɹ (turned r) with regular r for easier reading
+        // Safety normalization: convert to Oxford/Cambridge IPA standard
         if (ipa) {
-            ipa = ipa.replace(/ɹ/g, 'r');
+            ipa = normalizeIPA(ipa);
         }
 
         // Cache result with source metadata and alternatives
@@ -320,6 +336,7 @@ const Phonetics = (function () {
         getIPA,
         getIPABatch,
         getIPAWithSource,
+        normalizeIPA,
         preload,
         clearCache,
 

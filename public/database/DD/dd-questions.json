@@ -85025,31 +85025,161 @@
         "blankId": "q374-b1",
         "index": 0,
         "answer": "efficient",
-        "explanation": null
+        "explanation": "Grammatically, the structure demands an adjective (an + ADJ + Noun). Semantically, the passage shifts focus from initial dangers to establishing the inherent value and utility of hot air balloons. 'Efficient' perfectly captures this sense of functional productivity—it describes how well the means achieved its purpose for travel, making it the most appropriate descriptor.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The blank requires an adjective to modify the noun phrase 'means of transport,' specifying its functional quality or effectiveness.",
+        "coherenceCue": "The passage transitions from discussing initial dangers (safety risks) to establishing the inherent value and function of the transport method.",
+        "vocabGrammarCue": "Adjective placement: An adjective must precede a noun it modifies (e.g., an efficient means).",
+        "contextNote": "Although it was not a very safe option in the beginning, it was an efficient means of transport.",
+        "distractorNotes": [
+          {
+            "option": "traversing",
+            "reason": "This is a present participle (Verb form) and cannot grammatically modify 'means.' It describes an action, not the inherent quality or capability."
+          },
+          {
+            "option": "materials",
+            "reason": "This is a plural noun. The blank requires an adjective to describe the means of transport."
+          },
+          {
+            "option": "accidental",
+            "reason": "While grammatically an adjective, 'accidental' describes *how* something happened (unplanned origin). The context requires describing the mode of transport's functional quality or effectiveness."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q374-b2",
         "index": 1,
         "answer": "traversing",
-        "explanation": null
+        "explanation": "Grammatically, the structure 'a risk of' mandates a gerund (the -ing form). Semantically, the passage describes people undertaking a dangerous journey across the sky. 'Traversing' means traveling or moving across an expanse. Therefore, it perfectly captures the action of navigating the air in the balloon.",
+        "syntaxRequirement": "Gerund (V-ing form is mandatory after the preposition 'of').",
+        "collocationCohesionClue": "The fixed collocation 'risk of' requires a gerund. Contextually, the action must describe moving or crossing an area.",
+        "coherenceCue": "The sentence requires a verb that specifically denotes movement or crossing within the airspace.",
+        "vocabGrammarCue": "Gerund form needed after 'of'. Meaning: to travel or move across an area.",
+        "contextNote": "They took a risk of traversing in the air using this heated air vessel.",
+        "distractorNotes": [
+          {
+            "option": "efficient",
+            "reason": "This is an adjective and cannot function as the action following 'a risk of'."
+          },
+          {
+            "option": "materials",
+            "reason": "This is a plural noun and does not describe the act of travel or danger."
+          },
+          {
+            "option": "accidental",
+            "reason": "This is an adjective describing how something happened, not the action itself."
+          },
+          {
+            "option": "remote",
+            "reason": "This is an adjective modifying a place (e.g., remote areas), not an action."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q374-b3",
         "index": 2,
         "answer": "materials",
-        "explanation": null
+        "explanation": "\"Materials\" correctly functions as a plural count noun meaning raw substances or building components. Grammatically, it completes the subject phrase initiated by 'Many kinds of.' Semantically, since the sentence explicitly lists diverse manufactured items like paper and plastic, 'materials' is the most precise general term to encompass these physical inputs used in construction.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The quantifier 'Many kinds of' requires a plural noun that serves as a general category for physical components, which is strongly supported by the listed examples (paper, plastic).",
+        "coherenceCue": "The concrete listing of specific building components (paper, plastic) dictates that a noun representing raw substances or materials must be used.",
+        "vocabGrammarCue": "'Many kinds of' + [Plural Noun] structure requires a generalized term for physical inputs or resources.",
+        "contextNote": "This sentence details the various structural components and elements utilized in the early hot air balloon design.",
+        "distractorNotes": [
+          {
+            "option": "efficient",
+            "reason": "This is an adjective and cannot grammatically serve as the subject noun following 'Many kinds of'."
+          },
+          {
+            "option": "traversing",
+            "reason": "This is a gerund/verb form, failing to meet the required plural noun structure."
+          },
+          {
+            "option": "accidental",
+            "reason": "This is an adjective and cannot function as the general category noun needed here."
+          },
+          {
+            "option": "remote",
+            "reason": "This is an adjective, making it grammatically incompatible with the required subject noun structure."
+          },
+          {
+            "option": "earlier",
+            "reason": "This functions as an adjective or adverb and does not provide a general category for physical components."
+          },
+          {
+            "option": "matter",
+            "reason": "While 'matter' is a noun meaning substance, it is too abstract. 'Materials' is superior because it specifically implies manufactured building components (like paper/plastic), fitting the context better."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q374-b4",
         "index": 3,
         "answer": "accidental",
-        "explanation": null
+        "explanation": "The word 'accidental' means happening by chance, not by deliberate design. It is required here because the sentence establishes that the hot air balloon was an unplanned byproduct of existing activities (flying sky lanterns). Using this adjective correctly modifies 'discovery,' making it clear that its origin was unexpected and spontaneous.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The structure 'was [adjective]' requires an adjective to specify the manner or circumstance of the discovery.",
+        "coherenceCue": "The contrast between planned technological advancements (aerodynamics) and the unexpected nature of the initial discovery strongly suggests chance, making 'accidental' the only logical choice.",
+        "vocabGrammarCue": "The structure 'was + adjective' is necessary to describe the inherent quality or circumstance surrounding the noun 'discovery.'",
+        "contextNote": "Key sentence: 'The discovery of hot air balloon was accidental as people were traditionally used to flying sky lantern.'",
+        "distractorNotes": [
+          {
+            "option": "efficient",
+            "reason": "While an adjective, it describes quality or effectiveness (how well something works), not the manner in which the discovery occurred. It fails the contextual requirement."
+          },
+          {
+            "option": "traversing",
+            "reason": "This is a gerund/present participle and functions as a verb form. The blank requires an adjective to modify 'discovery,' making this grammatically incorrect."
+          },
+          {
+            "option": "materials",
+            "reason": "This is a plural noun, not an adjective. The sentence structure demands an adjective to describe the nature of the discovery."
+          },
+          {
+            "option": "remote",
+            "reason": "Although it is an adjective, it refers only to location (distant) and fails to convey the necessary meaning of 'by chance' or 'unplanned origin,' which is required by the clause that follows."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q374-b5",
         "index": 4,
         "answer": "remote",
-        "explanation": null
+        "explanation": "\"Remote\" means distant, secluded, or far from civilization. Grammatically, it functions as an adjective modifying the noun 'areas.' Semantically, this choice perfectly aligns with the context provided: locations lacking modern infrastructure ('where there are no roads built yet'). It is the only option that accurately describes a state of geographical isolation necessary for the passage's meaning.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The collocation 'remote areas' is standard English usage to describe regions that are geographically isolated or far from major population centers.",
+        "coherenceCue": "The discussion shifts to contemporary usage, focusing on advanced technology being applied in undeveloped or geographically isolated regions.",
+        "vocabGrammarCue": "Requires an adjective conveying 'isolation,' 'distance,' or 'seclusion.'",
+        "contextNote": "Nowadays, the technology is so advanced and it is still used in the remote areas where there are no roads built yet.",
+        "distractorNotes": [
+          {
+            "option": "efficient",
+            "reason": "While an adjective, 'efficient' describes methods or processes (e.g., efficient transport), not the physical state of a geographical location."
+          },
+          {
+            "option": "accidental",
+            "reason": "This adjective is used to describe events or discoveries (e.g., accidental discovery), not the inherent, permanent state of an area."
+          },
+          {
+            "option": "earlier",
+            "reason": "This comparative adjective relates strictly to time ('earlier times') and cannot function to describe a geographical location or its physical condition."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85156,25 +85286,117 @@
         "blankId": "q375-b1",
         "index": 0,
         "answer": "lure",
-        "explanation": null
+        "explanation": "This passage details the strategic shift in admissions policies. The infinitive phrase 'In an attempt to [verb]' requires a base form verb. Semantically, the schools are actively trying to draw in new students; therefore, 'lure'—meaning to attract or tempt—is the only word that both grammatically completes the structure and conveys the intended meaning of strategic recruitment.",
+        "syntaxRequirement": "Base Form Transitive Verb",
+        "collocationCohesionClue": "The structure 'In an attempt to...' demands a verb that defines the purpose or goal of the action described by the subject (the business schools).",
+        "coherenceCue": "The passage establishes the primary goal: explaining the motivation behind the schools' change in admissions strategy (attracting talent).",
+        "vocabGrammarCue": "Requires a strong action verb to complete the infinitive phrase ('to [verb] students').",
+        "contextNote": "The sentence describes the proactive, strategic steps taken by top business schools regarding student recruitment and policy changes.",
+        "distractorNotes": [
+          {
+            "option": "prerequisite",
+            "reason": "This is a noun and cannot follow 'to' to form an infinitive phrase."
+          },
+          {
+            "option": "instead",
+            "reason": "This is an adverb/conjunction, not a main verb describing the schools' action."
+          },
+          {
+            "option": "professionals",
+            "reason": "This is a noun and cannot grammatically complete the phrase 'to [blank] new students'."
+          },
+          {
+            "option": "conclusion",
+            "reason": "This is a noun, making it syntactically impossible to use here."
+          },
+          {
+            "option": "juveniles",
+            "reason": "While grammatically possible as a noun, the term does not fit the advanced context of professional business education admissions."
+          },
+          {
+            "option": "thus",
+            "reason": "This is an adverb used for transition, not a verb describing action."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q375-b2",
         "index": 1,
         "answer": "prerequisite",
-        "explanation": null
+        "explanation": "Semantically, the passage discusses academic standards and necessary qualifications. A 'prerequisite' is defined as something required beforehand. This word accurately describes the specific professional experience needed for admission. It functions correctly as a noun modifying 'admissions,' establishing the precise rule that the schools are changing.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The phrase 'admissions [BLANK] of' requires a noun specifying a mandatory condition or requirement for entry.",
+        "coherenceCue": "The context establishes that leading business schools are revising their mandatory entry requirements.",
+        "vocabGrammarCue": "Requires a specific Noun (a condition/requirement) to complete the phrase 'admissions [Noun] of.'",
+        "contextNote": "The passage describes moving away from an unofficial, but established, admissions requirement ('prerequisite') toward accepting recent graduates.",
+        "distractorNotes": [
+          {
+            "option": "conclusion",
+            "reason": "While a noun, 'admissions conclusion' is not the standard or idiomatic collocation used to describe necessary entry qualifications; 'prerequisite' is the precise term."
+          },
+          {
+            "option": "juveniles",
+            "reason": "This word refers to young people and has no semantic relationship with academic admissions standards or professional experience requirements."
+          },
+          {
+            "option": "thus",
+            "reason": "This is an adverb, not a noun. It cannot grammatically fill the blank space in this structure."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q375-b3",
         "index": 2,
         "answer": "instead",
-        "explanation": null
+        "explanation": "\"Instead\" is an essential transition marker signaling direct contrast or substitution. The passage establishes the schools abandoning an old prerequisite (four years' experience) and then details their new strategy (targeting recent graduates). \"Instead\" perfectly bridges this policy shift by meaning 'in place of this,' clearly indicating that the new focus replaces the former requirement. Grammatically, it functions as an adverbial phrase introducing the contrasting clause.",
+        "syntaxRequirement": "Adverbial Transition Marker / Conjunctive Adverb",
+        "collocationCohesionClue": "The blank connects two opposing policies or actions, requiring a word that signals replacement, substitution, or sharp contrast.",
+        "coherenceCue": "Contrast/Replacement Signal",
+        "vocabGrammarCue": "Requires a transitional adverb to link two opposing actions or strategies.",
+        "contextNote": "The schools are abandoning the requirement of work experience and adopting a new focus on young graduates.",
+        "distractorNotes": [
+          {
+            "option": "thus",
+            "reason": "While also a transition word, 'thus' signals cause and effect (result), meaning 'therefore.' The passage shows the new strategy is *in place of* the old rule, not necessarily caused by it."
+          },
+          {
+            "option": "conclusion",
+            "reason": "This word is a noun or verb and cannot grammatically function as an adverbial transition marker connecting two independent clauses describing actions taken by the schools."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q375-b4",
         "index": 3,
         "answer": "professionals",
-        "explanation": null
+        "explanation": "\"Professionals\" is the precise and grammatically necessary choice. It functions as a plural common noun, completing the descriptive title 'early career professionals.' The context—business schools adjusting admissions based on limited work experience—confirms that the passage discusses individuals who have entered the workforce and are establishing their careers, not students or minors.",
+        "syntaxRequirement": "Plural Common Noun",
+        "collocationCohesionClue": "The compound adjective 'early career' requires a plural noun that specifies the demographic of working adults.",
+        "coherenceCue": "The text defines a specific demographic group (recent graduates with limited work history) that business schools are actively targeting for enrollment.",
+        "vocabGrammarCue": "A plural noun is required immediately following the descriptive modifier 'early career' to name the target student population accurately.",
+        "contextNote": "The phrase 'only a couple years of work under their belt' confirms that the subject group consists of working adults who are transitioning into established careers.",
+        "distractorNotes": [
+          {
+            "option": "conclusion",
+            "reason": "While grammatically plural, its meaning ('summary' or 'ending') is abstract and does not fit the context of describing people entering a professional field."
+          },
+          {
+            "option": "juveniles",
+            "reason": "This word refers generally to young people or minors. 'Professionals' is superior because it precisely denotes individuals who are already actively working in an early career stage, regardless of their age."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85285,25 +85507,121 @@
         "blankId": "q376-b1",
         "index": 0,
         "answer": "result",
-        "explanation": null
+        "explanation": "Grammatically, the blank must be filled by an abstract noun following the article 'the.' Semantically, the sentence establishes a cause-and-effect relationship: physiological processes are caused by chemical changes. The word 'result' is the only option that accurately conveys this meaning of consequence or outcome, making the phrase 'occur as the result of...' both grammatically sound and scientifically precise.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The phrase 'occur as the [BLANK] of...' requires a noun that specifically denotes consequence or outcome.",
+        "coherenceCue": "The passage maintains a clear cause-and-effect relationship (chemical changes $\rightarrow$ physiological processes).",
+        "vocabGrammarCue": "Requires a noun meaning 'consequence,' 'outcome,' or 'effect.'",
+        "contextNote": "The text defines physiological functions as the direct outcome of underlying chemical reactions.",
+        "distractorNotes": [
+          {
+            "option": "signal",
+            "reason": "While a noun, 'signal' is too specific; it refers only to transmission (like an impulse), not the general overall consequence of all changes."
+          },
+          {
+            "option": "storage",
+            "reason": "This word describes the *act* or method of keeping something. The blank requires a term for the final outcome, not the process itself."
+          },
+          {
+            "option": "usage",
+            "reason": "This refers to consumption or application (the manner of use). The sentence demands a noun that defines the consequence, making 'usage' semantically incorrect."
+          },
+          {
+            "option": "prerequisite",
+            "reason": "This means something required *before* an event occurs. Since the blank describes what happens *after* the changes, it is temporally inaccurate."
+          },
+          {
+            "option": "situation",
+            "reason": "This noun is too vague and general. The context requires a specific term denoting scientific consequence or outcome."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q376-b2",
         "index": 1,
         "answer": "signal",
-        "explanation": null
+        "explanation": "In neuroscience, the movement of ions (influx/efflux) is the physical mechanism that generates an electrical impulse. 'Signal' is the precise technical term used to describe this communicative impulse traveling along a neuron's axon. Grammatically, the structure 'causing a [noun] to pass...' demands a countable noun representing a directional message. Therefore, 'signal' uniquely satisfies both the scientific concept (electrical transmission) and the grammatical requirement.",
+        "syntaxRequirement": "Countable Noun",
+        "collocationCohesionClue": "The context describes directional information transfer across a biological membrane, requiring a noun that represents an impulse or message.",
+        "coherenceCue": "The physical process of ion flow across a membrane is scientifically defined as generating a biological signal.",
+        "vocabGrammarCue": "Requires a noun that denotes an impulse or directional information transfer.",
+        "contextNote": "The preceding phrase ('influx/efflux of ions') describes the electrical action potential, which *is* the generation of a signal.",
+        "distractorNotes": [
+          {
+            "option": "result",
+            "reason": "'Result' refers to an outcome or consequence (the end state), not the active, directional impulse that physically travels down the neuron."
+          },
+          {
+            "option": "storage",
+            "reason": "This word describes the act of holding something (like oxygen) and does not fit the concept of immediate, directional transmission across a membrane."
+          },
+          {
+            "option": "usage",
+            "reason": "This term relates to consumption or application; it is semantically inappropriate for describing an electrical impulse passing through tissue."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q376-b3",
         "index": 2,
         "answer": "storage",
-        "explanation": null
+        "explanation": "This passage lists various physiological processes. The blank must name the physical function by which oxygen is retained in the blood. 'Storage' correctly identifies this biological process (the act of accumulating/holding). Grammatically, it functions as a noun following the article 'the,' maintaining strict parallel structure with other examples of processes mentioned earlier in the text.",
+        "syntaxRequirement": "Noun / Nominalization (A gerund or noun form derived from a verb, functioning as the subject/object of a process).",
+        "collocationCohesionClue": "The structure requires a specific noun that names a biological action or state, fitting the pattern 'the [Process] of oxygen.'",
+        "coherenceCue": "The passage establishes a list of scientific examples; therefore, the blank must name a specific, measurable biological action or state.",
+        "vocabGrammarCue": "Requires a nominalization (noun form) that collocates naturally and scientifically with 'of oxygen.'",
+        "contextNote": "Other examples include the storage [BLANK #3] of oxygen in the blood...",
+        "distractorNotes": [
+          {
+            "option": "prerequisite",
+            "reason": "This word denotes a necessary condition or requirement, not the physical action or process of retaining gas. It is semantically inappropriate for describing biological function."
+          },
+          {
+            "option": "situation",
+            "reason": "While grammatically a noun, 'situation' refers broadly to a circumstance or state of affairs and lacks the precise scientific connotation required to name a specific physiological process like oxygen retention."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q376-b4",
         "index": 3,
         "answer": "usage",
-        "explanation": null
+        "explanation": "This sentence details the physiological transfer of oxygen from the lungs into the bloodstream. The structure 'for usage' means 'for the purpose of being used.' Since oxygen is transported to sustain life functions throughout the body, its ultimate goal is consumption or utilization. Therefore, 'usage' correctly names this intended function, making it the most semantically appropriate choice.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The preposition 'for' introduces a purpose clause. The phrase 'for [BLANK] throughout the body' requires an abstract noun defining the intended function or ultimate destination of the oxygen.",
+        "coherenceCue": "The passage describes a continuous biological process (gas transfer), requiring a noun that defines the final purpose or destination of the substance within the body system.",
+        "vocabGrammarCue": "Requires an abstract noun following the preposition 'for' to indicate general purpose, function, or consumption.",
+        "contextNote": "The context emphasizes oxygen’s journey *to* its point of use. Using 'usage' clearly defines this functional endpoint throughout the body system.",
+        "distractorNotes": [
+          {
+            "option": "result",
+            "reason": "'Result' refers to a singular outcome or consequence, not the ongoing purpose or continuous act of consumption required by the gas."
+          },
+          {
+            "option": "signal",
+            "reason": "This word is too specific, relating only to electrical/chemical transmission (like nerve signals), and does not describe the general biological purpose of oxygen gas."
+          },
+          {
+            "option": "storage",
+            "reason": "The context already uses 'storage' earlier in the passage. Furthermore, it implies holding or keeping rather than the active process of consumption or use."
+          },
+          {
+            "option": "prerequisite",
+            "reason": "This noun means something required beforehand (a condition), which does not fit the meaning of ongoing biological function or destination."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85414,31 +85732,145 @@
         "blankId": "q377-b1",
         "index": 0,
         "answer": "participation",
-        "explanation": null
+        "explanation": "The sentence requires an abstract noun that describes the act of being involved. 'Participation' perfectly fits this meaning, referring to the degree of women’s involvement in paid employment. Grammatically, it functions as a noun following the possessive 'women's.' It maintains the academic tone and establishes the core topic: increased workforce engagement.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The fixed collocation 'participation in' is standard when discussing involvement or membership in a system, activity, or field.",
+        "coherenceCue": "The context requires a noun describing active involvement or presence within an economic system (the labor force).",
+        "vocabGrammarCue": "Noun required to complete the fixed phrase 'increase in... in'.",
+        "contextNote": "This sentence introduces the primary premise: the growing number of women entering or increasing their role in paid employment.",
+        "distractorNotes": [
+          {
+            "option": "available",
+            "reason": "This is an adjective and cannot grammatically follow the possessive 'women's' to describe a concept like involvement."
+          },
+          {
+            "option": "recognition",
+            "reason": "While a noun, it typically requires a preposition (e.g., 'recognition *of*') and does not fit the specific semantic context of labor force entry as well as 'participation'."
+          },
+          {
+            "option": "relationship",
+            "reason": "This noun refers to connections between people or things and is semantically inappropriate when discussing workforce statistics."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q377-b2",
         "index": 1,
         "answer": "available",
-        "explanation": null
+        "explanation": "The blank requires an adjective to modify the noun 'time.' 'Available' means capable of being used or obtained. In this context, it accurately conveys that the mothers have less amount of time that they are able to dedicate to domestic activities. This collocation ('available time') is highly idiomatic in English and perfectly fits the semantic requirement of discussing resource limitation.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The fixed collocation 'available time' is required, meaning time that can be used or accessed for a specific purpose.",
+        "coherenceCue": "The passage establishes a constraint on resources (time), necessitating an adjective that specifically denotes accessibility or usability.",
+        "vocabGrammarCue": "Requires an Adjective to modify 'time' and must fit the common, idiomatic collocation 'available time.'",
+        "contextNote": "The phrase describes the limited portion of their total time that they can actually dedicate to household chores.",
+        "distractorNotes": [
+          {
+            "option": "participation",
+            "reason": "This is a noun and cannot grammatically modify 'time' in this structure."
+          },
+          {
+            "option": "recognition",
+            "reason": "This is a noun and does not fit the grammatical slot requiring an adjective."
+          },
+          {
+            "option": "relationship",
+            "reason": "This is a noun; it cannot function as an adjective to describe time's usability."
+          },
+          {
+            "option": "roles",
+            "reason": "This is a plural noun and does not fit the grammatical slot requiring an adjective."
+          },
+          {
+            "option": "efficient",
+            "reason": "While an adjective, 'available' is the specific and idiomatic choice. 'Available time' is the standard phrase for discussing usable time, whereas 'efficient time' is unnatural."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q377-b3",
         "index": 2,
         "answer": "recognition",
-        "explanation": null
+        "explanation": "Semantically, the passage addresses evolving social norms regarding family dynamics. The structure 'there has been increasing X that...' demands a noun representing acknowledged change in understanding. 'Recognition' means the act of acknowledging importance, perfectly fitting the context where society is increasingly accepting and valuing father involvement. Grammatically, it functions as an abstract noun following the adjective 'increasing,' completing the required collocation.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The phrase 'increasing [noun] that...' requires an abstract noun signifying growing societal awareness or acknowledgment.",
+        "coherenceCue": "The text shifts from discussing time constraints (mothers' workload) to establishing the growing social acceptance of shared parenting responsibilities.",
+        "vocabGrammarCue": "A highly specific abstract noun is needed after 'increasing' to complete the phrase, emphasizing a collective or societal acknowledgment of value.",
+        "contextNote": "The sentence establishes that society is increasingly acknowledging and valuing the critical role fathers play in child-rearing and family life.",
+        "distractorNotes": [
+          {
+            "option": "relationship",
+            "reason": "Although related to the topic, 'increasing relationship' does not form a standard or grammatically correct collocation within this specific abstract structure; it lacks the necessary quality of acknowledgment."
+          },
+          {
+            "option": "roles",
+            "reason": "'Roles' is a plural noun that requires a different grammatical construction (e.g., 'recognition *of* roles') to fit correctly into this blank."
+          },
+          {
+            "option": "participation",
+            "reason": "While grammatically correct as a noun, 'increasing participation...' is semantically less precise than 'recognition.' The core idea being conveyed is the *acknowledgment* of importance, not merely the increase in activity."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q377-b4",
         "index": 3,
         "answer": "relationship",
-        "explanation": null
+        "explanation": "Grammatically, the blank follows the possessive determiner 'father's,' necessitating a singular abstract noun. Semantically, the passage centers on the vital nature of paternal involvement in modern family life. 'Relationship' is the standard and most natural collocation used to define the emotional connection or bond between a father and child, making it the only choice that maintains both grammatical integrity and thematic coherence.",
+        "syntaxRequirement": "Singular Abstract Noun",
+        "collocationCohesionClue": "Requires an abstract noun that describes a sustained, emotional, or developmental bond between two people.",
+        "coherenceCue": "The overall theme requires naming the fundamental interpersonal connection (the bond) itself.",
+        "vocabGrammarCue": "A noun describing an enduring tie or association (e.g., bond, link, relationship).",
+        "contextNote": "Focuses specifically on the emotional and developmental importance of paternal involvement in family dynamics.",
+        "distractorNotes": [
+          {
+            "option": "participation",
+            "reason": "While a noun, 'father's participation with a child' is less precise. The context requires naming the inherent bond (the relationship), not merely an action or activity."
+          },
+          {
+            "option": "roles",
+            "reason": "The structure 'father's roles with a child' suggests duties related to an activity, whereas the passage needs the foundational connection itself. Roles are listed later in the sentence ('ranging from income provider...')."
+          },
+          {
+            "option": "separation",
+            "reason": "This word is grammatically possible but semantically contradictory. The entire context of the passage emphasizes the positive importance and strengthening of the father-child bond."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q377-b5",
         "index": 4,
         "answer": "roles",
-        "explanation": null
+        "explanation": "\"Roles\" is the precise choice as it refers to the various functions or parts an individual plays within a family unit. Grammatically, the preceding quantifier 'many' mandates a plural countable noun. Semantically, the list provided (provider, teacher, carer) are classic examples of defined social roles, making this collocation highly natural and contextually accurate.",
+        "syntaxRequirement": "Plural Countable Noun",
+        "collocationCohesionClue": "The phrase 'ranging from X to Y' requires a plural noun that represents distinct functional capacities or duties within a social context.",
+        "coherenceCue": "The listed functions (provider, teacher, etc.) define the required concept: various life positions or duties.",
+        "vocabGrammarCue": "Collocation: 'have many roles.' The noun must be plural to match 'many' and describe functional capacities.",
+        "contextNote": "The list following the blank ('ranging from income provider to teacher, carer, and playmate') establishes that the required word must encompass multiple distinct functions.",
+        "distractorNotes": [
+          {
+            "option": "relationship",
+            "reason": "While a noun, 'relationship' refers specifically to connections or bonds between people. The context requires listing distinct *functions* or *capacities*, not separate emotional ties."
+          },
+          {
+            "option": "participation",
+            "reason": "This word is an abstract concept meaning involvement in an activity (an action). It does not fit the semantic pattern of enumerating defined, permanent family functions like 'provider' or 'teacher.'"
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85560,31 +85992,149 @@
         "blankId": "q378-b1",
         "index": 0,
         "answer": "community",
-        "explanation": null
+        "explanation": "Semantically, the passage establishes the theme of interdependence and mutual support among trees. The word 'community' is widely used in ecological contexts (like this one) to describe any system of interconnected organisms working together. Grammatically, the structure 'part of a [Noun]' mandates a singular countable noun. Therefore, 'community' perfectly anchors the central idea of collective existence and cooperation.",
+        "syntaxRequirement": "Singular Countable Noun",
+        "collocationCohesionClue": "The phrase 'being part of a...' requires a collective noun that describes membership or belonging to an interdependent group.",
+        "coherenceCue": "The passage introduces the core concept of natural cooperation and interdependence among trees.",
+        "vocabGrammarCue": "Requires a Noun to complete the prepositional phrase 'part of a...'",
+        "contextNote": "Trees may have a lot to teach us about being part of a community...",
+        "distractorNotes": [
+          {
+            "option": "competition",
+            "reason": "Although grammatically correct (Noun), it is semantically contradictory. The passage contrasts cooperation with competition, making the latter unsuitable for describing belonging."
+          },
+          {
+            "option": "contentment",
+            "reason": "This noun means satisfaction or peaceful state and does not fit the required context of describing a physical or social grouping structure."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q378-b2",
         "index": 1,
         "answer": "competition",
-        "explanation": null
+        "explanation": "Semantically, the passage establishes a contrast between positive social behavior (co-operation) and its natural opposite. 'Competition' functions as an abstract noun representing rivalry for limited resources, making it the direct conceptual foil to 'co-operation.' Grammatically, this choice maintains perfect parallel structure within the comparative clause, allowing the discussion to flow smoothly from one societal dynamic to the next.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The comparative structure 'X is better than Y' requires two abstract nouns that represent opposing societal forces or states of being.",
+        "coherenceCue": "The passage contrasts positive collective action (co-operation) with negative resource struggle or rivalry.",
+        "vocabGrammarCue": "Requires a high-level abstract noun that serves as the conceptual opposite (foil) to 'co-operation' in discussing societal dynamics.",
+        "contextNote": "The context discusses natural resource sharing among trees, suggesting that cooperation is superior to any form of internal rivalry or struggle.",
+        "distractorNotes": [
+          {
+            "option": "contentment",
+            "reason": "Although it is an abstract noun (correct PoS), 'contentment' refers only to a state of peaceful satisfaction and lacks the necessary conceptual opposition to 'co-operation' in the context of resource struggle."
+          },
+          {
+            "option": "community",
+            "reason": "This word is semantically redundant. It describes a group rather than the active force (like rivalry) that co-operation mitigates, and its meaning is already established by the initial mention of 'community' in Blank #1."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q378-b3",
         "index": 2,
         "answer": "share",
-        "explanation": null
+        "explanation": "Grammatically, the subject ('trees growing together') is plural, requiring a simple present tense base verb. Semantically, the context describes the mechanism of resource allocation in a cooperative system. The verb 'share' perfectly captures this concept of distributing limited assets (the object) equally among multiple subjects, making it both grammatically sound and highly appropriate to the passage’s core message.",
+        "syntaxRequirement": "Simple Present Tense Verb (Base form)",
+        "collocationCohesionClue": "The collocation 'share resources' is central to the passage's theme, emphasizing mutual distribution and cooperation among living things.",
+        "coherenceCue": "The passage establishes cooperation as superior to competition; therefore, the required action must involve mutual resource distribution rather than individual hoarding or conflict.",
+        "vocabGrammarCue": "Requires a transitive verb that accepts 'resources' as its direct object and describes an active process of division.",
+        "contextNote": "This sentence details the specific method by which trees distribute vital resources (food, water) to one another through their interconnected root systems.",
+        "distractorNotes": [
+          {
+            "option": "community",
+            "reason": "This is a noun and cannot function as the main action verb in this clause."
+          },
+          {
+            "option": "competition",
+            "reason": "This is also a noun, failing to meet the grammatical requirement for an active verb."
+          },
+          {
+            "option": "strong",
+            "reason": "This is an adjective. It cannot serve as the main verb; it would require a form of 'to be' (e.g., 'are strong')."
+          },
+          {
+            "option": "through",
+            "reason": "This is a preposition, used to introduce means or manner, not the primary action."
+          },
+          {
+            "option": "grown",
+            "reason": "This is a past participle. It cannot stand alone as the main verb for a plural subject in this tense structure."
+          },
+          {
+            "option": "despite",
+            "reason": "This is a preposition used to introduce contrast, not an action verb."
+          },
+          {
+            "option": "contentment",
+            "reason": "This is a noun and lacks the grammatical function required for the main clause verb."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q378-b4",
         "index": 3,
         "answer": "strong",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a descriptive adjective to modify 'trees.' Semantically, the passage establishes a clear hierarchy of resource distribution based on tree vigor. Since the sentence explicitly contrasts these trees with 'weaker trees,' the word 'strong' is necessary. It accurately conveys that only robust and healthy specimens possess the inherent vitality required to supply resources (food and water) to others.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The contrast established by 'weaker trees' demands an adjective that describes high vitality or robust physical health for the supplying group.",
+        "coherenceCue": "Contrast (Strong vs. Weaker)",
+        "vocabGrammarCue": "Adjective describing physical robustness or inherent health",
+        "contextNote": "The sentence identifies which type of tree possesses the necessary vitality and resource surplus to sustain the weaker members of the community.",
+        "distractorNotes": [
+          {
+            "option": "community",
+            "reason": "This is a noun that fails both grammatically (it cannot modify 'trees' in this context) and semantically, as it does not describe physical robustness."
+          },
+          {
+            "option": "competition",
+            "reason": "This is also a noun and cannot function as an adjective to describe the physical state of trees."
+          },
+          {
+            "option": "share",
+            "reason": "This word is primarily a verb, making it grammatically incompatible with modifying the noun 'trees'."
+          },
+          {
+            "option": "through",
+            "reason": "This is a preposition and cannot fulfill the required adjectival function."
+          },
+          {
+            "option": "grown",
+            "reason": "While grammatically possible (Past Participle), 'strong' better captures the required meaning of inherent, current vitality. 'Grown' merely implies maturity or having undergone a process of growth, lacking the necessary emphasis on robust health."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q378-b5",
         "index": 4,
         "answer": "through",
-        "explanation": null
+        "explanation": "The blank requires a preposition that specifies the *means* or *mechanism* of resource transfer. The list following the blank (roots, soil, fungi) details the physical pathways. 'Through' functions as an adverbial preposition meaning 'by way of' or 'via.' It establishes a clear causal link, indicating exactly how the trees distribute resources—they do it *via* these underground networks. This choice maintains semantic coherence and grammatical flow.",
+        "syntaxRequirement": "Preposition",
+        "collocationCohesionClue": "When listing physical pathways or methods, a preposition is needed to introduce the means by which an action occurs.",
+        "coherenceCue": "The passage transitions from stating the general benefit (resource sharing) to detailing the specific physical process (the mechanism of transfer).",
+        "vocabGrammarCue": "Requires a preposition that indicates instrumentality, pathway, or method.",
+        "contextNote": "Key sentence clue: 'They do this [blank] their roots, the soil and also the networks...' The subsequent list specifies the pathways used for the action.",
+        "distractorNotes": [
+          {
+            "option": "despite",
+            "reason": "'Despite' is a preposition of contrast (e.g., despite difficulty). The context requires indicating a physical pathway or method, not introducing an opposition or contradiction."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85706,31 +86256,173 @@
         "blankId": "q379-b1",
         "index": 0,
         "answer": "urged",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands a Past Participle form. Semantically, the context describes medical colleges advising doctors on best practices. 'Urged' means strongly recommended or implored, perfectly capturing this authoritative yet professional tone of necessary change. It indicates that external bodies (the Academy) are pressuring the doctors to adopt better habits, making it the ideal fit for the advisory nature of the text.",
+        "syntaxRequirement": "Past Participle Verb (V3) in a Passive Voice construction",
+        "collocationCohesionClue": "The structure 'have been [verb] to use' requires a verb that signifies external advice, recommendation, or pressure.",
+        "coherenceCue": "The passage establishes a relationship between an authority (medical colleges/BBC) and the subject (doctors), implying strong professional advice or mandatory best practice.",
+        "vocabGrammarCue": "Requires a verb conveying suggestion, necessity, or authoritative advice in the passive voice.",
+        "contextNote": "British doctors have been urged to use simple language when communicating with their patients...",
+        "distractorNotes": [
+          {
+            "option": "dosing",
+            "reason": "This is a noun/gerund and cannot function as the main verb in this passive construction."
+          },
+          {
+            "option": "outpatient",
+            "reason": "This functions as an adjective or noun, failing to meet the requirement for a main verb (V3)."
+          },
+          {
+            "option": "penned",
+            "reason": "While grammatically a V3, it means 'written by hand' and fails semantically because the context requires advice/pressure, not merely an action of writing."
+          },
+          {
+            "option": "condemned",
+            "reason": "This is too strong; it implies severe criticism or judgment. The text suggests professional best practice advice, which 'urged' captures better than 'condemned'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q379-b2",
         "index": 1,
         "answer": "dosing",
-        "explanation": null
+        "explanation": "This passage discusses simplifying complex medical terminology. The blank requires a noun to complete the phrase 'the [NOUN] of a medicine.' 'Dosing' refers specifically to the act and schedule of administering medication. It is grammatically sound because it functions as a gerund/noun, and semantically appropriate because it directly addresses the core topic: proper pharmaceutical usage instructions.",
+        "syntaxRequirement": "Noun or Gerund (functioning as a noun)",
+        "collocationCohesionClue": "The structure 'the [BLANK] of a medicine' requires a concrete noun that describes the process, quantity, or method of administration.",
+        "coherenceCue": "The passage emphasizes replacing complex medical jargon with plain English explanations concerning medicine administration.",
+        "vocabGrammarCue": "Requires a noun or gerund that denotes a process, regimen, or specific action (e.g., 'the writing of,' 'the reading of').",
+        "contextNote": "The sentence contrasts the clarity of phrases like 'twice daily' with the brevity of Latin abbreviations such as 'bd'.",
+        "distractorNotes": [
+          {
+            "option": "urged",
+            "reason": "This is a past participle/verb and cannot function as the subject noun in this context."
+          },
+          {
+            "option": "outpatient",
+            "reason": "While an adjective, it describes location status, not the process of administering medicine."
+          },
+          {
+            "option": "penned",
+            "reason": "This is a past participle/verb and does not fit grammatically after 'the'."
+          },
+          {
+            "option": "translated",
+            "reason": "This is a past participle/verb and cannot function as the subject noun here."
+          },
+          {
+            "option": "covered",
+            "reason": "This verb has no semantic connection to medicine dosage or administration methods."
+          },
+          {
+            "option": "condemned",
+            "reason": "This is a verb completely irrelevant to the medical context of language simplification."
+          },
+          {
+            "option": "supposed",
+            "reason": "This adjective/past participle does not name or describe the process of administering medication."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q379-b3",
         "index": 2,
         "answer": "outpatient",
-        "explanation": null
+        "explanation": "Semantically, the passage discusses communication with patients who are receiving non-hospital care. 'Outpatient' is a standard medical adjective used to describe services provided at clinics where patients visit for diagnosis or treatment but do not require an overnight stay. It correctly modifies 'clinics,' providing essential context and defining the specific scope of the initiative mentioned in the text.",
+        "syntaxRequirement": "Adjective / Compound Modifier",
+        "collocationCohesionClue": "The blank requires an adjective that specifies the *type* of medical facility or care setting, defining where the patients receive treatment (e.g., 'pediatric clinic', 'emergency clinic').",
+        "coherenceCue": "The passage shifts focus from general communication issues (jargon, abbreviations) to a specific group of medical settings—the clinics—that are targeted by the new guidelines.",
+        "vocabGrammarCue": "Requires an adjective that functions as a compound modifier preceding and defining the noun 'clinics'.",
+        "contextNote": "The phrase specifies the operational setting or location where doctors provide care in relation to patient visits.",
+        "distractorNotes": [
+          {
+            "option": "urged",
+            "reason": "This is a past tense verb and cannot grammatically modify the noun 'clinics'."
+          },
+          {
+            "option": "dosing",
+            "reason": "While it functions as an adjective/gerund, it refers specifically to medicine dosage and does not describe a type of medical facility."
+          },
+          {
+            "option": "penned",
+            "reason": "This is a past participle used to modify 'letters,' making it grammatically incorrect for the blank preceding 'clinics'."
+          },
+          {
+            "option": "translated",
+            "reason": "This is a past participle describing an action (the text being translated), not the physical type or setting of the clinic."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q379-b4",
         "index": 3,
         "answer": "penned",
-        "explanation": null
+        "explanation": "\"Penned\" means written, especially by hand or in a formal manner. It perfectly conveys the idea that the original document was created ('a letter penned to their GP'). While other options might be grammatically possible past participles, they fail semantically because the context requires describing the *creation* of the physical document, not its linguistic alteration or status. This choice maintains the appropriate professional tone for medical correspondence.",
+        "syntaxRequirement": "Past Participle Verb / Adjective",
+        "collocationCohesionClue": "The blank requires a verb that describes the physical act of creating or writing formal correspondence. The structure is 'a copy of a letter [verb-ed]'.",
+        "coherenceCue": "The context demands a specific verb that describes the action of writing an official letter in the past.",
+        "vocabGrammarCue": "Past participle used adjectivally to modify and describe the noun 'letter'.",
+        "contextNote": "This phrase establishes a contrast between receiving old, formally written copies ('penned') and the new best practice of direct communication from clinicians.",
+        "distractorNotes": [
+          {
+            "option": "translated",
+            "reason": "While grammatically correct as a past participle, it implies the letter was translated from another language. The context requires describing that the letter was simply written."
+          },
+          {
+            "option": "covered",
+            "reason": "This means 'dealt with' or 'included.' It does not fit the meaning of creating written correspondence."
+          },
+          {
+            "option": "condemned",
+            "reason": "This means criticized or judged negatively, which is semantically incorrect for describing a piece of writing."
+          },
+          {
+            "option": "supposed",
+            "reason": "This implies belief or assumption ('thought to be'), not the physical act of authorship. The letter was actually written, not just assumed to have been written."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q379-b5",
         "index": 4,
         "answer": "translated",
-        "explanation": null
+        "explanation": "\"Translated\" is the definitive term for converting text, language, or jargon from one form into another. Grammatically, the structure 'should be translated' mandates a Past Participle (V3) to correctly complete the passive voice construction. Semantically, given that the passage emphasizes moving away from complex medical jargon toward simple communication, 'translated' is the only word that accurately captures this necessary linguistic conversion process.",
+        "syntaxRequirement": "Past Participle Verb (V3)",
+        "collocationCohesionClue": "The relationship between 'medical words' and 'plain English' requires a verb that signifies linguistic transformation or conversion.",
+        "coherenceCue": "The stark contrast between 'complex medical jargon' and 'plain English' necessitates a verb of comprehensive linguistic conversion.",
+        "vocabGrammarCue": "Requires a V3 form meaning 'rendered into another language or style'; it must denote intellectual/linguistic change, not physical action.",
+        "contextNote": "The Academy suggests that any specialized medical terminology should be rendered into plain English for patient understanding.",
+        "distractorNotes": [
+          {
+            "option": "covered",
+            "reason": "While grammatically possible in some contexts, it implies addressing or physically covering a topic, not the act of converting language from jargon to simple terms."
+          },
+          {
+            "option": "condemned",
+            "reason": "This word relates exclusively to criticism, judgment, or sentencing and has no semantic connection whatsoever to simplifying medical terminology."
+          },
+          {
+            "option": "supposed",
+            "reason": "Although a V3 form, it functions primarily as an adjective (e.g., 'supposedly') and cannot denote the active process of converting language or jargon."
+          },
+          {
+            "option": "dubbing",
+            "reason": "This term is too specific, usually referring to replacing audio narration in media (like films). 'Translated' is the general, accurate term for written linguistic conversion."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85847,25 +86539,125 @@
         "blankId": "q380-b1",
         "index": 0,
         "answer": "checked",
-        "explanation": null
+        "explanation": "The phrase structure 'were having their... checked' requires a past participle to complete the passive action. Grammatically, this indicates that the weight and height were subjected to an inspection process. Semantically, 'checked' is the most natural choice in the context of routine veterinary or zoological care, signifying a thorough measurement or assessment of vital statistics.",
+        "syntaxRequirement": "Past Participle Verb (Completing a Passive Structure)",
+        "collocationCohesionClue": "The standard and natural collocation for assessing physical measurements is 'weight and height checked' or 'measured'.",
+        "coherenceCue": "The passage details routine, mandatory procedures (annual physical assessments) conducted at a zoo.",
+        "vocabGrammarCue": "Requires a simple past participle verb to describe the action performed on 'weight and height' during an inspection.",
+        "contextNote": "The phrase 'annual weight and height checked' establishes the core activity of systematic data collection regarding animal health.",
+        "distractorNotes": [
+          {
+            "option": "statistics",
+            "reason": "This is a plural noun. The blank requires a verb or adjective form to complete the passive measurement process (e.g., 'weight and height measured')."
+          },
+          {
+            "option": "coaxed",
+            "reason": "While grammatically a past participle, 'coaxed' refers only to persuading an animal; it does not describe the physical act of measuring weight or height."
+          },
+          {
+            "option": "enlarged",
+            "reason": "This word is semantically incorrect. The context describes measurement (data collection), not a process where the animals are physically made larger by the assessment itself."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q380-b2",
         "index": 1,
         "answer": "coaxed",
-        "explanation": null
+        "explanation": "Semantically, the passage describes keepers needing to get large, potentially resistant animals onto scales. 'Coaxed' means gently persuading or encouraging someone (or an animal) to cooperate. Grammatically, it functions perfectly as a Past Participle in the passive structure ('had to be coaxed'). This choice conveys the necessary nuance of careful handling required when dealing with wild or difficult zoo animals for measurement.",
+        "syntaxRequirement": "Past Participle Verb (V3) in a Passive Voice construction ('had to be V3')",
+        "collocationCohesionClue": "The phrase 'had to be [verb] on to' requires an action verb describing the gentle process of guiding or persuading reluctant subjects into position.",
+        "coherenceCue": "The action must describe persuading large, reluctant animals into cooperation for accurate weighing and measuring.",
+        "vocabGrammarCue": "Requires a verb meaning 'gently persuade' that fits the passive structure (V3) following 'had to be'.",
+        "contextNote": "Some creatures... had to be [BLANK] on to specially constructed larger scales.",
+        "distractorNotes": [
+          {
+            "option": "endangered",
+            "reason": "This is an adjective, not a verb, and cannot function as the main action in this passive structure."
+          },
+          {
+            "option": "statistics",
+            "reason": "This is a noun. The blank requires an action verb (V3) to complete the passive phrase."
+          },
+          {
+            "option": "values",
+            "reason": "This is also a noun and does not fit the required grammatical slot (Past Participle Verb)."
+          },
+          {
+            "option": "enlarged",
+            "reason": "While grammatically correct (V3), it suggests physical expansion of the animals, which contradicts the context of guiding them onto scales."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q380-b3",
         "index": 2,
         "answer": "endangered",
-        "explanation": null
+        "explanation": "\"Endangered\" is the precise term needed here, functioning as a post-nominal adjective modifying 'species.' It means facing extinction, which directly aligns with the passage's theme of global zoological management and conservation efforts. The zoos are collecting vital data specifically to monitor species that are at risk, making this choice both grammatically correct and semantically essential for conveying the text's overall purpose.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The phrase 'information about [BLANK] species' requires an adjective that specifies the conservation status or vulnerability of the animal group.",
+        "coherenceCue": "The shift in focus from general statistics (weight/height) to specific population monitoring (conservation status).",
+        "vocabGrammarCue": "Requires an adjective describing a biological classification or conservation status.",
+        "contextNote": "The passage discusses comparing data among global zoos, strongly implying that the primary concern is the survival and vulnerability of certain populations.",
+        "distractorNotes": [
+          {
+            "option": "values",
+            "reason": "This word functions primarily as a noun or verb and cannot grammatically modify 'species' in this context."
+          },
+          {
+            "option": "enlarged",
+            "reason": "Although an adjective, it relates to size, not the conservation status. The passage requires terminology related to risk or vulnerability."
+          },
+          {
+            "option": "dismissed",
+            "reason": "This word means rejected or ignored and creates a nonsensical meaning when discussing critical animal statistics."
+          },
+          {
+            "option": "developed",
+            "reason": "This describes growth or maturity, which is not the primary concern when comparing global species data in a conservation context."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q380-b4",
         "index": 3,
         "answer": "statistics",
-        "explanation": null
+        "explanation": "\"Statistics\" is the precise and professional term for numerical data derived from systematic observations, such as weights and heights. Grammatically, the structure 'The [Noun] are shared' requires a plural noun acting as the sentence subject. Semantically, since the passage describes collecting measurable metrics (weight/height) for scientific comparison, 'statistics' is the expert vocabulary choice used to refer to this compiled body of data.",
+        "syntaxRequirement": "Plural Count Noun (Subject of 'are shared')",
+        "collocationCohesionClue": "Comparing information necessitates a subject representing compiled, quantitative data sets.",
+        "coherenceCue": "Data compilation and sharing for comparative analysis.",
+        "vocabGrammarCue": "A plural noun must be used as the subject of the verb 'are shared'.",
+        "contextNote": "The zoo keepers are collecting quantitative metrics (weight, height) which must be summarized and exchanged with other institutions.",
+        "distractorNotes": [
+          {
+            "option": "values",
+            "reason": "While grammatically possible as a plural noun ('The values are shared'), 'statistics' is the more precise and academic term specifically used when referring to compiled, quantitative data sets in scientific contexts."
+          },
+          {
+            "option": "checked",
+            "reason": "This is a past participle/verb form and cannot function as the subject of the sentence ('The checked are shared...')."
+          },
+          {
+            "option": "coaxed",
+            "reason": "This is a simple past tense verb and does not fit the required noun slot."
+          },
+          {
+            "option": "endangered",
+            "reason": "This is an adjective, used to modify nouns (e.g., 'endangered species'), but cannot serve as the main subject of this sentence."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -85976,25 +86768,129 @@
         "blankId": "q381-b1",
         "index": 0,
         "answer": "detecting",
-        "explanation": null
+        "explanation": "Grammatically, any word following a preposition (like 'for') must function as a noun. Therefore, we require a gerund. Semantically, the passage describes instruments designed to find agents; thus, 'detecting' correctly specifies the sensor's purpose—the act of finding chemical and biological agents.",
+        "syntaxRequirement": "Gerund (-ing form functioning as a noun complement after the preposition 'for').",
+        "collocationCohesionClue": "The structure 'sensors for...' requires an activity or purpose, making the gerund form mandatory to complete the prepositional phrase.",
+        "coherenceCue": "The sentence establishes the primary function or application of plasmonic sensors.",
+        "vocabGrammarCue": "Preposition + Gerund (e.g., for running, for detecting).",
+        "contextNote": "One of the best studied applications... is sensors for [blank].",
+        "distractorNotes": [
+          {
+            "option": "binds",
+            "reason": "This is a finite verb (3rd person singular) and cannot follow the preposition 'for' to describe the sensor's purpose."
+          },
+          {
+            "option": "reemitted",
+            "reason": "This word is used later in the passage, describing light's action; it does not fit the context of defining the sensor's primary function."
+          },
+          {
+            "option": "enabling",
+            "reason": "While grammatically a gerund, 'sensors for enabling...' is semantically weak. The sensors are designed to perform detection itself, not merely enable the process."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q381-b2",
         "index": 1,
         "answer": "binds",
-        "explanation": null
+        "explanation": "Grammatically, the relative pronoun 'that' introduces a clause where the subject is 'a substance,' requiring a third-person singular present tense verb (ending in -s). Semantically, the context describes a fundamental process of chemical interaction. In chemistry and biology, when two molecules physically attach to each other, this action is precisely termed 'binding.' Therefore, 'binds' uniquely satisfies both the grammatical requirement and the scientific meaning.",
+        "syntaxRequirement": "Third-person singular Simple Present Tense Verb",
+        "collocationCohesionClue": "The phrase 'substance that [verb] to a molecule' requires a verb denoting specific molecular attraction or chemical attachment.",
+        "coherenceCue": "The passage links molecular binding (the cause) directly to a measurable change in light frequency (the effect).",
+        "vocabGrammarCue": "Requires a simple present tense verb form that agrees with the singular subject 'substance.'",
+        "contextNote": "In one approach, researchers coat a plasmonic nanomaterial with a substance that binds to a molecule of interest...",
+        "distractorNotes": [
+          {
+            "option": "detecting",
+            "reason": "This is a gerund/participle and fails to meet the required simple present tense verb form after 'that'."
+          },
+          {
+            "option": "reemitted",
+            "reason": "This is a past participle, used later in the passage (e.g., 'is reemitted'), but it does not describe the action of molecular attachment here."
+          },
+          {
+            "option": "enabling",
+            "reason": "This is also a gerund/participle and describes consequence, not the physical interaction between the substance and the molecule."
+          },
+          {
+            "option": "rejected",
+            "reason": "While grammatically possible, 'rejects' means to refuse or dismiss; it lacks the specific scientific meaning of molecular attachment (binding)."
+          },
+          {
+            "option": "sorting",
+            "reason": "This implies arrangement or classification, which is incorrect in the context of chemical bonding."
+          },
+          {
+            "option": "revolves",
+            "reason": "Although it is a third-person singular verb, 'revolves' means to turn around and does not fit the scientific concept of molecular binding."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q381-b3",
         "index": 2,
         "answer": "reemitted",
-        "explanation": null
+        "explanation": "Semantically, this passage details how light energy interacts with the plasmonic material. When no toxin is present, the incident light does not vanish; instead, its energy is redirected and sent out again. 'Reemitted' precisely captures this scientific process of reflection or radiation. Grammatically, the required passive structure ('is...') mandates a past participle to correctly describe the state of the light.",
+        "syntaxRequirement": "Past Participle (V3) forming a passive voice construction ('is' + V3)",
+        "collocationCohesionClue": "The structure 'light... is [verb] at an angle' requires a technical verb that describes the physical action of light being reflected or radiated.",
+        "coherenceCue": "The sentence establishes the baseline physical condition (no toxin) by defining the predictable behavior and fate of the light energy.",
+        "vocabGrammarCue": "Requires a technical verb describing the process of light radiation or reflection, fitting the passive voice structure.",
+        "contextNote": "In the absence of the toxin, light shining on the material is reemitted at a specific angle.",
+        "distractorNotes": [
+          {
+            "option": "detecting",
+            "reason": "This present participle/gerund fails to match the required passive voice structure ('is detecting') and describes an action (detection) rather than the physical process of light leaving."
+          },
+          {
+            "option": "binds",
+            "reason": "This is a simple present tense verb. It is grammatically incorrect in this context, and semantically wrong because 'binding' is an action performed by the substance, not the light itself."
+          },
+          {
+            "option": "enabling",
+            "reason": "This present participle/gerund fails to match the required passive voice structure ('is enabling'). Furthermore, it changes the core meaning of the sentence regarding the physical state of the light."
+          },
+          {
+            "option": "rejected",
+            "reason": "While grammatically correct as a past participle, 'rejected' is semantically inappropriate for describing light in this scientific context; 'reemitted' is the precise technical term used for radiated energy."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q381-b4",
         "index": 3,
         "answer": "enabling",
-        "explanation": null
+        "explanation": "Grammatically, 'enabling' acts as a participial phrase that modifies the entire preceding clause. It establishes a clear cause-and-effect relationship: because the effect can be measured with great accuracy (the cause), it consequently results in the ability to detect trace amounts (the consequence). Semantically, 'enabling' means 'making possible,' which perfectly links high measurement precision directly to enhanced detection capability.",
+        "syntaxRequirement": "Present Participial Phrase modifying the main clause; it functions as a result modifier.",
+        "collocationCohesionClue": "The comma followed by an -ing form signals a direct consequence or resulting capability stemming from the preceding measured action.",
+        "coherenceCue": "High precision leads directly to enhanced sensitivity and lower detection limits.",
+        "vocabGrammarCue": "The structure requires a word that conveys the meaning of 'allowing' or 'making it possible' as a result of the preceding clause.",
+        "contextNote": "This effect can be measured with great accuracy, enabling even trace amounts...",
+        "distractorNotes": [
+          {
+            "option": "detecting",
+            "reason": "While a participle, placing it here would create an ungrammatical or structurally awkward flow; 'enabling' is required to introduce the resulting capability."
+          },
+          {
+            "option": "reemitted",
+            "reason": "This word describes light (the object being measured), not the logical consequence or ability derived from the accurate measurement process."
+          },
+          {
+            "option": "binds",
+            "reason": "This is a simple present tense verb and does not fit the participial structure required to show the result/consequence of the preceding clause."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -86110,31 +87006,149 @@
         "blankId": "q382-b1",
         "index": 0,
         "answer": "multitask",
-        "explanation": null
+        "explanation": "Grammatically, the phrase 'ability to' mandates an infinitive verb. Semantically, the passage discusses the capacity for handling multiple tasks simultaneously. 'Multitask' is the only option that functions correctly as a base verb and accurately captures the core concept of dividing attention across various activities. It completes the thought by stating what training fails to improve: the fundamental skill of managing multiple tasks.",
+        "syntaxRequirement": "Base Form Verb (Infinitive)",
+        "collocationCohesionClue": "The structure 'the ability to' requires a general action verb that describes the skill or activity being measured.",
+        "coherenceCue": "The passage focuses on cognitive limitations regarding effective task management and divided attention.",
+        "vocabGrammarCue": "'Ability to' must be followed by a general action verb (base form) describing a capability.",
+        "contextNote": "Training does not improve the ability to multitask.",
+        "distractorNotes": [
+          {
+            "option": "switching",
+            "reason": "While grammatically correct, it is too specific. The passage discusses the overall general skill of handling multiple tasks, which 'multitask' covers more broadly."
+          },
+          {
+            "option": "allocate",
+            "reason": "This verb requires a direct object (e.g., 'ability to allocate resources') and does not fit the simple structure following 'to'."
+          },
+          {
+            "option": "control",
+            "reason": "Similar to 'allocate,' it needs an object to complete its meaning (e.g., 'ability to control attention')."
+          },
+          {
+            "option": "competence",
+            "reason": "This is a noun, not a verb, and cannot follow the preposition 'to' in this grammatical structure."
+          },
+          {
+            "option": "reasoning",
+            "reason": "It functions as a gerund or noun, failing to meet the requirement for a base action verb after 'ability to'."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q382-b2",
         "index": 1,
         "answer": "switching",
-        "explanation": null
+        "explanation": "The sentence requires a word that names a specific cognitive process. Grammatically, the preposition 'at' necessitates a gerund (V-ing) or a noun. 'Switching' functions perfectly as a gerund, accurately describing the core difficulty discussed in the passage: the inability to transition attention between tasks. This semantic fit is critical because the entire context revolves around poor task-switching ability.",
+        "syntaxRequirement": "Gerund/Noun (required following the preposition 'at' to name a skill or process)",
+        "collocationCohesionClue": "The structure 'effective at [V-ing]' is a standard collocation used in academic writing to measure proficiency or ability in performing an action.",
+        "coherenceCue": "The surrounding text establishes that the failure of digital multitasking directly correlates with a diminished capacity for moving focus or attention between different activities.",
+        "vocabGrammarCue": "A gerund form (V-ing) is required after the preposition 'at' to specify the particular skill or action being measured in terms of cognitive ability.",
+        "contextNote": "The blank requires a process word [X] that describes the act of moving attention from one task to another, making X a transition mechanism.",
+        "distractorNotes": [
+          {
+            "option": "multitask",
+            "reason": "'Multitasking' is too general; it refers to the overall activity. The blank requires the specific *mechanism* of failure—the act of moving attention between tasks, which 'switching' describes precisely."
+          },
+          {
+            "option": "allocate",
+            "reason": "While grammatically possible, 'to allocate' means to distribute resources (e.g., time or focus). The context requires the *act* of transition, not just the distribution of attention."
+          },
+          {
+            "option": "control",
+            "reason": "This is a noun referring to management or command. Although 'cognitive control' is used later in the passage, this blank demands the specific action (the process) of changing focus, which requires the gerund form."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q382-b3",
         "index": 2,
         "answer": "allocate",
-        "explanation": null
+        "explanation": "Semantically, 'allocate' means to distribute or assign (resources, time, etc.). The passage discusses how digital multitasking impairs cognitive function and focus. Therefore, stating that users are less able to 'allocate their attention' accurately describes a failure in managing or distributing limited mental resources effectively among various tasks.",
+        "syntaxRequirement": "Transitive Verb",
+        "collocationCohesionClue": "The phrase 'less able to... their attention' requires a verb that signifies the management or distribution of limited resources, making 'allocate' the precise fit.",
+        "coherenceCue": "The discussion moves from the general concept of ineffectiveness to a specific mechanism of failure: poor resource management (attention).",
+        "vocabGrammarCue": "'Allocate' is a high-frequency academic verb used specifically when discussing the distribution or assignment of time, funds, or cognitive resources.",
+        "contextNote": "They are less able to allocate their attention and are too vulnerable to distractions.",
+        "distractorNotes": [
+          {
+            "option": "multitask",
+            "reason": "This is a gerund/activity noun. The structure 'less able to...' requires an active verb describing the *failure* of management, not the activity itself."
+          },
+          {
+            "option": "switching",
+            "reason": "While related to attention, 'switching' describes the action or process (the movement between tasks). 'Allocate,' however, describes the failure in managing the underlying resource required for that action."
+          },
+          {
+            "option": "control",
+            "reason": "Although semantically relevant (cognitive control), the grammatical structure requires a verb of distribution ('less able to allocate'), not simply possessing the noun form of ability."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q382-b4",
         "index": 3,
         "answer": "control",
-        "explanation": null
+        "explanation": "Semantically, the passage discusses the difficulty of managing attention and switching tasks. Grammatically, the structure demands an abstract noun following the adjective 'cognitive.' 'Cognitive control' is the precise psychological term for executive function—the set of mental processes needed to plan, focus, inhibit distractions, and manage task transitions. This specific collocation is essential because it names the underlying ability that the digital native generation lacks.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The fixed academic collocation 'cognitive control' is required, referring to a measurable mental capacity.",
+        "coherenceCue": "The passage builds a theme of diminished self-management ability; 'control' completes this idea by naming the missing skill.",
+        "vocabGrammarCue": "Requires an Abstract Noun that functions as a measure of mental capacity or executive function (e.g., emotional control, cognitive control).",
+        "contextNote": "They are unlikely to develop the cognitive [BLANK] needed to divide their time...",
+        "distractorNotes": [
+          {
+            "option": "monopoly",
+            "reason": "This noun refers to exclusive ownership and has no semantic or functional connection to mental or attentional capacity."
+          },
+          {
+            "option": "upgrading",
+            "reason": "This is a gerund/verb form (V-ing) and does not fit the required Noun slot after 'cognitive'."
+          },
+          {
+            "option": "completion",
+            "reason": "While a noun, it refers to finishing an action or process, not the underlying mental ability or mechanism needed for task switching."
+          },
+          {
+            "option": "spend",
+            "reason": "This is a verb and cannot function as the required abstract noun in this grammatical position."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q382-b5",
         "index": 4,
         "answer": "competence",
-        "explanation": null
+        "explanation": "Grammatically, the structure 'illusion of [BLANK]' mandates an abstract noun. Semantically, the passage argues that constant digital switching creates a false sense of ability. 'Competence' is the most precise fit because it specifically refers to the measurable quality or state of being skilled and capable. The phrase 'illusion of competence' accurately summarizes the misleading feeling of mastery users experience when they confuse activity with actual skill.",
+        "syntaxRequirement": "Abstract Noun",
+        "collocationCohesionClue": "The fixed idiomatic phrase 'illusion of' requires an abstract noun that denotes a perceived quality or state of skill.",
+        "coherenceCue": "The passage establishes a causal link: lack of cognitive control leads directly to a dangerous, false perception of skill.",
+        "vocabGrammarCue": "Requires an abstract noun that completes the common English idiom 'illusion of X'.",
+        "contextNote": "This final sentence serves as the core thesis statement, summarizing the entire argument that digital multitasking is misleading rather than beneficial.",
+        "distractorNotes": [
+          {
+            "option": "control",
+            "reason": "While grammatically correct (Noun), 'illusion of control' is too general. The passage specifically addresses *skill level* and capability, making 'competence' the semantically superior choice."
+          },
+          {
+            "option": "multitask",
+            "reason": "This word functions primarily as a verb or gerund (action). It does not fit the required abstract noun form needed to complete the idiomatic structure 'illusion of...'"
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -86256,25 +87270,109 @@
         "blankId": "q383-b1",
         "index": 0,
         "answer": "reforms",
-        "explanation": null
+        "explanation": "This passage discusses complex economic and regulatory issues (carbon pricing). The term 'reforms' is the precise vocabulary choice because it refers to comprehensive, systemic improvements or adjustments made to an existing system. Grammatically, 'a series of reforms' is a highly natural collocation in academic writing when discussing policy shifts, making it the only word that fits both the structural requirement and the economic context.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The fixed collocation 'a series of' requires a plural noun that represents systematic changes or policy actions.",
+        "coherenceCue": "The passage requires a noun describing broad, systematic changes (policy adjustments) implemented to manage market imbalances following high carbon prices.",
+        "vocabGrammarCue": "'Reforms' correctly completes the 'a series of [noun]' structure while maintaining the necessary policy/economic register.",
+        "contextNote": "Following a series of reforms meant to limit the oversupply of credits...",
+        "distractorNotes": [
+          {
+            "option": "credits",
+            "reason": "This is an object (the item being regulated or limited), not the collection of actions or changes themselves. It does not fit 'a series of...'"
+          },
+          {
+            "option": "emissions",
+            "reason": "While related to carbon pricing, 'emissions' refers specifically to gases/output measurements (e.g., emissions trading), not a collection of policy adjustments."
+          },
+          {
+            "option": "potential",
+            "reason": "This is an adjective or abstract noun meaning possibility; it cannot function as the plural subject following 'a series of' in this context."
+          },
+          {
+            "option": "missions",
+            "reason": "This word typically refers to tasks, assignments, or space journeys and lacks the specific economic or regulatory connotation required by the passage."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q383-b2",
         "index": 1,
         "answer": "credits",
-        "explanation": null
+        "explanation": "In the context of carbon markets and emissions caps, 'credits' are standardized units representing allowances for greenhouse gas output. The structure 'oversupply of [Noun]' demands a countable noun that quantifies tradable assets. Since the passage discusses limiting the supply of these specific market units within an EU cap system, 'credits' is the precise technical term required to maintain both semantic and economic coherence.",
+        "syntaxRequirement": "Plural Count Noun",
+        "collocationCohesionClue": "The phrase 'oversupply of' requires a specific, quantifiable unit that functions within an economic or environmental trading system.",
+        "coherenceCue": "The discussion centers entirely on specialized carbon market mechanisms (caps, prices, reforms), necessitating highly specific terminology like 'credits'.",
+        "vocabGrammarCue": "Requires a plural noun following the preposition 'of,' specifically denoting an established unit of measure in environmental economics.",
+        "contextNote": "The text is focused on regulating and limiting the quantity of tradable units associated with carbon caps and pricing reforms.",
+        "distractorNotes": [
+          {
+            "option": "emissions",
+            "reason": "While semantically related, 'credits' refers to the specific *allowance* (the unit traded) granted by the cap. The oversupply is measured in these units, not merely the gas output itself."
+          },
+          {
+            "option": "potential",
+            "reason": "This word is an abstract concept describing capability and cannot function as a quantifiable noun following 'oversupply of.' It fails both grammatically and contextually."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q383-b3",
         "index": 2,
         "answer": "emissions",
-        "explanation": null
+        "explanation": "This passage discusses environmental policy. The term 'emissions' refers to gases (like CO2) released into the atmosphere. In environmental economics, an 'emissions trading program' is the standard mechanism for regulating pollution by allowing industries to buy and sell allowances for their measurable gas output. Grammatically, 'emissions' acts as a plural noun modifying 'trading program,' making it the only semantically and syntactically correct fit.",
+        "syntaxRequirement": "Plural Noun functioning as a Compound Modifier (Attributive Noun)",
+        "collocationCohesionClue": "The context of 'greenhouse gas emitter' and the phrase 'trading program' strongly suggest a measurable atmospheric output, making 'emissions' the required technical collocation.",
+        "coherenceCue": "The preceding phrase ('greenhouse gas emitter') establishes the topic of atmospheric pollutants, necessitating a related term like 'emissions' to complete the technical concept.",
+        "vocabGrammarCue": "Requires a countable, measurable output (a plural noun) that is central to market-based pollution regulation.",
+        "contextNote": "China's status as the world's largest greenhouse gas emitter makes its involvement in an 'emissions program' highly relevant and expected.",
+        "distractorNotes": [
+          {
+            "option": "potential",
+            "reason": "This word is primarily an adjective or noun describing capability, but it cannot grammatically modify the type of 'trading program' required here."
+          },
+          {
+            "option": "missions",
+            "reason": "While a plural noun, 'missions' refers to tasks or assignments and has no semantic connection to measurable atmospheric pollutants or climate policy."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q383-b4",
         "index": 3,
         "answer": "potential",
-        "explanation": null
+        "explanation": "This sentence requires a noun that completes the established English idiom, 'has the potential to.' This structure is mandatory for conveying future capacity or likelihood. Semantically, the passage moves from describing China's actions (the subject) to predicting a measurable consequence. Using 'potential' allows the phrase to function as a cohesive unit meaning 'is capable of,' making it ideal for academic and predictive writing.",
+        "syntaxRequirement": "Noun",
+        "collocationCohesionClue": "The fixed idiomatic phrase 'have the potential to [verb]' must be used to express inherent capability or possibility.",
+        "coherenceCue": "The sentence shifts focus from detailing China’s current regulatory steps to forecasting a specific, positive global outcome.",
+        "vocabGrammarCue": "Requires a noun that grammatically governs an infinitive phrase ('to narrow'), thereby defining the subject's inherent capacity for action.",
+        "contextNote": "China's move has the potential to narrow the gap...",
+        "distractorNotes": [
+          {
+            "option": "emissions",
+            "reason": "While a noun, 'has the emissions to...' is grammatically incorrect and fails to convey the required meaning of inherent capability."
+          },
+          {
+            "option": "reforms",
+            "reason": "This word refers to changes (like those in the EU) and does not fit the specific idiomatic structure needed to express future capacity or possibility."
+          },
+          {
+            "option": "credits",
+            "reason": "This is a highly specific economic unit. It cannot function as the general noun required to express abstract capability or potential."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [
@@ -86390,31 +87488,169 @@
         "blankId": "q384-b1",
         "index": 0,
         "answer": "synchronised",
-        "explanation": null
+        "explanation": "\"Synchronised\" means brought into agreement or working together at the same time. Grammatically, it functions as a past participle used adjectivally to describe the condition of the 'elements.' Semantically, since event setup involves coordinating multiple technical and logistical components (e.g., sound, lighting, staging), synchronization is the precise term needed to convey that all parts are working seamlessly together after the 24-hour setup period.",
+        "syntaxRequirement": "Past Participle functioning as an Adjective",
+        "collocationCohesionClue": "The phrase 'all elements carefully synchronised' requires a word that describes the resulting state of perfectly coordinated parts.",
+        "coherenceCue": "The passage describes complex operational setups requiring perfect coordination of various physical elements.",
+        "vocabGrammarCue": "Requires a participle/adjective meaning 'coordinated' or 'aligned in time and function.'",
+        "contextNote": "The sentence describes the final, coordinated state of all components after being set up over 24 hours.",
+        "distractorNotes": [
+          {
+            "option": "competitive",
+            "reason": "This adjective relates to markets or bidding processes, not the physical coordination of elements."
+          },
+          {
+            "option": "success",
+            "reason": "This is a noun and cannot grammatically describe the state of 'elements.'"
+          },
+          {
+            "option": "arrangements",
+            "reason": "This is a plural noun, not an adjective describing coordination."
+          },
+          {
+            "option": "challenging",
+            "reason": "While an adjective, it describes difficulty or complexity, not the state of being coordinated or aligned."
+          },
+          {
+            "option": "repetitive",
+            "reason": "This means done repeatedly and is irrelevant to the concept of simultaneous coordination."
+          },
+          {
+            "option": "feasible",
+            "reason": "This adjective means 'possible' but does not convey the specific meaning of coordinated timing or function."
+          },
+          {
+            "option": "assimilated",
+            "reason": "This word usually refers to cultural absorption or integration, not mechanical/operational coordination."
+          },
+          {
+            "option": "alignments",
+            "reason": "This is a plural noun and cannot grammatically describe the state of 'elements.'"
+          },
+          {
+            "option": "overall",
+            "reason": "This adjective modifies scope or totality, but does not fit the specific meaning of coordinated timing or function."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q384-b2",
         "index": 1,
         "answer": "competitive",
-        "explanation": null
+        "explanation": "An adjective is required here to modify the noun phrase 'bidding process.' Semantically, the passage details large convention bids that require extensive financial planning and deep market knowledge. 'Competitive' precisely captures this high-stakes environment where multiple parties are actively vying for limited opportunities (the bid), making it the most precise choice.",
+        "syntaxRequirement": "Adjective",
+        "collocationCohesionClue": "The collocation 'very competitive' is standard for describing high-stakes, market-driven processes like bidding or auctions. The context establishes a theme of intense rivalry.",
+        "coherenceCue": "The context shifts from general event management to specific, long-term, high-stakes bidding processes, necessitating a descriptor related to intense rivalry and market struggle.",
+        "vocabGrammarCue": "Adjective modifying 'bidding process' (Noun Phrase).",
+        "contextNote": "This phrase immediately follows the discussion of winning large convention bids over five years, establishing a clear theme of intense market rivalry that drives the need for detailed planning.",
+        "distractorNotes": [
+          {
+            "option": "challenging",
+            "reason": "While grammatically correct and fitting generally (e.g., 'very challenging process'), it is semantically too vague. 'Competitive' is superior because the text specifically details a rivalry for bids, making the choice more precise."
+          },
+          {
+            "option": "success",
+            "reason": "This word is a noun and cannot modify the process directly in this structure (it would require different phrasing or a possessive form)."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q384-b3",
         "index": 2,
         "answer": "success",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a noun that modifies the following noun ('factor'). The established collocation 'success factor' is highly common. Semantically, the passage details complex planning processes (market analysis, bidding, etc.) whose ultimate goal is achievement and profitability. Therefore, 'success' fits perfectly because it functions both as an abstract noun adjunct and accurately reflects the core theme of achieving positive results in event management.",
+        "syntaxRequirement": "Noun (functioning as a noun adjunct or modifier)",
+        "collocationCohesionClue": "The phrase 'critical success factor' is standard, fixed terminology in business and event management, referring to an essential element required for achieving positive outcomes.",
+        "coherenceCue": "The paragraph builds a strategic argument by identifying key elements necessary for profitable and successful event execution.",
+        "vocabGrammarCue": "Requires a Noun + Factor structure, demanding an abstract concept or realized outcome.",
+        "contextNote": "Marketing is a critical success factor...",
+        "distractorNotes": [
+          {
+            "option": "repetitive",
+            "reason": "This word is an adjective and fails the grammatical requirement for a noun adjunct modifying 'factor'."
+          },
+          {
+            "option": "feasible",
+            "reason": "Although semantically related to planning, this is an adjective. The structure requires a noun (noun adjunct) preceding 'factor,' making it grammatically incorrect."
+          },
+          {
+            "option": "assimilated",
+            "reason": "This word functions as a past participle/adjective and does not fit the required noun adjunct role. Furthermore, it lacks semantic connection to business achievement."
+          },
+          {
+            "option": "alignments",
+            "reason": "While 'alignments' is a plural noun, it would disrupt the standard collocation and require significant rephrasing (e.g., 'key alignment factor') to fit naturally into this specific structure."
+          },
+          {
+            "option": "overall",
+            "reason": "This is an adjective that modifies the concept generally but cannot function as a direct noun adjunct preceding 'factor' in this established idiomatic phrase."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q384-b4",
         "index": 3,
         "answer": "arrangements",
-        "explanation": null
+        "explanation": "Grammatically, the blank requires a plural noun to complete the phrase 'sponsorship [BLANK]'. Semantically, the context discusses establishing structured, long-term partnerships with industry players. 'Arrangements' perfectly captures this meaning by referring to planned deals or organized commitments, making it the most precise and professional choice for describing corporate sponsorship agreements in this field.",
+        "syntaxRequirement": "Noun (Plural)",
+        "collocationCohesionClue": "The fixed collocation 'sponsorship arrangements' is standard terminology used in business and event planning to refer to formal agreements.",
+        "coherenceCue": "The passage shifts focus from general planning concepts (like risk) to specific financial and partnership details, necessitating a term for formal contractual agreements.",
+        "vocabGrammarCue": "A plural noun is required after 'sponsorship' to specify the type of long-term deals or plans involved.",
+        "contextNote": "Many events involving long-term sponsorship arrangements with key industry players.",
+        "distractorNotes": [
+          {
+            "option": "synchronised",
+            "reason": "This is an adjective/past participle and cannot function as the noun complement needed after 'sponsorship'."
+          },
+          {
+            "option": "competitive",
+            "reason": "This is an adjective, not a noun. It would require restructuring (e.g., 'competitive bidding')."
+          },
+          {
+            "option": "success",
+            "reason": "While grammatically a noun, 'sponsorship success' is too general and lacks the formal precision needed to describe the actual contractual deals made."
+          },
+          {
+            "option": "alignments",
+            "reason": "Although it is a plural noun, 'alignments' refers more generally to structural or conceptual matching, whereas 'arrangements' specifically denotes organized plans or negotiated agreements."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q384-b5",
         "index": 4,
         "answer": "challenging",
-        "explanation": null
+        "explanation": "This sentence establishes a clear cause-and-effect relationship: the existence of many stakeholders (the cause) makes the activity of relationship building difficult (the effect). Therefore, a predicate adjective is needed to describe this high level of complexity. 'Challenging' perfectly captures the sense of demanding effort and intricacy required when dealing with multiple government agencies and diverse groups of stakeholders.",
+        "syntaxRequirement": "Predicate Adjective",
+        "collocationCohesionClue": "The structure 'is particularly [ADJECTIVE] since...' requires an adjective that describes the inherent difficulty or complexity of the subject, 'Relationship building.'",
+        "coherenceCue": "The causal conjunction 'since' dictates that the blank must be filled by an adjective describing the difficulty resulting from the presence of numerous stakeholders.",
+        "vocabGrammarCue": "Adjective used to describe the inherent complexity or demanding nature of a process (Relationship building).",
+        "contextNote": "Relationship building is particularly challenging since there are so many stakeholders involved in events, including government agencies at many levels.",
+        "distractorNotes": [
+          {
+            "option": "feasible",
+            "reason": "'Feasible' means possible or practical. The context implies a high degree of difficulty and demanding effort, not merely possibility; thus, 'challenging' conveys the intended meaning."
+          },
+          {
+            "option": "overall",
+            "reason": "'Overall' functions as an adverbial modifier (e.g., overall success) and does not describe the inherent nature or degree of difficulty related to relationship building in this specific predicate structure."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

@@ -578,6 +578,13 @@ def process_question(
     t1 = time.time()
     p1_raw = query_ollama(MODELS["dr"], p1_prompt, temperature=0.1, timeout=300, max_retries=4)
     p1_data = parse_phase1_response(p1_raw, blanks) if p1_raw else None
+
+    if p1_data is None and existing_explanation is not None:
+        logging.info("  Phase 1 retry without existing explanation context...")
+        p1_prompt = build_phase1_prompt(answer_text, full_text, blanks, None)
+        p1_raw = query_ollama(MODELS["dr"], p1_prompt, temperature=0.1, timeout=300, max_retries=4)
+        p1_data = parse_phase1_response(p1_raw, blanks) if p1_raw else None
+
     t1_elapsed = time.time() - t1
 
     if p1_data is None:

@@ -643,5 +643,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 455,2026-07-26,Fix duplicate corpus badge accumulation and spilling layout bug in CRM admin,Done,2026-07-26
 456,2026-07-26,Harden Next Word navigation to resolve index lookup and filter transition edge cases,Done,2026-07-26
 457,2026-07-26,Implement Rapid Stream hands-free continuous recording UX with VAD auto-stop in CRM admin,Done,2026-07-26
-458,2026-07-26,Harden 3-model local LLM RFIB revision pipeline and execute quality gate (6/10 completed),In Progress,
+458,2026-07-26,Harden 3-model local LLM RFIB revision pipeline and complete 10/10 quality gate,Done,2026-07-27
 459,2026-07-26,Execute multi-model essay analysis browser testing plan,Done,2026-07-26
+460,2026-07-27,Implement category-specific version filters and filter-locked rapid stream navigation in CRM admin,Done,2026-07-27
+461,2026-07-27,Investigate and fix CRM Admin Essay AI status 404 console errors,In Progress,

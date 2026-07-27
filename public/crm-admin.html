@@ -15,8 +15,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260726-v1.8.34" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260726-v1.8.34" />
+  <link rel="stylesheet" href="style.css?v=20260727-v1.8.34" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260727-v1.8.34" />
 </head>
 
 <body>
@@ -209,9 +209,15 @@
             <label for="corpus-sample-filter" style="display: block; font-size: 12px; font-weight: 600;">Show tests:</label>
             <select id="corpus-sample-filter" class="crm-input" style="width: 100%; margin: 5px 0 10px;">
               <option value="all">All words</option>
-              <option value="missing">Words without samples</option>
-              <option value="recorded">Words with samples</option>
+              <option value="missing">Missing any version (&lt; 5/5)</option>
+              <option value="missing_clean">Missing Version 1: Clean</option>
+              <option value="missing_omission">Missing Version 2: Omission</option>
+              <option value="missing_insertion">Missing Version 3: Insertion</option>
+              <option value="missing_accented">Missing Version 4: Accented</option>
+              <option value="missing_unrateable">Missing Version 5: Unrateable</option>
+              <option value="recorded">Complete (5/5 versions)</option>
             </select>
+
             <input type="text" id="corpus-word-search" class="crm-input" placeholder="Search words…" style="width: 100%; margin-bottom: 8px; box-sizing: border-box;" />
             <div class="corpus-pagination" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 10px;">
               <button id="btn-corpus-page-prev" class="crm-btn crm-btn-secondary" type="button">Previous</button>
@@ -2463,47 +2469,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260726-v1.8.34"></script>
-  <script src="js/classroom-api.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/utils.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/state.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/dom.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/courses.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/students.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/student-360.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/classrooms.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/leads.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/activities.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/enrollments.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/attendance.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/finance-workflow.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/finance.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/communications.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/staff-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/student-finance.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/live-delivery.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/classroom-modal.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/student-modal.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/course-modal.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/lead-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/communications-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/dashboard.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/governance.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/index.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260726-v1.8.34"></script>
-  <script src="js/crm/devtools-access.js?v=20260726-v1.8.34&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260726-v1.8.34"></script>
-  <script src="arpabet-ipa-map.js?v=20260726-v1.8.34"></script>
-  <script src="phonetics.js?v=20260726-v1.8.34"></script>
-  <script src="crm-admin.js?v=20260726-v1.8.34"></script>
+  <script src="js/auth-session-guard.js?v=20260727-v1.8.34"></script>
+  <script src="js/classroom-api.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/utils.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/state.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/dom.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/courses.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/students.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/student-360.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/classrooms.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/leads.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/activities.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/enrollments.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/attendance.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/finance-workflow.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/finance.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/communications.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/staff-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/student-finance.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/live-delivery.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/classroom-modal.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/student-modal.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/course-modal.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/lead-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/communications-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/dashboard.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/governance.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/index.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260727-v1.8.34"></script>
+  <script src="js/crm/devtools-access.js?v=20260727-v1.8.34&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260727-v1.8.34"></script>
+  <script src="arpabet-ipa-map.js?v=20260727-v1.8.34"></script>
+  <script src="phonetics.js?v=20260727-v1.8.34"></script>
+  <script src="crm-admin.js?v=20260727-v1.8.34"></script>
 </body>
 
 </html>

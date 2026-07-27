@@ -7070,16 +7070,28 @@
       });
     }
 
-    function applyWordFilter() {
+    function getFilteredWordButtons() {
       const filter = sampleFilter?.value || 'all';
       const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
-      const filtered = wordBtns.filter((button) => {
+      return wordBtns.filter((button) => {
         const word = String(button.dataset.word || '').toLowerCase();
-        const hasSample = savedWordSet.has(word);
-        const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const versions = savedVersionsByWord.get(word) || new Set();
+        let matchesFilter = true;
+        if (filter === 'missing') matchesFilter = versions.size < 5;
+        else if (filter === 'missing_clean') matchesFilter = !versions.has('clean');
+        else if (filter === 'missing_omission') matchesFilter = !versions.has('omission');
+        else if (filter === 'missing_insertion') matchesFilter = !versions.has('insertion');
+        else if (filter === 'missing_accented') matchesFilter = !versions.has('accented');
+        else if (filter === 'missing_unrateable') matchesFilter = !versions.has('unrateable');
+        else if (filter === 'recorded') matchesFilter = versions.size >= 5;
+
         const matchesSearch = !searchTerm || word.includes(searchTerm);
         return matchesFilter && matchesSearch;
       });
+    }
+
+    function applyWordFilter() {
+      const filtered = getFilteredWordButtons();
       const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
       currentPage = Math.min(currentPage, pageCount);
       const firstVisible = (currentPage - 1) * PAGE_SIZE;
@@ -7093,6 +7105,7 @@
       if (btnPagePrev) btnPagePrev.disabled = currentPage <= 1;
       if (btnPageNext) btnPageNext.disabled = currentPage >= pageCount;
     }
+
 
     function parseOxfordCsv(text) {
       const lines = String(text || '').split(/\r?\n/).filter(Boolean);
@@ -7529,11 +7542,70 @@
       }
     }
 
+    function advanceToNextFilteredWord() {
+      const filtered = getFilteredWordButtons();
+      if (!filtered.length) {
+        showToast('All target words in the current filter are completed!', 'success');
+        setStepGuidance('All target words in the current filter are completed! Select another filter or word.');
+        if (rapidStreamActive) {
+          rapidStreamActive = false;
+          if (rapidStreamToggle) rapidStreamToggle.checked = false;
+          clearStreamCountdown();
+        }
+        return;
+      }
+
+      const currWordLower = String(currentWord || '').trim().toLowerCase();
+      let currentIndex = filtered.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
+      let nextButton = null;
+
+      if (currentIndex >= 0 && currentIndex < filtered.length - 1) {
+        nextButton = filtered[currentIndex + 1];
+      } else if (currentIndex === filtered.length - 1) {
+        nextButton = filtered[0];
+      } else {
+        const fullIndex = wordBtns.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
+        if (fullIndex >= 0) {
+          nextButton = filtered.find((button) => wordBtns.indexOf(button) > fullIndex) || filtered[0];
+        } else {
+          nextButton = filtered[0];
+        }
+      }
+
+      if (!nextButton) return;
+
+      nextButton.click();
+      currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
+      applyWordFilter();
+      nextButton.scrollIntoView({ block: 'nearest' });
+
+      const filter = sampleFilter?.value || 'all';
+      if (filter.startsWith('missing_')) {
+        const targetCat = filter.replace('missing_', '');
+        const targetIdx = CORPUS_VERSIONS.findIndex(v => v.id === targetCat || v.category === targetCat);
+        if (targetIdx >= 0) {
+          moveToVersion(targetIdx);
+        }
+      }
+
+      if (rapidStreamActive) {
+        startStreamCountdown(() => startRecording());
+      }
+    }
+
     bindWordButtons();
     updateWordBadges();
     if (sampleFilter) sampleFilter.addEventListener('change', () => {
       currentPage = 1;
       applyWordFilter();
+      const filter = sampleFilter.value;
+      if (filter.startsWith('missing_')) {
+        const targetCat = filter.replace('missing_', '');
+        const targetIdx = CORPUS_VERSIONS.findIndex(v => v.id === targetCat || v.category === targetCat);
+        if (targetIdx >= 0) {
+          moveToVersion(targetIdx);
+        }
+      }
     });
     if (btnPagePrev) btnPagePrev.addEventListener('click', () => {
       currentPage = Math.max(1, currentPage - 1);
@@ -7547,35 +7619,9 @@
     if (btnNextVersion) btnNextVersion.addEventListener('click', () => moveToVersion(currentVersionIndex + 1));
     if (btnNextWord) btnNextWord.addEventListener('click', () => {
       if (!confirmVersionNavigation()) return;
-      const filter = sampleFilter?.value || 'all';
-      const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
-      const filtered = wordBtns.filter((button) => {
-        const word = String(button.dataset.word || '').toLowerCase();
-        const hasSample = savedWordSet.has(word) || (savedVersionsByWord.get(word)?.size > 0);
-        const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
-        const matchesSearch = !searchTerm || word.includes(searchTerm);
-        return matchesFilter && matchesSearch;
-      });
-      if (!filtered.length) return;
-      const currWordLower = String(currentWord || '').trim().toLowerCase();
-      let currentIndex = filtered.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
-      let nextButton = null;
-      if (currentIndex >= 0) {
-        nextButton = filtered[(currentIndex + 1) % filtered.length];
-      } else {
-        const fullIndex = wordBtns.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
-        if (fullIndex >= 0) {
-          nextButton = filtered.find((button) => wordBtns.indexOf(button) > fullIndex) || filtered[0];
-        } else {
-          nextButton = filtered[0];
-        }
-      }
-      if (!nextButton) return;
-      nextButton.click();
-      currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
-      applyWordFilter();
-      nextButton.scrollIntoView({ block: 'nearest' });
+      advanceToNextFilteredWord();
     });
+
     loadOxfordWordTests();
     if (btnUseCustom) {
       btnUseCustom.addEventListener('click', () => {
@@ -7936,32 +7982,38 @@
 
         // Auto-advance logic
         const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
+        const activeFilter = sampleFilter?.value || 'all';
+        const isCategorySpecificFilter = activeFilter.startsWith('missing_');
+
         if (rapidStreamActive) {
-          if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
+          if (isCategorySpecificFilter) {
+            setStepGuidance(`Saved ✓ for "${currentWord}"! Rapid streaming to next filtered word…`);
+            advanceToNextFilteredWord();
+          } else if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
             setStepGuidance(`Saved ✓ — Rapid streaming to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
             moveToVersion(currentVersionIndex + 1);
             startStreamCountdown(() => startRecording());
           } else {
-            setStepGuidance(`All 5 versions complete for "${currentWord}"! Rapid streaming to next word…`);
+            setStepGuidance(`All 5 versions complete for "${currentWord}"! Rapid streaming to next filtered word…`);
             showToast(`All versions complete for "${currentWord}"!`, 'success');
-            if (btnNextWord) btnNextWord.click();
-            startStreamCountdown(() => startRecording());
+            advanceToNextFilteredWord();
           }
         } else if (shouldAutoAdvance) {
-          if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
+          if (isCategorySpecificFilter) {
+            setStepGuidance(`Saved ✓ for "${currentWord}"! Auto-advancing to next filtered word…`);
+            setTimeout(() => advanceToNextFilteredWord(), 800);
+          } else if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
             setStepGuidance(`Saved ✓ — Auto-advancing to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
             setTimeout(() => moveToVersion(currentVersionIndex + 1), 800);
           } else {
-            setStepGuidance(`All 5 versions complete for "${currentWord}"! Auto-advancing to next word…`);
+            setStepGuidance(`All 5 versions complete for "${currentWord}"! Auto-advancing to next filtered word…`);
             showToast(`All versions complete for "${currentWord}"!`, 'success');
-            setTimeout(() => {
-              if (btnNextWord && !btnNextWord.disabled) btnNextWord.click();
-              else setStepGuidance('All versions complete. Select the next word from the list.');
-            }, 1000);
+            setTimeout(() => advanceToNextFilteredWord(), 1000);
           }
         } else {
           setStepGuidance(`Saved Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}. Click Next Version to continue, or Next Word when all versions are complete.`);
         }
+
       } catch (err) {
         console.error('Failed to save corpus sample:', err);
         if (rapidStreamActive) {

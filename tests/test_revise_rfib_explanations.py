@@ -65,6 +65,43 @@ class TestRevisionPipelineCore(unittest.TestCase):
         conf_long, flags_long = script.compute_objective_confidence(1, "proposal", options, long_blank)
         self.assertTrue(any("max 1000" in f for f in flags_long))
 
+    def test_find_list_key_nested_structures(self):
+        nested_data = {
+            "response": {
+                "payload": {
+                    "items": [
+                        {"blank_index": 1, "text": "Reason 1"}
+                    ]
+                }
+            }
+        }
+        extracted = script._find_list_key(nested_data, "diagnostic_blanks", ["items", "blanks"])
+        self.assertIsNotNone(extracted)
+        self.assertEqual(len(extracted), 1)
+        self.assertEqual(extracted[0]["text"], "Reason 1")
+
+    def test_string_item_coercion_across_parsers(self):
+        blanks = [{"index": 1, "correct": "proposal", "options": ["proposal", "reform"]}]
+
+        # Phase 1 string item list
+        p1_raw = json.dumps({"diagnostic_blanks": ["Grammar rule explanation for blank 1"]})
+        p1_parsed = script.parse_phase1_response(p1_raw, blanks)
+        self.assertIsNotNone(p1_parsed)
+        self.assertEqual(p1_parsed["diagnostic_blanks"][0]["correct_reason"], "Grammar rule explanation for blank 1")
+        self.assertEqual(p1_parsed["diagnostic_blanks"][0]["blank_index"], 1)
+
+        # Phase 2 string item list
+        p2_raw = json.dumps({"synthesized_blanks": ["Student explanation string for blank 1"]})
+        p2_parsed = script.parse_phase2_response(p2_raw, blanks)
+        self.assertIsNotNone(p2_parsed)
+        self.assertEqual(p2_parsed["synthesized_blanks"][0]["student_explanation"], "Student explanation string for blank 1")
+
+        # Phase 3 string item list
+        p3_raw = json.dumps({"reviewed_blanks": ["Final polished explanation for blank 1"]})
+        p3_parsed = script.parse_phase3_response(p3_raw, blanks)
+        self.assertIsNotNone(p3_parsed)
+        self.assertEqual(p3_parsed["reviewed_blanks"][0]["final_explanation"], "Final polished explanation for blank 1")
+
     def test_parse_phase1_response(self):
         blanks = [{"index": 1, "correct": "proposal", "options": ["proposal", "reform"]}]
         raw = json.dumps({
@@ -123,7 +160,6 @@ class TestRevisionPipelineCore(unittest.TestCase):
 
     @patch("scripts.revise_rfib_explanations.query_ollama")
     def test_process_question_untruncated_raw_artifacts(self, mock_query):
-        # Create a long response (>2000 chars) to test untruncated preservation
         long_dr_raw = json.dumps({
             "diagnostic_blanks": [{
                 "blank_index": 1, "correct_answer": "proposal",
@@ -175,7 +211,6 @@ class TestRevisionPipelineCore(unittest.TestCase):
         }
         mock_load_exist.return_value = {}
         mock_load_sidecar.return_value = {}
-        # 10 succeeds, 20 fails (returns None)
         mock_process.side_effect = [{"id": 10}, None]
 
         test_args = ["script", "--ids", "10,20"]

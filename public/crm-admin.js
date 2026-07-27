@@ -7070,6 +7070,12 @@
       });
     }
 
+    function getCategoryVersionIndex(filterValue) {
+      if (!filterValue || !filterValue.startsWith('missing_')) return -1;
+      const targetCat = filterValue.replace('missing_', '');
+      return CORPUS_VERSIONS.findIndex(v => v.id === targetCat || v.category === targetCat);
+    }
+
     function getFilteredWordButtons() {
       const filter = sampleFilter?.value || 'all';
       const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
@@ -7562,7 +7568,19 @@
       if (currentIndex >= 0 && currentIndex < filtered.length - 1) {
         nextButton = filtered[currentIndex + 1];
       } else if (currentIndex === filtered.length - 1) {
-        nextButton = filtered[0];
+        // Wrap-around: re-evaluate filtered list to avoid re-recording completed words
+        const refreshedFiltered = getFilteredWordButtons();
+        if (!refreshedFiltered.length) {
+          showToast('All target words in the current filter are completed!', 'success');
+          setStepGuidance('All target words in the current filter are completed! Select another filter or word.');
+          if (rapidStreamActive) {
+            rapidStreamActive = false;
+            if (rapidStreamToggle) rapidStreamToggle.checked = false;
+            clearStreamCountdown();
+          }
+          return;
+        }
+        nextButton = refreshedFiltered[0];
       } else {
         const fullIndex = wordBtns.findIndex((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
         if (fullIndex >= 0) {
@@ -7580,12 +7598,9 @@
       nextButton.scrollIntoView({ block: 'nearest' });
 
       const filter = sampleFilter?.value || 'all';
-      if (filter.startsWith('missing_')) {
-        const targetCat = filter.replace('missing_', '');
-        const targetIdx = CORPUS_VERSIONS.findIndex(v => v.id === targetCat || v.category === targetCat);
-        if (targetIdx >= 0) {
-          moveToVersion(targetIdx);
-        }
+      const catVersionIdx = getCategoryVersionIndex(filter);
+      if (catVersionIdx >= 0) {
+        moveToVersion(catVersionIdx);
       }
 
       if (rapidStreamActive) {
@@ -7598,13 +7613,9 @@
     if (sampleFilter) sampleFilter.addEventListener('change', () => {
       currentPage = 1;
       applyWordFilter();
-      const filter = sampleFilter.value;
-      if (filter.startsWith('missing_')) {
-        const targetCat = filter.replace('missing_', '');
-        const targetIdx = CORPUS_VERSIONS.findIndex(v => v.id === targetCat || v.category === targetCat);
-        if (targetIdx >= 0) {
-          moveToVersion(targetIdx);
-        }
+      const catVersionIdx = getCategoryVersionIndex(sampleFilter.value);
+      if (catVersionIdx >= 0) {
+        moveToVersion(catVersionIdx);
       }
     });
     if (btnPagePrev) btnPagePrev.addEventListener('click', () => {
@@ -7889,13 +7900,22 @@
       if (btnNextWord) btnNextWord.disabled = false;
       updateVersionButtons();
 
-      autoVerifyAndSaveAudio(audioBlob);
+      // Capture state snapshot before async analysis to prevent stale closures
+      autoVerifyAndSaveAudio(audioBlob, {
+        word: currentWord,
+        category: currentCategory,
+        expectedCount: currentExpectedObservedCount,
+        syllableCount: currentSyllableCount
+      });
     }
 
-    async function autoVerifyAndSaveAudio(blob) {
+    let _cachedPraatAPI = null;
+
+    async function autoVerifyAndSaveAudio(blob, snapshot) {
       if (!blob) return;
-      const expectedSyllables = Number(currentExpectedObservedCount ?? currentSyllableCount ?? 0);
-      const isUnrateable = currentCategory === 'unrateable';
+      const { word: snapWord, category: snapCategory, expectedCount: snapExpectedCount, syllableCount: snapSyllableCount } = snapshot || {};
+      const expectedSyllables = Number(snapExpectedCount ?? snapSyllableCount ?? 0);
+      const isUnrateable = snapCategory === 'unrateable';
 
       if (micStatus) {
         micStatus.textContent = "Status: 🔍 Auto-Analyzing Audio...";
@@ -7907,9 +7927,12 @@
       let analysisSummaryText = '';
 
       try {
-        const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?auto-verify=${Date.now()}`);
-        const api = new PraatAPI();
-        const analysis = await api.analyze(blob, expectedSyllables, { targetWord: currentWord });
+        if (!_cachedPraatAPI) {
+          const mod = await import('/pronunciation-analyzer/praat-api.js');
+          _cachedPraatAPI = mod.PraatAPI;
+        }
+        const api = new _cachedPraatAPI();
+        const analysis = await api.analyze(blob, expectedSyllables, { targetWord: snapWord });
         if (analysis) {
           observedSyllables = Number(analysis.observedSyllableCount ?? (analysis.syllables ? analysis.syllables.length : expectedSyllables));
           if (!isUnrateable && expectedSyllables > 0) {
@@ -7927,7 +7950,7 @@
           micStatus.textContent = `Status: ✓ Audio Matched${analysisSummaryText}`;
           micStatus.style.color = "#15803d";
         }
-        showToast(`✓ Recording matched "${currentWord}"! Auto-saving...`, 'success');
+        showToast(`✓ Recording matched "${snapWord}"! Auto-saving...`, 'success');
         setSaveButtonState(true);
         saveToCorpus();
       } else {
@@ -7935,12 +7958,12 @@
           micStatus.textContent = `Status: ⚠️ Syllable Mismatch${analysisSummaryText}`;
           micStatus.style.color = "#b45309";
         }
-        showToast(`⚠️ Syllable mismatch for "${currentWord}": Observed ${observedSyllables}, expected ${expectedSyllables}.`, 'warning');
+        showToast(`⚠️ Syllable mismatch for "${snapWord}": Observed ${observedSyllables}, expected ${expectedSyllables}.`, 'warning');
         setSaveButtonState(true);
         setStepGuidance(`Step 4: Syllable mismatch detected (Observed ${observedSyllables}, expected ${expectedSyllables}). Click Redo or Save Attempt.`);
 
         if (rapidStreamActive) {
-          showToast(`Rapid Stream paused due to syllable mismatch on "${currentWord}".`, 'info');
+          showToast(`Rapid Stream paused due to syllable mismatch on "${snapWord}".`, 'info');
           if (rapidStreamToggle) rapidStreamToggle.checked = false;
           rapidStreamActive = false;
           clearStreamCountdown();
@@ -8025,9 +8048,9 @@
           consoleOutput.textContent = `Saved to cloud: ${sampleId}.wav${hash ? ` (hash: ${hash.substring(0, 10)}...)` : ''}`;
         }
         showToast('Successfully saved to cloud storage.', 'success');
-        currentVersionSaved = true;
         const savedW = String(currentWord || '').trim().toLowerCase();
         const savedCat = String(categoryValue || '').trim().toLowerCase();
+        const savedWordDisplay = currentWord;
         savedWordSet.add(savedW);
         if (!savedVersionsByWord.has(savedW)) savedVersionsByWord.set(savedW, new Set());
         savedVersionsByWord.get(savedW).add(savedCat);
@@ -8037,7 +8060,6 @@
         currentVersionSaved = true;
         updateVersionButtons();
 
-
         // Auto-advance logic
         const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
         const activeFilter = sampleFilter?.value || 'all';
@@ -8045,27 +8067,27 @@
 
         if (rapidStreamActive) {
           if (isCategorySpecificFilter) {
-            setStepGuidance(`Saved ✓ for "${currentWord}"! Rapid streaming to next filtered word…`);
+            setStepGuidance(`Saved ✓ for "${savedWordDisplay}"! Rapid streaming to next filtered word…`);
             advanceToNextFilteredWord();
           } else if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
             setStepGuidance(`Saved ✓ — Rapid streaming to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
             moveToVersion(currentVersionIndex + 1);
             startStreamCountdown(() => startRecording());
           } else {
-            setStepGuidance(`All 5 versions complete for "${currentWord}"! Rapid streaming to next filtered word…`);
-            showToast(`All versions complete for "${currentWord}"!`, 'success');
+            setStepGuidance(`All 5 versions complete for "${savedWordDisplay}"! Rapid streaming to next filtered word…`);
+            showToast(`All versions complete for "${savedWordDisplay}"!`, 'success');
             advanceToNextFilteredWord();
           }
         } else if (shouldAutoAdvance) {
           if (isCategorySpecificFilter) {
-            setStepGuidance(`Saved ✓ for "${currentWord}"! Auto-advancing to next filtered word…`);
+            setStepGuidance(`Saved ✓ for "${savedWordDisplay}"! Auto-advancing to next filtered word…`);
             setTimeout(() => advanceToNextFilteredWord(), 800);
           } else if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
             setStepGuidance(`Saved ✓ — Auto-advancing to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
             setTimeout(() => moveToVersion(currentVersionIndex + 1), 800);
           } else {
-            setStepGuidance(`All 5 versions complete for "${currentWord}"! Auto-advancing to next filtered word…`);
-            showToast(`All versions complete for "${currentWord}"!`, 'success');
+            setStepGuidance(`All 5 versions complete for "${savedWordDisplay}"! Auto-advancing to next filtered word…`);
+            showToast(`All versions complete for "${savedWordDisplay}"!`, 'success');
             setTimeout(() => advanceToNextFilteredWord(), 1000);
           }
         } else {

@@ -96,6 +96,104 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
     return None
 
 
+def query_ollama_text(model: str, prompt: str, temperature: float = 0.3,
+                      max_retries: int = 3, timeout: int = 120) -> str | None:
+    """Query Ollama for free-text output (no JSON format constraint)."""
+    effective_prompt = prompt
+    if "qwen3" in model.lower():
+        effective_prompt = "/no_think\n\n" + prompt
+
+    for attempt in range(1, max_retries + 1):
+        temp = temperature if attempt == 1 else 0.1
+        payload = {
+            "model": model,
+            "prompt": effective_prompt,
+            "stream": False,
+            "options": {
+                "temperature": temp,
+                "num_predict": 2048,
+                "num_ctx": 4096,
+            },
+        }
+        try:
+            resp = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
+            if resp.status_code == 200:
+                raw = resp.json().get("response", "")
+                cleaned = clean_model_response(raw)
+                if not cleaned or len(cleaned.strip()) < 20:
+                    if attempt < max_retries:
+                        time.sleep(3 * attempt)
+                        continue
+                return cleaned
+            logging.warning(f"Ollama HTTP {resp.status_code} (attempt {attempt}, model={model})")
+        except requests.exceptions.Timeout:
+            logging.warning(f"Ollama timeout (attempt {attempt}, model={model})")
+        except Exception as e:
+            logging.warning(f"Ollama error (attempt {attempt}, model={model}): {e}")
+        if attempt < max_retries:
+            time.sleep(3 * attempt)
+    return None
+
+
+def build_translation_prompt(final_explanation: str) -> str:
+    """Build the Qwen3 interactive teacher persona prompt for Vietnamese translation."""
+    return (
+        'You are a warm, engaging, and expert English teacher having a 1-on-1 '
+        'interactive conversation with a Vietnamese student studying PTE '
+        'Reading Fill-in-the-Blanks.\n\n'
+        'GOAL: Explain the answer in friendly, natural, human Vietnamese, '
+        'making it feel like a real conversation.\n\n'
+        'RULES:\n'
+        '1. Use an interactive, human teacher persona (calling the student '
+        '"em" and asking friendly reflective questions like '
+        '"Em có chú ý... không?").\n'
+        '2. DO NOT repeat rigid repetitive headings like "Why \'X\' is '
+        'incorrect:". PARAPHRASE and translate distractor questions naturally '
+        'into conversational Vietnamese (e.g., "Thế còn phương án \'was '
+        'receiving\' thì sao nhỉ?", "Tại sao \'had received\' lại chưa '
+        'chuẩn trong câu này?").\n'
+        '3. KEEP exact option choices (e.g., \'received\', \'was receiving\'), '
+        'grammar terms (e.g., \'Past Simple Tense\', \'Past Continuous\'), '
+        'and English quotes in ENGLISH.\n'
+        '4. End with a "Tóm lại..." conclusion that includes a merged '
+        'reflective takeaway or thought-provoking question for the student. '
+        'Do NOT write a separate "Reflective Check" section.\n\n'
+        'English Explanation:\n'
+        f'{final_explanation}\n\n'
+        'Interactive Vietnamese Teacher Explanation:'
+    )
+
+
+def translate_blanks(record: dict) -> dict:
+    """Add vi_explanation to each blank in the record using Qwen3."""
+    qid = record["id"]
+    blanks = record["blanks"]
+    translate_model = MODELS["qw"]
+    translated_count = 0
+
+    for i, blank in enumerate(blanks):
+        final_exp = blank.get("final_explanation", "")
+        if not final_exp:
+            continue
+
+        b_idx = blank.get("blank_index", i + 1)
+        logging.info(f"  Translating blank {b_idx} for Question {qid} ...")
+
+        prompt = build_translation_prompt(final_exp)
+        vi_text = query_ollama_text(translate_model, prompt, temperature=0.3)
+
+        if vi_text:
+            blank["vi_explanation"] = vi_text
+            blank["vi_model"] = translate_model
+            blank["vi_timestamp"] = datetime.now(timezone.utc).isoformat()
+            translated_count += 1
+            logging.info(f"  Translated blank {b_idx} OK ({len(vi_text)} chars)")
+        else:
+            logging.warning(f"  Translation FAILED for blank {b_idx} of Question {qid}")
+
+    return record
+
+
 def compute_objective_confidence(
     blank_index: int,
     expected_correct: str,
@@ -699,6 +797,8 @@ def parse_args():
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--reset-sidecar", action="store_true")
     parser.add_argument("--save-every", type=int, default=10)
+    parser.add_argument("--translate", action="store_true",
+                        help="Enrichment-only mode: add Vietnamese translations to existing sidecar records")
     return parser.parse_args()
 
 
@@ -749,6 +849,39 @@ def main():
             save_sidecar_atomic(args.out, sidecar_records)
 
     save_sidecar_atomic(args.out, sidecar_records)
+
+    # --- Phase 4: Vietnamese Translation (if --translate or after full pipeline) ---
+    if args.translate:
+        logging.info("=== Phase 4: Vietnamese Translation Enrichment ===")
+        translate_count = 0
+        translate_failed = 0
+        for qid, rec in sidecar_records.items():
+            # Skip records that already have vi_explanation on all blanks (unless --no-resume)
+            if not args.no_resume:
+                all_translated = all(b.get("vi_explanation") for b in rec.get("blanks", []))
+                if all_translated:
+                    continue
+
+            # Filter by --ids if specified
+            if args.ids is not None:
+                id_list = [int(x.strip()) for x in args.ids.split(",") if x.strip()]
+                if qid not in id_list:
+                    continue
+
+            logging.info(f"--- Translating Question {qid}: {len(rec.get('blanks', []))} blanks ---")
+            try:
+                translate_blanks(rec)
+                translate_count += 1
+            except Exception as e:
+                logging.error(f"Translation error for Question {qid}: {e}")
+                translate_failed += 1
+
+            if translate_count % max(1, args.save_every) == 0:
+                save_sidecar_atomic(args.out, sidecar_records)
+
+        save_sidecar_atomic(args.out, sidecar_records)
+        logging.info(f"Translation done. Translated: {translate_count}, Failed: {translate_failed}")
+
     logging.info(f"Done. Succeeded: {succeeded}, Failed: {len(failed_ids)}")
     if failed_ids:
         logging.error(f"Batch completed with {len(failed_ids)} failed IDs: {failed_ids}")

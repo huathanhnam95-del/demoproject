@@ -219,6 +219,55 @@ class TestRevisionPipelineCore(unittest.TestCase):
                 script.main()
             self.assertEqual(cm.exception.code, 1)
 
+    def test_build_translation_prompt_contains_persona_markers(self):
+        exp = "The correct answer is 'received' because Past Simple is used."
+        prompt = script.build_translation_prompt(exp)
+        self.assertIn("em", prompt)
+        self.assertIn("Tóm lại", prompt)
+        self.assertIn("PARAPHRASE", prompt)
+        self.assertIn("Interactive Vietnamese Teacher Explanation:", prompt)
+        self.assertIn(exp, prompt)
+
+    @patch("scripts.revise_rfib_explanations.query_ollama_text")
+    def test_translate_blanks_adds_vi_fields_without_overwriting(self, mock_query_text):
+        mock_query_text.return_value = "Đáp án đúng là 'received' vì..."
+
+        record = {
+            "id": 1,
+            "blanks": [{
+                "blank_index": 1,
+                "correct_answer": "received",
+                "grammar_tag": "Past Simple",
+                "final_explanation": "The correct answer is 'received'.",
+                "concise_explanation": "Past Simple for completed actions.",
+                "confidence": "high",
+                "confidence_flags": [],
+            }]
+        }
+
+        original_keys = set(record["blanks"][0].keys())
+        result = script.translate_blanks(record)
+
+        # Verify new fields added
+        self.assertIn("vi_explanation", result["blanks"][0])
+        self.assertIn("vi_model", result["blanks"][0])
+        self.assertIn("vi_timestamp", result["blanks"][0])
+        self.assertEqual(result["blanks"][0]["vi_explanation"], "Đáp án đúng là 'received' vì...")
+        self.assertEqual(result["blanks"][0]["vi_model"], "qwen3:14b")
+
+        # Verify ALL original fields are untouched
+        for key in original_keys:
+            self.assertIn(key, result["blanks"][0])
+        self.assertEqual(result["blanks"][0]["final_explanation"], "The correct answer is 'received'.")
+        self.assertEqual(result["blanks"][0]["confidence"], "high")
+
+    def test_query_ollama_text_no_json_format(self):
+        """Verify query_ollama_text does NOT include format: json in payload."""
+        import inspect
+        source = inspect.getsource(script.query_ollama_text)
+        # The text query helper must NOT contain '"format"' in its body
+        self.assertNotIn('"format"', source)
+
 
 if __name__ == "__main__":
     unittest.main()

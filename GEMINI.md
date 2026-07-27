@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.34
+- **Phase**: Release V1.8.37
 
 ## Instructions
 
@@ -47,7 +47,7 @@ When a new task is created, immediately classify it:
 | Type | Examples | GSD Flow |
 |------|----------|----------|
 | **Quick Fix** | Bug fix, typo, config change, simple edit | Execute → Verify → Done |
-| **Feature** | New functionality, UI change, new endpoint, new page | Plan → Execute → Verify → Done |
+| **Feature** | New functionality, UI change, new endpoint, new page | Plan → Pause for Approval → Execute → Verify → Done |
 | **Investigation** | Debugging, research, performance issue, unknown cause | Research → Diagnose → Fix → Verify → Done |
 
 ### Step 2: Run the GSD Flow
@@ -61,12 +61,13 @@ When a new task is created, immediately classify it:
 **Feature (MUST plan before coding):**
 
 1. **CEO Review** (medium+ features only) — Auto-run `/ceo-review` to challenge the premise and find the 10-star version. Skip for small features or when user says "just build it".
-2. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum)
-3. **Execute** — Implement with atomic commits per logical unit
-4. **Diff-QA** (if UI changes) — Auto-suggest `/diff-qa` to verify affected pages in browser
-5. **Verify** — Run the app, test the feature, confirm it works. Screenshot or terminal proof preferred
-6. Mark done
-7. **Ship** (optional) — Run `/ship` to automate version bump, changelog, and push
+2. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum), create/update `implementation_plan.md` with `RequestFeedback: true`, and **STOP tool execution immediately** to present the plan to the user.
+3. **Wait for Approval** — Do NOT proceed to execution or code edits until the user explicitly approves the plan.
+4. **Execute** — Implement with atomic commits per logical unit
+5. **Diff-QA** (if UI changes) — Auto-suggest `/diff-qa` to verify affected pages in browser
+6. **Verify** — Run the app, test the feature, confirm it works. Screenshot or term-proof preferred
+7. Mark done
+8. **Ship** (optional) — Run `/ship` to automate version bump, changelog, and push
 
 **Investigation:**
 
@@ -79,6 +80,7 @@ When a new task is created, immediately classify it:
 ### GSD Core Rules (Always Enforced)
 
 - 🔒 **No code without a plan** — For Features, state the plan before writing any code. Even a 2-line inline plan counts.
+- 🛑 **No auto-proceeding on plans** — After creating or updating `implementation_plan.md`, set `RequestFeedback: true` in `ArtifactMetadata` and **STOP calling tools immediately**. Do NOT perform code edits or execution steps until the user explicitly approves the plan.
 - ✅ **Empirical verification required** — Never claim "done" without running verification. No "it should work" — prove it works.
 - 🧹 **Context hygiene** — After 3 failed debugging attempts on the same issue, stop → document what was tried → recommend a fresh approach or session.
 - 💾 **State tracking** — Always update TASK_TRACKER.csv at task creation and completion.
@@ -130,7 +132,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.35`
+- **Next Version**: `V1.8.38`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

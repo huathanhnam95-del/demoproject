@@ -198,6 +198,35 @@ body.has-site-header[data-site-section="home"] .hero {
   margin-left: 12px;
 }
 
+.site-header__notification-btn,
+.site-header__account-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--site-header-text);
+  cursor: pointer;
+}
+.site-header__notification-btn:hover,
+.site-header__notification-btn:focus-visible,
+.site-header__account-btn:hover,
+.site-header__account-btn:focus-visible { background: rgba(148, 163, 184, 0.12); }
+.site-header__notification-badge { position: absolute; top: 2px; right: 0; min-width: 18px; padding: 2px 5px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 0.68rem; font-weight: 700; }
+.notification-center-panel { position: absolute; top: calc(100% - 4px); right: var(--site-header-side-gap); width: min(360px, calc(100vw - 32px)); border: 1px solid var(--site-header-border); border-radius: 16px; background: #fff; box-shadow: var(--site-header-shadow); overflow: hidden; }
+.notification-center-panel__header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--site-header-border); }
+.notification-center-panel__header button { border: 0; background: transparent; color: var(--site-header-accent); cursor: pointer; font-size: 0.78rem; }
+.notification-center-panel__list { max-height: 360px; overflow: auto; padding: 8px; }
+.notification-center-item { padding: 10px; border-radius: 10px; }
+.notification-center-item.is-unread { background: var(--site-header-accent-soft); }
+.notification-center-item__title { font-weight: 700; font-size: 0.86rem; }
+.notification-center-item__body { margin-top: 4px; color: var(--site-header-muted); font-size: 0.8rem; line-height: 1.35; }
+.site-header__muted { margin: 10px; color: var(--site-header-muted); font-size: 0.82rem; }
+
 .site-header__account-btn:hover,
 .site-header__account-btn:focus-visible {
   background: var(--site-header-accent-soft);

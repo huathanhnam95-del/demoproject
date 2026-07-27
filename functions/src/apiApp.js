@@ -14,6 +14,7 @@ const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
+const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
 const readAloudRoutes = require('./routes/read-aloud');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const {
@@ -321,8 +322,17 @@ const sharedPracticeAttemptsRouter = createSharedPracticeAttemptsRouter({
     getStorageBucket
 });
 
+const essayAiAdminRouter = createEssayAiAdminRouter({
+    db,
+    authMiddleware,
+    adminMiddleware,
+    sendSuccess,
+    sendError
+});
+
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
+app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);

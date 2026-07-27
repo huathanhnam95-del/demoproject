@@ -63,6 +63,22 @@
   }
   nav.appendChild(accountBtn);
 
+  const notificationBtn = document.createElement('button');
+  notificationBtn.id = 'notification-center-toggle';
+  notificationBtn.className = 'site-header__notification-btn';
+  notificationBtn.type = 'button';
+  notificationBtn.setAttribute('aria-label', 'Notifications');
+  notificationBtn.setAttribute('aria-expanded', 'false');
+  notificationBtn.innerHTML = '<span aria-hidden="true">🔔</span><span id="notification-center-badge" class="site-header__notification-badge" hidden>0</span>';
+  nav.appendChild(notificationBtn);
+
+  const notificationPanel = document.createElement('div');
+  notificationPanel.id = 'notification-center-panel';
+  notificationPanel.className = 'notification-center-panel';
+  notificationPanel.hidden = true;
+  notificationPanel.innerHTML = '<div class="notification-center-panel__header"><strong>Notifications</strong><button type="button" id="notification-center-mark-read">Mark all read</button></div><div id="notification-center-list" class="notification-center-panel__list"><p class="site-header__muted">Sign in to view notifications.</p></div>';
+  header.appendChild(notificationPanel);
+
   inner.appendChild(brand);
   inner.appendChild(nav);
   header.appendChild(inner);

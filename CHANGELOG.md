@@ -1,3 +1,17 @@
+## [V1.8.34] - 2026-07-26
+
+### Added & Verified
+- **Multi-Model Essay Analysis & CRM Admin Infrastructure**:
+  - Implemented asynchronous local AI queue architecture for learner essay scoring (`submitEssayDeepAi` callable contract).
+  - Integrated CRM Admin Dashboard Essay AI scoring card (`#btn-essay-ai-preview`, `#btn-essay-ai-trigger`, `#essay-ai-admin-status`).
+  - Implemented preview lifecycle and manual batch trigger pipeline for unscored PTE Write Essay attempts.
+  - Executed full Playwright E2E browser testing suite against local HTTPS server and emulators with zero console errors.
+- **3-Model RFIB Explanation Revision Pipeline**:
+  - Implemented multi-model LLM revision pipeline and test suite for cohesive RFIB student explanations.
+- **CRM Admin UI Fixes & Polish**:
+  - Fixed Next Word navigation button disabling, search filter matching, and index lookup edge cases.
+  - Resolved duplicate corpus badge accumulation and layout spilling in CRM Admin.
+
 ## [V1.8.29] - 2026-07-25
 
 ### Fixed & Enhanced

@@ -21,6 +21,21 @@ assert.ok(
 );
 
 const indexes = JSON.parse(fs.readFileSync(indexesPath, 'utf8'));
+
+function hasIndex(collectionGroup, fields) {
+  return (indexes.indexes || []).some((index) =>
+    index.collectionGroup === collectionGroup
+    && fields.every((field) => index.fields.some((candidate) => candidate.fieldPath === field))
+  );
+}
+
+assert.ok(hasIndex('essay_ai_queue', ['status', 'submittedAt']), 'essay_ai_queue status/submittedAt index is required');
+assert.ok(hasIndex('essay_ai_queue', ['status', 'leaseExpiresAt']), 'essay_ai_queue status/leaseExpiresAt index is required');
+assert.ok(hasIndex('user_notifications', ['uid', 'isRead', 'createdAt']), 'user_notifications owner/unread/createdAt index is required');
+assert.ok(hasIndex('crm_system_alerts', ['status', 'createdAt']), 'crm_system_alerts status/createdAt index is required');
+assert.ok(hasIndex('essay_ai_backfill_jobs', ['status', 'createdAt']), 'backfill job status/createdAt index is required');
+assert.ok(hasIndex('essay_ai_backfill_jobs', ['status', 'leaseExpiresAt']), 'backfill job status/leaseExpiresAt index is required');
+assert.ok(hasIndex('speakingAttempts', ['practiceScope', 'canonicalMode', 'status', 'submittedAt']), 'essay backfill attempt index is required');
 const jobsIndex = (indexes.indexes || []).find((index) =>
   index.collectionGroup === 'jobs'
   && Array.isArray(index.fields)

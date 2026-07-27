@@ -121,6 +121,7 @@
   const selectedClassroomIds = new Set();
   let adminCapabilities = { ...DEFAULT_ADMIN_CAPABILITIES };
   let dashboardController = null;
+  let lastRenderedPanel = null;
   let schedulerController = null;
   let schedulerInitialized = false;
   let teacherSchedulerController = null;
@@ -286,6 +287,9 @@
       showGateMessage('Initialization failed.', e?.message || 'Unknown error');
     });
   });
+  window.addEventListener('pagehide', () => {
+    dashboardController?.dispose?.();
+  });
 
   function cacheElements() {
     elements.gate = document.getElementById('crm-loading');
@@ -358,6 +362,9 @@
     elements.dashboardRevenue = document.getElementById('dashboard-revenue');
     elements.dashboardDuplicates = document.getElementById('dashboard-duplicates');
     elements.dashboardAuditLogs = document.getElementById('dashboard-audit-logs');
+    elements.btnEssayAiPreview = document.getElementById('btn-essay-ai-preview');
+    elements.btnEssayAiTrigger = document.getElementById('btn-essay-ai-trigger');
+    elements.essayAiAdminStatus = document.getElementById('essay-ai-admin-status');
     elements.readAloudPromptSummaryCards = document.getElementById('read-aloud-prompt-summary-cards');
     elements.readAloudPromptSamples = document.getElementById('read-aloud-prompt-samples');
     elements.readAloudUsageSummaryCards = document.getElementById('read-aloud-usage-summary-cards');
@@ -4658,15 +4665,22 @@
 
     // Panels
     const activePanel = state.sub ? `${state.main}/${state.sub}` : state.main;
+    if (lastRenderedPanel === 'dashboard' && activePanel !== 'dashboard') {
+      dashboardController?.dispose?.();
+    }
     elements.panels.forEach((panel) => {
       panel.style.display = panel.dataset.panel === activePanel ? 'block' : 'none';
     });
 
     if (activePanel === 'dashboard') {
+      dashboardController?.activate?.().catch((error) => {
+        console.error('[CRM Admin] Essay AI dashboard activation failed:', error);
+      });
       refreshDashboard().catch((error) => {
         console.error('[CRM Admin] Dashboard refresh failed:', error);
       });
     }
+    lastRenderedPanel = activePanel;
 
 
 

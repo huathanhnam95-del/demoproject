@@ -234,5 +234,51 @@ service cloud.firestore {
     match /practiceAccessJobs/{jobId} {
       allow read, write: if false;
     }
+
+    // ============================================
+    // DEEP AI ESSAY REVIEW (server-created queue)
+    // ============================================
+    match /essay_ai_queue/{queueId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, delete: if false; // Cloud Functions Admin SDK bypasses rules.
+      allow update: if request.auth != null
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.isRead is bool
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+    }
+
+    match /essay_ai_usage/{uid} {
+      allow read, write: if false;
+    }
+
+    match /user_notifications/{notificationId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, delete: if false;
+      allow update: if request.auth != null
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.isRead is bool
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+    }
+
+    match /crm_system_alerts/{alertId} {
+      allow read: if isAdmin();
+      allow create, delete: if false;
+      allow update: if isAdmin()
+                    && resource.data.status == 'unresolved'
+                    && request.resource.data.status == 'resolved'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+    }
+
+    match /essay_ai_backfill_jobs/{jobId} {
+      allow read, write: if false;
+    }
+
+    match /essay_ai_backfill_control/{controlId} {
+      allow read, write: if false;
+    }
+
+    match /essay_ai_worker_status/{statusId} {
+      allow read, write: if false;
+    }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "phases": {
+    "phase1": {
+      "scores": {
+        "content": { "score": 5, "max": 6, "rationale": "Clear position.", "evidence": ["The thesis is explicit."] },
+        "form": { "score": 2, "max": 2, "rationale": "Appropriate length.", "evidence": ["The response is developed."] },
+        "development_structure_coherence": { "score": 5, "max": 6, "rationale": "Logical progression.", "evidence": ["Ideas are linked."] },
+        "grammar": { "score": 2, "max": 2, "rationale": "Accurate grammar.", "evidence": ["Few errors."] },
+        "general_linguistic_range": { "score": 5, "max": 6, "rationale": "Good range.", "evidence": ["Several structures are used."] },
+        "vocabulary_range": { "score": 2, "max": 2, "rationale": "Precise vocabulary.", "evidence": ["Word choice is effective."] },
+        "spelling": { "score": 2, "max": 2, "rationale": "Correct spelling.", "evidence": ["No material spelling errors."] }
+      }
+    },
+    "phase2": {
+      "sentenceRewrites": [
+        { "original": "Technology helps students.", "improved": "Technology can expand students' access to learning.", "explanation": "Adds precision." }
+      ],
+      "vocabularyUpgrades": [
+        { "originalWord": "helps", "suggestedWord": "facilitates", "context": "Use for formal academic tone." }
+      ]
+    },
+    "phase3": "Strength: clear ideas. Focus: develop examples.\n1. Add one specific example.\n2. Review linking phrases.\n3. Practise timed essays."
+  }
+}

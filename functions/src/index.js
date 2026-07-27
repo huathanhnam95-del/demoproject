@@ -18,6 +18,7 @@ const { syncProgressionUnlocks } = require('./syncProgressionUnlocks');
 const { migrateUserCoins } = require('./migrateCoins');
 const { assessWriting } = require('./assessWriting');
 const { scoreEssay } = require('./scoreEssay');
+const { submitEssayDeepAi } = require('./submitEssayDeepAi');
 const { scoreSWT } = require('./scoreSWT');
 const { scoreSST } = require('./scoreSST');
 const { scoreRTS } = require('./scoreRTS');
@@ -119,6 +120,7 @@ module.exports = {
     migrateUserCoins,
     assessWriting,
     scoreEssay,
+    submitEssayDeepAi,
     scoreSWT,
     scoreSST,
     scoreRTS,

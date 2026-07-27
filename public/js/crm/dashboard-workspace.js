@@ -16,6 +16,175 @@ window.CrmDashboardWorkspace = (function () {
             return capabilities[name] === true;
         }
 
+        const essayAiState = {
+            active: false,
+            ready: false,
+            previewJobId: null,
+            previewStatus: null,
+            enqueueJobId: null,
+            enqueueStatus: null,
+            pollTimer: null,
+            abortController: null
+        };
+
+        const onPreviewClick = () => {
+            startEssayAiPreview().catch((error) => {
+                if (elements.essayAiAdminStatus) elements.essayAiAdminStatus.textContent = error?.message || 'Preview failed.';
+                if (typeof showToast === 'function') showToast(error?.message || 'Essay AI preview failed.', 'error');
+            });
+        };
+        const onTriggerClick = () => {
+            const confirmed = typeof window.confirm !== 'function'
+                || window.confirm('Queue every essay in this preview for local AI scoring?');
+            if (!confirmed) return;
+            triggerEssayAiBackfill().catch((error) => {
+                if (elements.essayAiAdminStatus) elements.essayAiAdminStatus.textContent = error?.message || 'Trigger failed.';
+                if (typeof showToast === 'function') showToast(error?.message || 'Essay AI trigger failed.', 'error');
+            });
+        };
+
+        function createRequestId() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (token) => {
+                const value = Math.floor(Math.random() * 16);
+                return (token === 'x' ? value : ((value & 0x3) | 0x8)).toString(16);
+            });
+        }
+
+        function heartbeatMillis(value) {
+            if (value && typeof value.toDate === 'function') return value.toDate().getTime();
+            if (value && Number.isFinite(Number(value._seconds))) return Number(value._seconds) * 1000;
+            const parsed = new Date(value).getTime();
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function isWorkerReady(worker) {
+            if (!worker) return false;
+            if (typeof worker.ready === 'boolean') return worker.ready;
+            const ageMs = Date.now() - heartbeatMillis(worker.lastHeartbeatAt);
+            return ageMs >= 0
+                && ageMs <= 45_000
+                && worker.ollamaReachable === true
+                && worker.modelsReady === true;
+        }
+
+        function updateEssayAiControls() {
+            if (elements.btnEssayAiPreview) {
+                elements.btnEssayAiPreview.disabled = !essayAiState.ready || essayAiState.previewStatus === 'pending' || essayAiState.previewStatus === 'processing';
+            }
+            if (elements.btnEssayAiTrigger) {
+                elements.btnEssayAiTrigger.disabled = !essayAiState.ready
+                    || essayAiState.previewStatus !== 'completed'
+                    || essayAiState.enqueueStatus === 'pending'
+                    || essayAiState.enqueueStatus === 'processing';
+            }
+        }
+
+        async function loadEssayAiStatus() {
+            if (!elements.essayAiAdminStatus) return null;
+            const result = await apiFetchJson('/api/admin/essay-ai/status', { method: 'GET' });
+            essayAiState.ready = isWorkerReady(result.worker);
+            elements.essayAiAdminStatus.textContent = `${essayAiState.ready ? 'Worker ready' : 'Worker not ready'} · ${Number(result.pendingCount || 0)} queued`;
+            updateEssayAiControls();
+            return result;
+        }
+
+        async function pollEssayAiJob(jobId) {
+            if (!jobId || !essayAiState.active && essayAiState.previewJobId !== jobId && essayAiState.enqueueJobId !== jobId) return null;
+            const result = await apiFetchJson(`/api/admin/essay-ai/backfill-jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
+            const isPreview = result.mode === 'preview';
+            if (isPreview) {
+                essayAiState.previewJobId = jobId;
+                essayAiState.previewStatus = result.status;
+            } else {
+                essayAiState.enqueueJobId = jobId;
+                essayAiState.enqueueStatus = result.status;
+            }
+            if (elements.essayAiAdminStatus) {
+                if (result.status === 'completed' && isPreview) {
+                    elements.essayAiAdminStatus.textContent = `${Number(result.candidateCount || 0)} unscored essays · ${Number(result.invalidCount || 0)} invalid`;
+                } else if (result.status === 'completed') {
+                    elements.essayAiAdminStatus.textContent = `${Number(result.enqueuedCount || 0)} queued · ${Number(result.skippedCount || 0)} skipped`;
+                } else if (result.status === 'failed') {
+                    elements.essayAiAdminStatus.textContent = result.error || 'Essay AI job failed.';
+                } else {
+                    elements.essayAiAdminStatus.textContent = `Scanning… ${Number(result.scannedCount || 0)} checked`;
+                }
+            }
+            updateEssayAiControls();
+            if (essayAiState.active && (result.status === 'pending' || result.status === 'processing')) {
+                clearTimeout(essayAiState.pollTimer);
+                essayAiState.pollTimer = setTimeout(() => {
+                    pollEssayAiJob(jobId).catch(() => {});
+                }, 2000);
+            }
+            return result;
+        }
+
+        async function startEssayAiPreview() {
+            if (!essayAiState.ready) throw new Error('Essay AI worker is not ready.');
+            essayAiState.previewStatus = 'pending';
+            updateEssayAiControls();
+            try {
+                const result = await apiFetchJson('/api/admin/essay-ai/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId: createRequestId(), includeFailed: false })
+                });
+                essayAiState.previewJobId = result.jobId;
+                return pollEssayAiJob(result.jobId);
+            } catch (error) {
+                essayAiState.previewStatus = null;
+                updateEssayAiControls();
+                throw error;
+            }
+        }
+
+        async function triggerEssayAiBackfill() {
+            if (!essayAiState.ready) throw new Error('Essay AI worker is not ready.');
+            if (!essayAiState.previewJobId || essayAiState.previewStatus !== 'completed') {
+                throw new Error('Run and complete a preview before triggering scoring.');
+            }
+            essayAiState.enqueueStatus = 'pending';
+            updateEssayAiControls();
+            try {
+                const result = await apiFetchJson('/api/admin/essay-ai/trigger', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId: createRequestId(), previewJobId: essayAiState.previewJobId })
+                });
+                essayAiState.enqueueJobId = result.jobId;
+                return pollEssayAiJob(result.jobId);
+            } catch (error) {
+                essayAiState.enqueueStatus = null;
+                updateEssayAiControls();
+                throw error;
+            }
+        }
+
+        async function activate() {
+            if (!essayAiState.active) {
+                essayAiState.active = true;
+                elements.btnEssayAiPreview?.addEventListener('click', onPreviewClick);
+                elements.btnEssayAiTrigger?.addEventListener('click', onTriggerClick);
+            }
+            return loadEssayAiStatus();
+        }
+
+        function dispose() {
+            essayAiState.active = false;
+            clearTimeout(essayAiState.pollTimer);
+            essayAiState.pollTimer = null;
+            essayAiState.abortController?.abort();
+            essayAiState.abortController = null;
+            elements.btnEssayAiPreview?.removeEventListener('click', onPreviewClick);
+            elements.btnEssayAiTrigger?.removeEventListener('click', onTriggerClick);
+        }
+
+        function getEssayAiState() {
+            return { ...essayAiState, pollTimer: null, abortController: null };
+        }
+
         async function refreshDashboard() {
             if (!window.CrmDashboard) return;
 
@@ -236,7 +405,14 @@ window.CrmDashboardWorkspace = (function () {
 
         return {
             refreshDashboard,
-            createMergeJob
+            createMergeJob,
+            loadEssayAiStatus,
+            startEssayAiPreview,
+            triggerEssayAiBackfill,
+            pollEssayAiJob,
+            activate,
+            dispose,
+            getEssayAiState
         };
     }
 

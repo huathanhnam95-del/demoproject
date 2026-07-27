@@ -202,7 +202,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.33</div>
+  <div id="version-indicator" class="version-indicator">V1.8.34</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4441,9 +4441,10 @@
               <div id="essay-results-container" class="essay-results-container"></div>
               <div class="notes-results-controls essay-results-controls">
                 <button id="essay-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
-                <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Submit to AI scoring</button>
+                <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Queue AI scoring</button>
               </div>
               <div id="essay-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
+              <div id="essay-ai-score-status" class="essay-ai-score-hint" style="display:none;" role="status" aria-live="polite"></div>
             </div>
           </div>
         </div>
@@ -5465,6 +5466,7 @@
   </script>
   <script src="js/compat-emulator-redirect.js"></script>
   <script src="js/pte-attempt-archive.js"></script>
+  <script type="module" src="js/notification-center.js"></script>
   <!-- Watch/Notes heavy scripts are lazy-loaded by js/lazy-loader.js -->
 
   <!-- Dictionary Service (Definitions & Translations) -->
@@ -5866,7 +5868,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.33"></script>
+  <script src="/read-aloud-mode.js?v=1.8.34"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

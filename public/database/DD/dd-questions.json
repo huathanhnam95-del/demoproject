@@ -91378,19 +91378,97 @@
         "blankId": "q403-b1",
         "index": 0,
         "answer": "transferred",
-        "explanation": null
+        "explanation": "Grammatically, the sentence requires the passive voice ('residue... is transferred'), necessitating a past participle (V3). Semantically, the context details the scientific process: residue must move *from* the skin *to* an external surface. 'Transferred' precisely captures this physical action of deposition or movement across space, making it the only suitable choice to explain the formation mechanism.",
+        "syntaxRequirement": "Past Participle Transitive Verb (V3)",
+        "collocationCohesionClue": "The structure 'is [BLANK] onto a surface' demands a verb that describes the physical movement or deposition of material from one location to another.",
+        "coherenceCue": "Physical movement and deposition of biological residue.",
+        "vocabGrammarCue": "Passive voice construction (is + V3) requiring a verb of motion/transfer.",
+        "contextNote": "The blank explains the fundamental mechanism by which latent fingermarks are created: moving from skin to surface.",
+        "distractorNotes": [
+          {
+            "option": "contaminating",
+            "reason": "This is an adjective/present participle (V-ing) and cannot function as the main verb in this passive structure. The residue does not perform the action; it *receives* the action."
+          },
+          {
+            "option": "locating",
+            "reason": "This describes the act of finding or positioning something, which is a semantic mismatch. The sentence requires describing the material's movement, not the process of discovery."
+          },
+          {
+            "option": "purging",
+            "reason": "While related to removal, 'purging' suggests systematic cleansing or forceful expulsion. This connotation is too strong and inaccurate for the gentle deposition of natural skin residue."
+          },
+          {
+            "option": "deleting",
+            "reason": "This verb relates specifically to erasing data or information (digital context). It has no relevance whatsoever to the physical, biological transfer of material from skin to surface."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q403-b2",
         "index": 1,
         "answer": "contaminating",
-        "explanation": null
+        "explanation": "Grammatically, an adjectival participle is necessary to modify the plural noun 'materials.' Semantically, the passage discusses forensic residues. 'Contaminating' accurately describes sweat and substances like soap or grease because they are inherently sources of foreign matter (contaminants). This choice establishes a direct, functional link between the listed materials and their role in creating the fingermarks, making it the most precise fit for the context.",
+        "syntaxRequirement": "Adjective (Present Participle)",
+        "collocationCohesionClue": "The phrase 'colorless [ADJ] materials' requires a descriptive adjective that defines the inherent composition or source of the residue.",
+        "coherenceCue": "The context requires describing the *nature* or source of the substance, not an action performed by it.",
+        "vocabGrammarCue": "An adjective form is required to modify the noun 'materials'.",
+        "contextNote": "Fingermarks are made of sweat and colorless [ADJ] materials such as soap, moisturizer and grease.",
+        "distractorNotes": [
+          {
+            "option": "transferred",
+            "reason": "While grammatically possible (past participle), it describes the *action* or movement of something, not the inherent chemical nature or composition of the residue itself."
+          },
+          {
+            "option": "locating",
+            "reason": "This is a present participle meaning 'finding,' which does not describe what the materials are made of; it relates to discovery."
+          },
+          {
+            "option": "purging",
+            "reason": "This means cleaning or removing impurities, which contradicts the idea that these substances *are* the residue found at a crime scene."
+          },
+          {
+            "option": "deleting",
+            "reason": "This relates to erasure or removal of data and has no semantic connection whatsoever to physical forensic materials."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       },
       {
         "blankId": "q403-b3",
         "index": 2,
         "answer": "locating",
-        "explanation": null
+        "explanation": "Grammatically, the blank demands a V-ing form (gerund) because it initiates the subject of the dependent clause. Semantically, since the preceding text establishes that fingermarks are 'latent' and invisible, the chosen verb must relate directly to the difficulty of detection or discovery. 'Locating' accurately captures this required meaning—the act of finding a hidden object at a crime scene.",
+        "syntaxRequirement": "Gerund / Present Participle (V-ing form acting as the subject of a clause)",
+        "collocationCohesionClue": "The structure 'which means that [Blank] them... can be challenging' requires a gerund phrase to function grammatically as the subject, linking the difficulty back to the marks' invisibility.",
+        "coherenceCue": "The marks are described as invisible (latent), making their physical location the primary challenge for investigators.",
+        "vocabGrammarCue": "Requires a V-ing form that means 'to discover the physical position of.'",
+        "contextNote": "which means that locating them at a crime scene can be challenging.",
+        "distractorNotes": [
+          {
+            "option": "transferred",
+            "reason": "This is a past tense verb/participle and does not fit the required gerund structure or the meaning of 'finding' something."
+          },
+          {
+            "option": "contaminating",
+            "reason": "While grammatically V-ing, it changes the meaning to suggest that the act of finding them involves contamination, which is semantically incorrect in this forensic context."
+          },
+          {
+            "option": "purging",
+            "reason": "This word means cleansing or removing and has no semantic connection to the forensic process of discovery or detection."
+          },
+          {
+            "option": "deleting",
+            "reason": "This word implies erasing, which is not the action taken when investigators search for latent marks; 'locating' refers to finding their position."
+          }
+        ],
+        "model": "gemma4:latest",
+        "reviewPass": true,
+        "status": "generated"
       }
     ],
     "options": [

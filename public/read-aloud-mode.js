@@ -3097,18 +3097,18 @@ class ReadAloudMode {
       if (layer === 'assimilation') {
         return {
           badgeStyle: 'background: rgba(180, 83, 9, 0.14); color: #92400e;',
-          borderStyle: 'border-left: 4px solid #b45309;'
+          borderStyle: 'border-left: 2px solid #b45309;'
         };
       }
       if (layer === 'weak_forms') {
         return {
           badgeStyle: 'background: rgba(217, 119, 6, 0.14); color: #92400e;',
-          borderStyle: 'border-left: 4px solid #d97706;'
+          borderStyle: 'border-left: 2px solid #d97706;'
         };
       }
       return {
         badgeStyle: 'background: rgba(37, 99, 235, 0.12); color: #1d4ed8;',
-        borderStyle: 'border-left: 4px solid #2563eb;'
+        borderStyle: 'border-left: 2px solid #2563eb;'
       };
     };
 
@@ -3134,7 +3134,7 @@ class ReadAloudMode {
     const renderGuideCard = (item, selected) => {
       const palette = paletteForLayer(item.layer);
       const spokenAs = item.spokenAs
-        ? `<span style="font-size:0.86rem; color:#92400e; margin-left:6px;"><strong>Try:</strong> ${escapeHtml(item.spokenAs)}</span>`
+        ? `<span style="font-size:0.86rem; color:#92400e; margin-left:6px;"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
         : '';
       return `
         <button type="button" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:8px 12px; border-radius:8px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'}; cursor:pointer;">
@@ -3630,34 +3630,34 @@ class ReadAloudMode {
   _getReducedWordIpaInfo(phrase) {
     const clean = String(phrase || '').toLowerCase().trim().replace(/[^a-z]/g, '');
     const dict = {
-      'for':   { strong: '/fɔːr/',   reduced: '/fər/' },
-      'to':    { strong: '/tuː/',    reduced: '/tə/' },
-      'and':   { strong: '/ænd/',   reduced: '/ənd/' },
-      'of':    { strong: '/ɒv/',    reduced: '/əv/' },
+      'for':   { strong: '/fɔr/',    reduced: '/fər/' },
+      'to':    { strong: '/tu/',     reduced: '/tə/' },
+      'and':   { strong: '/ænd/',   reduced: '/ən/, /ənd/, /n/, /t/, /d/' },
+      'of':    { strong: '/ʌv/',    reduced: '/əv/, /ə/' },
       'that':  { strong: '/ðæt/',   reduced: '/ðət/' },
       'can':   { strong: '/kæn/',   reduced: '/kən/' },
-      'have':  { strong: '/hæv/',   reduced: '/həv/' },
-      'has':   { strong: '/hæz/',   reduced: '/həz/' },
+      'have':  { strong: '/hæv/',   reduced: '/həv/, /əv/, /v/' },
+      'has':   { strong: '/hæz/',   reduced: '/həz/, /əz/, /z/' },
       'had':   { strong: '/hæd/',   reduced: '/həd/' },
-      'was':   { strong: '/wɒz/',   reduced: '/wəz/' },
-      'were':  { strong: '/wɜːr/',  reduced: '/wər/' },
-      'from':  { strong: '/frɒm/',  reduced: '/frəm/' },
+      'was':   { strong: '/wʌz/',   reduced: '/wəz/' },
+      'were':  { strong: '/wər/',   reduced: '/wər/' },
+      'from':  { strong: '/frʌm/ or /frɑm/', reduced: '/frəm/' },
       'some':  { strong: '/sʌm/',   reduced: '/səm/' },
       'as':    { strong: '/æz/',    reduced: '/əz/' },
       'at':    { strong: '/æt/',    reduced: '/ət/' },
       'than':  { strong: '/ðæn/',   reduced: '/ðən/' },
       'but':   { strong: '/bʌt/',   reduced: '/bət/' },
-      'or':    { strong: '/ɔːr/',   reduced: '/ər/' },
-      'are':   { strong: '/ɑːr/',   reduced: '/ər/' },
-      'you':   { strong: '/juː/',   reduced: '/jə/' },
-      'your':  { strong: '/jɔːr/',  reduced: '/jər/' },
-      'them':  { strong: '/ðem/',   reduced: '/ðəm/' },
+      'or':    { strong: '/ɔr/',    reduced: '/ər/' },
+      'are':   { strong: '/ɑr/',    reduced: '/ər/' },
+      'you':   { strong: '/ju/',    reduced: '/jə/' },
+      'your':  { strong: '/jɔr/',   reduced: '/jər/' },
+      'them':  { strong: '/ðɛm/',   reduced: '/ðəm/' },
       'his':   { strong: '/hɪz/',   reduced: '/ɪz/' },
-      'her':   { strong: '/hɜːr/',  reduced: '/hər/' },
+      'her':   { strong: '/hɝ/',    reduced: '/hər/' },
       'a':     { strong: '/eɪ/',    reduced: '/ə/' },
       'an':    { strong: '/æn/',    reduced: '/ən/' },
-      'the':   { strong: '/ðiː/',   reduced: '/ðə/' },
-      'do':    { strong: '/duː/',    reduced: '/də/' },
+      'the':   { strong: '/ði/',    reduced: '/ðə/ before a consonant sound; /ði/ before a vowel sound' },
+      'do':    { strong: '/du/',     reduced: '/də/' },
       'does':  { strong: '/dʌz/',   reduced: '/dəz/' },
       'must':  { strong: '/mʌst/',  reduced: '/məst/' },
       'should':{ strong: '/ʃʊd/',   reduced: '/ʃəd/' },
@@ -3705,7 +3705,7 @@ class ReadAloudMode {
         cardHeader.dataset.scAccordionToggle = accordionId;
 
         const ipaInfo = this._getReducedWordIpaInfo(group.phrase);
-        const ipaHtml = ipaInfo ? ` <span style="font-size: 0.75rem; font-family: ui-monospace, monospace; color: #059669; font-weight: 500;">(${ipaInfo.strong} ➔ ${ipaInfo.reduced})</span>` : '';
+        const ipaHtml = ipaInfo ? ` <span style="font-size: 0.75rem; font-family: ui-monospace, monospace; color: #059669; font-weight: 500;">(Strong ${ipaInfo.strong} · Weak ${ipaInfo.reduced})</span>` : '';
 
         const labelSide = document.createElement('div');
         labelSide.className = 'sc-accordion-label';
@@ -3757,7 +3757,7 @@ class ReadAloudMode {
           }
 
           const defaultFeedback = ipaInfo
-            ? `Weak form reduction: Pronounce "${group.phrase}" as ${ipaInfo.reduced} rather than the stressed full form ${ipaInfo.strong}.`
+            ? `Weak form reduction: pronounce "${group.phrase}" as ${ipaInfo.reduced} in connected speech. The strong form is ${ipaInfo.strong} for citation or emphasis.`
             : 'No detailed coaching tips provided for this instance.';
 
           instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}${timeText}</span>${playButtonHtml}</div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || defaultFeedback)}</div>`;
@@ -3788,7 +3788,7 @@ class ReadAloudMode {
         const ipaHtml = ipaInfo ? `
           <div style="font-size: 0.72rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
             <span style="color: #9ca3af; text-decoration: line-through; font-size: 0.68rem;">${ipaInfo.strong}</span>
-            <span style="color: #059669; font-weight: 600;">➔ ${ipaInfo.reduced}</span>
+            <span style="color: #059669; font-weight: 600;">Weak ${ipaInfo.reduced}</span>
           </div>
         ` : '';
 
@@ -3839,14 +3839,14 @@ class ReadAloudMode {
     // Dictionary of high-frequency linking IPA pronunciations
     const commonIpa = {
       is: '/ɪz/', one: '/wʌn/', a: '/ə/', an: '/ən/', the: '/ðə/', to: '/tə/', of: '/əv/',
-      in: '/ɪn/', it: '/ɪt/', at: '/æt/', on: '/ɒn/', up: '/ʌp/', out: '/aʊt/', off: '/ɒf/',
-      us: '/əs/', are: '/ɑːr/', all: '/ɔːl/', and: '/ænd/', for: '/fər/', check: '/tʃek/',
-      did: '/dɪd/', you: '/juː/', want: '/wɑːnt/', black: '/blæk/', cat: '/kæt/', bad: '/bæd/',
-      dog: '/dɒɡ/', can: '/kən/', take: '/teɪk/', make: '/meɪk/', have: '/hæv/', has: '/hæz/',
-      had: '/həd/', was: '/wɒz/', were: '/wər/', see: '/siː/', go: '/ɡoʊ/', do: '/duː/',
-      she: '/ʃiː/', he: '/hiː/', we: '/wiː/', my: '/maɪ/', so: '/soʊ/', no: '/noʊ/',
-      two: '/tuː/', three: '/θriː/', four: '/fɔːr/', five: '/faɪv/', six: '/sɪks/',
-      seven: '/sev.ən/', eight: '/eɪt/', nine: '/naɪn/', ten: '/ten/'
+      in: '/ɪn/', it: '/ɪt/', at: '/æt/', on: '/ɑn/', up: '/ʌp/', out: '/aʊt/', off: '/ɔf/',
+      us: '/əs/', are: '/ɑr/', all: '/ɔl/', and: '/ænd/', for: '/fər/', check: '/tʃɛk/',
+      did: '/dɪd/', you: '/ju/', want: '/wɑnt/', black: '/blæk/', cat: '/kæt/', bad: '/bæd/',
+      dog: '/dɔɡ/', can: '/kən/', take: '/teɪk/', make: '/meɪk/', have: '/həv/', has: '/həz/',
+      had: '/hæd/', was: '/wəz/', were: '/wər/', see: '/si/', go: '/ɡoʊ/', do: '/də/',
+      she: '/ʃi/', he: '/hi/', we: '/wi/', my: '/maɪ/', so: '/soʊ/', no: '/noʊ/',
+      two: '/tu/', three: '/θri/', four: '/fɔr/', five: '/faɪv/', six: '/sɪks/',
+      seven: '/ˈsɛvn/', eight: '/eɪt/', nine: '/naɪn/', ten: '/tɛn/'
     };
 
     let ipa1 = commonIpa[cleanW1] || '';
@@ -3998,7 +3998,7 @@ class ReadAloudMode {
             <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #dc2626; margin: 0 4px;">➔</strong> <strong style="color: #b91c1c; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
           </div>
 
-          <div style="font-size: 0.84rem; color: #374151; margin-top: 8px; background: #fff5f5; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
+          <div style="font-size: 0.84rem; color: #374151; margin-top: 8px; background: #fff5f5; padding: 8px 10px; border-radius: 6px; border-left: 2px solid #ef4444;">
             <strong>How to fix:</strong> ${escapeHtml(reasonExplanation.tip)}
           </div>
         </div>
@@ -4096,7 +4096,7 @@ class ReadAloudMode {
             <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #047857; margin: 0 4px;">➔</strong> <strong style="color: #047857; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
           </div>
 
-          <div style="font-size: 0.84rem; color: #065f46; margin-top: 8px; background: #ecfdf5; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #10b981;">
+          <div style="font-size: 0.84rem; color: #065f46; margin-top: 8px; background: #ecfdf5; padding: 8px 10px; border-radius: 6px; border-left: 2px solid #10b981;">
             <strong>Why you nailed it:</strong> ${escapeHtml(reasonExplanation.tip)}
           </div>
         </div>

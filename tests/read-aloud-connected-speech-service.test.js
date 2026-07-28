@@ -6,6 +6,10 @@ const {
   buildGenericEvents,
   buildConnectedSpeechAnalysis
 } = require(path.join(process.cwd(), 'src/read-aloud/connected-speech-service.js'));
+const deployedConnectedSpeechService = require(path.join(
+  process.cwd(),
+  'functions/src/read-aloud/connected-speech-service.js'
+));
 
 function eventIds(events) {
   return events.map((event) => event.eventId);
@@ -129,6 +133,112 @@ function eventIds(events) {
   assert.ok(weakFormEvent?.rightWord, 'weak-form events should keep the rightWord field');
   assert.strictEqual(typeof weakFormEvent?.startWordIndex, 'number', 'weak-form events should keep the startWordIndex field');
   assert.strictEqual(typeof weakFormEvent?.endWordIndex, 'number', 'weak-form events should keep the endWordIndex field');
+  assert.equal(weakFormEvent?.targetFormRole, 'weak');
+  assert.equal(weakFormEvent?.targetIpa, '/tə/');
+  assert.deepEqual(weakFormEvent?.acceptedFormRoles, ['strong', 'weak']);
+
+  const andEvent = buildGenericEvents('bread and butter', 'and-forms')
+    .find((event) => event.family === 'weak_form_reduction' && event.leftWord === 'and');
+  assert.equal(andEvent?.targetIpa, '/ən/', 'the backend coaching target should use Oxford American’s preferred weak form');
+
+  const lowAccuracyStrongOnly = buildConnectedSpeechAnalysis({
+    questionId: '6',
+    referenceText: 'Want to go',
+    azurePayload: {
+      NBest: [{
+        Display: 'Want to go',
+        Words: [
+          { Word: 'Want', Offset: 0, Duration: 2000000, PronunciationAssessment: { AccuracyScore: 94 } },
+          { Word: 'to', Offset: 2100000, Duration: 4200000, PronunciationAssessment: { AccuracyScore: 60 } },
+          { Word: 'go', Offset: 6400000, Duration: 2200000, PronunciationAssessment: { AccuracyScore: 92 } }
+        ]
+      }]
+    }
+  });
+  assert.notEqual(
+    lowAccuracyStrongOnly.events.find((event) => event.family === 'weak_form_reduction')?.status,
+    'detected',
+    'low accuracy without weak-form phoneme or timing evidence must not prove reduction'
+  );
+
+  const nestedNBestWeakForm = buildConnectedSpeechAnalysis({
+    questionId: '8',
+    referenceText: 'Want to go',
+    azurePayload: {
+      NBest: [{
+        Display: 'Want to go',
+        Words: [
+          { Word: 'Want', Offset: 0, Duration: 2000000, PronunciationAssessment: { AccuracyScore: 94 } },
+          {
+            Word: 'to',
+            Offset: 2100000,
+            Duration: 2200000,
+            PronunciationAssessment: { AccuracyScore: 90 },
+            Phonemes: [
+              {
+                Phoneme: 't',
+                PronunciationAssessment: {
+                  NBestPhonemes: [{ Phoneme: 't', Score: 100 }, { Phoneme: 'd', Score: 12 }]
+                }
+              },
+              {
+                Phoneme: 'u',
+                PronunciationAssessment: {
+                  NBestPhonemes: [{ Phoneme: 'ə', Score: 96 }, { Phoneme: 'u', Score: 44 }]
+                }
+              }
+            ]
+          },
+          { Word: 'go', Offset: 4400000, Duration: 2200000, PronunciationAssessment: { AccuracyScore: 92 } }
+        ]
+      }]
+    }
+  });
+  const nestedWeakEvent = nestedNBestWeakForm.events.find((event) => event.family === 'weak_form_reduction');
+  assert.equal(
+    nestedWeakEvent?.status,
+    'detected',
+    'Azure phoneme-level NBestPhonemes should supply the spoken weak-vowel evidence'
+  );
+  assert.deepEqual(nestedWeakEvent?.evidence?.leftPhonemeHints, ['t', 'ə']);
+
+  const strongWereAnalysis = buildConnectedSpeechAnalysis({
+    questionId: 'were-strong',
+    referenceText: 'Were you ready',
+    azurePayload: {
+      NBest: [{
+        Display: 'Were you ready',
+        Words: [
+          {
+            Word: 'Were',
+            Offset: 0,
+            Duration: 3600000,
+            PronunciationAssessment: { AccuracyScore: 98 },
+            Phonemes: [{ Phoneme: 'w' }, { Phoneme: 'ə' }, { Phoneme: 'r' }]
+          },
+          {
+            Word: 'you',
+            Offset: 3700000,
+            Duration: 2000000,
+            PronunciationAssessment: { AccuracyScore: 96 }
+          },
+          {
+            Word: 'ready',
+            Offset: 5800000,
+            Duration: 3000000,
+            PronunciationAssessment: { AccuracyScore: 96 }
+          }
+        ]
+      }]
+    }
+  });
+  assert.equal(
+    strongWereAnalysis.events.find((event) => (
+      event.family === 'weak_form_reduction' && event.leftWord === 'were'
+    ))?.status,
+    'not_detected',
+    'the non-contrastive schwa in /wər/ must not by itself prove that “were” was reduced'
+  );
 
   const assimilationAnalysis = buildConnectedSpeechAnalysis({
     questionId: '7',
@@ -173,6 +283,11 @@ function eventIds(events) {
 
   assert.strictEqual(notRateableAnalysis.status, 'not_rateable', 'analysis should abstain on clipped audio');
   assert.deepStrictEqual(notRateableAnalysis.events, [], 'not_rateable audio should not produce event scores');
+  assert.deepStrictEqual(
+    deployedConnectedSpeechService.buildGenericEvents('bread and butter', 'parity'),
+    buildGenericEvents('bread and butter', 'parity'),
+    'the deployed Functions copy must keep the same weak-form event contract'
+  );
 
   console.log('read-aloud connected-speech service tests passed');
 })().catch((error) => {

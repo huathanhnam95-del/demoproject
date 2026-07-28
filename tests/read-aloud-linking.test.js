@@ -127,7 +127,14 @@ async function assertSoundChangeCase(analyzePrompt, caseItem) {
   }
   assert.strictEqual(boundary.layer, 'assimilation', `layer mismatch for "${caseItem.text}"`);
   assert.strictEqual(boundary.teachingLevel, 'v3', `teachingLevel mismatch for "${caseItem.text}"`);
-  assert.strictEqual(boundary.markerText, 'sound change', `markerText mismatch for "${caseItem.text}"`);
+  const expectedMarkerText = {
+    coalescent_dj: 'd + y → /dʒ/',
+    coalescent_tj: 't + y → /tʃ/',
+    coalescent_sj: 's + y → /ʃ/',
+    coalescent_zj: 'z + y → /ʒ/',
+    n_bilabial_assimilation: 'n → /m/'
+  }[boundary.subtype] || 'sound change';
+  assert.strictEqual(boundary.markerText, expectedMarkerText, `markerText mismatch for "${caseItem.text}"`);
 }
 
 async function assertNoReducedWordCase(analyzePrompt, caseItem) {
@@ -136,6 +143,48 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
   });
   const annotation = findTokenAnnotation(analysis, caseItem.word);
   assert.strictEqual(annotation, null, `did not expect reduced-word annotation for "${caseItem.text}"`);
+}
+
+async function assertWeakFormMetadata(analyzePrompt) {
+  const analysis = await analyzePrompt('of course', {
+    connectedSpeechLevel: 'v2_reduced_words',
+    phoneticLookup: buildPhoneticLookup({
+      of: {
+        ipa: '/ʌv/',
+        source: 'oxford-american-form',
+        forms: [
+          { id: 'of:strong', formRole: 'strong', ipa: '/ʌv/' },
+          { id: 'of:weak:1', formRole: 'weak', ipa: '/əv/' }
+        ]
+      },
+      course: { ipa: '/kɔrs/', source: 'cmu' }
+    })
+  });
+  const annotation = findTokenAnnotation(analysis, 'of');
+  assert.equal(annotation.targetFormRole, 'weak');
+  assert.equal(annotation.targetIpa, '/əv/');
+  assert.deepEqual(annotation.acceptedFormIds, ['of:strong', 'of:weak:1']);
+  assert.deepEqual(annotation.acceptedIpa, ['/ʌv/', '/əv/']);
+}
+
+async function assertFromWeakFormAnnotation(analyzePrompt) {
+  const analysis = await analyzePrompt('from Boston', {
+    connectedSpeechLevel: 'v2_reduced_words',
+    phoneticLookup: buildPhoneticLookup({
+      from: {
+        ipa: '/frʌm/',
+        source: 'oxford-american-form',
+        forms: [
+          { id: 'from:strong', formRole: 'strong', ipa: '/frʌm/' },
+          { id: 'from:weak:1', formRole: 'weak', ipa: '/frəm/' }
+        ]
+      },
+      boston: { ipa: '/ˈbɑstən/', source: 'cmu' }
+    })
+  });
+  const annotation = findTokenAnnotation(analysis, 'from');
+  assert.ok(annotation, '"from" should be annotated when reduced-word coaching is enabled');
+  assert.equal(annotation.targetIpa, '/frəm/');
 }
 
 (async () => {
@@ -148,6 +197,15 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
     hasVisibleAssimilation,
     filterAnalysisByBlockedBoundaries
   } = await loadHelper();
+
+  await assertWeakFormMetadata(analyzePrompt);
+  await assertFromWeakFormAnnotation(analyzePrompt);
+  const deployedLinking = require(path.join(
+    __dirname,
+    '../functions/src/read-aloud/read-aloud-linking.js'
+  ));
+  await assertWeakFormMetadata(deployedLinking.analyzePrompt);
+  await assertFromWeakFormAnnotation(deployedLinking.analyzePrompt);
 
   assert.strictEqual(
     normalizeConnectedSpeechLevel('v3_sound_changes'),

@@ -133,8 +133,11 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
   const originalWorkerUrl = process.env.CONNECTED_SPEECH_API_URL;
   const originalWorkerTimeout = process.env.CONNECTED_SPEECH_TIMEOUT_MS;
   const originalAlignmentMode = process.env.CONNECTED_SPEECH_ALIGNMENT_MODE;
+  const originalAzureKey = process.env.AZURE_SPEECH_KEY;
+  const originalAzureRegion = process.env.AZURE_SPEECH_REGION;
   const originalFetch = global.fetch;
   let azureFetchCalls = 0;
+  let azureRequestSpec = null;
   let workerRequestSpec = null;
   let workerResponseMode = 'complete';
 
@@ -177,6 +180,28 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       const url = String(resource && resource.url ? resource.url : resource || '');
       if (url.includes('.stt.speech.microsoft.com/')) {
         azureFetchCalls += 1;
+        azureRequestSpec = args[1] || null;
+        return new Response(JSON.stringify({
+          RecognitionStatus: 'Success',
+          NBest: [{
+            Display: 'Pick it up now',
+            PronunciationAssessment: {
+              AccuracyScore: 92,
+              FluencyScore: 88,
+              CompletenessScore: 100,
+              PronScore: 91
+            },
+            Words: [
+              { Word: 'Pick', PronunciationAssessment: { AccuracyScore: 94, ErrorType: 'None' } },
+              { Word: 'it', PronunciationAssessment: { AccuracyScore: 90, ErrorType: 'None' } },
+              { Word: 'up', PronunciationAssessment: { AccuracyScore: 88, ErrorType: 'None' } },
+              { Word: 'now', PronunciationAssessment: { AccuracyScore: 96, ErrorType: 'None' } }
+            ]
+          }]
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
       }
       if (url === 'http://worker.test/connected-speech/analyze') {
         const requestBody = args[1]?.body;
@@ -265,6 +290,26 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.strictEqual(result.payload.error, 'INVALID_AUDIO');
     assert.strictEqual(result.payload.details.reason, 'too_short');
     assert.strictEqual(azureFetchCalls, 0, 'too-short audio should not call Azure');
+
+    delete process.env.READ_ALOUD_AZURE_MOCK_RESPONSE;
+    process.env.AZURE_SPEECH_KEY = 'test-key';
+    process.env.AZURE_SPEECH_REGION = 'test-region';
+    azureFetchCalls = 0;
+    azureRequestSpec = null;
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
+      referenceText: 'Pick it up now'
+    });
+    assert.strictEqual(result.response.status, 200, 'the direct Azure request fixture should assess valid audio');
+    assert.strictEqual(azureFetchCalls, 1, 'valid audio should make exactly one Azure request');
+    const pronunciationAssessmentHeader = azureRequestSpec?.headers?.['Pronunciation-Assessment'];
+    assert.ok(pronunciationAssessmentHeader, 'Azure requests should include pronunciation assessment configuration');
+    const pronunciationAssessmentConfig = JSON.parse(
+      Buffer.from(pronunciationAssessmentHeader, 'base64').toString('utf8')
+    );
+    assert.strictEqual(pronunciationAssessmentConfig.Granularity, 'Phoneme');
+    assert.strictEqual(pronunciationAssessmentConfig.PhonemeAlphabet, 'IPA');
+    assert.strictEqual(pronunciationAssessmentConfig.NBestPhonemeCount, 5);
 
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
       RecognitionStatus: 'Success',
@@ -611,6 +656,10 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     process.env.CONNECTED_SPEECH_API_URL = originalWorkerUrl;
     process.env.CONNECTED_SPEECH_TIMEOUT_MS = originalWorkerTimeout;
     process.env.CONNECTED_SPEECH_ALIGNMENT_MODE = originalAlignmentMode;
+    if (originalAzureKey === undefined) delete process.env.AZURE_SPEECH_KEY;
+    else process.env.AZURE_SPEECH_KEY = originalAzureKey;
+    if (originalAzureRegion === undefined) delete process.env.AZURE_SPEECH_REGION;
+    else process.env.AZURE_SPEECH_REGION = originalAzureRegion;
     connectedSpeechStorage.uploadConnectedSpeechAudio = originalUpload;
     connectedSpeechStorage.persistConnectedSpeechAttempt = originalPersist;
     global.fetch = originalFetch;

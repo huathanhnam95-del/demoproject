@@ -668,18 +668,7 @@ h1 {
   --accent-rgb: 245, 158, 11;
 }
 
-.practice-skill-btn::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
-  opacity: 0.04;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
+
 
 .practice-skill-btn:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -687,9 +676,7 @@ h1 {
   transform: translateY(-4px);
 }
 
-.practice-skill-btn:hover::before {
-  opacity: 0.08;
-}
+
 
 .practice-skill-btn:active {
   transform: translateY(0);
@@ -2675,10 +2662,7 @@ h1 {
   font-size: 1.75rem;
   letter-spacing: -0.02em;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, #1a73e8 0%, #8ab4f8 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--brand-primary, #1557b0);
 }
 
 .mode-helper-options {
@@ -12592,10 +12576,6 @@ textarea:focus {
 .pattern-list-compact li strong {
   color: #7c3aed;
   font-weight: 700;
-  background: linear-gradient(135deg, #8b5cf6, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Shop UI Improvements */
@@ -13748,10 +13728,6 @@ html {
   font-weight: 800;
   color: #1e293b;
   letter-spacing: -0.025em;
-  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .vocabulary-header::before {
@@ -14204,12 +14180,7 @@ html {
 #ascension-modal h2 {
   font-size: 4rem;
   margin: 0;
-  background: linear-gradient(to right, #fcd34d, #d97706, #fcd34d);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shine 3s linear infinite;
+  color: #d97706;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -18064,12 +18035,9 @@ body.readingjourney-active #readingjourney-root {
 .rj-theme-modern .rj-header__logo {
   font-family: var(--rj-font-story);
   font-size: 1.6rem;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: -0.03em;
-  background: var(--rj-accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--rj-accent, #3b82f6);
 }
 
 .rj-theme-modern .rj-header__actions {

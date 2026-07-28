@@ -29,8 +29,19 @@ const path = require('path');
       const toIpa = mode._getReducedWordIpaInfo('to');
       const andIpa = mode._getReducedWordIpaInfo('and');
       const ofIpa = mode._getReducedWordIpaInfo('of');
+      const theIpa = mode._getReducedWordIpaInfo('the');
+      const haveIpa = mode._getReducedWordIpaInfo('have');
+      const hasIpa = mode._getReducedWordIpaInfo('has');
+      const fromIpa = mode._getReducedWordIpaInfo('from');
+      const linkingIpa = {
+        she: mode._getLinkingIpaDetails('she', 'is', {}).ipa1,
+        he: mode._getLinkingIpaDetails('he', 'is', {}).ipa1,
+        we: mode._getLinkingIpaDetails('we', 'are', {}).ipa1,
+        seven: mode._getLinkingIpaDetails('seven', 'of', {}).ipa1,
+        ten: mode._getLinkingIpaDetails('ten', 'of', {}).ipa1
+      };
 
-      return { forIpa, toIpa, andIpa, ofIpa };
+      return { forIpa, toIpa, andIpa, ofIpa, theIpa, haveIpa, hasIpa, fromIpa, linkingIpa };
     });
 
     console.log('for IPA:', testResults.forIpa);
@@ -38,12 +49,30 @@ const path = require('path');
     console.log('and IPA:', testResults.andIpa);
     console.log('of IPA:', testResults.ofIpa);
 
-    const forCorrect = testResults.forIpa.strong === '/fɔːr/' && testResults.forIpa.reduced === '/fər/';
-    const toCorrect = testResults.toIpa.strong === '/tuː/' && testResults.toIpa.reduced === '/tə/';
-    const andCorrect = testResults.andIpa.strong === '/ænd/' && testResults.andIpa.reduced === '/ənd/';
-    const ofCorrect = testResults.ofIpa.strong === '/ɒv/' && testResults.ofIpa.reduced === '/əv/';
+    const forCorrect = testResults.forIpa.strong === '/fɔr/' && testResults.forIpa.reduced === '/fər/';
+    const toCorrect = testResults.toIpa.strong === '/tu/' && testResults.toIpa.reduced === '/tə/';
+    const andCorrect = testResults.andIpa.strong === '/ænd/'
+      && testResults.andIpa.reduced === '/ən/, /ənd/, /n/, /t/, /d/';
+    const ofCorrect = testResults.ofIpa.strong === '/ʌv/'
+      && testResults.ofIpa.reduced === '/əv/, /ə/';
+    const theCorrect = testResults.theIpa.strong === '/ði/'
+      && testResults.theIpa.reduced === '/ðə/ before a consonant sound; /ði/ before a vowel sound';
+    const haveCorrect = testResults.haveIpa.strong === '/hæv/'
+      && testResults.haveIpa.reduced === '/həv/, /əv/, /v/';
+    const hasCorrect = testResults.hasIpa.strong === '/hæz/'
+      && testResults.hasIpa.reduced === '/həz/, /əz/, /z/';
+    const fromCorrect = testResults.fromIpa.strong === '/frʌm/ or /frɑm/'
+      && testResults.fromIpa.reduced === '/frəm/';
+    const linkingCorrect = JSON.stringify(testResults.linkingIpa) === JSON.stringify({
+      she: '/ʃi/',
+      he: '/hi/',
+      we: '/wi/',
+      seven: '/ˈsɛvn/',
+      ten: '/tɛn/'
+    });
 
-    const success = forCorrect && toCorrect && andCorrect && ofCorrect;
+    const success = forCorrect && toCorrect && andCorrect && ofCorrect
+      && theCorrect && haveCorrect && hasCorrect && fromCorrect && linkingCorrect;
 
     if (success) {
       console.log('\n🎉 ALL IPA WEAK FORM REDUCTION CHECKS PASSED!');

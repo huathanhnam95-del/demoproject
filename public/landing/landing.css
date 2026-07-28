@@ -400,10 +400,7 @@ h6 {
 
 .hero-highlight {
     display: block;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary);
 }
 
 .hero-subtitle {
@@ -1242,11 +1239,6 @@ h6 {
     font-size: 0.75rem;
     font-weight: 500;
     color: currentColor;
-    background: currentColor;
-    background: linear-gradient(135deg, currentColor 0%, currentColor 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     border: 1px solid currentColor;
     border-radius: var(--radius-pill);
     opacity: 0.8;
@@ -2082,10 +2074,7 @@ h6 {
 .logo-text {
     font-size: 1.5rem;
     font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary);
 }
 
 .logo-full {
@@ -2754,8 +2743,7 @@ body.dark-mode .engine-list strong {
         padding-bottom: 28px;
     }
 }
- 
- 
+
 /* ============================================
    Language Switcher
    ============================================ */
@@ -2835,4 +2823,18 @@ body.dark-mode .engine-list strong {
         z-index: 2;
         width: 90%; /* slightly smaller to fit nicely over the image */
     }
+}
+
+/* ── Phase 4: Impeccable UI Overrides ── */
+
+.engine-card, .rd-card, .glass-card {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: var(--bg-surface) !important;
+}
+
+.engine-card:hover, .rd-card:hover, .glass-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08) !important;
 }

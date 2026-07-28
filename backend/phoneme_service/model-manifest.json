@@ -11,15 +11,15 @@
   },
   "benchmark": {
     "peakRssGiB": 0.163,
-    "coldLoadMs": 10275.78,
-    "warmMedianMs": 214.99,
-    "warmP95Ms": 302.47,
+    "coldLoadMs": 6494.13,
+    "warmMedianMs": 156.12,
+    "warmP95Ms": 164.58,
     "mandatoryWordsCorrect": 2,
     "mandatoryWordsTotal": 6,
     "cleanAccuracy": 0.5354,
     "corpusManifestHash": "549c622dcc75482159476b3c3db444c18e0f8bb865372a7bc0439450a261480d"
   },
   "evidenceStatus": "verified",
-  "createdAt": "2026-07-28T04:32:49.036385+00:00",
+  "createdAt": "2026-07-28T05:57:08.028637+00:00",
   "verdict": "provider-evaluation-required"
 }

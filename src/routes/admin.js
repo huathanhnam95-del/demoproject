@@ -428,7 +428,9 @@ function registerLocalOnlyRoutes(router, deps) {
                 expectedObservedCount,
                 targetSyllableCount,
                 category,
-                speakerCohort
+                speakerCohort,
+                needsRerecording,
+                rerecordReason
             } = metadata;
 
             // Strict metadata validations
@@ -582,6 +584,10 @@ function registerLocalOnlyRoutes(router, deps) {
                             targetSyllableCount: targetSyllableCountInt,
                             category,
                             speakerCohort,
+                            needsRerecording: needsRerecording === true,
+                            rerecordReason: needsRerecording === true
+                                ? String(rerecordReason || '').trim().slice(0, 120) || 'verification_failed'
+                                : null,
                             sourceHash: sha256,
                             labelProvenance: "manual",
                             verifiedSpans: null

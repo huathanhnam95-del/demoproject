@@ -14,8 +14,8 @@ import unicodedata
 from typing import Any, Iterable, Optional
 
 
-SCHEMA_VERSION = 9
-ALGORITHM_VERSION = "pronunciation-reference-v3"
+SCHEMA_VERSION = 10
+ALGORITHM_VERSION = "pronunciation-reference-v4"
 DIALECT = "en-US"
 
 CONFLICT_ORDER = (
@@ -459,6 +459,9 @@ def build_pronunciation_variant(
     source_transcription: Optional[str] = None,
     source_dialect: str = DIALECT,
     source_labels: Optional[Iterable[str]] = None,
+    form_role: str = "citation",
+    usage: Optional[dict[str, str]] = None,
+    conditions: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     normalized_raw = _nfc(raw_ipa)
     conflicts: list[str] = []
@@ -504,9 +507,26 @@ def build_pronunciation_variant(
         for label in (source_labels or [])
         if (normalized := _nfc(label))
     ]
+    normalized_form_role = _nfc(form_role) or "citation"
+    if normalized_form_role not in {"citation", "strong", "weak"}:
+        raise ValueError(f"Unsupported pronunciation form role: {normalized_form_role}")
+    normalized_usage = {
+        "isolated": "preferred" if normalized_form_role in {"citation", "strong"} else "accepted",
+        "connectedSpeech": "accepted" if normalized_form_role in {"citation", "strong"} else "preferred",
+    }
+    if usage:
+        normalized_usage.update({key: value for key, value in usage.items() if value})
 
     return {
-        "id": stable_variant_id(word, part_of_speech, normalized_raw, audio_filename),
+        "id": stable_variant_id(
+            word,
+            part_of_speech,
+            normalized_raw if normalized_form_role == "citation" else f"{normalized_raw}|{normalized_form_role}",
+            audio_filename,
+        ),
+        "formRole": normalized_form_role,
+        "usage": normalized_usage,
+        "conditions": conditions or {},
         "partOfSpeech": _nfc(part_of_speech) or None,
         "definition": _nfc(definition) or None,
         "source": {
@@ -565,6 +585,23 @@ def build_pronunciation_reference(
         ),
         None,
     )
+
+    def context_default(context: str) -> Optional[dict[str, Any]]:
+        preferred = next(
+            (
+                variant
+                for variant in deduplicated
+                if variant.get("validation", {}).get("status") == "valid"
+                and variant.get("source", {}).get("exactMatch") is True
+                and variant.get("usage", {}).get(context) == "preferred"
+                and not variant.get("conditions")
+            ),
+            None,
+        )
+        return preferred or default_variant
+
+    isolated_default = context_default("isolated")
+    connected_default = context_default("connectedSpeech")
     return {
         "schemaVersion": SCHEMA_VERSION,
         "algorithmVersion": ALGORITHM_VERSION,
@@ -572,6 +609,10 @@ def build_pronunciation_reference(
         "word": _nfc(word).casefold(),
         "dialect": DIALECT,
         "defaultVariantId": default_variant.get("id") if default_variant else None,
+        "formDefaults": {
+            "isolated": isolated_default.get("id") if isolated_default else None,
+            "connectedSpeech": connected_default.get("id") if connected_default else None,
+        },
         "variants": deduplicated,
     }
 
@@ -621,10 +662,27 @@ def validate_reference_invariants(reference: dict[str, Any]) -> list[str]:
             errors.append("CONFLICT_NOT_FAIL_CLOSED")
         if validation.get("status") == "valid" and variant.get("source", {}).get("exactMatch"):
             valid_default_ids.add(variant_id)
+        if variant.get("formRole") not in {"citation", "strong", "weak"}:
+            errors.append("FORM_ROLE_INVALID")
+        usage = variant.get("usage")
+        if not isinstance(usage, dict) or usage.get("isolated") not in {"preferred", "accepted"}:
+            errors.append("ISOLATED_USAGE_INVALID")
+        if not isinstance(usage, dict) or usage.get("connectedSpeech") not in {"preferred", "accepted"}:
+            errors.append("CONNECTED_USAGE_INVALID")
+        if not isinstance(variant.get("conditions"), dict):
+            errors.append("CONDITIONS_NOT_OBJECT")
 
     default_id = reference.get("defaultVariantId")
     if default_id is not None and default_id not in valid_default_ids:
         errors.append("INVALID_DEFAULT_VARIANT")
+    form_defaults = reference.get("formDefaults")
+    if not isinstance(form_defaults, dict):
+        errors.append("FORM_DEFAULTS_NOT_OBJECT")
+    else:
+        for key in ("isolated", "connectedSpeech"):
+            default_form_id = form_defaults.get(key)
+            if default_form_id is not None and default_form_id not in valid_default_ids:
+                errors.append("FORM_DEFAULT_INVALID")
     return list(dict.fromkeys(errors))
 
 

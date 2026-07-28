@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Practice Mode Base Styles
+   Foundation for all practice modes (HCS, LMCMA, LMCSA, SMW, ROP, SGD)
+   ========================================================================== */
+
+/* ── Container Layouts ── */
+.pm-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  width: 100%;
+}
+
+/* Legacy mode wrappers retain their selectors while sharing these foundations. */
+.hcs-container,
+.rop-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  width: 100%;
+}
+
+.pm-split-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+.hcs-split-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-md);
+  align-items: stretch;
+}
+
+@media (min-width: 900px) {
+  .pm-split-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .hcs-split-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+}
+
+.pm-col-left {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.pm-col-right {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.hcs-audio-section,
+.hcs-question-section,
+.hcs-explanation-section,
+.rop-workspace-card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: var(--space-md) 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hcs-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex-grow: 1;
+}
+
+/* ── Clean UI Elements (No Box-in-Box) ── */
+/* Use these classes instead of nested .card classes */
+.pm-content-section {
+  padding: var(--space-lg) 0;
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
+}
+
+.pm-content-section:last-child {
+  border-bottom: none;
+}
+
+.pm-question-text {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.pm-instruction-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+/* ── Standard Progress Bar ── */
+.pm-progress-wrapper {
+  background: var(--bg-surface);
+  padding: var(--space-sm) 0;
+  margin-bottom: var(--space-md);
+}
+
+.pm-progress-track {
+  height: 6px;
+  background: var(--border-light, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pm-progress-fill {
+  height: 100%;
+  background: var(--brand-primary);
+  border-radius: 4px;
+  transform-origin: left;
+  transition: transform 0.3s ease-out;
+}
+
+/* ── Standard Button Reset ── */
+.pm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition-base);
+  cursor: pointer;
+  border: none;
+}
+
+.pm-btn-primary {
+  background: var(--brand-primary);
+  color: #ffffff;
+}
+
+.pm-btn-primary:hover {
+  background: #114b9c; /* darker shade */
+}
+
+.pm-btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.pm-btn-secondary:hover {
+  background: #f1f5f9;
+}

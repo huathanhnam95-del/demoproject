@@ -152,9 +152,13 @@ async function run() {
       labels = null,
       status = 'valid',
       audio = true,
-      provider = 'merriam-webster'
+      provider = 'merriam-webster',
+      formRole = 'citation'
     }) => ({
       id,
+      formRole,
+      usage: { isolated: 'preferred', connectedSpeech: 'preferred' },
+      conditions: {},
       partOfSpeech: pos,
       definition: 'fixture',
       source: {
@@ -263,11 +267,15 @@ async function run() {
         const variants = references[word] || [];
         const defaultVariant = variants.find((item) => item.validation.status === 'valid');
         return jsonResponse({
-          schemaVersion: 9,
-          algorithmVersion: 'pronunciation-reference-v3',
+          schemaVersion: 10,
+          algorithmVersion: 'pronunciation-reference-v4',
           deploymentVersion: 'browser-fixture',
           word,
           dialect: 'en-US',
+          formDefaults: {
+            isolated: defaultVariant?.id || null,
+            connectedSpeech: defaultVariant?.id || null
+          },
           defaultVariantId: defaultVariant?.id || null,
           variants
         });

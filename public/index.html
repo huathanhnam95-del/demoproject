@@ -7,6 +7,7 @@
   <base href="/">
   <meta name="theme-color" content="#f4f4f6">
   <title>Dictation Practice | AI Language Learning</title>
+  <link rel="stylesheet" href="/design-tokens.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -21,6 +22,7 @@
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
+  <link rel="stylesheet" href="practice-mode-base.css">
   <link rel="stylesheet" href="rfib-mode.css">
   <link rel="stylesheet" href="dd-mode.css">
   <link rel="stylesheet" href="rmcma-mode.css">
@@ -725,7 +727,7 @@
         <div class="graph-container"
           style="background: #f9fafb; border-radius: 12px; padding: 16px; height: 200px; display: flex; align-items: center; justify-content: center; position: relative;">
           <canvas id="retention-chart"></canvas>
-          <div id="graph-loading" style="position: absolute; color: #9ca3af;">Loading visual data...</div>
+          <div id="graph-loading" style="position: absolute; color: #6b7280;">Loading visual data...</div>
         </div>
         <div id="retention-stats"
           style="margin-top: 12px; font-size: 0.9rem; color: #4b5563; display: flex; justify-content: space-around; background: #eff6ff; padding: 10px; border-radius: 8px;">
@@ -3911,8 +3913,8 @@
   </div>
 
   <!-- HCS Main Split Container -->
-  <div class="hcs-container">
-    <div class="hcs-split-layout">
+  <div class="hcs-container pm-container pm-content-section">
+    <div class="hcs-split-layout pm-split-layout">
       <!-- Left side: Questions and choices -->
       <div class="hcs-question-section">
         <div class="hcs-card-header">
@@ -5006,7 +5008,7 @@
           <!-- Accuracy Results -->
           <div id="ra-result-box" class="ra-result ra-card ra-card--results"
             style="display: none; margin-bottom: 20px;">
-            <div class="ra-accuracy-score" style="font-size: 2.5rem; font-weight: 800; color: var(--success, #10b981);">
+            <div class="ra-accuracy-score" style="font-size: 2.5rem; font-weight: 800; color: var(--success, #059669);">
               <span id="ra-accuracy-value">--</span>%
             </div>
             <div class="ra-accuracy-label"
@@ -5542,7 +5544,7 @@
             <div class="srs-writing-tools" style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
               <label class="srs-ai-toggle"
                 style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
-                <input type="checkbox" id="srs-skip-ai-toggle" style="accent-color: #3b82f6;">
+                <input type="checkbox" id="srs-skip-ai-toggle" style="accent-color: #2563eb;">
                 <span>Skip AI (Offline Mode)</span>
               </label>
             </div>
@@ -5929,7 +5931,7 @@
       align-items: center;
       cursor: pointer;
       filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .bel-chat-trigger:hover {

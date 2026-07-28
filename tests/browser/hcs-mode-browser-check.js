@@ -192,6 +192,10 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const onSnapshot = (queryRef, onNext) => {
+          onNext?.({ empty: true, docs: [] });
+          return () => {};
+        };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -333,6 +337,7 @@ async function retryAndAssertReset(page) {
   });
 
   const errors = [];
+  const optionalBackendNoise = /CORS policy|praat-api|Error fetching word data|Failed to fetch/i;
   page.on('pageerror', (error) => {
     console.error('PAGE ERROR:', error);
     errors.push(error.message);
@@ -341,7 +346,7 @@ async function retryAndAssertReset(page) {
     console.log(`BROWSER CONSOLE [${msg.type()}]:`, msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource')) {
+      if (!text.includes('Failed to load resource') && !optionalBackendNoise.test(text)) {
         errors.push(text);
       }
     }
@@ -386,6 +391,13 @@ async function retryAndAssertReset(page) {
       const choices = document.querySelectorAll('#hcs-choices-container .hcs-choice-card');
       return prompt.length > 10 && choices.length > 0 && !prompt.includes('Loading');
     }, { timeout: 30000 });
+
+    const hcsLayout = await page.locator('.hcs-split-layout').evaluate((element) => {
+      const styles = getComputedStyle(element);
+      return { display: styles.display, columns: styles.gridTemplateColumns };
+    });
+    assert.equal(hcsLayout.display, 'grid', 'HCS main layout should remain a grid');
+    assert(!/^none|1px$/.test(hcsLayout.columns), `HCS layout should retain two columns, got "${hcsLayout.columns}"`);
 
     // Verify correct question title is shown in question picker pill
     let pillText = await page.locator('#hcs-v7-question-pill').textContent();

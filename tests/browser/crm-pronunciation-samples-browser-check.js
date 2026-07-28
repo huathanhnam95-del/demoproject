@@ -208,6 +208,8 @@ async function main() {
                   category: 'clean',
                   targetSyllableCount: 2,
                   expectedObservedCount: 2,
+                  needsRerecording: true,
+                  rerecordReason: 'low_audio_energy',
                   durationSeconds: 2.65,
                   audioUrl: 'https://storage.test/busy.wav'
                 }]
@@ -392,6 +394,10 @@ async function main() {
     // Click Next Word again: camera -> university
     await nextWordBtn.click();
     await expectText(page.locator('#corpus-display-word'), /university/i);
+
+    await page.selectOption('#corpus-sample-filter', 'needs_rerecord');
+    await expectText(page.locator('#corpus-page-status'), /1 words/i);
+    assert.strictEqual(await page.locator('.corpus-word-btn[data-word="busy"]').isVisible(), true);
 
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     assert.strictEqual(consoleErrors.length, 0, `Unexpected console errors:\n${consoleErrors.join('\n')}`);

@@ -654,12 +654,207 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 466,2026-07-27,Execute RFIB Vietnamese translation plan (Tasks 1-5 quality gate),Done,2026-07-27
 467,2026-07-27,Fix unrateable audio auto-save bypass and AudioContext teardown console error in CRM admin,Done,2026-07-27
 468,2026-07-27,Normalize IPA transcriptions and stress mark placement to Oxford-Cambridge dictionary standard,Done,2026-07-27
+274,2026-05-19,Check and resolve GitHub Actions deploy errors,Done,2026-05-19
+275,2026-05-19,Debug SWT question loading issue,Done,2026-05-19
+276,2026-05-19,Batch audio generation for all remaining Read Aloud questions,Done,2026-05-19
+277,2026-05-19,Verify Read Aloud voice mapping and playability,Done,2026-05-19
+278,2026-05-20,Deploy V1.7.6 release and voice audio assets,Done,2026-05-20
+279,2026-05-20,Investigate production site version mismatch,Done,2026-05-20
+280,2026-05-20,Automate version synchronization across project,Done,2026-05-20
+281,2026-05-20,Review SWT and essay workflow and deploy browser tests,Done,2026-05-20
+282,2026-05-20,Group Read Aloud audios by question ID into subfolders,Done,2026-05-20
+283,2026-05-20,Implement RMCMA reading practice mode,Done,2026-05-20
+284,2026-05-21,Implement Re-order Paragraph reading practice mode,Done,2026-05-21
+285,2026-05-21,Use local GemmaAI for ROP and RMCMA enrichment,Done,2026-05-21
+286,2026-05-21,Generate ROP explanations using local GemmaAI,Done,2026-05-21
+287,2026-05-21,Write implementation plan to categorize ROP questions by difficulty,Done,2026-05-21
+288,2026-05-21,Implement ROP difficulty filtering and parsing updates,Done,2026-05-21
+289,2026-05-21,Verify ROP database classification and integrate login logout reload wiring,Done,2026-05-21
+290,2026-05-21,Implement ROP pair-wise cohesion feedback and clean transition metadata,Done,2026-05-21
+291,2026-05-21,Release V1.8.1 - Sync version and commit ROP updates,Done,2026-05-21
+292,2026-05-21,Implement Drag & Drop reading practice mode,Done,2026-05-21
+293,2026-05-21,Check ROP mode implementation and explanation generation,Done,2026-05-21
+294,2026-05-21,Fix MCMA and ROP practice scope visibility,Done,2026-05-21
+295,2026-05-21,Declutter UI cards and reduce nested box layering,Done,2026-05-21
+296,2026-05-22,Debug CI verify pipeline and deploy V1.8.2 release,Done,2026-05-22
+297,2026-05-22,Debug SWT question loading issue,Done,2026-05-22
+298,2026-05-22,Fix ROP container resizing during paragraph movement,Done,2026-05-22
+299,2026-05-22,Update Drag and Drop mode submissions and explanations,Done,2026-05-22
+300,2026-05-22,Implement ROP split-screen UX and routing updates,Done,2026-05-22
+301,2026-05-22,Add highlights and bolds in ROP AI explanations,Done,2026-05-22
+302,2026-05-23,Investigate and resolve dev server and emulator connection refused errors,Done,2026-05-23
+303,2026-05-23,Implement RMCSA reading practice mode with GemmaAI explanations,Done,2026-05-23
+304,2026-05-23,Implement LMCMA listening practice mode with Kokoro TTS and GemmaAI,Done,2026-05-23
+305,2026-05-23,Implement LMCSA listening practice mode with Kokoro TTS,Done,2026-05-23
+306,2026-05-23,Rename practice modes to Multiple Choice Multiple Answers and Single Answer,Done,2026-05-23
+307,2026-05-23,Implement HCS Highlight Correct Summary practice mode with Kokoro TTS and GemmaAI,Done,2026-05-23
+308,2026-05-23,Implement Select Missing Word practice mode,Done,2026-05-23
+309,2026-05-24,Investigate IP address 199.36.158.100 source,Done,2026-05-24
+310,2026-05-25,Implement Highlight Incorrect Words listening practice mode,Done,2026-05-26
+311,2026-05-26,Review debug and refactor SMW mode,Done,2026-05-26
+312,2026-05-26,Reduce SMW beep volume by 30 percent,Done,2026-05-26
+313,2026-05-26,Reduce SMW beep further and add volume changer,Done,2026-05-26
+314,2026-05-26,Review new SST mode and use local Gemma AI to analyze points extraction logic,Done,2026-05-26
+315,2026-05-26,Audit all SST questions in the database using local Gemma AI,Done,2026-05-26
+316,2026-05-27,Revise flagged SST expected main points based on Gemma audit,Done,2026-05-27
+317,2026-05-27,Re-audit revised SST expected main points using local Gemma AI,Done,2026-05-27
+318,2026-05-28,Release V1.8.8 - review and deploy all practice mode updates to production,Done,2026-05-28
+319,2026-05-28,Reorder PTE Listening practice modes,Done,2026-05-28
+320,2026-05-28,Redesign HIW and Multiple Choice listening modes layout,Done,2026-05-28
+321,2026-05-30,Fix PTE attempt archiving scoring and scope flow bugs,Done,2026-05-30
+322,2026-05-30,Configure custom agent course commission rates and export agent reports,Done,2026-05-30
+323,2026-06-01,Deploy V1.8.10 release - commit and push all changes,Done,2026-06-01
+324,2026-06-01,Investigate Kokoro AI audio file locations,Done,2026-06-01
+325,2026-06-02,Generate Pepe Frog Hello Kitty style image,Done,2026-06-02
+326,2026-06-02,Generate Pepe Frog Pudge Dota 2 style image,Done,2026-06-02
+327,2026-06-02,Generate Pepe Frog Io Dota 2 style image,Done,2026-06-02
+328,2026-06-02,Provide design concepts for 10 Dota 2 Pepe heroes,Done,2026-06-02
+329,2026-06-02,Refine Pepe Dota 2 hero concepts using default skins,Done,2026-06-02
+330,2026-06-02,Generate Pepe Dota 2 hero images,Done,2026-06-02
+331,2026-06-02,Generate 20 additional Pepe Dota 2 hero headshots,Done,2026-06-02
+332,2026-06-03,Add Witcher 3 background to Pepe image,Done,2026-06-03
+333,2026-06-03,Locate Kokoro AI audio file storage directories,Done,2026-06-03
+334,2026-06-03,Check commit and push status of Kokoro AI audio files,Done,2026-06-03
+335,2026-06-03,Check for historical versions of RA audio in Git,Done,2026-06-03
+336,2026-06-03,Investigate C drive space reduction,Done,2026-06-03
+337,2026-06-06,Check if all RFIB audio files are pushed to production,Done,2026-06-06
+338,2026-06-06,Generate missing RFIB beginner audio files using Kokoro AI,Done,2026-06-06
+339,2026-06-09,Change 8.0 IELTS to 8.5 IELTS in Downloaded PDF,Done,2026-06-09
+340,2026-06-26,Explain git lfs folder,Done,2026-06-26
+341,2026-06-26,Explain git objects folder,Done,2026-06-26
+342,2026-06-26,Optimize and clean up Git LFS and objects,Done,2026-06-26
+343,2026-06-26,Clean up and uninstall Figma,Done,2026-06-26
+344,2026-06-26,Explain Windows Software Development Kit,Done,2026-06-26
+345,2026-06-26,Check if NIKKE and Guild Wars 2 are installed,Done,2026-06-26
+346,2026-06-26,Explain Visual Studio Build Tools 2022,Done,2026-06-26
+347,2026-06-26,Explain Android Studio and Chrome AppData Local Folders,Done,2026-06-26
+348,2026-06-26,Analyze AppData Local Microsoft folder,Done,2026-06-26
+349,2026-06-26,Analyze npm-cache folder,Done,2026-06-26
+350,2026-06-26,Explain AppData Local Temp folder,Done,2026-06-26
+351,2026-06-26,Explain Microsoft and npm-cache AppData folders,Done,2026-06-26
+352,2026-06-26,Explain uv AppData Local folder,Done,2026-06-26
+353,2026-06-26,Run uv cache clean command,Done,2026-06-26
+354,2026-06-26,Explain User .cache folder,Done,2026-06-26
+355,2026-06-26,Explain User .git and .gradle folders,Done,2026-06-26
+356,2026-06-26,Scan home directory for removable folders,Done,2026-06-26
+357,2026-06-26,Scan AppData Roaming folder for removable folders,Done,2026-06-26
+358,2026-06-26,Scan global npm folder,Done,2026-06-26
+359,2026-06-26,Run npm cache clean force command,Done,2026-06-26
+360,2026-06-26,Uninstall global gemini-cli,Done,2026-06-26
+361,2026-06-26,Uninstall global perplexity-ask server,Done,2026-06-26
+362,2026-06-26,Scan installed apps over 1GB,Done,2026-06-26
+363,2026-06-26,Scan pip cache folder,Done,2026-06-26
+364,2026-07-01,Investigate Read Aloud assessment error,Done,2026-07-01
+365,2026-07-01,Add previous attempts history toggle UI and details review modal for PTE Practice modes,Done,2026-07-01
+366,2026-07-01,Add confirmation prompt before navigating away from active Write Essay practice,Done,2026-07-01
+367,2026-07-01,Fix attempts detail modal to render basic feedback metrics when AI scores are missing,Done,2026-07-01
+368,2026-07-02,Change default mode to PTE Practice instead of English practice,Done,2026-07-02
+369,2026-07-02,Push V1.8.15 to production,Done,2026-07-02
+370,2026-07-02,Replace browser navigation confirmations with in-web modals,Done,2026-07-02
+371,2026-07-02,Fix practice-modes browser check scope mismatch,Done,2026-07-02
+372,2026-07-03,Fix root URL router scope reset bug in script.js,Done,2026-07-03
+373,2026-07-03,Swap the position of PTE Practice and English Practice tabs,Done,2026-07-03
+374,2026-07-04,Review tutorials for font errors and other modes,Done,2026-07-04
+375,2026-07-04,Implement Read Aloud audio player and restore attempts list,Done,2026-07-04
+376,2026-07-04,Write implementation plan for Speech Coach word hover highlight and audio playback,Done,2026-07-04
+377,2026-07-04,Investigate why male and female audio for Read Aloud question cannot be played,Done,2026-07-04
+378,2026-07-04,Implement Azure quota protection guardrails,Done,2026-07-04
+379,2026-07-04,Review debug and refactor Azure guardrail changes,Done,2026-07-04
+380,2026-07-06,Generate 10 profile picture variations for Better English Learning,Done,2026-07-06
+381,2026-07-12,Merge and push all changes to production,Done,2026-07-12
+382,2026-07-12,Review pronunciation audit 1000-2000-3000 test plan,Done,2026-07-12
+383,2026-07-12,Execute 3000-word pronunciation audit campaign,Done,2026-07-12
+384,2026-07-13,Redesign Pronunciation Analyzer UI layout to be compact and clean,Done,2026-07-13
+385,2026-07-13,Redesign Pronunciation Analyzer comparison graph alignment and colors,Done,2026-07-13
+386,2026-07-13,Merge and push all changes to production,Done,2026-07-13
+387,2026-07-13,Fix Pronunciation Analyzer layout issues,Done,2026-07-13
+388,2026-07-13,Review independent phoneme segmentation and fresh-word graphs plan,Done,2026-07-13
+389,2026-07-13,Review revised pronunciation segmentation v3 plan,Done,2026-07-13
+390,2026-07-13,Review final pronunciation segmentation v3 plan (10-section revision),Done,2026-07-13
+391,2026-07-14,Execute pronunciation segmentation v3 implementation plan,Done,2026-07-14
+392,2026-07-14,Explain pronunciation v3 rollout execution plan,Done,2026-07-14
+393,2026-07-14,Plan and design Pronunciation Samples recording page,Done,2026-07-14
+394,2026-07-14,Implement Pronunciation Samples recording page,Done,2026-07-14
+395,2026-07-16,Re-audit RFIB cohesion features and generate student-facing explanations using local Gemma AI,Done,2026-07-17
+396,2026-07-17,CRM Enquiry hide other sections and match lead basic info to student,Done,2026-07-17
+397,2026-07-17,Relocate PTE Attempts history list to modal inside Track Progress,Done,2026-07-17
+398,2026-07-17,Unified Speaking Practice Controller — Revised Implementation Plan,Done,2026-07-22
+399,2026-07-17,Speaking Controller Wave 0 — Core infrastructure + 65/65 browser tests,Done,2026-07-17
+400,2026-07-17,Review and audit RFIB student explanations using local Gemma AI,Done,2026-07-17
+401,2026-07-18,Investigate wrong transcription on Speaking Question 3,Done,2026-07-18
+402,2026-07-20,Update RFIB workbook Cohesion Feature and Details based on new analysis,Done,2026-07-20
+403,2026-07-20,Fix Speaking Controller browser tests — test isolation + DI adapter + aria-pressed,Done,2026-07-20
+404,2026-07-20,Fix CRM Enquiry page — hide non-test sections + align lead form + clean ghost refs,Done,2026-07-20
+405,2026-07-21,Optimize Pronunciation Samples recording tool UX for efficient corpus collection,Done,2026-07-21
+406,2026-07-22,Production Push V1.8.24 - Pronunciation UX optimization and Speaking Controller Wave 0 updates,Done,2026-07-22
+407,2026-07-22,Investigate HIW audio folders count and missing audio files,Done,2026-07-22
+408,2026-07-22,Batch generate Kokoro audio files for remaining HIW questions,Done,2026-07-23
+409,2026-07-22,Execute remaining Unified Speaking Practice Controller migration (Waves 1-6),Done,2026-07-22
+410,2026-07-22,Review debug and refactor plan for Speaking Practice Controller UI,Done,2026-07-22
+411,2026-07-22,Execute Phase 2 & 3 refactor: a11y + perf + CSS tokens + code cleanup (28 fixes),Done,2026-07-22
+412,2026-07-23,Edge-case audit and fix: fragile selector + ID coercion + visibility helper + scroll sentinel,Done,2026-07-23
+413,2026-07-23,Deploy release V1.8.25 to Firebase Hosting production & run live browser verification,Done,2026-07-23
+414,2026-07-23,Re-architect and clean up Speaking Practice button layout visual hierarchy,Done,2026-07-23
+415,2026-07-23,Deploy release V1.8.26 to Firebase Hosting production & run live browser verification,Done,2026-07-23
+416,2026-07-23,Clean up messy practice page UI — reduce visual clutter and improve information hierarchy,Done,2026-07-24
+417,2026-07-24,Deploy release V1.8.27 to Firebase Hosting production & run live browser verification,Done,2026-07-24
+418,2026-07-24,Redesign Read Aloud practice mode UX flow — fix broken buttons + logical control layout + visible filters,Done,2026-07-24
+419,2026-07-24,Read Aloud Phase 2 — Settings side panel + visual consistency + button harmonization,Done,2026-07-24
+420,2026-07-24,Adjust picker nav max-width + prominent circular Back/Next buttons + remove duplicate Next Prompt button,Done,2026-07-24
+421,2026-07-24,Wire Advanced toggle and Settings button to natively open Settings sheet with all practice target filter options,Done,2026-07-24
+422,2026-07-25,Fix settings button click handler so clicking Settings or Advanced reliably opens Settings sheet under all URL routing states,Done,2026-07-25
+423,2026-07-25,Fix Speech Coach Feedback UI bugs (expand arrows word truncation link reasons tooltips and tab stuck issue),Done,2026-07-25
+424,2026-07-25,Move Adaptive/Manual difficulty manager, question count totals, and filter controls into mode Settings side panel across all practice modes,Done,2026-07-25
+425,2026-07-25,Fix Repeat Sentence 1st question audio text mismatch,Done,2026-07-25
+426,2026-07-25,Distinguish Basic vs Advanced view on main canvas and add Read Aloud difficulty filter chips to Settings side panel,Done,2026-07-25
+427,2026-07-25,Clean up Read Aloud prompt box border remove Off button add dedicated instruction text per mode,Done,2026-07-25
+428,2026-07-25,Implement multi-factor difficulty classifier for Read Aloud matching RL/SST classification model (Level 1 Easy, Level 2 Medium, Level 3 Hard),Done,2026-07-25
+429,2026-07-25,Fix guide button untick and toggle handlers so chunking and linking/reduced words can be toggled off,Done,2026-07-25
+430,2026-07-25,Fix Speech Coach feedback bugs (separate play button from accordion toggle classify merely-a as Vowel-to-Vowel link and generate dynamic non-templated phonetic explanations),Done,2026-07-25
+431,2026-07-25,Add IPA strong-to-weak form reduction transformation mapping (e.g. for /fɔːr/ -> /fər/) on Reduced Words cards and accordions,Done,2026-07-25
+432,2026-07-25,Fix Basic mode display and score analysis feedback logic,Done,2026-07-25
+433,2026-07-25,Integrate ipa-dict (Wiktionary) dataset as primary IPA source with symbol normalization,Done,2026-07-25
+434,2026-07-25,Disable Basic/Advanced view mode toggle during active recording session,Done,2026-07-25
+435,2026-07-25,Implement and run E2E browser test for ipa-dict dataset edge cases and pipeline stability,Done,2026-07-25
+436,2026-07-25,Fix CRM sample analysis status mismatch and primary stress display,Done,2026-07-25
+437,2026-07-25,Fix corpus sample analysis expected count parameter and add delete sample endpoint and button,Done,2026-07-25
+438,2026-07-25,Fix Basic mode speech feature feedback leak and restore attempt recognized text transcript display,Done,2026-07-25
+439,2026-07-25,Snapshot practice mode and advanced guide settings at recording start to filter post-recording results accordingly,Done,2026-07-25
+440,2026-07-25,Add Show Advanced Analysis button to reveal Speech Coach results when practicing in Basic mode,Done,2026-07-25
+441,2026-07-25,Display clear IPA style pronunciation in Speech Coach feedback explanation cards,Done,2026-07-25
+442,2026-07-25,Bump crm-admin.js asset cache buster in crm-admin.html and structure sample row action buttons,Done,2026-07-25
+443,2026-07-25,Deploy release V1.8.28 to Firebase Hosting and Cloud Functions,Done,2026-07-25
+444,2026-07-25,Enable hover position highlighting for successful links and linking issue cards in Speech Coach,Done,2026-07-25
+445,2026-07-25,Make preloader only show on cold start or homepage - skip for returning logged-in users,Done,2026-07-25
+446,2026-07-25,Update CRM sample verification for accented category to report detected non-standard stress,Done,2026-07-25
+447,2026-07-25,Deploy release V1.8.29 to Firebase Hosting and Cloud Functions,Done,2026-07-25
+448,2026-07-26,Audit missing audio files across all Speaking modes,Done,2026-07-26
+449,2026-07-26,Analyze Reading Drag and Drop DD questions and design gemma explanation structure,Done,2026-07-26
+450,2026-07-26,Generate missing Kokoro audio for speak and ASQ modes and check Reading audio,Done,2026-07-26
+451,2026-07-26,Add code comments for Read Aloud settings sheet dual branching & push V1.8.30 to production,Done,2026-07-26
+452,2026-07-26,Batch generate explanations for Reading Drag and Drop DD questions using local Gemma AI,In Progress,
+453,2026-07-26,Review generated audio files and verify playback across modes,Done,2026-07-26
+454,2026-07-26,Fix Next Word button disabled bug and search filter matching in CRM admin pronunciation corpus,Done,2026-07-26
+455,2026-07-26,Fix duplicate corpus badge accumulation and spilling layout bug in CRM admin,Done,2026-07-26
+456,2026-07-26,Harden Next Word navigation to resolve index lookup and filter transition edge cases,Done,2026-07-26
+457,2026-07-26,Implement Rapid Stream hands-free continuous recording UX with VAD auto-stop in CRM admin,Done,2026-07-26
+458,2026-07-26,Harden 3-model local LLM RFIB revision pipeline and complete 10/10 quality gate,Done,2026-07-27
+459,2026-07-26,Execute multi-model essay analysis browser testing plan,Done,2026-07-26
+460,2026-07-27,Implement category-specific version filters and filter-locked rapid stream navigation in CRM admin,Done,2026-07-27
+461,2026-07-27,Investigate and fix CRM Admin Essay AI status 404 console errors,Done,2026-07-27
+462,2026-07-27,Implement post-recording auto-analysis and auto-save on match in CRM admin,Done,2026-07-27
+463,2026-07-27,Review debug and refactor CRM pronunciation corpus recording changes (8 bugs),Done,2026-07-27
+464,2026-07-27,Add Vietnamese translation Phase 4 to RFIB 3-model revision pipeline using Qwen3,Done,2026-07-27
+465,2026-07-27,Review CRM pronunciation corpus recording and RFIB Qwen3 translation changes,Done,2026-07-27
+466,2026-07-27,Execute RFIB Vietnamese translation plan (Tasks 1-5 quality gate),Done,2026-07-27
+467,2026-07-27,Fix unrateable audio auto-save bypass and AudioContext teardown console error in CRM admin,Done,2026-07-27
+468,2026-07-27,Normalize IPA transcriptions and stress mark placement to Oxford-Cambridge dictionary standard,Done,2026-07-27
 469,2026-07-27,Deploy release V1.8.38 to Firebase Hosting and Cloud Functions,Done,2026-07-27
 470,2026-07-27,Add lead source selection with Facebook dynamic Student FB link field,Done,2026-07-27
 471,2026-07-27,Add personal Facebook owner dropdown (Nam/Thành/Quỳnh) when Facebook Personal source chosen,Done,2026-07-27
 472,2026-07-27,Convert student acquisition source input to standardized dropdown,Done,2026-07-27
 473,2026-07-27,Deploy release V1.8.39 to Firebase Hosting and Cloud Functions,Done,2026-07-27
-474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar,In Progress,
+474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar (76 questions completed),In Progress,
 475,2026-07-27,Add Student FB link and Personal FB Owner dropdown to Student Management modal,Done,2026-07-27
 476,2026-07-27,Deploy release V1.8.40 to Firebase Hosting and Cloud Functions,Done,2026-07-27
 477,2026-07-27,Update adult family IPA transcriptions to use caret vowel /ʌ/ per Oxford dictionary,Done,2026-07-27
@@ -669,4 +864,16 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 479,2026-07-28,Execute remaining steps of Pronunciation V3 Rollout Execution Plan,Done,2026-07-28
 480,2026-07-28,Audit root cause of IPA discrepancies, examine similar dictionary cases, and apply Oxford-Cambridge normalization fixes,Done,2026-07-28
 482,2026-07-28,Deploy release V1.8.41 to Firebase Hosting and Cloud Functions,Done,2026-07-28
-
+483,2026-07-28,Remediate UI slop anti-patterns and WCAG contrast violations based on Impeccable review,Done,2026-07-28
+484,2026-07-28,Fix 3 critical bugs in normalizeIPA (subway/disrupt destruction and corrupt/interrupt caret) plus add missing junction/presumption/disruption patterns,Done,2026-07-28
+485,2026-07-28,Add universal stressed-schwa→caret vowel rule fixing 6500+ words including 113 core Oxford 5000 words (come/love/money/mother/country/just/must/run/sun/bus/cut),Done,2026-07-28
+486,2026-07-28,Phase 3 UI anti-pattern remediation (281→222 count reached across 6 batches),Done,2026-07-28
+487,2026-07-28,Execute Batch 4 UI anti-pattern remediation plan,In Progress,
+488,2026-07-28,Execute Batches 1 and 2 of UI anti-pattern remediation plan,In Progress,
+489,2026-07-28,Execute Batch 6 of UI anti-pattern remediation plan,Done,2026-07-28
+490,2026-07-28,Execute Batch 3 of UI anti-pattern remediation plan,Done,2026-07-28
+491,2026-07-28,Add Agent lead source dropdown and Mr/Ms honorific title radio options,Done,2026-07-28
+492,2026-07-28,Find top 20 repeating words with syllable /i:/ from Read Aloud question bank,Done,2026-07-28
+493,2026-07-28,Export top 20 repeating words with syllable /i:/ from Read Aloud bank into markdown file,Done,2026-07-28
+494,2026-07-28,Find top 20 words for short /ɪ/ and unstressed happy-vowel /i/ from Read Aloud bank and update markdown doc,Done,2026-07-28
+495,2026-07-28,Deploy release V1.8.42 to Firebase Hosting and Cloud Functions,Done,2026-07-28

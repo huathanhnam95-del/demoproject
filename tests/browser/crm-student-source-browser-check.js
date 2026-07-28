@@ -59,7 +59,7 @@ async function runTest() {
 
     // Verify Acquisition Source choices
     const acquisitionOptions = await page.$$eval('#lead-source option', (els) => els.map((el) => el.value));
-    assert.deepStrictEqual(acquisitionOptions, ['Facebook - Personal', 'Facebook - Page', 'Zalo - Page'], 'Student acquisition source options mismatch');
+    assert.deepStrictEqual(acquisitionOptions, ['Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Agent'], 'Student acquisition source options mismatch');
 
     // Default source is Facebook - Personal
     const isUrlVisiblePersonal = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
@@ -68,8 +68,16 @@ async function runTest() {
     const isOwnerVisiblePersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isOwnerVisiblePersonal, true, "FB Personal Account dropdown should be visible for Facebook - Personal");
 
+    const isAgentVisiblePersonal = await page.$eval('#lead-agent-source-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
+    assert.strictEqual(isAgentVisiblePersonal, true, "Agent Source dropdown should be hidden for Facebook - Personal");
+
     const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
     assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
+
+    // Select Agent
+    await page.selectOption('#lead-source', 'Agent');
+    const isAgentVisibleAgent = await page.$eval('#lead-agent-source-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    assert.strictEqual(isAgentVisibleAgent, true, "Agent Source dropdown should be visible for Agent source");
 
     // Select Facebook - Page
     await page.selectOption('#lead-source', 'Facebook - Page');
@@ -87,7 +95,7 @@ async function runTest() {
     const isOwnerVisibleZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isOwnerVisibleZalo, true, "FB Personal Account dropdown should be hidden for Zalo - Page");
 
-    console.log('✓ Student Management acquisition source, FB link, and FB Personal Account owner dropdown browser check PASSED');
+    console.log('✓ Student Management acquisition source, FB link, FB Personal Account owner, and Agent source dropdown browser check PASSED');
   } finally {
     await browser.close();
     server.close();

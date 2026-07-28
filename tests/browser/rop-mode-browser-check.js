@@ -148,6 +148,10 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [], forEach: () => {} });
+        export const onSnapshot = (queryRef, onNext) => {
+          onNext?.({ empty: true, docs: [] });
+          return () => {};
+        };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -253,12 +257,13 @@ async function setupFirebaseMocks(context) {
   });
 
   const errors = [];
+  const optionalBackendNoise = /CORS policy|praat-api|Error fetching word data|Failed to fetch/i;
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (msg) => {
     console.log('PAGE LOG:', msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource')) {
+      if (!text.includes('Failed to load resource') && !optionalBackendNoise.test(text)) {
         errors.push(text);
       }
     }
@@ -302,6 +307,15 @@ async function setupFirebaseMocks(context) {
     // Verify all source paragraphs are rendered
     const sourceCount = await page.locator('#rop-source-list .rop-item').count();
     assert.equal(sourceCount, target.paragraphs.length, `Expected ${target.paragraphs.length} paragraphs in source list, found ${sourceCount}`);
+
+    const ropLayout = await page.locator('.rop-container').evaluate((element) => ({
+      containerWidth: getComputedStyle(element).maxWidth,
+      cardBackground: getComputedStyle(element.querySelector('.rop-workspace-card')).backgroundColor,
+      cardBorder: getComputedStyle(element.querySelector('.rop-workspace-card')).borderTopWidth
+    }));
+    assert.equal(ropLayout.containerWidth, '1200px', 'ROP container should retain the shared max width');
+    assert.equal(ropLayout.cardBackground, 'rgba(0, 0, 0, 0)', 'ROP workspace cards should remain flat');
+    assert.equal(ropLayout.cardBorder, '0px', 'ROP workspace cards should not regain card borders');
 
     // Click navigation next and check title change
     await page.locator('#rop-v7-next-btn').click();

@@ -425,8 +425,9 @@
 }
 
 .ra-v7-list-item.is-current {
-  background: rgba(26, 115, 232, 0.06);
-  border-left: 4px solid var(--primary, #1a73e8);
+  background: rgba(26, 115, 232, 0.08);
+  border: 1px solid var(--primary, #1a73e8);
+  font-weight: 600;
 }
 
 .ra-v7-list-primary {

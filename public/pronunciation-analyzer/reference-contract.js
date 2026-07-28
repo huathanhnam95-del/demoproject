@@ -1,5 +1,5 @@
-export const SCHEMA_VERSION = 9;
-export const ALGORITHM_VERSION = 'pronunciation-reference-v3';
+export const SCHEMA_VERSION = 10;
+export const ALGORITHM_VERSION = 'pronunciation-reference-v4';
 export const ANALYSIS_VERSION = 'pronunciation-analysis-v2';
 export const DIALECT = 'en-US';
 export const NATIVE_ANALYSIS_RETRY_DELAY_MS = 500;
@@ -35,6 +35,16 @@ function sourceLabelsAreEnUsCompatible(labels) {
 function validateVariant(variant) {
     invariant(variant && typeof variant === 'object', 'variant must be an object');
     invariant(/^[0-9a-f]{16}$/.test(variant.id || ''), 'invalid variant id');
+    invariant(['citation', 'strong', 'weak'].includes(variant.formRole), 'invalid form role');
+    invariant(
+        ['preferred', 'accepted'].includes(variant.usage?.isolated),
+        'invalid isolated form usage'
+    );
+    invariant(
+        ['preferred', 'accepted'].includes(variant.usage?.connectedSpeech),
+        'invalid connected-speech form usage'
+    );
+    invariant(variant.conditions && typeof variant.conditions === 'object', 'form conditions are required');
     invariant(
         ['merriam-webster', 'cmu-pronouncing-dictionary'].includes(variant.source?.provider),
         'unknown source provider'
@@ -117,11 +127,23 @@ export function validateReferenceV2(reference, { expectedWord } = {}) {
         );
     }
     invariant(Array.isArray(reference.variants), 'variants must be an array');
+    invariant(reference.formDefaults && typeof reference.formDefaults === 'object', 'form defaults are required');
     const ids = new Set();
     reference.variants.forEach((variant) => {
         validateVariant(variant);
         invariant(!ids.has(variant.id), 'duplicate variant id');
         ids.add(variant.id);
+    });
+    ['isolated', 'connectedSpeech'].forEach((context) => {
+        const formId = reference.formDefaults[context];
+        if (formId !== null) {
+            const selected = reference.variants.find((variant) => variant.id === formId);
+            invariant(selected, `${context} form default is missing`);
+            invariant(
+                selected.validation.status === 'valid' && selected.source?.exactMatch === true,
+                `${context} form default must be valid and exact`
+            );
+        }
     });
     if (reference.defaultVariantId !== null) {
         const selected = reference.variants.find((variant) => variant.id === reference.defaultVariantId);

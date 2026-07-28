@@ -1396,7 +1396,7 @@
             transcriptEl.className = 'sgd-speaker-transcript';
             transcriptEl.style.display = 'none';
             transcriptEl.style.marginTop = '6px';
-            transcriptEl.style.borderLeft = `3px solid ${colors.border}`;
+            transcriptEl.style.borderLeft = `2px solid ${colors.border}`;
             transcriptEl.style.paddingLeft = '10px';
             (data.highlightedTranscriptParts || []).forEach((part) => {
                 if (part.matched) {

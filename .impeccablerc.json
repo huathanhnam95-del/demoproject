@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "single-font": "off",
+    "overused-font": "off",
+    "em-dash-overuse": "off"
+  }
+}

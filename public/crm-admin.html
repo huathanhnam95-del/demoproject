@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
+  <link rel="stylesheet" href="/design-tokens.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -215,6 +216,7 @@
               <option value="missing_insertion">Missing Version 3: Insertion</option>
               <option value="missing_accented">Missing Version 4: Accented</option>
               <option value="missing_unrateable">Missing Version 5: Unrateable</option>
+              <option value="needs_rerecord">Needs re-recording</option>
               <option value="recorded">Complete (5/5 versions)</option>
             </select>
 
@@ -1168,10 +1170,21 @@
                   <option value="Facebook - Personal">Facebook - Personal</option>
                   <option value="Facebook - Page">Facebook - Page</option>
                   <option value="Zalo - Page">Zalo - Page</option>
+                  <option value="Agent">Agent</option>
                 </select>
               </div>
               <div class="crm-form-group">
-                <label for="lead-name">Full Name</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label for="lead-name" style="margin-bottom: 0;">Full Name</label>
+                  <div class="crm-salutation-group" style="display: flex; gap: 12px; align-items: center; font-size: 13px;">
+                    <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500; color: #4b5563;">
+                      <input type="radio" name="salutation" id="lead-salutation-mr" value="Mr" class="salutation-radio"> Mr
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500; color: #4b5563;">
+                      <input type="radio" name="salutation" id="lead-salutation-ms" value="Ms" class="salutation-radio"> Ms
+                    </label>
+                  </div>
+                </div>
                 <input type="text" id="lead-name" name="name" class="crm-input" placeholder="Lead name">
               </div>
               <div class="crm-form-group">
@@ -1206,7 +1219,7 @@
                   <option value="Quỳnh">Quỳnh</option>
                 </select>
               </div>
-              <div class="crm-form-group">
+              <div class="crm-form-group" id="lead-agent-source-group">
                 <label for="lead-agent-source">Agent Source</label>
                 <select id="lead-agent-source" name="agent_source_id" class="crm-input">
                   <option value="">No agent source</option>

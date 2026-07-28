@@ -78,8 +78,8 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         payload = response.get_json()
-        self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v3")
+        self.assertEqual(payload["schemaVersion"], 10)
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v4")
         self.assertEqual(payload["word"], "car")
         self.assertEqual(len(payload["variants"]), 1)
         variant = payload["variants"][0]
@@ -481,8 +481,8 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
-        self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v3")
+        self.assertEqual(payload["schemaVersion"], 10)
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v4")
         self.assertEqual(payload["analysisVersion"], "pronunciation-analysis-v2")
         self.assertTrue(payload["deploymentVersion"])
 

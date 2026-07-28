@@ -54,6 +54,7 @@ async function setupFirebaseMocks(context) {
         export const doc = (db, path, ...segments) => ({ path: [path, ...segments].filter(Boolean).join('/') });
         export const getDoc = async () => ({ exists: () => false, data: () => ({}) });
         export const getDocs = async () => ({ empty: true, docs: [], forEach: () => {} });
+        export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};

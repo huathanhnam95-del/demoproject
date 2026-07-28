@@ -1,0 +1,73 @@
+/* design-tokens.css — Single source of truth for UI */
+:root {
+  /* Brand colors (WCAG AA pre-validated) */
+  --brand-primary: #1557b0;
+  --brand-accent: #7c3aed;
+  
+  /* Text colors */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;  /* Guaranteed 4.5:1 on white */
+  --text-muted: #64748b;      /* Guaranteed 4.5:1 on white */
+  
+  /* Semantic colors */
+  --color-success: #1e8e3e;
+  --color-warning: #f9ab00;
+  --color-danger: #d93025;
+  --color-info: #1a73e8;
+
+  /* Backgrounds */
+  --bg-main: #f8f9fa;
+  --bg-surface: #ffffff;
+  
+  /* Spacing scale (prevents cramped-padding) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* Typography (2 fonts only) */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  /* Elevations */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Transitions */
+  --transition-base: all 0.3s ease-out;
+}
+
+/* ── Phase 4: Impeccable UI Overrides (Typography & Hovers) ── */
+
+h1, h2, h3, .panel-title, .dashboard-title {
+  font-family: var(--font-display) !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.tutorial-grid .tutorial-btn {
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: var(--bg-surface) !important;
+}
+
+.tutorial-grid .tutorial-btn:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.practice-skill-btn {
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.practice-skill-btn:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}

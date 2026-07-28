@@ -281,7 +281,8 @@
         const result = await phoneticLookup(normalized || raw);
         if (result && typeof result === 'object') {
           profile.source = result.source || null;
-          profile.ipa = String(result.ipa || '');
+          profile.ipa = String(result.selected?.ipa || result.ipa || '');
+          profile.pronunciationForms = Array.isArray(result.forms) ? result.forms : [];
         } else if (typeof result === 'string') {
           profile.ipa = result;
         }

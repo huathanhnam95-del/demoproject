@@ -71,7 +71,7 @@
 
 .pattern-list-compact li {
     padding: 6px 10px;
-    border-left: 3px solid var(--secondary-color);
+    border-left: 2px solid var(--secondary-color);
     background: rgba(var(--secondary-rgb), 0.05);
     margin-bottom: 6px;
     font-size: 0.9rem;

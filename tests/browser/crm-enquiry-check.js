@@ -74,7 +74,7 @@ async function main() {
         return Array.from(inputs).map(el => el.id);
     });
     
-    const expectedOrder = ['lead-source', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
+    const expectedOrder = ['lead-source', 'lead-salutation-mr', 'lead-salutation-ms', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
     assert('Form fields are in correct order', JSON.stringify(fieldOrder) === JSON.stringify(expectedOrder));
 
     // ===== Test 2: Workspace section IDs =====

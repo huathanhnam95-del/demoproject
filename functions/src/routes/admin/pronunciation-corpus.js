@@ -25,6 +25,10 @@ function validateCorpusMetadata(metadata) {
   const targetWord = String(metadata.targetWord || '').trim();
   const referenceIpa = String(metadata.referenceIpa || '').trim();
   const speakerCohort = String(metadata.speakerCohort || '').trim().toLowerCase();
+  const needsRerecording = metadata.needsRerecording === true;
+  const rerecordReason = needsRerecording
+    ? String(metadata.rerecordReason || '').trim().slice(0, 120) || 'verification_failed'
+    : null;
 
   if (!SAMPLE_ID_RE.test(sampleId)) fail('sampleId must match ^[a-z0-9-]+$.');
   if (!targetWord) fail('targetWord must be a non-empty string.');
@@ -47,7 +51,9 @@ function validateCorpusMetadata(metadata) {
     expectedObservedCount: metadata.expectedObservedCount,
     targetSyllableCount: metadata.targetSyllableCount,
     category: metadata.category,
-    speakerCohort
+    speakerCohort,
+    needsRerecording,
+    rerecordReason
   };
 }
 

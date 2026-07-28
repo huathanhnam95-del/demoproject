@@ -178,6 +178,22 @@ class TestIndependentSyllabifier(unittest.TestCase):
         self.assertEqual(result["syllable_count"], 1)
         self.assertEqual(result["nuclei_detected"], ["aɪ"])
 
+    def test_length_marked_vowels_are_nuclei(self) -> None:
+        """Model-emitted long vowels must count as syllable nuclei."""
+        phonemes = _quick_phonemes(["b", "aː", "n", "a", "n", "ə"])
+        result = self.syl.syllabify(phonemes)
+
+        self.assertEqual(result["syllable_count"], 3)
+        self.assertEqual(result["nuclei_detected"], ["aː", "a", "ə"])
+
+    def test_composite_model_vowels_are_nuclei(self) -> None:
+        """Composite tokenizer symbols such as schwa-plus-l count once."""
+        phonemes = _quick_phonemes(["k", "ə", "b", "əl"])
+        result = self.syl.syllabify(phonemes)
+
+        self.assertEqual(result["syllable_count"], 2)
+        self.assertEqual(result["nuclei_detected"], ["ə", "əl"])
+
 
 if __name__ == "__main__":
     unittest.main()

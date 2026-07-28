@@ -1,120 +1,56 @@
-# Pronunciation V3 Rollout Execution Plan
+# Pronunciation V3 Vietnamese Cohort Verification Plan
 
-> **For Antigravity:** REQUIRED SUB-SKILL: Load executing-plans to implement this plan task-by-task.
+**Goal:** Verify that Pronunciation V3 accurately detects how many syllables a Vietnamese L1 learner actually spoke and displays usable stress, pitch, intensity, and syllable-timing feedback for rateable recordings.
 
-**Goal:** Produce real corpus-backed evidence for pronunciation V3, verify the candidate service, and only then authorize a shadow rollout.
+**Scope:** This plan is for the `l1-vn-01` (Vietnamese L1) cohort only. It does not require evidence from five L1 cohorts. American-English pronunciation remains the reference standard, but the acoustic result must come from the learner's recording rather than being forced from the target word.
 
-**Architecture:** The browser and local regression paths are already repaired. The remaining work is an evidence pipeline: collect and label protected audio, benchmark the pinned phoneme model, build the recognizer image, run the candidate audit, and use shadow mode before any active promotion. The service must remain not-ready until the manifest contains verified evidence.
+**Core product outcomes:**
 
-**Tech Stack:** Python 3.14, Flask, PyTorch/Transformers, WAV audio, JSON Schema, Docker, Google Cloud Run, Chrome/Playwright, PowerShell.
+1. Report the number of syllables actually spoken.
+2. Show the detected syllables and their timing.
+3. Show stress/pitch and intensity patterns when the recording is rateable.
+4. Return a clear unavailable/unrateable reason instead of fabricating feedback when the audio is insufficient.
 
 ---
 
-## Important rules before starting
+## Rules
 
 - Work from `C:\Cursor AI`.
-- Do not commit raw recordings, consent forms, names, account IDs, access tokens, or model credentials.
-- Store local audio only under the ignored directory `test-results\pronunciation-segmentation-corpus\`.
-- Do not deploy or push production until the explicit deployment step below is approved.
-- The current tracked manifest is intentionally empty and the model manifest is intentionally pending. Do not change those statuses by hand.
-- If any required gate fails, stop promotion, record the failure, and fix the underlying evidence or code before continuing.
+- Keep raw recordings only under the ignored `test-results\pronunciation-segmentation-corpus\` directory.
+- Do not commit recordings, consent data, names, account IDs, credentials, or tokens.
+- Use only deidentified cohort ID `l1-vn-01` for this verification.
+- Do not force the observed syllable count from the target word or expected count.
+- Do not deploy or push production without explicit user approval.
+- A local test pass is not a production deployment approval.
 
-## Task 1: Confirm the repaired baseline
+## Step 1: Validate the Vietnamese clean corpus
 
-**Purpose:** Establish that the current code is healthy before adding external evidence.
+**Purpose:** Confirm that the current clean recordings and labels are suitable for the accuracy check.
 
-**Files:** None changed.
+**Current target set:** 127 clean `l1-vn-01` recordings.
 
-**Commands:**
+**Required checks:**
 
-```powershell
-Set-Location 'C:\Cursor AI'
-python -m unittest discover -s backend -p "test_*.py"
-npm run test:pronounce:logic
-npm run test:pronounce:browser
-```
-
-**Expected:** Backend tests pass with only the known corpus-dependent skips; logic tests pass; both Chrome pronunciation browser checks pass.
-
-**Stop condition:** Any failure means repair the regression first. Do not collect or benchmark against a failing baseline.
-
-## Task 2: Prepare the protected audio corpus
-
-**Purpose:** Create the real evaluation data required by the benchmark and promotion gates.
-
-**Files:**
-- Local-only audio: `test-results\pronunciation-segmentation-corpus\<sampleId>.wav`
-- Modify later: `tests\fixtures\pronunciation-segmentation\manifest.json`
-
-**Required corpus:**
-
-- 60 clean American-English recordings.
-- 30 adversarial recordings: omissions, insertions, hesitations, or controlled noise.
-- 30 accented recordings from at least five deidentified speaker cohorts.
-- At least one clean sample for each: `busy`, `photograph`, `photography`, `banana`, `camera`, `university`.
-
-**For every sample, record:**
-
-- `sampleId` matching `^[a-z0-9-]+$`.
-- `targetWord` and American-English `referenceIpa`.
-- `expectedObservedCount`: what the speaker actually produced.
-- `targetSyllableCount`: independently verified canonical count for the prompted word.
-- `category`, `speakerCohort`, `sourceHash`, `labelProvenance`.
-- `verifiedSpans` using `{ "start": seconds, "end": seconds }` when available.
-
-**Procedure:**
-
-1. Obtain consent and store consent records outside the repository.
-2. Record or import the WAV files at a supported sample rate.
-3. Deidentify filenames and assign stable sample IDs.
-4. Label the canonical target count separately from the observed recording count. For example, `busy` has `targetSyllableCount: 2`; an omission sample may have `expectedObservedCount: 1`.
-5. Compute a SHA-256 hash for every WAV.
-6. Keep the raw files in the ignored local corpus directory.
-
-**Do not continue:** If the corpus is incomplete, leave the manifest empty or incomplete. The benchmark must fail closed.
-
-## Task 3: Build and validate the manifest
-
-**Purpose:** Convert the protected audio set into schema-validated metadata.
-
-**Files:**
-- Modify: `tests\fixtures\pronunciation-segmentation\manifest.json`
-- Validate: `tests\fixtures\pronunciation-segmentation\manifest.schema.json`
-- Reference: `scripts\audit\build-pronunciation-segmentation-corpus.py`
+- At least 120 clean Vietnamese L1 recordings.
+- Every clean entry uses `speakerCohort: "l1-vn-01"`.
+- Every entry has a positive `targetSyllableCount` and `expectedObservedCount`.
+- Every manifest `sourceHash` matches its local WAV file.
+- Clean recordings exist for `busy`, `photograph`, `photography`, `banana`, `camera`, and `university`.
+- No personally identifying information appears in the manifest.
 
 **Commands:**
 
 ```powershell
-python scripts/audit/build-pronunciation-segmentation-corpus.py `
-  --input-dir test-results/pronunciation-segmentation-corpus `
-  --output tests/fixtures/pronunciation-segmentation/manifest.json `
-  --schema tests/fixtures/pronunciation-segmentation/manifest.schema.json
-
 python -m unittest backend.test_pronunciation_segmentation_corpus -v
 ```
 
-**Manual checks before committing:**
+Accented, omission, and insertion samples may remain as targeted regression fixtures, but they are not a multi-cohort gate for this Vietnamese-only release.
 
-- The manifest contains at least 120 entries.
-- All six mandatory words have clean entries.
-- Every entry has a positive `targetSyllableCount`.
-- Every `sourceHash` matches the local WAV.
-- No PII appears in the JSON.
+**Stop condition:** Do not benchmark if a clean WAV is missing, a hash does not match, or a clean label is invalid.
 
-**Expected:** Schema validation passes and corpus integrity tests pass. An incomplete corpus must fail validation or remain unsuitable for benchmarking.
+## Step 2: Measure clean syllable-count accuracy
 
-**Commit artifact:** Commit only the deidentified manifest and schema-related documentation; never commit WAV files.
-
-## Task 4: Run the pinned model benchmark
-
-**Purpose:** Replace the pending model evidence with measurements from the actual pinned model and actual corpus audio.
-
-**Files:**
-- Read: `backend\phoneme_service\model-manifest.json`
-- Generate: `test-results\pronunciation-model-benchmark\*`
-- Update only from verified output: `backend\phoneme_service\model-manifest.json`
-
-**Prerequisites:** Install the project’s Python dependencies, including PyTorch, Transformers, NumPy, SciPy, and psutil. Use the pinned revision already in the manifest; do not benchmark `latest`.
+**Purpose:** Measure the current model against the 127 clean Vietnamese L1 recordings.
 
 **Command:**
 
@@ -123,148 +59,103 @@ python scripts/benchmarks/phoneme_model_probe.py `
   --manifest tests/fixtures/pronunciation-segmentation/manifest.json `
   --audio-dir test-results/pronunciation-segmentation-corpus `
   --revision ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4 `
-  --output test-results/pronunciation-model-benchmark
+  --output test-results/pronunciation-model-benchmark-vn-clean-rerun `
+  --allow-composition-mismatch
 ```
 
-**Expected:** The command evaluates real WAV files, reports mandatory-word accuracy, confidence calibration, warm latency, cold load, and RSS, then writes a manifest with `evidenceStatus: "verified"` only if evidence is complete.
+`--allow-composition-mismatch` is temporary compatibility with the existing benchmark script's older multi-cohort rule. For this run, evaluate the `clean` category only. Do not interpret the flag as evidence for non-Vietnamese cohorts.
 
-**Stop conditions:**
+**Accuracy gate:**
 
-- Empty or undersized corpus.
-- Missing mandatory words or audio.
-- Hash mismatch.
-- Fewer than 5/6 mandatory words correct.
-- Peak RSS or latency outside the limits.
-- No confidence threshold satisfies the calibration gates.
+- At least 95% exact syllable-count accuracy across the 127 clean recordings.
+- All six mandatory words must be correct.
+- The observed count must remain unchanged when a deliberately different expected count is supplied.
 
-Do not edit benchmark numbers manually to make a gate pass.
+**Evidence to retain:**
 
-## Task 5: Verify the recognizer service and container
+- `benchmark-summary.md`
+- `probe-results.json`
+- Per-recording expected count, observed count, nuclei, and confidence
 
-**Purpose:** Ensure the model manifest and service readiness behavior match the measured verdict.
+**Stop condition:** If the accuracy gate fails, continue only to Step 3. Do not build or deploy a candidate.
 
-**Files:**
-- `backend\Dockerfile.phoneme`
-- `backend\cloudbuild.phoneme.yaml`
-- `backend\phoneme_service\model-manifest.json`
+## Step 3: Diagnose and repair only the failing recordings
 
-**Commands:**
+**Purpose:** Keep the repair loop focused instead of redesigning the whole pronunciation system.
 
-```powershell
-python -m unittest backend.test_phoneme_service backend.test_phoneme_model_manifest backend.test_pronunciation_packaging -v
-docker build --file backend/Dockerfile.phoneme --tag phoneme-recognizer:candidate .
-docker run --rm -p 8081:8081 phoneme-recognizer:candidate
-```
+For each failed clean recording, compare:
 
-In another PowerShell window:
+1. Expected syllable count.
+2. Raw recognized IPA/phoneme sequence.
+3. Detected vowel nuclei.
+4. Final grouped syllables.
 
-```powershell
-Invoke-WebRequest http://127.0.0.1:8081/healthz
-Invoke-WebRequest http://127.0.0.1:8081/readyz
-```
+Classify each failure:
 
-**Expected:** `/healthz` returns 200; `/readyz` returns 200 only after verified evidence and the selected engine are available. The image uses the pinned model revision and offline runtime settings.
+- **Recognizer failure:** the raw phoneme output omitted or invented a vowel nucleus.
+- **Syllabifier failure:** the raw nuclei are usable, but grouping or glide/diphthong handling produced the wrong count.
+- **Audio/label failure:** the recording is unclear or the manual label is incorrect.
 
-**Stop condition:** If Docker is unavailable, do not claim the image passed. Move this task to a Docker-capable build runner.
+**Repair rule:**
 
-## Task 6: Start a non-production candidate
+- Change `IndependentSyllabifier` only for demonstrated grouping errors.
+- If the recognizer is losing nuclei, evaluate the recognizer/model rather than adding word-specific syllable rules.
+- Preserve target-count independence.
+- Add a focused regression test for every repaired error class.
 
-**Purpose:** Test the real `/analyze/v3` endpoint without exposing it to users.
+After a repair, rerun Step 2 once and compare the new per-recording results with the saved baseline.
 
-**Files:** No production files changed.
+## Step 4: Verify stress and pitch feedback in Chrome
 
-**Procedure:**
+**Purpose:** Confirm the behavior the learner actually sees after recording.
 
-1. Deploy the image to a separate Cloud Run candidate service with no production traffic.
-2. Configure the candidate’s V3 mode as `active` only after Task 5 passes; use `shadow` first if the service is connected to real user traffic.
-3. Record the candidate URL and build SHA.
-4. Confirm `/health`, `/healthz`, `/readyz`, and `/version`.
-5. Confirm the service reports the expected model revision and manifest checksum.
-
-**Authorization:** This is the first step requiring deployment authority. Do not execute it until explicitly approved.
-
-## Task 7: Run the real segmentation audit
-
-**Purpose:** Exercise native graphs, target-forcing independence, timing, accuracy, and latency against the candidate.
-
-**Command:**
+**Local checks:**
 
 ```powershell
-python scripts/audit/pronunciation-segmentation-audit.py `
-  --base-url '<CANDIDATE_URL>' `
-  --manifest tests/fixtures/pronunciation-segmentation/manifest.json `
-  --model-manifest backend/phoneme_service/model-manifest.json `
-  --output test-results/audit-results
-```
-
-**Expected:** The report at `test-results\audit-results\pronunciation-v3-audit-report.md` passes every gate:
-
-- 6/6 mandatory clean words.
-- At least 95% clean accuracy.
-- At least 90% omission and insertion precision/recall.
-- At least 90% accented accuracy.
-- Boundary MAE no greater than 60 ms.
-- Per-syllable duration availability at least 98%.
-- Warm p95 no greater than 2 seconds.
-- RSS no greater than 3.5 GiB.
-- Native graph coverage at least 99%.
-- No target-forced counts.
-- No unexplained blank graphs.
-
-**Stop condition:** Any failed gate blocks promotion. Investigate the raw JSON report and add a regression test before rerunning.
-
-## Task 8: Verify the user-facing Chrome flow against the candidate
-
-**Purpose:** Confirm that the real candidate response is rendered correctly in the browser.
-
-**Files:** Existing browser checks in `tests\browser\`.
-
-**Procedure:**
-
-1. If login is required, read `C:\Cursor AI\.local\browser-test-credentials.md`; never copy credentials into notes or commits.
-2. Run the local Playwright Chrome checks.
-3. In the candidate UI, search `photograph`, `photography`, `busy`, and a previously uncached word.
-4. Confirm syllable counts, native pitch/intensity graphs, and syllable duration charts.
-5. Record a screenshot or console artifact only if it contains no personal data.
-
-**Command:**
-
-```powershell
+python -m unittest backend.test_phoneme_service backend.test_phoneme_model_manifest -v
+npm run test:pronounce:logic
 npm run test:pronounce:browser
 ```
 
-**Expected:** No blank graph for a valid audio-backed variant; `busy` has two syllables; `photograph` has three; duration remains unavailable only when the service explicitly reports it unavailable.
+Then use Chrome to test representative Vietnamese L1 recordings, including:
 
-## Task 9: Run shadow mode before active promotion
+- A correct two-syllable word such as `busy`.
+- A correct three-syllable word such as `photograph`.
+- A longer word such as `photography` or `university`.
+- One intentionally unclear recording.
 
-**Purpose:** Compare V2 and V3 safely using real traffic without changing user scoring.
+**Confirm:**
 
-**Requirements:**
+- The displayed syllable count matches what was spoken.
+- Syllable boundaries and durations appear when available.
+- Pitch and intensity graphs are not blank for rateable recordings.
+- Primary stress is derived from the recorded acoustic pattern.
+- Unclear audio receives an explicit unrateable reason.
+- Changing the expected count does not change the observed acoustic count.
 
-- At least seven days and 500 valid attempts.
-- Structured logs include V2/V3 counts, disagreement category, confidence, latency, reason, model revision, and target word.
-- No audio, tokens, account IDs, or consent data in logs.
-- Monitor recognizer busy and authentication-failure rates.
+If login is required, use `C:\Cursor AI\.local\browser-test-credentials.md`. Run the local Playwright Chrome check first; use the interactive browser-agent workflow only when live confirmation or screenshots are needed.
 
-**Procedure:**
+## Step 5: Package and release only after the core behavior passes
 
-1. Enable shadow mode on the no-traffic or controlled candidate.
-2. Export daily aggregate disagreement reports.
-3. Investigate every unexpected insertion, omission, timeout, or blank graph.
-4. Keep V2 as the user-facing result until all shadow gates pass.
+Packaging and deployment are not part of the accuracy repair loop.
 
-## Task 10: Decide promotion or rollback
+After Steps 1–4 pass:
 
-Promote only when Tasks 1–9 are complete and every audit gate passes. Keep the candidate in shadow or roll it back if any gate fails, if readiness becomes unstable, or if the model evidence cannot be reproduced. Production deployment requires a separate explicit approval; this plan does not authorize it automatically.
+1. Build the recognizer container on a Docker-capable machine.
+2. Confirm `/healthz`, `/readyz`, and `/version`.
+3. Deploy a non-production candidate only with explicit approval.
+4. Run the same representative Chrome recording checks against the candidate.
+5. Use a small controlled Vietnamese L1 pilot if additional production confidence is wanted.
 
-## Final handoff checklist
+Production deployment remains a separate explicit decision. A mandatory seven-day, 500-attempt shadow run is not required by this simplified plan.
 
-- [ ] Corpus manifest and hashes reviewed.
-- [ ] Raw audio remains outside Git.
-- [ ] Benchmark output is reproducible.
-- [ ] `evidenceStatus` is `verified`.
-- [ ] Docker image build and `/readyz` pass.
-- [ ] Candidate audit report passes all gates.
-- [ ] Chrome candidate flow passes.
-- [ ] Shadow evidence meets duration and volume requirements.
-- [ ] Promotion decision and rollback owner are documented.
+## Completion checklist
+
+- [ ] 127 clean Vietnamese L1 recordings pass integrity checks.
+- [ ] Clean exact syllable-count accuracy is at least 95%.
+- [ ] All six mandatory words are correct.
+- [ ] Observed counts are independent of expected target counts.
+- [ ] Rateable recordings show syllable timing, pitch, intensity, and stress feedback.
+- [ ] Unrateable recordings return an explicit reason.
+- [ ] Focused backend, logic, and Chrome tests pass.
+- [ ] Any container or deployment work has separate approval.

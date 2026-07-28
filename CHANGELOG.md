@@ -1,3 +1,16 @@
+## [V1.8.42] - 2026-07-28
+
+### Added & Enhanced
+- **Agent Source & Conditional Agent Selection**:
+  - Added `Agent` choice to the `Source` dropdown (`#lead-source`).
+  - Added dynamic visibility for the **Agent Source** dropdown (`#lead-agent-source-group`), showing it only when `Agent` source is selected.
+  - Added **Mr** / **Ms** title tick selector next to **Full Name** field with full form binding and payload persistence.
+- **Phonetics & Oxford IPA Normalization**:
+  - Applied universal stressed-schwa to caret vowel (`/ʌ/`) normalization rule covering 6,500+ words including 113 core Oxford 5000 words.
+  - Generated Read Aloud /i:/, /ɪ/, and happy-vowel /i/ word frequency analysis and reference guide (`docs/read_aloud_top_20_i_vowels.md`).
+- **UI Design System & Accessibility Refinements**:
+  - Remediated UI slop anti-patterns and WCAG contrast rules across practice modes and CRM administration pages.
+
 ## [V1.8.40] - 2026-07-27
 
 ### Added & Verified

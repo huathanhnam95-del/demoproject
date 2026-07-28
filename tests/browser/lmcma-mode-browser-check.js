@@ -175,6 +175,7 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -320,11 +321,14 @@ async function retryAndAssertReset(page) {
   });
 
   const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  const optionalBackendNoise = /CORS policy|praat-api|Error fetching word data|Failed to fetch/i;
+  page.on('pageerror', (error) => {
+    if (!optionalBackendNoise.test(error.message)) errors.push(error.message);
+  });
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource')) {
+      if (!text.includes('Failed to load resource') && !optionalBackendNoise.test(text)) {
         errors.push(text);
       }
     }

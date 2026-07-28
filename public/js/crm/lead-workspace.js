@@ -56,10 +56,13 @@ window.CrmLeadWorkspace = (function () {
             const inputUrl = elements.inputLeadFacebookProfileUrl || document.getElementById('lead-facebook-profile-url');
             const groupOwner = elements.leadFacebookPersonalOwnerGroup || document.getElementById('lead-facebook-personal-owner-group');
             const inputOwner = elements.inputLeadFacebookPersonalOwner || document.getElementById('lead-facebook-personal-owner');
+            const groupAgent = elements.leadAgentSourceGroup || document.getElementById('lead-agent-source-group');
+            const inputAgent = elements.inputLeadAgentSource || document.getElementById('lead-agent-source');
 
             const val = String(inputLeadSource?.value || '').trim();
             const isFacebook = val.startsWith('Facebook');
             const isFacebookPersonal = val === 'Facebook - Personal';
+            const isAgent = val === 'Agent';
 
             if (groupUrl) {
                 groupUrl.style.display = isFacebook ? '' : 'none';
@@ -74,10 +77,22 @@ window.CrmLeadWorkspace = (function () {
             if (!isFacebookPersonal && inputOwner) {
                 inputOwner.value = 'Nam';
             }
+
+            if (groupAgent) {
+                groupAgent.style.display = isAgent ? '' : 'none';
+            }
+            if (!isAgent && inputAgent) {
+                inputAgent.value = '';
+            }
         }
         window.updateLeadSourceVisibility = updateLeadSourceVisibility;
 
         function resetLeadComposer() {
+            const mr = elements.inputSalutationMr || document.getElementById('lead-salutation-mr');
+            const ms = elements.inputSalutationMs || document.getElementById('lead-salutation-ms');
+            if (mr) mr.checked = false;
+            if (ms) ms.checked = false;
+
             const inputs = [
                 elements.inputLeadName,
                 elements.inputLeadLabel,

@@ -76,6 +76,20 @@ async function runTest() {
     // Enter a link
     await page.fill('#lead-facebook-profile-url', 'https://facebook.com/teststudent');
 
+    // Check salutation radios are present
+    await page.check('#lead-salutation-mr');
+    const isMrChecked = await page.$eval('#lead-salutation-mr', (el) => el.checked);
+    assert.strictEqual(isMrChecked, true, 'Mr radio should be checked when clicked');
+
+    await page.check('#lead-salutation-ms');
+    const isMsChecked = await page.$eval('#lead-salutation-ms', (el) => el.checked);
+    assert.strictEqual(isMsChecked, true, 'Ms radio should be checked when clicked');
+
+    // Switch to Agent source
+    await page.selectOption('#lead-source', 'Agent');
+    const isAgentVisible = await page.$eval('#lead-agent-source-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    assert.strictEqual(isAgentVisible, true, 'Agent Source dropdown should be visible when Agent source selected');
+
     // Switch to Zalo - Page
     await page.selectOption('#lead-source', 'Zalo - Page');
     const isVisibleZalo = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
@@ -83,6 +97,9 @@ async function runTest() {
 
     const isOwnerVisibleZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isOwnerVisibleZalo, true, "FB Personal Account dropdown should be hidden for Zalo - Page");
+
+    const isAgentVisibleZalo = await page.$eval('#lead-agent-source-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
+    assert.strictEqual(isAgentVisibleZalo, true, "Agent Source dropdown should be hidden for Zalo - Page");
 
     const zaloClearedValue = await page.$eval('#lead-facebook-profile-url', (el) => el.value);
     assert.strictEqual(zaloClearedValue, '', "Student's FB link input value should be cleared when switching to non-Facebook source");
@@ -95,7 +112,7 @@ async function runTest() {
     const isOwnerVisiblePage = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isOwnerVisiblePage, true, "FB Personal Account dropdown should be hidden for Facebook - Page");
 
-    console.log('✓ Lead source, dynamic Student\'s FB link field, and FB Personal Account owner dropdown browser check PASSED');
+    console.log('✓ Lead source, dynamic Student\'s FB link field, FB Personal Account owner, Agent source dropdown, and Mr/Ms salutation browser check PASSED');
   } finally {
     await browser.close();
     server.close();

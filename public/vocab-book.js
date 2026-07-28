@@ -629,18 +629,49 @@ const VocabularyBook = (function () {
             return phoneticCache.get(cleanWord);
         }
 
-        // Use the new Phonetics module (CMU Dict → Wiktionary → espeak-ng)
+        // Use the shared American pronunciation contract and keep both
+        // isolated strong and connected-speech weak forms visible.
+        if (typeof Phonetics !== 'undefined' && typeof Phonetics.getPronunciations === 'function') {
+            try {
+                const pronunciations = await Phonetics.getPronunciations(cleanWord);
+                phoneticCache.set(cleanWord, pronunciations || null);
+                return pronunciations || null;
+            } catch (e) {
+                log.warn(`Phonetics.getPronunciations failed for: ${cleanWord}`, e);
+            }
+        }
+
         if (typeof Phonetics !== 'undefined' && Phonetics.getIPA) {
             try {
                 const ipa = await Phonetics.getIPA(cleanWord);
-                phoneticCache.set(cleanWord, ipa || '');
-                return ipa || '';
+                const fallback = {
+                    forms: ipa ? [{ formRole: 'citation', ipa }] : []
+                };
+                phoneticCache.set(cleanWord, fallback);
+                return fallback;
             } catch (e) {
                 log.warn(`Phonetics.getIPA failed for: ${cleanWord}`, e);
             }
         }
 
         return '';
+    }
+
+    function formatPronunciationDisplay(pronunciations) {
+        if (typeof pronunciations === 'string') return escapeHtml(pronunciations || '-');
+        const forms = Array.isArray(pronunciations?.forms) ? pronunciations.forms : [];
+        if (!forms.length) return '-';
+        return forms
+            .filter((form) => form?.ipa)
+            .map((form) => {
+                const label = form.formRole === 'weak'
+                    ? 'Weak'
+                    : form.formRole === 'strong'
+                        ? 'Strong'
+                        : 'Citation';
+                return `<span class="vocab-phonetic-form vocab-phonetic-form--${label.toLowerCase()}"><span class="vocab-phonetic-form-label">${label}:</span> ${escapeHtml(form.ipa)}</span>`;
+            })
+            .join('<br>') || '-';
     }
 
     /**
@@ -791,7 +822,7 @@ const VocabularyBook = (function () {
 
             // Update UI via selectors (Safe and efficient)
             const pCells = tbody.querySelectorAll(`.pronunciation-cell[data-word="${escapedWord}"] .vocab-phonetic`);
-            pCells.forEach(cell => cell.textContent = phonetic || '-');
+            pCells.forEach(cell => { cell.innerHTML = formatPronunciationDisplay(phonetic); });
 
             const tCells = tbody.querySelectorAll(`.translation-cell[data-word="${escapedWord}"] .vocab-vietnamese`);
             tCells.forEach(cell => cell.textContent = entry.translation || '-');

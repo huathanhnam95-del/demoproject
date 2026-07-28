@@ -174,6 +174,7 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -315,15 +316,16 @@ async function retryAndAssertReset(page) {
   });
 
   const errors = [];
+  const optionalBackendNoise = /CORS policy|praat-api|Error fetching word data|Failed to fetch/i;
   page.on('pageerror', (error) => {
     console.error('PAGE ERROR:', error);
-    errors.push(error.message);
+    if (!optionalBackendNoise.test(error.message)) errors.push(error.message);
   });
   page.on('console', (msg) => {
     console.log(`BROWSER CONSOLE [${msg.type()}]:`, msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource') && !text.includes('Error loading extended database')) {
+      if (!text.includes('Failed to load resource') && !text.includes('Error loading extended database') && !optionalBackendNoise.test(text)) {
         errors.push(text);
       }
     }

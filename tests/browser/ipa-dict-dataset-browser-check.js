@@ -131,6 +131,12 @@ async function run() {
     assert.ok(multiWords.either.alternatives.length > 0, 'either should have alternative pronunciations');
     assert.ok(multiWords.a.alternatives.length > 0, 'a should have alternative pronunciations');
     assert.ok(multiWords.the.alternatives.length > 0, 'the should have alternative pronunciations');
+    assert.strictEqual(multiWords.the.ipa, '/ðə/', 'weak function-word stress must not become STRUT');
+    assert.deepStrictEqual(
+      [multiWords.the.ipa, ...multiWords.the.alternatives],
+      ['/ðə/', '/ði/'],
+      'the primary IPA and alternatives should expose each normalized pronunciation once'
+    );
 
     // 6. Test edge cases: casing, whitespace, punctuation
     console.log('🔍 Testing formatting edge cases (casing, whitespace, apostrophes, hyphens)...');
@@ -144,7 +150,7 @@ async function run() {
     });
     console.log('  -> Edge cases:', edgeCases);
     assert.strictEqual(edgeCases.uppercase, '/ˈfɔrəst/', 'Whitespace and uppercase should be normalized');
-    assert.ok(edgeCases.dont.length > 0, "don't should return valid IPA");
+    assert.strictEqual(edgeCases.dont, '/doʊnt/', "don't should retain its citation-form final /t/");
     assert.ok(edgeCases.cant.length > 0, "can't should return valid IPA");
 
     // 7. Test CMU Fallback & Out-of-Vocabulary words

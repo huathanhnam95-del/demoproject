@@ -44,8 +44,13 @@ window.CrmLeads = (function () {
         const stage = getValue(elements.inputLeadStage || elements.inputStudentStage) || 'new';
         const probability = getNumberValue(elements.inputLeadProbability || elements.inputStudentProbability);
 
+        const mrRadio = elements.inputSalutationMr || document.getElementById('lead-salutation-mr');
+        const msRadio = elements.inputSalutationMs || document.getElementById('lead-salutation-ms');
+        const salutation = mrRadio?.checked ? 'Mr' : (msRadio?.checked ? 'Ms' : null);
+
         return {
             name,
+            salutation,
             label,
             email,
             phone,
@@ -99,6 +104,11 @@ window.CrmLeads = (function () {
         const targetInputAgentSource = elements.inputLeadAgentSource || elements.inputStudentAgentSource;
         const targetInputStage = elements.inputLeadStage || elements.inputStudentStage;
         const targetInputProbability = elements.inputLeadProbability || elements.inputStudentProbability;
+
+        const mrRadio = elements.inputSalutationMr || document.getElementById('lead-salutation-mr');
+        const msRadio = elements.inputSalutationMs || document.getElementById('lead-salutation-ms');
+        if (mrRadio) mrRadio.checked = (lead?.salutation === 'Mr');
+        if (msRadio) msRadio.checked = (lead?.salutation === 'Ms');
 
         if (targetInputName) targetInputName.value = String(lead?.name || '');
         if (targetInputLabel) targetInputLabel.value = String(lead?.label || '');

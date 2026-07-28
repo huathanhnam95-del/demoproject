@@ -326,6 +326,9 @@
     elements.leadFacebookPersonalOwnerGroup = document.getElementById('lead-facebook-personal-owner-group');
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadAgentSource = document.getElementById('lead-agent-source');
+    elements.leadAgentSourceGroup = document.getElementById('lead-agent-source-group');
+    elements.inputSalutationMr = document.getElementById('lead-salutation-mr');
+    elements.inputSalutationMs = document.getElementById('lead-salutation-ms');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
     elements.leadWorkspace = document.getElementById('lead-workspace');
@@ -2167,10 +2170,13 @@
     const inputUrl = elements.inputLeadFacebookProfileUrl || document.getElementById('lead-facebook-profile-url');
     const groupOwner = elements.leadFacebookPersonalOwnerGroup || document.getElementById('lead-facebook-personal-owner-group');
     const inputOwner = elements.inputLeadFacebookPersonalOwner || document.getElementById('lead-facebook-personal-owner');
+    const groupAgent = elements.leadAgentSourceGroup || document.getElementById('lead-agent-source-group');
+    const inputAgent = elements.inputLeadAgentSource || document.getElementById('lead-agent-source');
 
     const val = String(inputLeadSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
     const isFacebookPersonal = val === 'Facebook - Personal';
+    const isAgent = val === 'Agent';
 
     if (groupUrl) {
       groupUrl.style.display = isFacebook ? '' : 'none';
@@ -2184,20 +2190,30 @@
     }
     if (!isFacebookPersonal && inputOwner) {
       inputOwner.value = 'Nam';
+    }
+
+    if (groupAgent) {
+      groupAgent.style.display = isAgent ? '' : 'none';
+    }
+    if (!isAgent && inputAgent) {
+      inputAgent.value = '';
     }
   }
   window.updateLeadSourceVisibility = updateLeadSourceVisibility;
 
   function updateStudentSourceVisibility() {
-    const inputStudentSource = elements.inputStudentAcquisitionSource || document.getElementById('student-acquisition-source');
+    const inputStudentSource = elements.inputStudentAcquisitionSource || document.getElementById('student-acquisition-source') || document.getElementById('lead-source');
     const groupUrl = elements.studentFacebookProfileUrlGroup || document.getElementById('student-facebook-profile-url-group');
     const inputUrl = elements.inputStudentFacebookProfileUrl || document.getElementById('student-facebook-profile-url');
     const groupOwner = elements.studentFacebookPersonalOwnerGroup || document.getElementById('student-facebook-personal-owner-group');
     const inputOwner = elements.inputStudentFacebookPersonalOwner || document.getElementById('student-facebook-personal-owner');
+    const groupAgent = elements.studentAgentSourceGroup || elements.leadAgentSourceGroup || document.getElementById('lead-agent-source-group');
+    const inputAgent = elements.inputStudentAgentSource || elements.inputLeadAgentSource || document.getElementById('lead-agent-source');
 
     const val = String(inputStudentSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
     const isFacebookPersonal = val === 'Facebook - Personal';
+    const isAgent = val === 'Agent';
 
     if (groupUrl) {
       groupUrl.style.display = isFacebook ? '' : 'none';
@@ -2211,6 +2227,13 @@
     }
     if (!isFacebookPersonal && inputOwner) {
       inputOwner.value = 'Nam';
+    }
+
+    if (groupAgent) {
+      groupAgent.style.display = isAgent ? '' : 'none';
+    }
+    if (!isAgent && inputAgent) {
+      inputAgent.value = '';
     }
   }
   window.updateStudentSourceVisibility = updateStudentSourceVisibility;
@@ -2232,6 +2255,11 @@
     inputs.forEach((input) => {
       if (input) input.value = '';
     });
+    if (elements.inputLeadStage) {
+      elements.inputLeadStage.value = 'new';
+    }
+    if (elements.inputSalutationMr) elements.inputSalutationMr.checked = false;
+    if (elements.inputSalutationMs) elements.inputSalutationMs.checked = false;
     if (elements.inputLeadSource) {
       elements.inputLeadSource.value = 'Facebook - Personal';
     }
@@ -7138,6 +7166,8 @@
     let recordingStartTime = 0;
     let allSavedSamples = [];
     const savedVersionsByWord = new Map();
+    const samplesNeedingRerecordByWord = new Map();
+    let pendingRerecord = null;
 
     const CORPUS_VERSIONS = [
       {
@@ -7242,6 +7272,7 @@
         else if (filter === 'missing_insertion') matchesFilter = !versions.has('insertion');
         else if (filter === 'missing_accented') matchesFilter = !versions.has('accented');
         else if (filter === 'missing_unrateable') matchesFilter = !versions.has('unrateable');
+        else if (filter === 'needs_rerecord') matchesFilter = samplesNeedingRerecordByWord.has(word);
         else if (filter === 'recorded') matchesFilter = versions.size >= 5;
 
         const matchesSearch = !searchTerm || word.includes(searchTerm);
@@ -7684,6 +7715,20 @@
       }
     }
 
+    function sampleNeedsRerecording(sample) {
+      return sample?.needsRerecording === true
+        || sample?.audioQuality?.needsRerecording === true
+        || sample?.retakeRequired === true;
+    }
+
+    function buildRerecordMap(samples) {
+      samplesNeedingRerecordByWord.clear();
+      for (const sample of samples) {
+        const word = String(sample.targetWord || '').trim().toLowerCase();
+        if (word && sampleNeedsRerecording(sample)) samplesNeedingRerecordByWord.set(word, true);
+      }
+    }
+
     async function loadSavedSamples() {
       if (!savedSamplesContainer) return;
       try {
@@ -7692,6 +7737,7 @@
         allSavedSamples = samples;
         savedWordSet = new Set(samples.map((sample) => String(sample.targetWord || '').trim().toLowerCase()).filter(Boolean));
         buildVersionMap(samples);
+        buildRerecordMap(samples);
         updateProgressDashboard(samples);
         renderSavedSamples(samples);
         updateWordBadges();
@@ -7769,6 +7815,7 @@
     if (sampleFilter) sampleFilter.addEventListener('change', () => {
       currentPage = 1;
       applyWordFilter();
+      bindWordButtons();
       const catVersionIdx = getCategoryVersionIndex(sampleFilter.value);
       if (catVersionIdx >= 0) {
         moveToVersion(catVersionIdx);
@@ -8080,6 +8127,7 @@
 
       let analysisMatched = true;
       let isAudioUnrateable = false;
+      let rerecordReason = null;
       let observedSyllables = expectedSyllables;
       let analysisSummaryText = '';
 
@@ -8098,8 +8146,10 @@
             if (!audioRateable) {
               analysisMatched = false;
               isAudioUnrateable = true;
+              rerecordReason = analysis.quality?.reason || 'unrateable_audio';
             } else if (expectedSyllables > 0) {
               analysisMatched = (observedSyllables === expectedSyllables);
+              if (!analysisMatched) rerecordReason = 'syllable_mismatch';
             }
           }
           analysisSummaryText = ` (${isAudioUnrateable ? 'Unrateable audio · ' : ''}Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
@@ -8108,6 +8158,10 @@
         console.debug('[Auto Analysis] Praat API offline or bypassed:', err);
         analysisMatched = true;
       }
+
+      pendingRerecord = snapCategory === 'clean' && !analysisMatched
+        ? { needsRerecording: true, rerecordReason: rerecordReason || 'verification_failed' }
+        : null;
 
       if (analysisMatched) {
         if (micStatus) {
@@ -8181,6 +8235,7 @@
     function redoRecording() {
       rawSamples = [];
       audioBlob = null;
+      pendingRerecord = null;
       currentVersionSaved = false;
       if (audioPlayer) audioPlayer.src = '';
       if (playbackContainer) playbackContainer.style.display = 'none';
@@ -8212,7 +8267,9 @@
         expectedObservedCount: observedCountValue,
         targetSyllableCount: currentSyllableCount,
         category: categoryValue,
-        speakerCohort: currentSpeakerCohort
+        speakerCohort: currentSpeakerCohort,
+        needsRerecording: Boolean(pendingRerecord?.needsRerecording),
+        rerecordReason: pendingRerecord?.rerecordReason || null
       };
       const formData = new FormData();
       formData.append('audio', audioBlob, `${sampleId}.wav`);
@@ -8242,7 +8299,7 @@
         // Auto-advance logic
         const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
         const activeFilter = sampleFilter?.value || 'all';
-        const isCategorySpecificFilter = activeFilter.startsWith('missing_');
+        const isCategorySpecificFilter = activeFilter.startsWith('missing_') || activeFilter === 'needs_rerecord';
 
         if (rapidStreamActive) {
           if (isCategorySpecificFilter) {

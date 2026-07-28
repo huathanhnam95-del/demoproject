@@ -22,11 +22,25 @@ const YOD_COALESCENCE_PHRASES = new Set([
   'got you'
 ]);
 const REDUCED_WORDS = new Map([
+  ['a', ['canonical', 'reduced_a']],
+  ['an', ['canonical', 'reduced_an']],
+  ['the', ['canonical', 'reduced_the']],
   ['to', ['canonical', 'reduced_to']],
   ['and', ['canonical', 'reduced_and']],
   ['of', ['canonical', 'reduced_of']],
   ['for', ['canonical', 'reduced_for']],
-  ['have', ['canonical', 'reduced_have']]
+  ['can', ['canonical', 'reduced_can']],
+  ['have', ['canonical', 'reduced_have']],
+  ['has', ['canonical', 'reduced_has']],
+  ['was', ['canonical', 'reduced_was']],
+  ['were', ['canonical', 'reduced_were']],
+  ['from', ['canonical', 'reduced_from']]
+]);
+const REDUCED_WORD_IPA = new Map([
+  ['a', '/ə/'], ['an', '/ən/'], ['the', '/ðə/'], ['to', '/tə/'],
+  ['and', '/ən/'], ['of', '/əv/'], ['for', '/fər/'], ['can', '/kən/'],
+  ['have', '/həv/'], ['has', '/həz/'], ['was', '/wəz/'], ['were', '/wər/'],
+  ['from', '/frəm/']
 ]);
 const PHONEME_ALIAS_MAP = new Map([
   ['m', 'm'],
@@ -310,6 +324,9 @@ function buildBaseEvent({
   right,
   phrase,
   allowedVariants,
+  targetFormRole,
+  targetIpa,
+  acceptedFormRoles,
   detectorConfig,
   confidenceHint,
   feedbackTemplates
@@ -323,6 +340,9 @@ function buildBaseEvent({
     startWordIndex: left.wordIndex,
     endWordIndex: right.wordIndex,
     allowedVariants,
+    targetFormRole: targetFormRole || null,
+    targetIpa: targetIpa || null,
+    acceptedFormRoles: acceptedFormRoles || ['strong', 'weak'],
     detectorConfig: {
       confidenceThreshold: confidenceHint || 0.7,
       ...detectorConfig
@@ -495,6 +515,9 @@ function buildGenericEvents(referenceText, questionId) {
         right,
         phrase: left.display,
         allowedVariants: REDUCED_WORDS.get(left.normalized) || ['canonical', 'reduced'],
+        targetFormRole: 'weak',
+        targetIpa: REDUCED_WORD_IPA.get(left.normalized) || null,
+        acceptedFormRoles: ['strong', 'weak'],
         detectorConfig: {
           weakFormWord: left.normalized
         }
@@ -583,6 +606,9 @@ function buildEventResult(event, overrides = {}) {
     rightWord: event.rightWord,
     startWordIndex: event.startWordIndex,
     endWordIndex: event.endWordIndex,
+    targetFormRole: event.targetFormRole || null,
+    targetIpa: event.targetIpa || null,
+    acceptedFormRoles: event.acceptedFormRoles || ['strong', 'weak'],
     ...overrides
   };
 }
@@ -606,19 +632,45 @@ function getAzureWordErrorType(wordNode) {
   return String(wordNode?.PronunciationAssessment?.ErrorType || wordNode?.ErrorType || 'None');
 }
 
+function selectMostLikelyPhoneme(candidates, fallback = '') {
+  const ranked = Array.isArray(candidates)
+    ? candidates
+      .map((candidate, index) => ({
+        phoneme: String(candidate?.Phoneme || candidate?.phoneme || '').trim(),
+        score: Number(candidate?.Score ?? candidate?.score),
+        index
+      }))
+      .filter((candidate) => candidate.phoneme)
+      .sort((left, right) => {
+        const leftScore = Number.isFinite(left.score) ? left.score : -Infinity;
+        const rightScore = Number.isFinite(right.score) ? right.score : -Infinity;
+        return rightScore - leftScore || left.index - right.index;
+      })
+    : [];
+  return ranked[0]?.phoneme || String(fallback || '').trim();
+}
+
+function extractSpokenPhonemes(wordNode) {
+  const wordLevelCandidates = wordNode?.PronunciationAssessment?.NBestPhonemes
+    || wordNode?.NBestPhonemes;
+  if (Array.isArray(wordLevelCandidates) && wordLevelCandidates.length > 0) {
+    const candidate = selectMostLikelyPhoneme(wordLevelCandidates);
+    return candidate ? [candidate] : [];
+  }
+
+  if (!Array.isArray(wordNode?.Phonemes)) return [];
+  return wordNode.Phonemes
+    .map((phonemeNode) => selectMostLikelyPhoneme(
+      phonemeNode?.PronunciationAssessment?.NBestPhonemes || phonemeNode?.NBestPhonemes,
+      phonemeNode?.Phoneme || phonemeNode?.phoneme
+    ))
+    .filter(Boolean);
+}
+
 function simplifyWordNode(wordNode, index, referenceWords) {
   if (!wordNode) return null;
   const word = normalizeWord(wordNode.Word || wordNode.Display || wordNode.Lexical || '');
-  const rawPhonemeCandidates = Array.isArray(wordNode?.PronunciationAssessment?.NBestPhonemes)
-    ? wordNode.PronunciationAssessment.NBestPhonemes
-    : Array.isArray(wordNode?.NBestPhonemes)
-      ? wordNode.NBestPhonemes
-      : Array.isArray(wordNode?.Phonemes)
-        ? wordNode.Phonemes
-        : [];
-  const phonemeCandidates = rawPhonemeCandidates
-    .map((candidate) => String(candidate?.Phoneme || candidate?.phoneme || '').trim())
-    .filter(Boolean);
+  const phonemeCandidates = extractSpokenPhonemes(wordNode);
   const accuracyScore = getAzureWordScore(wordNode, 'AccuracyScore');
   return {
     index,
@@ -795,7 +847,6 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
   const leftPhonemeHints = leftAzure.phonemes || [];
   const rightPhonemeHints = rightAzure.phonemes || [];
   const coalescedHint = hasAnyPhonemeCandidate(rightAzure, ['dʒ', 'ʤ', 'tʃ', 'ʧ', 'ʒ']);
-  const reducedHint = hasAnyPhonemeCandidate(leftAzure, ['ə', 'ɐ', 'ʊ', 'ɪ']);
   const bilabialHint = hasAnyPhonemeCandidate(leftAzure, ['m']);
 
   if (event.family === 'catenation') {
@@ -911,12 +962,17 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
 
   if (event.family === 'weak_form_reduction') {
     const targetWord = normalizeWord(event.detectorConfig?.weakFormWord || event.phrase);
+    // Oxford American transcribes both strong and weak "were" as /wər/.
+    // Its schwa is therefore not contrastive evidence of reduction; rely on
+    // duration/prominence evidence for that word.
+    const reducedHint = targetWord !== 'were'
+      && hasAnyPhonemeCandidate(leftAzure, ['ə', 'ɐ', 'ʊ', 'ɪ']);
     const reducedDuration = Number(leftAzure.durationMs || 0);
     const nextDuration = Number(rightAzure.durationMs || 0);
     const relativeDuration = nextDuration > 0 ? reducedDuration / nextDuration : null;
-    const status = (leftAzure.accuracyScore <= 78 || (relativeDuration != null && relativeDuration <= 0.75) || reducedHint)
+    const status = ((relativeDuration != null && relativeDuration <= 0.75) || reducedHint)
       ? 'detected'
-      : (leftAzure.accuracyScore >= 94 && (relativeDuration == null || relativeDuration >= 1.15) && !reducedHint)
+      : (leftAzure.accuracyScore >= 94 && relativeDuration != null && relativeDuration >= 1.15 && !reducedHint)
         ? 'not_detected'
         : 'uncertain';
     return buildEventResult(event, {
@@ -932,6 +988,9 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
         leftPhonemeHints,
         rightPhonemeHints,
         targetWord,
+        targetFormRole: event.targetFormRole || 'weak',
+        targetIpa: event.targetIpa || null,
+        acceptedFormRoles: event.acceptedFormRoles || ['strong', 'weak'],
         promptText
       }
     });

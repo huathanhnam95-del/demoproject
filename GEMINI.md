@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.41
+- **Phase**: Release V1.8.42
 
 ## Instructions
 
@@ -80,7 +80,7 @@ When a new task is created, immediately classify it:
 ### GSD Core Rules (Always Enforced)
 
 - 🔒 **No code without a plan** — For Features, state the plan before writing any code. Even a 2-line inline plan counts.
-- 🛑 **No auto-proceeding on plans** — After creating or updating `implementation_plan.md`, set `RequestFeedback: true` in `ArtifactMetadata` and **STOP calling tools immediately**. Do NOT perform code edits or execution steps until the user explicitly approves the plan.
+- 🛑 **No auto-proceeding on plans** — After creating or updating `implementation_plan.md`, set `RequestFeedback: true` in `ArtifactMetadata`. Modifying `implementation_plan.md` MUST be the ONLY and LAST tool call in that turn. You are STRICTLY FORBIDDEN from generating subsequent tool calls (e.g., `invoke_subagent`, `run_command`, file edits) in the same turn. **STOP calling tools immediately** and wait for explicit user approval.
 - ✅ **Empirical verification required** — Never claim "done" without running verification. No "it should work" — prove it works.
 - 🧹 **Context hygiene** — After 3 failed debugging attempts on the same issue, stop → document what was tried → recommend a fresh approach or session.
 - 💾 **State tracking** — Always update TASK_TRACKER.csv at task creation and completion.
@@ -132,7 +132,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.42`
+- **Next Version**: `V1.8.43`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

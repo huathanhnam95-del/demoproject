@@ -17,6 +17,9 @@ import {
 function validVariant(overrides = {}) {
     return {
         id: '0123456789abcdef',
+        formRole: 'citation',
+        usage: { isolated: 'preferred', connectedSpeech: 'accepted' },
+        conditions: {},
         partOfSpeech: 'noun',
         definition: 'fixture',
         source: {
@@ -49,22 +52,27 @@ function validVariant(overrides = {}) {
 function validReference(overrides = {}) {
     const variant = validVariant();
     return {
-        schemaVersion: 9,
-        algorithmVersion: 'pronunciation-reference-v3',
+        schemaVersion: 10,
+        algorithmVersion: 'pronunciation-reference-v4',
         deploymentVersion: 'deadbeef',
         word: 'car',
         dialect: 'en-US',
         defaultVariantId: variant.id,
+        formDefaults: { isolated: variant.id, connectedSpeech: variant.id },
         variants: [variant],
         ...overrides
     };
 }
 
-assert.equal(SCHEMA_VERSION, 9);
-assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v3');
+assert.equal(SCHEMA_VERSION, 10);
+assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v4');
+assert.ok(
+    validReference().formDefaults,
+    'form defaults are part of the required reference contract'
+);
 assert.equal(
     buildReferenceCacheKey(' Car '),
-    'pronunciation-reference-v3|9|en-US|car'
+    'pronunciation-reference-v4|10|en-US|car'
 );
 
 const reference = validateReferenceV2(validReference(), { expectedWord: 'car' });
@@ -181,6 +189,25 @@ assert.throws(
         variants: [conflicted]
     })),
     /fail closed/i
+);
+const nonExact = validVariant({
+    id: 'fedcba9876543210',
+    source: {
+        ...validVariant().source,
+        entryId: 'automobile:1',
+        exactMatch: false
+    }
+});
+assert.throws(
+    () => validateReferenceV2(validReference({
+        defaultVariantId: validVariant().id,
+        formDefaults: {
+            isolated: validVariant().id,
+            connectedSpeech: nonExact.id
+        },
+        variants: [validVariant(), nonExact]
+    })),
+    /form default must be valid/i
 );
 
 const variant = validVariant();

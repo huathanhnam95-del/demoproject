@@ -9,20 +9,21 @@
   const OBVIOUS_WORD_PATTERN = /^[a-z]+(?:['-][a-z]+)*$/i;
   const ORTHOGRAPHIC_FALLBACK_BLOCKLIST = new Set(['hour']);
   const AMBIGUOUS_FINAL_SPELLING_PATTERNS = [/mb$/i, /bt$/i, /mn$/i, /gue$/i, /que$/i];
-  const REDUCED_WORD_HINTS = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'for', 'can', 'have', 'has', 'was', 'were']);
+  const REDUCED_WORD_HINTS = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'for', 'can', 'have', 'has', 'was', 'were', 'from']);
   const REDUCED_WORD_GUIDE_COPY = {
-    a: { spokenAs: 'uh', explanation: 'Make it short and light unless you want to stress it.' },
-    an: { spokenAs: 'uhn', explanation: 'Keep the vowel weak and move quickly into the next word.' },
-    the: { spokenAs: 'thuh', explanation: 'Use a light vowel in fast speech unless you are emphasizing it.' },
-    to: { spokenAs: 'tuh', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
-    of: { spokenAs: 'uhv', explanation: 'Reduce the vowel and keep it quick; some speakers make it almost just v.' },
-    and: { spokenAs: 'uhn', explanation: 'Lighten the vowel so it sounds quicker and less stressed.' },
-    for: { spokenAs: 'fer', explanation: 'Use a lighter vowel and do not hold the word too long.' },
-    can: { spokenAs: "k'n", explanation: 'Keep it light when it is not being emphasized.' },
-    have: { spokenAs: 'uhv', explanation: 'Shorten the vowel and let it stay unstressed.' },
-    has: { spokenAs: 'huz', explanation: 'Reduce the vowel and keep the word light.' },
-    was: { spokenAs: 'wuz', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
-    were: { spokenAs: 'wer', explanation: 'Keep it short and unstressed in connected speech.' }
+    a: { strongAs: '/eɪ/', spokenAs: '/ə/', explanation: 'Use the weak form in connected speech unless you want to stress the article.' },
+    an: { strongAs: '/æn/', spokenAs: '/ən/', explanation: 'Keep the vowel weak and move quickly into the next word.' },
+    the: { strongAs: '/ði/', spokenAs: '/ðə/ or /ði/', explanation: 'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.' },
+    to: { strongAs: '/tu/', spokenAs: '/tə/', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
+    of: { strongAs: '/ʌv/', spokenAs: '/əv/ or /ə/', explanation: 'Reduce the vowel and keep it quick; the strong form is used for emphasis.' },
+    and: { strongAs: '/ænd/', spokenAs: '/ən/, /ənd/, /n/, /t/, or /d/', explanation: 'Lighten or omit sounds in unstressed connected speech; use the strong form for emphasis.' },
+    for: { strongAs: '/fɔr/', spokenAs: '/fər/', explanation: 'Use a lighter vowel and do not hold the word too long.' },
+    can: { strongAs: '/kæn/', spokenAs: '/kən/', explanation: 'Keep it light when it is not being emphasized.' },
+    have: { strongAs: '/hæv/', spokenAs: '/həv/, /əv/, or /v/', explanation: 'Shorten the vowel and let it stay unstressed.' },
+    has: { strongAs: '/hæz/', spokenAs: '/həz/, /əz/, or /z/', explanation: 'Reduce the vowel and keep the word light.' },
+    was: { strongAs: '/wʌz/', spokenAs: '/wəz/', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
+    were: { strongAs: '/wər/', spokenAs: '/wər/', explanation: 'Oxford American uses the same broad IPA; make the weak form shorter and unstressed.' },
+    from: { strongAs: '/frʌm/ or /frɑm/', spokenAs: '/frəm/', explanation: 'Use the weak vowel in unstressed connected speech.' }
   };
   const SOUND_CHANGE_GUIDE_COPY = {
     coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
@@ -347,7 +348,9 @@
         layer: 'weak_forms',
         label: annotation.display || annotation.word || normalized,
         badge: 'Reduced word',
+        strongAs: copy.strongAs,
         spokenAs: copy.spokenAs,
+        targetIpa: annotation.targetIpa || copy.spokenAs,
         explanation: copy.explanation
       });
     });
@@ -728,9 +731,13 @@
   }
 
   function getDefaultPhoneticLookup() {
-    if (typeof root === 'undefined' || !root.Phonetics || typeof root.Phonetics.getIPAWithSource !== 'function') {
+    if (typeof root === 'undefined' || !root.Phonetics) {
       return null;
     }
+    if (typeof root.Phonetics.getPronunciations === 'function') {
+      return (word) => root.Phonetics.getPronunciations(word);
+    }
+    if (typeof root.Phonetics.getIPAWithSource !== 'function') return null;
     return (word) => root.Phonetics.getIPAWithSource(word);
   }
 
@@ -778,6 +785,11 @@
 
       const profile = wordProfiles.get(token.id);
       if (profile?.ambiguous) return;
+      const nextProfile = wordProfiles.get(nextWordBoundary.nextWord.id);
+      const nextSound = nextProfile?.initialSoundClass === 'vowel' ? 'vowel' : 'consonant';
+      const weakForm = (profile?.pronunciationForms || []).find((form) => (
+        form.formRole === 'weak' && (!form.condition?.nextSound || form.condition.nextSound === nextSound)
+      ));
 
       annotations.push({
         id: `token-${token.id}`,
@@ -789,6 +801,15 @@
         category: 'reduced_word',
         subtype: normalized,
         confidence: 'medium',
+        targetFormRole: 'weak',
+        targetFormId: weakForm?.id || null,
+        targetIpa: weakForm?.ipa || null,
+        acceptedFormIds: Array.from(new Set((profile?.pronunciationForms || [])
+          .filter((form) => form?.id && ['strong', 'weak', 'citation'].includes(form.formRole))
+          .map((form) => form.id))),
+        acceptedIpa: Array.from(new Set((profile?.pronunciationForms || [])
+          .filter((form) => form?.ipa && ['strong', 'weak', 'citation'].includes(form.formRole))
+          .map((form) => form.ipa))),
         legendLabel: `Reduced word: ${token.display || token.raw || normalized}`,
         explanationKey: `weak_form_${normalized}`
       });

@@ -374,7 +374,8 @@ function buildPronunciationAssessmentHeader(referenceText) {
     GradingSystem: 'HundredMark',
     Granularity: 'Phoneme',
     PhonemeAlphabet: 'IPA',
-    EnableMiscue: true
+    EnableMiscue: true,
+    NBestPhonemeCount: 5
   };
   return Buffer.from(JSON.stringify(config)).toString('base64');
 }

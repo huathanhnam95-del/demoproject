@@ -11,11 +11,12 @@
     "word",
     "dialect",
     "defaultVariantId",
+    "formDefaults",
     "variants"
   ],
   "properties": {
-    "schemaVersion": { "const": 9 },
-    "algorithmVersion": { "const": "pronunciation-reference-v3" },
+    "schemaVersion": { "const": 10 },
+    "algorithmVersion": { "const": "pronunciation-reference-v4" },
     "deploymentVersion": { "type": "string", "minLength": 1 },
     "word": { "type": "string", "minLength": 1 },
     "dialect": { "const": "en-US" },
@@ -24,6 +25,25 @@
         { "type": "string", "pattern": "^[0-9a-f]{16}$" },
         { "type": "null" }
       ]
+    },
+    "formDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["isolated", "connectedSpeech"],
+      "properties": {
+        "isolated": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+            { "type": "null" }
+          ]
+        },
+        "connectedSpeech": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+            { "type": "null" }
+          ]
+        }
+      }
     },
     "variants": {
       "type": "array",
@@ -48,6 +68,9 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "formRole",
+        "usage",
+        "conditions",
         "partOfSpeech",
         "definition",
         "source",
@@ -63,6 +86,17 @@
       ],
       "properties": {
         "id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "formRole": { "enum": ["citation", "strong", "weak"] },
+        "usage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["isolated", "connectedSpeech"],
+          "properties": {
+            "isolated": { "enum": ["preferred", "accepted"] },
+            "connectedSpeech": { "enum": ["preferred", "accepted"] }
+          }
+        },
+        "conditions": { "type": "object", "additionalProperties": true },
         "partOfSpeech": { "type": ["string", "null"] },
         "definition": { "type": ["string", "null"] },
         "source": {

@@ -1,14 +1,14 @@
 /* classroom.css */
 
 :root {
-    --crm-primary: #1b8a4f;
+    --crm-primary: #157a3b;
     --crm-primary-dark: #126338;
     --crm-bg: #f8fbfa;
     --crm-panel-bg: #ffffff;
     --crm-text: #2d3748;
-    --crm-text-muted: #718096;
+    --crm-text-muted: #4a5568;
     --crm-border: #edf2f7;
-    --accent-missing: #e53e3e;
+    --accent-missing: #c53030;
     --accent-done: #38a169;
 }
 
@@ -385,7 +385,8 @@ body {
 }
 
 .submit-btn:disabled {
-    background: #cbd5e0;
+    background: #e2e8f0;
+    color: #64748b;
     cursor: not-allowed;
 }
 

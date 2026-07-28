@@ -40,6 +40,7 @@ class IndependentSyllabifier:
     # fmt: off
     VOWEL_NUCLEI: set[str] = {
         "a", "e", "i", "o", "u",
+        "aː", "eː", "iː", "oː", "uː", "ɑː", "ɔː", "ɜː",
         "æ", "ɑ", "ɒ", "ɔ", "ə",
         "ɛ", "ɜ", "ɪ", "ʊ", "ʌ",
         "ɐ", "ɤ", "ɨ", "ʉ",
@@ -52,13 +53,13 @@ class IndependentSyllabifier:
 
     RHOTIC_VOWELS: set[str] = {
         "ɑɹ", "ɔɹ", "ɛɹ", "ɪɹ", "ʊɹ",
-        "ɝ", "ɚ",
+        "ɝ", "ɚ", "ɔːɹ",
     }
 
     SYLLABIC_CONSONANTS: set[str] = {
         "l̩", "m̩", "n̩", "ŋ̩",
         # Simplified / alternate representations
-        "ɫ",
+        "ɫ", "əl", "ə5", "ᵻ",
     }
 
     CONSONANTS: set[str] = {

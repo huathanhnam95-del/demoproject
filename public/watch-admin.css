@@ -5,12 +5,12 @@
 :root {
     --admin-bg: #f4f4f6;
     --admin-surface: #ffffff;
-    --admin-primary: #8b5cf6;
-    --admin-primary-dark: #7c3aed;
-    --admin-danger: #ef4444;
-    --admin-success: #10b981;
+    --admin-primary: #7c3aed;
+    --admin-primary-dark: #6d28d9;
+    --admin-danger: #dc2626;
+    --admin-success: #059669;
     --admin-text: #1f2937;
-    --admin-text-muted: #6b7280;
+    --admin-text-muted: #4b5563;
     --admin-border: #e5e7eb;
     --admin-shadow: rgba(0, 0, 0, 0.08);
 }

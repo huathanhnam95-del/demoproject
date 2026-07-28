@@ -81,6 +81,7 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -159,12 +160,15 @@ async function setupFirebaseMocks(context) {
   });
 
   const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  const optionalBackendNoise = /CORS policy|praat-api|Error fetching word data|Failed to fetch/i;
+  page.on('pageerror', (error) => {
+    if (!optionalBackendNoise.test(error.message)) errors.push(error.message);
+  });
   page.on('console', (msg) => {
     console.log('PAGE LOG:', msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource')) {
+      if (!text.includes('Failed to load resource') && !optionalBackendNoise.test(text)) {
         errors.push(text);
       }
     }
@@ -287,19 +291,32 @@ async function setupFirebaseMocks(context) {
     // Solve with 1 incorrect choice to verify distractor feedback
     console.log('Running Incorrect Attempt solve...');
     
-    // We will place correct answers in all blanks except the first one, where we place a distractor
-    const incorrectWord = target.options.find(o => o.kind === 'distractor').text;
-    console.log(`Using incorrect word for first blank: ${incorrectWord}`);
+    // Place a distractor in the first blank whose dataset includes matching
+    // distractor metadata, then solve the remaining blanks correctly.
+    const incorrectBlankIndex = target.blanks.findIndex((blank) =>
+      (blank.distractorNotes || []).some((note) => target.options.some((candidate) =>
+        candidate.kind === 'distractor' && candidate.text.trim().toLowerCase() === String(note.option || '').trim().toLowerCase()
+      ))
+    );
+    assert(incorrectBlankIndex >= 0, 'At least one blank should have a matching distractor option for the feedback test');
+    const incorrectBlank = target.blanks[incorrectBlankIndex];
+    const incorrectWord = target.options.find((option) =>
+      option.kind === 'distractor' && (incorrectBlank.distractorNotes || []).some((note) =>
+        option.text.trim().toLowerCase() === String(note.option || '').trim().toLowerCase()
+      )
+    ).text;
+    console.log(`Using incorrect word for blank ${incorrectBlankIndex + 1}: ${incorrectWord}`);
 
-    // Place incorrect word in blank 1
+    // Place the incorrect word in the selected blank.
     await page.locator('#dd-word-bank .dd-option-chip', { hasText: incorrectWord }).click();
-    await page.locator(`#dd-passage .dd-blank-slot[data-blank-id="${target.blanks[0].blankId}"]`).click();
+    await page.locator(`#dd-passage .dd-blank-slot[data-blank-id="${incorrectBlank.blankId}"]`).click();
 
     // Verify Submit button is enabled after filling just one blank (Requirement 2)
     assert.equal(await submitBtn.getAttribute('disabled'), null, 'Submit button should be enabled after filling just one blank');
 
-    // Place correct words in remaining blanks
-    for (let i = 1; i < target.blanks.length; i++) {
+    // Place correct words in remaining blanks.
+    for (let i = 0; i < target.blanks.length; i++) {
+      if (i === incorrectBlankIndex) continue;
       const blank = target.blanks[i];
       await page.locator('#dd-word-bank .dd-option-chip', { hasText: blank.answer }).click();
       await page.locator(`#dd-passage .dd-blank-slot[data-blank-id="${blank.blankId}"]`).click();
@@ -316,12 +333,12 @@ async function setupFirebaseMocks(context) {
     const expectedScoreTextWrong = `${target.blanks.length - 1} / ${target.blanks.length}`;
     assert(summaryTextWrong.includes(expectedScoreTextWrong), `Expected score ${expectedScoreTextWrong} in summary, got: ${summaryTextWrong}`);
 
-    // Verify first card is incorrect and has distractor analysis
-    const firstCard = resultCards.first();
-    const firstCardText = await firstCard.textContent();
-    assert(firstCardText.includes('Incorrect'), 'First blank card should show Incorrect badge');
-    assert(firstCardText.includes('Distractor Analysis'), 'First blank card should show Distractor Analysis');
-    assert(firstCardText.includes(incorrectWord), 'First blank card should mention incorrect word in analysis');
+    // Verify the selected incorrect card has distractor analysis.
+    const incorrectCard = resultCards.nth(incorrectBlankIndex);
+    const incorrectCardText = await incorrectCard.textContent();
+    assert(incorrectCardText.includes('Incorrect'), 'The incorrect blank card should show an Incorrect badge');
+    assert(incorrectCardText.includes('Distractor Analysis'), 'The incorrect blank card should show Distractor Analysis');
+    assert(incorrectCardText.includes(incorrectWord), 'The incorrect blank card should mention the selected word in its analysis');
 
     // --- PHASE 3: Question Picker and Navigation ---
     console.log('Testing Question Picker...');

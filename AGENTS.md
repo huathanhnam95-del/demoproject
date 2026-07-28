@@ -41,7 +41,11 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 
 ## Implementation Plan Approval Rule
 
-- **Do not auto-proceed with implementation plan**: Whenever creating or updating `implementation_plan.md`, always set `RequestFeedback: true` in `ArtifactMetadata` and **STOP calling tools immediately**. Do not perform any code edits or execution steps until the user explicitly approves the plan.
+- **Do not auto-proceed with implementation plan**:
+  1. Whenever creating or updating `implementation_plan.md`, set `RequestFeedback: true` in `ArtifactMetadata`.
+  2. Modifying `implementation_plan.md` **MUST BE THE ONLY AND LAST TOOL CALL IN YOUR RESPONSE TURN**.
+  3. You are **EXPLICITLY FORBIDDEN** from combining `implementation_plan.md` edits with any subsequent tool calls (such as `invoke_subagent`, `run_command`, code edits, etc.) in the same response turn.
+  4. After writing `implementation_plan.md`, you MUST **STOP calling tools immediately** and yield control to the user. Do not launch subagents, edit files, or execute commands until the user explicitly approves the plan.
 
 ## UI Design Rules
 

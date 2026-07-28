@@ -51,11 +51,12 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         return build_pronunciation_variant(**values)
 
     def test_schema_freezes_public_versions_and_conflict_codes(self):
-        self.assertEqual(self.schema["properties"]["schemaVersion"]["const"], 9)
+        self.assertEqual(self.schema["properties"]["schemaVersion"]["const"], 10)
         self.assertEqual(
             self.schema["properties"]["algorithmVersion"]["const"],
-            "pronunciation-reference-v3",
+            "pronunciation-reference-v4",
         )
+        self.assertIn("formDefaults", self.schema["required"])
         conflict_codes = set(
             self.schema["$defs"]["variant"]["properties"]["validation"]
             ["properties"]["conflicts"]["items"]["enum"]
@@ -227,6 +228,41 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertEqual(len(reference["variants"]), 2)
         self.assertEqual(validate_reference_invariants(reference), [])
 
+    def test_reference_exposes_explicit_form_roles_and_context_defaults(self):
+        fixture = next(item for item in self.fixtures["valid"] if item["word"] == "car")
+        variant = self.build_fixture_variant(fixture)
+        reference = build_pronunciation_reference(
+            word="car",
+            variants=[variant],
+            deployment_version="deadbeef",
+        )
+        self.assertEqual(variant["formRole"], "citation")
+        self.assertEqual(variant["usage"]["isolated"], "preferred")
+        self.assertEqual(variant["usage"]["connectedSpeech"], "accepted")
+        self.assertEqual(reference["formDefaults"]["isolated"], variant["id"])
+        self.assertEqual(reference["formDefaults"]["connectedSpeech"], variant["id"])
+
+    def test_reference_selects_context_preferred_form_defaults(self):
+        fixture = next(item for item in self.fixtures["valid"] if item["word"] == "car")
+        strong = self.build_fixture_variant(
+            fixture,
+            form_role="strong",
+            usage={"isolated": "preferred", "connectedSpeech": "accepted"},
+        )
+        weak = self.build_fixture_variant(
+            fixture,
+            raw_ipa="kər",
+            form_role="weak",
+            usage={"isolated": "accepted", "connectedSpeech": "preferred"},
+        )
+        reference = build_pronunciation_reference(
+            word="car",
+            variants=[strong, weak],
+            deployment_version="deadbeef",
+        )
+        self.assertEqual(reference["formDefaults"]["isolated"], strong["id"])
+        self.assertEqual(reference["formDefaults"]["connectedSpeech"], weak["id"])
+
     def test_cross_field_invariant_validator_rejects_mixed_data(self):
         fixture = next(item for item in self.fixtures["valid"] if item["word"] == "import")
         variant = self.build_fixture_variant(fixture)
@@ -242,6 +278,23 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertIn("SYLLABLE_LENGTH_MISMATCH", errors)
         self.assertIn("PRIMARY_STRESS_OUT_OF_RANGE", errors)
         self.assertIn("SECONDARY_STRESS_OUT_OF_RANGE", errors)
+
+    def test_form_defaults_must_select_valid_exact_variants(self):
+        fixture = next(item for item in self.fixtures["valid"] if item["word"] == "car")
+        valid = self.build_fixture_variant(fixture)
+        conflicted = self.build_fixture_variant(
+            fixture,
+            entry_id="automobile",
+            exact_match=False,
+            audio_filename="automobile.mp3",
+        )
+        reference = build_pronunciation_reference(
+            word="car",
+            variants=[valid, conflicted],
+            deployment_version="deadbeef",
+        )
+        reference["formDefaults"]["connectedSpeech"] = conflicted["id"]
+        self.assertIn("FORM_DEFAULT_INVALID", validate_reference_invariants(reference))
 
 
 if __name__ == "__main__":

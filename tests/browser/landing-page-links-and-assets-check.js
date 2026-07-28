@@ -1,5 +1,32 @@
 const { chromium } = require('playwright');
 
+const BASE_URL = process.env.BROWSER_BASE_URL || 'https://localhost:8443';
+
+async function assertLandingIntegrity(page, label) {
+  const integrity = await page.evaluate(async () => {
+    const invalidInlineStyles = [...document.querySelectorAll('[style]')]
+      .map((element) => element.getAttribute('style') || '')
+      .filter((style) => /\s-webkit-\s*$/.test(style));
+    const cssResponse = await fetch('../landing.css');
+    const cssText = await cssResponse.text();
+    return {
+      invalidInlineStyles,
+      cssStatus: cssResponse.status,
+      hasNullByte: cssText.includes('\u0000')
+    };
+  });
+
+  if (integrity.cssStatus !== 200) {
+    throw new Error(`${label} landing.css returned HTTP ${integrity.cssStatus}`);
+  }
+  if (integrity.invalidInlineStyles.length) {
+    throw new Error(`${label} contains an invalid inline vendor declaration`);
+  }
+  if (integrity.hasNullByte) {
+    throw new Error(`${label} landing.css contains a NUL byte`);
+  }
+}
+
 async function assertLinkHref(page, selector, expectedHref, label) {
   const locator = page.locator(selector).first();
   await locator.waitFor({ state: 'visible', timeout: 3000 });
@@ -30,10 +57,13 @@ async function assertImagesLoad(page, selector, label) {
 }
 
 async function runEnglishChecks(browser) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1024 } });
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    viewport: { width: 1440, height: 1024 }
+  });
   const page = await context.newPage();
 
-  await page.goto('http://127.0.0.1:4173/landing/en/index.html', { waitUntil: 'networkidle' });
+  await page.goto(`${BASE_URL}/landing/en/index.html`, { waitUntil: 'networkidle' });
 
   await assertLinkHref(page, '.nav-cta', '../../index.html?demo=1', 'English nav CTA');
   await assertLinkHref(page, '.hero .btn.btn-primary', '../../index.html?demo=1', 'English hero CTA');
@@ -45,21 +75,26 @@ async function runEnglishChecks(browser) {
   await assertImagesLoad(page, '.demo-visual img', 'English demo visual');
   await assertImagesLoad(page, '.step-visual img', 'English step visuals');
   await assertImagesLoad(page, '.rd-icon-img', 'English roadmap icons');
+  await assertLandingIntegrity(page, 'English');
 
   await context.close();
 }
 
 async function runVietnameseChecks(browser) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1024 } });
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    viewport: { width: 1440, height: 1024 }
+  });
   const page = await context.newPage();
 
-  await page.goto('http://127.0.0.1:4173/landing/vi/index.html', { waitUntil: 'networkidle' });
+  await page.goto(`${BASE_URL}/landing/vi/index.html`, { waitUntil: 'networkidle' });
 
   await assertLinkHref(page, '.nav-cta', '../../index.html?demo=1', 'Vietnamese nav CTA');
   await assertLinkHref(page, '.hero .btn.btn-primary', '../../index.html?demo=1', 'Vietnamese hero CTA');
   await assertLinkHref(page, '.demo-info .btn.btn-primary', '../../index.html?demo=1', 'Vietnamese demo CTA');
   await assertLinkHref(page, '.journey-footer .btn.btn-primary', '../../index.html?demo=1', 'Vietnamese journey CTA');
   await assertLinkHref(page, '.final-cta .btn.btn-white', '../../index.html?demo=1', 'Vietnamese final CTA');
+  await assertLandingIntegrity(page, 'Vietnamese');
 
   await context.close();
 }

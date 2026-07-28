@@ -175,14 +175,36 @@ const Phonetics = (function () {
     /**
      * Normalize IPA to Oxford/Cambridge Dictionary format:
      * - Replaces rhotic vowels (ɝ, ɚ) with 'ər'
-     * - Replaces turned-r (ɹ) with 'r'
+     * - Replaces turned-r (ɹ) with 'r' and dialect flap-t (ɾ)/glottal stops (ʔ) with 't'
+     * - Fixes split-stress placement on onset consonant clusters (e.g. /əˈkjuz/, /əˈbjus/, /əˈkwaɪər/)
+     * - Restores unreduced caret vowel /ʌ/ before consonant clusters (-duct, -struct, -rupt, -sult, -dult, -sump, -funci)
      * - Cleans up multiple slashes or misplaced stress marks
      */
     function normalizeIPA(ipa) {
         if (!ipa || typeof ipa !== 'string') return '';
         let cleaned = ipa
+            // 1. Split-stress onset cluster fix (/əkˈjuz/ -> /əˈkjuz/, /əbˈjus/ -> /əˈbjus/)
+            .replace(/([əɪeaouæɑɔʊi])([kptgbdfvsz])ˈ([jwrl])/g, '$1ˈ$2$3')
+            .replace(/([əɪeaouæɑɔʊi])([kptgbdfvsz])ˌ([jwrl])/g, '$1ˌ$2$3')
+            
+            // 2. Caret vowel /ʌ/ restoration for short 'u' before clusters & prefixes
+            .replace(/dəkt/g, 'dʌkt')
+            .replace(/strək/g, 'strʌk')
+            .replace(/dəkʃ/g, 'dʌkʃ')
+            .replace(/rəpt/g, 'rʌpt')
+            .replace(/zəlt/g, 'zʌlt')
+            .replace(/səlt/g, 'sʌlt')
+            .replace(/dəlt/g, 'dʌlt')
+            .replace(/səmp/g, 'sʌmp')
+            .replace(/fəŋk/g, 'fʌŋk')
+            .replace(/^səb([ˈˌa-z])/g, 'sʌb$1')
+            .replace(/^ən([ˈˌ])/g, 'ʌn$1')
+
+            // 3. Rhotic & dialect symbol normalization
             .replace(/[ɝɚ]/g, 'ər')
             .replace(/ɹ/g, 'r')
+            .replace(/ɾ/g, 't')
+            .replace(/ʔ/g, 't')
             .replace(/\/+/g, '/')
             .trim();
         return cleaned;

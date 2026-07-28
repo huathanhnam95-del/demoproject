@@ -52,6 +52,32 @@ function normalizeLeadStage(value, fallback = 'new') {
     return normalized;
 }
 
+function normalizeLearningProfile(input, fallback = {}) {
+    const source = input && typeof input === 'object' ? input : {};
+    const base = fallback && typeof fallback === 'object' ? fallback : {};
+
+    return {
+        overall: Object.prototype.hasOwnProperty.call(source, 'overall') ? cleanOptionalNumber(source.overall) : (base.overall ?? null),
+        listening: Object.prototype.hasOwnProperty.call(source, 'listening') ? cleanOptionalNumber(source.listening) : (base.listening ?? null),
+        reading: Object.prototype.hasOwnProperty.call(source, 'reading') ? cleanOptionalNumber(source.reading) : (base.reading ?? null),
+        speaking: Object.prototype.hasOwnProperty.call(source, 'speaking') ? cleanOptionalNumber(source.speaking) : (base.speaking ?? null),
+        writing: Object.prototype.hasOwnProperty.call(source, 'writing') ? cleanOptionalNumber(source.writing) : (base.writing ?? null),
+        entryLevel: Object.prototype.hasOwnProperty.call(source, 'entryLevel') ? cleanOptionalString(source.entryLevel) : (base.entryLevel ?? null),
+        testResultDueDate: Object.prototype.hasOwnProperty.call(source, 'testResultDueDate') ? cleanOptionalString(source.testResultDueDate) : (base.testResultDueDate ?? null),
+        visaType: Object.prototype.hasOwnProperty.call(source, 'visaType') ? cleanOptionalString(source.visaType) : (base.visaType ?? null),
+        targetLevel: Object.prototype.hasOwnProperty.call(source, 'targetLevel') ? cleanOptionalString(source.targetLevel) : (base.targetLevel ?? null)
+    };
+}
+
+function normalizeTargets(input, fallback = {}) {
+    const source = input && typeof input === 'object' ? input : {};
+    const base = fallback && typeof fallback === 'object' ? fallback : {};
+    return {
+        exam: Object.prototype.hasOwnProperty.call(source, 'exam') ? cleanOptionalString(source.exam) : (base.exam ?? null),
+        score: Object.prototype.hasOwnProperty.call(source, 'score') ? cleanOptionalNumber(source.score) : (base.score ?? null)
+    };
+}
+
 function normalizeLeadCore(input, fallback = {}) {
     const source = input && typeof input === 'object' ? input : {};
     const base = fallback && typeof fallback === 'object' ? fallback : {};
@@ -121,7 +147,9 @@ function normalizeLeadCore(input, fallback = {}) {
         lastContactAt: Object.prototype.hasOwnProperty.call(source, 'lastContactAt') ? cleanOptionalString(source.lastContactAt) : (base.lastContactAt ?? null),
         lossReason: Object.prototype.hasOwnProperty.call(source, 'lossReason') ? cleanOptionalString(source.lossReason) : (base.lossReason ?? null),
         notes: Object.prototype.hasOwnProperty.call(source, 'notes') ? cleanOptionalString(source.notes) : (base.notes ?? null),
-        studentId: Object.prototype.hasOwnProperty.call(source, 'studentId') ? cleanOptionalString(source.studentId) : (base.studentId ?? null)
+        studentId: Object.prototype.hasOwnProperty.call(source, 'studentId') ? cleanOptionalString(source.studentId) : (base.studentId ?? null),
+        learningProfile: normalizeLearningProfile(source.learningProfile, base.learningProfile),
+        targets: normalizeTargets(source.targets, base.targets)
     };
 }
 
@@ -158,11 +186,11 @@ function buildLeadPatchData(existing, input, context = {}) {
     const patch = normalizeLeadCore(input, existing);
     const recognized = [
         'name', 'label', 'phone', 'email', 'zalo', 'facebook',
-        'facebookDisplayName', 'facebookProfileUrl', 'realName', 'dateOfBirth',
+        'facebookDisplayName', 'facebookProfileUrl', 'facebookPersonalOwner', 'realName', 'dateOfBirth',
         'learningNeeds', 'preferredLearningDays', 'preferredLearningHours',
         'messengerThreadUrl', 'messengerLastContactAt', 'messengerStatus', 'source', 'agentSourceId',
         'ownerUid', 'stage', 'probability', 'nextActionAt', 'lastContactAt',
-        'lossReason', 'notes', 'studentId'
+        'lossReason', 'notes', 'studentId', 'learningProfile', 'targets'
     ].some((key) => Object.prototype.hasOwnProperty.call(input || {}, key));
     if (!recognized) {
         throw new Error('No lead fields provided for update.');
@@ -222,14 +250,16 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         phone: lead.phone,
         email: lead.email,
         zalo: lead.zalo,
-        facebook: studentFacebookName,
         facebookProfileUrl: studentFacebookProfileUrl,
+        facebookPersonalOwner: lead.facebookPersonalOwner || null,
         crmId: cleanOptionalString(lead.crmId) || cleanOptionalString(context.crmId) || null,
         ownerUid: lead.ownerUid || context.user?.uid || null,
         acquisitionSource: lead.source || null,
         agentSourceId: lead.agentSourceId || null,
         leadId,
         lifecycleStage: studentLifecycleStage,
+        learningProfile: lead.learningProfile || null,
+        targets: lead.targets || null,
         notes: joinNonEmpty([lead.notes, notes]),
         preferredSchedule,
         preferredLearningDays: cleanOptionalArray(lead.preferredLearningDays),

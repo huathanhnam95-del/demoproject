@@ -705,7 +705,7 @@ async function main() {
 
     await page.click('.btn-convert-lead[data-lead-id="lead-1"]');
     await page.waitForSelector('#crm-student-modal', { state: 'visible' });
-    await page.waitForFunction(() => document.getElementById('student-name')?.value === 'Lead One');
+    await page.waitForFunction(() => (document.getElementById('lead-name') || document.getElementById('student-name'))?.value === 'Lead One');
     await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
     await page.waitForFunction(() => /submitted/i.test(document.getElementById('entrance-tests-list')?.textContent || ''));
 

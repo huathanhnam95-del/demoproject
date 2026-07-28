@@ -1,8 +1,8 @@
 {
   "total": 279,
-  "found": 278,
-  "not_found": 1,
-  "errors": 0,
-  "match_rate": 100.0,
+  "found": 0,
+  "not_found": 0,
+  "errors": 279,
+  "match_rate": 0,
   "mismatches": []
 }

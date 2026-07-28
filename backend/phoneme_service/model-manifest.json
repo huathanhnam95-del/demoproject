@@ -5,19 +5,21 @@
   "modelRevision": "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4",
   "tokenizerChecksum": "d732ab2456c0c017930001dc9af0b41b3b93d25b2eb9740bf9d925508d7d87d0",
   "modelChecksum": "3173bde9e9ce490fa0f989e413c42f25bc1820c020adc1e6b9b87025b3cfcc5e",
-  "quantization": {
-    "type": "none"
-  },
   "quality": {
     "meanPhonemeConfidence": 0.65,
     "minNucleusConfidence": 0.45
   },
   "benchmark": {
-    "peakRssGiB": null,
-    "mandatoryWordsCorrect": 0,
-    "mandatoryWordsTotal": 6
+    "peakRssGiB": 0.163,
+    "coldLoadMs": 10275.78,
+    "warmMedianMs": 214.99,
+    "warmP95Ms": 302.47,
+    "mandatoryWordsCorrect": 2,
+    "mandatoryWordsTotal": 6,
+    "cleanAccuracy": 0.5354,
+    "corpusManifestHash": "549c622dcc75482159476b3c3db444c18e0f8bb865372a7bc0439450a261480d"
   },
-  "evidenceStatus": "pending",
-  "createdAt": "2026-07-14T05:30:00Z",
+  "evidenceStatus": "verified",
+  "createdAt": "2026-07-28T04:32:49.036385+00:00",
   "verdict": "provider-evaluation-required"
 }

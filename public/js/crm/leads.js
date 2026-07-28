@@ -31,17 +31,29 @@ window.CrmLeads = (function () {
     }
 
     function buildPayload(elements) {
-        const facebook = getValue(elements.inputLeadFacebook || elements.inputLeadFacebookDisplayName);
+        const facebook = getValue(elements.inputLeadFacebook || elements.inputLeadFacebookDisplayName || elements.inputStudentFacebook);
+        const name = getValue(elements.inputLeadName || elements.inputStudentName);
+        const label = getValue(elements.inputLeadLabel || elements.inputStudentLabel);
+        const email = getValue(elements.inputLeadEmail || elements.inputStudentEmail);
+        const phone = getValue(elements.inputLeadPhone || elements.inputStudentPhone);
+        const zalo = getValue(elements.inputLeadZalo || elements.inputStudentZalo);
+        const facebookProfileUrl = getValue(elements.inputLeadFacebookProfileUrl || elements.inputStudentFacebookProfileUrl);
+        const facebookPersonalOwner = getValue(elements.inputLeadFacebookPersonalOwner || elements.inputStudentFacebookPersonalOwner);
+        const source = getValue(elements.inputLeadSource || elements.inputStudentAcquisitionSource);
+        const agentSourceId = getValue(elements.inputLeadAgentSource || elements.inputStudentAgentSource);
+        const stage = getValue(elements.inputLeadStage || elements.inputStudentStage) || 'new';
+        const probability = getNumberValue(elements.inputLeadProbability || elements.inputStudentProbability);
+
         return {
-            name: getValue(elements.inputLeadName),
-            label: getValue(elements.inputLeadLabel),
-            email: getValue(elements.inputLeadEmail),
-            phone: getValue(elements.inputLeadPhone),
-            zalo: getValue(elements.inputLeadZalo),
+            name,
+            label,
+            email,
+            phone,
+            zalo,
             facebook: facebook || null,
             facebookDisplayName: facebook || null,
-            facebookProfileUrl: getValue(elements.inputLeadFacebookProfileUrl) || null,
-            facebookPersonalOwner: getValue(elements.inputLeadFacebookPersonalOwner) || null,
+            facebookProfileUrl: facebookProfileUrl || null,
+            facebookPersonalOwner: facebookPersonalOwner || null,
             realName: getValue(elements.inputLeadRealName) || null,
             dateOfBirth: getValue(elements.inputLeadDateOfBirth) || null,
             learningNeeds: getValue(elements.inputLeadLearningNeeds) || null,
@@ -50,11 +62,71 @@ window.CrmLeads = (function () {
             messengerThreadUrl: getValue(elements.inputLeadMessengerThreadUrl) || null,
             messengerLastContactAt: getValue(elements.inputLeadMessengerLastContactAt) || null,
             messengerStatus: getValue(elements.inputLeadMessengerStatus) || null,
-            source: getValue(elements.inputLeadSource),
-            agentSourceId: getValue(elements.inputLeadAgentSource),
-            stage: getValue(elements.inputLeadStage) || 'new',
-            probability: getNumberValue(elements.inputLeadProbability)
+            source,
+            agentSourceId,
+            stage,
+            probability,
+            learningProfile: {
+                overall: getNumberValue(elements.inputScoreOverall),
+                listening: getNumberValue(elements.inputScoreListening),
+                reading: getNumberValue(elements.inputScoreReading),
+                speaking: getNumberValue(elements.inputScoreSpeaking),
+                writing: getNumberValue(elements.inputScoreWriting),
+                entryLevel: getValue(elements.inputStudentLevel),
+                testResultDueDate: getValue(elements.inputStudentDueDate),
+                visaType: getValue(elements.inputVisaType),
+                targetLevel: getValue(elements.inputTargetLevel)
+            },
+            targets: {
+                exam: getValue(elements.inputTargetExam),
+                score: getNumberValue(elements.inputTargetScore)
+            }
         };
+    }
+
+    function applyToForm(elements, lead) {
+        const learning = lead?.learningProfile || {};
+        const targets = lead?.targets || {};
+        const targetInputName = elements.inputLeadName || elements.inputStudentName;
+        const targetInputLabel = elements.inputLeadLabel || elements.inputStudentLabel;
+        const targetInputPhone = elements.inputLeadPhone || elements.inputStudentPhone;
+        const targetInputEmail = elements.inputLeadEmail || elements.inputStudentEmail;
+        const targetInputZalo = elements.inputLeadZalo || elements.inputStudentZalo;
+        const targetInputFacebook = elements.inputLeadFacebook || elements.inputStudentFacebook;
+        const targetInputFacebookProfileUrl = elements.inputLeadFacebookProfileUrl || elements.inputStudentFacebookProfileUrl;
+        const targetInputFacebookPersonalOwner = elements.inputLeadFacebookPersonalOwner || elements.inputStudentFacebookPersonalOwner;
+        const targetInputSource = elements.inputLeadSource || elements.inputStudentAcquisitionSource;
+        const targetInputAgentSource = elements.inputLeadAgentSource || elements.inputStudentAgentSource;
+        const targetInputStage = elements.inputLeadStage || elements.inputStudentStage;
+        const targetInputProbability = elements.inputLeadProbability || elements.inputStudentProbability;
+
+        if (targetInputName) targetInputName.value = String(lead?.name || '');
+        if (targetInputLabel) targetInputLabel.value = String(lead?.label || '');
+        if (targetInputPhone) targetInputPhone.value = String(lead?.phone || '');
+        if (targetInputEmail) targetInputEmail.value = String(lead?.email || '');
+        if (targetInputZalo) targetInputZalo.value = String(lead?.zalo || '');
+        if (targetInputFacebook) targetInputFacebook.value = String(lead?.facebook || '');
+        if (targetInputFacebookProfileUrl) targetInputFacebookProfileUrl.value = String(lead?.facebookProfileUrl || '');
+        if (targetInputFacebookPersonalOwner) targetInputFacebookPersonalOwner.value = String(lead?.facebookPersonalOwner || 'Nam');
+        if (targetInputSource) targetInputSource.value = String(lead?.source || 'Facebook - Personal');
+        if (targetInputAgentSource) targetInputAgentSource.value = String(lead?.agentSourceId || '');
+        if (targetInputStage) targetInputStage.value = String(lead?.stage || 'new');
+        if (targetInputProbability) targetInputProbability.value = lead?.probability ?? '';
+
+        if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
+        if (window.updateLeadSourceVisibility) window.updateLeadSourceVisibility();
+
+        if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';
+        if (elements.inputScoreListening) elements.inputScoreListening.value = learning.listening ?? '';
+        if (elements.inputScoreReading) elements.inputScoreReading.value = learning.reading ?? '';
+        if (elements.inputScoreSpeaking) elements.inputScoreSpeaking.value = learning.speaking ?? '';
+        if (elements.inputScoreWriting) elements.inputScoreWriting.value = learning.writing ?? '';
+        if (elements.inputStudentDueDate) elements.inputStudentDueDate.value = String(learning.testResultDueDate || '');
+        if (elements.inputStudentLevel) elements.inputStudentLevel.value = String(learning.entryLevel || '');
+        if (elements.inputVisaType) elements.inputVisaType.value = String(learning.visaType || '');
+        if (elements.inputTargetLevel) elements.inputTargetLevel.value = String(learning.targetLevel || '');
+        if (elements.inputTargetExam) elements.inputTargetExam.value = String(targets.exam || '');
+        if (elements.inputTargetScore) elements.inputTargetScore.value = targets.score ?? '';
     }
 
     function buildStudentPayloadFromLead(lead) {
@@ -87,9 +159,12 @@ window.CrmLeads = (function () {
             email: String(lead?.email || '').trim(),
             zalo: String(lead?.zalo || '').trim(),
             facebook,
+            facebookPersonalOwner: String(lead?.facebookPersonalOwner || 'Nam').trim(),
             acquisitionSource: String(lead?.source || '').trim(),
             agentSourceId: String(lead?.agentSourceId || '').trim(),
             lifecycleStage: 'potential',
+            learningProfile: lead?.learningProfile || null,
+            targets: lead?.targets || null,
             notes: notesParts.join(' | '),
             preferredSchedule: preferredScheduleParts.join(' | '),
             counselingNotes: counselingParts.join(' | ')
@@ -145,6 +220,7 @@ window.CrmLeads = (function () {
 
     return {
         STAGES,
+        applyToForm,
         buildPayload,
         buildStudentPayloadFromLead,
         formatStageLabel,

@@ -6,13 +6,14 @@
 /* Design Tokens */
 :root {
     /* Colors - Google AI Inspired */
-    --primary: #1a73e8;
+    --primary: #1557b0;
     --primary-dark: #1557b0;
     --primary-light: #e8f0fe;
-    --primary-gradient: linear-gradient(135deg, #1a73e8 0%, #6c47ff 100%);
+    --primary-gradient: linear-gradient(135deg, #1557b0 0%, #6c47ff 100%);
 
-    --secondary: #5f6368;
-    --success: #1e8e3e;
+    --secondary: #6c47ff;
+    --accent: #ff6b35;
+    --success: #137333;
     --warning: #f9ab00;
     --danger: #d93025;
 

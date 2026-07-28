@@ -58,33 +58,33 @@ async function runTest() {
     });
 
     // Verify Acquisition Source choices
-    const acquisitionOptions = await page.$$eval('#student-acquisition-source option', (els) => els.map((el) => el.value));
+    const acquisitionOptions = await page.$$eval('#lead-source option', (els) => els.map((el) => el.value));
     assert.deepStrictEqual(acquisitionOptions, ['Facebook - Personal', 'Facebook - Page', 'Zalo - Page'], 'Student acquisition source options mismatch');
 
     // Default source is Facebook - Personal
-    const isUrlVisiblePersonal = await page.$eval('#student-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    const isUrlVisiblePersonal = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isUrlVisiblePersonal, true, "Student's FB link field should be visible for Facebook - Personal");
 
-    const isOwnerVisiblePersonal = await page.$eval('#student-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    const isOwnerVisiblePersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isOwnerVisiblePersonal, true, "FB Personal Account dropdown should be visible for Facebook - Personal");
 
-    const ownerOptions = await page.$$eval('#student-facebook-personal-owner option', (els) => els.map((el) => el.value));
+    const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
     assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
 
     // Select Facebook - Page
-    await page.selectOption('#student-acquisition-source', 'Facebook - Page');
-    const isUrlVisiblePage = await page.$eval('#student-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    await page.selectOption('#lead-source', 'Facebook - Page');
+    const isUrlVisiblePage = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isUrlVisiblePage, true, "Student's FB link field should be visible for Facebook - Page");
 
-    const isOwnerVisiblePage = await page.$eval('#student-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
+    const isOwnerVisiblePage = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isOwnerVisiblePage, true, "FB Personal Account dropdown should be hidden for Facebook - Page");
 
     // Select Zalo - Page
-    await page.selectOption('#student-acquisition-source', 'Zalo - Page');
-    const isUrlVisibleZalo = await page.$eval('#student-facebook-profile-url-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
+    await page.selectOption('#lead-source', 'Zalo - Page');
+    const isUrlVisibleZalo = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isUrlVisibleZalo, true, "Student's FB link field should be hidden for Zalo - Page");
 
-    const isOwnerVisibleZalo = await page.$eval('#student-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
+    const isOwnerVisibleZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isOwnerVisibleZalo, true, "FB Personal Account dropdown should be hidden for Zalo - Page");
 
     console.log('✓ Student Management acquisition source, FB link, and FB Personal Account owner dropdown browser check PASSED');

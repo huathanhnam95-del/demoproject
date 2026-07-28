@@ -808,7 +808,7 @@ textarea.admin-input {
     opacity: 1;
 }
 
-.toast-info { border-left: 4px solid var(--admin-primary); }
-.toast-success { border-left: 4px solid var(--admin-success); }
-.toast-error { border-left: 4px solid var(--admin-danger); }
-.toast-warning { border-left: 4px solid #f59e0b; }
+.toast-info { border: 1px solid var(--admin-primary); background-color: rgba(26,115,232,0.05); }
+.toast-success { border: 1px solid var(--admin-success); background-color: rgba(16,185,129,0.05); }
+.toast-error { border: 1px solid var(--admin-danger); background-color: rgba(239,68,68,0.05); }
+.toast-warning { border: 1px solid #f59e0b; background-color: rgba(245,158,11,0.05); }

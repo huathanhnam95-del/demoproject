@@ -54,6 +54,10 @@ def clean_model_response(raw: str) -> str:
         match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", cleaned, re.DOTALL)
         if match:
             cleaned = match.group(1).strip()
+    if not cleaned.startswith("{") and not cleaned.startswith("["):
+        match = re.search(r"(\[.*\]|\{.*\})", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(1).strip()
     return cleaned
 
 

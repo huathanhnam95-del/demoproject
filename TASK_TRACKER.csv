@@ -662,3 +662,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar,In Progress,
 475,2026-07-27,Add Student FB link and Personal FB Owner dropdown to Student Management modal,Done,2026-07-27
 476,2026-07-27,Deploy release V1.8.40 to Firebase Hosting and Cloud Functions,Done,2026-07-27
+477,2026-07-27,Update adult family IPA transcriptions to use caret vowel /ʌ/ per Oxford dictionary,Done,2026-07-27
+478,2026-07-28,Run Impeccable slop audit on public frontend and plan DESIGN.md token system,Done,2026-07-28
+481,2026-07-28,Make New Lead open modal dialog with Test Result and Target Level fields,Done,2026-07-28
+
+479,2026-07-28,Execute remaining steps of Pronunciation V3 Rollout Execution Plan,Done,2026-07-28
+480,2026-07-28,Audit root cause of IPA discrepancies, examine similar dictionary cases, and apply Oxford-Cambridge normalization fixes,Done,2026-07-28
+482,2026-07-28,Deploy release V1.8.41 to Firebase Hosting and Cloud Functions,Done,2026-07-28
+

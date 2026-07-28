@@ -768,8 +768,8 @@
         font-style: italic;
         background: rgba(0, 0, 0, 0.02);
         padding: 12px 16px;
-        border-left: 3px solid #6366f1;
-        border-radius: 0 8px 8px 0;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 8px;
       }
       .pte-attempt-review-audio-player {
         width: 100%;
@@ -1130,7 +1130,7 @@
     if (adviceText) {
       adviceHtml = `
         <h4 class="pte-attempt-review-section-title">Teacher Advice</h4>
-        <div class="pte-attempt-review-text-block" style="white-space:pre-wrap;background:rgba(99,102,241,0.03);padding:14px 18px;border-radius:8px;border-left:3px solid #4f46e5;">${escapeHtml(adviceText)}</div>
+        <div class="pte-attempt-review-text-block" style="white-space:pre-wrap;background:rgba(99,102,241,0.03);padding:14px 18px;border-radius:8px;border:1px solid rgba(79,70,229,0.2);">${escapeHtml(adviceText)}</div>
       `;
     }
 

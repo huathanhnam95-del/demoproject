@@ -8,7 +8,7 @@ import json
 
 BASE_URL = "http://127.0.0.1:8080"
 
-def test_analyze_url(word):
+def run_analyze_url(word):
     """Test by analyzing the native audio from MW dictionary."""
     print(f"\n{'='*60}")
     print(f"Testing: {word}")
@@ -24,49 +24,45 @@ def test_analyze_url(word):
     if not dict_data.get('found'):
         print(f"Word not found in dictionary")
         return
+        
+    audio_url = dict_data.get('audio_url')
+    syllables = dict_data.get('syllables', [])
+    num_syls = len(syllables)
     
-    data = dict_data['data']
-    print(f"Syllables: {data.get('syllables')} ({data.get('syllableCount')})")
-    print(f"Stressed: syllable {data.get('stressedSyllable', 0) + 1}")
-    print(f"Audio URL: {data.get('audioUrl')}")
-    
-    audio_url = data.get('audioUrl')
     if not audio_url:
-        print("No audio URL available")
+        print("No audio URL found")
         return
+        
+    print(f"Audio URL: {audio_url}")
+    print(f"Syllable count: {num_syls}")
+    print(f"Syllables: {dict_data.get('syllable_spans')}")
     
-    # Analyze the native audio
-    analyze_resp = requests.post(
-        f"{BASE_URL}/analyze-url",
-        json={
-            "audioUrl": audio_url,
-            "expectedSyllables": data.get('syllableCount')
-        },
-        timeout=30
-    )
+    # Now post to analyze-url
+    payload = {
+        "audioUrl": audio_url,
+        "expectedSyllables": num_syls
+    }
     
-    if analyze_resp.status_code != 200:
-        print(f"Analyze error: {analyze_resp.status_code}")
-        print(analyze_resp.text[:500])
+    resp = requests.post(f"{BASE_URL}/analyze-url", json=payload, timeout=30)
+    if resp.status_code != 200:
+        print(f"Analyze error: {resp.status_code} - {resp.text}")
         return
+        
+    result = resp.json()
+    analyzed_syls = result.get('syllables', [])
     
-    result = analyze_resp.json()
-    
-    print(f"\nAnalysis Result:")
-    print(f"  Duration: {result.get('duration')}s")
-    print(f"  Syllables detected: {len(result.get('syllables', []))}")
-    
-    syllables = result.get('syllables', [])
-    for i, syl in enumerate(syllables):
-        stressed = " ★" if syl.get('isStressed') else ""
-        print(f"  Syl {i+1}: {syl['startTime']:.3f}s - {syl['endTime']:.3f}s "
-              f"(dur: {syl['duration']:.3f}s, pitch: {syl.get('avgPitch', 0):.0f}Hz){stressed}")
-    
-    # Check for potential leakage (Syl1 too long relative to avg)
-    if len(syllables) >= 2:
-        avg_dur = sum(s['duration'] for s in syllables) / len(syllables)
-        if syllables[0]['duration'] > avg_dur * 1.8:
-            print(f"\n⚠️  WARNING: Syl1 duration ({syllables[0]['duration']:.3f}s) is >1.8x average ({avg_dur:.3f}s)")
+    print("\nResults:")
+    for s in analyzed_syls:
+        print(f"  Syl {s['syllable']}: {s['startTime']:.3f}s - {s['endTime']:.3f}s (dur: {s['duration']:.3f}s)")
+        
+    if len(analyzed_syls) >= 2:
+        syl1_dur = analyzed_syls[0]['duration']
+        avg_dur = sum(s['duration'] for s in analyzed_syls) / len(analyzed_syls)
+        ratio = syl1_dur / avg_dur if avg_dur > 0 else 0
+        
+        print(f"\nSyl1 / Avg ratio: {ratio:.2f}x")
+        if ratio > 1.4:
+            print("⚠️  WARNING: Syl1 duration seems unusually long!")
             print("     This may indicate onset cluster leakage!")
         else:
             print(f"\n✅ Syl1 duration looks reasonable (avg: {avg_dur:.3f}s)")
@@ -84,6 +80,6 @@ if __name__ == "__main__":
     
     for word in test_words:
         try:
-            test_analyze_url(word)
+            run_analyze_url(word)
         except Exception as e:
             print(f"Error testing {word}: {e}")

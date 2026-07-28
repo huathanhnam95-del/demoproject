@@ -384,7 +384,17 @@ window.CrmLeadWorkspace = (function () {
                     body: JSON.stringify(payload)
                 });
 
-                elements.leadComposer.style.display = 'none';
+                if (typeof window.hideStudentModalSurface === 'function') {
+                    window.hideStudentModalSurface();
+                } else {
+                    const modal = document.getElementById('crm-student-modal');
+                    if (modal) {
+                        modal.style.display = 'none';
+                        modal.classList.remove('active');
+                        modal.setAttribute('aria-hidden', 'true');
+                    }
+                }
+                if (elements.leadComposer) elements.leadComposer.style.display = 'none';
                 resetLeadComposer();
                 await refreshLeadPipeline();
                 await refreshDashboard();
@@ -666,8 +676,12 @@ window.CrmLeadWorkspace = (function () {
 
             if (elements.btnNewLead) {
                 elements.btnNewLead.addEventListener('click', () => {
-                    resetLeadComposer();
-                    elements.leadComposer.style.display = 'block';
+                    if (typeof window.openLeadModal === 'function') {
+                        window.openLeadModal();
+                    } else {
+                        resetLeadComposer();
+                        elements.leadComposer.style.display = 'block';
+                    }
                 });
             }
 

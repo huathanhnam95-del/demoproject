@@ -232,12 +232,14 @@
   function showStudentModalSurface() {
     if (!elements.studentModal) return;
     elements.studentModal.style.display = 'flex';
+    elements.studentModal.classList.add('active');
     elements.studentModal.setAttribute('aria-hidden', 'false');
   }
 
   function hideStudentModalSurface() {
     if (!elements.studentModal) return;
     elements.studentModal.style.display = 'none';
+    elements.studentModal.classList.remove('active');
     elements.studentModal.setAttribute('aria-hidden', 'true');
   }
 
@@ -307,7 +309,7 @@
     elements.recycleBinWorkspace = document.getElementById('recycle-bin-workspace');
     elements.btnRefreshRecycleBin = document.getElementById('btn-refresh-recycle-bin');
     elements.btnNewLead = document.getElementById('btn-new-lead');
-    elements.btnSaveLead = document.getElementById('btn-save-lead');
+    elements.btnSaveLead = document.getElementById('btn-save-lead') || document.getElementById('btn-save-student');
     elements.btnCancelLead = document.getElementById('btn-cancel-lead');
     elements.leadComposer = document.getElementById('lead-composer');
     elements.leadStageBoard = document.getElementById('lead-stage-board');
@@ -389,21 +391,23 @@
       ? Array.from(elements.studentModal.querySelectorAll('.crm-tab-content'))
       : [];
 
-    // Student Info Inputs
-    elements.inputStudentName = document.getElementById('student-name');
+    // Student & Lead Info Inputs
+    elements.inputStudentName = document.getElementById('student-name') || document.getElementById('lead-name');
     elements.btnGenerateAiSummary = document.getElementById('btn-generate-ai-summary');
     elements.studentAiSummaryBox = document.getElementById('student-ai-summary-box');
-    elements.inputStudentLabel = document.getElementById('student-label');
-    elements.inputStudentPhone = document.getElementById('student-phone');
-    elements.inputStudentEmail = document.getElementById('student-email');
-    elements.inputStudentZalo = document.getElementById('student-zalo');
-    elements.inputStudentFacebook = document.getElementById('student-facebook');
-    elements.inputStudentFacebookProfileUrl = document.getElementById('student-facebook-profile-url');
-    elements.studentFacebookProfileUrlGroup = document.getElementById('student-facebook-profile-url-group');
-    elements.inputStudentFacebookPersonalOwner = document.getElementById('student-facebook-personal-owner');
-    elements.studentFacebookPersonalOwnerGroup = document.getElementById('student-facebook-personal-owner-group');
-    elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source');
-    elements.inputStudentAgentSource = document.getElementById('student-agent-source');
+    elements.inputStudentLabel = document.getElementById('student-label') || document.getElementById('lead-label');
+    elements.inputStudentPhone = document.getElementById('student-phone') || document.getElementById('lead-phone');
+    elements.inputStudentEmail = document.getElementById('student-email') || document.getElementById('lead-email');
+    elements.inputStudentZalo = document.getElementById('student-zalo') || document.getElementById('lead-zalo');
+    elements.inputStudentFacebook = document.getElementById('student-facebook') || document.getElementById('lead-facebook');
+    elements.inputStudentFacebookProfileUrl = document.getElementById('student-facebook-profile-url') || document.getElementById('lead-facebook-profile-url');
+    elements.studentFacebookProfileUrlGroup = document.getElementById('student-facebook-profile-url-group') || document.getElementById('lead-facebook-profile-url-group');
+    elements.inputStudentFacebookPersonalOwner = document.getElementById('student-facebook-personal-owner') || document.getElementById('lead-facebook-personal-owner');
+    elements.studentFacebookPersonalOwnerGroup = document.getElementById('student-facebook-personal-owner-group') || document.getElementById('lead-facebook-personal-owner-group');
+    elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source') || document.getElementById('lead-source');
+    elements.inputStudentAgentSource = document.getElementById('student-agent-source') || document.getElementById('lead-agent-source');
+    elements.inputStudentStage = document.getElementById('student-stage') || document.getElementById('lead-stage');
+    elements.inputStudentProbability = document.getElementById('student-probability') || document.getElementById('lead-probability');
     elements.inputScoreOverall = document.getElementById('score-overall');
     elements.inputScoreListening = document.getElementById('score-listening');
     elements.inputScoreReading = document.getElementById('score-reading');
@@ -2016,7 +2020,12 @@
     modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
     modalState.studentId = null;
     modalState.studentProfile = null;
+    modalState.isLeadMode = false;
+    modalState.leadId = null;
     modalState.createdTestLinks = new Map();
+
+    if (elements.studentModalTitle) elements.studentModalTitle.textContent = 'New Student Profile';
+    if (elements.btnSaveStudent) elements.btnSaveStudent.textContent = 'Save Student';
 
     switchStudentTab('info');
 
@@ -2205,6 +2214,8 @@
     }
   }
   window.updateStudentSourceVisibility = updateStudentSourceVisibility;
+  window.hideStudentModalSurface = hideStudentModalSurface;
+  window.openLeadModal = openLeadModal;
 
   function resetLeadComposer() {
     const inputs = [
@@ -2536,8 +2547,7 @@
 
     if (elements.btnNewLead) {
       elements.btnNewLead.addEventListener('click', () => {
-        resetLeadComposer();
-        elements.leadComposer.style.display = 'block';
+        openLeadModal();
       });
     }
 
@@ -2781,7 +2791,77 @@
     }
   }
 
+  function openLeadModal(lead = null) {
+    resetStudentModal();
+    modalState.isLeadMode = true;
+    modalState.leadId = lead?.leadId || null;
+
+    if (elements.studentModalTitle) {
+      elements.studentModalTitle.textContent = lead ? 'Edit Lead Profile' : 'New Lead Profile';
+    }
+    if (elements.btnSaveStudent) elements.btnSaveStudent.style.display = 'none';
+    if (elements.btnSaveLead) {
+      elements.btnSaveLead.style.display = 'inline-block';
+      elements.btnSaveLead.disabled = false;
+      elements.btnSaveLead.textContent = lead ? 'Update Lead' : 'Save Lead';
+    }
+
+    if (window.CrmLeads && typeof window.CrmLeads.applyToForm === 'function') {
+      window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: 'Facebook - Personal', facebookPersonalOwner: 'Nam' });
+    }
+
+    if (elements.studentModal) {
+      elements.studentModal.style.display = 'flex';
+      elements.studentModal.classList.add('active');
+    }
+    switchStudentTab('info');
+    if (typeof updateLeadSourceVisibility === 'function') updateLeadSourceVisibility();
+    if (typeof updateStudentSourceVisibility === 'function') updateStudentSourceVisibility();
+  }
+
+  async function saveLeadFromModal() {
+    const payload = window.CrmLeads ? window.CrmLeads.buildPayload(elements) : {};
+    if (!window.CrmLeads || !window.CrmLeads.hasAnyContact(payload)) {
+      throw new Error('Please fill at least 1 lead contact field before saving.');
+    }
+
+    const saveBtn = elements.btnSaveLead || elements.btnSaveStudent;
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    }
+    try {
+      const path = modalState.leadId
+        ? `/api/admin/leads/${encodeURIComponent(modalState.leadId)}`
+        : '/api/admin/leads';
+      const method = modalState.leadId ? 'PATCH' : 'POST';
+      const json = await apiFetchJson(path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      showToast(modalState.leadId ? 'Lead updated successfully.' : 'Lead created successfully.', 'success');
+      hideStudentModalSurface();
+      closeStudentProfile();
+      await refreshLeadPipeline();
+      return json;
+    } catch (error) {
+      console.error('[CRM Admin] Save lead from modal failed:', error);
+      showToast(error?.message || 'Failed to save lead.', 'error');
+      throw error;
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = modalState.leadId ? 'Update Lead' : 'Save Lead';
+      }
+    }
+  }
+
   async function saveStudentProfile() {
+    if (modalState.isLeadMode) {
+      return saveLeadFromModal();
+    }
     const payload = getStudentPayload();
     if (!hasAnyInfoField(payload)) {
       throw new Error('Please fill at least 1 field in Info tab before saving.');

@@ -449,6 +449,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Pronunciation Segmentation V3 Audit Script")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Base URL of praat-api orchestrator")
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help="Path to corpus manifest file")
+    parser.add_argument("--audio-dir", default="test-results/pronunciation-segmentation-corpus", help="Path to corpus audio directory")
     parser.add_argument("--model-manifest", default=DEFAULT_MODEL_MANIFEST_PATH, help="Path to model manifest file")
     parser.add_argument("--output", default=DEFAULT_OUTPUT_DIR, help="Output directory for reports")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run without calling the live API")
@@ -456,7 +457,9 @@ def main() -> None:
 
     manifest_path = Path(args.manifest)
     model_manifest_path = Path(args.model_manifest)
+    audio_dir = Path(args.audio_dir)
     output_dir = Path(args.output)
+
 
     print("=" * 60)
     print("Pronunciation Segmentation V3 Audit")
@@ -495,7 +498,9 @@ def main() -> None:
 
     print(f"Evaluating {len(manifest['entries'])} entries from manifest …")
     # For actual evaluation, we query the live backend if WAV files are present
-    audio_dir = manifest_path.parent / "audio"
+    if not audio_dir.exists():
+        audio_dir = manifest_path.parent / "audio"
+
 
     for entry in manifest["entries"]:
         sample_id = entry["sampleId"]

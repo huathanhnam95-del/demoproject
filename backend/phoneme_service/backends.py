@@ -110,13 +110,25 @@ class TorchRecognizerBackend(RecognizerBackend):
             import torch  # noqa: F811
             from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-            self._processor = Wav2Vec2Processor.from_pretrained(
-                self._model_id, revision=self._model_revision
-            )
+            try:
+                self._processor = Wav2Vec2Processor.from_pretrained(
+                    self._model_id, revision=self._model_revision
+                )
+            except Exception:
+                from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2CTCTokenizer
+                fe = Wav2Vec2FeatureExtractor.from_pretrained(
+                    self._model_id, revision=self._model_revision
+                )
+                tok = Wav2Vec2CTCTokenizer.from_pretrained(
+                    self._model_id, revision=self._model_revision
+                )
+                self._processor = Wav2Vec2Processor(feature_extractor=fe, tokenizer=tok)
+
             self._model = Wav2Vec2ForCTC.from_pretrained(
                 self._model_id, revision=self._model_revision
             )
             self._model.eval()
+
 
             # Build symbol table from tokenizer vocabulary
             vocab = self._processor.tokenizer.get_vocab()

@@ -271,7 +271,7 @@ window.CrmCalendar = (function () {
                 const ariaLabel = `${className}, ${timeRange}, ${teacherStr}, ${dayStr}`;
                 const tooltipText = `${className}\n${timeRange}\n${teacherStr}`;
 
-                html += `<div class="crm-cal-event" style="top:${top}%;height:${height}%;background:${ev.color}20;border-left:3px solid ${ev.color};" 
+                html += `<div class="crm-cal-event" style="top:${top}%;height:${height}%;background:${ev.color}20;border-left:2px solid ${ev.color};" 
                     data-classroom-id="${escapeHtml(ev.classroomId || '')}"
                     role="button" tabindex="0" aria-label="${escapeHtml(ariaLabel)}"
                     draggable="true"
@@ -337,7 +337,7 @@ window.CrmCalendar = (function () {
                 html += '<div class="crm-cal-day-empty">No classes</div>';
             } else {
                 dayEvents.forEach(ev => {
-                    html += `<div class="crm-cal-day-event" data-classroom-id="${escapeHtml(ev.classroomId || '')}" role="button" tabindex="0" aria-label="${escapeHtml(ev.classroomName || 'Class')}, ${ev.startTime} to ${ev.endTime}" style="border-left:3px solid ${ev.color};">
+                    html += `<div class="crm-cal-day-event" data-classroom-id="${escapeHtml(ev.classroomId || '')}" role="button" tabindex="0" aria-label="${escapeHtml(ev.classroomName || 'Class')}, ${ev.startTime} to ${ev.endTime}" style="border-left:2px solid ${ev.color};">
                         <span class="crm-cal-event-name">${escapeHtml(ev.classroomName || 'Class')}</span>
                         <span class="crm-cal-event-time">${ev.startTime} – ${ev.endTime}</span>
                         ${ev.teacher ? `<span class="crm-cal-event-teacher">${escapeHtml(ev.teacher)}</span>` : ''}

@@ -290,11 +290,13 @@
 }
 
 .dd-result-card.is-correct {
-  border-left: 6px solid var(--dd-success);
+  border-color: var(--dd-success);
+  background-color: rgba(16, 185, 129, 0.04);
 }
 
 .dd-result-card.is-incorrect {
-  border-left: 6px solid var(--dd-danger);
+  border-color: var(--dd-danger);
+  background-color: rgba(239, 68, 68, 0.04);
 }
 
 .dd-result-card-header {

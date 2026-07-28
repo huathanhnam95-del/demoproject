@@ -67,5 +67,8 @@ jobs:
       - name: Run practice mode browser matrix
         run: node tests/browser/practice-modes-browser-check.js
 
+      - name: Run UI Quality Audit
+        run: npx -y impeccable detect public/ --no-advisory || true
+
       - name: Run pronunciation Chrome checks
         run: npm run test:pronounce:browser

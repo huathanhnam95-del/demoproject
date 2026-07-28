@@ -1,7 +1,11 @@
 import io
 import json
+import sys
 import unittest
 import wave
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 from connected_speech_worker import app
 

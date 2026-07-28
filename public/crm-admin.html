@@ -15,8 +15,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260727-v1.8.40" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260727-v1.8.40" />
+  <link rel="stylesheet" href="style.css?v=20260728-v1.8.41" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260728-v1.8.41" />
 </head>
 
 <body>
@@ -736,81 +736,6 @@
           </div>
           <button id="btn-new-lead" class="crm-btn-primary">+ New Lead</button>
         </div>
-        <div id="lead-composer" class="crm-placeholder-card" style="display: none; text-align: left;">
-          <div class="crm-form-grid">
-            <div class="crm-form-group">
-              <label for="lead-source">Source</label>
-              <select id="lead-source" class="crm-input" onchange="if(window.updateLeadSourceVisibility)window.updateLeadSourceVisibility();">
-                <option value="Facebook - Personal">Facebook - Personal</option>
-                <option value="Facebook - Page">Facebook - Page</option>
-                <option value="Zalo - Page">Zalo - Page</option>
-              </select>
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-name">Full Name</label>
-              <input type="text" id="lead-name" class="crm-input" placeholder="Lead name">
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-label">Label</label>
-              <input type="text" id="lead-label" class="crm-input" placeholder="e.g. High Priority">
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-phone">Phone Number</label>
-              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-email">Email</label>
-              <input type="email" id="lead-email" class="crm-input" placeholder="lead@example.com">
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-zalo">Zalo Number</label>
-              <input type="text" id="lead-zalo" class="crm-input" placeholder="Enter Zalo number">
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-facebook">Facebook Name</label>
-              <input type="text" id="lead-facebook" class="crm-input" placeholder="Enter Facebook name">
-            </div>
-            <div class="crm-form-group" id="lead-facebook-profile-url-group">
-              <label for="lead-facebook-profile-url">Student's FB link</label>
-              <input type="text" id="lead-facebook-profile-url" class="crm-input" placeholder="https://facebook.com/username_or_id">
-            </div>
-            <div class="crm-form-group" id="lead-facebook-personal-owner-group">
-              <label for="lead-facebook-personal-owner">FB Personal Account</label>
-              <select id="lead-facebook-personal-owner" class="crm-input">
-                <option value="Nam">Nam</option>
-                <option value="Thành">Thành</option>
-                <option value="Quỳnh">Quỳnh</option>
-              </select>
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-agent-source">Agent Source</label>
-              <select id="lead-agent-source" class="crm-input">
-                <option value="">No agent source</option>
-              </select>
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-stage">Stage</label>
-              <select id="lead-stage" class="crm-input">
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="test_scheduled">Test Scheduled</option>
-                <option value="test_completed">Test Completed</option>
-                <option value="counseling">Counseling</option>
-                <option value="trial">Trial</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
-              </select>
-            </div>
-            <div class="crm-form-group">
-              <label for="lead-probability">Probability</label>
-              <input type="number" id="lead-probability" class="crm-input" min="0" max="100" placeholder="0-100">
-            </div>
-          </div>
-          <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-            <button id="btn-cancel-lead" class="crm-btn-secondary" type="button">Cancel</button>
-            <button id="btn-save-lead" class="crm-btn-primary" type="button">Save Lead</button>
-          </div>
-        </div>
         <div id="lead-stage-board" class="crm-lead-board"></div>
         <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
         <div id="lead-workspace" class="crm-workspace-grid" style="display: none;">
@@ -1196,7 +1121,7 @@
     <div class="crm-modal-container">
       <div class="crm-modal-header">
         <div class="crm-modal-title-row">
-          <h2>New Student Profile</h2>
+          <h2 id="crm-student-modal-title">New Student Profile</h2>
           <span id="crm-student-id-badge" class="crm-student-id-badge" style="display: none;">ID: —</span>
         </div>
         <button id="btn-close-student-modal" class="crm-icon-btn text-dark" title="Close">
@@ -1236,58 +1161,73 @@
               <div id="student-ai-summary-box" style="font-size: 14px; color: #555; line-height: 1.5; margin-top: 8px;">
                 Click 'Generate' to create a summary, or save the profile to auto-generate.</div>
             </div>
-            <div class="crm-form-grid">
+            <div id="lead-composer" class="crm-form-grid">
               <div class="crm-form-group">
-                <label for="student-name">Full Name</label>
-                <input type="text" id="student-name" name="name" class="crm-input" placeholder="Enter full name">
-              </div>
-              <div class="crm-form-group">
-                <label for="student-label">Label</label>
-                <input type="text" id="student-label" name="label" class="crm-input" placeholder="e.g. High Priority">
-              </div>
-              <div class="crm-form-group">
-                <label for="student-phone">Phone Number</label>
-                <input type="tel" id="student-phone" name="phone" class="crm-input" placeholder="Enter phone number">
-              </div>
-              <div class="crm-form-group">
-                <label for="student-email">Email</label>
-                <input type="email" id="student-email" name="email" class="crm-input" placeholder="Enter email">
-              </div>
-              <div class="crm-form-group">
-                <label for="student-zalo">Zalo Number</label>
-                <input type="text" id="student-zalo" name="zalo" class="crm-input" placeholder="Enter Zalo number">
-              </div>
-              <div class="crm-form-group">
-                <label for="student-acquisition-source">Acquisition Source</label>
-                <select id="student-acquisition-source" name="acquisition_source" class="crm-input" onchange="if(window.updateStudentSourceVisibility)window.updateStudentSourceVisibility();">
+                <label for="lead-source">Source</label>
+                <select id="lead-source" name="acquisition_source" class="crm-input" onchange="if(window.updateStudentSourceVisibility)window.updateStudentSourceVisibility();if(window.updateLeadSourceVisibility)window.updateLeadSourceVisibility();">
                   <option value="Facebook - Personal">Facebook - Personal</option>
                   <option value="Facebook - Page">Facebook - Page</option>
                   <option value="Zalo - Page">Zalo - Page</option>
                 </select>
               </div>
               <div class="crm-form-group">
-                <label for="student-facebook">Facebook Name</label>
-                <input type="text" id="student-facebook" name="facebook" class="crm-input"
-                  placeholder="Enter Facebook name">
+                <label for="lead-name">Full Name</label>
+                <input type="text" id="lead-name" name="name" class="crm-input" placeholder="Lead name">
               </div>
-              <div class="crm-form-group" id="student-facebook-profile-url-group">
-                <label for="student-facebook-profile-url">Student's FB link</label>
-                <input type="text" id="student-facebook-profile-url" name="facebookProfileUrl" class="crm-input"
-                  placeholder="https://facebook.com/username_or_id">
+              <div class="crm-form-group">
+                <label for="lead-label">Label</label>
+                <input type="text" id="lead-label" name="label" class="crm-input" placeholder="e.g. High Priority">
               </div>
-              <div class="crm-form-group" id="student-facebook-personal-owner-group">
-                <label for="student-facebook-personal-owner">FB Personal Account</label>
-                <select id="student-facebook-personal-owner" name="facebookPersonalOwner" class="crm-input">
+              <div class="crm-form-group">
+                <label for="lead-phone">Phone Number</label>
+                <input type="tel" id="lead-phone" name="phone" class="crm-input" placeholder="Phone number">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-email">Email</label>
+                <input type="email" id="lead-email" name="email" class="crm-input" placeholder="lead@example.com">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-zalo">Zalo Number</label>
+                <input type="text" id="lead-zalo" name="zalo" class="crm-input" placeholder="Enter Zalo number">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-facebook">Facebook Name</label>
+                <input type="text" id="lead-facebook" name="facebook" class="crm-input" placeholder="Enter Facebook name">
+              </div>
+              <div class="crm-form-group" id="lead-facebook-profile-url-group">
+                <label for="lead-facebook-profile-url">Student's FB link</label>
+                <input type="text" id="lead-facebook-profile-url" name="facebookProfileUrl" class="crm-input" placeholder="https://facebook.com/username_or_id">
+              </div>
+              <div class="crm-form-group" id="lead-facebook-personal-owner-group">
+                <label for="lead-facebook-personal-owner">FB Personal Account</label>
+                <select id="lead-facebook-personal-owner" name="facebookPersonalOwner" class="crm-input">
                   <option value="Nam">Nam</option>
                   <option value="Thành">Thành</option>
                   <option value="Quỳnh">Quỳnh</option>
                 </select>
               </div>
               <div class="crm-form-group">
-                <label for="student-agent-source">Agent Source</label>
-                <select id="student-agent-source" name="agent_source_id" class="crm-input">
+                <label for="lead-agent-source">Agent Source</label>
+                <select id="lead-agent-source" name="agent_source_id" class="crm-input">
                   <option value="">No agent source</option>
                 </select>
+              </div>
+              <div class="crm-form-group" id="lead-stage-group">
+                <label for="lead-stage">Stage</label>
+                <select id="lead-stage" name="stage" class="crm-input">
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="test_scheduled">Test Scheduled</option>
+                  <option value="test_completed">Test Completed</option>
+                  <option value="counseling">Counseling</option>
+                  <option value="trial">Trial</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
+                </select>
+              </div>
+              <div class="crm-form-group" id="lead-probability-group">
+                <label for="lead-probability">Probability (%)</label>
+                <input type="number" id="lead-probability" name="probability" class="crm-input" min="0" max="100" placeholder="e.g. 50">
               </div>
             </div>
             <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
@@ -1734,7 +1674,7 @@
             <div id="crm-handshake-preview" class="crm-preview-card"
               style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <img id="crm-handshake-avatar" src="" alt="Avatar"
+                <img id="crm-handshake-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Avatar"
                   style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
                 <div>
                   <div id="crm-handshake-name" style="font-weight: bold;">User Name</div>
@@ -1758,6 +1698,7 @@
       <div class="crm-modal-footer">
         <button class="crm-btn-secondary" id="btn-cancel-student">Cancel</button>
         <button class="crm-btn-primary" id="btn-save-student">Save Student</button>
+        <button class="crm-btn-primary" id="btn-save-lead" style="display: none;">Save Lead</button>
       </div>
     </div>
   </div>
@@ -2501,47 +2442,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260727-v1.8.40"></script>
-  <script src="js/classroom-api.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/utils.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/state.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/dom.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/courses.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/students.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/student-360.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/classrooms.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/leads.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/activities.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/enrollments.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/attendance.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/finance-workflow.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/finance.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/communications.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/staff-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/student-finance.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/live-delivery.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/classroom-modal.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/student-modal.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/course-modal.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/lead-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/communications-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/dashboard.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/governance.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/index.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260727-v1.8.40"></script>
-  <script src="js/crm/devtools-access.js?v=20260727-v1.8.40&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260727-v1.8.40"></script>
-  <script src="arpabet-ipa-map.js?v=20260727-v1.8.40"></script>
-  <script src="phonetics.js?v=20260727-v1.8.40"></script>
-  <script src="crm-admin.js?v=20260727-v1.8.40"></script>
+  <script src="js/auth-session-guard.js?v=20260728-v1.8.41"></script>
+  <script src="js/classroom-api.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/utils.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/state.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/dom.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/courses.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/students.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/student-360.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/classrooms.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/leads.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/activities.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/enrollments.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/attendance.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/finance-workflow.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/finance.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/communications.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/staff-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/student-finance.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/live-delivery.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/classroom-modal.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/student-modal.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/course-modal.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/lead-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/communications-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/dashboard.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/governance.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/index.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260728-v1.8.41"></script>
+  <script src="js/crm/devtools-access.js?v=20260728-v1.8.41&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260728-v1.8.41"></script>
+  <script src="arpabet-ipa-map.js?v=20260728-v1.8.41"></script>
+  <script src="phonetics.js?v=20260728-v1.8.41"></script>
+  <script src="crm-admin.js?v=20260728-v1.8.41"></script>
 </body>
 
 </html>

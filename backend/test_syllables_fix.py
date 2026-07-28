@@ -65,7 +65,7 @@ def count_ipa_syllables(ipa):
     
     return count, matched
 
-def test_word(word):
+def run_word_test(word):
     """Test a word against MW API and count syllables."""
     print(f"\n{'='*60}")
     print(f"Testing: {word}")
@@ -75,33 +75,23 @@ def test_word(word):
     
     try:
         resp = requests.get(url, timeout=10)
-        print(f"Status: {resp.status_code}")
-        
-        if resp.status_code != 200:
-            print(f"Error: {resp.text[:200]}")
-            return
-        
         data = resp.json()
         
         if not data or not isinstance(data[0], dict):
-            print("No dictionary entry found")
+            print(f"No entry found for {word}")
             return
-        
+            
         entry = data[0]
         hwi = entry.get('hwi', {})
         hw = hwi.get('hw', '')
-        prs = hwi.get('prs', [])
+        prs = hwi.get('prs', [{}])
         
-        ipa = prs[0].get('ipa', '') if prs else ''
-        mw = prs[0].get('mw', '') if prs else ''
-        pron_string = ipa or mw
+        pron_string = prs[0].get('ipa', prs[0].get('mw', '')) if prs else ''
         
         print(f"Headword: {hw}")
-        print(f"IPA field: {ipa}")
-        print(f"MW field: {mw}")
-        print(f"Using: {pron_string}")
+        print(f"Pronunciation: /{pron_string}/")
         
-        # Count headword syllables
+        # Count from headword dots
         hw_parts = hw.split('·') if '·' in hw else [hw]
         hw_count = len(hw_parts)
         
@@ -122,9 +112,9 @@ def test_word(word):
 
 if __name__ == "__main__":
     # Test the problematic word
-    test_word("anonymous")
+    run_word_test("anonymous")
     
     # Test a few more for validation
-    test_word("economy")
-    test_word("pronunciation") 
-    test_word("comfortable")
+    run_word_test("economy")
+    run_word_test("pronunciation") 
+    run_word_test("comfortable")

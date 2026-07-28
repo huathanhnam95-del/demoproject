@@ -40,13 +40,19 @@ async function runTest() {
     await page.evaluate(() => {
       const loading = document.getElementById('crm-loading');
       if (loading) loading.style.display = 'none';
+      const studentModal = document.getElementById('crm-student-modal');
+      if (studentModal) studentModal.style.display = 'flex';
+      const studentInfo = document.getElementById('student-info');
+      if (studentInfo) studentInfo.style.display = 'block';
       const composer = document.getElementById('lead-composer');
-      if (composer) composer.style.display = 'block';
+      if (composer) composer.style.display = 'grid';
       const sourceInput = document.getElementById('lead-source');
       if (sourceInput) {
         sourceInput.value = 'Facebook - Personal';
         sourceInput.dispatchEvent(new Event('change'));
       }
+      if (window.updateLeadSourceVisibility) window.updateLeadSourceVisibility();
+      if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
     });
 
     // Check default source selection

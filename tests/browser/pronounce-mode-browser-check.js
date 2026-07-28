@@ -321,8 +321,17 @@ async function run() {
         });
       }
       if (url.includes('/analyze/v3')) {
-        window.__lastV3Form = Object.fromEntries(options.body.entries());
+        const formObj = {};
+        if (options.body && typeof options.body.entries === 'function') {
+          for (const [key, value] of options.body.entries()) {
+            if (typeof value === 'string') {
+              formObj[key] = value;
+            }
+          }
+        }
+        window.__lastV3Form = formObj;
         return jsonResponse({
+
           analysisVersion: 'pronunciation-analysis-v3',
           mode: 'active',
           engine: 'ctc-praat',
@@ -338,7 +347,17 @@ async function run() {
           capabilities: { graphs: true, syllable_duration: true, phoneme_alignment: true }
         });
       }
+      if (url.includes('/analyze/v2')) {
+        return jsonResponse({
+          analysisVersion: 'pronunciation-analysis-v2',
+          canonicalSyllableCount: 2,
+          quality: { rateable: true, confidence: 0.9, reasons: [] },
+          segmentation: { selectedCount: 2, confidence: 0.9 },
+          observed: { syllableCount: 2, syllables: [] }
+        });
+      }
       if (url.includes('/proxy-audio')) {
+
         return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
       }
       return originalFetch(resource, options);
@@ -505,6 +524,8 @@ async function run() {
 
     const v3ClientContract = await page.evaluate(async () => {
       const { PraatAPI } = await import('/pronunciation-analyzer/praat-api.js');
+      const { config } = await import('/pronunciation-analyzer/config.js');
+      config.features.usePronunciationV3LearnerAnalysis = true;
       const api = new PraatAPI();
       api._v3SupportPromise = Promise.resolve('active');
       const result = await api.analyze(
@@ -512,6 +533,7 @@ async function run() {
         2,
         { referenceIpa: '/ˈbɪzi/', targetWord: 'busy' }
       );
+
       return {
         form: {
           referenceIpa: window.__lastV3Form.reference_ipa,

@@ -7,7 +7,7 @@ async function callOllamaChatJson(messages, temperature = 0.3, retries = 2) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      const timeout = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for batched prompts
 
       const res = await fetch(url, {
         method: 'POST',
@@ -18,7 +18,9 @@ async function callOllamaChatJson(messages, temperature = 0.3, retries = 2) {
           stream: false,
           format: 'json',
           options: {
-            temperature
+            temperature,
+            num_predict: 4096,
+            num_ctx: 8192
           }
         }),
         signal: controller.signal

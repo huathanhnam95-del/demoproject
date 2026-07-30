@@ -7338,6 +7338,7 @@ textarea:focus {
   padding: 10px 24px;
   border: none;
   border-radius: 8px;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;

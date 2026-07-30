@@ -10,7 +10,30 @@ const limitArg = parseInt(args.find((_, i, a) => a[i - 1] === '--limit') || '0',
 const resume = args.includes('--resume');
 const targetQuestionId = parseInt(args.find((_, i, a) => a[i - 1] === '--question-id') || '0', 10);
 
-function buildPrompt(question, blank) {
+function safeSaveFile(filePath, content, maxRetries = 5) {
+  const tempPath = `${filePath}.tmp_${Date.now()}`;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      fs.writeFileSync(tempPath, content, 'utf8');
+      fs.renameSync(tempPath, filePath);
+      return;
+    } catch (err) {
+      if (fs.existsSync(tempPath)) {
+        try { fs.unlinkSync(tempPath); } catch (_) {}
+      }
+      if (attempt === maxRetries) {
+        fs.writeFileSync(filePath, content, 'utf8');
+        return;
+      }
+      console.warn(`  ⚠️ File save attempt ${attempt}/${maxRetries} encountered lock (${err.message}). Retrying in 500ms...`);
+      const stop = Date.now() + 500;
+      while (Date.now() < stop) {}
+    }
+  }
+}
+
+// Pass 1: Question-Level Batched Prompt
+function buildQuestionPrompt(question) {
   const optionsText = question.options.map(o => o.text).join(', ');
   const allCorrectAnswers = question.blanks.map(b => b.answer);
   const extraDistractors = question.options
@@ -19,63 +42,94 @@ function buildPrompt(question, blank) {
 
   return `You are an expert English language teacher preparing material for a PTE Academic Reading Practice test (Drag & Drop / Fill in the Blanks).
 
-Analyze this passage and explain why the word "${blank.answer}" is the correct choice for Blank #${blank.index + 1} (correct answer: "${blank.answer}").
+Analyze this entire passage and ALL its blank gaps holistically.
 
 Passage:
 ${question.plainText}
 
-Full Word Bank (Shared Pool):
+Shared Word Bank (Pool of Options):
 [${optionsText}]
 
-Target Answers for other blanks in this passage (for context):
-${question.blanks.map((b, idx) => `Blank #${idx + 1}: "${b.answer}"`).join('\n')}
+Blanks & Target Answers:
+${question.blanks.map((b, idx) => `Blank #${idx + 1} (blankId: "${b.blankId}") -> Correct Answer: "${b.answer}"`).join('\n')}
 
-Unused Extra Distractor Words in pool:
+Unused Extra Distractor Words in pool (not used in any blank):
 [${extraDistractors.join(', ')}]
 
-For Blank #${blank.index + 1} (correct answer: "${blank.answer}"), generate a clear, pedagogical explanation in JSON format.
+Generate a clear, pedagogical explanation object for EVERY blank gap in this question in a single JSON payload.
 
-Ensure your explanation addresses:
-1. "syntaxRequirement": The required Part of Speech (Noun, Verb, Adjective, etc.) and grammatical form (e.g. Past Tense Transitive Verb) for this blank.
-2. "collocationCohesionClue": The specific collocations, discourse markers, or context clues that indicate this choice.
-3. "explanation": A concise explanation (under 130 words) explaining why "${blank.answer}" is correct grammatically and semantically.
-4. "competingOptionNotes": Array of objects with "option" and "reason" explaining why competing options in the pool are incorrect for THIS blank (distinguishing between same-PoS traps and PoS mismatches).
-5. "coherenceCue": Short cue summarizing how context leads to this answer.
-6. "vocabGrammarCue": Short cue on grammar/collocation fit.
-7. "contextNote": Key sentence clue.
+For EACH blank in the "blanks" array, provide:
+1. "blankId": Exact blankId matching the target blank.
+2. "syntaxRequirement": The required Part of Speech (Noun, Verb, Adjective, etc.) and grammatical form (e.g. Past Tense Transitive Verb).
+3. "collocationCohesionClue": The specific collocations, discourse markers, or context clues in the sentence.
+4. "explanation": A concise explanation (under 120 words) explaining why this answer is correct grammatically and semantically.
+5. "competingOptionNotes": Array of objects with "option" and "reason". Include cross-blank context (e.g., explicitly noting if a distractor belongs to another blank in the text vs an unused pool distractor).
 
-Return ONLY a JSON object matching this schema exactly, with no markdown code fences or extra text around it:
+Return ONLY a JSON object matching this schema exactly, with no markdown code fences or extra text:
 {
-  "syntaxRequirement": "...",
-  "collocationCohesionClue": "...",
-  "explanation": "...",
-  "coherenceCue": "...",
-  "vocabGrammarCue": "...",
-  "contextNote": "...",
-  "competingOptionNotes": [
-    { "option": "word", "reason": "why it does not fit this blank" }
+  "blanks": [
+    {
+      "blankId": "...",
+      "syntaxRequirement": "...",
+      "collocationCohesionClue": "...",
+      "explanation": "...",
+      "coherenceCue": "...",
+      "vocabGrammarCue": "...",
+      "contextNote": "...",
+      "competingOptionNotes": [
+        { "option": "word", "reason": "why it does not fit this specific blank" }
+      ]
+    }
   ]
 }`;
 }
 
-function buildReviewPrompt(question, blank, initialDraft) {
-  return `You are a Senior PTE English Language Master Editor auditing and refining AI-generated practice test explanations.
+// Pass 2: Question-Level Master Editor Review Prompt
+function buildQuestionReviewPrompt(question, initialDraft) {
+  return `You are a Senior PTE English Language Master Editor auditing and refining AI-generated practice test explanations for a Reading Drag & Drop question.
 
 Passage:
 ${question.plainText}
 
-Target Blank: Blank #${blank.index + 1} (Correct Answer: "${blank.answer}")
+Shared Word Bank:
+[${question.options.map(o => o.text).join(', ')}]
 
-Draft Explanation to Review:
+Draft Explanations to Review:
 ${JSON.stringify(initialDraft, null, 2)}
 
 Audit Rubric:
-1. "syntaxRequirement": Ensure the Part of Speech and grammatical form (e.g. Past Tense Transitive Verb) is 100% accurate.
-2. "collocationCohesionClue": Verify the collocation or sentence context cue is concise, natural, and helpful for B1-B2 learners.
-3. "explanation": Edit the explanation to be crystal clear, professional, pedagogical, and under 120 words. Eliminate any repetitive phrases.
-4. "competingOptionNotes": Review each distractor reason. Ensure reasons are accurate (correctly distinguishing PoS mismatches from same-PoS traps).
+1. "syntaxRequirement": Ensure the Part of Speech and grammatical form for each blank is 100% accurate.
+2. "collocationCohesionClue": Verify collocations and sentence context cues are natural and clear for B1-B2 learners.
+3. "explanation": Refine explanations to be crystal clear, professional, pedagogical, and under 120 words.
+4. "competingOptionNotes": Audit distractor reasons. Ensure cross-blank distinctions are accurate (explicitly noting when a distractor belongs to another blank vs a global distractor).
 
-Return ONLY the final, polished JSON object matching the schema below, with no markdown wrappers:
+Return ONLY the final, polished JSON object matching the exact same schema with no markdown code fences:
+{
+  "blanks": [
+    {
+      "blankId": "...",
+      "syntaxRequirement": "...",
+      "collocationCohesionClue": "...",
+      "explanation": "...",
+      "coherenceCue": "...",
+      "vocabGrammarCue": "...",
+      "contextNote": "...",
+      "competingOptionNotes": [
+        { "option": "word", "reason": "why it does not fit this specific blank" }
+      ]
+    }
+  ]
+}`;
+}
+
+// Single Blank Fallback Prompt if batched call ever fails
+function buildSingleBlankPrompt(question, blank) {
+  const optionsText = question.options.map(o => o.text).join(', ');
+  return `You are an expert English language teacher. Explain why "${blank.answer}" is correct for Blank #${blank.index + 1} in this passage:
+${question.plainText}
+Word bank: [${optionsText}]
+
+Return ONLY JSON:
 {
   "syntaxRequirement": "...",
   "collocationCohesionClue": "...",
@@ -84,14 +138,14 @@ Return ONLY the final, polished JSON object matching the schema below, with no m
   "vocabGrammarCue": "...",
   "contextNote": "...",
   "competingOptionNotes": [
-    { "option": "word", "reason": "why it does not fit this blank" }
+    { "option": "word", "reason": "why it does not fit" }
   ]
 }`;
 }
 
 async function run() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('  Drag & Drop Explanation Generator (2-Pass Ollama / Gemma AI)');
+  console.log('  Drag & Drop Explanation Generator (Option B: Question-Level 2-Pass)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`  File: ${QUESTIONS_JSON_PATH}`);
   console.log(`  Resume: ${resume}`);
@@ -123,93 +177,140 @@ async function run() {
       break;
     }
 
-    let needsUpdate = false;
-    for (let j = 0; j < q.blanks.length; j++) {
-      const blank = q.blanks[j];
+    // Question-level resume check: skip only if all blanks have OptionB-v1 batchVersion
+    const allBlanksUpToDate = q.blanks.every(b => 
+      b.explanation && 
+      typeof b.explanation === 'string' && 
+      b.explanation.trim().length > 0 && 
+      (b.batchVersion === 'OptionB-v1' || b.reviewPass === true)
+    );
 
-      if (resume && blank.explanation && typeof blank.explanation === 'string' && blank.explanation.trim().length > 0 && blank.reviewPass === true) {
-        continue;
+    if (resume && allBlanksUpToDate) {
+      continue;
+    }
+
+    console.log(`\n[Q#${q.id} "${q.title}"] Processing ${q.blanks.length} blanks with Option B...`);
+
+    let questionSuccess = false;
+    let generatedData = null;
+
+    // Pass 1: Question-Level Batch Generation
+    try {
+      console.log(`  [Pass 1: Question-Level Batch Generate] Q#${q.id}...`);
+      const prompt = buildQuestionPrompt(q);
+      const rawResponse = await callOllamaChatJson([{ role: 'user', content: prompt }]);
+      
+      let parsed;
+      try {
+        let cleaned = rawResponse.trim().replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        const match = rawResponse.match(/\{[\s\S]*\}/);
+        if (match) {
+          parsed = JSON.parse(match[0]);
+        } else {
+          throw new Error('Failed to parse batched JSON response');
+        }
       }
 
-      needsUpdate = true;
-      console.log(`[Pass 1: Generate] Q#${q.id} "${q.title}" -> Blank #${j + 1} (${blank.answer})...`);
-
-      const prompt = buildPrompt(q, blank);
-      const messages = [{ role: 'user', content: prompt }];
-
-      try {
-        // Pass 1: Generate initial explanation
-        const rawResponse = await callOllamaChatJson(messages);
-        let parsed;
-        try {
-          let cleaned = rawResponse.trim();
-          cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-          parsed = JSON.parse(cleaned);
-        } catch (e) {
-          const match = rawResponse.match(/\{[\s\S]*?\}/);
-          if (match) {
-            parsed = JSON.parse(match[0]);
-          } else {
-            throw new Error(`Failed to parse JSON response from Ollama: ${rawResponse.slice(0, 100)}...`);
-          }
+      if (parsed && Array.isArray(parsed.blanks) && parsed.blanks.length > 0) {
+        console.log(`    → Received ${parsed.blanks.length}/${q.blanks.length} blank explanations`);
+        if (parsed.blanks.length !== q.blanks.length) {
+          console.warn(`    ⚠️ Blank count mismatch! Expected ${q.blanks.length}, got ${parsed.blanks.length}`);
         }
+        // Pass 2: Question-Level Master Editor Review
+        console.log(`  [Pass 2: Question-Level Master Review] Q#${q.id}...`);
+        const reviewPrompt = buildQuestionReviewPrompt(q, parsed);
+        const rawReview = await callOllamaChatJson([{ role: 'user', content: reviewPrompt }]);
 
-        // Pass 2: Review & Edit with local Gemma AI
-        console.log(`  [Pass 2: Review & Edit] Q#${q.id} Blank #${j + 1}...`);
-        const reviewPrompt = buildReviewPrompt(q, blank, parsed);
-        const reviewMessages = [{ role: 'user', content: reviewPrompt }];
-        const rawReviewResponse = await callOllamaChatJson(reviewMessages);
-        
         let reviewed;
         try {
-          let cleanedRev = rawReviewResponse.trim();
-          cleanedRev = cleanedRev.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+          let cleanedRev = rawReview.trim().replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
           reviewed = JSON.parse(cleanedRev);
         } catch (e) {
-          const matchRev = rawReviewResponse.match(/\{[\s\S]*?\}/);
+          const matchRev = rawReview.match(/\{[\s\S]*\}/);
           if (matchRev) {
             reviewed = JSON.parse(matchRev[0]);
           } else {
-            // Fallback to Pass 1 if Pass 2 JSON parsing fails
             reviewed = parsed;
           }
         }
 
-        blank.explanation = reviewed.explanation || parsed.explanation || '';
-        blank.syntaxRequirement = reviewed.syntaxRequirement || parsed.syntaxRequirement || '';
-        blank.collocationCohesionClue = reviewed.collocationCohesionClue || parsed.collocationCohesionClue || '';
-        blank.coherenceCue = reviewed.coherenceCue || parsed.coherenceCue || '';
-        blank.vocabGrammarCue = reviewed.vocabGrammarCue || parsed.vocabGrammarCue || '';
-        blank.contextNote = reviewed.contextNote || parsed.contextNote || '';
-        blank.distractorNotes = reviewed.competingOptionNotes || reviewed.distractorNotes || parsed.competingOptionNotes || [];
+        generatedData = (reviewed && Array.isArray(reviewed.blanks) && reviewed.blanks.length > 0) ? reviewed : parsed;
+        questionSuccess = true;
+      }
+    } catch (err) {
+      console.warn(`  ⚠️ Question-level batching failed for Q#${q.id} (${err.message}). Falling back to single-blank processing...`);
+    }
+
+    // Apply results or Single-Blank Fallback
+    for (let j = 0; j < q.blanks.length; j++) {
+      const blank = q.blanks[j];
+      const rawMatch = questionSuccess && generatedData && generatedData.blanks 
+        ? (generatedData.blanks.find(b => b.blankId === blank.blankId) || generatedData.blanks[j])
+        : null;
+      const matchData = rawMatch && rawMatch.explanation && rawMatch.explanation.trim().length > 0
+        ? rawMatch
+        : null;
+
+      if (matchData) {
+        blank.explanation = matchData.explanation || '';
+        blank.syntaxRequirement = matchData.syntaxRequirement || '';
+        blank.collocationCohesionClue = matchData.collocationCohesionClue || '';
+        blank.coherenceCue = matchData.coherenceCue || '';
+        blank.vocabGrammarCue = matchData.vocabGrammarCue || '';
+        blank.contextNote = matchData.contextNote || '';
+        blank.distractorNotes = matchData.competingOptionNotes || matchData.distractorNotes || [];
         blank.model = 'gemma4:latest';
         blank.reviewPass = true;
+        blank.batchVersion = 'OptionB-v1';
         blank.status = 'generated';
-
         successCount++;
-      } catch (err) {
-        console.error(`  ❌ Failed to generate/review explanation for Q#${q.id} Blank #${j + 1}: ${err.message}`);
-        blank.explanation = null;
-        blank.status = 'generation_failed';
-        blank.error = err.message;
-        failCount++;
+      } else {
+        // Single Blank Fallback
+        console.log(`  [Fallback Single Blank] Q#${q.id} Blank #${j + 1} (${blank.answer})...`);
+        try {
+          const fbPrompt = buildSingleBlankPrompt(q, blank);
+          const rawFb = await callOllamaChatJson([{ role: 'user', content: fbPrompt }]);
+          let parsedFb;
+          try {
+            parsedFb = JSON.parse(rawFb.trim().replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim());
+          } catch (e) {
+            const m = rawFb.match(/\{[\s\S]*?\}/);
+            parsedFb = m ? JSON.parse(m[0]) : {};
+          }
+
+          blank.explanation = parsedFb.explanation || '';
+          blank.syntaxRequirement = parsedFb.syntaxRequirement || '';
+          blank.collocationCohesionClue = parsedFb.collocationCohesionClue || '';
+          blank.coherenceCue = parsedFb.coherenceCue || '';
+          blank.vocabGrammarCue = parsedFb.vocabGrammarCue || '';
+          blank.contextNote = parsedFb.contextNote || '';
+          blank.distractorNotes = parsedFb.competingOptionNotes || parsedFb.distractorNotes || [];
+          blank.model = 'gemma4:latest';
+          blank.reviewPass = true;
+          blank.batchVersion = 'OptionB-v1';
+          blank.status = 'generated';
+          successCount++;
+        } catch (err) {
+          console.error(`  ❌ Fallback failed for Q#${q.id} Blank #${j + 1}: ${err.message}`);
+          blank.status = 'generation_failed';
+          blank.error = err.message;
+          failCount++;
+        }
       }
     }
 
-
-    if (needsUpdate) {
-      processedCount++;
-      // Save after each question updated
-      fs.writeFileSync(QUESTIONS_JSON_PATH, JSON.stringify(questions, null, 2), 'utf8');
-      console.log(`Saved Q#${q.id} changes to questions JSON file.`);
-    }
+    processedCount++;
+    safeSaveFile(QUESTIONS_JSON_PATH, JSON.stringify(questions, null, 2));
+    console.log(`Saved Q#${q.id} changes (OptionB-v1) to questions JSON file.`);
   }
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('  Generator Finished.');
   console.log(`  Processed: ${processedCount} questions`);
-  console.log(`  Succeeded: ${successCount} explanations`);
-  console.log(`  Failed: ${failCount} explanations`);
+  console.log(`  Succeeded: ${successCount} blank explanations`);
+  console.log(`  Failed: ${failCount} blank explanations`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 

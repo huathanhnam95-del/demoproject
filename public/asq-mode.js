@@ -666,7 +666,15 @@ class AsqMode {
     this.stopMediaStream();
     this.currentId = String(id || '').trim() || null;
     if (!this.currentId) return;
+    // `random` is a selection command, not a persistent question identity.
+    // Keep the native source select and the shared picker anchored to the
+    // actual question selected from the database.
+    if (this.els.select) {
+      const option = Array.from(this.els.select.options).find((entry) => String(entry.value) === this.currentId);
+      if (option) this.els.select.value = this.currentId;
+    }
     this.setPromptAudioForCurrent();
+    window.SpeakingPracticeController?.sync?.('asq');
 
     // Update URL with current question ID (replaceState — no history entry per question)
     if (window.PracticeRouter && this.currentId) {

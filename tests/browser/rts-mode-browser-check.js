@@ -225,6 +225,25 @@ function startHarnessServer() {
       return pill && pill.textContent && (pill.textContent.includes('#1') || pill.textContent.includes('#'));
     }, null, { timeout: 10000 });
 
+    const initialActionState = await page.evaluate(() => {
+      const visible = (id) => {
+        const el = document.getElementById(id);
+        return Boolean(el && getComputedStyle(el).display !== 'none');
+      };
+      return {
+        start: visible('play-rts-btn'),
+        stop: visible('rts-stop-btn'),
+        retry: visible('rts-retry-btn'),
+        aiScore: visible('rts-ai-score-btn'),
+        next: visible('rts-next-question-btn')
+      };
+    });
+    assert.strictEqual(initialActionState.start, true, 'RTS should show Start before practice begins');
+    assert.strictEqual(initialActionState.stop, false, 'RTS should hide Stop Recording before recording begins');
+    assert.strictEqual(initialActionState.retry, false, 'RTS should hide Retry before results exist');
+    assert.strictEqual(initialActionState.aiScore, false, 'RTS should hide AI scoring before results exist');
+    assert.strictEqual(initialActionState.next, false, 'RTS should hide Next Question before results exist');
+
     await page.evaluate(() => {
       const messenger = document.querySelector('df-messenger');
       if (messenger) {

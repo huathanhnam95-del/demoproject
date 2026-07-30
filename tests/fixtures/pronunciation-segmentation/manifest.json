@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "createdAt": "2026-07-28T01:26:41.846Z",
+  "createdAt": "2026-07-30T03:55:55.815Z",
   "entries": [
     {
       "sampleId": "abandon-clean-l1-vn-01-20260726-105302674",
@@ -27,6 +27,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "ability-clean-l1-vn-01-20260730-104307001",
+      "targetWord": "ability",
+      "referenceIpa": "/əˈbɪləˌti/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "35e4ad5cdc199210eb38dbd2834d3909bd0da189a40e71f005901cd822015ccd",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "able-clean-l1-vn-01-20260726-105415834",
       "targetWord": "able",
       "referenceIpa": "/ˈeɪbəl/",
@@ -39,6 +51,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "able-clean-l1-vn-01-20260730-104317563",
+      "targetWord": "able",
+      "referenceIpa": "/ˈeɪbəl/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "88efb9823932a98f1e58d0b1c0b56786a7990a9d27e698698fe7ebc8b9336db7",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "abolish-clean-l1-vn-01-20260726-110554732",
       "targetWord": "abolish",
       "referenceIpa": "/əˈbɑlɪʃ/",
@@ -47,6 +71,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "72254b8ca687aa858cd733bef173b013a006732d6d748984fe7338bb668e21ae",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "abolish-clean-l1-vn-01-20260730-104328773",
+      "targetWord": "abolish",
+      "referenceIpa": "/əˈbɑlɪʃ/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "0f0b8838abd8a9aee10b88e00ab28dba58d35ac0d83b344241a2306ca961b997",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -87,6 +123,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "above-clean-l1-vn-01-20260730-104339456",
+      "targetWord": "above",
+      "referenceIpa": "/əˈbʌv/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "98ce9919bed99c2d9053508c093359b56f5b59143c4700cd241694b77a436199",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "abroad-clean-l1-vn-01-20260727-100748380",
       "targetWord": "abroad",
       "referenceIpa": "/əˈbrɔd/",
@@ -95,6 +143,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "a197c380b6e4319d660778f5c744f22ec93475f61696246e88be74a275a25aeb",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "abroad-clean-l1-vn-01-20260730-104349749",
+      "targetWord": "abroad",
+      "referenceIpa": "/əˈbrɔd/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "a1972df739fdce358749250078d5371fcfcb836c81c5b432aef579ff046e761b",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -135,6 +195,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "absolute-clean-l1-vn-01-20260730-104400706",
+      "targetWord": "absolute",
+      "referenceIpa": "/ˈæbsəˌlut/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "331235c91d714e1dab720abe85ebb1bcb92af55f91c6bc837ce7e49154e06d48",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "absolutely-clean-l1-vn-01-20260727-122712288",
       "targetWord": "absolutely",
       "referenceIpa": "/ˌæbsəˈlutli/",
@@ -155,6 +227,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "47ee709a9426b0bb2f248d58eccfbffb90d38813f5fb308eb362f559ba9d4363",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "absolutely-clean-l1-vn-01-20260730-104412019",
+      "targetWord": "absolutely",
+      "referenceIpa": "/ˌæbsəˈlutli/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "599c3d1f7490424fcaf9e488f6d2fbdd6f784c8a87fde1f8aae1ad3fa14dd3ac",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -203,6 +287,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "3c1747f0634f8f8cb20f20cecaba108b4aa72a00ebd98824e124c6088b26909c",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "absurd-clean-l1-vn-01-20260730-104423157",
+      "targetWord": "absurd",
+      "referenceIpa": "/əbˈsərd/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "957a57b1799a968bc646cc3a36a5c5e7c0ff5a7a93ad5b848b16e14b6b0aa138",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -279,6 +375,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accept-clean-l1-vn-01-20260730-104433770",
+      "targetWord": "accept",
+      "referenceIpa": "/ækˈsɛpt/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "83a76886fdfd19f1f83cf5aad2e54f3ad27c7bd967849323de7cfb1fe848a0e1",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "acceptable-clean-l1-vn-01-20260727-122843728",
       "targetWord": "acceptable",
       "referenceIpa": "/ækˈsɛptəbəl/",
@@ -287,6 +395,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "2a0d880a4e387b934256b960b96850e8ff8b668f390ad6a6bf7dfdae07554052",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "acceptable-clean-l1-vn-01-20260730-104444086",
+      "targetWord": "acceptable",
+      "referenceIpa": "/ækˈsɛptəbəl/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "ddc24e04c6438e075c1ab163f8b15134188e685f7585834fde77917371a21494",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -327,6 +447,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accessible-clean-l1-vn-01-20260730-104454291",
+      "targetWord": "accessible",
+      "referenceIpa": "/ækˈsɛsəbəl/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "5d5df12d6e529a704b36b7bdd00951826ba198438a4e386be02cb588198b42a0",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accident-clean-l1-vn-01-20260727-122919237",
       "targetWord": "accident",
       "referenceIpa": "/ˈæksədənt/",
@@ -351,6 +483,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accidentally-clean-l1-vn-01-20260730-104511306",
+      "targetWord": "accidentally",
+      "referenceIpa": "/ˌæksəˈdɛnəli/",
+      "expectedObservedCount": 5,
+      "targetSyllableCount": 5,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "d636cbd67bba8a96016b0901afc4b0e5cb490909b9dbf9642ec74059167f4d29",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accommodate-clean-l1-vn-01-20260727-122939016",
       "targetWord": "accommodate",
       "referenceIpa": "/əˈkɑməˌdeɪt/",
@@ -363,6 +507,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accommodate-clean-l1-vn-01-20260730-104521827",
+      "targetWord": "accommodate",
+      "referenceIpa": "/əˈkɑməˌdeɪt/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "4d484e0e04991f16b30bd342136a98cdde53beb5811fc0b1a6f41f5fa66555dc",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accommodation-clean-l1-vn-01-20260727-122948444",
       "targetWord": "accommodation",
       "referenceIpa": "/əˌkɑməˈdeɪʃən/",
@@ -371,6 +527,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "7346f7065e99761880f896ac67bdc76bf609f46cf0bb6f94fb2a211c02268897",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accommodation-clean-l1-vn-01-20260730-104533259",
+      "targetWord": "accommodation",
+      "referenceIpa": "/əˌkɑməˈdeɪʃən/",
+      "expectedObservedCount": 5,
+      "targetSyllableCount": 5,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "61a39f92d42caa505d523ad7d7640204e62f5055dc38e5a5b1145029fa6fb091",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -423,6 +591,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accordance-clean-l1-vn-01-20260730-104553868",
+      "targetWord": "accordance",
+      "referenceIpa": "/əˈkɔrdəns/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "84317df300ee11bd5d6fd809dfe5c0507d42e020586d353c9f0c7cbd05b12a25",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accordingly-clean-l1-vn-01-20260727-123034070",
       "targetWord": "accordingly",
       "referenceIpa": "/əˈkɔrdɪŋli/",
@@ -431,6 +611,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "fc3597c1600c1e7bf24afbb10ec66c9d1cec2b8d8102eca43b67455fdbb3fe6e",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accordingly-clean-l1-vn-01-20260730-104604873",
+      "targetWord": "accordingly",
+      "referenceIpa": "/əˈkɔrdɪŋli/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "314a7c7a10f1d9296bead4ed79856bf5fd32738bd46be548bc1c00860137e3f8",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -471,6 +663,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accountability-clean-l1-vn-01-20260730-104616663",
+      "targetWord": "accountability",
+      "referenceIpa": "/əˈkaʊnəbɪlɪti/",
+      "expectedObservedCount": 6,
+      "targetSyllableCount": 6,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "597fc0634b33330896cb3e09e83d9ec771e17dfc61922ec68ed3d4d80b79fbcb",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accountable-clean-l1-vn-01-20260727-131726087",
       "targetWord": "accountable",
       "referenceIpa": "/əˈkaʊnəbəl/",
@@ -479,6 +683,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "057c0d0685b8bdef936df5e4b7b2b0830548f045074f736461689c957a40d930",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accountable-clean-l1-vn-01-20260730-104632869",
+      "targetWord": "accountable",
+      "referenceIpa": "/əˈkaʊnəbəl/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "6cefcac62700cbacb9de03fd564606648f4c3da4cbc51bee8d58df2b439254da",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -507,6 +723,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accumulate-clean-l1-vn-01-20260730-104723010",
+      "targetWord": "accumulate",
+      "referenceIpa": "/əˈkjumjəˌleɪt/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "b9aac1e9ea50459d8935473544f1e33e36d526241a4bf0b51eb4d39588b887ee",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accumulation-clean-l1-vn-01-20260727-123122275",
       "targetWord": "accumulation",
       "referenceIpa": "/əkˌjumjəˈleɪʃən/",
@@ -515,6 +743,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "5a5c8afb1ea3cf1e72aeea139648ad242f442d59bc0d1f06984e4e43635afaae",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accumulation-clean-l1-vn-01-20260730-104733719",
+      "targetWord": "accumulation",
+      "referenceIpa": "/əkˌjumjəˈleɪʃən/",
+      "expectedObservedCount": 5,
+      "targetSyllableCount": 5,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "e5926d4b6f7a6575e673899590097fec8ba08965cfec1a9bf3a59ef27042faa8",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -531,6 +771,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accuracy-clean-l1-vn-01-20260730-104744495",
+      "targetWord": "accuracy",
+      "referenceIpa": "/ˈækjərəsi/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "893cbd67bb49f381ea0314091968b0c2aa5afd8cd4913485e03489c9d3aa3375",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accurate-clean-l1-vn-01-20260727-123141419",
       "targetWord": "accurate",
       "referenceIpa": "/ˈækjɝət/",
@@ -539,6 +791,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "7281ac59feff27e761e31eaa3e95a6a35752cfdcdac572f7a3b6214d93a3de03",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accurate-clean-l1-vn-01-20260730-104755664",
+      "targetWord": "accurate",
+      "referenceIpa": "/ˈækjərət/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "52846f848a6d4da45854af5d316ab22cbe398c2c9b0d689bb8a14c25ef5d1a82",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -555,6 +819,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accurately-clean-l1-vn-01-20260730-104806874",
+      "targetWord": "accurately",
+      "referenceIpa": "/ˈækjərətli/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "f53413a31fa361b72e0e3c6efd8a945999ae82e676a3f76da5d2054ed9d484f2",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accusation-clean-l1-vn-01-20260727-131755935",
       "targetWord": "accusation",
       "referenceIpa": "/ˌækjəˈzeɪʃən/",
@@ -563,6 +839,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "8cb6982994e3b8b1c00df17863a7413e1272e13f207a4b154eeed3c993b3035d",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accusation-clean-l1-vn-01-20260730-104818110",
+      "targetWord": "accusation",
+      "referenceIpa": "/ˌækjəˈzeɪʃən/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "ace0beca939e3a3f9e6f95eaf37d60f3862211e6d984c302b975db51ab0a5ef9",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -579,6 +867,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "accuse-clean-l1-vn-01-20260730-104829569",
+      "targetWord": "accuse",
+      "referenceIpa": "/əˈkjuz/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "0a4fd01e8f0fabba621ca5653c69db4b192c64727a98a4bb1f9efebae9dc23e9",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "accused-clean-l1-vn-01-20260727-131911221",
       "targetWord": "accused",
       "referenceIpa": "/əkˈjuzd/",
@@ -587,6 +887,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "279d2f9287ce3e07a5c0cd8b717eac1ac8d9976e9ffef25ff175cf012dcf2945",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "accused-clean-l1-vn-01-20260730-104839919",
+      "targetWord": "accused",
+      "referenceIpa": "/əˈkjuzd/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "de58ff3e8506d80a5575bfa57a818a37862563bf5966726cfbe50ed4bc13e592",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -615,6 +927,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "achievement-clean-l1-vn-01-20260730-104850987",
+      "targetWord": "achievement",
+      "referenceIpa": "/əˈtʃivmənt/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "5a50154c49197b07d908ef6f96d49edf6250af84545dfce1c4e8132797d0c306",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "acid-clean-l1-vn-01-20260727-131939368",
       "targetWord": "acid",
       "referenceIpa": "/ˈæsəd/",
@@ -623,6 +947,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "5bfd3ea1b47a629ead435ff907c00b6c6d0d23866bef20ce61ceb78f59d81eef",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "acid-clean-l1-vn-01-20260730-104901640",
+      "targetWord": "acid",
+      "referenceIpa": "/ˈæsəd/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "67afdc025e34bb5522037d662bfd5c1e7dbbafa150a77227ce70a4e667c77bf7",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -647,6 +983,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "426e3decde9d7f4b62ed53dfa84aa3f4ed89fcd6ebea870b166ba34deee09455",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "acquire-clean-l1-vn-01-20260730-104912869",
+      "targetWord": "acquire",
+      "referenceIpa": "/əˈkwaɪər/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "c7d6624d32b21f86cce03e064c3a69d569425af4fe6829eff39294953476e787",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -687,6 +1035,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "across-clean-l1-vn-01-20260730-104923186",
+      "targetWord": "across",
+      "referenceIpa": "/əˈkrɔs/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "b1f0e2549228839caee570e50a1ac2e246c689228bbb8d3f895f9ab54abad23c",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "act-clean-l1-vn-01-20260727-132034222",
       "targetWord": "act",
       "referenceIpa": "/ˈækt/",
@@ -695,6 +1055,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "5da37ddd603d22f6c25d98cac4a091a29f4c165cd877eb3a6cb6594b6a9ae4af",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "act-clean-l1-vn-01-20260730-104933028",
+      "targetWord": "act",
+      "referenceIpa": "/ˈækt/",
+      "expectedObservedCount": 1,
+      "targetSyllableCount": 1,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "ef3eb345c50086da95eb3f8794865e086194dec4fe1e92f13567c7c5d6cf1a61",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -711,6 +1083,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "action-clean-l1-vn-01-20260730-104942751",
+      "targetWord": "action",
+      "referenceIpa": "/ˈækʃən/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "e632b5b19d720bfea09e05a4fe67cfc8dbc9983eaa4271553532d86f6bab54ea",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "activate-clean-l1-vn-01-20260727-132058490",
       "targetWord": "activate",
       "referenceIpa": "/ˈæktəˌveɪt/",
@@ -719,6 +1103,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "d605405c540dc5648a5cf9cfcefda3604d25edcd1706445aeb8fae071d559c27",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "activate-clean-l1-vn-01-20260730-104953846",
+      "targetWord": "activate",
+      "referenceIpa": "/ˈæktəˌveɪt/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "1d3410e7694eb6f19b919fa81a50292b30d0081fae9a136a6622b02f604df7f4",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -755,6 +1151,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "1eb5949e6a69293efd35d2e9c89d8d7ddb254a32407528f1ca4f7b4ba3d7aed3",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "activist-clean-l1-vn-01-20260730-105004498",
+      "targetWord": "activist",
+      "referenceIpa": "/ˈæktəvəst/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "b325ebd9df8d66ad2f0910061d9b9ae6017ee454f96ac408840bc5ba58fa5a3f",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -807,6 +1215,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "actual-clean-l1-vn-01-20260730-105024511",
+      "targetWord": "actual",
+      "referenceIpa": "/ˈækʃəl/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "e11c0e9857ab4bb011a63ef0dc0b9f674df4f91696b89ce644b36ef00e9f3631",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "actually-clean-l1-vn-01-20260727-134642133",
       "targetWord": "actually",
       "referenceIpa": "/ˈækˌtʃuəli/",
@@ -819,6 +1239,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "actually-clean-l1-vn-01-20260730-105035527",
+      "targetWord": "actually",
+      "referenceIpa": "/ˈækˌtʃuəli/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "89ff9a0c6f8aa74447d11f0f31d82ed69df4d7dc816eee7eba6eb0eec79e5faf",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "acute-clean-l1-vn-01-20260727-134704484",
       "targetWord": "acute",
       "referenceIpa": "/əkˈjut/",
@@ -827,6 +1259,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "2526de3fd1ef600751d739b14dce1a0cad60e62a3a4f339af28f1ef9f0dc1acd",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "acute-clean-l1-vn-01-20260730-105046877",
+      "targetWord": "acute",
+      "referenceIpa": "/əˈkjut/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "1b859ae8dd30ad1317db708261c9480e72c1b195d699f61d07d24f02a44c3178",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -903,6 +1347,30 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "addition-clean-l1-vn-01-20260730-105058404",
+      "targetWord": "addition",
+      "referenceIpa": "/əˈdɪʃən/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "a77132374674ddbea9fc14f8aed4bd9a5962e80c8ee47e6901f2a9056b85c7ea",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "addition-clean-l1-vn-01-20260730-105058493",
+      "targetWord": "addition",
+      "referenceIpa": "/əˈdɪʃən/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "a77132374674ddbea9fc14f8aed4bd9a5962e80c8ee47e6901f2a9056b85c7ea",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "additional-clean-l1-vn-01-20260727-134812672",
       "targetWord": "additional",
       "referenceIpa": "/əˈdɪʃənəl/",
@@ -923,6 +1391,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "18cd208276abb39276328542e597df252aee368ca471311afbdb0b6b8823885d",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "additionally-clean-l1-vn-01-20260730-105111181",
+      "targetWord": "additionally",
+      "referenceIpa": "/əˈdɪʃəˌnəli/",
+      "expectedObservedCount": 5,
+      "targetSyllableCount": 5,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "626d99e47f9937ce6d8ca834c4b73bbc17ebce81d814c0c6c765783c0957c893",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -951,6 +1431,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "adequate-clean-l1-vn-01-20260730-105121948",
+      "targetWord": "adequate",
+      "referenceIpa": "/ˈædəˌkweɪt/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "155bef077385a532723953ad6dbcaf50ddb7143c91b401de46d44b304f279464",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "adequately-clean-l1-vn-01-20260727-134858905",
       "targetWord": "adequately",
       "referenceIpa": "/ˈædəkwətli/",
@@ -959,6 +1451,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "efc4fd7b7efb9483225990d3b7ed95d0b4395c2eb683d51ed29600d0aa628b81",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "adequately-clean-l1-vn-01-20260730-105133193",
+      "targetWord": "adequately",
+      "referenceIpa": "/ˈædəkwətli/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "9260fd614243dd53d9a387badac270329fd228b135e9d4d94112e50d5e71976c",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -975,6 +1479,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "adhere-clean-l1-vn-01-20260730-105144509",
+      "targetWord": "adhere",
+      "referenceIpa": "/ədˈhɪr/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "707f0cf860a10f5139888a9a632727f098ed7333afc7b96487e9ae9e21e40388",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "adjacent-clean-l1-vn-01-20260727-134919143",
       "targetWord": "adjacent",
       "referenceIpa": "/əˈdʒeɪsənt/",
@@ -983,6 +1499,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "0fe88475c8e5ff7072edecc784ba8cbf62475f8840d071326fec9e664f07b764",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "adjacent-clean-l1-vn-01-20260730-105156060",
+      "targetWord": "adjacent",
+      "referenceIpa": "/əˈdʒeɪsənt/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "9ff5568085c27c89b3d03d3ced985ad42df1103c9d9db22bb540c0277e02bcac",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1083,6 +1611,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "admire-clean-l1-vn-01-20260730-105212323",
+      "targetWord": "admire",
+      "referenceIpa": "/ædˈmaɪr/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "acf0dee7b51d1cca564112af5ff193eaba4e984fb2d31b1bd3b62ee2abdb2dce",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "admission-clean-l1-vn-01-20260727-210900963",
       "targetWord": "admission",
       "referenceIpa": "/ædˈmɪʃən/",
@@ -1091,6 +1631,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "3538fda79238b8c9d84261e1ffa93624ea9671613eae71e91d4939aaa01d7f1f",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "admission-clean-l1-vn-01-20260730-105224061",
+      "targetWord": "admission",
+      "referenceIpa": "/ædˈmɪʃən/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "0633a118c7dc69bfe4bd38a7b27d2f1ca4513c2c260baad068f4983aaf7871a7",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1155,6 +1707,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "adult-clean-l1-vn-01-20260730-105234630",
+      "targetWord": "adult",
+      "referenceIpa": "/ˈædəlt/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "9becaac4f861dad47c1558db0ed255d5c320a8b4a17b0eb99e42a78dfb85131b",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "advance-clean-l1-vn-01-20260727-211042197",
       "targetWord": "advance",
       "referenceIpa": "/ədˈvæns/",
@@ -1175,6 +1739,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "6fc3240847ffd3def5bccf7f0116153a06794cdd027a6439a9af5c912e20194c",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "advanced-clean-l1-vn-01-20260730-105245889",
+      "targetWord": "advanced",
+      "referenceIpa": "/ədˈvænst/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "d2a8849ccca82b8e25245a9d6db611e11e537e13a634be55c785300f2ab6f931",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1223,6 +1799,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "3745ac64561d91c2323e7e06c518c925d86b4ad28000c1fcf576f66f56f76ca3",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "advertise-clean-l1-vn-01-20260730-105257440",
+      "targetWord": "advertise",
+      "referenceIpa": "/ˈædvərˌtaɪz/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "7ca7fd44305f2ca226a3d97ab64f82d7ccbb611ff747b0df5aa905637390b8f4",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1347,6 +1935,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "afford-clean-l1-vn-01-20260730-105308495",
+      "targetWord": "afford",
+      "referenceIpa": "/əˈfɔrd/",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "27b3017b716456fd8429d2a5560501ce2a1ed6b526437c723ca42f574e0447ae",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "affordable-clean-l1-vn-01-20260727-211409628",
       "targetWord": "affordable",
       "referenceIpa": "/əˈfɔrdəbəl/",
@@ -1355,6 +1955,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "97c6640b87aae21aa8e084e0b1fe5107fe42a4cbe2e4951b3e1d9965cb8fedae",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "affordable-clean-l1-vn-01-20260730-105319110",
+      "targetWord": "affordable",
+      "referenceIpa": "/əˈfɔrdəbəl/",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "c7826f0e34f4801fa6348faa6bbaa4a8ee3939b3c62cb08cff67cbb3b634d526",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1407,6 +2019,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "afternoon-clean-l1-vn-01-20260730-105329883",
+      "targetWord": "afternoon",
+      "referenceIpa": "/ˌæftərˈnun/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "8295918361660f114e7cd46608868ec234a756e51bb1f12017e64172367f8b7a",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "afterwards-clean-l1-vn-01-20260727-211504429",
       "targetWord": "afterwards",
       "referenceIpa": "/ˈæftərwərdz/",
@@ -1419,6 +2043,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "afterwards-clean-l1-vn-01-20260730-105341436",
+      "targetWord": "afterwards",
+      "referenceIpa": "/ˈæftərwərdz/",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "2bebeb2c6b9b22629e51400f59066720efc0282b129733d900ccb9f2da42d2f5",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "banana-clean-l1-vn-01-20260726-104714034",
       "targetWord": "banana",
       "referenceIpa": "bəˈnæn.ə",
@@ -1427,6 +2063,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "71acbcbd1d0b08909e43b7eb0289ef3ace83f4b328bb12703080caf2f37e0696",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "banana-clean-l1-vn-01-20260730-104244924",
+      "targetWord": "banana",
+      "referenceIpa": "bəˈnæn.ə",
+      "expectedObservedCount": 3,
+      "targetSyllableCount": 3,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "ef553b03783e00350cec34f5a4dfe36fbc21603c7579cda187295b4323cd6611",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1475,6 +2123,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "03258469f856d9862ed8963915bce2cbd3184b163175077494417f0b57313137",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "busy-clean-l1-vn-01-20260730-104223086",
+      "targetWord": "busy",
+      "referenceIpa": "ˈbɪz.i",
+      "expectedObservedCount": 2,
+      "targetSyllableCount": 2,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "1036321d90f6710f9298117e346ac43c159f0346067df46422f3a5a71dcfd586",
       "labelProvenance": "manual",
       "verifiedSpans": null
     },
@@ -1539,6 +2199,18 @@
       "verifiedSpans": null
     },
     {
+      "sampleId": "photography-clean-l1-vn-01-20260730-104234571",
+      "targetWord": "photography",
+      "referenceIpa": "fəˈtɑː.ɡrə.fi",
+      "expectedObservedCount": 4,
+      "targetSyllableCount": 4,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "0780d4699d1e3eea7f0ecb9af412aa78b43ccafe46fcd15ba2895aec10450841",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
       "sampleId": "photography-insertion-l1-vn-01-20260725-102441400",
       "targetWord": "photography",
       "referenceIpa": "fəˈtɑː.ɡrə.fi",
@@ -1571,6 +2243,18 @@
       "category": "clean",
       "speakerCohort": "l1-vn-01",
       "sourceHash": "d2d7ba1f41ed8a8c8c78e1cacf7fd662746e3c6b420bf334af6e3c97b41b9c3b",
+      "labelProvenance": "manual",
+      "verifiedSpans": null
+    },
+    {
+      "sampleId": "university-clean-l1-vn-01-20260730-104255620",
+      "targetWord": "university",
+      "referenceIpa": "ˌjuː.nɪˈvɜːr.sə.t̬i",
+      "expectedObservedCount": 5,
+      "targetSyllableCount": 5,
+      "category": "clean",
+      "speakerCohort": "l1-vn-01",
+      "sourceHash": "5ed367c69cdf43a85683b9ce446575afdf8715be35c1ae5ca377f694d6d1f90a",
       "labelProvenance": "manual",
       "verifiedSpans": null
     }

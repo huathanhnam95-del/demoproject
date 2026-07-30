@@ -8,7 +8,7 @@
 const DifficultyFilter = (() => {
     'use strict';
 
-    const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes', 'rop'];
+    const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes', 'rop', 'sgd'];
     const STORAGE_PREFIX = 'questionDifficulty';
     const LEGACY_STORAGE_PREFIX = 'difficultyFilter';
     const VALID_VALUES = new Set(['all', '1', '2', '3']);
@@ -19,7 +19,8 @@ const DifficultyFilter = (() => {
         speak: 'all',
         extended: 'all',
         notes: 'all',
-        rop: 'all'
+        rop: 'all',
+        sgd: 'all'
     };
     let isInitialized = false;
 
@@ -141,6 +142,10 @@ const DifficultyFilter = (() => {
         } else if (mode === 'rop') {
             if (window.ROPMode && typeof window.ROPMode.applyFilters === 'function') {
                 window.ROPMode.applyFilters();
+            }
+        } else if (mode === 'sgd') {
+            if (window.SGDMode && typeof window.SGDMode.applyFilters === 'function') {
+                window.SGDMode.applyFilters();
             }
         } else if (typeof window.populateQuestionSelect === 'function') {
             window.populateQuestionSelect(mode);

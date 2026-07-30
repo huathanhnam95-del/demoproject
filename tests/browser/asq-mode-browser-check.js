@@ -167,6 +167,16 @@ async function runTest() {
         // Verify element state
         const isVisible = await page.isVisible('#asq-record-btn');
         console.log('Record button visible:', isVisible);
+        const pickerIdentity = await page.evaluate(() => ({
+            sourceValue: document.getElementById('asq-question-select')?.value || '',
+            pillText: document.querySelector('#spc-picker-asq')?.textContent || ''
+        }));
+        if (pickerIdentity.sourceValue !== '1') {
+            throw new Error(`ASQ should normalize the random sentinel to the selected question ID, got ${pickerIdentity.sourceValue}`);
+        }
+        if (/#random\b/i.test(pickerIdentity.pillText)) {
+            throw new Error(`ASQ controller should not display #random as the current question: ${pickerIdentity.pillText}`);
+        }
 
         await page.evaluate(() => {
             const audio = document.getElementById('asq-prompt-audio');

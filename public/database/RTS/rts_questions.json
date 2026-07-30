@@ -1,732 +1,1170 @@
 [
-  {
-    "id": 1,
-    "title": "#1 Shared Study Space",
-    "answer": "You manage a small local library and have arranged a space within it for community members to study and work. Upon a routine check, you find that the area is cluttered with personal items left behind. You need to address this issue with the community members. What would you say to the community members?"
-  },
-  {
-    "id": 2,
-    "title": "#2 Deadline Extension",
-    "answer": "During a team meeting on Tuesday, your supervisor asks if you can complete and submit a comprehensive project update for a client by Friday. However, you're waiting on essential feedback from a key team member who's out of the office until Thursday. What would you say to your supervisor?"
-  },
-  {
-    "id": 3,
-    "title": "#3 A Spa Day",
-    "answer": "You book a spa day based on glowing reviews and a wide range of services listed online. When you arrive, half the services are unavailable, and the facilities are not as advertised. How do you address this with the spa manager?"
-  },
-  {
-    "id": 4,
-    "title": "#4 Addressing Concerns Over Car Borrowing",
-    "answer": "You've lent your car to a friend for a weekend trip. Upon its return, you notice the interior is much dirtier than before. You need to discuss this with your friend to address the care of your property and the importance of respecting the agreements made. What would you say to your friend?"
-  },
-  {
-    "id": 5,
-    "title": "#5 Addressing Equipment Care",
-    "answer": "You are the captain of a community sports team and have provided team equipment for everyone's use. After a few weeks, you notice that the equipment is often left outside, not stored properly, and some items are starting to show wear and tear much faster than expected. What would you say to your team?"
-  },
-  {
-    "id": 6,
-    "title": "#6 Group Project",
-    "answer": "You're responsible for a crucial part of a group project due in a week. You've been waiting on important data from another group member, which they've just informed you will be delayed. This setback affects your ability to complete your section on time. What would you say to your group members?"
-  },
-  {
-    "id": 7,
-    "title": "#7 Heavy Lifts",
-    "answer": "You're at the gym, finishing up your workout, when your workout buddy asks if you're available to spot him for his heavy lifts tomorrow morning. However, you realize you have a doctor's appointment scheduled at the same time. What would you say to him?"
-  },
-  {
-    "id": 8,
-    "title": "#8 A photography Lesson",
-    "answer": "You sign up for a photography lesson advertised as covering a wide range of techniques and offering hands-on practice. However, when you attend the lesson, you find that only basic topics are covered, and there's minimal opportunity for practical application. How do you address this with the lesson organizer?"
-  },
-  {
-    "id": 9,
-    "title": "#9 A Delayed Project",
-    "answer": "You've organized a group project with your classmates, and everyone agreed on their roles and deadlines. However, one member consistently fails to deliver their part on time, causing delays for the entire group. What would you say to your classmate?"
-  },
-  {
-    "id": 10,
-    "title": "#10 Addressing Pet Care",
-    "answer": "You've entrusted a friend to take care of your pet while you're away, but when you return, you find your pet's food bowl empty, the water dish dirty, and your pet visibly stressed. You need to address this with your friend. What would you say to your friend?"
-  },
-  {
-    "id": 11,
-    "title": "#11 Addressing Shared Kitchen Hygiene",
-    "answer": "You're the manager of a shared kitchen in your office, and you've noticed that some employees are leaving dirty dishes in the sink and not cleaning up spills on the counters. This is causing unpleasant odors and attracting pests. You need to remind them of the importance of cleaning up for everyone's convenience and health. What would you say?"
-  },
-  {
-    "id": 12,
-    "title": "#12 A Messy Gym",
-    "answer": "You notice that the communal gym equipment at your apartment complex has been left in disarray with weights scattered all over the floor and machines left unattended. You decide to send a friendly reminder to your neighbors. What would you say to your neighbors?"
-  },
-  {
-    "id": 13,
-    "title": "#13 A Communal Garden",
-    "answer": "You manage a communal garden, and during your latest visit, you notice several plants have been trampled, and gardening tools are scattered everywhere. You need to address the community to encourage care and shared responsibility for the garden's upkeep. What would you say to the community members?"
-  },
-  {
-    "id": 14,
-    "title": "#14 Team Project",
-    "answer": "After a team project meeting, you notice that tasks are frequently being misunderstood or forgotten, leading to delays and frustration. You need to address the team to encourage clear communication, timely updates, and shared responsibility for the project's success. What would you say to the team？"
-  },
-  {
-    "id": 15,
-    "title": "#15 A Messy Bike Return",
-    "answer": "You've lent your bicycle to a friend for a few days, but when they return it, you notice it's covered in mud, the tires are deflated, and there are scratches on the frame. You're disappointed with the lack of care and want to remind your friend. What would you say to your friend?"
-  },
-  {
-    "id": 16,
-    "title": "#16 Dietary Restrictions",
-    "answer": "You've organized a dinner with your friends at your place. However, when they arrive, you notice they've brought food without considering dietary restrictions or allergies of others. You need to remind them to be mindful of everyone's dietary needs for a successful and inclusive gathering. What would you say to your friends?"
-  },
-  {
-    "id": 17,
-    "title": "#17 A Hiking Trip",
-    "answer": "You've organized a group hiking trip with your friends, and everyone's excited to hit the trails. However, upon arrival at the meeting point, you notice some of them have brought single-use plastic water bottles and snack wrappers, leaving behind litter. You need to remind them to respect the environment. What would you say to your friends?"
-  },
-  {
-    "id": 18,
-    "title": "#18 A Cleanup",
-    "answer": "You've organized a beach cleanup event with your friends to help protect marine life and preserve the coastline. However, upon arriving at the beach, you notice some participants tossing their trash on the sand instead of using the designated bins. What would you say to your friends?"
-  },
-  {
-    "id": 19,
-    "title": "#19 Noise Control",
-    "answer": "You've organized a group study session with your classmates at your apartment. However, when they arrive, you notice some of them are not following the agreed-upon noise level and are causing disturbances to your neighbors. You need to remind them to be considerate of others. What would you say to your classmates?"
-  },
-  {
-    "id": 20,
-    "title": "#20 Barbecue Party",
-    "answer": "You've organized a barbecue with your friends at your place. However, upon their arrival, you notice some of your friends are using your kitchen utensils carelessly. You need to remind everyone to handle the utensils with care to maintain their quality and keep ourselves safe. What would you say to your friends?"
-  },
-  {
-    "id": 21,
-    "title": "#21 Team-building Activity",
-    "answer": "You've organized a team-building activity for your colleagues at a local park. However, upon arrival, you notice some team members are not participating actively and seem disengaged. You need to remind everyone of the importance of teamwork and encourage active participation to maximize the benefits of the activity. What would you say to your colleagues?"
-  },
-  {
-    "id": 22,
-    "title": "#22 Community Garden Project",
-    "answer": "You've organized a community garden project with your neighbors, and everyone's excited to start planting. However, upon arrival, you notice some garden beds are neglected, with weeds growing rampant. You need to remind everyone of their responsibility to maintain their assigned plots to ensure the success of the garden. What would you say to your neighbors?"
-  },
-  {
-    "id": 23,
-    "title": "#23 Book Club",
-    "answer": "You've organized a weekly book club meeting with your friends, and everyone's excited to discuss the latest read. However, upon arrival, you notice some attendees haven't finished the book and are unable to participate fully in the discussion. You need to remind everyone of the importance of reading the assigned material. What would you say to your friends?"
-  },
-  {
-    "id": 24,
-    "title": "#24 Movie Night",
-    "answer": "You've organized a monthly movie night with your friends, and everyone's excited to watch a classic film together. However, upon arrival, you notice some guests bringing loud snacks that could disturb others during the movie. You need to remind everyone to bring quiet snacks to ensure an enjoyable viewing experience for everyone. What would you say to your friends?"
-  },
-  {
-    "id": 25,
-    "title": "#25 Proper Gear",
-    "answer": "You've organized a weekend hiking trip with your friends, and everyone's excited to hit the trails. However, upon arrival, you notice some of them are not wearing proper hiking shoes, which could lead to discomfort and injuries during the hike. You need to remind everyone to wear appropriate footwear. What would you say to your friends?"
-  },
-  {
-    "id": 26,
-    "title": "#26 Checking Presentation Slides",
-    "answer": "Your colleague asks if you can review the presentation slides they've prepared for an upcoming meeting. However, you realize you have several urgent tasks to complete by the end of the day. You need to politely ask for more time to ensure you can give their slides the attention they deserve. What would you say to your colleague?"
-  },
-  {
-    "id": 27,
-    "title": "#27 Feasible Options",
-    "answer": "You're planning a weekend getaway with friends, and they're discussing the activities they want to do. However, you realize some of the suggestions might not be feasible due to time constraints or budget limitations. You need to gently guide the conversation towards more realistic options without dampening the excitement. What would you say to your friends?"
-  },
-  {
-    "id": 28,
-    "title": "#28 Food Choice",
-    "answer": "You're hosting a dinner party for friends, and they're suggesting elaborate dishes that require a lot of preparation. However, you realize you have limited time and resources to cook such elaborate meals. You need to gently steer the conversation towards simpler, yet equally delicious. What would you say to your friends?"
-  },
-  {
-    "id": 29,
-    "title": "#29 Birthday Activity",
-    "answer": "You're organizing a team outing to celebrate a colleague's birthday-Dave, and everyone's suggesting different activities. However, you realize that some options might not be suitable due to varying preferences and physical abilities. You need to gently guide the discussion towards inclusive activities that everyone can enjoy regardless of their interests or limitations. What would you say to your colleagues?"
-  },
-  {
-    "id": 30,
-    "title": "#30 Group Presentation",
-    "answer": "You're preparing for a group presentation, and your team members suggest incorporating complex charts and graphs into the slides. However, you realize that these visuals might confuse the audience and distract from the main points. You need to gently steer the discussion towards simpler and clearer visuals that enhance understanding. What would you say to your team members?"
-  },
-  {
-    "id": 31,
-    "title": "#31 A Charity Event",
-    "answer": "You're coordinating a charity event for your company, and your team proposes hosting a silent auction to raise funds. However, you realize that organizing the auction might require more resources and time than anticipated. You need to gently guide the discussion towards simpler fundraising ideas. What would you say to your team?"
-  },
-  {
-    "id": 32,
-    "title": "#32 Wellness Program",
-    "answer": "You're organizing a company-wide wellness program, and your team proposes implementing a mandatory daily yoga session for all employees. However, you realize that not everyone may be interested in or able to participate in yoga. You need to gently guide the discussion towards alternative wellness activities that accommodate different preferences and abilities. What would you say to your team?"
-  },
-  {
-    "id": 33,
-    "title": "#33 Enhancing Customer Service Process",
-    "answer": "Your team is discussing how to enhance the company's customer service process, and someone suggests increasing the use of automated systems to handle customer inquiries. However, you realize this might weaken the interpersonal connection with customers. What would you say to your team?"
-  },
-  {
-    "id": 34,
-    "title": "#34 A Team-building Event",
-    "answer": "You're coordinating a team-building event for your department, and your team suggests going to an amusement park. However, you realize that some team members may not enjoy rides or have health conditions that prevent them from participating fully. What would you say to your team?"
-  },
-  {
-    "id": 35,
-    "title": "#35 Destination Choice",
-    "answer": "You and your friends are planning a vacation. Someone suggests going to a faraway foreign country, but you realize one friend might have a fear of flying and some of them have a relatively tight budget. You need to carefully propose an alternative suggestion to ensure everyone can enjoy the trip. What would you say to your friends?"
-  },
-  {
-    "id": 36,
-    "title": "#36 Choosing a Place",
-    "answer": "You're planning a birthday celebration for a friend, and the group is discussing potential venues. One suggestion is to go to a loud and crowded nightclub, but you know that some friends prefer quieter and more intimate settings. What would you say to the group?"
-  },
-  {
-    "id": 37,
-    "title": "#37 Activity Preference",
-    "answer": "You're organizing a team-building event for your colleagues, and one suggestion is to participate in an escape room activity. However, you realize that some team members may feel uncomfortable or anxious in enclosed spaces. What would you say to your colleagues?"
-  },
-  {
-    "id": 38,
-    "title": "#38 Postponing a Deadline",
-    "answer": "You're in the library working on your thesis when suddenly you receive a message from your advisor asking if you can submit a progress report by Friday. You hope to request more time since the reference materials you reserved won't be available from the library until Thursday. What would you say to your advisor?"
-  },
-  {
-    "id": 39,
-    "title": "#39 A Flawed Project",
-    "answer": "You're a project manager who has just reviewed a team's project draft due next week. You notice several critical sections are incomplete, and the overall quality is below expectations. You need to address these issues promptly while motivating the team to improve their work before the deadline. What would you say to your team?"
-  },
-  {
-    "id": 40,
-    "title": "#40 Soccer Team",
-    "answer": "You're the coach of a youth soccer team and you've just watched them lose a game because of a lack of teamwork and coordination. You want to address the situation in a way that motivates them to improve their teamwork for the next game without discouraging them. What would you say to your soccer team?"
-  },
-  {
-    "id": 41,
-    "title": "#41 Low Morale",
-    "answer": "You're the head of a small department in a company, and you've noticed that the team's morale has been low due to the high workload and tight deadlines. You want to address the issue to motivate them and discuss potential solutions to manage the workload more effectively without overwhelming anyone. What would you say to your team?"
-  },
-  {
-    "id": 42,
-    "title": "#42 Low Participation",
-    "answer": "You're the leader of a book club that has been meeting virtually for the past few months. Recently, you've noticed that participation has dropped, and fewer people are joining the discussions. You want to revive interest and encourage more members to actively participate in the book club's meetings and discussions. What would you say to your club?"
-  },
-  {
-    "id": 43,
-    "title": "#43 Coaching a Basketball Team",
-    "answer": "You're coaching a youth basketball team, and you've noticed that the team's performance has been inconsistent. The players show potential during practice but struggle to maintain focus and teamwork during games. You want to find a way to improve their game-time performance and help them play more cohesively as a team. What would you say to your team?"
-  },
-  {
-    "id": 44,
-    "title": "#44 Enhancing Collaboration",
-    "answer": "You're tasked with leading a team to develop a new software feature within a tight deadline. The team is talented but new to working together, and progress has been slower than expected. To meet the deadline, you need to find ways to enhance collaboration and efficiency among team members without causing burnout. What would you say to your team?"
-  },
-  {
-    "id": 45,
-    "title": "#45 Alternate Plans",
-    "answer": "You've arranged a weekend hiking trip with friends, but as the date approaches, you notice the weather forecast predicts heavy rain. You need to discuss with your friends whether to proceed with the hike, postpone it, or plan an alternative indoor activity for the weekend. What would you say to your friends?"
-  },
-  {
-    "id": 46,
-    "title": "#46 Overwhelmed with Work",
-    "answer": "You've been feeling overwhelmed with work and personal commitments lately, realizing you need a better balance. You decide to speak with your manager about adjusting your workload or finding a more flexible working arrangement to manage stress and maintain productivity without compromising the quality of your work. What would you say to your boss?"
-  },
-  {
-    "id": 47,
-    "title": "#47 Loud music",
-    "answer": "Your neighbor has been playing loud music late at night, making it difficult for you to sleep. You want to address the situation diplomatically to maintain a good relationship with your neighbor while ensuring the noise is reduced during late hours. What would you say to your neighbor?"
-  },
-  {
-    "id": 48,
-    "title": "#48 Missing Books",
-    "answer": "You're leading a community book club, and during this month's meeting, you discover several books are missing from the club's library. You want to address the issue respectfully, reminding members to return books on time for everyone's benefit. What would you say to your members?"
-  },
-  {
-    "id": 49,
-    "title": "#49 Party",
-    "answer": "You are going to have a party with your classmates at home. You will prepare barbecue and salad to treat them, but you do not know their dietary restrictions. You made a phone call to ask them about this, but they did not answer the call. Please leave a message to them."
-  },
-  {
-    "id": 50,
-    "title": "#50 Chip Discount",
-    "answer": "You bought some chips at a supermarket with a discount of 2 for 3 dollars, but when you checked out, you found a mistake because you were charged 3 dollars each. What would you say to the cashier?"
-  },
-  {
-    "id": 51,
-    "title": "#51 Package",
-    "answer": "You are expecting an important package to be delivered while you are not at home for about an hour. Since the package requires a signature upon delivery, you decide to ask your neighbor for help. How would you politely request your neighbor to sign for the package and let them know that you will pick it up once you return?"
-  },
-  {
-    "id": 52,
-    "title": "#52 Subway",
-    "answer": "Your colleague drives to work, but the traffic is heavy every day. How should you suggest she take the subway for several reasons?"
-  },
-  {
-    "id": 53,
-    "title": "#53 Restaurant Order",
-    "answer": "You were eating in a restaurant and you ordered a hamburger, but you were served fish and chips. What would you say to the waiter?"
-  },
-  {
-    "id": 54,
-    "title": "#54 Spoiled Food",
-    "answer": "You recently bought some food from a store, but after opening it at home, you realized it was spoiled. You decide to go back to the store and speak to the manager about the issue. How would you explain the situation and request a solution?"
-  },
-  {
-    "id": 55,
-    "title": "#55 Late for Appointment",
-    "answer": "You are thirty minutes late for your doctor's appointment. You need to explain to the receptionist and ask if the doctor could see you later today. What would you say to the receptionist?"
-  },
-  {
-    "id": 56,
-    "title": "#56 Cat",
-    "answer": "You are planning to be away from home for three days and need someone to take care of your cat. You decide to ask your friend Monica for help. How would you explain the situation and request her assistance in feeding your cat while you are away?"
-  },
-  {
-    "id": 57,
-    "title": "#57 Wind",
-    "answer": "Your classmate is on vacation and your are at her home. The strong wind damaged the furniture on the balcony, so you want to inform your classmates so that she could be mentally prepared. What do you say to her?"
-  },
-  {
-    "id": 58,
-    "title": "#58 Call and Dinner",
-    "answer": "You are preparing dinner and your friend is calling you to discuss her daughter's problem. You really want to help your friend to solve her problem, but you are busy now, so you hope your friend could call you later. What do you say to your friend?"
-  },
-  {
-    "id": 59,
-    "title": "#59 Borrowed Book",
-    "answer": "You borrowed a book from your friend Anit, but she now wants it back. How would you politely arrange to return the book to her, and possibly discuss a convenient time for her to pick it up?"
-  },
-  {
-    "id": 60,
-    "title": "#60 Baby Carer",
-    "answer": "You have a new baby and find it challenging to manage cooking and taking care of the baby simultaneously. You want to ask a friend for advice on how they manage to balance cooking with baby care. How do you approach this conversation and what specific questions do you ask to get helpful tips?"
-  },
-  {
-    "id": 61,
-    "title": "#61 History Assignment",
-    "answer": "You've just completed a history assignment and you're keen on improving it before submission. You decide to seek feedback from your classmate, Ali, who always seems to excel in history. How do you approach Ali for feedback, and what specific questions do you ask to gain insights on how to enhance your assignment?"
-  },
-  {
-    "id": 62,
-    "title": "#62 Garden Care",
-    "answer": "You're about to go on vacation and are worried that no one will take care of your garden plants. You want to ask your neighbor if they could help. One morning, you see her standing at the door and want to ask if she could water the plants twice a week. What should you say to your neighbor?"
-  },
-  {
-    "id": 63,
-    "title": "#63 Wet Floor",
-    "answer": "You are walking up the stairs in front of your apartment and almost slip on the wet floor. You tell one of your neighbors about it. What would you say?"
-  },
-  {
-    "id": 64,
-    "title": "#64 Noisy Library",
-    "answer": "You have an assignment due next week. Now you are in the library, but someone next to you is playing a video without headphones. You are too distracted to focus on your study. You should have a conversation with him to make sure you have a quiet place. What would you say?"
-  },
-  {
-    "id": 65,
-    "title": "#65 Missing Pages",
-    "answer": "You borrowed a book from the university library. But while reading it, you notice that two pages have been torn out, but you didn't do it. What do you say to the librarian when you return the book?"
-  },
-  {
-    "id": 66,
-    "title": "#66 Asking for Leave",
-    "answer": "You have an appointment and need to leave work early to accompany a relative. How do you request permission from your employer for early departure? What key points should you address to ensure your request is understood and approved?"
-  },
-  {
-    "id": 67,
-    "title": "#67 Poor Living Conditions",
-    "answer": "You recently moved into a rental apartment, but you've noticed that the living conditions are not as expected. You decide to speak with the landlord about the issues. How would you explain the problems you're experiencing and request a solution?"
-  },
-  {
-    "id": 68,
-    "title": "#68 Sports Club",
-    "answer": "Your friend invited you to join a sports club. You are interested in the sports but you cannot join because of your family and your job, and because you need to travel. What do you say to your friend?"
-  },
-  {
-    "id": 69,
-    "title": "#69 Wrong Delivery",
-    "answer": "You received a letter that was mistakenly delivered to your address, and it belongs to your neighbor. How would you approach your neighbor and politely return the letter to them?"
-  },
-  {
-    "id": 70,
-    "title": "#70 Flight Canceled",
-    "answer": "You previously called the taxi driver and informed him that you were going to the airport, but now you have to change your destination to go home due to the flight cancel. You want to tell the driver where your home address is and how to get there. What should you say to the driver?"
-  },
-  {
-    "id": 71,
-    "title": "#71 Late to School",
-    "answer": "You are late to school today and need to explain the situation to your teacher. How would you apologize for being late and provide a reasonable explanation for your delay?"
-  },
-  {
-    "id": 72,
-    "title": "#72 Rescheduling Meeting",
-    "answer": "You need to change the meeting time with your colleague. How would you approach them to request a new time, and what key points should you cover, including suggesting alternative times, considering their availability, and ensuring the rescheduling is convenient for both parties?"
-  },
-  {
-    "id": 73,
-    "title": "#73 Italian Food",
-    "answer": "You are going to eat outside with your friends and they want to eat Italian food. You don't like Italian food, but you want to dine out with them. What would you say to your friends?"
-  },
-  {
-    "id": 74,
-    "title": "#74 Broken Car",
-    "answer": "Your car has broken down, and you know a girl is waiting for you. How do you approach this situation to inform her of the delay and ask for assistance or suggest alternative arrangements? What specific details do you include to ensure clear communication and to propose a solution that accommodates both of your needs?"
-  },
-  {
-    "id": 75,
-    "title": "#75 Asking for a Ride",
-    "answer": "You haven’t taken a taxi, and you want to ask your colleague for a ride. What should you say to your colleague?"
-  },
-  {
-    "id": 76,
-    "title": "#76 Dinner with Colleague",
-    "answer": "You plan to have dinner with your colleague and maybe later go to watch a movie, but right now you feel sick, and you have a headache and may have a cold. You see your colleague is having a coffee in the lunch room. What should you say?"
-  },
-  {
-    "id": 77,
-    "title": "#77 Final Project",
-    "answer": "You need help with your final project and want to ask your teacher for assistance. How do you approach your teacher to explain the situation and what specific points do you include to ensure you get the support you need?"
-  },
-  {
-    "id": 78,
-    "title": "#78 Sharing the Cost",
-    "answer": "You are living in the same building with your colleague Mike, and you want to go to work with him every day and share the cost together. What would you say to him?"
-  },
-  {
-    "id": 79,
-    "title": "#79 Wall Painting",
-    "answer": "You've been living in your apartment for a few years and feel that a fresh coat of paint would brighten up the space. You want to ask your landlord for permission to paint the walls yourself. How do you approach this conversation and what specific points do you bring up to get a positive response?"
-  },
-  {
-    "id": 80,
-    "title": "#80 Lost Bag",
-    "answer": "You and your friends had dinner at a restaurant yesterday. You think you left a bag at the restaurant. You sat at the table next to the window. You had college materials inside the bag. You call the manager of the restaurant and what would you say to the manager?"
-  },
-  {
-    "id": 81,
-    "title": "#81 New Classroom",
-    "answer": "When you arrive at the usual classroom where you normally have class, you find a notice saying that the computer is broken and you need to move to another new classroom. However, you are late today, and the other students have already moved to the new classroom. So you ask a staff member about how to get to the new classroom. What will you say?"
-  },
-  {
-    "id": 82,
-    "title": "#82 Lazy Roommate",
-    "answer": "You have a roommate, but he usually does not clean the common areas. You cannot stand dirty common areas. You're going to talk to him. What are you going to say?"
-  },
-  {
-    "id": 83,
-    "title": "#83 Absence for Tutorial",
-    "answer": "You have a tutorial at 3 P.M. on Monday afternoon, but unfortunately there is a football match that you need to attend at the same time. You want to rearrange the time with the teacher. What would you say to your teacher?"
-  },
-  {
-    "id": 84,
-    "title": "#84 Umbrella",
-    "answer": "You've just arrived at the office and realized that it's pouring outside. You didn't bring an umbrella and know that one of your colleagues, who sits near you, often has a spare umbrella. How do you approach your colleague to ask for an umbrella, and what specific points do you include to ensure a positive response?"
-  },
-  {
-    "id": 85,
-    "title": "#85 Renting Bikes",
-    "answer": "You overheard your colleagues discussing renting bikes, which sounds really fun and you are interested in it. Speak to your colleagues to inquire about the details, such as the cost of renting and how and where you can rent a bike."
-  },
-  {
-    "id": 86,
-    "title": "#86 Cafe Job",
-    "answer": "You are interested in applying for a part-time job in the school cafe. You know that the boss is looking for someone to work at weekends and requires working experience, which you are actually currently lacking. However, you are eager to learn and determined to work hard. What do you have to say to get this chance?"
-  },
-  {
-    "id": 87,
-    "title": "#87 Project Extension",
-    "answer": "You are taking business night classes and your project is going to be due soon. You want to ask your professor for an extension over the weekend. You go to the professor's office. What do you say to him?"
-  },
-  {
-    "id": 88,
-    "title": "#88 Movie Delay",
-    "answer": "You went to watch a movie with a friend, but the car broke down on the way and made your friend wait for a long time. What should you say to your friend?"
-  },
-  {
-    "id": 89,
-    "title": "#89 Lost Wallet",
-    "answer": "You’re at a salon and you want to get a haircut, but you realize that you left your wallet in your taxi. You don’t have the taxi number and you don’t have any other payment methods with you. What will you tell the stylist in order to resolve this situation?"
-  },
-  {
-    "id": 90,
-    "title": "#90 Dessert",
-    "answer": "You invite some friends to your party, and one of them wants to bring some dessert. You have already prepared the dessert. So you hope your friend can bring something else (for example: fruit, cake, etc..). What should you say to your friend?"
-  },
-  {
-    "id": 91,
-    "title": "#91 Walk in Countryside",
-    "answer": "Your friend Susan suggests having a walk in the countryside tomorrow. You would love to, but you have seen the weather forecast and it might rain tomorrow. You want to wait and see the weather tomorrow morning, and decide then. What would you say to Susan right now?"
-  },
-  {
-    "id": 92,
-    "title": "#92 Farewell Gift",
-    "answer": "Your manager Joe is about to retire and he is going to travel in another country. You want to give him a farewell gift. How should you discuss with your colleagues what gift to prepare for the manager?"
-  },
-  {
-    "id": 93,
-    "title": "#93 Complaint about Waiter",
-    "answer": "You have finished your dinner at a restaurant. The manager comes to ask you how the food was. You think the dishes were good, but you want to complain about the waiter's service and the fact that the coffee you ordered has not arrived. What would you say to the manager?"
-  },
-  {
-    "id": 94,
-    "title": "#94 Late for Meeting",
-    "answer": "You are ten minutes late for a meeting because of a traffic jam. How should you explain to your colleagues?"
-  },
-  {
-    "id": 95,
-    "title": "#95 Essay Extension",
-    "answer": "You have an essay due tomorrow, but you have been feeling sick for the past two weeks. You went to the clinic and got a doctor's note. You feel bad about now but have to ask your professor for an extension until the weekend. You go to the professor's office. What do you say to him?"
-  },
-  {
-    "id": 96,
-    "title": "#96 Working Remotely",
-    "answer": "You will be on vacation and you want to discuss with your boss how to work efficiently, such as working remotely or something like that. What should you say to your boss?"
-  },
-  {
-    "id": 97,
-    "title": "#97 Sam's Cafe",
-    "answer": "You have a dinner date with a friend, and she wants to go to Sam's Cafe which only serves coffee, tea, etc. You want to eat in a restaurant with a lot of food. What do you say to your friend?"
-  },
-  {
-    "id": 98,
-    "title": "#98 RTS",
-    "answer": "You are in your second year of university and have been working on a big assignment for your psychology class. Unfortunately, you’ve had the flu for the past week and couldn’t concentrate or get much work done. You have a doctor’s note and feel a little better now. You go to your lecturer’s office to talk. What would you say?"
-  },
-  {
-    "id": 99,
-    "title": "#99 RTS",
-    "answer": "You are working on a group presentation for one of your classes. Each person was assigned a section to complete by the weekend. However, you were unable to finish your part because of a family emergency. You meet with your group the next day. What would you say to them?"
-  },
-  {
-    "id": 100,
-    "title": "#100 Taking Notes",
-    "answer": "You are walking out of your lecture and realize you didn't understand some of the main points your professor was making. You see a classmate who you think took good notes and paid attention during class. You want to ask them for help understanding what was covered. What would you say?"
-  },
-  {
-    "id": 101,
-    "title": "#101 RTS",
-    "answer": "You are checking your latest essay grade online and notice that your tutor left detailed feedback on every paragraph, including useful suggestions. You’re surprised and impressed by how much time they must have spent reviewing your work. The next day, you see your tutor in the hallway after class. What would you say to them?"
-  },
-  {
-    "id": 102,
-    "title": "#102 RTS",
-    "answer": "You share an apartment with a roommate and have both agreed to split the cleaning duties each week. Lately, you’ve noticed that your roommate hasn’t been doing their part, and it's starting to bother you. You want to bring it up without starting an argument. You see your roommate in the kitchen. What would you say?"
-  },
-  {
-    "id": 103,
-    "title": "#103 RTS",
-    "answer": "You are on your way to a group meeting in the library to prepare for an upcoming exam. However, you just received an urgent phone call from a family member and need to deal with it before joining the group. You know the meeting has already started. You call one of your classmates to let them know. What would you say?"
-  },
-  {
-    "id": 104,
-    "title": "#104 RTS",
-    "answer": "You are scheduled to work in the biology lab next Tuesday at 10 am. However, you have a very important doctor's appointment that day that you cannot reschedule. You need to ask your lab partner if they would be willing to switch lab times with you next week. What would you say?"
-  },
-  {
-    "id": 105,
-    "title": "#105 Copying Assignment",
-    "answer": "You are in the library working on a difficult assignment. A classmate, who you know hasn't started the work, approaches you and asks if they can copy your nearly completed assignment because they are out of time. You don't want to give them your work. What would you say?"
-  },
-  {
-    "id": 106,
-    "title": "#106 RTS",
-    "answer": "You are a university student who scheduled an appointment to meet with your professor during office hours to ask for help with an assignment. However, you missed the meeting because you were stuck in traffic and couldn't make it on time. You now see your professor in the hallway later that day. What would you say?"
-  },
-  {
-    "id": 107,
-    "title": "#107 RTS",
-    "answer": "You are a student and you keep getting locked out of your university account. You've reset your password multiple times, but the problem persists. You call IT support to explain the situation and ask for a more permanent solution. What would you say?"
-  },
-  {
-    "id": 108,
-    "title": "#108 RTS",
-    "answer": "You are chatting with a classmate after your language class. You’ve just found out about a fun language exchange event happening this weekend on campus. It’s a good opportunity to practice speaking with students from different countries. You’d like to invite your classmate to come with you. What would you say?"
-  },
-  {
-    "id": 109,
-    "title": "#109 RTS",
-    "answer": "You are working on an assignment for your history class, but you are confused about what the professor expects in one of the questions. You read the instructions several times but are still unsure how to approach it. After class, you decide to ask your professor to clarify. What would you say?"
-  },
-  {
-    "id": 110,
-    "title": "#110 RTS",
-    "answer": "You are checking your grade for a recent assignment and you feel your work deserved a higher mark. After class, you approach your lecturer to talk about it. You would like them to review your paper again and explain how the grade was decided. What would you say?"
-  },
-  {
-    "id": 111,
-    "title": "#111 RTS",
-    "answer": "You are in the library studying for a very important exam. Your classmate invites you to a party this weekend, but you really need to focus on your studies. You want to politely decline their invitation without hurting their feelings. What would you say?"
-  },
-  {
-    "id": 112,
-    "title": "#112 RTS",
-    "answer": "You are studying for an important exam in a quiet section of the library. A group of students nearby is speaking loudly, making it hard for you to concentrate. You notice a librarian at the help desk a few steps away. What would you say to the librarian?"
-  },
-  {
-    "id": 113,
-    "title": "#113 RTS",
-    "answer": "You are enrolled in Professor Miller's History course. You've missed the last three classes because you had to care for a sick family member. You haven't been able to keep up with the readings or assignments. You approach Professor Miller after class to explain your situation. What would you say?"
-  },
-  {
-    "id": 114,
-    "title": "#114 RTS",
-    "answer": "You are feeling overwhelmed by the upcoming final exams and decide to seek advice from a senior student who has successfully navigated them before. You see them in the campus coffee shop, take a seat at their table, and introduce yourself. What would you say?"
-  },
-  {
-    "id": 115,
-    "title": "#115 RTS",
-    "answer": "You are eating lunch in the university cafeteria. You take a bite of the chicken and realize it's significantly undercooked and still pink inside. You need to speak to one of the cafeteria staff members about this issue. What would you say?"
-  },
-  {
-    "id": 116,
-    "title": "#116 RTS",
-    "answer": "You are working on a research paper for one of your classes. You asked a classmate to read your draft and they gave you some helpful comments last week. Now, you see them in the library and want to let them know you appreciated their feedback. What would you say?"
-  },
-  {
-    "id": 117,
-    "title": "#117 RTS",
-    "answer": "You are in the library and notice a student has left her laptop unattended at a table. There are several people nearby, but you are concerned about the laptop's security. You decide to report it to the security desk which is located near the entrance. What would you say?"
-  },
-  {
-    "id": 118,
-    "title": "#118 RTS",
-    "answer": "You are in the university's photography club, but you've realized you're overcommitted this semester with your coursework and a part-time job. You need to tell the club president, whom you see in the hallway, that you have to withdraw from the club. What do you say?"
-  },
-  {
-    "id": 119,
-    "title": "#119 Computer Failure",
-    "answer": "You are in the campus library working on an urgent assignment when your computer suddenly stops working. You try restarting it, but nothing happens. You see a staff member nearby who might be able to help or direct you to someone who can. What would you say?"
-  },
-  {
-    "id": 120,
-    "title": "#120 RTS",
-    "answer": "You are a student living in university accommodation, and the heater in your room has stopped working. It’s the middle of winter and your room is uncomfortably cold, especially at night. You go to the accommodation manager’s office to report the problem. What do you say to the accommodation manager?"
-  },
-  {
-    "id": 121,
-    "title": "#121 RTS",
-    "answer": "You are in the student lounge when a classmate tells you they are struggling to keep up with assignments and often miss deadlines because they can't manage their time. They seem frustrated and ask for your help. You remember you used to be disorganized too but have learned some strategies. What do you say to your classmate?"
-  },
-  {
-    "id": 122,
-    "title": "#122 RTS",
-    "answer": "You are in class when you remember that you will be traveling overseas next week to attend a family event. You realize that you will miss one of your lectures and possibly an assignment deadline. After class, you approach your professor to inform them about your trip. What do you say to your professor?"
-  },
-  {
-    "id": 123,
-    "title": "#123 Broken Refrigerator",
-    "answer": "You are living in a student dorm and recently noticed that the refrigerator in your shared kitchen is not cooling properly. Some of your food has spoiled, and it's becoming a real inconvenience. You decide to speak to the accommodation manager about the issue. What do you say to the accommodation manager?"
-  },
-  {
-    "id": 124,
-    "title": "#124 RTS",
-    "answer": "You are in the student center and realize you lost your headphones earlier today. You think you might have dropped them in the library or the cafeteria. You decide to go to the campus security office to see if someone turned them in. What do you say to the campus security officer?"
-  },
-  {
-    "id": 125,
-    "title": "#125 Meeting Change",
-    "answer": "You are working on a group assignment with three classmates, and you’ve all been meeting in person after class. This week, your schedule is really tight and it would be easier for you to meet online. You see the group in the hallway and want to suggest the change. What do you say to them?"
-  },
-  {
-    "id": 126,
-    "title": "#126 RTS",
-    "answer": "You are in your second year of university and studying business. You're interested in finding an internship for the summer that’s related to your course. After class, you see your professor packing up her things and decide to ask her for some advice. What do you say?"
-  },
-  {
-    "id": 127,
-    "title": "#127 RTS",
-    "answer": "You are working on a group presentation for class, and your teammates just decided on the order of presenters. They want you to go first, but you feel unprepared and think it would be better to go later. You’re in a meeting with your group now. What do you say to your teammates?"
-  },
-  {
-    "id": 128,
-    "title": "#128 Assignment Extension",
-    "answer": "The deadline for your assignment is approaching, but your computer is broken, and you want to ask your tutor for an extension. What would you say?"
-  },
-  {
-    "id": 130,
-    "title": "#130 Subject Change",
-    "answer": "You took a political science course, but you want to change it to a history course. You don't know the exact arrangement and content of the history course, and then you go to your teacher for help. What should you say?"
-  },
-  {
-    "id": 132,
-    "title": "#132 Broken Photocopier",
-    "answer": "You want to copy some documents, but you notice the photocopier does not have paper and the red light is flashing.\nWhat would you say to the library staff?"
-  },
-  {
-    "id": 133,
-    "title": "#133 Roommate",
-    "answer": "You're sharing a flat with a few other students, but you've noticed they often use your desk and your stationery. You are very concerned about losing your things.\nWhat would you say?"
-  },
-  {
-    "id": 135,
-    "title": "#135 Forgotten Book",
-    "answer": "You have to return a book to your friend Tom, but when you get to school you realize you have forgotten to bring it. Your friend really needs it today.\nWhat will you say to your friend?"
-  },
-  {
-    "id": 136,
-    "title": "#136 Delay of Loan",
-    "answer": "Your loan has been delayed, so you can't pay the full amount of the accommodation fee at once. You have a part-time job, but it's not enough. You are going to ask the university accommodation officer for advice.\nWhat will you say?"
-  },
-  {
-    "id": 137,
-    "title": "#137 Disappearing Food",
-    "answer": "Your flatmate's visitors don't follow the rules, and your food in the fridge keeps disappearing. You need to talk to your flatmate about it.\nWhat will you say?"
-  },
-  {
-    "id": 138,
-    "title": "#138 Absence of Online Class",
-    "answer": "Your computer is broken and you can’t attend the online class. How should you tell your professor?"
-  },
-  {
-    "id": 139,
-    "title": "#139 Cafe Advertisement",
-    "answer": "You see a job advertisement for a café, but you're not sure if it's still valid, so you go and ask the manager and inquire about the tasks of the position being advertised.\nWhat would you say?"
-  },
-  {
-    "id": 140,
-    "title": "#140 Housework",
-    "answer": "Your flatmate doesn't follow the schedule to complete housework.\nWhat would you say to him or her?"
-  },
-  {
-    "id": 141,
-    "title": "#141 Car Parking",
-    "answer": "You've bought a car but don’t know where to park at school, so you ask a classmate who drives to school.\nWhat would you say?"
-  },
-  {
-    "id": 142,
-    "title": "#142 Book to Return",
-    "answer": "You lent an English book to a friend three weeks ago, and he hasn't returned it yet. Now, you need the book very much.\nWhat would you say to him?"
-  },
-  {
-    "id": 143,
-    "title": "#143 Noisy Flatmates",
-    "answer": "Your flatmates are holding a party with loud music in their room at night, which is too noisy and influences your sleep, but you have an important exam early tomorrow morning.\nWhat should you say to them?"
-  },
-  {
-    "id": 144,
-    "title": "#144 Feedback of Essay",
-    "answer": "You wrote an essay, consulted your tutor, and asked them for some feedback on your work.\nWhat would you say to him?"
-  },
-  {
-    "id": 145,
-    "title": "#145 Difficult Course",
-    "answer": "You have taken a course for one semester. Now your friend tells you they also want to take this course and asks for your advice. Since the course is too difficult, you do not recommend it. What should you say?"
-  },
-  {
-    "id": 146,
-    "title": "#146 Party Decline",
-    "answer": "Your friend is having a birthday party this weekend, and you have been invited. However, you need to complete an essay this weekend. How would you communicate to your friend that you cannot attend, in a way that does not make them feel sad and is polite?"
-  },
-  {
-    "id": 147,
-    "title": "#147 Injured Classmate",
-    "answer": "Your classmate's leg is injured, but he needs to return books to the library. You are planning to help him by returning the books. What would you say to him?"
-  },
-  {
-    "id": 148,
-    "title": "#148 Forgotten Keys",
-    "answer": "You forgot to bring the keys to your dorm and the door is locked so you can't get in. You need to call the school management team and ask them to solve this problem. What should you say?"
-  },
-  {
-    "id": 149,
-    "title": "#149 Suggestion for University",
-    "answer": "One of your school friends is going away to start university next week. She's excited but sad to say goodbye. Some of you are discussing ideas for a present to give her for her new apartment. What would you suggest to them?"
-  }
+    {
+        "id": 1,
+        "title": "#1 Shared Study Space",
+        "answer": "You manage a small local library and have arranged a space within it for community members to study and work. Upon a routine check, you find that the area is cluttered with personal items left behind. You need to address this issue with the community members. What would you say to the community members?",
+        "level": 3,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 2,
+        "title": "#2 Deadline Extension",
+        "answer": "During a team meeting on Tuesday, your supervisor asks if you can complete and submit a comprehensive project update for a client by Friday. However, you're waiting on essential feedback from a key team member who's out of the office until Thursday. What would you say to your supervisor?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 3,
+        "title": "#3 A Spa Day",
+        "answer": "You book a spa day based on glowing reviews and a wide range of services listed online. When you arrive, half the services are unavailable, and the facilities are not as advertised. How do you address this with the spa manager?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 4,
+        "title": "#4 Addressing Concerns Over Car Borrowing",
+        "answer": "You've lent your car to a friend for a weekend trip. Upon its return, you notice the interior is much dirtier than before. You need to discuss this with your friend to address the care of your property and the importance of respecting the agreements made. What would you say to your friend?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 5,
+        "title": "#5 Addressing Equipment Care",
+        "answer": "You are the captain of a community sports team and have provided team equipment for everyone's use. After a few weeks, you notice that the equipment is often left outside, not stored properly, and some items are starting to show wear and tear much faster than expected. What would you say to your team?",
+        "level": 2,
+        "speechAct": "suggesting|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 6,
+        "title": "#6 Group Project",
+        "answer": "You're responsible for a crucial part of a group project due in a week. You've been waiting on important data from another group member, which they've just informed you will be delayed. This setback affects your ability to complete your section on time. What would you say to your group members?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 7,
+        "title": "#7 Heavy Lifts",
+        "answer": "You're at the gym, finishing up your workout, when your workout buddy asks if you're available to spot him for his heavy lifts tomorrow morning. However, you realize you have a doctor's appointment scheduled at the same time. What would you say to him?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 8,
+        "title": "#8 A photography Lesson",
+        "answer": "You sign up for a photography lesson advertised as covering a wide range of techniques and offering hands-on practice. However, when you attend the lesson, you find that only basic topics are covered, and there's minimal opportunity for practical application. How do you address this with the lesson organizer?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 9,
+        "title": "#9 A Delayed Project",
+        "answer": "You've organized a group project with your classmates, and everyone agreed on their roles and deadlines. However, one member consistently fails to deliver their part on time, causing delays for the entire group. What would you say to your classmate?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 10,
+        "title": "#10 Addressing Pet Care",
+        "answer": "You've entrusted a friend to take care of your pet while you're away, but when you return, you find your pet's food bowl empty, the water dish dirty, and your pet visibly stressed. You need to address this with your friend. What would you say to your friend?",
+        "level": 3,
+        "speechAct": "complaining diplomatically",
+        "context": "personal"
+    },
+    {
+        "id": 11,
+        "title": "#11 Addressing Shared Kitchen Hygiene",
+        "answer": "You're the manager of a shared kitchen in your office, and you've noticed that some employees are leaving dirty dishes in the sink and not cleaning up spills on the counters. This is causing unpleasant odors and attracting pests. You need to remind them of the importance of cleaning up for everyone's convenience and health. What would you say?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 12,
+        "title": "#12 A Messy Gym",
+        "answer": "You notice that the communal gym equipment at your apartment complex has been left in disarray with weights scattered all over the floor and machines left unattended. You decide to send a friendly reminder to your neighbors. What would you say to your neighbors?",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 13,
+        "title": "#13 A Communal Garden",
+        "answer": "You manage a communal garden, and during your latest visit, you notice several plants have been trampled, and gardening tools are scattered everywhere. You need to address the community to encourage care and shared responsibility for the garden's upkeep. What would you say to the community members?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 14,
+        "title": "#14 Team Project",
+        "answer": "After a team project meeting, you notice that tasks are frequently being misunderstood or forgotten, leading to delays and frustration. You need to address the team to encourage clear communication, timely updates, and shared responsibility for the project's success. What would you say to the team？",
+        "level": 3,
+        "speechAct": "mediating conflict",
+        "context": "professional"
+    },
+    {
+        "id": 15,
+        "title": "#15 A Messy Bike Return",
+        "answer": "You've lent your bicycle to a friend for a few days, but when they return it, you notice it's covered in mud, the tires are deflated, and there are scratches on the frame. You're disappointed with the lack of care and want to remind your friend. What would you say to your friend?",
+        "level": 1,
+        "speechAct": "complaining diplomatically",
+        "context": "personal"
+    },
+    {
+        "id": 16,
+        "title": "#16 Dietary Restrictions",
+        "answer": "You've organized a dinner with your friends at your place. However, when they arrive, you notice they've brought food without considering dietary restrictions or allergies of others. You need to remind them to be mindful of everyone's dietary needs for a successful and inclusive gathering. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 17,
+        "title": "#17 A Hiking Trip",
+        "answer": "You've organized a group hiking trip with your friends, and everyone's excited to hit the trails. However, upon arrival at the meeting point, you notice some of them have brought single-use plastic water bottles and snack wrappers, leaving behind litter. You need to remind them to respect the environment. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "persuading",
+        "context": "personal"
+    },
+    {
+        "id": 18,
+        "title": "#18 A Cleanup",
+        "answer": "You've organized a beach cleanup event with your friends to help protect marine life and preserve the coastline. However, upon arriving at the beach, you notice some participants tossing their trash on the sand instead of using the designated bins. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "personal"
+    },
+    {
+        "id": 19,
+        "title": "#19 Noise Control",
+        "answer": "You've organized a group study session with your classmates at your apartment. However, when they arrive, you notice some of them are not following the agreed-upon noise level and are causing disturbances to your neighbors. You need to remind them to be considerate of others. What would you say to your classmates?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 20,
+        "title": "#20 Barbecue Party",
+        "answer": "You've organized a barbecue with your friends at your place. However, upon their arrival, you notice some of your friends are using your kitchen utensils carelessly. You need to remind everyone to handle the utensils with care to maintain their quality and keep ourselves safe. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "personal"
+    },
+    {
+        "id": 21,
+        "title": "#21 Team-building Activity",
+        "answer": "You've organized a team-building activity for your colleagues at a local park. However, upon arrival, you notice some team members are not participating actively and seem disengaged. You need to remind everyone of the importance of teamwork and encourage active participation to maximize the benefits of the activity. What would you say to your colleagues?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 22,
+        "title": "#22 Community Garden Project",
+        "answer": "You've organized a community garden project with your neighbors, and everyone's excited to start planting. However, upon arrival, you notice some garden beds are neglected, with weeds growing rampant. You need to remind everyone of their responsibility to maintain their assigned plots to ensure the success of the garden. What would you say to your neighbors?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 23,
+        "title": "#23 Book Club",
+        "answer": "You've organized a weekly book club meeting with your friends, and everyone's excited to discuss the latest read. However, upon arrival, you notice some attendees haven't finished the book and are unable to participate fully in the discussion. You need to remind everyone of the importance of reading the assigned material. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 24,
+        "title": "#24 Movie Night",
+        "answer": "You've organized a monthly movie night with your friends, and everyone's excited to watch a classic film together. However, upon arrival, you notice some guests bringing loud snacks that could disturb others during the movie. You need to remind everyone to bring quiet snacks to ensure an enjoyable viewing experience for everyone. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 25,
+        "title": "#25 Proper Gear",
+        "answer": "You've organized a weekend hiking trip with your friends, and everyone's excited to hit the trails. However, upon arrival, you notice some of them are not wearing proper hiking shoes, which could lead to discomfort and injuries during the hike. You need to remind everyone to wear appropriate footwear. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    },
+    {
+        "id": 26,
+        "title": "#26 Checking Presentation Slides",
+        "answer": "Your colleague asks if you can review the presentation slides they've prepared for an upcoming meeting. However, you realize you have several urgent tasks to complete by the end of the day. You need to politely ask for more time to ensure you can give their slides the attention they deserve. What would you say to your colleague?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 27,
+        "title": "#27 Feasible Options",
+        "answer": "You're planning a weekend getaway with friends, and they're discussing the activities they want to do. However, you realize some of the suggestions might not be feasible due to time constraints or budget limitations. You need to gently guide the conversation towards more realistic options without dampening the excitement. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "persuading",
+        "context": "personal"
+    },
+    {
+        "id": 28,
+        "title": "#28 Food Choice",
+        "answer": "You're hosting a dinner party for friends, and they're suggesting elaborate dishes that require a lot of preparation. However, you realize you have limited time and resources to cook such elaborate meals. You need to gently steer the conversation towards simpler, yet equally delicious. What would you say to your friends?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 29,
+        "title": "#29 Birthday Activity",
+        "answer": "You're organizing a team outing to celebrate a colleague's birthday-Dave, and everyone's suggesting different activities. However, you realize that some options might not be suitable due to varying preferences and physical abilities. You need to gently guide the discussion towards inclusive activities that everyone can enjoy regardless of their interests or limitations. What would you say to your colleagues?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 30,
+        "title": "#30 Group Presentation",
+        "answer": "You're preparing for a group presentation, and your team members suggest incorporating complex charts and graphs into the slides. However, you realize that these visuals might confuse the audience and distract from the main points. You need to gently steer the discussion towards simpler and clearer visuals that enhance understanding. What would you say to your team members?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 31,
+        "title": "#31 A Charity Event",
+        "answer": "You're coordinating a charity event for your company, and your team proposes hosting a silent auction to raise funds. However, you realize that organizing the auction might require more resources and time than anticipated. You need to gently guide the discussion towards simpler fundraising ideas. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 32,
+        "title": "#32 Wellness Program",
+        "answer": "You're organizing a company-wide wellness program, and your team proposes implementing a mandatory daily yoga session for all employees. However, you realize that not everyone may be interested in or able to participate in yoga. You need to gently guide the discussion towards alternative wellness activities that accommodate different preferences and abilities. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 33,
+        "title": "#33 Enhancing Customer Service Process",
+        "answer": "Your team is discussing how to enhance the company's customer service process, and someone suggests increasing the use of automated systems to handle customer inquiries. However, you realize this might weaken the interpersonal connection with customers. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 34,
+        "title": "#34 A Team-building Event",
+        "answer": "You're coordinating a team-building event for your department, and your team suggests going to an amusement park. However, you realize that some team members may not enjoy rides or have health conditions that prevent them from participating fully. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 35,
+        "title": "#35 Destination Choice",
+        "answer": "You and your friends are planning a vacation. Someone suggests going to a faraway foreign country, but you realize one friend might have a fear of flying and some of them have a relatively tight budget. You need to carefully propose an alternative suggestion to ensure everyone can enjoy the trip. What would you say to your friends?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 36,
+        "title": "#36 Choosing a Place",
+        "answer": "You're planning a birthday celebration for a friend, and the group is discussing potential venues. One suggestion is to go to a loud and crowded nightclub, but you know that some friends prefer quieter and more intimate settings. What would you say to the group?",
+        "level": 3,
+        "speechAct": "mediating conflict",
+        "context": "personal"
+    },
+    {
+        "id": 37,
+        "title": "#37 Activity Preference",
+        "answer": "You're organizing a team-building event for your colleagues, and one suggestion is to participate in an escape room activity. However, you realize that some team members may feel uncomfortable or anxious in enclosed spaces. What would you say to your colleagues?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 38,
+        "title": "#38 Postponing a Deadline",
+        "answer": "You're in the library working on your thesis when suddenly you receive a message from your advisor asking if you can submit a progress report by Friday. You hope to request more time since the reference materials you reserved won't be available from the library until Thursday. What would you say to your advisor?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 39,
+        "title": "#39 A Flawed Project",
+        "answer": "You're a project manager who has just reviewed a team's project draft due next week. You notice several critical sections are incomplete, and the overall quality is below expectations. You need to address these issues promptly while motivating the team to improve their work before the deadline. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 40,
+        "title": "#40 Soccer Team",
+        "answer": "You're the coach of a youth soccer team and you've just watched them lose a game because of a lack of teamwork and coordination. You want to address the situation in a way that motivates them to improve their teamwork for the next game without discouraging them. What would you say to your soccer team?",
+        "level": 2,
+        "speechAct": "persuading",
+        "context": "semi-formal"
+    },
+    {
+        "id": 41,
+        "title": "#41 Low Morale",
+        "answer": "You're the head of a small department in a company, and you've noticed that the team's morale has been low due to the high workload and tight deadlines. You want to address the issue to motivate them and discuss potential solutions to manage the workload more effectively without overwhelming anyone. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 42,
+        "title": "#42 Low Participation",
+        "answer": "You're the leader of a book club that has been meeting virtually for the past few months. Recently, you've noticed that participation has dropped, and fewer people are joining the discussions. You want to revive interest and encourage more members to actively participate in the book club's meetings and discussions. What would you say to your club?",
+        "level": 2,
+        "speechAct": "persuading",
+        "context": "semi-formal"
+    },
+    {
+        "id": 43,
+        "title": "#43 Coaching a Basketball Team",
+        "answer": "You're coaching a youth basketball team, and you've noticed that the team's performance has been inconsistent. The players show potential during practice but struggle to maintain focus and teamwork during games. You want to find a way to improve their game-time performance and help them play more cohesively as a team. What would you say to your team?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 44,
+        "title": "#44 Enhancing Collaboration",
+        "answer": "You're tasked with leading a team to develop a new software feature within a tight deadline. The team is talented but new to working together, and progress has been slower than expected. To meet the deadline, you need to find ways to enhance collaboration and efficiency among team members without causing burnout. What would you say to your team?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 45,
+        "title": "#45 Alternate Plans",
+        "answer": "You've arranged a weekend hiking trip with friends, but as the date approaches, you notice the weather forecast predicts heavy rain. You need to discuss with your friends whether to proceed with the hike, postpone it, or plan an alternative indoor activity for the weekend. What would you say to your friends?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 46,
+        "title": "#46 Overwhelmed with Work",
+        "answer": "You've been feeling overwhelmed with work and personal commitments lately, realizing you need a better balance. You decide to speak with your manager about adjusting your workload or finding a more flexible working arrangement to manage stress and maintain productivity without compromising the quality of your work. What would you say to your boss?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 47,
+        "title": "#47 Loud music",
+        "answer": "Your neighbor has been playing loud music late at night, making it difficult for you to sleep. You want to address the situation diplomatically to maintain a good relationship with your neighbor while ensuring the noise is reduced during late hours. What would you say to your neighbor?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 48,
+        "title": "#48 Missing Books",
+        "answer": "You're leading a community book club, and during this month's meeting, you discover several books are missing from the club's library. You want to address the issue respectfully, reminding members to return books on time for everyone's benefit. What would you say to your members?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 49,
+        "title": "#49 Party",
+        "answer": "You are going to have a party with your classmates at home. You will prepare barbecue and salad to treat them, but you do not know their dietary restrictions. You made a phone call to ask them about this, but they did not answer the call. Please leave a message to them.",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 50,
+        "title": "#50 Chip Discount",
+        "answer": "You bought some chips at a supermarket with a discount of 2 for 3 dollars, but when you checked out, you found a mistake because you were charged 3 dollars each. What would you say to the cashier?",
+        "level": 3,
+        "speechAct": "complaining diplomatically",
+        "context": "semi-formal"
+    },
+    {
+        "id": 51,
+        "title": "#51 Package",
+        "answer": "You are expecting an important package to be delivered while you are not at home for about an hour. Since the package requires a signature upon delivery, you decide to ask your neighbor for help. How would you politely request your neighbor to sign for the package and let them know that you will pick it up once you return?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 52,
+        "title": "#52 Subway",
+        "answer": "Your colleague drives to work, but the traffic is heavy every day. How should you suggest she take the subway for several reasons?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 53,
+        "title": "#53 Restaurant Order",
+        "answer": "You were eating in a restaurant and you ordered a hamburger, but you were served fish and chips. What would you say to the waiter?",
+        "level": 1,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 54,
+        "title": "#54 Spoiled Food",
+        "answer": "You recently bought some food from a store, but after opening it at home, you realized it was spoiled. You decide to go back to the store and speak to the manager about the issue. How would you explain the situation and request a solution?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "semi-formal"
+    },
+    {
+        "id": 55,
+        "title": "#55 Late for Appointment",
+        "answer": "You are thirty minutes late for your doctor's appointment. You need to explain to the receptionist and ask if the doctor could see you later today. What would you say to the receptionist?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 56,
+        "title": "#56 Cat",
+        "answer": "You are planning to be away from home for three days and need someone to take care of your cat. You decide to ask your friend Monica for help. How would you explain the situation and request her assistance in feeding your cat while you are away?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 57,
+        "title": "#57 Wind",
+        "answer": "Your classmate is on vacation and your are at her home. The strong wind damaged the furniture on the balcony, so you want to inform your classmates so that she could be mentally prepared. What do you say to her?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "personal"
+    },
+    {
+        "id": 58,
+        "title": "#58 Call and Dinner",
+        "answer": "You are preparing dinner and your friend is calling you to discuss her daughter's problem. You really want to help your friend to solve her problem, but you are busy now, so you hope your friend could call you later. What do you say to your friend?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    },
+    {
+        "id": 59,
+        "title": "#59 Borrowed Book",
+        "answer": "You borrowed a book from your friend Anit, but she now wants it back. How would you politely arrange to return the book to her, and possibly discuss a convenient time for her to pick it up?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    },
+    {
+        "id": 60,
+        "title": "#60 Baby Carer",
+        "answer": "You have a new baby and find it challenging to manage cooking and taking care of the baby simultaneously. You want to ask a friend for advice on how they manage to balance cooking with baby care. How do you approach this conversation and what specific questions do you ask to get helpful tips?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    },
+    {
+        "id": 61,
+        "title": "#61 History Assignment",
+        "answer": "You've just completed a history assignment and you're keen on improving it before submission. You decide to seek feedback from your classmate, Ali, who always seems to excel in history. How do you approach Ali for feedback, and what specific questions do you ask to gain insights on how to enhance your assignment?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 62,
+        "title": "#62 Garden Care",
+        "answer": "You're about to go on vacation and are worried that no one will take care of your garden plants. You want to ask your neighbor if they could help. One morning, you see her standing at the door and want to ask if she could water the plants twice a week. What should you say to your neighbor?",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 63,
+        "title": "#63 Wet Floor",
+        "answer": "You are walking up the stairs in front of your apartment and almost slip on the wet floor. You tell one of your neighbors about it. What would you say?",
+        "level": 1,
+        "speechAct": "informing",
+        "context": "personal"
+    },
+    {
+        "id": 64,
+        "title": "#64 Noisy Library",
+        "answer": "You have an assignment due next week. Now you are in the library, but someone next to you is playing a video without headphones. You are too distracted to focus on your study. You should have a conversation with him to make sure you have a quiet place. What would you say?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "semi-formal"
+    },
+    {
+        "id": 65,
+        "title": "#65 Missing Pages",
+        "answer": "You borrowed a book from the university library. But while reading it, you notice that two pages have been torn out, but you didn't do it. What do you say to the librarian when you return the book?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 66,
+        "title": "#66 Asking for Leave",
+        "answer": "You have an appointment and need to leave work early to accompany a relative. How do you request permission from your employer for early departure? What key points should you address to ensure your request is understood and approved?",
+        "level": 3,
+        "speechAct": "requesting",
+        "context": "professional"
+    },
+    {
+        "id": 67,
+        "title": "#67 Poor Living Conditions",
+        "answer": "You recently moved into a rental apartment, but you've noticed that the living conditions are not as expected. You decide to speak with the landlord about the issues. How would you explain the problems you're experiencing and request a solution?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 68,
+        "title": "#68 Sports Club",
+        "answer": "Your friend invited you to join a sports club. You are interested in the sports but you cannot join because of your family and your job, and because you need to travel. What do you say to your friend?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 69,
+        "title": "#69 Wrong Delivery",
+        "answer": "You received a letter that was mistakenly delivered to your address, and it belongs to your neighbor. How would you approach your neighbor and politely return the letter to them?",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 70,
+        "title": "#70 Flight Canceled",
+        "answer": "You previously called the taxi driver and informed him that you were going to the airport, but now you have to change your destination to go home due to the flight cancel. You want to tell the driver where your home address is and how to get there. What should you say to the driver?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 71,
+        "title": "#71 Late to School",
+        "answer": "You are late to school today and need to explain the situation to your teacher. How would you apologize for being late and provide a reasonable explanation for your delay?",
+        "level": 2,
+        "speechAct": "apologizing|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 72,
+        "title": "#72 Rescheduling Meeting",
+        "answer": "You need to change the meeting time with your colleague. How would you approach them to request a new time, and what key points should you cover, including suggesting alternative times, considering their availability, and ensuring the rescheduling is convenient for both parties?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 73,
+        "title": "#73 Italian Food",
+        "answer": "You are going to eat outside with your friends and they want to eat Italian food. You don't like Italian food, but you want to dine out with them. What would you say to your friends?",
+        "level": 1,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 74,
+        "title": "#74 Broken Car",
+        "answer": "Your car has broken down, and you know a girl is waiting for you. How do you approach this situation to inform her of the delay and ask for assistance or suggest alternative arrangements? What specific details do you include to ensure clear communication and to propose a solution that accommodates both of your needs?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 75,
+        "title": "#75 Asking for a Ride",
+        "answer": "You haven’t taken a taxi, and you want to ask your colleague for a ride. What should you say to your colleague?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "professional"
+    },
+    {
+        "id": 76,
+        "title": "#76 Dinner with Colleague",
+        "answer": "You plan to have dinner with your colleague and maybe later go to watch a movie, but right now you feel sick, and you have a headache and may have a cold. You see your colleague is having a coffee in the lunch room. What should you say?",
+        "level": 2,
+        "speechAct": "apologizing",
+        "context": "semi-formal"
+    },
+    {
+        "id": 77,
+        "title": "#77 Final Project",
+        "answer": "You need help with your final project and want to ask your teacher for assistance. How do you approach your teacher to explain the situation and what specific points do you include to ensure you get the support you need?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 78,
+        "title": "#78 Sharing the Cost",
+        "answer": "You are living in the same building with your colleague Mike, and you want to go to work with him every day and share the cost together. What would you say to him?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 79,
+        "title": "#79 Wall Painting",
+        "answer": "You've been living in your apartment for a few years and feel that a fresh coat of paint would brighten up the space. You want to ask your landlord for permission to paint the walls yourself. How do you approach this conversation and what specific points do you bring up to get a positive response?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 80,
+        "title": "#80 Lost Bag",
+        "answer": "You and your friends had dinner at a restaurant yesterday. You think you left a bag at the restaurant. You sat at the table next to the window. You had college materials inside the bag. You call the manager of the restaurant and what would you say to the manager?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 81,
+        "title": "#81 New Classroom",
+        "answer": "When you arrive at the usual classroom where you normally have class, you find a notice saying that the computer is broken and you need to move to another new classroom. However, you are late today, and the other students have already moved to the new classroom. So you ask a staff member about how to get to the new classroom. What will you say?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 82,
+        "title": "#82 Lazy Roommate",
+        "answer": "You have a roommate, but he usually does not clean the common areas. You cannot stand dirty common areas. You're going to talk to him. What are you going to say?",
+        "level": 2,
+        "speechAct": "persuading",
+        "context": "personal"
+    },
+    {
+        "id": 83,
+        "title": "#83 Absence for Tutorial",
+        "answer": "You have a tutorial at 3 P.M. on Monday afternoon, but unfortunately there is a football match that you need to attend at the same time. You want to rearrange the time with the teacher. What would you say to your teacher?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 84,
+        "title": "#84 Umbrella",
+        "answer": "You've just arrived at the office and realized that it's pouring outside. You didn't bring an umbrella and know that one of your colleagues, who sits near you, often has a spare umbrella. How do you approach your colleague to ask for an umbrella, and what specific points do you include to ensure a positive response?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 85,
+        "title": "#85 Renting Bikes",
+        "answer": "You overheard your colleagues discussing renting bikes, which sounds really fun and you are interested in it. Speak to your colleagues to inquire about the details, such as the cost of renting and how and where you can rent a bike.",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 86,
+        "title": "#86 Cafe Job",
+        "answer": "You are interested in applying for a part-time job in the school cafe. You know that the boss is looking for someone to work at weekends and requires working experience, which you are actually currently lacking. However, you are eager to learn and determined to work hard. What do you have to say to get this chance?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 87,
+        "title": "#87 Project Extension",
+        "answer": "You are taking business night classes and your project is going to be due soon. You want to ask your professor for an extension over the weekend. You go to the professor's office. What do you say to him?",
+        "level": 2,
+        "speechAct": "requesting|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 88,
+        "title": "#88 Movie Delay",
+        "answer": "You went to watch a movie with a friend, but the car broke down on the way and made your friend wait for a long time. What should you say to your friend?",
+        "level": 2,
+        "speechAct": "apologizing",
+        "context": "personal"
+    },
+    {
+        "id": 89,
+        "title": "#89 Lost Wallet",
+        "answer": "You’re at a salon and you want to get a haircut, but you realize that you left your wallet in your taxi. You don’t have the taxi number and you don’t have any other payment methods with you. What will you tell the stylist in order to resolve this situation?",
+        "level": 2,
+        "speechAct": "negotiating|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 90,
+        "title": "#90 Dessert",
+        "answer": "You invite some friends to your party, and one of them wants to bring some dessert. You have already prepared the dessert. So you hope your friend can bring something else (for example: fruit, cake, etc..). What should you say to your friend?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 91,
+        "title": "#91 Walk in Countryside",
+        "answer": "Your friend Susan suggests having a walk in the countryside tomorrow. You would love to, but you have seen the weather forecast and it might rain tomorrow. You want to wait and see the weather tomorrow morning, and decide then. What would you say to Susan right now?",
+        "level": 1,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 92,
+        "title": "#92 Farewell Gift",
+        "answer": "Your manager Joe is about to retire and he is going to travel in another country. You want to give him a farewell gift. How should you discuss with your colleagues what gift to prepare for the manager?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 93,
+        "title": "#93 Complaint about Waiter",
+        "answer": "You have finished your dinner at a restaurant. The manager comes to ask you how the food was. You think the dishes were good, but you want to complain about the waiter's service and the fact that the coffee you ordered has not arrived. What would you say to the manager?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 94,
+        "title": "#94 Late for Meeting",
+        "answer": "You are ten minutes late for a meeting because of a traffic jam. How should you explain to your colleagues?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 95,
+        "title": "#95 Essay Extension",
+        "answer": "You have an essay due tomorrow, but you have been feeling sick for the past two weeks. You went to the clinic and got a doctor's note. You feel bad about now but have to ask your professor for an extension until the weekend. You go to the professor's office. What do you say to him?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 96,
+        "title": "#96 Working Remotely",
+        "answer": "You will be on vacation and you want to discuss with your boss how to work efficiently, such as working remotely or something like that. What should you say to your boss?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 97,
+        "title": "#97 Sam's Cafe",
+        "answer": "You have a dinner date with a friend, and she wants to go to Sam's Cafe which only serves coffee, tea, etc. You want to eat in a restaurant with a lot of food. What do you say to your friend?",
+        "level": 1,
+        "speechAct": "persuading",
+        "context": "personal"
+    },
+    {
+        "id": 98,
+        "title": "#98 RTS",
+        "answer": "You are in your second year of university and have been working on a big assignment for your psychology class. Unfortunately, you’ve had the flu for the past week and couldn’t concentrate or get much work done. You have a doctor’s note and feel a little better now. You go to your lecturer’s office to talk. What would you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 99,
+        "title": "#99 RTS",
+        "answer": "You are working on a group presentation for one of your classes. Each person was assigned a section to complete by the weekend. However, you were unable to finish your part because of a family emergency. You meet with your group the next day. What would you say to them?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 100,
+        "title": "#100 Taking Notes",
+        "answer": "You are walking out of your lecture and realize you didn't understand some of the main points your professor was making. You see a classmate who you think took good notes and paid attention during class. You want to ask them for help understanding what was covered. What would you say?",
+        "level": 2,
+        "speechAct": "requesting|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 101,
+        "title": "#101 RTS",
+        "answer": "You are checking your latest essay grade online and notice that your tutor left detailed feedback on every paragraph, including useful suggestions. You’re surprised and impressed by how much time they must have spent reviewing your work. The next day, you see your tutor in the hallway after class. What would you say to them?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 102,
+        "title": "#102 RTS",
+        "answer": "You share an apartment with a roommate and have both agreed to split the cleaning duties each week. Lately, you’ve noticed that your roommate hasn’t been doing their part, and it's starting to bother you. You want to bring it up without starting an argument. You see your roommate in the kitchen. What would you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 103,
+        "title": "#103 RTS",
+        "answer": "You are on your way to a group meeting in the library to prepare for an upcoming exam. However, you just received an urgent phone call from a family member and need to deal with it before joining the group. You know the meeting has already started. You call one of your classmates to let them know. What would you say?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 104,
+        "title": "#104 RTS",
+        "answer": "You are scheduled to work in the biology lab next Tuesday at 10 am. However, you have a very important doctor's appointment that day that you cannot reschedule. You need to ask your lab partner if they would be willing to switch lab times with you next week. What would you say?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 105,
+        "title": "#105 Copying Assignment",
+        "answer": "You are in the library working on a difficult assignment. A classmate, who you know hasn't started the work, approaches you and asks if they can copy your nearly completed assignment because they are out of time. You don't want to give them your work. What would you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 106,
+        "title": "#106 RTS",
+        "answer": "You are a university student who scheduled an appointment to meet with your professor during office hours to ask for help with an assignment. However, you missed the meeting because you were stuck in traffic and couldn't make it on time. You now see your professor in the hallway later that day. What would you say?",
+        "level": 2,
+        "speechAct": "apologizing|explaining|requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 107,
+        "title": "#107 RTS",
+        "answer": "You are a student and you keep getting locked out of your university account. You've reset your password multiple times, but the problem persists. You call IT support to explain the situation and ask for a more permanent solution. What would you say?",
+        "level": 3,
+        "speechAct": "explaining|negotiating|complaining diplomatically",
+        "context": "professional/institutional"
+    },
+    {
+        "id": 108,
+        "title": "#108 RTS",
+        "answer": "You are chatting with a classmate after your language class. You’ve just found out about a fun language exchange event happening this weekend on campus. It’s a good opportunity to practice speaking with students from different countries. You’d like to invite your classmate to come with you. What would you say?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    },
+    {
+        "id": 109,
+        "title": "#109 RTS",
+        "answer": "You are working on an assignment for your history class, but you are confused about what the professor expects in one of the questions. You read the instructions several times but are still unsure how to approach it. After class, you decide to ask your professor to clarify. What would you say?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 110,
+        "title": "#110 RTS",
+        "answer": "You are checking your grade for a recent assignment and you feel your work deserved a higher mark. After class, you approach your lecturer to talk about it. You would like them to review your paper again and explain how the grade was decided. What would you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional/institutional"
+    },
+    {
+        "id": 111,
+        "title": "#111 RTS",
+        "answer": "You are in the library studying for a very important exam. Your classmate invites you to a party this weekend, but you really need to focus on your studies. You want to politely decline their invitation without hurting their feelings. What would you say?",
+        "level": 3,
+        "speechAct": "declining professionally",
+        "context": "personal"
+    },
+    {
+        "id": 112,
+        "title": "#112 RTS",
+        "answer": "You are studying for an important exam in a quiet section of the library. A group of students nearby is speaking loudly, making it hard for you to concentrate. You notice a librarian at the help desk a few steps away. What would you say to the librarian?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "semi-formal"
+    },
+    {
+        "id": 113,
+        "title": "#113 RTS",
+        "answer": "You are enrolled in Professor Miller's History course. You've missed the last three classes because you had to care for a sick family member. You haven't been able to keep up with the readings or assignments. You approach Professor Miller after class to explain your situation. What would you say?",
+        "level": 3,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 114,
+        "title": "#114 RTS",
+        "answer": "You are feeling overwhelmed by the upcoming final exams and decide to seek advice from a senior student who has successfully navigated them before. You see them in the campus coffee shop, take a seat at their table, and introduce yourself. What would you say?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 115,
+        "title": "#115 RTS",
+        "answer": "You are eating lunch in the university cafeteria. You take a bite of the chicken and realize it's significantly undercooked and still pink inside. You need to speak to one of the cafeteria staff members about this issue. What would you say?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "semi-formal"
+    },
+    {
+        "id": 116,
+        "title": "#116 RTS",
+        "answer": "You are working on a research paper for one of your classes. You asked a classmate to read your draft and they gave you some helpful comments last week. Now, you see them in the library and want to let them know you appreciated their feedback. What would you say?",
+        "level": 2,
+        "speechAct": "informing",
+        "context": "semi-formal"
+    },
+    {
+        "id": 117,
+        "title": "#117 RTS",
+        "answer": "You are in the library and notice a student has left her laptop unattended at a table. There are several people nearby, but you are concerned about the laptop's security. You decide to report it to the security desk which is located near the entrance. What would you say?",
+        "level": 2,
+        "speechAct": "informing",
+        "context": "semi-formal"
+    },
+    {
+        "id": 118,
+        "title": "#118 RTS",
+        "answer": "You are in the university's photography club, but you've realized you're overcommitted this semester with your coursework and a part-time job. You need to tell the club president, whom you see in the hallway, that you have to withdraw from the club. What do you say?",
+        "level": 2,
+        "speechAct": "declining professionally",
+        "context": "semi-formal"
+    },
+    {
+        "id": 119,
+        "title": "#119 Computer Failure",
+        "answer": "You are in the campus library working on an urgent assignment when your computer suddenly stops working. You try restarting it, but nothing happens. You see a staff member nearby who might be able to help or direct you to someone who can. What would you say?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 120,
+        "title": "#120 RTS",
+        "answer": "You are a student living in university accommodation, and the heater in your room has stopped working. It’s the middle of winter and your room is uncomfortably cold, especially at night. You go to the accommodation manager’s office to report the problem. What do you say to the accommodation manager?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 121,
+        "title": "#121 RTS",
+        "answer": "You are in the student lounge when a classmate tells you they are struggling to keep up with assignments and often miss deadlines because they can't manage their time. They seem frustrated and ask for your help. You remember you used to be disorganized too but have learned some strategies. What do you say to your classmate?",
+        "level": 2,
+        "speechAct": "suggesting|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 122,
+        "title": "#122 RTS",
+        "answer": "You are in class when you remember that you will be traveling overseas next week to attend a family event. You realize that you will miss one of your lectures and possibly an assignment deadline. After class, you approach your professor to inform them about your trip. What do you say to your professor?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 123,
+        "title": "#123 Broken Refrigerator",
+        "answer": "You are living in a student dorm and recently noticed that the refrigerator in your shared kitchen is not cooling properly. Some of your food has spoiled, and it's becoming a real inconvenience. You decide to speak to the accommodation manager about the issue. What do you say to the accommodation manager?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 124,
+        "title": "#124 RTS",
+        "answer": "You are in the student center and realize you lost your headphones earlier today. You think you might have dropped them in the library or the cafeteria. You decide to go to the campus security office to see if someone turned them in. What do you say to the campus security officer?",
+        "level": 2,
+        "speechAct": "informing",
+        "context": "semi-formal"
+    },
+    {
+        "id": 125,
+        "title": "#125 Meeting Change",
+        "answer": "You are working on a group assignment with three classmates, and you’ve all been meeting in person after class. This week, your schedule is really tight and it would be easier for you to meet online. You see the group in the hallway and want to suggest the change. What do you say to them?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 126,
+        "title": "#126 RTS",
+        "answer": "You are in your second year of university and studying business. You're interested in finding an internship for the summer that’s related to your course. After class, you see your professor packing up her things and decide to ask her for some advice. What do you say?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 127,
+        "title": "#127 RTS",
+        "answer": "You are working on a group presentation for class, and your teammates just decided on the order of presenters. They want you to go first, but you feel unprepared and think it would be better to go later. You’re in a meeting with your group now. What do you say to your teammates?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 128,
+        "title": "#128 Assignment Extension",
+        "answer": "The deadline for your assignment is approaching, but your computer is broken, and you want to ask your tutor for an extension. What would you say?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 130,
+        "title": "#130 Subject Change",
+        "answer": "You took a political science course, but you want to change it to a history course. You don't know the exact arrangement and content of the history course, and then you go to your teacher for help. What should you say?",
+        "level": 2,
+        "speechAct": "requesting|explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 132,
+        "title": "#132 Broken Photocopier",
+        "answer": "You want to copy some documents, but you notice the photocopier does not have paper and the red light is flashing.\nWhat would you say to the library staff?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 133,
+        "title": "#133 Roommate",
+        "answer": "You're sharing a flat with a few other students, but you've noticed they often use your desk and your stationery. You are very concerned about losing your things.\nWhat would you say?",
+        "level": 2,
+        "speechAct": "complaining diplomatically",
+        "context": "personal"
+    },
+    {
+        "id": 135,
+        "title": "#135 Forgotten Book",
+        "answer": "You have to return a book to your friend Tom, but when you get to school you realize you have forgotten to bring it. Your friend really needs it today.\nWhat will you say to your friend?",
+        "level": 2,
+        "speechAct": "apologizing",
+        "context": "personal"
+    },
+    {
+        "id": 136,
+        "title": "#136 Delay of Loan",
+        "answer": "Your loan has been delayed, so you can't pay the full amount of the accommodation fee at once. You have a part-time job, but it's not enough. You are going to ask the university accommodation officer for advice.\nWhat will you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "professional"
+    },
+    {
+        "id": 137,
+        "title": "#137 Disappearing Food",
+        "answer": "Your flatmate's visitors don't follow the rules, and your food in the fridge keeps disappearing. You need to talk to your flatmate about it.\nWhat will you say?",
+        "level": 3,
+        "speechAct": "negotiating",
+        "context": "personal"
+    },
+    {
+        "id": 138,
+        "title": "#138 Absence of Online Class",
+        "answer": "Your computer is broken and you can’t attend the online class. How should you tell your professor?",
+        "level": 2,
+        "speechAct": "explaining|requesting",
+        "context": "semi-formal"
+    },
+    {
+        "id": 139,
+        "title": "#139 Cafe Advertisement",
+        "answer": "You see a job advertisement for a café, but you're not sure if it's still valid, so you go and ask the manager and inquire about the tasks of the position being advertised.\nWhat would you say?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 140,
+        "title": "#140 Housework",
+        "answer": "Your flatmate doesn't follow the schedule to complete housework.\nWhat would you say to him or her?",
+        "level": 2,
+        "speechAct": "negotiating",
+        "context": "semi-formal"
+    },
+    {
+        "id": 141,
+        "title": "#141 Car Parking",
+        "answer": "You've bought a car but don’t know where to park at school, so you ask a classmate who drives to school.\nWhat would you say?",
+        "level": 1,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 142,
+        "title": "#142 Book to Return",
+        "answer": "You lent an English book to a friend three weeks ago, and he hasn't returned it yet. Now, you need the book very much.\nWhat would you say to him?",
+        "level": 2,
+        "speechAct": "requesting",
+        "context": "personal"
+    },
+    {
+        "id": 143,
+        "title": "#143 Noisy Flatmates",
+        "answer": "Your flatmates are holding a party with loud music in their room at night, which is too noisy and influences your sleep, but you have an important exam early tomorrow morning.\nWhat should you say to them?",
+        "level": 3,
+        "speechAct": "complaining diplomatically",
+        "context": "personal"
+    },
+    {
+        "id": 144,
+        "title": "#144 Feedback of Essay",
+        "answer": "You wrote an essay, consulted your tutor, and asked them for some feedback on your work.\nWhat would you say to him?",
+        "level": 2,
+        "speechAct": "explaining",
+        "context": "semi-formal"
+    },
+    {
+        "id": 145,
+        "title": "#145 Difficult Course",
+        "answer": "You have taken a course for one semester. Now your friend tells you they also want to take this course and asks for your advice. Since the course is too difficult, you do not recommend it. What should you say?",
+        "level": 2,
+        "speechAct": "suggesting|explaining",
+        "context": "personal"
+    },
+    {
+        "id": 146,
+        "title": "#146 Party Decline",
+        "answer": "Your friend is having a birthday party this weekend, and you have been invited. However, you need to complete an essay this weekend. How would you communicate to your friend that you cannot attend, in a way that does not make them feel sad and is polite?",
+        "level": 2,
+        "speechAct": "apologizing",
+        "context": "personal"
+    },
+    {
+        "id": 147,
+        "title": "#147 Injured Classmate",
+        "answer": "Your classmate's leg is injured, but he needs to return books to the library. You are planning to help him by returning the books. What would you say to him?",
+        "level": 2,
+        "speechAct": "unknown",
+        "context": "unknown"
+    },
+    {
+        "id": 148,
+        "title": "#148 Forgotten Keys",
+        "answer": "You forgot to bring the keys to your dorm and the door is locked so you can't get in. You need to call the school management team and ask them to solve this problem. What should you say?",
+        "level": 3,
+        "speechAct": "explaining",
+        "context": "professional"
+    },
+    {
+        "id": 149,
+        "title": "#149 Suggestion for University",
+        "answer": "One of your school friends is going away to start university next week. She's excited but sad to say goodbye. Some of you are discussing ideas for a present to give her for her new apartment. What would you suggest to them?",
+        "level": 2,
+        "speechAct": "suggesting",
+        "context": "personal"
+    }
 ]

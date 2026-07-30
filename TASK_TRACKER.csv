@@ -854,7 +854,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 471,2026-07-27,Add personal Facebook owner dropdown (Nam/Thành/Quỳnh) when Facebook Personal source chosen,Done,2026-07-27
 472,2026-07-27,Convert student acquisition source input to standardized dropdown,Done,2026-07-27
 473,2026-07-27,Deploy release V1.8.39 to Firebase Hosting and Cloud Functions,Done,2026-07-27
-474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar (76 questions completed),In Progress,
+474,2026-07-27,Execute Task 6 full Vietnamese translation batch for RFIB sidecar (99 questions synced to review-metadata.json and audit MD and frontend accordion UI),In Progress,
 475,2026-07-27,Add Student FB link and Personal FB Owner dropdown to Student Management modal,Done,2026-07-27
 476,2026-07-27,Deploy release V1.8.40 to Firebase Hosting and Cloud Functions,Done,2026-07-27
 477,2026-07-27,Update adult family IPA transcriptions to use caret vowel /ʌ/ per Oxford dictionary,Done,2026-07-27
@@ -877,3 +877,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 493,2026-07-28,Export top 20 repeating words with syllable /i:/ from Read Aloud bank into markdown file,Done,2026-07-28
 494,2026-07-28,Find top 20 words for short /ɪ/ and unstressed happy-vowel /i/ from Read Aloud bank and update markdown doc,Done,2026-07-28
 495,2026-07-28,Deploy release V1.8.42 to Firebase Hosting and Cloud Functions,Done,2026-07-28
+496,2026-07-29,Speaking modes difficulty categorization audit and fix (RA 7-factor analyzer integrated RS/ASQ/SGD/RTS done DI running),In Progress,
+497,2026-07-29,Upgrade DD explanation generator to Option B question-level 2-pass batching with cross-blank audit,In Progress,
+498,2026-07-29,Plan for an RA audit using 3 local LLMs,In Progress,
+499,2026-07-30,Upgrade RFIB explanation UI from wall-of-text to inline per-blank popovers,Done,2026-07-30
+500,2026-07-30,Add Tiktok - Personal acquisition source option and rename FB Personal Account label,Done,2026-07-30
+501,2026-07-30,Deploy release V1.8.43 to Firebase Hosting and Cloud Functions,Done,2026-07-30

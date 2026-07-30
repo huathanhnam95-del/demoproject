@@ -776,6 +776,7 @@
 
   // Track current active mode for tutorial button
   let currentActiveMode = '';
+  let modeTransitionToken = 0;
   const PRACTICE_LAUNCHER = {
     defaultSkill: 'speaking',
     defaultMode: 'read-aloud',
@@ -1879,6 +1880,11 @@
     if (leavingMode === 'hiw') window.HIWMode?.onExit?.();
     if (leavingMode === 'rop') window.ROPMode?.onExit?.();
 
+    modeTransitionToken += 1;
+    if (leavingMode && window.SpeakingPracticeController?.unmount) {
+      window.SpeakingPracticeController.unmount(leavingMode);
+    }
+
     // Hide all mode panels
     document.querySelectorAll('.mode-panel').forEach(panel => {
       panel.classList.remove('active');
@@ -1920,6 +1926,8 @@
   window.switchToMode = async function (mode) {
     if (!mode) return;
 
+    const transitionToken = ++modeTransitionToken;
+    const isCurrentTransition = () => transitionToken === modeTransitionToken;
     const leavingMode = currentActiveMode;
     if (leavingMode === 'essay' && mode !== 'essay') {
       if (window.WriteEssayMode?.shouldConfirmExit?.()) {
@@ -1928,6 +1936,7 @@
           'Leaving Write Essay will discard your current draft. Continue?',
           true
         );
+        if (!isCurrentTransition()) return false;
         if (!confirmed) return false;
       }
     }
@@ -1950,6 +1959,7 @@
           'Leaving Summarize Written Text will discard your current draft. Continue?',
           true
         );
+        if (!isCurrentTransition()) return false;
         if (!confirmed) return false;
       }
       window.SWTMode?.onExit?.();
@@ -1961,6 +1971,7 @@
           'Leaving Summarize Spoken Text will discard your current attempt. Continue?',
           true
         );
+        if (!isCurrentTransition()) return false;
         if (!confirmed) return false;
       }
       window.SSTMode?.onExit?.();
@@ -1999,6 +2010,7 @@
           'Leaving Drag & Drop will discard your current attempt. Continue?',
           true
         );
+        if (!isCurrentTransition()) return false;
         if (!confirmed) return false;
       }
       window.DDMode?.onExit?.();
@@ -2013,6 +2025,10 @@
     //   window.SpeakMode?.onExit?.();
     // }
 
+    if (leavingMode && leavingMode !== mode && window.SpeakingPracticeController?.unmount) {
+      window.SpeakingPracticeController.unmount(leavingMode);
+    }
+
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
       window.updateAdaptiveUI(mode);
@@ -2025,6 +2041,7 @@
       if (typeof window.ensureSurvivalGameLoaded === 'function') {
         try {
           await window.ensureSurvivalGameLoaded();
+          if (!isCurrentTransition()) return false;
         } catch (error) {
           console.error('Survival Game module failed to load:', error);
           window.shopModule?.showAlertModal?.('Survival game could not load. Please try again.', true);
@@ -2047,6 +2064,7 @@
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
+    if (!isCurrentTransition()) return false;
 
     // Map mode names to tab IDs and panel IDs
     const tabId = 'tab-' + mode;
@@ -2188,15 +2206,15 @@
         if (typeQuestionBox) typeQuestionBox.style.display = 'none';
         // Trigger ReadAloud mode init
         if (window.ReadAloudMode && typeof window.ReadAloudMode.onEnter === 'function') {
-          window.ReadAloudMode.onEnter();
+          await window.ReadAloudMode.onEnter();
         }
       } else if (mode === 'asq') {
         if (window.ASQMode && typeof window.ASQMode.onEnter === 'function') {
-          window.ASQMode.onEnter();
+          await window.ASQMode.onEnter();
         }
       } else if (mode === 'describe-image') {
         if (window.DescribeImageMode && typeof window.DescribeImageMode.onEnter === 'function') {
-          window.DescribeImageMode.onEnter();
+          await window.DescribeImageMode.onEnter();
         }
       } else if (mode === 'swt') {
         if (window.SWTMode && typeof window.SWTMode.onEnter === 'function') {
@@ -2204,9 +2222,11 @@
         }
       } else if (mode === 'rts') {
         if (window.RTSMode && typeof window.RTSMode.onEnter === 'function') {
-          window.RTSMode.onEnter();
+          await window.RTSMode.onEnter();
         }
       }
+
+      if (!isCurrentTransition()) return false;
 
       syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
 
@@ -2231,6 +2251,7 @@
       // 6. Force Layout Re-check (Self-correction)
       // This ensures that even if some other script tries to show a panel, we force hide it
       setTimeout(() => {
+        if (!isCurrentTransition()) return;
         document.querySelectorAll('.mode-panel').forEach(panel => {
           if (panel.id !== panelId) {
             panel.style.display = 'none';

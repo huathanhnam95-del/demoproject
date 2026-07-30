@@ -55,7 +55,7 @@ async function main() {
         { id: 'lead-zalo', label: 'Zalo Number' },
         { id: 'lead-facebook', label: 'Facebook Name' },
         { id: 'lead-facebook-profile-url', label: "Student's FB link" },
-        { id: 'lead-facebook-personal-owner', label: 'FB Personal Account' },
+        { id: 'lead-facebook-personal-owner', label: 'Personal Social Media Account' },
         { id: 'lead-agent-source', label: 'Agent Source' },
         { id: 'lead-stage', label: 'Stage' },
         { id: 'lead-probability', label: 'Probability' }

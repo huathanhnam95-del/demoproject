@@ -245,6 +245,47 @@ async function waitForActivePanel(page, panelId) {
       return !!select && Array.from(select.options).some((option) => !/loading/i.test(option.textContent || ''));
     }, { timeout: 15000 });
 
+    const initialActionState = await page.evaluate(() => {
+      const visible = (id) => {
+        const el = document.getElementById(id);
+        return Boolean(el && getComputedStyle(el).display !== 'none');
+      };
+      return {
+        play: visible('play-sgd-btn'),
+        record: visible('sgd-record-btn'),
+        stop: visible('sgd-stop-btn'),
+        submit: visible('sgd-submit-btn'),
+        retry: visible('sgd-retry-btn'),
+        difficultyFilter: Boolean(document.getElementById('difficulty-filter-container-sgd'))
+      };
+    });
+    assert.strictEqual(initialActionState.play, true, 'SGD should show Play before practice begins');
+    assert.strictEqual(initialActionState.record, false, 'SGD should hide recording before the speaking step');
+    assert.strictEqual(initialActionState.stop, false, 'SGD should hide Stop before recording begins');
+    assert.strictEqual(initialActionState.submit, false, 'SGD should hide Submit before recording completes');
+    assert.strictEqual(initialActionState.retry, false, 'SGD should hide Retry before results exist');
+    assert.strictEqual(initialActionState.difficultyFilter, true, 'SGD should expose a real difficulty filter');
+
+    await page.click('.spc-settings-btn');
+    await page.waitForSelector('#spc-settings-sheet-sgd.is-active', { timeout: 5000 });
+    await page.click('#spc-settings-sheet-sgd #difficulty-filter-btn-sgd');
+    await page.click('#spc-settings-sheet-sgd #difficulty-filter-menu-sgd .filter-option[data-value="2"]');
+    const selectedDifficulty = await page.evaluate(() => ({
+      current: window.DifficultyFilter?.getCurrentDifficulty?.('sgd'),
+      label: document.getElementById('difficulty-filter-label-sgd')?.textContent || '',
+      stored: localStorage.getItem('questionDifficulty_sgd_guest')
+    }));
+    assert.strictEqual(selectedDifficulty.current, '2', 'SGD difficulty filter should update the shared difficulty state');
+    assert.match(selectedDifficulty.label, /Level 2/i, 'SGD difficulty filter should update its visible label');
+    assert.strictEqual(selectedDifficulty.stored, '2', 'SGD difficulty filter should persist for the guest profile');
+    await page.click('#spc-settings-sheet-sgd .spc-sheet-close');
+    await page.click('.spc-settings-btn');
+    await page.waitForSelector('#spc-settings-sheet-sgd.is-active', { timeout: 5000 });
+    const reopenedDifficultyLabel = await page.textContent('#spc-settings-sheet-sgd #difficulty-filter-label-sgd');
+    assert.match(reopenedDifficultyLabel || '', /Level 2/i, 'SGD difficulty filter should persist after reopening settings');
+    await page.evaluate(() => window.DifficultyFilter?.selectDifficulty?.('sgd', 'all'));
+    await page.click('#spc-settings-sheet-sgd .spc-sheet-close');
+
     await page.click('#play-sgd-btn');
     await page.waitForFunction(() => {
       const step = document.getElementById('sgd-step-listen');

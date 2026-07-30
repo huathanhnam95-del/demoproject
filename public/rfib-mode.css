@@ -16,31 +16,17 @@
   padding: 8px 2px 18px;
 }
 
-#mode-rfib::before {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border-radius: 28px;
-  border: 1px solid rgba(184, 109, 45, 0.08);
-  pointer-events: none;
-}
-
 .rfib-question-selector {
   margin-bottom: 18px;
 }
 
-.rfib-header-card,
-.rfib-passage-card,
-.rfib-support-panel,
-.rfib-result-box {
+/* ── Only the header gets full card treatment ──────────── */
+.rfib-header-card {
   border: 1px solid var(--rfib-border);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 18px 45px rgba(42, 31, 18, 0.06);
   backdrop-filter: blur(8px);
-}
-
-.rfib-header-card {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
   gap: 16px;
@@ -74,16 +60,19 @@
   max-width: 58ch;
 }
 
+/* ── Flat audio area inside header (no inner card box) ── */
 .rfib-audio-card {
-  border-radius: 20px;
-  padding: 14px;
-  background: linear-gradient(180deg, rgba(248, 239, 226, 0.95), rgba(255, 250, 243, 0.95));
-  border: 1px solid rgba(184, 109, 45, 0.16);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   align-self: stretch;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
+  border-left: 1px solid rgba(184, 109, 45, 0.12);
+  padding-left: 16px;
 }
 
 .rfib-audio-head,
@@ -151,9 +140,11 @@
   transform: translateY(-1px);
 }
 
+/* ── Passage area (flat, no card) ──────────────────────── */
 .rfib-passage-card {
-  padding: 18px 18px 8px;
+  padding: 18px 0 8px;
   margin-bottom: 14px;
+  border-top: 1px solid rgba(110, 84, 54, 0.1);
 }
 
 .rfib-cloze-view {
@@ -216,9 +207,11 @@
   font-weight: 700;
 }
 
+/* ── Support panel (flat, divider only) ───────────────── */
 .rfib-support-panel {
-  padding: 16px 18px 18px;
+  padding: 16px 0 18px;
   margin-bottom: 14px;
+  border-top: 1px solid rgba(110, 84, 54, 0.1);
 }
 
 .rfib-support-panel-head {
@@ -259,9 +252,11 @@
   margin-bottom: 14px;
 }
 
+/* ── Result box (flat score line, no card) ────────────────────── */
 .rfib-result-box {
-  padding: 16px 18px;
-  min-height: 60px;
+  padding: 14px 0;
+  min-height: 0;
+  text-align: center;
 }
 
 .rfib-result-box:empty {
@@ -274,8 +269,12 @@
 
 .rfib-result-summary {
   font-weight: 800;
-  font-size: 1rem;
-  margin-bottom: 10px;
+  font-size: 1.05rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .rfib-result-summary.is-perfect {
@@ -286,43 +285,229 @@
   color: var(--rfib-danger);
 }
 
-.rfib-result-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+/* ── Inline blank wrapper (holds select + hint btn + correct label) ── */
+.rfib-blank-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: baseline;
+  position: relative;
+}
+
+/* ── Correct answer label (shown inline below incorrect blanks) ── */
+.rfib-correct-label {
+  display: none;
+  font-size: 0.78rem;
+  color: var(--rfib-success);
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+.rfib-correct-label.is-visible {
+  display: inline;
+}
+
+/* ── Inline ? hint button ─────────────────────────────────────── */
+.rfib-hint-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rfib-border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--rfib-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 160ms ease;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.rfib-hint-btn.is-visible {
+  display: inline-flex;
+}
+
+.rfib-hint-btn:hover {
+  border-color: var(--rfib-accent);
+  color: var(--rfib-accent);
+  background: var(--rfib-accent-soft);
+  transform: scale(1.12);
+}
+
+.rfib-hint-btn.is-active {
+  border-color: var(--rfib-accent);
+  background: var(--rfib-accent);
+  color: white;
+}
+
+/* ── Popover (appended to body, fixed position) ───────────────── */
+.rfib-popover {
+  position: fixed;
+  z-index: 60000;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(420px, 60vh);
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8ed 100%);
+  border: 1px solid rgba(184, 109, 45, 0.22);
+  border-radius: 16px;
+  box-shadow:
+    0 12px 40px rgba(42, 31, 18, 0.14),
+    0 2px 8px rgba(42, 31, 18, 0.06);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.rfib-popover.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.rfib-popover-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fffdf8;
+  border: 1px solid rgba(184, 109, 45, 0.22);
+  border-right: 0;
+  border-bottom: 0;
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+.rfib-popover-arrow.arrow-top {
+  top: -7px;
+  left: 24px;
+}
+
+.rfib-popover-arrow.arrow-bottom {
+  bottom: -7px;
+  left: 24px;
+  transform: rotate(225deg);
+}
+
+.rfib-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid rgba(110, 84, 54, 0.1);
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.rfib-popover.is-dragging .rfib-popover-header {
+  cursor: grabbing;
+}
+
+.rfib-popover.is-dragging {
+  transition: none;
+}
+
+.rfib-popover-blank-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rfib-muted);
+}
+
+.rfib-popover-grammar-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(110, 84, 54, 0.1);
+  color: var(--rfib-ink);
+  letter-spacing: 0.02em;
+}
+
+.rfib-popover-answer {
+  font-size: 0.82rem;
+  margin-left: auto;
+  color: var(--rfib-success);
+  font-weight: 700;
+}
+
+.rfib-popover-answer.is-incorrect {
+  color: var(--rfib-danger);
+}
+
+.rfib-popover-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--rfib-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 120ms;
+  flex-shrink: 0;
+}
+
+.rfib-popover-close:hover {
+  color: var(--rfib-danger);
+}
+
+.rfib-popover-body {
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.rfib-result-row {
-  border-radius: 16px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(110, 84, 54, 0.12);
+.rfib-popover-section {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #2c3e50;
 }
 
-.rfib-result-row.is-correct {
-  border-color: rgba(31, 122, 77, 0.18);
-  background: rgba(31, 122, 77, 0.06);
-}
-
-.rfib-result-row.is-incorrect {
-  border-color: rgba(155, 47, 58, 0.18);
-  background: rgba(155, 47, 58, 0.06);
-}
-
-.rfib-result-index {
-  display: block;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+.rfib-popover-exp-label {
+  font-size: 0.78rem;
   text-transform: uppercase;
-  color: var(--rfib-muted);
+  letter-spacing: 0.04em;
   margin-bottom: 4px;
+  color: #4a5568;
+  font-weight: 700;
 }
 
-.rfib-result-value {
-  display: block;
-  color: var(--rfib-ink);
-  line-height: 1.35;
+.rfib-popover-exp-text {
+  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.rfib-popover-section-en {
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+  padding-bottom: 10px;
+}
+
+.rfib-popover-section-vi {
+  background: rgba(79, 70, 229, 0.04);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #4f46e5;
+}
+
+.rfib-popover-empty {
+  font-size: 0.86rem;
+  color: var(--rfib-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
 }
 
 .rfib-support-audio .modern-btn--play,
@@ -333,6 +518,13 @@
 @media (max-width: 900px) {
   .rfib-header-card {
     grid-template-columns: 1fr;
+  }
+
+  .rfib-audio-card {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(184, 109, 45, 0.12);
+    padding-top: 12px;
   }
 
   .rfib-cloze-view {
@@ -346,10 +538,7 @@
     padding-inline: 0;
   }
 
-  .rfib-header-card,
-  .rfib-passage-card,
-  .rfib-support-panel,
-  .rfib-result-box {
+  .rfib-header-card {
     border-radius: 20px;
   }
 

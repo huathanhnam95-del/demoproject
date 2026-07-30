@@ -59,20 +59,25 @@ async function runTest() {
 
     // Verify Acquisition Source choices
     const acquisitionOptions = await page.$$eval('#lead-source option', (els) => els.map((el) => el.value));
-    assert.deepStrictEqual(acquisitionOptions, ['Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Agent'], 'Student acquisition source options mismatch');
+    assert.deepStrictEqual(acquisitionOptions, ['Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Tiktok - Personal', 'Agent'], 'Student acquisition source options mismatch');
 
     // Default source is Facebook - Personal
     const isUrlVisiblePersonal = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isUrlVisiblePersonal, true, "Student's FB link field should be visible for Facebook - Personal");
 
     const isOwnerVisiblePersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisiblePersonal, true, "FB Personal Account dropdown should be visible for Facebook - Personal");
+    assert.strictEqual(isOwnerVisiblePersonal, true, "Personal Social Media Account dropdown should be visible for Facebook - Personal");
 
     const isAgentVisiblePersonal = await page.$eval('#lead-agent-source-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
     assert.strictEqual(isAgentVisiblePersonal, true, "Agent Source dropdown should be hidden for Facebook - Personal");
 
     const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
     assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
+
+    // Select Tiktok - Personal
+    await page.selectOption('#lead-source', 'Tiktok - Personal');
+    const isOwnerVisibleTiktok = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    assert.strictEqual(isOwnerVisibleTiktok, true, "Personal Social Media Account dropdown should be visible for Tiktok - Personal");
 
     // Select Agent
     await page.selectOption('#lead-source', 'Agent');

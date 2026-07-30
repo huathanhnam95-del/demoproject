@@ -61,7 +61,7 @@ window.CrmLeadWorkspace = (function () {
 
             const val = String(inputLeadSource?.value || '').trim();
             const isFacebook = val.startsWith('Facebook');
-            const isFacebookPersonal = val === 'Facebook - Personal';
+            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal';
             const isAgent = val === 'Agent';
 
             if (groupUrl) {
@@ -72,9 +72,9 @@ window.CrmLeadWorkspace = (function () {
             }
 
             if (groupOwner) {
-                groupOwner.style.display = isFacebookPersonal ? '' : 'none';
+                groupOwner.style.display = isPersonalSocialMedia ? '' : 'none';
             }
-            if (!isFacebookPersonal && inputOwner) {
+            if (!isPersonalSocialMedia && inputOwner) {
                 inputOwner.value = 'Nam';
             }
 

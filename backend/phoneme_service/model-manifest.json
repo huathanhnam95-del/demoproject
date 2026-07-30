@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "selectedEngine": "provider-evaluation-required",
+  "selectedEngine": "torch",
   "modelId": "facebook/wav2vec2-lv-60-espeak-cv-ft",
   "modelRevision": "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4",
   "tokenizerChecksum": "d732ab2456c0c017930001dc9af0b41b3b93d25b2eb9740bf9d925508d7d87d0",
@@ -11,15 +11,19 @@
   },
   "benchmark": {
     "peakRssGiB": 0.163,
-    "coldLoadMs": 6494.13,
-    "warmMedianMs": 156.12,
-    "warmP95Ms": 164.58,
-    "mandatoryWordsCorrect": 2,
+    "coldLoadMs": 10006.48,
+    "warmMedianMs": 179.91,
+    "warmP95Ms": 190.63,
+    "mandatoryWordsCorrect": 5,
     "mandatoryWordsTotal": 6,
-    "cleanAccuracy": 0.5354,
-    "corpusManifestHash": "549c622dcc75482159476b3c3db444c18e0f8bb865372a7bc0439450a261480d"
+    "cleanAccuracy": 0.9167,
+    "corpusManifestHash": "6f5da1541e982ae5a3962e183e5b5007ed8c6480edfbcdaf1cf0058be1dafdc6"
   },
   "evidenceStatus": "verified",
-  "createdAt": "2026-07-28T05:57:08.028637+00:00",
-  "verdict": "provider-evaluation-required"
+  "createdAt": "2026-07-30T03:58:35.885273+00:00",
+  "verdict": "torch",
+  "quantization": {
+    "type": "none",
+    "format": "native"
+  }
 }

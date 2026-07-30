@@ -29,6 +29,7 @@
   /* Typography (2 fonts only) */
   --font-display: 'Outfit', system-ui, sans-serif;
   --font-body: 'Outfit', system-ui, sans-serif;
+  --font-content: 'Lora', Georgia, serif;
   --font-mono: 'Roboto Mono', monospace;
 
   /* Elevations */

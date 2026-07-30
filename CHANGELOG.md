@@ -1,3 +1,12 @@
+## [V1.8.43] - 2026-07-30
+
+### Added & Standardized
+- **Tiktok - Personal Source & Label Standardization**:
+  - Added `Tiktok - Personal` option to the `Source` acquisition dropdown (`#lead-source`).
+  - Standardized field label from `FB Personal Account` to `Personal Social Media Account`.
+  - Updated visibility behavior (`updateLeadSourceVisibility()` & `updateStudentSourceVisibility()`) to display `Personal Social Media Account` for both `Facebook - Personal` and `Tiktok - Personal` sources.
+  - Updated automated test suites (`crm-lead-source-browser-check.js`, `crm-student-source-browser-check.js`, `crm-enquiry-check.js`, `crm-admin-workflow-browser-check.js`).
+
 ## [V1.8.42] - 2026-07-28
 
 ### Added & Enhanced

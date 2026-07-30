@@ -67,6 +67,10 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
     if "qwen3" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
 
+    # Adjust context size per model architecture to prevent CUDA VRAM memory bounds
+    num_ctx = 4096 if "gemma" in model.lower() else 8192
+    num_predict = 2048 if "gemma" in model.lower() else 4096
+
     for attempt in range(1, max_retries + 1):
         temp = temperature if attempt == 1 else 0.0
         payload = {
@@ -76,8 +80,8 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
             "stream": False,
             "options": {
                 "temperature": temp,
-                "num_predict": 4096,
-                "num_ctx": 8192,
+                "num_predict": num_predict,
+                "num_ctx": num_ctx,
             },
         }
         try:
@@ -319,6 +323,13 @@ RULES:
 - correct_answer must match the first option in each blank exactly.
 - Each distractor_analysis must cover ALL distractors (every option except the correct one).
 - Be rigorous and specific. Avoid vague claims like "it doesn't fit" - explain exactly WHY.
+- MULTI-DIMENSION RULE: For each distractor, evaluate ALL applicable dimensions independently:
+  (a) TENSE — Does the tense match the time frame of the passage?
+  (b) VOICE — Is Active/Passive voice appropriate for the subject-verb relationship? If a distractor uses passive voice, does it make semantic sense for the subject to be the receiver of the action?
+  (c) ASPECT — Is the aspect (simple/continuous/perfect) appropriate for the event type?
+  (d) COLLOCATION — Does the word collocate naturally with its surrounding words?
+  (e) MEANING — Does the word fit the semantic context?
+  List ALL dimensions that apply in why_wrong, not just the first one you find. Separate multiple reasons with numbered points if more than one dimension fails.
 """
 
 
@@ -372,6 +383,8 @@ RULES:
 - blank_index must be sequential starting from 1.
 - correct_answer must match the first option in each blank exactly.
 - student_explanation MUST address the correct answer AND every distractor using * bullet points.
+- When a distractor fails on MULTIPLE dimensions (e.g., both wrong tense AND wrong voice), list each reason as a separate numbered point within that distractor's bullet. Do NOT collapse multiple failures into a single vague sentence.
+- When labelling a grammar form (e.g., "Present Passive", "Past Continuous"), ALWAYS explain what that label means in plain English so B1-B2 learners understand it.
 """
 
 
@@ -398,7 +411,11 @@ TASK: Review the synthesized student-facing explanations below. For each blank:
 1. VERIFY: Are all grammar rules cited factually correct? Is the reasoning sound?
 2. CHECK ENGLISH: Is the language natural and appropriate for B1-B2 learners? Fix awkward phrasing.
 3. COMPARE: Compare with the original explanation (if provided). Flag any important disagreements.
-4. FINALIZE: Produce the definitive final explanation, incorporating any corrections.
+4. COMPLETENESS CHECK: For each distractor, verify that ALL relevant failure dimensions are covered. If a distractor fails on Tense but ALSO fails on Voice/Transitivity (or vice versa), add the missing dimension. Common missed dimensions:
+   - Passive voice used where Active is semantically required (subject performs the action)
+   - Active voice used where Passive is semantically required (subject receives the action)
+   - Aspect mismatch (simple vs continuous vs perfect) beyond just tense
+5. FINALIZE: Produce the definitive final explanation, incorporating any corrections and completeness additions.
 
 ORIGINAL PASSAGE:
 {answer_with_blanks}

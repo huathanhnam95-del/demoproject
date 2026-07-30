@@ -73,6 +73,7 @@ async function setupFirebaseMocks(context) {
           data: () => ({}) 
         });
         export const getDocs = async (q) => ({ empty: true, docs: [], forEach: () => {} });
+        export const onSnapshot = () => () => {};
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -187,12 +188,18 @@ async function setupFirebaseMocks(context) {
   });
 
   const errors = [];
+  const isExpectedOptionalError = (text) => {
+    return text.includes('praat-api-') ||
+      text.includes('WordReferenceService') ||
+      text.includes('Access to fetch at') ||
+      text.includes('net::ERR_FAILED');
+  };
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (msg) => {
     console.log('PAGE LOG:', msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
-      if (!text.includes('Failed to load resource')) {
+      if (!text.includes('Failed to load resource') && !isExpectedOptionalError(text)) {
         errors.push(text);
       }
     }

@@ -3934,9 +3934,9 @@
         <!-- Submission and feedback action drawer -->
         <div class="hcs-footer-actions" style="margin-top: 24px;">
           <div class="hcs-buttons-row">
-            <button id="hcs-submit-btn" class="action-btn primary-btn btn-hero" type="button" disabled>Submit</button>
-            <button id="hcs-retry-btn" class="action-btn secondary-btn btn-hero" type="button" style="display: none;">Try Again</button>
-            <button id="hcs-explanation-toggle" class="action-btn secondary-btn btn-hero" type="button" style="display: none;">Show explanation</button>
+            <button id="hcs-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
+            <button id="hcs-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Try Again</button>
+            <button id="hcs-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Show explanation</button>
           </div>
         </div>
       </div>
@@ -4273,6 +4273,30 @@
           <div id="recommendation-controls-sgd" class="recommendation-controls">
             <button id="recommended-btn-sgd" class="recommended-jump-btn" type="button" disabled>Recommended</button>
             <span id="recommendation-summary-sgd" class="recommendation-summary is-hidden"></span>
+          </div>
+          <div id="difficulty-filter-container-sgd" class="difficulty-filter-dropdown" style="display: none;">
+            <button id="difficulty-filter-btn-sgd" class="difficulty-filter-btn" type="button">
+              <span id="difficulty-filter-label-sgd">Recommended</span>
+              <span class="filter-arrow">▼</span>
+            </button>
+            <div id="difficulty-filter-menu-sgd" class="difficulty-filter-menu" style="display: none;">
+              <div class="filter-option selected" data-value="all">
+                <span class="filter-option-icon">📋</span>
+                <span class="filter-option-text">Recommended</span>
+              </div>
+              <div class="filter-option" data-value="1">
+                <span class="filter-option-icon">🟢</span>
+                <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+              </div>
+              <div class="filter-option" data-value="2">
+                <span class="filter-option-icon">🟡</span>
+                <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+              </div>
+              <div class="filter-option" data-value="3">
+                <span class="filter-option-icon">🔴</span>
+                <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="question-total">

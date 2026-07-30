@@ -47,6 +47,14 @@
       .replace(/'/g, '&#39;');
   }
 
+  /** Convert escaped markdown bold/italic back to HTML after escapeHtml(). */
+  function renderMarkdownInline(escaped) {
+    return escaped
+      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')  // ***bold-italic***
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')               // **bold**
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');                          // *italic*
+  }
+
   function shuffleArray(items) {
     const arr = Array.from(items || []);
     for (let index = arr.length - 1; index > 0; index -= 1) {
@@ -312,14 +320,16 @@
           .join('');
 
         return `
-          <select
-            class="rfib-blank-select"
-            data-blank-index="${part.index}"
-            style="min-width: ${Math.min(Math.max(maxOptionLength + 2, 10), 22)}ch"
-            aria-label="Blank ${part.index + 1}"
-          >
-            ${optionHtml}
-          </select>
+          <span class="rfib-blank-wrapper" data-blank-index="${part.index}">
+            <select
+              class="rfib-blank-select"
+              data-blank-index="${part.index}"
+              style="min-width: ${Math.min(Math.max(maxOptionLength + 2, 10), 22)}ch"
+              aria-label="Blank ${part.index + 1}"
+            >
+              ${optionHtml}
+            </select>
+          </span>
         `;
       }).join('');
       return `<p class="rfib-paragraph">${parts}</p>`;
@@ -337,6 +347,12 @@
       select.addEventListener('change', () => {
         existing.answer = normalizeAnswer(select.value);
         select.classList.remove('is-correct', 'is-incorrect');
+        // Remove any injected hint elements when re-answering
+        const wrapper = select.closest('.rfib-blank-wrapper');
+        if (wrapper) {
+          wrapper.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
+        }
+        hidePopover();
         if (elements.resultBox) {
           elements.resultBox.innerHTML = '';
           elements.resultBox.classList.remove('is-visible');
@@ -526,10 +542,224 @@
     renderSupportAudio(variant);
   }
 
+  /* ── Popover lifecycle ─────────────────────────────────────────── */
+
+  let popoverEl = null;
+  let activeHintBtn = null;
+
+  function ensurePopoverElement() {
+    if (popoverEl) return popoverEl;
+    popoverEl = document.createElement('div');
+    popoverEl.className = 'rfib-popover';
+    popoverEl.innerHTML = `
+      <div class="rfib-popover-arrow arrow-top"></div>
+      <div class="rfib-popover-header">
+        <span class="rfib-popover-blank-label"></span>
+        <span class="rfib-popover-grammar-badge"></span>
+        <button type="button" class="rfib-popover-close" aria-label="Close explanation">&times;</button>
+      </div>
+      <div class="rfib-popover-body"></div>
+    `;
+    document.body.appendChild(popoverEl);
+
+    popoverEl.querySelector('.rfib-popover-close').addEventListener('click', hidePopover);
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && popoverEl?.classList.contains('is-visible')) {
+        hidePopover();
+      }
+    });
+
+    // Close on click outside (skip during drag)
+    let isDragging = false;
+    document.addEventListener('mousedown', (e) => {
+      if (isDragging) return;
+      if (!popoverEl?.classList.contains('is-visible')) return;
+      if (popoverEl.contains(e.target)) return;
+      if (e.target.closest('.rfib-hint-btn')) return;
+      hidePopover();
+    });
+
+    // Drag-to-move via header
+    const header = popoverEl.querySelector('.rfib-popover-header');
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let popStartX = 0;
+    let popStartY = 0;
+
+    header.addEventListener('mousedown', (e) => {
+      // Don't drag when clicking the close button
+      if (e.target.closest('.rfib-popover-close')) return;
+      e.preventDefault();
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      popStartX = popoverEl.offsetLeft;
+      popStartY = popoverEl.offsetTop;
+      popoverEl.classList.add('is-dragging');
+      // Hide arrow once user drags (it no longer points at the anchor)
+      const arrow = popoverEl.querySelector('.rfib-popover-arrow');
+      if (arrow) arrow.style.display = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      popoverEl.style.left = `${popStartX + dx}px`;
+      popoverEl.style.top = `${popStartY + dy}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      popoverEl.classList.remove('is-dragging');
+    });
+
+    return popoverEl;
+  }
+
+  function positionPopover(anchorEl) {
+    if (!popoverEl) return;
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 16;
+    const arrowEl = popoverEl.querySelector('.rfib-popover-arrow');
+
+    // Temporarily make visible off-screen to measure
+    popoverEl.style.left = '-9999px';
+    popoverEl.style.top = '-9999px';
+    popoverEl.classList.add('is-visible');
+    const popRect = popoverEl.getBoundingClientRect();
+    popoverEl.classList.remove('is-visible');
+
+    // Default: below the anchor
+    let top = anchorRect.bottom + 10;
+    let placeAbove = false;
+
+    // If below overflows, try above
+    if (top + popRect.height > vh - margin) {
+      top = anchorRect.top - popRect.height - 10;
+      placeAbove = true;
+    }
+    // If above also overflows, clamp at top
+    if (top < margin) {
+      top = margin;
+      placeAbove = false;
+    }
+
+    // Horizontal: try to center on anchor, clamp to edges
+    let left = anchorRect.left + anchorRect.width / 2 - popRect.width / 2;
+    if (left + popRect.width > vw - margin) {
+      left = vw - popRect.width - margin;
+    }
+    if (left < margin) {
+      left = margin;
+    }
+
+    popoverEl.style.top = `${top}px`;
+    popoverEl.style.left = `${left}px`;
+
+    // Arrow positioning
+    if (arrowEl) {
+      arrowEl.classList.toggle('arrow-top', !placeAbove);
+      arrowEl.classList.toggle('arrow-bottom', placeAbove);
+      const arrowLeft = Math.max(16, Math.min(anchorRect.left + anchorRect.width / 2 - left - 6, popRect.width - 28));
+      arrowEl.style.left = `${arrowLeft}px`;
+    }
+  }
+
+  function showPopover(blankIndex, analysisData, anchorEl) {
+    ensurePopoverElement();
+
+    // Toggle: if clicking the same hint button, close
+    if (activeHintBtn === anchorEl && popoverEl.classList.contains('is-visible')) {
+      hidePopover();
+      return;
+    }
+
+    // Deactivate previous hint button
+    if (activeHintBtn) {
+      activeHintBtn.classList.remove('is-active');
+    }
+    activeHintBtn = anchorEl;
+    anchorEl.classList.add('is-active');
+
+    const { grammarTag, engExp, viExp, isCorrect, displayAnswer } = analysisData;
+
+    // Header
+    const blankLabel = popoverEl.querySelector('.rfib-popover-blank-label');
+    const grammarBadge = popoverEl.querySelector('.rfib-popover-grammar-badge');
+    blankLabel.textContent = `Blank ${blankIndex + 1}`;
+    if (grammarTag) {
+      grammarBadge.textContent = grammarTag;
+      grammarBadge.style.display = '';
+    } else {
+      grammarBadge.style.display = 'none';
+    }
+
+    // Body
+    const body = popoverEl.querySelector('.rfib-popover-body');
+    let bodyHtml = '';
+
+    if (!isCorrect && displayAnswer) {
+      bodyHtml += `<div class="rfib-popover-section" style="font-weight:700;color:var(--rfib-success);font-size:0.84rem;margin-bottom:2px;">✓ Correct: ${escapeHtml(displayAnswer)}</div>`;
+    }
+
+    if (engExp) {
+      bodyHtml += `
+        <div class="rfib-popover-section rfib-popover-section-en">
+          <div class="rfib-popover-exp-label">🇬🇧 Explanation</div>
+          <div class="rfib-popover-exp-text">${renderMarkdownInline(escapeHtml(engExp)).replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+    }
+    if (viExp) {
+      bodyHtml += `
+        <div class="rfib-popover-section rfib-popover-section-vi">
+          <div class="rfib-popover-exp-label">🇻🇳 Giải thích chi tiết</div>
+          <div class="rfib-popover-exp-text">${renderMarkdownInline(escapeHtml(viExp)).replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+    }
+
+    if (!engExp && !viExp) {
+      bodyHtml = '<div class="rfib-popover-empty">No explanation available for this blank.</div>';
+    }
+
+    body.innerHTML = bodyHtml;
+
+    // Reset arrow (may have been hidden during drag) and position
+    const arrowReset = popoverEl.querySelector('.rfib-popover-arrow');
+    if (arrowReset) arrowReset.style.display = '';
+    positionPopover(anchorEl);
+    popoverEl.classList.add('is-visible');
+  }
+
+  function hidePopover() {
+    if (activeHintBtn) {
+      activeHintBtn.classList.remove('is-active');
+      activeHintBtn = null;
+    }
+    if (popoverEl) {
+      popoverEl.classList.remove('is-visible');
+    }
+  }
+
+  function removeHintButtons() {
+    hidePopover();
+    if (!elements.clozeView) return;
+    // Fully remove injected hint buttons and correct labels from DOM
+    elements.clozeView.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
+  }
+
   function clearResultBox() {
     if (!elements.resultBox) return;
     elements.resultBox.innerHTML = '';
     elements.resultBox.classList.remove('is-visible', 'is-error', 'is-success');
+    removeHintButtons();
   }
 
   function applyBlankClasses(results) {
@@ -696,6 +926,7 @@
         index,
         userAnswer,
         correctAnswer: blank.correctAnswer,
+        displayAnswer: blank.displayAnswer || '',
         isCorrect
       };
     });
@@ -706,19 +937,74 @@
 
     applyBlankClasses(results);
 
-    if (elements.resultBox) {
-      const rows = results.map((result) => `
-        <div class="rfib-result-row ${result.isCorrect ? 'is-correct' : 'is-incorrect'}">
-          <span class="rfib-result-index">Blank ${result.index + 1}</span>
-          <span class="rfib-result-value">${result.isCorrect ? 'Correct' : `Answer: ${escapeHtml(result.displayAnswer || result.correctAnswer || '')}`}</span>
-        </div>
-      `).join('');
+    // Load enrichment metadata for explanations
+    const metadata = getReviewMetadata(state.currentQuestion.id) || await loadReviewMetadata().then(() => getReviewMetadata(state.currentQuestion.id));
+    let blankAnalysisMap = new Map();
+    if (metadata && metadata.blankAnalysis) {
+      try {
+        const analysisList = typeof metadata.blankAnalysis === 'string'
+          ? JSON.parse(metadata.blankAnalysis)
+          : metadata.blankAnalysis;
+        if (Array.isArray(analysisList)) {
+          analysisList.forEach((item) => {
+            if (item && item.blank_index != null) {
+              blankAnalysisMap.set(Number(item.blank_index), item);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('[RFIB] Failed to parse blankAnalysis', e);
+      }
+    }
 
+    // Inject inline hint buttons + correct labels for each blank (created dynamically, not pre-rendered)
+    results.forEach((result) => {
+      const wrapper = elements.clozeView?.querySelector(`.rfib-blank-wrapper[data-blank-index="${result.index}"]`);
+      if (!wrapper) return;
+
+      // Remove any leftover hint elements from a previous Check
+      wrapper.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
+
+      // Show correct answer label for incorrect blanks (only if user actually picked something)
+      if (!result.isCorrect && result.userAnswer) {
+        const correctLabel = document.createElement('span');
+        correctLabel.className = 'rfib-correct-label is-visible';
+        correctLabel.textContent = `→ ${result.displayAnswer || result.correctAnswer}`;
+        wrapper.appendChild(correctLabel);
+      }
+
+      // Build analysis data for this blank
+      const analysis = blankAnalysisMap.get(result.index + 1);
+      const grammarTag = analysis?.grammar_tag || '';
+      const engExp = analysis?.final_explanation || analysis?.detailed_explanation || analysis?.concise_explanation || analysis?.student_explanation || analysis?.simplified_explanation || '';
+      const viExp = analysis?.vi_explanation || '';
+
+      // Create and append hint button
+      const hintBtn = document.createElement('button');
+      hintBtn.type = 'button';
+      hintBtn.className = 'rfib-hint-btn is-visible';
+      hintBtn.setAttribute('aria-label', `Explanation for blank ${result.index + 1}`);
+      hintBtn.title = 'Show explanation';
+      hintBtn.textContent = '?';
+      hintBtn.addEventListener('click', () => {
+        showPopover(result.index, {
+          grammarTag,
+          engExp,
+          viExp,
+          isCorrect: result.isCorrect,
+          displayAnswer: result.displayAnswer || result.correctAnswer
+        }, hintBtn);
+      });
+      wrapper.appendChild(hintBtn);
+    });
+
+    // Compact score summary (no per-blank wall of text)
+    if (elements.resultBox) {
+      const icon = isPerfect ? '🎉' : '';
       elements.resultBox.innerHTML = `
         <div class="rfib-result-summary ${isPerfect ? 'is-perfect' : 'has-misses'}">
-          ${correct}/${total} blanks correct
+          ${icon} ${correct}/${total} blanks correct ${isPerfect ? '— Perfect!' : '— Click ? for explanations'}
         </div>
-        <div class="rfib-result-details">${rows}</div>
       `;
       elements.resultBox.classList.add('is-visible');
       elements.resultBox.classList.toggle('is-success', isPerfect);

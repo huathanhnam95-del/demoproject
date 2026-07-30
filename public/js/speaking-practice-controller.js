@@ -363,6 +363,7 @@
       if (srcRandom) {
         // For random, wire it to the prev button spot or add a separate random btn
         controllerState.srcRandomBtn = srcRandom;
+        controllerState.srcRandomOriginalDisplay = srcRandom.style.display;
         // If no prev button, the random button gets the prev slot
         if (!picker.previousButtonId && prevBtn.style.display === 'none') {
           prevBtn.textContent = '🎲';
@@ -741,9 +742,28 @@
 
   /* ═══════════════════════════ DOM ADOPTION ═══════════════════════════ */
 
+  function observeVisibilityScope(element, scopeElement) {
+    const syncVisibility = () => {
+      if (isElementVisible(scopeElement)) {
+        delete element.dataset.spcScopeHidden;
+      } else {
+        element.dataset.spcScopeHidden = '';
+      }
+    };
+
+    const observer = new MutationObserver(syncVisibility);
+    observer.observe(scopeElement, {
+      attributes: true,
+      attributeFilter: ['style', 'hidden', 'class', 'aria-hidden']
+    });
+    syncVisibility();
+    return observer;
+  }
+
   function adoptControls(config, controllerState) {
     const controls = config.controls || [];
     const adoptedNodes = [];
+    controllerState.adoptedNodes = adoptedNodes;
 
     const slotMap = {
       'media': controllerState.dom.slotMedia,
@@ -793,19 +813,10 @@
         if (ctrl.visibilityScopeId) {
           const scopeEl = document.getElementById(ctrl.visibilityScopeId);
           if (scopeEl) {
-            const observer = new MutationObserver(() => {
-              el.style.display = isElementVisible(scopeEl) ? '' : 'none';
-            });
-            observer.observe(scopeEl, {
-              attributes: true,
-              attributeFilter: ['style', 'hidden', 'class']
-            });
-            adoptedNodes[adoptedNodes.length - 1].observer = observer;
+            adoptedNodes[adoptedNodes.length - 1].observer = observeVisibilityScope(el, scopeEl);
           }
         }
       });
-
-      controllerState.adoptedNodes = adoptedNodes;
 
       // In-place controls (stay in mode panel, get visibility gating)
       const inPlaceControls = config.inPlaceControls || [];
@@ -827,8 +838,12 @@
 
   function hideLegacyPicker(config, controllerState) {
     const legacyId = config?.picker?.legacyContainerId;
-    if (!legacyId) return;
-    const legacy = document.getElementById(legacyId);
+    const legacySelector = config?.legacyContainerSelector;
+    const legacy = legacyId
+      ? document.getElementById(legacyId)
+      : legacySelector
+        ? document.querySelector(legacySelector)
+        : null;
     if (!legacy) return;
     controllerState.legacyPickerContainer = legacy;
     controllerState.legacyPickerOriginalDisplay = legacy.style.display;
@@ -858,6 +873,7 @@
 
       // Remove level attribute
       delete el.dataset.spcLevel;
+      delete el.dataset.spcScopeHidden;
     });
 
     // Restore in-place controls
@@ -877,7 +893,7 @@
       controllerState.srcNextBtn.style.display = controllerState.srcNextOriginalDisplay ?? '';
     }
     if (controllerState.srcRandomBtn) {
-      controllerState.srcRandomBtn.style.display = '';
+      controllerState.srcRandomBtn.style.display = controllerState.srcRandomOriginalDisplay ?? '';
     }
   }
 
@@ -1079,48 +1095,66 @@
       panel.querySelector('.question-count-info')
     ) : null;
 
-    if (questionTotal) {
+    if (questionTotal && adaptiveContainer) {
       moveToSettings(questionTotal, diffSection);
       questionTotal.style.display = 'block';
     }
 
-    targetPanel.appendChild(diffSection);
+    if (adaptiveContainer) {
+      targetPanel.appendChild(diffSection);
+    }
 
     // Section 2: Question Filters
     const filterSection = document.createElement('div');
     filterSection.className = 'spc-settings-section';
+    let filterControlCount = 0;
     filterSection.innerHTML = '<h4 class="spc-settings-section-title">🎯 Question Filters</h4>';
 
     const statusFilter = panel ? (
       panel.querySelector('#status-filter-container-' + modeId) ||
       panel.querySelector('.status-filter-dropdown')
     ) : null;
-    if (statusFilter) moveToSettings(statusFilter, filterSection);
+    if (statusFilter) {
+      moveToSettings(statusFilter, filterSection);
+      filterControlCount++;
+    }
 
     const lengthFilter = panel ? (
       panel.querySelector('#length-filter-container-' + modeId) ||
       panel.querySelector('.length-filter-dropdown')
     ) : null;
-    if (lengthFilter) moveToSettings(lengthFilter, filterSection);
+    if (lengthFilter) {
+      moveToSettings(lengthFilter, filterSection);
+      filterControlCount++;
+    }
 
     const diffFilter = panel ? (
       panel.querySelector('#difficulty-filter-container-' + modeId) ||
       panel.querySelector('.difficulty-filter-dropdown')
     ) : null;
-    if (diffFilter) moveToSettings(diffFilter, filterSection);
+    if (diffFilter) {
+      moveToSettings(diffFilter, filterSection);
+      filterControlCount++;
+    }
 
     const filtersRow = panel ? panel.querySelector('.question-filters-row') : null;
     if (filtersRow && filtersRow.children.length > 0) {
       moveToSettings(filtersRow, filterSection);
+      filterControlCount++;
     }
 
     const recControls = panel ? (
       panel.querySelector('#recommendation-controls-' + modeId) ||
       panel.querySelector('.recommendation-controls')
     ) : null;
-    if (recControls) moveToSettings(recControls, filterSection);
+    if (recControls) {
+      moveToSettings(recControls, filterSection);
+      filterControlCount++;
+    }
 
-    targetPanel.appendChild(filterSection);
+    if (filterControlCount > 0) {
+      targetPanel.appendChild(filterSection);
+    }
     panelsContainer.appendChild(targetPanel);
 
     // Panel 2: History
@@ -1140,7 +1174,12 @@
     if (historyContentHost) moveToSettings(historyContentHost, historyPanel);
     if (historyContainer && !historyContentHost) moveToSettings(historyContainer, historyPanel);
 
-    panelsContainer.appendChild(historyPanel);
+    const hasHistory = Boolean(historyActionHost || historyContentHost || historyContainer);
+    if (hasHistory) {
+      panelsContainer.appendChild(historyPanel);
+    } else {
+      tabs.querySelector('[data-tab="history"]')?.remove();
+    }
     body.appendChild(panelsContainer);
 
     // Tab switching listener
@@ -1235,6 +1274,7 @@
       srcPrevBtn: null,
       srcNextBtn: null,
       srcRandomBtn: null,
+      srcRandomOriginalDisplay: '',
       pickerSheet: null,
       pickerListEl: null,
       pickerEmptyEl: null,

@@ -168,6 +168,15 @@ async function runTest() {
             await page3.waitForTimeout(1000);
         }
 
+        const speakLayout = await page3.evaluate(() => ({
+            controllerCount: document.querySelectorAll('#mode-speak .spc-controller').length,
+            legacyToolbarHidden: getComputedStyle(document.querySelector('#mode-speak > .unified-controls')).display === 'none',
+            replayInController: Boolean(document.querySelector('#mode-speak .spc-slot-media #replay-counter-speak'))
+        }));
+        assert('Repeat Sentence has one active controller', speakLayout.controllerCount === 1);
+        assert('Repeat Sentence legacy toolbar is hidden', speakLayout.legacyToolbarHidden);
+        assert('Repeat Sentence replay status is in the controller', speakLayout.replayInController);
+
         // Inject a synthetic adapter and test the full contract
         const syntheticResults = await page3.evaluate(() => {
             const SPC = window.SpeakingPracticeController;
@@ -200,6 +209,12 @@ async function runTest() {
             nextBtn.id = 'synth-next-btn';
             nextBtn.textContent = 'Next';
             testPanel.appendChild(nextBtn);
+
+            const randomBtn = document.createElement('button');
+            randomBtn.id = 'synth-random-btn';
+            randomBtn.textContent = 'Random';
+            randomBtn.style.display = 'inline-flex';
+            testPanel.appendChild(randomBtn);
 
             const playBtn = document.createElement('button');
             playBtn.id = 'synth-play-btn';
@@ -238,7 +253,8 @@ async function runTest() {
                 picker: {
                     sourceSelectId: 'synth-question-select',
                     previousButtonId: 'synth-prev-btn',
-                    nextButtonId: 'synth-next-btn'
+                    nextButtonId: 'synth-next-btn',
+                    randomButtonId: 'synth-random-btn'
                 },
                 controls: [
                     { sourceId: 'synth-play-btn', slot: 'media', level: 'basic', order: 1 },
@@ -369,6 +385,7 @@ async function runTest() {
             results.sourceSelectRestored = sourceSelect.style.display !== 'none';
             results.prevBtnRestored = prevBtn.style.display !== 'none';
             results.nextBtnRestored = nextBtn.style.display !== 'none';
+            results.randomBtnDisplayRestored = randomBtn.style.display === 'inline-flex';
 
             // Check in-place control level removed
             results.inPlaceLevelRemoved = !inPlaceGuide.dataset.spcLevel;
@@ -426,6 +443,7 @@ async function runTest() {
         assert('Source select visible after unmount', syntheticResults.sourceSelectRestored);
         assert('Previous button visible after unmount', syntheticResults.prevBtnRestored);
         assert('Next button visible after unmount', syntheticResults.nextBtnRestored);
+        assert('Random button display restored exactly after unmount', syntheticResults.randomBtnDisplayRestored);
         assert('In-place level attribute removed after unmount', syntheticResults.inPlaceLevelRemoved);
         assert('Comment anchors removed after unmount', syntheticResults.anchorsRemoved);
 
@@ -769,14 +787,14 @@ async function runTest() {
             results.notesUnmountedInEnglish = !notesPanel?.querySelector('.spc-controller');
             SPC.unmount('notes');
 
-            results.sgdDeadDifficultyFilterRemoved = !document.getElementById('difficulty-filter-container-sgd');
+            results.sgdDifficultyFilterPresent = !!document.getElementById('difficulty-filter-container-sgd');
             results.sgdDeadStatusFilterRemoved = !document.getElementById('status-filter-container-sgd');
             SPC.activate('sgd', { scope: 'pte' });
             const sgdController = sgdPanel?.querySelector('.spc-controller');
             results.sgdMounted = !!sgdController;
             results.sgdPlayAdopted = !!sgdController?.querySelector('#play-sgd-btn');
             results.sgdHasAdvanced = !!sgdController && !sgdController.hasAttribute('data-spc-no-toggle');
-            results.sgdNoDeadFiltersInPanel = !sgdPanel?.querySelector('#difficulty-filter-container-sgd, #status-filter-container-sgd');
+            results.sgdDifficultyFilterAdopted = !!document.querySelector('#spc-settings-sheet-sgd #difficulty-filter-container-sgd');
             SPC.unmount('sgd');
 
             const speakPanel = document.getElementById('mode-speak');
@@ -860,12 +878,12 @@ async function runTest() {
         assert('Retell Lecture Play control is adopted', productionAdapterResults.notesPlayAdopted);
         assert('Retell Lecture exposes Advanced view', productionAdapterResults.notesHasAdvanced);
         assert('English Take Notes remains unmounted', productionAdapterResults.notesUnmountedInEnglish);
-        assert('SGD dead difficulty filter is removed', productionAdapterResults.sgdDeadDifficultyFilterRemoved);
+        assert('SGD difficulty filter markup exists', productionAdapterResults.sgdDifficultyFilterPresent);
         assert('SGD dead status filter is removed', productionAdapterResults.sgdDeadStatusFilterRemoved);
         assert('SGD production adapter mounts', productionAdapterResults.sgdMounted);
         assert('SGD Play control is adopted', productionAdapterResults.sgdPlayAdopted);
         assert('SGD exposes Advanced view', productionAdapterResults.sgdHasAdvanced);
-        assert('SGD panel contains no dead filter markup', productionAdapterResults.sgdNoDeadFiltersInPanel);
+        assert('SGD difficulty filter is adopted', productionAdapterResults.sgdDifficultyFilterAdopted);
         assert('Speak production adapter mounts', productionAdapterResults.speakMounted);
         assert('Speak Play control is adopted', productionAdapterResults.speakPlayAdopted);
         assert('Speak Record control is adopted', productionAdapterResults.speakRecordAdopted);

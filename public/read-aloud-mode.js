@@ -929,14 +929,17 @@ class ReadAloudMode {
   }
 
   /**
-   * Multi-Factor Read Aloud Difficulty Classifier
+   * 7-Factor Read Aloud Difficulty Classifier
    * Evaluates passage difficulty (Level 1: Easy, Level 2: Medium, Level 3: Hard)
-   * based on:
-   * 1. Explicit database Level/Difficulty column (if present)
-   * 2. Academic vocabulary density (infrequent & multisyllabic academic words)
-   * 3. Syntactic complexity (average sentence length & clause structure)
-   * 4. Phonetic & articulation challenge (consonant cluster density, syllable complexity)
-   * 5. Passage length & pacing demands
+   * based on the 7 core linguistic & phonetic difficulty dimensions:
+   * 
+   * 1. WORD FREQUENCY: Rarer words are harder to recognize and speak
+   * 2. SPELLING COMPLEXITY: Low-frequency / irregular spelling patterns add difficulty
+   * 3. PRONOUNCEABILITY DEMAND: Unusual word forms & complex consonant clusters add production load
+   * 4. SYNTACTIC COMPLEXITY: Sentence length, embedded clauses, and parentheticals
+   * 5. CONCEPTUAL DENSITY: Information density and multi-word technical units packed in short space
+   * 6. CONCRETENESS VS. ABSTRACTNESS: Abstract nominalizations and non-physical concepts
+   * 7. VOCABULARY FAMILIARITY: Academic, domain-specific, or specialized terminology
    */
   classifyPromptDifficulty(row) {
     if (!row) return '2';
@@ -949,50 +952,121 @@ class ReadAloudMode {
       if (str === '3' || str.toLowerCase().includes('hard') || str.toLowerCase().includes('adv') || str.toLowerCase().includes('level 3')) return '3';
     }
 
-    // 2. Multi-factor classifier calculation
+    // 2. 7-Factor Classifier Calculation
     const text = String(row['ANSWER FOR COMPARE OR TRANSCRIPT'] || row.ANSWER || '').trim();
     if (!text) return '2';
 
     const words = text.split(/\s+/).filter(Boolean);
     const wordCount = words.length;
+    if (wordCount === 0) return '2';
 
-    // Feature A: Complex & Academic Vocabulary (3+ syllables or >=8 letters)
-    const complexWords = words.filter(w => {
-      const clean = w.replace(/[^a-zA-Z]/g, '');
-      return clean.length >= 8 || this.countWordSyllables(clean) >= 3;
+    const cleanWords = words.map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(Boolean);
+
+    // ── FACTOR 1: WORD FREQUENCY (Rarer words) ──
+    const commonLongWords = new Set(['children','language','languages','electricity','building','important','different','following','business','question','government','national','research','american','computer','possible','community','together','industry','activity','students','university','education','learning','sentence','examples','example','practice','problem','farmers','waited']);
+    const rareWords = cleanWords.filter(w => {
+      if (commonLongWords.has(w)) return false;
+      if (w.length >= 10) return true;
+      if (w.length >= 8 && !/^(every|about|before|between|through|another|because|without|against|himself|herself|someone|nothing|already|always|around)/.test(w)) return true;
+      return /(?:esen|quis|heur|conun|phora|archaeo|ephem|ubiq|juven|senesc)/.test(w);
     });
-    const complexRatio = complexWords.length / Math.max(1, wordCount);
+    const wordFrequencyScore = rareWords.length / Math.max(1, wordCount);
 
-    // Feature B: Syntactic & Sentence Structure
+    // ── FACTOR 2: SPELLING COMPLEXITY (Low-frequency spelling patterns) ──
+    const irregularSpellingRegex = /(?:ieu|eau|ough|eigh|aigh|ae|oe|eui|sch|ph|rh|rrh|gn|kn|wr|ps|pt|mn|mb|bt|tch|dg)/i;
+    const spellingComplexWords = cleanWords.filter(w => irregularSpellingRegex.test(w));
+    const spellingComplexityScore = spellingComplexWords.length / Math.max(1, wordCount);
+
+    // ── FACTOR 3: PRONOUNCEABILITY DEMAND (Consonant clusters & phonological load) ──
+    const clusterRegex = /[bcdfghjklmnpqrstvwxyz]{3,}/i;
+    const difficultClustersRegex = /(?:spl|str|scr|rth|lth|mph|nth|rch|spt|chth|rch|lsh)/i;
+    const pronounceableWords = words.filter(w => {
+      const clean = w.toLowerCase().replace(/[^a-z]/g, '');
+      return clusterRegex.test(clean) || difficultClustersRegex.test(clean) || (clean.length >= 10 && this.countWordSyllables(clean) >= 4);
+    });
+    const pronounceabilityScore = pronounceableWords.length / Math.max(1, wordCount);
+
+    // ── FACTOR 4: SYNTACTIC COMPLEXITY (Sentence length & clause structure) ──
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const avgSentenceLength = wordCount / Math.max(1, sentences.length);
-    const clauseMarkers = (text.match(/;|:|--|—|whereas|although|nevertheless|consequently|subsequently|furthermore|notwithstanding/gi) || []).length;
+    const clauseMarkers = (text.match(/;|:|--|—|, which|, that|, who|, whom|, whose|whereas|although|nevertheless|consequently|subsequently|furthermore|notwithstanding|until that point|provided that/gi) || []).length;
+    let syntacticScore = 0;
+    if (avgSentenceLength >= 22 || clauseMarkers >= 3) syntacticScore = 3;
+    else if (avgSentenceLength >= 15 || clauseMarkers >= 1) syntacticScore = 2;
+    else syntacticScore = 1;
 
-    // Feature C: Phonetic Cluster & Articulation Density
-    const clusterWords = words.filter(w => /[bcdfghjklmnpqrstvwxyz]{3,}/i.test(w));
-    const clusterRatio = clusterWords.length / Math.max(1, wordCount);
+    // ── FACTOR 5: CONCEPTUAL DENSITY (Information density & technical units) ──
+    const stopWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','it','its','this','that','these','those','i','you','he','she','we','they']);
+    const contentWords = cleanWords.filter(w => !stopWords.has(w) && w.length > 2);
+    const contentDensity = contentWords.length / Math.max(1, wordCount);
+    let conceptualScore = 0;
+    if (contentDensity > 0.65 || (wordCount > 55 && contentDensity > 0.60)) conceptualScore = 3;
+    else if (contentDensity >= 0.52) conceptualScore = 2;
+    else conceptualScore = 1;
 
-    // Multi-factor composite rating
-    let score = 0;
+    // ── FACTOR 6: CONCRETENESS VS. ABSTRACTNESS (Abstract nominalizations & concepts) ──
+    const abstractSuffixRegex = /(?:tion|sion|ment|ness|ity|ism|ance|ence|ship|ization|isation|ology)$/i;
+    const abstractWords = cleanWords.filter(w => abstractSuffixRegex.test(w) || /^(notion|sovereignty|globalisation|globalization|phenomenon|paradigm|framework|ideology|ethos|hypothesis|philosophy|era)$/i.test(w));
+    const abstractRatio = abstractWords.length / Math.max(1, wordCount);
 
-    if (wordCount > 65) score += 3.0;
-    else if (wordCount >= 48) score += 2.0;
-    else score += 1.0;
+    // ── FACTOR 7: VOCABULARY FAMILIARITY (Academic & domain-specific jargon) ──
+    const academicWords = cleanWords.filter(w => {
+      if (commonLongWords.has(w)) return false;
+      return (w.length >= 8 && this.countWordSyllables(w) >= 3) || /^(photovoltaic|electromagnetic|photoelectric|monocrystalline|silicon|radiation|inflationary|aggregate|sluggish|jurisprudence|archaeological|hegemony|demographic)/i.test(w);
+    });
+    const familiarityScore = academicWords.length / Math.max(1, wordCount);
 
-    if (complexRatio > 0.28) score += 3.0;
-    else if (complexRatio >= 0.18) score += 2.0;
-    else score += 1.0;
+    // ── WEIGHTED COMPOSITE SCORING ──
+    let totalPoints = 0;
 
-    if (avgSentenceLength > 24 || clauseMarkers >= 2) score += 3.0;
-    else if (avgSentenceLength >= 16 || clauseMarkers === 1) score += 2.0;
-    else score += 1.0;
+    // Factor 1: Word Frequency
+    if (wordFrequencyScore >= 0.18) totalPoints += 3.0;
+    else if (wordFrequencyScore >= 0.10) totalPoints += 2.0;
+    else totalPoints += 1.0;
 
-    if (clusterRatio > 0.12) score += 3.0;
-    else if (clusterRatio >= 0.05) score += 2.0;
-    else score += 1.0;
+    // Factor 2: Spelling Complexity
+    if (spellingComplexityScore >= 0.15) totalPoints += 3.0;
+    else if (spellingComplexityScore >= 0.08) totalPoints += 2.0;
+    else totalPoints += 1.0;
 
-    if (score >= 9.2) return '3';
-    if (score >= 6.2) return '2';
+    // Factor 3: Pronounceability Demand
+    if (pronounceabilityScore >= 0.16) totalPoints += 3.0;
+    else if (pronounceabilityScore >= 0.08) totalPoints += 2.0;
+    else totalPoints += 1.0;
+
+    // Factor 4: Syntactic Complexity
+    totalPoints += syntacticScore;
+
+    // Factor 5: Conceptual Density
+    totalPoints += conceptualScore;
+
+    // Factor 6: Concreteness vs. Abstractness
+    if (abstractRatio >= 0.14) totalPoints += 3.0;
+    else if (abstractRatio >= 0.07) totalPoints += 2.0;
+    else totalPoints += 1.0;
+
+    // Factor 7: Vocabulary Familiarity
+    if (familiarityScore >= 0.18) totalPoints += 3.0;
+    else if (familiarityScore >= 0.10) totalPoints += 2.0;
+    else totalPoints += 1.0;
+
+    // Factor Spike Boost: If any individual factor is extremely high (Level 3 intensity),
+    // ensure single-sentence passages with high difficulty on that factor trigger Level 3.
+    let spikeCount = 0;
+    if (wordFrequencyScore >= 0.18) spikeCount++;
+    if (spellingComplexityScore >= 0.15) spikeCount++;
+    if (pronounceabilityScore >= 0.16) spikeCount++;
+    if (syntacticScore >= 3) spikeCount++;
+    if (conceptualScore >= 3) spikeCount++;
+    if (abstractRatio >= 0.14) spikeCount++;
+    if (familiarityScore >= 0.18) spikeCount++;
+
+    if (spikeCount >= 2) totalPoints += 2.0;
+    else if (spikeCount >= 1) totalPoints += 1.0;
+
+    // Final Level Mapping (Scale: 7.0 to 23.0)
+    if (totalPoints >= 15.0) return '3';
+    if (totalPoints >= 10.5) return '2';
     return '1';
   }
 

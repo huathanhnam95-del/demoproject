@@ -46,7 +46,7 @@ LONG_WORD_COUNT = 12        # +1 dictation score if count >= this
 DENSE_CONTENT_COUNT = 7     # +1 dictation score if count >= this
 WPM_MED_THRESHOLD = 165     # WPM higher than this -> faster
 WPM_HARD_THRESHOLD = 185    # WPM higher than this -> fast_wpm flag
-MAX_DICTATION_SCORE = 3     # Cap for dictation sub-score
+MAX_DICTATION_SCORE = 4     # Cap for dictation sub-score (raised from 3 to accommodate length factor)
 
 # === SCORE CAPS ===
 MAX_GRAMMAR_SCORE = 4
@@ -454,8 +454,8 @@ def compute_grammar_score(sentence):
             score += 1
             flags.append(f"passive({match.group(0)})")
     
-    # --- Perfect aspect (+1): have/has/had + past participle (allow adverbs/not) ---
-    perfect_pattern = r"\b(have|has|had)\s+(?:\w+\s+){0,2}\b([a-zA-Z]{3,}(?:ed|en|wn|nt)|built|sent|taught|brought|thought|caught|held|kept|left|led|met|paid|said|sold|set|sat|read|run|written|spoken|broken|chosen|driven|eaten|fallen|forgotten|frozen|gotten|grown|hidden|ridden|risen|shaken|stolen|sworn|torn|worn|woken|been)\b"
+    # --- Perfect aspect (+1): have/has/had/having + past participle (allow adverbs/not) ---
+    perfect_pattern = r"\b(have|has|had|having)\s+(?:\w+\s+){0,2}\b([a-zA-Z]{3,}(?:ed|en|wn|nt)|built|sent|taught|brought|thought|caught|held|kept|left|led|met|paid|said|sold|set|sat|read|run|written|spoken|broken|chosen|driven|eaten|fallen|forgotten|frozen|gotten|grown|hidden|ridden|risen|shaken|stolen|sworn|torn|worn|woken|been)\b"
     match = re.search(perfect_pattern, sentence_lower)
     if match:
         verb = match.group(2)
@@ -550,6 +550,15 @@ def compute_dictation_score(sentence, word_count, content_count, wpm=None):
             score += 1
             flags.append(f"dense_ratio({ratio:.2f})")
     
+    # --- Sentence Length / Memory Span (+1 or +2) ---
+    # RS tests auditory short-term memory; longer sentences are harder to repeat
+    if word_count >= LONG_WORD_COUNT:  # 12 words
+        score += 1
+        flags.append(f"long({word_count}w)")
+    if word_count >= 16:  # Extra penalty for very long memory span
+        score += 1
+        flags.append(f"very_long({word_count}w)")
+    
     # --- Audio Rate (WPM) (+1) ---
     if wpm is not None:
         if wpm >= WPM_HARD_THRESHOLD:
@@ -569,19 +578,23 @@ def assign_level(lex_score, grammar_score, dictation_score, word_count, content_
     - Core = 2*Lex + 2*Grammar
     - Total = Core + Dictation
     Levels:
-    - 3: Core >= 6 OR (Lex=2 AND Gram>=2)
-    - 2: Total >= 5 OR Core >= 4
+    - 3: Core >= 5 OR (Lex=2 AND Gram>=1) OR Total >= 6
+    - 2: Total >= 3 OR Core >= 3
     - 1: Default
+    
+    Note: Thresholds calibrated for RS (short spoken sentences, avg 11 words).
+    RS sentences are inherently simpler than reading passages, so thresholds
+    are lower than academic text classifiers.
     """
     core = 2 * lex_score + 2 * grammar_score
     total = core + dictation_score
 
-    # L3: must be core-driven
-    if core >= 6 or (lex_score == 2 and grammar_score >= 2):
+    # L3: strong core complexity OR high overall difficulty (including memory span)
+    if core >= 5 or (lex_score == 2 and grammar_score >= 1) or total >= 6:
         return 3
 
-    # L2: combined evidence
-    if total >= 5 or core >= 4:
+    # L2: moderate combined evidence
+    if total >= 3 or core >= 3:
         return 2
 
     return 1

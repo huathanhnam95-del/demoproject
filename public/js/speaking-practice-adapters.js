@@ -43,6 +43,7 @@
     picker: {
       sourceSelectId: 'asq-question-select'
     },
+    legacyContainerSelector: '#mode-asq > .question-selector',
     controls: [
       { sourceId: 'asq-play-prompt-btn', slot: 'media', level: 'basic', order: 1 },
       { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1 },
@@ -85,11 +86,12 @@
     },
     controls: [
       { sourceId: 'play-rts-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1 },
-      { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2 },
-      { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3 },
-      { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4 }
-    ]
+      { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'rts-step-record' },
+      { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'rts-step-results' },
+      { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'rts-step-results' },
+      { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'rts-step-results' }
+    ],
+    legacyContainerSelector: '#mode-rts > .question-selector'
   });
 
   // Wave 2: Describe Image. Filters and recommendations live in Advanced;
@@ -103,6 +105,7 @@
       previousButtonId: 'back-btn-di',
       nextButtonId: 'next-btn-di'
     },
+    legacyContainerSelector: '#mode-describe-image > .question-selector',
     controls: [
       { sourceId: 'play-di-btn', slot: 'media', level: 'basic', order: 1 },
       { sourceId: 'di-stop-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'di-step-record' },
@@ -135,6 +138,7 @@
       previousButtonId: 'back-btn-notes',
       nextButtonId: 'next-btn-notes'
     },
+    legacyContainerSelector: '#mode-notes > .question-selector',
     controls: [
       { sourceId: 'play-notes-btn', slot: 'media', level: 'basic', order: 1 },
       { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'notes-step-audio' },
@@ -177,7 +181,17 @@
       { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'sgd-step-record' },
       { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'sgd-step-record' },
       { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'sgd-step-results' },
-      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1 }
+      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'difficulty-filter-container-sgd', slot: 'advanced-setting', level: 'advanced', order: 1 }
+    ],
+    legacyContainerSelector: '#mode-sgd > .question-selector',
+    advancedSettings: [
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-sgd',
+        isActive: () => isFilterActive('difficulty-filter-label-sgd', 'Recommended'),
+        summaryLabel: 'Difficulty filter'
+      }
     ]
   });
 
@@ -197,12 +211,15 @@
       { sourceId: 'record-btn', slot: 'attempt', level: 'basic', order: 1 },
       { sourceId: 'check-btn-speak', slot: 'attempt', level: 'basic', order: 2 },
       { sourceId: 'retry-btn-speak', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'replay-counter-speak', slot: 'media', level: 'basic', order: 2 },
+      { sourceId: 'shadow-mode-btn', slot: 'advanced-action', level: 'advanced', order: 2 },
       { sourceId: 'recommended-btn-speak', slot: 'advanced-action', level: 'advanced', order: 1 },
       { sourceId: 'progress-bar-speak', slot: 'advanced-setting', level: 'advanced', order: 1 },
       { sourceId: 'status-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 2 },
       { sourceId: 'length-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 3 },
       { sourceId: 'difficulty-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 4 }
     ],
+    legacyContainerSelector: '#mode-speak > .unified-controls',
     inPlaceControls: [],
     advancedSettings: [
       {

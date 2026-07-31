@@ -916,4 +916,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 526,2026-07-31,Make BEL Assistant chat bubble 2x larger while keeping avatar at 50 percent,Done,2026-07-31
 527,2026-07-31,Verify all app dictionaries use latest IPA enhancement and audit IPA style accuracy,Done,2026-07-31
 524,2026-07-31,Fix ROP touch drag with pointer events and repair stray div breaking Watch mode side-by-side layout,Done,2026-07-31
-528,2026-07-31,Repository cleanup and main branch merge with production deployment,In Progress,
+528,2026-07-31,Repository cleanup and main branch merge with production deployment,Done,2026-07-31

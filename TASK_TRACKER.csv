@@ -920,3 +920,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 529,2026-07-31,Audit and verify pronounce retry + segmentation status report claims and propose next steps,Done,2026-07-31
 531,2026-07-31,Migrate learner IPA to true Oxford American notation and fix 7 dictionary defects,Done,2026-07-31
 530,2026-07-31,Harden admin bootstrap (remove placeholder email + require email_verified) and add split-guard + IPA segmentation convention tests,Done,2026-07-31
+531,2026-07-31,Deploy admin bootstrap security fix and IPA segmentation convention to production with Kokoro accuracy A/B verification,Done,2026-07-31

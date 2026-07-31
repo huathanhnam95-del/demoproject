@@ -346,10 +346,18 @@ const Phonetics = (function () {
 
     function canonicalTokens(value, neutralizeStrut = false) {
         const tokens = [];
-        for (const symbol of Array.from(String(value || '').replace(/\//g, ''))) {
+        const symbols = Array.from(String(value || '').replace(/\//g, ''));
+        for (let index = 0; index < symbols.length; index += 1) {
+            const symbol = symbols[index];
             if (/[ˈˌː̯]/.test(symbol)) continue;
-            if (symbol === 'ɝ' || symbol === 'ɚ') {
-                tokens.push('ə', 'r');
+            // Compare pre- and post-Oxford spellings on the same footing: the
+            // r-coloured vowels all reduce to schwa + r exactly once, so
+            // /ɜːr/, /ɝ/ and /ər/ share one shape.
+            if (symbol === 'ɝ' || symbol === 'ɚ' || symbol === 'ɜ') {
+                tokens.push('ə');
+                if (symbols[index + 1] !== 'r' && symbols[index + 2] !== 'r') tokens.push('r');
+            } else if (symbol === 'ɛ') {
+                tokens.push('e');
             } else if (symbol === 'ɹ') {
                 tokens.push('r');
             } else if (symbol === 'ɡ') {
@@ -378,7 +386,7 @@ const Phonetics = (function () {
         if (sourceShape !== referenceShape || !/ʌ/.test(stripSlashes(referenceIPA))) return value;
 
         const referenceTokens = canonicalTokens(referenceIPA, false);
-        const matches = Array.from(value.matchAll(/ˈ[bcdfghjklmnpqrstvwxyzŋʃʒθðɡrw]*?ə/g));
+        const matches = Array.from(value.matchAll(STRESSED_SCHWA_RE_G));
         let result = value;
         for (const match of matches.reverse()) {
             const schwaOffset = match[0].lastIndexOf('ə');
@@ -705,4 +713,17 @@ const Phonetics = (function () {
         // For debugging
         _lookupIpaDict: lookupIpaDict,
         _lookupOxfordVariants: lookupOxfordVariants,
-  
+        _lookupCMU: lookupCMU,
+        _lookupDictionary: lookupDictionary,
+        _cache: ipaCache,
+
+        // Enable debug mode
+        enableDebug: () => { CONFIG.debug = true; },
+        disableDebug: () => { CONFIG.debug = false; }
+    };
+})();
+
+// Expose globally
+if (typeof window !== 'undefined') {
+    window.Phonetics = Phonetics;
+}

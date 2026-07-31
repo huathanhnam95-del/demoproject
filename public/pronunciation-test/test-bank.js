@@ -5,11 +5,38 @@ export async function loadTestBank() {
   }
 
   const payload = await response.json();
+  const hydrateSharedIPA = async (items) => {
+    const source = Array.isArray(items) ? items : [];
+    const phonetics = typeof window !== 'undefined' ? window.Phonetics : null;
+    if (!phonetics || typeof phonetics.getIPA !== 'function') return source.slice();
+
+    return Promise.all(source.map(async (item) => {
+      try {
+        const sharedIPA = await phonetics.getIPA(item.word);
+        if (sharedIPA) {
+          return {
+            ...item,
+            displayIpa: sharedIPA.replace(/^\/|\/$/g, '')
+          };
+        }
+      } catch (_) {
+        // Keep the bank's contrast-specific fallback when the shared lookup fails.
+      }
+      return { ...item };
+    }));
+  };
+
+  const [practice, core, reserve] = await Promise.all([
+    hydrateSharedIPA(payload?.practice),
+    hydrateSharedIPA(payload?.core),
+    hydrateSharedIPA(payload?.reserve)
+  ]);
+
   return {
     contrastPriority: Array.isArray(payload?.contrastPriority) ? payload.contrastPriority.slice() : [],
-    practice: Array.isArray(payload?.practice) ? payload.practice.slice() : [],
-    core: Array.isArray(payload?.core) ? payload.core.slice() : [],
-    reserve: Array.isArray(payload?.reserve) ? payload.reserve.slice() : []
+    practice,
+    core,
+    reserve
   };
 }
 

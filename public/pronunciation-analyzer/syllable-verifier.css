@@ -56,13 +56,33 @@
     transform: translateY(0);
 }
 
-.sv-btn-compare {
-    background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%);
-    border-color: #86efac;
+.sv-btn-manual {
+    border-color: #f59e0b;
+    color: #92400e;
+    background: #fffbeb;
 }
 
-.sv-btn-compare:hover {
-    background: linear-gradient(135deg, #bbf7d0 0%, #bfdbfe 100%);
+.sv-btn-manual.is-active {
+    color: #fff;
+    background: #b45309;
+    border-color: #92400e;
+}
+
+.sv-btn-subtle {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+}
+
+.sv-btn-save {
+    color: #166534;
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+.sv-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
 }
 
 /* Speed selector dropdown */
@@ -99,6 +119,67 @@
 
 #sv-waveform {
     min-height: 80px;
+}
+
+#sv-waveform.sv-manual-active {
+    cursor: crosshair;
+}
+
+.sv-manual-review-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 0 2px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 10px;
+}
+
+.sv-manual-review-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: #475569;
+    font-size: 0.78rem;
+}
+
+.sv-manual-review-copy strong {
+    color: #1e293b;
+    font-size: 0.82rem;
+}
+
+.sv-manual-review-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.sv-manual-count {
+    color: #92400e;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.sv-manual-status {
+    flex-basis: 100%;
+    min-height: 1.1em;
+    color: #64748b;
+    font-size: 0.76rem;
+}
+
+.sv-manual-status[data-state="error"] {
+    color: #b91c1c;
+}
+
+.sv-manual-status[data-state="saving"] {
+    color: #92400e;
+}
+
+.sv-manual-status[data-state="saved"] {
+    color: #15803d;
 }
 
 /* Syllable Label Bar */
@@ -201,28 +282,6 @@
     background: #fffbeb;
     border-radius: 6px;
     border-left: 2px solid #f59e0b;
-}
-
-/* Comparison Label */
-.sv-comparison-label {
-    text-align: center;
-    padding: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-radius: 8px;
-    margin-top: 8px;
-    transition: all 0.3s;
-    min-height: 20px;
-}
-
-.sv-comparison-label.sv-native {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.sv-comparison-label.sv-user {
-    background: #dbeafe;
-    color: #1e40af;
 }
 
 /* Responsive */

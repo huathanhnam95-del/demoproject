@@ -7167,6 +7167,8 @@
     let allSavedSamples = [];
     const savedVersionsByWord = new Map();
     const samplesNeedingRerecordByWord = new Map();
+    const samplesNeedingReviewByWord = new Map();
+    const samplesAutoUnrateableByWord = new Map();
     let pendingRerecord = null;
 
     const CORPUS_VERSIONS = [
@@ -7273,6 +7275,8 @@
         else if (filter === 'missing_accented') matchesFilter = !versions.has('accented');
         else if (filter === 'missing_unrateable') matchesFilter = !versions.has('unrateable');
         else if (filter === 'needs_rerecord') matchesFilter = samplesNeedingRerecordByWord.has(word);
+        else if (filter === 'needs_review') matchesFilter = samplesNeedingReviewByWord.has(word);
+        else if (filter === 'auto_unrateable') matchesFilter = samplesAutoUnrateableByWord.has(word);
         else if (filter === 'recorded') matchesFilter = versions.size >= 5;
 
         const matchesSearch = !searchTerm || word.includes(searchTerm);
@@ -7412,6 +7416,7 @@
 
     function updateDisplay() {
       if (!displayWord || !displayIpaCount) return;
+      displayWord.textContent = currentWord;
       const rawIpaClean = String(currentIpa || '').replace(/^\/+|\/+$/g, '');
       const normalizedIpa = typeof Phonetics !== 'undefined' && Phonetics.normalizeIPA 
         ? Phonetics.normalizeIPA(rawIpaClean) 
@@ -7451,43 +7456,30 @@
     }
 
     function getSampleVerification(sample, analysis) {
-      const targetCount = Number(sample.targetSyllableCount || 0);
-      const expectedCount = Number(sample.expectedObservedCount ?? targetCount);
-      const observedCount = Number(analysis?.observed?.syllableCount || 0);
-      const audioRateable = analysis?.quality?.rateable !== false;
-      const stressRateable = analysis?.observed?.stressEvidence?.rateable !== false;
-      const category = String(sample.category || 'clean').toLowerCase();
-      const primaryStressIdx = analysis?.observed?.primaryStress;
-      const hasPrimaryStress = primaryStressIdx !== null && primaryStressIdx !== undefined && Number(primaryStressIdx) >= 0;
-
-      if (category === 'unrateable') {
-        return audioRateable
-          ? { label: 'Needs review · audio was rateable', color: '#991b1b' }
-          : { label: 'Verified · unrateable condition matched', color: '#166534' };
-      }
-      if (!audioRateable) return { label: 'Needs review · unrateable audio', color: '#92400e' };
-      if (category === 'clean' && observedCount === targetCount) return { label: 'Verified · clean target matched', color: '#166534' };
-      if (category === 'omission' && observedCount === expectedCount && observedCount < targetCount) return { label: 'Verified · omission target matched', color: '#166534' };
-      if (category === 'insertion' && observedCount === expectedCount && observedCount > targetCount) return { label: 'Verified · insertion target matched', color: '#166534' };
-      if (category === 'accented' && observedCount === expectedCount) {
-        if (stressRateable && hasPrimaryStress) {
-          const stressSyllableNum = Number(primaryStressIdx) + 1;
-          return { label: `Verified · accented stress detected (syllable ${stressSyllableNum})`, color: '#166534' };
+      const contract = analysis?.verification;
+      if (contract && ['verified', 'incorrect', 'unrateable'].includes(contract.status)) {
+        if (contract.status === 'verified') {
+          const count = contract.count?.observed ?? contract.count?.expected ?? 0;
+          const stress = contract.primary_stress;
+          return {
+            label: stress?.applicable === false
+              ? `Verified: ${count} syllable${count === 1 ? '' : 's'}; stress check not applicable.`
+              : `Verified: ${count} syllables; primary stress verified on syllable ${(Number(stress.expected) || 0) + 1}.`,
+            color: '#166534', status: 'verified'
+          };
         }
-        return { label: 'Count verified · review stress/accent', color: '#92400e' };
+        if (contract.status === 'incorrect') {
+          const count = contract.count || {};
+          return {
+            label: count.status === 'incorrect'
+              ? `Incorrect: heard ${count.observed ?? 'an unknown number'} syllables; expected ${count.expected ?? 'the target count'}.`
+              : 'Incorrect: the recording does not match the expected pronunciation.',
+            color: '#991b1b', status: 'incorrect'
+          };
+        }
+        return { label: 'Could not rate this recording reliably.', color: '#92400e', status: 'unrateable' };
       }
-      if (observedCount !== expectedCount) return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
-      if (!stressRateable) return { label: 'Needs review · stress evidence unrateable', color: '#92400e' };
-      return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
-    }
-
-    function appendAnalysisLine(container, label, value) {
-      const line = document.createElement('div');
-      const strong = document.createElement('strong');
-      strong.textContent = `${label}: `;
-      line.appendChild(strong);
-      line.appendChild(document.createTextNode(String(value)));
-      container.appendChild(line);
+      return { label: 'Could not rate this recording reliably.', color: '#92400e', status: 'unrateable' };
     }
 
     function renderSampleAnalysis(sample, resultContainer, state) {
@@ -7510,28 +7502,13 @@
       status.textContent = verification.label;
       resultContainer.appendChild(status);
 
-      const observedCount = Number(analysis.observed?.syllableCount || 0);
-      const primaryStressIdx = analysis.observed?.primaryStress;
-      const primaryStressStr = (primaryStressIdx !== null && primaryStressIdx !== undefined && Number(primaryStressIdx) >= 0)
-        ? `syllable ${Number(primaryStressIdx) + 1}`
-        : 'N/A';
-
-      appendAnalysisLine(resultContainer, 'Counts', `${Number(sample.targetSyllableCount || 0)} target · ${Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0)} expected observed`);
-      appendAnalysisLine(resultContainer, 'Observed', `${observedCount} syllables`);
-      appendAnalysisLine(resultContainer, 'Quality', `${analysis.quality?.rateable === false ? 'unrateable' : 'rateable'} · confidence ${Number(analysis.quality?.confidence ?? 0).toFixed(2)}`);
-      appendAnalysisLine(resultContainer, 'Segmentation', `${analysis.segmentation?.method || 'unknown'} · confidence ${Number(analysis.segmentation?.confidence ?? 0).toFixed(2)}`);
-      appendAnalysisLine(resultContainer, 'Primary stress', `${primaryStressStr} · confidence ${Number(analysis.observed?.stressEvidence?.confidence ?? 0).toFixed(2)}`);
-
-      const syllables = document.createElement('div');
-      syllables.style.marginTop = '6px';
-      syllables.textContent = 'Syllables: ';
-      (analysis.observed?.syllables || []).forEach((item, index) => {
-        if (index > 0) syllables.appendChild(document.createTextNode(' · '));
-        syllables.appendChild(document.createTextNode(
-          `#${Number(item.syllable || index + 1)} ${Number(item.startTime || 0).toFixed(2)}–${Number(item.endTime || 0).toFixed(2)}s, ${Number(item.duration || 0).toFixed(2)}s, ${Number(item.avgPitch || 0).toFixed(0)}Hz${item.isStressed ? ', stressed' : ''}`
-        ));
-      });
-      resultContainer.appendChild(syllables);
+      const stress = analysis.verification?.primary_stress;
+      if (stress?.status !== 'unrateable' && Array.isArray(stress.pitch_evidence) && stress.pitch_evidence.length) {
+        const evidence = document.createElement('div');
+        evidence.style.marginTop = '6px';
+        evidence.textContent = `Pitch evidence: ${stress.pitch_evidence.map((item) => `#${Number(item.index) + 1} ${Number(item.f0_median).toFixed(0)}Hz`).join(' · ')}`;
+        resultContainer.appendChild(evidence);
+      }
     }
 
     async function analyzeSavedSample(sample, resultContainer, button) {
@@ -7540,7 +7517,7 @@
       button.disabled = true;
       button.textContent = 'Analyzing…';
       resultContainer.style.color = '#123';
-      resultContainer.textContent = 'Downloading audio and running V2 pronunciation analysis…';
+      resultContainer.textContent = 'Downloading audio and running V3 pronunciation verification…';
       try {
         const user = firebase.auth().currentUser;
         if (!user) throw new Error('Admin session expired. Please sign in again.');
@@ -7554,8 +7531,10 @@
         const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?corpus-analysis=${encodeURIComponent(sampleId)}`);
         const api = new PraatAPI();
         const expectedSyllables = Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0);
-        const analysis = await api.analyze(audioBlob, expectedSyllables, {
-          targetWord: sample.targetWord || ''
+        const analysis = await api.analyzeV3(audioBlob, {
+          expectedSyllables,
+          targetWord: sample.targetWord || '',
+          referenceIpa: sample.referenceIpa || ''
         });
         analysisBySampleId.set(sampleId, { analysis });
         renderSampleAnalysis(sample, resultContainer, { analysis });
@@ -7578,7 +7557,13 @@
 
       const label = document.createElement('span');
       label.style.flex = '1';
-      label.textContent = `${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}`;
+      const manualSpanCount = Array.isArray(sample.manualSegments)
+        ? sample.manualSegments.length
+        : (Array.isArray(sample.verifiedSpans) ? sample.verifiedSpans.length : 0);
+      const reviewLabel = sample.needsManualReview === true
+        ? ` · Manual review${manualSpanCount ? ` (${manualSpanCount} spans)` : ''}`
+        : '';
+      label.textContent = `${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}${reviewLabel}`;
       row.appendChild(label);
 
       const sampleId = String(sample.id || sample.sampleId || '').trim();
@@ -7721,11 +7706,33 @@
         || sample?.retakeRequired === true;
     }
 
+    function sampleNeedsManualReview(sample) {
+      return sample?.needsManualReview === true || sample?.reviewRequired === true;
+    }
+
+    function sampleIsAutoUnrateable(sample) {
+      const status = String(sample?.verification?.status || sample?.analysis?.verification?.status || sample?.analysisStatus || '').toLowerCase();
+      return status === 'unrateable' || sample?.autoUnrateable === true;
+    }
+
     function buildRerecordMap(samples) {
       samplesNeedingRerecordByWord.clear();
+      samplesNeedingReviewByWord.clear();
+      samplesAutoUnrateableByWord.clear();
+      const latestCleanSampleByWord = new Map();
       for (const sample of samples) {
         const word = String(sample.targetWord || '').trim().toLowerCase();
-        if (word && sampleNeedsRerecording(sample)) samplesNeedingRerecordByWord.set(word, true);
+        if (!word) continue;
+        if (sampleIsAutoUnrateable(sample)) samplesAutoUnrateableByWord.set(word, true);
+        if (String(sample.category || '').trim().toLowerCase() !== 'clean') continue;
+        const previous = latestCleanSampleByWord.get(word);
+        const sampleId = String(sample.sampleId || sample.id || '');
+        const previousId = String(previous?.sampleId || previous?.id || '');
+        if (!previous || sampleId.localeCompare(previousId) > 0) latestCleanSampleByWord.set(word, sample);
+      }
+      for (const [word, sample] of latestCleanSampleByWord) {
+        if (sampleNeedsRerecording(sample)) samplesNeedingRerecordByWord.set(word, true);
+        if (sampleNeedsManualReview(sample)) samplesNeedingReviewByWord.set(word, true);
       }
     }
 
@@ -8139,24 +8146,32 @@
         const api = new _cachedPraatAPI();
         const analysis = await api.analyze(blob, expectedSyllables, { targetWord: snapWord });
         if (analysis) {
-          const audioRateable = analysis.quality?.rateable !== false;
-          observedSyllables = Number(analysis.observed?.syllableCount ?? analysis.observedSyllableCount ?? (analysis.syllables ? analysis.syllables.length : 0));
-          
-          if (!isUnrateable) {
-            if (!audioRateable) {
-              analysisMatched = false;
-              isAudioUnrateable = true;
-              rerecordReason = analysis.quality?.reason || 'unrateable_audio';
-            } else if (expectedSyllables > 0) {
-              analysisMatched = (observedSyllables === expectedSyllables);
-              if (!analysisMatched) rerecordReason = 'syllable_mismatch';
-            }
+          const verificationStatus = analysis?.verification?.status;
+          observedSyllables = Number(analysis?.verification?.count?.observed ?? 0);
+          if (!['verified', 'incorrect', 'unrateable'].includes(verificationStatus)) {
+            analysisMatched = false;
+            isAudioUnrateable = true;
+            rerecordReason = 'VERIFICATION_CONTRACT_UNAVAILABLE';
+          } else if (isUnrateable) {
+            analysisMatched = verificationStatus === 'unrateable';
+            isAudioUnrateable = !analysisMatched;
+            if (!analysisMatched) rerecordReason = 'EXPECTED_UNRATEABLE_RECORDING';
+          } else if (snapCategory === 'clean') {
+            analysisMatched = verificationStatus === 'verified';
+            isAudioUnrateable = verificationStatus === 'unrateable';
+            if (!analysisMatched) rerecordReason = isAudioUnrateable ? 'unrateable_audio' : 'verification_failed';
+          } else {
+            analysisMatched = verificationStatus === 'incorrect';
+            isAudioUnrateable = verificationStatus === 'unrateable';
+            if (!analysisMatched) rerecordReason = isAudioUnrateable ? 'unrateable_audio' : 'EXPECTED_INCORRECT_RECORDING';
           }
           analysisSummaryText = ` (${isAudioUnrateable ? 'Unrateable audio · ' : ''}Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
         }
       } catch (err) {
         console.debug('[Auto Analysis] Praat API offline or bypassed:', err);
-        analysisMatched = true;
+        analysisMatched = false;
+        isAudioUnrateable = true;
+        rerecordReason = 'VERIFICATION_CONTRACT_UNAVAILABLE';
       }
 
       pendingRerecord = snapCategory === 'clean' && !analysisMatched
@@ -8269,7 +8284,9 @@
         category: categoryValue,
         speakerCohort: currentSpeakerCohort,
         needsRerecording: Boolean(pendingRerecord?.needsRerecording),
-        rerecordReason: pendingRerecord?.rerecordReason || null
+        rerecordReason: pendingRerecord?.rerecordReason || null,
+        needsManualReview: false,
+        reviewReason: null
       };
       const formData = new FormData();
       formData.append('audio', audioBlob, `${sampleId}.wav`);

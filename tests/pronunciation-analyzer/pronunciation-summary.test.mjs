@@ -31,6 +31,13 @@ assert.equal(
     '3 syllables. Primary stress on PHO, syllable 1. Secondary stress on GRAPH, syllable 3.'
 );
 
+const sharedLayerSummary = buildPronunciationSummary({
+    ...photograph,
+    displayIpa: '/ˈmerriam-webster-form/',
+    learnerDisplayIpa: '/ˈoʊksfərd-form/'
+});
+assert.equal(sharedLayerSummary.ipa, '/ˈoʊksfərd-form/');
+
 const carSummary = buildPronunciationSummary({
     displayIpa: '/kɑr/',
     syllableCount: 1,

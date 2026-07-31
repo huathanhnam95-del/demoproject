@@ -18,7 +18,16 @@ global.window = {};
 global.arpabetToIPA = require('../../public/arpabet-ipa-map.js').arpabetToIPA;
 require('../../public/phonetics.js');
 
-const dictionary = JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/ipa-dict.json'), 'utf8'));
+const baseDictionary = JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/ipa-dict.json'), 'utf8'));
+const oxfordOverlay = JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/oxford-american-ipa.json'), 'utf8'));
+const dictionary = { ...baseDictionary };
+const oxfordVerifiedWords = new Set(Object.keys(oxfordOverlay.entries || {}));
+for (const [word, variants] of Object.entries(oxfordOverlay.entries || {})) {
+  dictionary[word] = variants;
+}
+for (const word of oxfordOverlay.quarantine || []) {
+  delete dictionary[word];
+}
 const cmu = JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/cmudict.json'), 'utf8'));
 const { normalizeIPA } = global.window.Phonetics;
 const stressedSchwa = /ˈ[bcdfghjklmnpqrstvwxyzŋʃʒθðɡrw]*ə/u;
@@ -87,7 +96,8 @@ for (const [word, rawVariants] of Object.entries(dictionary)) {
     const hasStressedSchwa = stressedSchwa.test(sourceIPA);
     const referenceIPAs = hasStressedSchwa ? cmuIPAs(word) : [];
     const referenceIPA = matchingReference(sourceIPA, referenceIPAs);
-    const sourceMatchesReference = Boolean(referenceIPA);
+    const sourceMatchesReference = Boolean(referenceIPA) || oxfordVerifiedWords.has(word);
+    const verifiedByOxford = oxfordVerifiedWords.has(word);
     const normalized = normalizeIPA(sourceIPA, word, { referenceIPA });
 
     if (hasStressedSchwa) {
@@ -107,7 +117,7 @@ for (const [word, rawVariants] of Object.entries(dictionary)) {
       }
     }
 
-    if (hasResidualLexicalSchwa(normalized)) {
+    if (hasResidualLexicalSchwa(normalized) && !verifiedByOxford) {
       report.residualVariants += 1;
       report.findings.push({ type: 'RESIDUAL_STRESSED_SCHWA', word, sourceIPA, normalized });
     } else if (hasStressedSchwa) {

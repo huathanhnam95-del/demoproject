@@ -1,63 +1,27 @@
+/* Palette, panel wash, header card, section rhythm, result line, controls and
+   pills all come from read-mode-base.css. These aliases keep the existing
+   --rfib-* selectors working against the shared tokens. */
 #mode-rfib {
-  --rfib-paper: #fffaf2;
-  --rfib-ink: #2c2418;
-  --rfib-muted: #6f5f4e;
-  --rfib-border: rgba(110, 84, 54, 0.18);
-  --rfib-accent: #b86d2d;
-  --rfib-accent-soft: rgba(184, 109, 45, 0.14);
-  --rfib-success: #1f7a4d;
-  --rfib-danger: #9b2f3a;
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at top right, rgba(184, 109, 45, 0.12), transparent 30%),
-    radial-gradient(circle at left bottom, rgba(90, 130, 168, 0.1), transparent 28%),
-    linear-gradient(180deg, #fff 0%, #fffdf8 100%);
-  padding: 8px 2px 18px;
+  --rfib-paper: var(--read-paper);
+  --rfib-ink: var(--read-ink);
+  --rfib-muted: var(--read-muted);
+  --rfib-border: var(--read-border);
+  --rfib-accent: var(--read-accent);
+  --rfib-accent-soft: var(--read-accent-soft);
+  --rfib-success: var(--read-success);
+  --rfib-danger: var(--read-danger);
 }
 
 .rfib-question-selector {
   margin-bottom: 18px;
 }
 
-/* ── Only the header gets full card treatment ──────────── */
+/* Fill in the Blanks is the only Reading task with an audio column, so its
+   header splits into copy | audio. Every other mode uses the base single column. */
 .rfib-header-card {
-  border: 1px solid var(--rfib-border);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 18px 45px rgba(42, 31, 18, 0.06);
-  backdrop-filter: blur(8px);
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
   gap: 16px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
-
-.rfib-header-copy h2 {
-  margin: 6px 0 8px;
-  font-family: 'Lora', serif;
-  font-size: 1.6rem;
-  line-height: 1.15;
-  color: var(--rfib-ink);
-}
-
-.rfib-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--rfib-accent);
-  font-weight: 700;
-}
-
-.rfib-header-copy p {
-  margin: 0;
-  color: var(--rfib-muted);
-  line-height: 1.55;
-  max-width: 58ch;
 }
 
 /* ── Flat audio area inside header (no inner card box) ── */
@@ -71,7 +35,7 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
-  border-left: 1px solid rgba(184, 109, 45, 0.12);
+  border-left: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.12);
   padding-left: 16px;
 }
 
@@ -102,49 +66,23 @@
   flex-wrap: wrap;
 }
 
+/* Pill group + pill behaviour live in read-mode-base.css (.read-pill-group,
+   .read-pill). Only the sizing is mode-specific. */
 .rfib-voice-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px;
-  border-radius: 999px;
+  border-radius: var(--read-radius-pill);
   background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(184, 109, 45, 0.14);
-}
-
-.rfib-voice-btn,
-.rfib-support-toggle {
-  border: 0;
-  cursor: pointer;
-  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  border: 1px solid var(--read-accent-soft);
 }
 
 .rfib-voice-btn {
-  border-radius: 999px;
   padding: 8px 12px;
   background: transparent;
   color: var(--rfib-muted);
-  font-weight: 700;
   font-size: 0.84rem;
-}
-
-.rfib-voice-btn.is-active,
-.rfib-support-toggle.is-active {
-  background: var(--rfib-accent);
-  color: white;
-  box-shadow: 0 8px 18px rgba(184, 109, 45, 0.28);
-}
-
-.rfib-voice-btn:hover,
-.rfib-support-toggle:hover {
-  transform: translateY(-1px);
-}
-
-/* ── Passage area (flat, no card) ──────────────────────── */
-.rfib-passage-card {
-  padding: 18px 0 8px;
-  margin-bottom: 14px;
-  border-top: 1px solid rgba(110, 84, 54, 0.1);
 }
 
 .rfib-cloze-view {
@@ -164,21 +102,15 @@
 
 .rfib-blank-select {
   appearance: none;
-  border: 1px solid rgba(110, 84, 54, 0.22);
-  border-radius: 14px;
+  border: 1px solid var(--rfib-border);
+  border-radius: var(--read-radius-control);
   background: linear-gradient(180deg, #fff 0%, #fff8ed 100%);
   color: var(--rfib-ink);
   font-family: 'Outfit', sans-serif;
   font-size: 0.96rem;
   padding: 9px 14px;
   margin: 0 4px;
-  box-shadow: 0 8px 18px rgba(49, 37, 22, 0.04);
-}
-
-.rfib-blank-select:focus {
-  outline: none;
-  border-color: var(--rfib-accent);
-  box-shadow: 0 0 0 3px rgba(184, 109, 45, 0.16);
+  box-shadow: var(--read-shadow-control);
 }
 
 .rfib-blank-select.is-correct {
@@ -200,18 +132,9 @@
 
 .rfib-support-toggle {
   padding: 10px 16px;
-  border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
   color: var(--rfib-muted);
-  border: 1px solid rgba(110, 84, 54, 0.18);
-  font-weight: 700;
-}
-
-/* ── Support panel (flat, divider only) ───────────────── */
-.rfib-support-panel {
-  padding: 16px 0 18px;
-  margin-bottom: 14px;
-  border-top: 1px solid rgba(110, 84, 54, 0.1);
+  border: 1px solid var(--rfib-border);
 }
 
 .rfib-support-panel-head {
@@ -252,37 +175,98 @@
   margin-bottom: 14px;
 }
 
-/* ── Result box (flat score line, no card) ────────────────────── */
-.rfib-result-box {
-  padding: 14px 0;
-  min-height: 0;
+/* ── Audio Slider & Controls ─────────────────────────── */
+.rfib-audio-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.rfib-audio-time {
+  font-family: monospace, sans-serif;
+  font-size: 0.82rem;
+  color: var(--rfib-muted);
+  min-width: 32px;
   text-align: center;
 }
 
-.rfib-result-box:empty {
-  display: none;
+.audio-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  background: rgb(var(--read-accent-rgb, 154 87 34) / 0.2);
+  cursor: pointer;
+  transition: background 150ms ease;
 }
 
+/* .audio-slider is a shared class — Listening's Fill In the Blanks (#mode-extended)
+   uses it too. Inside a Reading panel --read-accent resolves and the ring is warm;
+   everywhere else it falls back to the global brand rather than leaking sepia. */
+.audio-slider:focus-visible {
+  outline: 2px solid var(--read-accent, var(--brand-primary, #1557b0));
+  outline-offset: 3px;
+}
+
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rfib-accent, #9a5722);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(var(--read-accent-rgb, 154 87 34) / 0.35);
+  transition: transform 120ms ease;
+}
+
+.audio-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.audio-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rfib-accent, #9a5722);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgb(var(--read-accent-rgb, 154 87 34) / 0.35);
+}
+
+.modern-btn.is-playing {
+  background: var(--rfib-ink, #2d241e);
+  color: #fff;
+}
+
+.rfib-support-audio-card {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.14);
+  border-radius: var(--read-radius-control);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modern-btn--easy-reading {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  color: #c2410c;
+  border: 1px solid rgba(194, 65, 12, 0.25);
+  font-weight: 700;
+}
+
+.modern-btn--easy-reading:hover {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  transform: translateY(-1px);
+}
+
+/* Result box + score line: see read-mode-base.css §5 */
 .rfib-result-box.is-visible {
   display: block;
-}
-
-.rfib-result-summary {
-  font-weight: 800;
-  font-size: 1.05rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.rfib-result-summary.is-perfect {
-  color: var(--rfib-success);
-}
-
-.rfib-result-summary.has-misses {
-  color: var(--rfib-danger);
 }
 
 /* ── Inline blank wrapper (holds select + hint btn + correct label) ── */
@@ -352,8 +336,8 @@
   width: min(380px, calc(100vw - 32px));
   max-height: min(420px, 60vh);
   background: linear-gradient(180deg, #fffdf8 0%, #fff8ed 100%);
-  border: 1px solid rgba(184, 109, 45, 0.22);
-  border-radius: 16px;
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.22);
+  border-radius: var(--read-radius-container);
   box-shadow:
     0 12px 40px rgba(42, 31, 18, 0.14),
     0 2px 8px rgba(42, 31, 18, 0.06);
@@ -378,7 +362,7 @@
   width: 12px;
   height: 12px;
   background: #fffdf8;
-  border: 1px solid rgba(184, 109, 45, 0.22);
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.22);
   border-right: 0;
   border-bottom: 0;
   transform: rotate(45deg);
@@ -523,7 +507,7 @@
   .rfib-audio-card {
     border-left: none;
     padding-left: 0;
-    border-top: 1px solid rgba(184, 109, 45, 0.12);
+    border-top: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.12);
     padding-top: 12px;
   }
 
@@ -534,14 +518,6 @@
 }
 
 @media (max-width: 640px) {
-  #mode-rfib {
-    padding-inline: 0;
-  }
-
-  .rfib-header-card {
-    border-radius: 20px;
-  }
-
   .rfib-audio-actions,
   .rfib-support-toggle-row,
   .rfib-actions {

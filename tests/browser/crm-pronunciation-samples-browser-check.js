@@ -245,24 +245,30 @@ async function main() {
         });
       }
 
-      if (url.hostname.includes('praat-api-') && url.pathname === '/analyze/v2') {
+      if (url.hostname.includes('praat-api-') && url.pathname === '/analyze/v3') {
         requestLog.push({ method: route.request().method(), path: url.pathname, url: url.toString() });
         return route.fulfill({
           status: 200,
           contentType: 'application/json; charset=utf-8',
           body: JSON.stringify({
-            analysisVersion: 'pronunciation-analysis-v2',
-            observed: {
-              syllableCount: 2,
-              primaryStress: 0,
-              syllables: [
-                { syllable: 1, startTime: 0.2, endTime: 0.4, duration: 0.2, avgPitch: 120, intensity: 80, isStressed: true },
-                { syllable: 2, startTime: 0.4, endTime: 0.6, duration: 0.2, avgPitch: 90, intensity: 70, isStressed: false }
-              ],
-              stressEvidence: { confidence: 0.88, rateable: true }
-            },
-            quality: { confidence: 1, rateable: true, reasons: [] },
-            segmentation: { method: 'target-aligned-acoustic-feedback', confidence: 1, selectedCount: 2 }
+            analysisVersion: 'pronunciation-analysis-v3',
+            verification: {
+              status: 'verified',
+              count: { expected: 2, observed: 2, status: 'verified', confidence: 0.98, reasons: [] },
+              primary_stress: {
+                applicable: true,
+                expected: 0,
+                matches_expected: true,
+                status: 'verified',
+                confidence: 0.96,
+                pitch_evidence: [
+                  { index: 0, f0_median: 120 },
+                  { index: 1, f0_median: 90 }
+                ],
+                reasons: []
+              },
+              model_revision: 'test-revision'
+            }
           })
         });
       }
@@ -301,21 +307,25 @@ async function main() {
     const analysisResult = page.locator('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result');
     await analysisResult.waitFor({ state: 'visible', timeout: 15_000 });
     try {
-      await page.waitForFunction(() => /2 syllables/i.test(document.querySelector('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result')?.textContent || ''), null, { timeout: 20_000 });
+      await page.waitForFunction(() => /Verified: 2 syllables; primary stress verified on syllable 1\./i.test(document.querySelector('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result')?.textContent || ''), null, { timeout: 20_000 });
     } catch (error) {
       console.error('Analysis result text:', await analysisResult.textContent());
       throw error;
     }
-    await expectText(analysisResult, /2 syllables/i);
-    await expectText(analysisResult, /verified/i);
+    await expectText(analysisResult, /Verified: 2 syllables; primary stress verified on syllable 1\./i);
+    assert.doesNotMatch(await analysisResult.textContent(), /strongest detected|\b0Hz\b/i);
     assert.ok(requestLog.some((r) => r.path === '/api/admin/dev/corpus-samples/busy-clean-l1-vn-01-saved/audio' && r.method === 'GET'));
-    assert.ok(requestLog.some((r) => r.path === '/analyze/v2' && r.method === 'POST'));
+    assert.ok(requestLog.some((r) => r.path === '/analyze/v3' && r.method === 'POST'));
+    assert.ok(!requestLog.some((r) => r.path === '/analyze/v2'), 'CRM re-analysis must not fall back to V2.');
     
     // 4. Select target word 'photograph'
     await page.waitForSelector('.corpus-word-btn[data-word="photograph"]', { state: 'visible' });
-    await page.click('.corpus-word-btn[data-word="photograph"]');
+    await page.locator('#corpus-sample-filter').selectOption('all');
+    const photographButton = page.locator('.corpus-word-btn[data-word="photograph"]');
+    await photographButton.dispatchEvent('click');
 
     // Verify Display updates
+    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'photograph', null, { timeout: 5000 });
     const displayWordText = await page.textContent('#corpus-display-word');
     assert.strictEqual(displayWordText.trim(), 'photograph');
     await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
@@ -366,15 +376,22 @@ async function main() {
     // Let fake mic run for 500ms
     await page.waitForTimeout(500);
 
-    // 6. Stop Recording (triggers auto-verification & auto-save on match)
+    // 6. Stop Recording. A V2-only response must fail closed instead of
+    // creating a green verification or automatic save.
     await page.click('#btn-corpus-stop');
 
-    // Wait for auto-save success toast to appear
-    await page.waitForSelector('.crm-toast.success', { state: 'visible' });
+    await page.waitForFunction(() => /Unrateable Audio/i.test(document.querySelector('#corpus-mic-status')?.textContent || ''), null, { timeout: 30_000 });
+    assert.strictEqual(
+      requestLog.some(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST'),
+      false,
+      'A V2 fallback response must not auto-save as verified.'
+    );
 
-    // Assert API call was tracked automatically
+    // Corpus capture remains possible through the explicit admin save action.
+    await page.click('#btn-corpus-save');
+    await page.waitForSelector('.crm-toast.success', { state: 'visible' });
     const saveRequest = requestLog.find(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST');
-    assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent automatically upon auto-verify.');
+    assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent after explicit admin save.');
 
 
     // 8. Test Next Word button navigation

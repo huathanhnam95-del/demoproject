@@ -874,14 +874,14 @@
         launcherVisible: false
       },
       rfib: {
-        label: 'Fill in the blanks',
+        label: 'Fill in the Blanks (Dropdown)',
         skill: 'reading',
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
       },
       dd: {
-        label: 'Drag & Drop',
+        label: 'Fill in the Blanks (Drag and Drop)',
         skill: 'reading',
         hasTutorial: false,
         isLive: true,
@@ -937,7 +937,7 @@
         launcherVisible: true
       },
       rop: {
-        label: 'Re-order Paragraph',
+        label: 'Reorder Paragraph',
         skill: 'reading',
         hasTutorial: false,
         isLive: true,
@@ -1008,8 +1008,8 @@
         sst: { label: 'Summarize Spoken Text' },
         'describe-image': { launcherVisible: true, label: 'Describe Image' },
         rts: { launcherVisible: true, label: 'Respond To Situation' },
-        rop: { label: 'Re-order Paragraph' },
-        dd: { label: 'Drag & Drop' },
+        rop: { label: 'Reorder Paragraph' },
+        dd: { label: 'Fill in the Blanks (Drag and Drop)' },
         lmcma: { label: 'Multiple Choice, Multiple Answers' },
         lmcsa: { label: 'Multiple Choice, Single Answer' },
         hcs: { label: 'Highlight Correct Summary' },
@@ -9604,11 +9604,10 @@
         const ipaPromises = words.map(async (word) => {
           const clean = word.replace(/[.,!?;:]/g, '').toLowerCase();
           try {
-            const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
-            if (!resp.ok) return `${clean}`;
-            const data = await resp.json();
-            const phonetic = data?.[0]?.phonetic || data?.[0]?.phonetics?.find(p => p.text)?.text;
-            return phonetic ? `${clean} ${phonetic}` : `${clean}`;
+            const details = typeof window.Phonetics?.getIPAWithSource === 'function'
+              ? await window.Phonetics.getIPAWithSource(clean)
+              : null;
+            return details?.ipa ? `${clean} ${details.ipa}` : `${clean}`;
           } catch { return `${clean}`; }
         });
 
@@ -10854,4 +10853,3 @@
     requestAnimationFrame(setupMobileToolbar);
   }
 })();
-

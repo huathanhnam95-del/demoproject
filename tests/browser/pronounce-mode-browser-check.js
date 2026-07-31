@@ -115,6 +115,10 @@ async function run() {
     window.__charts = [];
     window.__dictionaryCalls = {};
     window.__nativeAnalysisAttempts = {};
+    window.__savedLocalSamples = [];
+    window.__savedManualReviews = [];
+    window.__manualReviewAuthHeader = null;
+    window.__adminStatus = false;
     window.__lastV3Form = null;
     window.Logger = { log() {}, warn() {}, error() {} };
     window.__FIREBASE_INTERNAL__ = { db: null };
@@ -364,6 +368,40 @@ async function run() {
           observed: { syllableCount: 2, syllables: [] }
         });
       }
+      if (url.includes('/api/admin/dev/save-corpus-sample')) {
+        let metadata = {};
+        if (options.body && typeof options.body.entries === 'function') {
+          for (const [key, value] of options.body.entries()) {
+            if (key === 'metadata' && typeof value === 'string') metadata = JSON.parse(value);
+          }
+        }
+        window.__manualReviewAuthHeader = options.headers?.Authorization || options.headers?.authorization || null;
+        window.__savedManualReviews.push(metadata);
+        return jsonResponse({
+          success: true,
+          data: { sampleId: metadata.sampleId, sample: { id: metadata.sampleId } }
+        });
+      }
+      if (url.includes('/api/admin/status')) {
+        return jsonResponse({ success: true, isAdmin: window.__adminStatus === true });
+      }
+      if (url.includes('/debug/pronounce-samples')) {
+        let metadata = {};
+        let audio = null;
+        if (options.body && typeof options.body.entries === 'function') {
+          for (const [key, value] of options.body.entries()) {
+            if (key === 'metadata' && typeof value === 'string') metadata = JSON.parse(value);
+            if (key === 'audio') audio = { type: value.type, size: value.size };
+          }
+        }
+        window.__savedLocalSamples.push({ metadata, audio });
+        return jsonResponse({
+          success: true,
+          sampleId: metadata.sampleId,
+          audioPath: `test-results/pronounce-local-samples/${metadata.sampleId}.wav`,
+          metadataPath: `test-results/pronounce-local-samples/${metadata.sampleId}.json`
+        });
+      }
       if (url.includes('/proxy-audio')) {
 
         return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
@@ -423,6 +461,171 @@ async function run() {
     assert.equal(
       await page.locator('#pa-pattern-display').textContent(),
       '3 syllables. Primary stress on PHO, syllable 1. Secondary stress on GRAPH, syllable 3.'
+    );
+    const localSampleSave = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      const pcm = new Uint8Array(32);
+      const wav = new ArrayBuffer(44 + pcm.length);
+      const view = new DataView(wav);
+      const write = (offset, value) => [...value].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
+      write(0, 'RIFF');
+      view.setUint32(4, 36 + pcm.length, true);
+      write(8, 'WAVE');
+      write(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, 16000, true);
+      view.setUint32(28, 32000, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      write(36, 'data');
+      view.setUint32(40, pcm.length, true);
+      new Uint8Array(wav, 44).set(pcm);
+
+      app.setLocalSampleSnapshot(
+        new Blob([wav], { type: 'audio/wav' }),
+        {
+          engine: 'praat',
+          quality: { rateable: true, confidence: 0.4 },
+          syllables: [{ startTime: 0.1, endTime: 0.2, duration: 0.1 }]
+        }
+      );
+      const button = document.querySelector('#pa-save-local-sample-btn');
+      const ready = { exists: Boolean(button), disabled: button?.disabled };
+      await app.saveLocalSample();
+      return {
+        ready,
+        status: document.querySelector('#pa-local-sample-status')?.textContent,
+        saved: window.__savedLocalSamples
+      };
+    });
+    assert.deepEqual(localSampleSave.ready, { exists: true, disabled: false });
+    assert.match(localSampleSave.status, /Saved locally:/);
+    assert.equal(localSampleSave.saved.length, 1);
+    assert.equal(localSampleSave.saved[0].metadata.source, 'pronounce-mode-local');
+    assert.equal(localSampleSave.saved[0].metadata.word, 'photograph');
+    assert.equal(localSampleSave.saved[0].audio.type, 'audio/wav');
+    const manualCloudSave = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.localSampleEnabled = false;
+      app.showSyllableVerifier = Object.getPrototypeOf(app).showSyllableVerifier;
+      app.userAudioBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' });
+      app.praatAPI.ensureWav = async (blob) => blob;
+      app.currentReference = { word: 'photograph' };
+      app.currentWordRef = {
+        id: '8888888888888888',
+        displayIpa: '/ˈfoʊtəˌɡræf/',
+        syllableCount: 3
+      };
+      app.expectedData = { syllables: 3, ipa: '/ˈfoʊtəˌɡræf/' };
+      app.syllableVerifier = {
+        destroy() {},
+        syllables: [
+          { startTime: 0.05, endTime: 0.2 },
+          { startTime: 0.2, endTime: 0.42 },
+          { startTime: 0.42, endTime: 0.68 }
+        ]
+      };
+      window.firebaseAuthFunctions = {
+        getCurrentUser: () => ({ getIdToken: async () => 'manual-review-test-token' })
+      };
+      return app.saveManualReview([
+        { startTime: 0.08, endTime: 0.19 },
+        { startTime: 0.21, endTime: 0.4 },
+        { startTime: 0.43, endTime: 0.7 }
+      ]).then((result) => ({ result, saved: window.__savedManualReviews, auth: window.__manualReviewAuthHeader }));
+    });
+    assert.equal(manualCloudSave.result.sampleId, manualCloudSave.saved[0].sampleId);
+    assert.equal(manualCloudSave.saved[0].needsManualReview, true);
+    assert.equal(manualCloudSave.saved[0].reviewReason, 'manual_syllable_segmentation');
+    assert.equal(manualCloudSave.saved[0].manualSegments.length, 3);
+    assert.equal(manualCloudSave.saved[0].automaticSegments.length, 3);
+    assert.equal(manualCloudSave.auth, 'Bearer manual-review-test-token');
+    const manualLocalSave = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.localSampleEnabled = true;
+      app.userAudioBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' });
+      app.praatAPI.ensureWav = async (blob) => blob;
+      app.currentReference = { word: 'photograph' };
+      app.currentWordRef = {
+        id: '8888888888888888',
+        displayIpa: '/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/',
+        syllableCount: 3,
+        syllables: [{ ipa: 'foÊŠ' }, { ipa: 'tÉ™' }, { ipa: 'É¡rÃ¦f' }]
+      };
+      app.expectedData = { syllables: 3, ipa: '/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/' };
+      app.syllableVerifier = {
+        destroy() {},
+        syllables: [
+          { startTime: 0.05, endTime: 0.2 },
+          { startTime: 0.2, endTime: 0.42 },
+          { startTime: 0.42, endTime: 0.68 }
+        ]
+      };
+      window.firebaseAuthFunctions = null;
+      window.auth = { currentUser: null };
+      window.__savedLocalSamples = [];
+      const result = await app.saveManualReview([
+        { startTime: 0.08, endTime: 0.19 },
+        { startTime: 0.21, endTime: 0.4 },
+        { startTime: 0.43, endTime: 0.7 }
+      ]);
+      return { result, saved: window.__savedLocalSamples };
+    });
+    assert.equal(manualLocalSave.saved.length, 1);
+    assert.equal(manualLocalSave.saved[0].metadata.source, 'pronounce-mode-local');
+    assert.equal(manualLocalSave.saved[0].metadata.manualReview.manualSegments.length, 3);
+
+    const targetDurationFallback = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.currentReference = { word: 'photograph' };
+      app.currentWordRef = {
+        nativeAnalysis: { quality: { rateable: false } },
+        syllables: [{ ipa: 'foÊŠ' }, { ipa: 'tÉ™' }, { ipa: 'É¡rÃ¦f' }]
+      };
+      app.expectedData = { syllables: 3, primaryStress: 0 };
+      app.nativePattern = [
+        { duration: 0.22, ipa: 'foÊŠ' },
+        { duration: 0.11, ipa: 'tÉ™' },
+        { duration: 0.18, ipa: 'É¡rÃ¦f' }
+      ];
+      app.renderSyllableFeedback(
+        null,
+        [
+          { startTime: 0.05, endTime: 0.2, duration: 0.15 },
+          { startTime: 0.2, endTime: 0.42, duration: 0.22 },
+          { startTime: 0.42, endTime: 0.68, duration: 0.26 }
+        ],
+        0,
+        { rateable: false, confidence: 0 },
+        { rateable: false, confidence: 0 }
+      );
+      const chart = window.__charts.at(-1);
+      return {
+        labels: chart.data.labels,
+        target: chart.data.datasets.find((dataset) => dataset.label === 'Target duration')?.data
+      };
+    });
+    assert.deepEqual(
+      targetDurationFallback.labels,
+      ['Target: foÊŠ', 'Target: tÉ™', 'Target: É¡rÃ¦f', 'Observed 1', 'Observed 2', 'Observed 3']
+    );
+    assert.deepEqual(targetDurationFallback.target, [0.22, 0.11, 0.18, null, null, null]);
+    assert.deepEqual(
+      await page.evaluate(async () => {
+        const { isLocalPronounceHost } = await import('/pronunciation-analyzer/app.js');
+        return {
+          localhost: isLocalPronounceHost('localhost'),
+          loopback: isLocalPronounceHost('127.0.0.1'),
+          production: isLocalPronounceHost('betterenglishlearning.com')
+        };
+      }),
+      { localhost: true, loopback: true, production: false }
     );
     const screenshotDir = process.env.PRONOUNCE_SCREENSHOT_DIR;
     if (screenshotDir) {
@@ -563,6 +766,94 @@ async function run() {
       timings: [[0.05, 0.24, 0.19], [0.24, 0.43, 0.19]],
       durationAvailable: true
     });
+
+    const retryPolicyUi = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.currentReference = { word: 'busy-v2' };
+      app.currentWordRef = { id: 'busy-v2', displayIpa: '/ËˆbÉªzi/' };
+      app.expectedData = { syllables: 2, primaryStress: 0 };
+      const messages = [];
+      for (let index = 0; index < 3; index += 1) {
+        app.renderV3LearnerResult(
+          {
+            status: 'unrateable',
+            count: { expected: 2, observed: 2, status: 'unrateable' },
+            primary_stress: { applicable: true, status: 'unrateable' }
+          },
+          { available: true, observed_count: 2, expected_stress_appears_strongest: true, advisory_only: true },
+          [],
+          null
+        );
+        messages.push(document.querySelector('#pa-results-summary').textContent);
+      }
+      return messages;
+    });
+    assert.match(retryPolicyUi[0], /re-recording 1 of 2/);
+    assert.match(retryPolicyUi[1], /re-recording 2 of 2/);
+    assert.match(retryPolicyUi[2], /may be inaccurate/);
+
+    const v2RetryPolicyUi = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      const originalVisualizer = app.visualizer;
+      app.currentReference = { word: 'busy-v4' };
+      app.currentWordRef = { id: 'busy-v1', displayIpa: '/ËˆbÉªzi/' };
+      app.expectedData = { syllables: 2, primaryStress: 0 };
+      app.visualizer = { drawDurationChart() {}, clear() {} };
+      app.showSyllableVerifier = () => {};
+      const messages = [];
+      for (let index = 0; index < 3; index += 1) {
+        app.renderSyllableFeedback(
+          null,
+          [
+            { startTime: 0.05, endTime: 0.24, duration: 0.19 },
+            { startTime: 0.24, endTime: 0.43, duration: 0.19 }
+          ],
+          0,
+          { rateable: false, confidence: 0 },
+          { rateable: false, confidence: 0 }
+        );
+        messages.push(document.querySelector('#pa-results-summary').textContent);
+      }
+      app.visualizer = originalVisualizer;
+      app.showSyllableVerifier = Object.getPrototypeOf(app).showSyllableVerifier;
+      return messages;
+    });
+    assert.match(v2RetryPolicyUi[0], /re-recording 1 of 2/);
+    assert.match(v2RetryPolicyUi[1], /re-recording 2 of 2/);
+    assert.match(v2RetryPolicyUi[2], /may be inaccurate/);
+
+    const manualReviewAccessUi = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.localSampleEnabled = false;
+      app.showSyllableVerifier = Object.getPrototypeOf(app).showSyllableVerifier;
+      app.userAudioBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' });
+      app.praatAPI.ensureWav = async (blob) => blob;
+      app.currentReference = { word: 'busy' };
+      app.currentWordRef = { id: 'busy-v1', displayIpa: '/ËˆbÉªzi/' };
+      app.expectedData = { syllables: 2, primaryStress: 0 };
+      window.firebaseAuthFunctions = {
+        getCurrentUser: () => ({ getIdToken: async () => 'admin-review-test-token' })
+      };
+      const created = [];
+      window.SyllableVerifier = class {
+        constructor(_containerId, options) {
+          created.push(options.enableManualReview);
+        }
+        loadAudio() {}
+        destroy() {}
+      };
+      window.__adminStatus = false;
+      await app.showSyllableVerifier(app.userAudioBlob, []);
+      const learnerOnly = created.at(-1);
+      window.__adminStatus = true;
+      app._manualReviewAccessPromise = null;
+      await app.showSyllableVerifier(app.userAudioBlob, []);
+      return { learnerOnly, admin: created.at(-1) };
+    });
+    assert.deepEqual(manualReviewAccessUi, { learnerOnly: false, admin: true });
     if (screenshotDir) {
       await page.screenshot({
         path: path.join(screenshotDir, 'pronunciation-fresh-word-duration.png'),

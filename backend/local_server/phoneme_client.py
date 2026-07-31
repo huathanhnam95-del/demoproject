@@ -24,6 +24,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import json
 import os
 import time
 from typing import Optional
@@ -255,6 +256,47 @@ class PhonemeClient:
         response.raise_for_status()
         # Fallback (should not be reached after raise_for_status)
         return response.json()
+
+    def recognize_v2(self, wav_bytes: bytes, reference_syllables: list[str], expected_syllable_count: int, *, variant_id: str | None = None) -> dict:
+        """Call the reference-constrained recognizer contract.
+
+        The method is intentionally separate from ``recognize`` so V1 callers
+        retain byte-compatible behavior and cannot accidentally receive target
+        guided data.
+        """
+        if not 1 <= len(reference_syllables) <= 8 or len(reference_syllables) != int(expected_syllable_count):
+            raise RecognizerError("invalid reference syllable contract", reason="REFERENCE_CONFLICT")
+        url = f"{self.service_url}/recognize/v2"
+        data = {
+            "reference_syllables": json.dumps(reference_syllables, ensure_ascii=False),
+            "expected_syllable_count": str(int(expected_syllable_count)),
+        }
+        if variant_id:
+            data["variant_id"] = variant_id
+        response = self._session.post(
+            url,
+            files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
+            data=data,
+            headers=self._auth_headers(),
+            timeout=_RECOGNIZER_HTTP_TIMEOUT_SEC,
+        )
+        if response.status_code in (401, 403) and self.auth_mode != "disabled":
+            self._invalidate_token()
+            response = self._session.post(
+                url,
+                files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
+                data=data,
+                headers=self._auth_headers(force_refresh=True),
+                timeout=_RECOGNIZER_HTTP_TIMEOUT_SEC,
+            )
+        if response.status_code == 503:
+            raise RecognizerError("Phoneme recognizer is temporarily unavailable (503)", reason=REASON_RECOGNIZER_BUSY, status_code=503)
+        if response.status_code != 200:
+            response.raise_for_status()
+        payload = response.json()
+        if payload.get("contract_version") != "recognize-v2":
+            raise RecognizerError("recognizer V2 contract mismatch", reason="CONTRACT_MISMATCH", status_code=response.status_code)
+        return payload
 
 
 # ---------------------------------------------------------------------------

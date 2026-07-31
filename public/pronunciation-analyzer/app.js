@@ -14,6 +14,36 @@ import {
 } from './reference-contract.js';
 import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
 import { buildPronunciationSummary } from './pronunciation-summary.js';
+import {
+    attemptStatusFor,
+    createAttemptKey,
+    nextAttemptState,
+    resetAttemptState
+} from './verification-attempt-policy.js';
+
+const LOCAL_PRONOUNCE_HOSTNAMES = new Set(['localhost', '127.0.0.1']);
+
+export function isLocalPronounceHost(hostname = null) {
+    const resolvedHostname = hostname ?? (
+        typeof window !== 'undefined' ? window.location?.hostname : ''
+    );
+    return LOCAL_PRONOUNCE_HOSTNAMES.has(String(resolvedHostname || '').toLowerCase());
+}
+
+function toSerializable(value) {
+    try {
+        return JSON.parse(JSON.stringify(value, (_key, candidate) => {
+            if (typeof ArrayBuffer !== 'undefined' && (
+                candidate instanceof ArrayBuffer || ArrayBuffer.isView(candidate)
+            )) {
+                return undefined;
+            }
+            return candidate;
+        }));
+    } catch (_error) {
+        return null;
+    }
+}
 
 export class PronunciationApp {
     constructor() {
@@ -34,6 +64,12 @@ export class PronunciationApp {
         this.syllableVerifier = null;
         this.userAudioBlob = null;
         this.nativeAudioUrl = null;
+        this.localSampleEnabled = isLocalPronounceHost();
+        this.localSampleSnapshot = null;
+        this.localSampleTools = null;
+        this.localSampleSaveButton = null;
+        this.localSampleStatus = null;
+        this._verificationAttemptState = resetAttemptState();
 
         this.recordBtn = document.getElementById('pa-record-btn');
         this.stopBtn = document.getElementById('pa-stop-btn');
@@ -62,6 +98,8 @@ export class PronunciationApp {
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
         this.nativeAudio = document.getElementById('pa-native-audio');
         this.nativeAudioPlayer = new NativeAudioPlayer(this.audioCapture.audioContext, this.nativeAudio);
+
+        this.initLocalSampleTools();
 
         this.expectedData = {
             ipa: '/ˈfoʊ.tə.ɡræf/',
@@ -138,7 +176,7 @@ export class PronunciationApp {
             });
 
             // Listen to other tabs to hide pronounce panel and deactivate pronounce tab
-            allTabs.forEach(tab => {
+                    allTabs.forEach(tab => {
                 if (tab.id !== 'tab-pronounce') {
                     tab.addEventListener('click', () => {
                         if (pronouncePanel) {
@@ -148,6 +186,7 @@ export class PronunciationApp {
                         if (pronounceTab) {
                             pronounceTab.classList.remove('active');
                         }
+                        this._verificationAttemptState = resetAttemptState();
                     });
                 }
             });
@@ -176,6 +215,168 @@ export class PronunciationApp {
                     });
                 }
             });
+        }
+    }
+
+    initLocalSampleTools() {
+        if (!this.localSampleEnabled || !this.resultsSummary) return;
+
+        const tools = document.createElement('div');
+        tools.id = 'pa-local-debug-tools';
+        tools.className = 'pa-local-debug-tools';
+        tools.setAttribute('aria-label', 'Local pronunciation debugging tools');
+
+        const button = document.createElement('button');
+        button.id = 'pa-save-local-sample-btn';
+        button.type = 'button';
+        button.className = 'pa-btn pa-btn-local';
+        button.textContent = '💾 Save sample locally';
+        button.title = 'Save this recording and its analysis to the local test-results folder';
+        button.disabled = true;
+
+        const status = document.createElement('span');
+        status.id = 'pa-local-sample-status';
+        status.className = 'pa-local-sample-status';
+        status.setAttribute('role', 'status');
+
+        tools.append(button, status);
+        this.resultsSummary.insertAdjacentElement('afterend', tools);
+
+        this.localSampleTools = tools;
+        this.localSampleSaveButton = button;
+        this.localSampleStatus = status;
+        button.addEventListener('click', () => this.saveLocalSample());
+        this.clearLocalSampleSnapshot();
+    }
+
+    clearLocalSampleSnapshot(message = 'Local only · available after a recording is analyzed.') {
+        this.localSampleSnapshot = null;
+        if (this.localSampleSaveButton) {
+            this.localSampleSaveButton.disabled = true;
+        }
+        if (this.localSampleStatus) {
+            this.localSampleStatus.textContent = message;
+            this.localSampleStatus.dataset.state = 'idle';
+        }
+    }
+
+    buildLocalSampleMetadata(audioBlob, result, error = null) {
+        const word = String(
+            this.currentReference?.word || this.wordInput?.value || 'unknown'
+        ).trim();
+        const wordSlug = word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'word';
+        const timestamp = new Date().toISOString().replace(/\D/g, '').slice(0, 17);
+        const randomSuffix = globalThis.crypto?.randomUUID
+            ? globalThis.crypto.randomUUID().slice(0, 8)
+            : Math.random().toString(36).slice(2, 10);
+        const variant = this.currentWordRef || {};
+        const safeResult = toSerializable(result) || {};
+        const referenceSyllables = Array.isArray(variant.syllables)
+            ? variant.syllables.map((syllable, index) => ({
+                index: syllable?.index ?? index,
+                ipa: syllable?.ipa || null,
+                label: syllable?.label || null,
+                stress: syllable?.stress || null,
+                syllabicConsonant: Boolean(syllable?.syllabicConsonant)
+            }))
+            : [];
+
+        return {
+            format: 'bel-pronounce-local-sample',
+            schemaVersion: 1,
+            source: 'pronounce-mode-local',
+            sampleId: `${wordSlug}-${timestamp}-${randomSuffix}`,
+            createdAt: new Date().toISOString(),
+            word,
+            reference: {
+                variantId: variant.id || this.expectedData?.variantId || null,
+                displayIpa: variant.learnerDisplayIpa || variant.displayIpa || this.expectedData?.ipa || null,
+                rawIpa: variant.rawIpa || null,
+                syllableCount: this.expectedData?.syllables ?? variant.syllableCount ?? null,
+                primaryStress: this.expectedData?.primaryStress ?? variant.primaryStress ?? null,
+                secondaryStress: Array.isArray(this.expectedData?.secondaryStress)
+                    ? this.expectedData.secondaryStress
+                    : (variant.secondaryStress || []),
+                syllables: referenceSyllables,
+                source: toSerializable(variant.source) || null
+            },
+            recording: {
+                mimeType: audioBlob?.type || null,
+                bytes: Number.isFinite(audioBlob?.size) ? audioBlob.size : null
+            },
+            analysis: {
+                engine: safeResult.engine || null,
+                usedPraatFallback: Boolean(safeResult.usedPraatFallback),
+                quality: safeResult.quality || null,
+                observedSyllables: safeResult.syllables || [],
+                analysis: safeResult.analysis || null,
+                analysisData: safeResult.analysisData || null,
+                noiseCount: safeResult.noiseCount || 0,
+                praatError: safeResult.praatError || null
+            },
+            error: error ? String(error.message || error) : null,
+            browser: {
+                userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+            }
+        };
+    }
+
+    setLocalSampleSnapshot(audioBlob, result, error = null) {
+        if (!this.localSampleEnabled || !audioBlob) return;
+
+        this.localSampleSnapshot = {
+            audioBlob,
+            metadata: this.buildLocalSampleMetadata(audioBlob, result, error)
+        };
+        if (this.localSampleSaveButton) {
+            this.localSampleSaveButton.disabled = false;
+        }
+        if (this.localSampleStatus) {
+            this.localSampleStatus.textContent = 'Local only · this recording is ready to save for debugging.';
+            this.localSampleStatus.dataset.state = 'ready';
+        }
+    }
+
+    async saveLocalSample() {
+        if (!this.localSampleEnabled || !this.localSampleSnapshot) return;
+
+        const { audioBlob, metadata } = this.localSampleSnapshot;
+        if (this.localSampleSaveButton) {
+            this.localSampleSaveButton.disabled = true;
+        }
+        if (this.localSampleStatus) {
+            this.localSampleStatus.textContent = 'Saving locally…';
+            this.localSampleStatus.dataset.state = 'saving';
+        }
+
+        try {
+            const wavBlob = await this.praatAPI.ensureWav(audioBlob);
+            const formData = new FormData();
+            formData.append('audio', wavBlob, `${metadata.sampleId}.wav`);
+            formData.append('metadata', JSON.stringify(metadata));
+
+            const response = await fetch(`${config.backendUrl}/debug/pronounce-samples`, {
+                method: 'POST',
+                body: formData
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || `Local save failed (${response.status})`);
+            }
+
+            if (this.localSampleStatus) {
+                this.localSampleStatus.textContent = `Saved locally: ${payload.audioPath || payload.sampleId || metadata.sampleId}`;
+                this.localSampleStatus.dataset.state = 'saved';
+            }
+        } catch (error) {
+            if (this.localSampleSaveButton) {
+                this.localSampleSaveButton.disabled = false;
+            }
+            if (this.localSampleStatus) {
+                this.localSampleStatus.textContent = `Local save failed: ${error.message || error}`;
+                this.localSampleStatus.dataset.state = 'error';
+            }
+            Logger.error('Failed to save local Pronounce sample:', error);
         }
     }
 
@@ -262,6 +463,8 @@ export class PronunciationApp {
         this.nativePattern = null;
         this.nativeAudioUrl = null;
         this.userAudioBlob = null;
+        this.clearLocalSampleSnapshot();
+        this._verificationAttemptState = resetAttemptState();
         this.visualizer?.clear();
         this.nativeAudioPlayer.clearSource();
         if (this.nativeAudio) {
@@ -293,7 +496,9 @@ export class PronunciationApp {
     }
 
     clearLearnerAttemptState() {
+        this._verificationAttemptState = resetAttemptState();
         this.userAudioBlob = null;
+        this.clearLocalSampleSnapshot();
         if (this.syllableVerifier) {
             this.syllableVerifier.destroy();
             this.syllableVerifier = null;
@@ -337,6 +542,7 @@ export class PronunciationApp {
             this.statusIndicator.classList.add('recording');
             this.statusIndicator.textContent = "Recording...";
             this.resultsSummary.innerHTML = "";
+            this.clearLocalSampleSnapshot('Local only · recording in progress…');
 
             // Clear charts
             this.visualizer.clear();
@@ -357,21 +563,26 @@ export class PronunciationApp {
             this.statusIndicator.textContent = this.usePraatBackend ? 'Analyzing with Praat...' : 'Processing...';
             this.spinner.style.display = 'block';
 
+            let audioBlob = null;
+            let result = null;
+            let localSamplePrepared = false;
             try {
                 const capture = await this.audioCapture.stopCapture();
-                const audioBlob = capture?.blob || null;
+                audioBlob = capture?.blob || null;
                 if (!audioBlob) {
                     throw new Error('No audio recorded');
                 }
+                this.userAudioBlob = audioBlob;
 
                 const expectedCount = this.expectedData?.syllables || null;
-                const result = await analyzeRecordedAttempt({
+                result = await analyzeRecordedAttempt({
                     audioBlob,
                     expectedSyllables: expectedCount,
                     preferPraat: this.usePraatBackend,
                     praatAnalyze: (blob) => this.praatAPI.analyze(blob, expectedCount, {
                         referenceIpa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
-                        targetWord: this.currentReference?.word
+                        targetWord: this.currentReference?.word,
+                        variantId: this.currentWordRef?.id
                     }),
                     decodeBlob: (blob) => this.audioCapture.blobToAudioBuffer(blob),
                     pitchAnalyze: (audioBuffer) => this.pitchAnalyzer.analyze(audioBuffer),
@@ -382,6 +593,26 @@ export class PronunciationApp {
                         }
                     }
                 });
+                this.setLocalSampleSnapshot(audioBlob, result);
+                localSamplePrepared = true;
+
+                if (config.features?.usePronunciationV3LearnerAnalysis === true) {
+                    // V3 is the sole authority for learner feedback. When the
+                    // backend is unreachable the pipeline falls back to local
+                    // analysis; that fallback must not render syllable or
+                    // stress feedback in V3's place.
+                    const isV3 = result.engine === 'praat'
+                        && result.analysis?.analysisVersion === 'pronunciation-analysis-v3';
+                    this.renderV3LearnerResult(
+                        isV3 ? result.analysis.verification : null,
+                        isV3 ? result.analysis.best_effort : null,
+                        isV3 ? result.syllables : [],
+                        audioBlob,
+                        isV3 ? result.analysis : null
+                    );
+                    this._finishAnalysis('Idle');
+                    return;
+                }
 
                 if (!result.quality?.rateable) {
                     this.visualizer.clear();
@@ -444,6 +675,9 @@ export class PronunciationApp {
                 this._finishAnalysis('Idle');
             } catch (err) {
                 Logger.error(err);
+                if (audioBlob && !localSamplePrepared) {
+                    this.setLocalSampleSnapshot(audioBlob, result, err);
+                }
                 this.resultsSummary.innerHTML = `
                     <div style="color: #dc2626; font-size: 0.95rem; padding: 12px;">
                         Analysis error: ${err.message}
@@ -458,6 +692,112 @@ export class PronunciationApp {
         })();
 
         return this._analysisInProgress;
+    }
+
+    getVerificationAttemptKey() {
+        return createAttemptKey({
+            word: this.currentReference?.word,
+            variantId: this.currentWordRef?.id,
+            ipa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
+            expectedCount: this.expectedData?.syllables
+        });
+    }
+
+    renderV3LearnerResult(verification, bestEffort, syllables = [], audioBlob = null, analysis = null) {
+        const key = this.getVerificationAttemptKey();
+        const attemptStatus = attemptStatusFor(verification);
+        const expectedCount = this.expectedData?.syllables;
+
+        // Charts and playback are descriptive, not a verdict. They are driven
+        // by the recognizer's syllable spans and Praat's contours, so they
+        // render whenever segmentation exists — including when the count
+        // could not be confirmed.
+        this.renderV3Segmentation(analysis, syllables, audioBlob);
+
+        if (attemptStatus === 'unavailable') {
+            // Nothing was judged, so nothing is spent.
+            this._verificationAttemptState = nextAttemptState(
+                this._verificationAttemptState,
+                { key, status: 'unavailable' }
+            );
+            this.resultsSummary.textContent = 'Pronunciation checking is temporarily unavailable. Your recording was not scored — please try again shortly.';
+            return;
+        }
+
+        if (attemptStatus === 'verified' || attemptStatus === 'incorrect') {
+            this._verificationAttemptState = nextAttemptState(
+                this._verificationAttemptState,
+                { key, status: attemptStatus }
+            );
+            const count = verification.count || {};
+            const stress = verification.primary_stress || {};
+            const shown = count.expected ?? expectedCount;
+            if (attemptStatus === 'incorrect') {
+                if (count.status === 'incorrect') {
+                    this.resultsSummary.textContent = `Incorrect: heard ${count.observed ?? 'an unknown number of'} syllables; expected ${shown}.`;
+                } else {
+                    // Count was fine; the stress head is what failed. Never
+                    // fall through to a "Verified" line here.
+                    this.resultsSummary.textContent = `Incorrect: ${shown} syllables are correct, but the primary stress does not match syllable ${Number.isInteger(Number(stress.expected)) ? Number(stress.expected) + 1 : 'the expected one'}.`;
+                }
+            } else if (stress.applicable === false) {
+                this.resultsSummary.textContent = `Verified: ${shown} syllable${shown === 1 ? '' : 's'} confirmed.`;
+            } else {
+                const expectedStress = Number(stress.expected);
+                this.resultsSummary.textContent = `Verified: ${shown} syllables; primary stress matches syllable ${Number.isInteger(expectedStress) ? expectedStress + 1 : 'the expected'}.`;
+            }
+        } else {
+            const state = nextAttemptState(this._verificationAttemptState, { key, status: 'unrateable' });
+            this._verificationAttemptState = state;
+            if (state.action === 'retry') {
+                this.resultsSummary.textContent = `Could not analyze this recording reliably. Please make re-recording ${state.retryNumber} of 2.`;
+            } else if (state.action === 'advisory' && bestEffort?.available) {
+                const observed = bestEffort.observed_count;
+                const strongest = bestEffort.expected_stress_appears_strongest;
+                this.resultsSummary.textContent = `There was difficulty analyzing your recording. This result may be inaccurate. Observed syllables: ${observed ?? 'unclear'}${strongest === true ? '; expected stress appears strongest.' : ''}`;
+            } else {
+                this.resultsSummary.textContent = 'Could not analyze this recording reliably.';
+            }
+        }
+    }
+
+    /**
+     * Draw the pitch and duration charts and arm syllable playback from V3
+     * recognizer output. Independent of the formal verdict: a learner whose
+     * count could not be confirmed still gets working charts and playback.
+     */
+    renderV3Segmentation(analysis, syllables = [], audioBlob = null) {
+        const spans = (Array.isArray(syllables) ? syllables : []).filter((syllable) => (
+            Number.isFinite(syllable?.startTime) &&
+            Number.isFinite(syllable?.endTime) &&
+            syllable.endTime > syllable.startTime
+        ));
+
+        if (!analysis || spans.length === 0) {
+            this.visualizer?.clear();
+            this.chartsContainer?.classList.add('hidden');
+            if (audioBlob) {
+                this.showSyllableVerifier(audioBlob, []);
+            }
+            return;
+        }
+
+        this.chartsContainer?.classList.remove('hidden');
+
+        // Pitch contour: learner (Praat contours aligned to V3 spans) vs native.
+        this.visualizer.drawComparisonPitchContour(
+            analysis,
+            this.currentWordRef?.nativeAnalysis,
+            this.currentWordRef?.syllables || []
+        );
+
+        // Duration lanes: recognizer spans against the native pattern when we
+        // have one, otherwise the learner's own spans alone.
+        this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), spans);
+
+        if (audioBlob) {
+            this.showSyllableVerifier(audioBlob, spans);
+        }
     }
 
     _finishAnalysis(statusText = 'Idle') {
@@ -491,10 +831,41 @@ export class PronunciationApp {
         `;
     }
 
+    async canUseManualReview() {
+        if (this.localSampleEnabled) return true;
+
+        const user = window.firebaseAuthFunctions?.getCurrentUser?.() || window.auth?.currentUser;
+        if (!user?.getIdToken) {
+            this._manualReviewAccessUser = null;
+            this._manualReviewAccessPromise = null;
+            return false;
+        }
+
+        if (!this._manualReviewAccessPromise || this._manualReviewAccessUser !== user) {
+            this._manualReviewAccessUser = user;
+            this._manualReviewAccessPromise = (async () => {
+                try {
+                    const idToken = await user.getIdToken();
+                    const response = await fetch('/api/admin/status', {
+                        method: 'GET',
+                        headers: { Authorization: `Bearer ${idToken}` },
+                        cache: 'no-store'
+                    });
+                    const payload = await response.json().catch(() => null);
+                    return Boolean(response.ok && payload?.success && payload?.isAdmin);
+                } catch (_error) {
+                    return false;
+                }
+            })();
+        }
+
+        return this._manualReviewAccessPromise;
+    }
+
     /**
      * Show syllable verification waveform with click-to-play
      */
-    showSyllableVerifier(audioBlob, syllables) {
+    async showSyllableVerifier(audioBlob, syllables) {
         Logger.log('Main: showSyllableVerifier called with:', {
             audioBlobSize: audioBlob?.size,
             syllablesCount: syllables?.length,
@@ -516,39 +887,155 @@ export class PronunciationApp {
 
         // Get syllable labels from IPA if available
         const syllableLabels = this.getSyllableLabels();
+        const enableManualReview = await this.canUseManualReview();
 
-        // Create new verifier
-        this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container');
-
-        const nativeComparisonSyllables = this.getNativeComparisonSyllables();
-
-        // Check if we have native audio for comparison mode
-        if (this.nativeAudioUrl && nativeComparisonSyllables.length > 0) {
-            // Use comparison mode with A/B playback
-            this.syllableVerifier.loadComparison(
-                audioBlob,
-                syllables,
-                this.nativeAudioUrl,
-                nativeComparisonSyllables,
-                syllableLabels
-            );
-        } else {
-            // Simple mode - just user audio
-            this.syllableVerifier.loadAudio(audioBlob, syllables, syllableLabels);
-        }
+        // Create a single learner waveform. Native audio remains available in
+        // the reference player above; the verifier is reserved for learner
+        // segmentation and manual review.
+        this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container', {
+            enableManualReview,
+            onManualSave: (segments) => this.saveManualReview(segments)
+        });
+        this.syllableVerifier.loadAudio(audioBlob, syllables, syllableLabels);
     }
 
-    getNativeComparisonSyllables() {
-        const syllables = this.currentWordRef?.nativeAnalysis?.observed?.syllables;
-        if (!Array.isArray(syllables)) {
-            return [];
+    buildManualReviewMetadata(manualSegments) {
+        const word = String(
+            this.currentReference?.word || this.wordInput?.value || 'unknown'
+        ).trim();
+        const wordSlug = word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'word';
+        const timestamp = new Date().toISOString().replace(/\D/g, '').slice(0, 17);
+        const randomSuffix = globalThis.crypto?.randomUUID
+            ? globalThis.crypto.randomUUID().slice(0, 8)
+            : Math.random().toString(36).slice(2, 10);
+        const targetCount = Math.max(
+            1,
+            Number(this.expectedData?.syllables || this.currentWordRef?.syllableCount || manualSegments.length || 1)
+        );
+        const observedCount = manualSegments.length;
+        const category = observedCount === targetCount
+            ? 'clean'
+            : (observedCount < targetCount ? 'omission' : 'insertion');
+        const toSpan = (segment, index) => {
+            const startTime = Number(segment?.startTime ?? segment?.start);
+            const endTime = Number(segment?.endTime ?? segment?.end);
+            return {
+                index,
+                startTime,
+                endTime,
+                duration: endTime - startTime
+            };
+        };
+        const automaticSegments = Array.isArray(this.syllableVerifier?.syllables)
+            ? this.syllableVerifier.syllables.map(toSpan)
+            : [];
+
+        return {
+            sampleId: `${wordSlug}-manual-review-${timestamp}-${randomSuffix}`,
+            targetWord: word,
+            referenceIpa: String(
+                this.currentWordRef?.learnerDisplayIpa || this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa || this.expectedData?.ipa || ''
+            ).trim(),
+            expectedObservedCount: observedCount,
+            targetSyllableCount: targetCount,
+            category,
+            speakerCohort: 'pronounce-manual-review',
+            needsRerecording: false,
+            rerecordReason: null,
+            needsManualReview: true,
+            reviewReason: 'manual_syllable_segmentation',
+            manualSegments: manualSegments.map(toSpan),
+            automaticSegments
+        };
+    }
+
+    buildLocalManualReviewMetadata(manualSegments, reviewMetadata = null) {
+        const normalizedReviewMetadata = reviewMetadata || this.buildManualReviewMetadata(manualSegments);
+        const localMetadata = this.buildLocalSampleMetadata(this.userAudioBlob, {
+            engine: 'manual-review',
+            quality: {
+                rateable: false,
+                confidence: 0,
+                reasons: ['MANUAL_SYLLABLE_SEGMENTATION']
+            },
+            syllables: normalizedReviewMetadata.automaticSegments,
+            analysis: {
+                manualSegments: normalizedReviewMetadata.manualSegments,
+                automaticSegments: normalizedReviewMetadata.automaticSegments,
+                reviewReason: normalizedReviewMetadata.reviewReason
+            }
+        });
+        localMetadata.sampleId = normalizedReviewMetadata.sampleId;
+        localMetadata.manualReview = normalizedReviewMetadata;
+        localMetadata.analysis.manualSegments = normalizedReviewMetadata.manualSegments;
+        localMetadata.analysis.automaticSegments = normalizedReviewMetadata.automaticSegments;
+        return localMetadata;
+    }
+
+    getTargetDurationSyllables() {
+        const candidates = [
+            this.nativePattern,
+            this.currentWordRef?.nativeAnalysis?.observed?.syllables
+        ];
+        return candidates.find((candidate) => (
+            Array.isArray(candidate) &&
+            candidate.length > 0 &&
+            candidate.some((syllable) => Number.isFinite(Number(
+                syllable?.vowelDuration ?? syllable?.duration
+            )))
+        )) || [];
+    }
+
+    async saveManualReview(manualSegments) {
+        if (!this.userAudioBlob) {
+            throw new Error('The recording is no longer available. Please record it again.');
+        }
+        if (!Array.isArray(manualSegments) || manualSegments.length === 0) {
+            throw new Error('Mark at least one syllable before saving.');
         }
 
-        return syllables.filter((syllable) => (
-            Number.isFinite(syllable?.startTime) &&
-            Number.isFinite(syllable?.endTime) &&
-            syllable.endTime > syllable.startTime
-        ));
+        const metadata = this.buildManualReviewMetadata(manualSegments);
+        const wavBlob = await this.praatAPI.ensureWav(this.userAudioBlob);
+        const formData = new FormData();
+        formData.append('audio', wavBlob, `${metadata.sampleId}.wav`);
+
+        if (this.localSampleEnabled) {
+            const localMetadata = this.buildLocalManualReviewMetadata(manualSegments, metadata);
+            formData.append('metadata', JSON.stringify(localMetadata));
+            const response = await fetch(`${config.backendUrl}/debug/pronounce-samples`, {
+                method: 'POST',
+                body: formData
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || `Local manual review save failed (${response.status})`);
+            }
+            return {
+                ...(payload.data || payload),
+                destination: 'local',
+                sampleId: payload.sampleId || localMetadata.sampleId
+            };
+        }
+
+        const user = window.firebaseAuthFunctions?.getCurrentUser?.() || window.auth?.currentUser;
+        if (!user?.getIdToken) {
+            throw new Error('Cloud save requires an authenticated admin account.');
+        }
+
+        const idToken = await user.getIdToken();
+        formData.append('metadata', JSON.stringify(metadata));
+
+        const response = await fetch('/api/admin/dev/save-corpus-sample', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${idToken}` },
+            body: formData
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.message || payload.error || `Cloud save failed (${response.status})`);
+        }
+
+        return payload.data || payload;
     }
 
     renderSyllableFeedback(
@@ -560,6 +1047,18 @@ export class PronunciationApp {
     ) {
         const targetCount = this.expectedData?.syllables || 0;
         const countsMatch = targetCount === syllables.length;
+        const attemptKey = this.getVerificationAttemptKey();
+        const markUnrateableAttempt = () => {
+            this._verificationAttemptState = nextAttemptState(
+                this._verificationAttemptState,
+                { key: attemptKey, status: 'unrateable' }
+            );
+            return this._verificationAttemptState;
+        };
+        const resetFormalAttempt = () => {
+            this._verificationAttemptState = resetAttemptState(attemptKey);
+        };
+        const targetDurationSyllables = this.getTargetDurationSyllables();
         const detailed = canShowDetailedFeedback({
             targetCount,
             observedCount: syllables.length,
@@ -580,31 +1079,35 @@ export class PronunciationApp {
 
         if (!countsMatch) {
             this.visualizer.drawDurationChart(
-                this.nativePattern || this.currentWordRef?.syllables || [],
+                targetDurationSyllables,
                 syllables
             );
             this.resultsSummary.textContent =
                 `Target: ${targetCount} syllables. Observed: ${syllables.length}. ` +
                 'A phoneme alignment is required to identify which syllable differs.';
         } else if (lexicalFallback && syllables.length > 0) {
-            this.visualizer.drawDurationChart([], syllables);
+            resetFormalAttempt();
+            this.visualizer.drawDurationChart(targetDurationSyllables, syllables);
             this.resultsSummary.textContent = lexicalFallback.message;
-        } else if (detailed && this.nativePattern && syllables.length > 0) {
+        } else if (detailed && targetDurationSyllables.length > 0 && syllables.length > 0) {
+            resetFormalAttempt();
             const comparison = this.wordRefService.compareWithNative(
                 syllables,
-                this.nativePattern
+                targetDurationSyllables
             );
-            this.visualizer.drawDurationChart(this.nativePattern, syllables);
+            this.visualizer.drawDurationChart(targetDurationSyllables, syllables);
             this.generateComparisonSummary(syllables, comparison);
         } else if (syllables.length > 0) {
-            this.visualizer.drawDurationChart([], syllables);
-            this.resultsSummary.textContent =
-                'The recording was detected, but confidence is too low for detailed stress feedback. Please try again.';
+            this.visualizer.drawDurationChart(targetDurationSyllables, syllables);
+            const state = markUnrateableAttempt();
+            this.resultsSummary.textContent = state.action === 'retry'
+                ? `Could not analyze this recording reliably. Please make re-recording ${state.retryNumber} of 2.`
+                : 'There was difficulty analyzing your recording. This result may be inaccurate. You can save it for manual review.';
         } else {
             this.generateSummary(syllables, noiseCount);
         }
 
-        if (syllables.length > 0 && audioBlob) {
+        if (audioBlob) {
             this.showSyllableVerifier(audioBlob, syllables);
         }
     }
@@ -646,19 +1149,13 @@ export class PronunciationApp {
             return `<li>Syllable ${i + 1}: ${s.duration.toFixed(2)}s, ${pitchText}</li>`;
         }).join('');
 
-        const stressedIndex = this.wordRefService.findUserStressedSyllable(syllables);
-
         this.resultsSummary.innerHTML = `
       ${noiseHtml}
       <div style="margin-bottom: 8px;"><strong>${syllables.length}</strong> syllables detected:</div>
       <ul style="list-style: none; padding-left: 0; margin-bottom: 12px; font-size: 0.9em; color: #4b5563;">
         ${detailsHtml}
       </ul>
-      <div style="color: #1e40af; font-weight: 500; margin-bottom: 8px;">
-        Detected stress: <strong>Syllable ${stressedIndex + 1}</strong>
-        <span style="font-size: 0.85em; font-weight: normal; color: #6b7280;">(based on pitch, duration & intensity)</span>
-      </div>
-      ${this.generateComparison(syllables.length, stressedIndex)}
+      <div style="color: #6b7280; font-size: 0.85em;">Stress could not be verified reliably from this recording.</div>
     `;
     }
 
@@ -966,7 +1463,7 @@ export class PronunciationApp {
         const contourOnly = canShowGraphs && wordRef.nativeAnalysis?.quality?.rateable !== true;
 
         this.expectedData = {
-            ipa: wordRef.displayIpa || '',
+            ipa: wordRef.learnerDisplayIpa || wordRef.displayIpa || '',
             syllables: wordRef.syllableCount,
             primaryStress: wordRef.primaryStress,
             secondaryStress: wordRef.secondaryStress || [],
@@ -1069,7 +1566,8 @@ export class PronunciationApp {
 
             const posDisplay = alt.partOfSpeech || 'Word';
             const posFormatted = posDisplay.charAt(0).toUpperCase() + posDisplay.slice(1);
-            btn.textContent = `${posFormatted}${alt.displayIpa ? ` ${alt.displayIpa}` : ''}`;
+            const learnerIpa = alt.learnerDisplayIpa || alt.displayIpa;
+            btn.textContent = `${posFormatted}${learnerIpa ? ` ${learnerIpa}` : ''}`;
             btn.dataset.variantId = alt.id;
             btn.disabled = false;
 

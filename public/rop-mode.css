@@ -1,41 +1,23 @@
+/* Palette, panel wash, header card, section rhythm, result line, controls and
+   pills all come from read-mode-base.css. These aliases keep the existing
+   --rop-* selectors working against the shared tokens. */
 #mode-rop {
-  --rop-paper: #fffaf2;
-  --rop-ink: #2c2418;
-  --rop-muted: #6f5f4e;
-  --rop-border: rgba(110, 84, 54, 0.18);
-  --rop-accent: #b86d2d;
-  --rop-accent-soft: rgba(184, 109, 45, 0.14);
-  --rop-success: #1f7a4d;
-  --rop-success-bg: rgba(31, 122, 77, 0.06);
-  --rop-success-border: rgba(31, 122, 77, 0.5);
-  --rop-danger: #9b2f3a;
-  --rop-danger-bg: rgba(155, 47, 58, 0.06);
-  --rop-danger-border: rgba(155, 47, 58, 0.5);
-  
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at top right, rgba(184, 109, 45, 0.12), transparent 30%),
-    radial-gradient(circle at left bottom, rgba(90, 130, 168, 0.1), transparent 28%),
-    linear-gradient(180deg, #fff 0%, #fffdf8 100%);
-  padding: 8px 2px 18px;
+  --rop-paper: var(--read-paper);
+  --rop-ink: var(--read-ink);
+  --rop-muted: var(--read-muted);
+  --rop-border: var(--read-border);
+  --rop-accent: var(--read-accent);
+  --rop-accent-soft: var(--read-accent-soft);
+  --rop-success: var(--read-success);
+  --rop-success-bg: var(--read-success-bg);
+  --rop-success-border: var(--read-success-border);
+  --rop-danger: var(--read-danger);
+  --rop-danger-bg: var(--read-danger-bg);
+  --rop-danger-border: var(--read-danger-border);
 }
 
-#mode-rop::before {
-  display: none;
-}
-
-
-.rop-instructions {
-  font-size: 0.96rem;
-  color: var(--rop-muted);
-  background: var(--rop-accent-soft);
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin-bottom: 20px;
-  border-left: 2px solid var(--rop-accent);
-  line-height: 1.5;
-}
+/* The old tinted callout is gone — task instructions now live in the header
+   card description, the same as every other Reading task. */
 
 .rop-workspace {
   display: grid;
@@ -45,40 +27,13 @@
   align-items: stretch;
 }
 
-@media (max-width: 800px) {
-  .rop-workspace {
-    grid-template-columns: 1fr;
-  }
-  .rop-controls-column {
-    flex-direction: row !important;
-    justify-content: center;
-    gap: 15px;
-    margin: 10px 0;
-  }
-}
-
-
-.rop-card-header {
-  margin-bottom: 12px;
-  border-bottom: 1px solid rgba(110, 84, 54, 0.08);
-  padding-bottom: 8px;
-}
-
-.rop-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--rop-accent);
-  font-weight: 700;
-}
-
 .rop-list-area {
-  height: 480px;
+  /* Was a fixed 480px, which forced a scroll region inside page scroll on
+     every viewport. Now it grows with content and only caps on tall lists. */
+  min-height: 320px;
+  max-height: 70vh;
   border: 2px dashed transparent;
-  border-radius: 16px;
+  border-radius: var(--read-radius-container);
   background: transparent;
   padding: 8px;
   display: flex;
@@ -89,7 +44,7 @@
 }
 
 .rop-list-area.drag-over {
-  background: rgba(184, 109, 45, 0.04);
+  background: rgb(var(--read-accent-rgb, 154 87 34) / 0.04);
   border-color: var(--rop-accent);
 }
 
@@ -109,7 +64,7 @@
   color: var(--rop-muted);
   font-size: 0.92rem;
   border: 2px dashed rgba(110, 84, 54, 0.12);
-  border-radius: 12px;
+  border-radius: var(--read-radius-control);
   background: rgba(110, 84, 54, 0.015);
   font-style: italic;
   opacity: 0.7;
@@ -124,12 +79,10 @@
 }
 
 
-/* ROP Drag & Drop Card Item */
+/* ROP Drag & Drop Card Item
+   Surface, hover and focus come from read-mode-base.css §6 */
 .rop-item {
   position: relative;
-  background: #fff;
-  border: 1px solid var(--rop-border);
-  border-radius: 12px;
   padding: 14px 18px;
   cursor: grab;
   user-select: none;
@@ -137,8 +90,6 @@
   font-size: 1.02rem;
   line-height: 1.6;
   color: var(--rop-ink);
-  box-shadow: 0 4px 12px rgba(42, 31, 18, 0.02);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -151,7 +102,7 @@
 .rop-item.is-selected {
   border-color: var(--rop-accent);
   background: var(--rop-accent-soft);
-  box-shadow: 0 8px 20px rgba(184, 109, 45, 0.15);
+  box-shadow: 0 8px 20px rgb(var(--read-accent-rgb, 154 87 34) / 0.15);
 }
 
 .rop-item.is-dragging {
@@ -160,7 +111,10 @@
   border-style: dashed;
 }
 
-/* Handle icon for drag */
+/* Handle icon for drag.
+   touch-action: none is what lets a touch drag start here instead of the
+   browser claiming the gesture for scrolling. It is scoped to the handle so
+   the rest of the card still scrolls and taps normally. */
 .rop-item-handle {
   display: flex;
   align-items: center;
@@ -168,6 +122,36 @@
   opacity: 0.4;
   padding-top: 4px;
   cursor: grab;
+  touch-action: none;
+}
+
+.rop-item-handle:active {
+  cursor: grabbing;
+}
+
+/* A 12x18 grip is far below the 44px touch target minimum, so grow the hit
+   area (not the glyph) wherever the primary input is a finger. */
+@media (pointer: coarse) {
+  .rop-item-handle {
+    margin: -12px 0 -12px -12px;
+    padding: 12px 10px 12px 12px;
+    opacity: 0.6;
+  }
+}
+
+/* Follows the finger during a touch drag. pointer-events: none is required —
+   elementFromPoint must see the list underneath, not the ghost. */
+.rop-ghost {
+  position: fixed;
+  z-index: 9000;
+  pointer-events: none;
+  margin: 0;
+  opacity: 0.95;
+  box-shadow: 0 12px 28px rgba(42, 31, 18, 0.22);
+  transform: scale(1.02);
+  background: #fff;
+  border: 1px solid var(--read-accent);
+  border-radius: var(--read-radius-control);
 }
 
 .rop-item:hover .rop-item-handle {
@@ -253,13 +237,20 @@
   color: var(--rop-ink);
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: var(--read-radius-control);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
+  box-shadow: var(--read-shadow-control);
+  transition: transform var(--read-ease), box-shadow var(--read-ease),
+    border-color var(--read-ease), background-color var(--read-ease),
+    color var(--read-ease);
+}
+
+/* Stacked layout turns "left/right" into "down/up" — swap which glyph shows. */
+.rop-arrow-btn .rop-arrow-icon--stacked {
+  display: none;
 }
 
 .rop-arrow-btn:hover:not(:disabled) {
@@ -293,30 +284,16 @@
   flex-wrap: wrap;
 }
 
-.rop-result-box {
-  border: 1px solid var(--rop-border);
-  border-radius: 20px;
-  background: #fffdf8;
-  padding: 16px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.rop-score-display {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--rop-ink);
-}
+/* Result panel + score line: see read-mode-base.css §5
+   No display/gap here: rop-mode.js sets style.display = 'block' inline when it
+   reveals the box, which beats any stylesheet rule, so a flex column and its
+   gap would never take effect. Spacing is handled by the children. */
 
 .rop-score-display .score-badge {
   background: var(--rop-accent);
   color: #ffffff;
   padding: 4px 10px;
-  border-radius: 99px;
+  border-radius: var(--read-radius-pill);
   font-size: 0.95rem;
 }
 
@@ -466,7 +443,7 @@
 .rop-cohesion-card {
   border: 1px solid var(--rop-danger-border);
   background: var(--rop-danger-bg);
-  border-radius: 16px;
+  border-radius: var(--read-radius-container);
   padding: 16px;
   display: flex;
   align-items: flex-start;
@@ -595,7 +572,42 @@
   overflow-y: auto;
 }
 
+/* Stacked layout — aligned with the shared 900px breakpoint in
+   read-mode-base.css §8 (was 800px here and 900px for the review split). */
 @media (max-width: 900px) {
+  .rop-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  /* Source sits above target, so the move buttons now mean down/up.
+     Show the stacked glyphs and hide the horizontal ones. */
+  .rop-controls-column {
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+    margin: 10px 0;
+  }
+
+  .rop-arrow-btn .rop-arrow-icon--inline {
+    display: none;
+  }
+
+  .rop-arrow-btn .rop-arrow-icon--stacked {
+    display: block;
+  }
+
+  /* Capping each list at 45vh keeps both drop zones within roughly one screen
+     of each other. Letting them run free reads better as a document, but with
+     five paragraphs the source list grew to ~714px and pushed the target list
+     645px down the page — far enough that dragging one card to the other list
+     meant holding at the screen edge for seconds. A bounded internal scroll is
+     the lesser cost. */
+  .rop-list-area {
+    min-height: 200px;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
   .rop-review-split {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -603,7 +615,7 @@
   .rop-review-left {
     border-right: none;
     padding-right: 0;
-    border-bottom: 1px solid rgba(110, 84, 54, 0.08);
+    border-bottom: 1px solid var(--read-border-faint);
     padding-bottom: 20px;
   }
   .rop-review-right {
@@ -618,7 +630,7 @@
   background: var(--rop-success-bg);
   border: 1px solid var(--rop-success-border);
   border-left: 2px solid var(--rop-success);
-  border-radius: 12px;
+  border-radius: var(--read-radius-control);
   padding: 14px 18px;
   font-family: 'Lora', serif;
   font-size: 1.02rem;

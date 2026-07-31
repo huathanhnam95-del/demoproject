@@ -103,7 +103,7 @@ def assess_thumbnail(image_bytes, full_text):
         try:
             print(f"    [Council Assessment] Asking the Council...")
             response = client.models.generate_content(
-                model="gemini-2.5-pro",
+                model="gemini-3.1-pro-preview",
                 contents=[
                     types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
                     COUNCIL_RUBRIC.format(full_text=full_text)
@@ -158,7 +158,7 @@ def run_batch():
         # Extract visual concepts to prevent text generation
         try:
             concept_response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3.1-flash-lite",
                 contents=f"Extract only the raw visual themes and objects from this text. Output a short comma-separated list (max 20 words). CRITICAL: Remove all proper nouns, names, and any references to signs, books, or writing: '{str(full_text)[:300]}'"
             )
             visual_concept = concept_response.text.strip()

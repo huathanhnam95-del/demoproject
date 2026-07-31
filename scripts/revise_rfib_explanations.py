@@ -610,7 +610,15 @@ def save_sidecar_atomic(path: str, records: dict[int, dict]):
         with open(tmp_path, "w", encoding="utf-8") as f:
             for rid in sorted(records.keys()):
                 f.write(json.dumps(records[rid], ensure_ascii=False) + "\n")
-        os.replace(tmp_path, path)
+        
+        for attempt in range(1, 6):
+            try:
+                os.replace(tmp_path, path)
+                break
+            except PermissionError:
+                if attempt == 5:
+                    raise
+                time.sleep(0.5 * attempt)
     except Exception:
         if os.path.exists(tmp_path):
             try:

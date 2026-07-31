@@ -1,0 +1,224 @@
+{
+  "schema_version": "pronunciation-verifier-v1",
+  "feature_schema_version": "features-v1",
+  "seed": 20260730,
+  "release_profile": "count-only",
+  "features": {
+    "count": [
+      "count_delta",
+      "mean_nucleus_confidence",
+      "min_nucleus_confidence",
+      "canonical_log_likelihood",
+      "canonical_minus_omission",
+      "canonical_minus_insertion",
+      "alignment_confidence",
+      "observed_duration_per_expected_syllable"
+    ]
+  },
+  "count": {
+    "mean": [
+      0.00659434,
+      0.41585496,
+      0.383216,
+      -0.53458204,
+      0.54506952,
+      0.93455744,
+      0.41585496,
+      0.19058181
+    ],
+    "scale": [
+      0.24265232,
+      0.38656514,
+      0.39378205,
+      0.73145635,
+      0.71379298,
+      0.87961518,
+      0.38656514,
+      0.12562987
+    ],
+    "coefficients": [
+      0.27269555,
+      -0.05425408,
+      1.92946723,
+      0.81074075,
+      0.65487865,
+      -0.59805303,
+      -0.05425408,
+      -1.8641492
+    ],
+    "intercept": 2.7676911,
+    "thresholds": {
+      "verified": 0.56521739,
+      "incorrect": -1e-06,
+      "verified_precision": 0.95501022,
+      "incorrect_precision": 1.0,
+      "verified_decisions": 978,
+      "incorrect_decisions": 0,
+      "selection_min_precision": 0.95,
+      "incorrect_disabled_reason": "INSUFFICIENT_MISMATCH_LABELS"
+    }
+  },
+  "stress": {
+    "mode": "disabled",
+    "reason": "INSUFFICIENT_MISMATCH_LABELS",
+    "features": [
+      "duration_sec",
+      "intensity_db",
+      "f0_median",
+      "f0_range",
+      "f0_slope",
+      "spectral_tilt",
+      "nucleus_confidence",
+      "voiced_confidence"
+    ]
+  },
+  "isotonic": {
+    "count": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.2e-07,
+        0.0
+      ],
+      [
+        2.1e-07,
+        0.39130435
+      ],
+      [
+        0.00169779,
+        0.39130435
+      ],
+      [
+        0.00170231,
+        0.5
+      ],
+      [
+        0.01274496,
+        0.5
+      ],
+      [
+        0.01301997,
+        0.50847458
+      ],
+      [
+        0.10498034,
+        0.50847458
+      ],
+      [
+        0.10511178,
+        0.56521739
+      ],
+      [
+        0.12817544,
+        0.56521739
+      ],
+      [
+        0.13748433,
+        0.61111111
+      ],
+      [
+        0.15947198,
+        0.61111111
+      ],
+      [
+        0.15999272,
+        0.75
+      ],
+      [
+        0.16829878,
+        0.75
+      ],
+      [
+        0.16843644,
+        0.80327869
+      ],
+      [
+        0.29757913,
+        0.80327869
+      ],
+      [
+        0.29768863,
+        0.88888889
+      ],
+      [
+        0.31580162,
+        0.88888889
+      ],
+      [
+        0.317719,
+        0.93846154
+      ],
+      [
+        0.47563683,
+        0.93846154
+      ],
+      [
+        0.47719579,
+        0.96078431
+      ],
+      [
+        0.57795743,
+        0.96078431
+      ],
+      [
+        0.57876414,
+        0.96103896
+      ],
+      [
+        0.68199957,
+        0.96103896
+      ],
+      [
+        0.68259508,
+        0.97959184
+      ],
+      [
+        0.73224219,
+        0.97959184
+      ],
+      [
+        0.73323419,
+        0.98076923
+      ],
+      [
+        0.79057523,
+        0.98076923
+      ],
+      [
+        0.7919333,
+        0.99415205
+      ],
+      [
+        0.9691808,
+        0.99415205
+      ],
+      [
+        0.96942689,
+        0.99722222
+      ],
+      [
+        0.99988304,
+        0.99722222
+      ],
+      [
+        0.99989597,
+        1.0
+      ],
+      [
+        0.99998974,
+        1.0
+      ]
+    ]
+  },
+  "threshold_policy": "count_only_verified_precision_first",
+  "training_support": {
+    "train": 6894,
+    "calibration": 1597,
+    "train_count_labels": 4701,
+    "calibration_count_labels": 1092
+  },
+  "dataset_hash": "99bead7cfee31c8b46f059eb8119e9b553349b34887c828c13ef6a3a0868eb0d",
+  "artifact_sha256": "6d1ffbf9cf20e55562bb2356790b5571873f3c31b37841ba22a1b71015cdb7e5"
+}

@@ -1,80 +1,40 @@
+/* Palette, panel wash, header card, section rhythm, result line, controls and
+   pills all come from read-mode-base.css. These aliases keep the existing
+   --rmcma-* selectors working against the shared tokens. */
 #mode-rmcma {
-  --rmcma-paper: #fffaf2;
-  --rmcma-ink: #2c2418;
-  --rmcma-muted: #6f5f4e;
-  --rmcma-border: rgba(110, 84, 54, 0.18);
-  --rmcma-accent: #b86d2d;
-  --rmcma-accent-soft: rgba(184, 109, 45, 0.14);
-  --rmcma-success: #1f7a4d;
-  --rmcma-success-bg: rgba(31, 122, 77, 0.06);
-  --rmcma-success-border: rgba(31, 122, 77, 0.5);
-  --rmcma-danger: #9b2f3a;
-  --rmcma-danger-bg: rgba(155, 47, 58, 0.06);
-  --rmcma-danger-border: rgba(155, 47, 58, 0.5);
-  
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at top right, rgba(184, 109, 45, 0.12), transparent 30%),
-    radial-gradient(circle at left bottom, rgba(90, 130, 168, 0.1), transparent 28%),
-    linear-gradient(180deg, #fff 0%, #fffdf8 100%);
-  padding: 8px 2px 18px;
+  --rmcma-paper: var(--read-paper);
+  --rmcma-ink: var(--read-ink);
+  --rmcma-muted: var(--read-muted);
+  --rmcma-border: var(--read-border);
+  --rmcma-accent: var(--read-accent);
+  --rmcma-accent-soft: var(--read-accent-soft);
+  --rmcma-success: var(--read-success);
+  --rmcma-success-bg: var(--read-success-bg);
+  --rmcma-success-border: var(--read-success-border);
+  --rmcma-danger: var(--read-danger);
+  --rmcma-danger-bg: var(--read-danger-bg);
+  --rmcma-danger-border: var(--read-danger-border);
 }
 
-#mode-rmcma::before {
-  display: none;
-}
+/* Measure (.rmcma-container) and the split layout are owned by
+   read-mode-base.css — redeclaring either here would beat the base media
+   queries, because this sheet loads after it. */
 
-.rmcma-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-.rmcma-split-layout {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 20px;
-  margin-bottom: 20px;
-  align-items: stretch;
-}
-
+/* Section rhythm + kicker: read-mode-base.css §3–4 */
 .rmcma-passage-card,
-.rmcma-question-card,
+.rmcma-question-card {
+  display: flex;
+  flex-direction: column;
+}
+
 .rmcma-explanation-card {
   border: none;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
-  padding: 24px 16px;
+  padding: 24px 0;
   display: flex;
   flex-direction: column;
-}
-
-.rmcma-result-box {
-  border: 1px solid var(--rmcma-border);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.88);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-}
-
-.rmcma-card-header {
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(110, 84, 54, 0.08);
-  padding-bottom: 12px;
-}
-
-.rmcma-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--rmcma-accent);
-  font-weight: 700;
 }
 
 .rmcma-passage-text {
@@ -95,8 +55,8 @@
   background: transparent;
 }
 .rmcma-passage-text::-webkit-scrollbar-thumb {
-  background: rgba(184, 109, 45, 0.2);
-  border-radius: 99px;
+  background: rgb(var(--read-accent-rgb, 154 87 34) / 0.2);
+  border-radius: var(--read-radius-pill);
 }
 
 .rmcma-question-prompt {
@@ -132,26 +92,13 @@
   align-items: flex-start;
   gap: 12px;
   padding: 14px 18px;
-  border-radius: 16px;
-  border: 1px solid rgba(110, 84, 54, 0.14);
-  background: #ffffff;
   cursor: pointer;
   font: inherit;
   text-align: left;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
-.rmcma-choice-card:not(:disabled):hover {
-  transform: translateY(-2px);
-  border-color: var(--rmcma-accent);
-  box-shadow: 0 6px 16px rgba(184, 109, 45, 0.08);
-}
-
-.rmcma-choice-card:focus-visible {
-  outline: 3px solid rgba(90, 130, 168, 0.32);
-  outline-offset: 2px;
-}
+/* Surface, hover and focus come from read-mode-base.css §6 */
 
 .rmcma-choice-card:disabled {
   cursor: default;
@@ -264,44 +211,15 @@
   flex-wrap: wrap;
 }
 
-/* Result panel */
-.rmcma-result-box {
-  padding: 16px 20px;
-  border-radius: 18px;
-}
-
+/* Result panel + score line: see read-mode-base.css §5 */
 .rmcma-result-header {
-  font-weight: 800;
-  font-size: 1.1rem;
   margin-bottom: 4px;
 }
 
-.rmcma-result-header.is-correct {
-  color: var(--rmcma-success);
-}
-
-.rmcma-result-header.is-partial {
-  color: var(--rmcma-accent);
-}
-
-.rmcma-result-header.is-incorrect {
-  color: var(--rmcma-danger);
-}
-
-.rmcma-result-desc {
-  font-size: 0.92rem;
-  color: var(--rmcma-muted);
-}
-
-/* Explanation Panel accordion styling */
+/* Explanation is a flat section divided by a hairline, not a nested card */
 .rmcma-explanation-panel {
   margin-top: 6px;
-}
-
-.rmcma-explanation-card {
-  padding: 20px;
-  background: linear-gradient(180deg, #fdfbfa, #f9f5f0);
-  border: 1px solid rgba(184, 109, 45, 0.16);
+  border-top: 1px solid var(--read-border-soft);
 }
 
 .rmcma-explanation-header {
@@ -311,7 +229,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 12px;
-  border-bottom: 1px dashed rgba(184, 109, 45, 0.2);
+  border-bottom: 1px dashed rgb(var(--read-accent-rgb, 154 87 34) / 0.2);
   padding-bottom: 6px;
 }
 
@@ -329,30 +247,21 @@
   color: var(--rmcma-accent);
 }
 
-/* Responsive queries */
+/* Responsive: shared breakpoints live in read-mode-base.css §8 */
 @media (max-width: 900px) {
-  .rmcma-split-layout {
-    grid-template-columns: 1fr;
-  }
-  
+  /* Let the passage run its natural length once the columns stack — a capped
+     scroll region inside page scroll is worse than a longer page on mobile. */
   .rmcma-passage-text {
-    max-height: 300px;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
   }
 }
 
 @media (max-width: 640px) {
-  #mode-rmcma {
-    padding-inline: 0;
-  }
-  
   .rmcma-passage-card,
   .rmcma-question-card,
   .rmcma-explanation-card {
     padding: 16px 0;
-  }
-  
-  .rmcma-result-box {
-    border-radius: 20px;
-    padding: 16px;
   }
 }

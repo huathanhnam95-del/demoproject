@@ -71,7 +71,7 @@ export function buildPronunciationSummary(variant) {
     }
 
     return {
-        ipa: String(variant.displayIpa || ''),
+        ipa: String(variant.learnerDisplayIpa || variant.displayIpa || ''),
         countLabel,
         primaryLabel,
         secondaryLabels,

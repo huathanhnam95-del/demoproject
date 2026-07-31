@@ -21,9 +21,10 @@ const path = require('path');
     await page.goto(`${baseUrl}/pte-practice/speaking/read-aloud/353`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1000);
 
-    const testResults = await page.evaluate(() => {
+    const testResults = await page.evaluate(async () => {
       const mode = window.ReadAloudMode;
       if (!mode) return null;
+      await mode.sharedPronunciationWarmup;
 
       const forIpa = mode._getReducedWordIpaInfo('for');
       const toIpa = mode._getReducedWordIpaInfo('to');
@@ -67,7 +68,7 @@ const path = require('path');
       she: '/ʃi/',
       he: '/hi/',
       we: '/wi/',
-      seven: '/ˈsɛvn/',
+      seven: '/ˈsɛvən/',
       ten: '/tɛn/'
     });
 

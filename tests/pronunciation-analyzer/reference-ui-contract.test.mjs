@@ -13,6 +13,10 @@ const styleSource = fs.readFileSync(
     new URL('../../public/pronunciation-analyzer/style.css', import.meta.url),
     'utf8'
 );
+const referenceServiceSource = fs.readFileSync(
+    new URL('../../public/pronunciation-analyzer/word-reference-service.js', import.meta.url),
+    'utf8'
+);
 
 assert.match(htmlSource, /id="pa-reference-status"[^>]*aria-live="polite"/);
 assert.match(htmlSource, /id="pa-charts-container"/);
@@ -27,6 +31,8 @@ assert.ok(!appSource.includes('window.Phonetics'), 'legacy IPA fallback must not
 assert.match(appSource, /selectReferenceVariant/);
 assert.match(appSource, /getSelectableReferenceVariants/);
 assert.match(appSource, /buildPronunciationSummary/);
+assert.match(referenceServiceSource, /decorateLearnerIPA/);
+assert.match(referenceServiceSource, /learnerDisplayIpa/);
 assert.match(appSource, /Pronunciation reference under review\./);
 assert.match(appSource, /CMU pronunciation fallback/);
 assert.match(appSource, /capabilities\.scoreCountStress/);
@@ -35,6 +41,11 @@ assert.match(appSource, /primaryStress/);
 assert.match(appSource, /secondaryStress/);
 assert.match(appSource, /nativeAnalysis\?\.observed\?\.syllables/);
 assert.match(appSource, /setAttribute\('aria-pressed'/);
+assert.ok(!appSource.includes('findUserStressedSyllable'), 'learner UI must not guess a stressed syllable');
+assert.ok(!appSource.includes('Detected stress:'), 'learner UI must not display guessed stress locations');
+assert.match(appSource, /Could not analyze this recording reliably\./);
+assert.match(appSource, /Please make re-recording/);
+assert.match(appSource, /This result may be inaccurate/);
 
 const updateWordDataCatch = appSource.match(/} catch \(err\) \{[\s\S]*?\n        } finally \{/);
 assert.ok(updateWordDataCatch, 'updateWordData must have an explicit error path');

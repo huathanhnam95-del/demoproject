@@ -112,8 +112,8 @@ function startLocalServer({ port }) {
       PORT: String(port),
       READING_JOURNEY_ENABLED: 'true',
       // Keep smoke verification independent from stale local Gemini 1.5 aliases.
-      READING_JOURNEY_GEMINI_MODEL: 'gemini-2.5-flash',
-      READING_JOURNEY_GEMINI_FALLBACK_MODEL: 'gemini-2.5-flash'
+      READING_JOURNEY_GEMINI_MODEL: 'gemini-3.1-flash-lite',
+      READING_JOURNEY_GEMINI_FALLBACK_MODEL: 'gemini-3.1-flash-lite'
     }
   });
 

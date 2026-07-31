@@ -11,16 +11,20 @@
   },
   "benchmark": {
     "peakRssGiB": 0.163,
-    "coldLoadMs": 10006.48,
-    "warmMedianMs": 179.91,
-    "warmP95Ms": 190.63,
+    "coldLoadMs": 7759.16,
+    "warmMedianMs": 192.29,
+    "warmP95Ms": 223.73,
     "mandatoryWordsCorrect": 5,
     "mandatoryWordsTotal": 6,
-    "cleanAccuracy": 0.9167,
-    "corpusManifestHash": "6f5da1541e982ae5a3962e183e5b5007ed8c6480edfbcdaf1cf0058be1dafdc6"
+    "cleanAccuracy": 0.8474,
+    "corpusManifestHash": "d0aa83bf74f5fe83428e09facd5839ebe7d947ae85a46a69b1d81325b760c5dc"
   },
-  "evidenceStatus": "verified",
-  "createdAt": "2026-07-30T03:58:35.885273+00:00",
+  "evidenceStatus": "composition-waived",
+  "waivedRequirements": [
+    "category_composition",
+    "accented_speaker_cohorts"
+  ],
+  "createdAt": "2026-07-31T02:25:34.442046+00:00",
   "verdict": "torch",
   "quantization": {
     "type": "none",

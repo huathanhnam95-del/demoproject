@@ -15,6 +15,35 @@ const { buildEntranceTestAdminList } = require('../../functions/src/crm/entrance
 
 const VALID_TEST_TYPES_LEGACY = new Set(['entrance_test_36plus_v1', 'segmental_screening_v1']);
 const DEFAULT_TEST_TYPE_LEGACY = 'entrance_test_36plus_v1';
+const MAX_PRONUNCE_REVIEW_SECONDS = 15;
+
+function normalizePronounceReviewSegments(value, fieldName) {
+    if (value === undefined || value === null) return null;
+    if (!Array.isArray(value)) throw new Error(`${fieldName} must be an array.`);
+    if (value.length > 64) throw new Error(`${fieldName} may contain at most 64 segments.`);
+    let previousEnd = -1;
+    return value.map((segment, index) => {
+        const startTime = Number(segment?.startTime ?? segment?.start);
+        const endTime = Number(segment?.endTime ?? segment?.end);
+        const startValue = segment?.startTime ?? segment?.start;
+        const endValue = segment?.endTime ?? segment?.end;
+        if (startValue === null || startValue === '' || endValue === null || endValue === ''
+            || !Number.isFinite(startTime) || !Number.isFinite(endTime)
+            || startTime < 0 || endTime <= startTime || endTime > MAX_PRONUNCE_REVIEW_SECONDS) {
+            throw new Error(`${fieldName}[${index}] must be an increasing span within the 15 second limit.`);
+        }
+        if (index > 0 && startTime < previousEnd - 0.000001) {
+            throw new Error(`${fieldName} spans must be ordered and non-overlapping.`);
+        }
+        previousEnd = endTime;
+        return {
+            index,
+            startTime: Number(startTime.toFixed(6)),
+            endTime: Number(endTime.toFixed(6)),
+            duration: Number((endTime - startTime).toFixed(6))
+        };
+    });
+}
 
 async function generateClassCode() {
     if (!db) {
@@ -430,7 +459,11 @@ function registerLocalOnlyRoutes(router, deps) {
                 category,
                 speakerCohort,
                 needsRerecording,
-                rerecordReason
+                rerecordReason,
+                needsManualReview,
+                reviewReason,
+                manualSegments,
+                automaticSegments
             } = metadata;
 
             // Strict metadata validations
@@ -463,6 +496,15 @@ function registerLocalOnlyRoutes(router, deps) {
 
             if (!speakerCohort || typeof speakerCohort !== 'string' || !/^[a-z0-9-]+$/.test(speakerCohort)) {
                 return localSendError(res, 400, 'VALIDATION_ERROR', 'speakerCohort must match ^[a-z0-9-]+$.');
+            }
+
+            let normalizedManualSegments;
+            let normalizedAutomaticSegments;
+            try {
+                normalizedManualSegments = normalizePronounceReviewSegments(manualSegments, 'manualSegments');
+                normalizedAutomaticSegments = normalizePronounceReviewSegments(automaticSegments, 'automaticSegments');
+            } catch (error) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
 
             // Audio validation
@@ -540,6 +582,10 @@ function registerLocalOnlyRoutes(router, deps) {
                 return localSendError(res, 400, 'VALIDATION_ERROR', `Audio duration (${duration.toFixed(2)}s) exceeds the maximum allowed limit of 15 seconds.`);
             }
 
+            if (normalizedManualSegments?.some((segment) => segment.endTime > duration + 0.02)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'manualSegments must fall within the uploaded audio duration.');
+            }
+
             const fs = require('fs').promises;
             const corpusDir = path.join(process.cwd(), 'test-results', 'pronunciation-segmentation-corpus');
 
@@ -588,9 +634,16 @@ function registerLocalOnlyRoutes(router, deps) {
                             rerecordReason: needsRerecording === true
                                 ? String(rerecordReason || '').trim().slice(0, 120) || 'verification_failed'
                                 : null,
+                            needsManualReview: needsManualReview === true,
+                            reviewReason: needsManualReview === true
+                                ? String(reviewReason || '').trim().slice(0, 120) || 'model_acoustic_disagreement'
+                                : null,
                             sourceHash: sha256,
                             labelProvenance: "manual",
-                            verifiedSpans: null
+                            verifiedSpans: normalizedManualSegments?.map((segment) => ({
+                                start: segment.startTime,
+                                end: segment.endTime
+                            })) || null
                         };
 
                         const existingIdx = manifest.entries.findIndex(entry => entry.sampleId === sampleId);

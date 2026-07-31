@@ -14,6 +14,7 @@
     currentQuestion: null,
     currentAttempt: null,
     supportVariant: 'full',
+    supportVisible: false,
     supportVoice: {
       full: 'male',
       beginner: 'male',
@@ -23,6 +24,13 @@
   };
 
   const elements = {};
+
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
 
   function normalizeText(value) {
     return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -117,6 +125,10 @@
     elements.fullAudioPlay = document.getElementById('rfib-full-audio-play');
     elements.fullAudioNote = document.getElementById('rfib-full-audio-note');
     elements.fullVoiceToggle = document.getElementById('rfib-full-audio-voice-male');
+    elements.fullAudioCurrentTime = document.getElementById('rfib-full-audio-current-time');
+    elements.fullAudioSlider = document.getElementById('rfib-full-audio-slider');
+    elements.fullAudioTotalTime = document.getElementById('rfib-full-audio-total-time');
+    elements.supportToggleRow = elements.panel?.querySelector('.rfib-support-toggle-row');
     elements.supportFullBtn = document.getElementById('rfib-support-full-btn');
     elements.supportBeginnerBtn = document.getElementById('rfib-support-beginner-btn');
     elements.supportIntermediateBtn = document.getElementById('rfib-support-intermediate-btn');
@@ -126,9 +138,21 @@
     elements.supportAudio = document.getElementById('rfib-support-audio');
     elements.supportAudioPlayer = document.getElementById('rfib-support-audio-player');
     elements.supportAudioNote = document.getElementById('rfib-support-audio-note');
+    elements.easyReadingBtn = document.getElementById('rfib-easy-reading-btn');
     elements.checkBtn = document.getElementById('rfib-check-btn');
     elements.retryBtn = document.getElementById('rfib-retry-btn');
+    elements.nextQuestionBtn = document.getElementById('rfib-next-question-btn');
     elements.resultBox = document.getElementById('rfib-result-box');
+  }
+
+  function updateSupportVisibility() {
+    const isVisible = !!state.supportVisible;
+    if (elements.supportToggleRow) {
+      elements.supportToggleRow.style.display = isVisible ? 'flex' : 'none';
+    }
+    if (elements.supportPanel) {
+      elements.supportPanel.style.display = isVisible ? 'block' : 'none';
+    }
   }
 
   function setupEventListeners() {
@@ -149,6 +173,21 @@
       elements.nextBtn.addEventListener('click', () => navigateQuestion(1));
     }
 
+    if (elements.easyReadingBtn) {
+      elements.easyReadingBtn.addEventListener('click', () => {
+        state.supportVisible = true;
+        if (state.supportVariant === 'full') {
+          state.supportVariant = 'beginner';
+        }
+        renderSupportVariantButtons();
+        renderSupportAudio(state.supportVariant);
+        updateSupportVisibility();
+        if (elements.supportPanel) {
+          elements.supportPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    }
+
     if (elements.checkBtn) {
       elements.checkBtn.addEventListener('click', checkAnswers);
     }
@@ -160,8 +199,78 @@
       });
     }
 
-    if (elements.fullAudioPlay) {
-      elements.fullAudioPlay.addEventListener('click', () => playAudio('full'));
+    if (elements.nextQuestionBtn) {
+      elements.nextQuestionBtn.addEventListener('click', () => navigateQuestion(1));
+    }
+
+    if (elements.fullAudioPlay && elements.fullAudioPlayer) {
+      elements.fullAudioPlay.addEventListener('click', () => {
+        if (elements.fullAudioPlayer.paused) {
+          playAudio('full');
+        } else {
+          elements.fullAudioPlayer.pause();
+        }
+      });
+
+      elements.fullAudioPlayer.addEventListener('play', () => {
+        elements.fullAudioPlay.textContent = 'Pause';
+        elements.fullAudioPlay.classList.add('is-playing');
+      });
+
+      elements.fullAudioPlayer.addEventListener('pause', () => {
+        elements.fullAudioPlay.textContent = 'Play';
+        elements.fullAudioPlay.classList.remove('is-playing');
+      });
+
+      elements.fullAudioPlayer.addEventListener('ended', () => {
+        elements.fullAudioPlay.textContent = 'Play';
+        elements.fullAudioPlay.classList.remove('is-playing');
+        if (elements.fullAudioSlider) elements.fullAudioSlider.value = '0';
+        if (elements.fullAudioCurrentTime) elements.fullAudioCurrentTime.textContent = '0:00';
+      });
+
+      elements.fullAudioPlayer.addEventListener('timeupdate', () => {
+        if (!elements.fullAudioPlayer.duration) return;
+        const current = elements.fullAudioPlayer.currentTime;
+        const duration = elements.fullAudioPlayer.duration;
+        if (elements.fullAudioSlider && !elements.fullAudioSlider.dataset.dragging) {
+          elements.fullAudioSlider.value = String((current / duration) * 100);
+        }
+        if (elements.fullAudioCurrentTime) {
+          elements.fullAudioCurrentTime.textContent = formatTime(current);
+        }
+      });
+
+      const handleDurationUpdate = () => {
+        if (elements.fullAudioTotalTime && elements.fullAudioPlayer.duration) {
+          elements.fullAudioTotalTime.textContent = formatTime(elements.fullAudioPlayer.duration);
+        }
+      };
+      elements.fullAudioPlayer.addEventListener('loadedmetadata', handleDurationUpdate);
+      elements.fullAudioPlayer.addEventListener('durationchange', handleDurationUpdate);
+    }
+
+    if (elements.fullAudioSlider) {
+      const slider = elements.fullAudioSlider;
+      slider.addEventListener('mousedown', () => { slider.dataset.dragging = 'true'; });
+      slider.addEventListener('touchstart', () => { slider.dataset.dragging = 'true'; });
+      slider.addEventListener('input', () => {
+        if (elements.fullAudioPlayer?.duration) {
+          const targetSecs = (Number(slider.value) / 100) * elements.fullAudioPlayer.duration;
+          if (elements.fullAudioCurrentTime) {
+            elements.fullAudioCurrentTime.textContent = formatTime(targetSecs);
+          }
+        }
+      });
+      const endDrag = () => {
+        delete slider.dataset.dragging;
+        if (elements.fullAudioPlayer?.duration) {
+          elements.fullAudioPlayer.currentTime = (Number(slider.value) / 100) * elements.fullAudioPlayer.duration;
+        }
+      };
+      slider.addEventListener('change', endDrag);
+      slider.addEventListener('mouseup', endDrag);
+      slider.addEventListener('touchend', endDrag);
     }
 
     if (elements.supportFullBtn) {
@@ -465,15 +574,26 @@
     }
 
     elements.supportAudio.innerHTML = `
-      <div class="rfib-audio-inline">
-        <button type="button" class="rfib-inline-play modern-btn modern-btn--play">Play ${textLabel}</button>
-        <div class="rfib-voice-toggle rfib-voice-toggle-inline"></div>
+      <div class="rfib-audio-card rfib-support-audio-card">
+        <div class="rfib-audio-actions">
+          <button type="button" class="rfib-inline-play modern-btn modern-btn--play">Play ${textLabel}</button>
+          <div class="rfib-voice-toggle rfib-voice-toggle-inline"></div>
+        </div>
+        <div class="rfib-audio-slider-container">
+          <span class="rfib-support-audio-current-time rfib-audio-time">0:00</span>
+          <input type="range" class="rfib-support-audio-slider audio-slider" min="0" max="100" value="0" step="0.1" aria-label="Support audio progress slider">
+          <span class="rfib-support-audio-total-time rfib-audio-time">0:00</span>
+        </div>
       </div>
     `;
     elements.supportAudioNote.textContent = `${textLabel} audio`;
 
     const inlinePlay = elements.supportAudio.querySelector('.rfib-inline-play');
     const inlineToggle = elements.supportAudio.querySelector('.rfib-voice-toggle-inline');
+    const currentTimeEl = elements.supportAudio.querySelector('.rfib-support-audio-current-time');
+    const totalTimeEl = elements.supportAudio.querySelector('.rfib-support-audio-total-time');
+    const sliderEl = elements.supportAudio.querySelector('.rfib-support-audio-slider');
+
     renderVoiceToggle(inlineToggle, variant, entry);
 
     elements.supportAudioPlayer.src = `/database/RFIB/audio/${encodeURIComponent(fileName)}`;
@@ -481,12 +601,77 @@
     elements.supportAudioPlayer.dataset.voice = state.supportVoice[variant] || 'male';
 
     inlinePlay?.addEventListener('click', async () => {
-      try {
-        await elements.supportAudioPlayer.play();
-      } catch (error) {
-        console.error('[RFIB] Failed to play support audio', error);
+      if (elements.supportAudioPlayer.paused) {
+        try {
+          await elements.supportAudioPlayer.play();
+        } catch (error) {
+          console.error('[RFIB] Failed to play support audio', error);
+        }
+      } else {
+        elements.supportAudioPlayer.pause();
       }
     });
+
+    const player = elements.supportAudioPlayer;
+    const onPlay = () => {
+      if (inlinePlay) {
+        inlinePlay.textContent = `Pause ${textLabel}`;
+        inlinePlay.classList.add('is-playing');
+      }
+    };
+    const onPause = () => {
+      if (inlinePlay) {
+        inlinePlay.textContent = `Play ${textLabel}`;
+        inlinePlay.classList.remove('is-playing');
+      }
+    };
+    const onEnded = () => {
+      if (inlinePlay) {
+        inlinePlay.textContent = `Play ${textLabel}`;
+        inlinePlay.classList.remove('is-playing');
+      }
+      if (sliderEl) sliderEl.value = '0';
+      if (currentTimeEl) currentTimeEl.textContent = '0:00';
+    };
+    const onTimeUpdate = () => {
+      if (!player.duration) return;
+      if (sliderEl && !sliderEl.dataset.dragging) {
+        sliderEl.value = String((player.currentTime / player.duration) * 100);
+      }
+      if (currentTimeEl) currentTimeEl.textContent = formatTime(player.currentTime);
+    };
+    const onDuration = () => {
+      if (totalTimeEl && player.duration) {
+        totalTimeEl.textContent = formatTime(player.duration);
+      }
+    };
+
+    player.onplay = onPlay;
+    player.onpause = onPause;
+    player.onended = onEnded;
+    player.ontimeupdate = onTimeUpdate;
+    player.onloadedmetadata = onDuration;
+    player.ondurationchange = onDuration;
+
+    if (sliderEl) {
+      sliderEl.addEventListener('mousedown', () => { sliderEl.dataset.dragging = 'true'; });
+      sliderEl.addEventListener('touchstart', () => { sliderEl.dataset.dragging = 'true'; });
+      sliderEl.addEventListener('input', () => {
+        if (player.duration) {
+          const targetSecs = (Number(sliderEl.value) / 100) * player.duration;
+          if (currentTimeEl) currentTimeEl.textContent = formatTime(targetSecs);
+        }
+      });
+      const endDrag = () => {
+        delete sliderEl.dataset.dragging;
+        if (player.duration) {
+          player.currentTime = (Number(sliderEl.value) / 100) * player.duration;
+        }
+      };
+      sliderEl.addEventListener('change', endDrag);
+      sliderEl.addEventListener('mouseup', endDrag);
+      sliderEl.addEventListener('touchend', endDrag);
+    }
   }
 
   function renderFullAudio() {
@@ -758,8 +943,16 @@
   function clearResultBox() {
     if (!elements.resultBox) return;
     elements.resultBox.innerHTML = '';
-    elements.resultBox.classList.remove('is-visible', 'is-error', 'is-success');
+    elements.resultBox.classList.remove('is-visible');
     removeHintButtons();
+    resetActionButtons();
+  }
+
+  /** Pre-grade action bar: Check only. */
+  function resetActionButtons() {
+    if (elements.checkBtn) elements.checkBtn.style.display = '';
+    if (elements.retryBtn) elements.retryBtn.style.display = 'none';
+    if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
   }
 
   function applyBlankClasses(results) {
@@ -834,6 +1027,7 @@
 
     if (freshAttempt || !state.currentAttempt) {
       state.currentAttempt = buildAttempt(state.currentQuestion);
+      state.supportVisible = false;
     }
 
     renderQuestionSelect();
@@ -841,6 +1035,7 @@
     renderSupportVariantButtons();
     renderSupportAudio(state.supportVariant);
     renderFullAudio();
+    updateSupportVisibility();
     clearResultBox();
 
     if (elements.currentQuestionId) {
@@ -871,6 +1066,7 @@
     state.currentQuestion = state.questions[nextIndex];
     if (freshAttempt) {
       state.currentAttempt = buildAttempt(state.currentQuestion);
+      state.supportVisible = false;
     }
     renderCurrentQuestion({ freshAttempt: false });
     updateQuestionButtons();
@@ -889,6 +1085,7 @@
     state.currentQuestionIndex = nextIndex;
     state.currentQuestion = state.questions[nextIndex];
     state.currentAttempt = buildAttempt(state.currentQuestion);
+    state.supportVisible = false;
     renderCurrentQuestion({ freshAttempt: false });
     updateQuestionButtons();
 
@@ -910,6 +1107,9 @@
 
   async function checkAnswers() {
     if (!state.currentQuestion || !state.currentAttempt) return;
+
+    state.supportVisible = true;
+    updateSupportVisibility();
 
     const selects = Array.from(elements.clozeView.querySelectorAll('.rfib-blank-select'));
     const answers = state.currentAttempt.blanks.map((blank, index) => {
@@ -1007,8 +1207,15 @@
         </div>
       `;
       elements.resultBox.classList.add('is-visible');
-      elements.resultBox.classList.toggle('is-success', isPerfect);
-      elements.resultBox.classList.toggle('is-error', !isPerfect);
+    }
+
+    // Match the other Reading tasks: Retry and Next Question appear only once
+    // the attempt has been graded.
+    if (elements.checkBtn) elements.checkBtn.style.display = 'none';
+    if (elements.retryBtn) elements.retryBtn.style.display = '';
+    if (elements.nextQuestionBtn) {
+      elements.nextQuestionBtn.style.display =
+        state.currentQuestionIndex < state.questions.length - 1 ? '' : 'none';
     }
 
     if (window.handleDualTrackScoring) {
@@ -1058,7 +1265,7 @@
     } catch (error) {
       console.error('[RFIB] Failed to initialize mode', error);
       if (elements.resultBox) {
-        elements.resultBox.classList.add('is-visible', 'is-error');
+        elements.resultBox.classList.add('is-visible');
         elements.resultBox.innerHTML = '<div class="rfib-result-summary has-misses">RFIB data failed to load.</div>';
       }
       window.shopModule?.showAlertModal?.('RFIB mode could not load right now. Please try again.', true);
@@ -1076,7 +1283,7 @@
     } catch (error) {
       console.error('[RFIB] Failed to load question data', error);
       if (elements.resultBox) {
-        elements.resultBox.classList.add('is-visible', 'is-error');
+        elements.resultBox.classList.add('is-visible');
         elements.resultBox.innerHTML = '<div class="rfib-result-summary has-misses">RFIB data failed to load.</div>';
       }
       return;

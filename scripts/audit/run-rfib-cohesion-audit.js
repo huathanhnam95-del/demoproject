@@ -146,9 +146,8 @@ function pickMostAdvancedModel(models) {
   const preference = [
     'models/gemini-3.1-pro-preview',
     'models/gemini-3-pro-preview',
-    'models/gemini-2.5-pro',
+    'models/gemini-3.1-flash-lite',
     'models/gemini-pro-latest',
-    'models/gemini-2.5-flash',
     'models/gemini-flash-latest',
     'models/gemini-flash-lite-latest'
   ];

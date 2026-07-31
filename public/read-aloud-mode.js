@@ -50,6 +50,13 @@ class ReadAloudMode {
     this.sessionConnectedSpeechLayerOverrides = new Set();
     this.promptAnalysisCache = new Map();
     this.promptAnalysisPromiseCache = new Map();
+    this.sharedLinkingPronunciations = new Map();
+    this.sharedReducedWordForms = new Map();
+    this.sharedPronunciationWarmup = this.primeSharedPronunciations([{
+      phrase: 'a an the to of and for can have has had was were from that some as at than but or are you your them his her do does must should would could us she he we is seven ten'
+    }]).catch((error) => {
+      console.warn('[ReadAloud] Shared pronunciation warmup failed:', error);
+    });
     this.activePromptKey = null;
     this.activePromptRenderToken = 0;
     this.resizeObserver = null;
@@ -3310,6 +3317,7 @@ class ReadAloudMode {
 
     // Aggregate events into reduced-word groups vs linking issues/successes
     const events = Array.isArray(connectedSpeech.events) ? connectedSpeech.events : [];
+    await this.primeSharedPronunciations(events);
     const { groupedReduced, linkingIssues, linkingSuccesses } = this._aggregateSpeechEvents(events);
 
     // Build annotated paragraph with token highlights + SVG overlay
@@ -3701,45 +3709,57 @@ class ReadAloudMode {
     return usedTokenAnnotation;
   }
 
+  async primeSharedPronunciations(events = []) {
+    const phonetics = window.Phonetics;
+    if (!phonetics || typeof phonetics.getPronunciations !== 'function') return;
+
+    const requests = new Map();
+    (Array.isArray(events) ? events : []).forEach((event) => {
+      const words = String(event?.phrase || '').trim().split(/\s+/).filter(Boolean);
+      words.forEach((word, index) => {
+        const clean = word.replace(/[^a-zA-Z']/g, '').toLowerCase();
+        if (!clean) return;
+        const nextWord = words[index + 1] || '';
+        const nextSound = /^[aeiou]/i.test(nextWord) ? 'vowel' : 'consonant';
+        if (!requests.has(clean)) requests.set(clean, nextSound);
+      });
+    });
+
+    await Promise.all([...requests.entries()].map(async ([word, nextSound]) => {
+      try {
+        const result = await phonetics.getPronunciations(word, {
+          context: 'connectedSpeech',
+          nextSound
+        });
+        const selectedIPA = result?.selected?.ipa || result?.forms?.[0]?.ipa || '';
+        if (selectedIPA) this.sharedLinkingPronunciations.set(word, selectedIPA);
+
+        const strong = (result?.forms || [])
+          .filter((form) => form?.formRole === 'strong' && form.ipa)
+          .map((form) => form.ipa);
+        const weakForms = (result?.forms || [])
+          .filter((form) => form?.formRole === 'weak' && form.ipa)
+          .map((form) => {
+            if (form.condition?.nextSound === 'consonant') return `${form.ipa} before a consonant sound`;
+            if (form.condition?.nextSound === 'vowel') return `${form.ipa} before a vowel sound`;
+            return form.ipa;
+          });
+        const weak = weakForms.join(weakForms.some((form) => form.includes(' before ')) ? '; ' : ', ');
+        if (strong.length && weak) {
+          this.sharedReducedWordForms.set(word, {
+            strong: [...new Set(strong)].join(' or '),
+            reduced: [...new Set(weakForms)].join(weakForms.some((form) => form.includes(' before ')) ? '; ' : ', ')
+          });
+        }
+      } catch (error) {
+        console.warn(`[ReadAloud] Shared pronunciation lookup failed for ${word}:`, error);
+      }
+    }));
+  }
+
   _getReducedWordIpaInfo(phrase) {
-    const clean = String(phrase || '').toLowerCase().trim().replace(/[^a-z]/g, '');
-    const dict = {
-      'for':   { strong: '/fɔr/',    reduced: '/fər/' },
-      'to':    { strong: '/tu/',     reduced: '/tə/' },
-      'and':   { strong: '/ænd/',   reduced: '/ən/, /ənd/, /n/, /t/, /d/' },
-      'of':    { strong: '/ʌv/',    reduced: '/əv/, /ə/' },
-      'that':  { strong: '/ðæt/',   reduced: '/ðət/' },
-      'can':   { strong: '/kæn/',   reduced: '/kən/' },
-      'have':  { strong: '/hæv/',   reduced: '/həv/, /əv/, /v/' },
-      'has':   { strong: '/hæz/',   reduced: '/həz/, /əz/, /z/' },
-      'had':   { strong: '/hæd/',   reduced: '/həd/' },
-      'was':   { strong: '/wʌz/',   reduced: '/wəz/' },
-      'were':  { strong: '/wər/',   reduced: '/wər/' },
-      'from':  { strong: '/frʌm/ or /frɑm/', reduced: '/frəm/' },
-      'some':  { strong: '/sʌm/',   reduced: '/səm/' },
-      'as':    { strong: '/æz/',    reduced: '/əz/' },
-      'at':    { strong: '/æt/',    reduced: '/ət/' },
-      'than':  { strong: '/ðæn/',   reduced: '/ðən/' },
-      'but':   { strong: '/bʌt/',   reduced: '/bət/' },
-      'or':    { strong: '/ɔr/',    reduced: '/ər/' },
-      'are':   { strong: '/ɑr/',    reduced: '/ər/' },
-      'you':   { strong: '/ju/',    reduced: '/jə/' },
-      'your':  { strong: '/jɔr/',   reduced: '/jər/' },
-      'them':  { strong: '/ðɛm/',   reduced: '/ðəm/' },
-      'his':   { strong: '/hɪz/',   reduced: '/ɪz/' },
-      'her':   { strong: '/hɝ/',    reduced: '/hər/' },
-      'a':     { strong: '/eɪ/',    reduced: '/ə/' },
-      'an':    { strong: '/æn/',    reduced: '/ən/' },
-      'the':   { strong: '/ði/',    reduced: '/ðə/ before a consonant sound; /ði/ before a vowel sound' },
-      'do':    { strong: '/du/',     reduced: '/də/' },
-      'does':  { strong: '/dʌz/',   reduced: '/dəz/' },
-      'must':  { strong: '/mʌst/',  reduced: '/məst/' },
-      'should':{ strong: '/ʃʊd/',   reduced: '/ʃəd/' },
-      'would': { strong: '/wʊd/',   reduced: '/wəd/' },
-      'could': { strong: '/kʊd/',   reduced: '/kəd/' },
-      'us':    { strong: '/ʌs/',    reduced: '/əs/' }
-    };
-    return dict[clean] || null;
+    const clean = String(phrase || '').toLowerCase().trim().replace(/[^a-z']/g, '');
+    return this.sharedReducedWordForms.get(clean) || null;
   }
 
   /** Build "Reduced Words" section with accordion cards and single-occurrence grid */
@@ -3910,21 +3930,8 @@ class ReadAloudMode {
     const cleanW1 = String(w1 || '').replace(/[^a-zA-Z]/g, '').toLowerCase();
     const cleanW2 = String(w2 || '').replace(/[^a-zA-Z]/g, '').toLowerCase();
 
-    // Dictionary of high-frequency linking IPA pronunciations
-    const commonIpa = {
-      is: '/ɪz/', one: '/wʌn/', a: '/ə/', an: '/ən/', the: '/ðə/', to: '/tə/', of: '/əv/',
-      in: '/ɪn/', it: '/ɪt/', at: '/æt/', on: '/ɑn/', up: '/ʌp/', out: '/aʊt/', off: '/ɔf/',
-      us: '/əs/', are: '/ɑr/', all: '/ɔl/', and: '/ænd/', for: '/fər/', check: '/tʃɛk/',
-      did: '/dɪd/', you: '/ju/', want: '/wɑnt/', black: '/blæk/', cat: '/kæt/', bad: '/bæd/',
-      dog: '/dɔɡ/', can: '/kən/', take: '/teɪk/', make: '/meɪk/', have: '/həv/', has: '/həz/',
-      had: '/hæd/', was: '/wəz/', were: '/wər/', see: '/si/', go: '/ɡoʊ/', do: '/də/',
-      she: '/ʃi/', he: '/hi/', we: '/wi/', my: '/maɪ/', so: '/soʊ/', no: '/noʊ/',
-      two: '/tu/', three: '/θri/', four: '/fɔr/', five: '/faɪv/', six: '/sɪks/',
-      seven: '/ˈsɛvn/', eight: '/eɪt/', nine: '/naɪn/', ten: '/tɛn/'
-    };
-
-    let ipa1 = commonIpa[cleanW1] || '';
-    let ipa2 = commonIpa[cleanW2] || '';
+    let ipa1 = this.sharedLinkingPronunciations.get(cleanW1) || '';
+    let ipa2 = this.sharedLinkingPronunciations.get(cleanW2) || '';
 
     if (window.Phonetics && typeof window.Phonetics._cache !== 'undefined') {
       const cache = window.Phonetics._cache;

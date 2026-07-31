@@ -3,11 +3,11 @@ const { safeJsonParse, countWords, trimToMaxWords } = require('./json');
 
 // Default to the highest-capability Gemini model currently available in Vertex AI.
 // Can be overridden via READING_JOURNEY_GEMINI_MODEL in .env.
-const DEFAULT_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 
 // Fallback when the primary model is unavailable (quota/rate limits, model not found, etc.).
 // Can be overridden via READING_JOURNEY_GEMINI_FALLBACK_MODEL in .env.
-const DEFAULT_FALLBACK_MODEL = 'gemini-2.0-flash-lite';
+const DEFAULT_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 const ALLOWED_LEVELS = new Set(['A2', 'B1', 'B2', 'C1']);
 
 const MAX_INTERACTIVE_BEATS = 3;

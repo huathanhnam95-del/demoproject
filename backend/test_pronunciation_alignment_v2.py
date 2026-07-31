@@ -26,6 +26,50 @@ def candidate(time, intensity, confidence, *, voiced=True):
 
 
 class PronunciationAlignmentV2Test(unittest.TestCase):
+    def test_oversized_syllable_is_not_split_after_expected_count_is_already_met(self):
+        """A count-matched stream must not create a phantom boundary then prune it."""
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        class FakeIntensity:
+            @staticmethod
+            def get_value(_time_value):
+                return 70.0
+
+        syllables = [
+            {
+                "startTime": 0.0,
+                "endTime": 0.2,
+                "duration": 0.2,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+            {
+                "startTime": 0.2,
+                "endTime": 0.85,
+                "duration": 0.65,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+        ]
+
+        with patch.object(server, "find_pitch_transitions", return_value=[0.5]):
+            result = server.split_oversized_syllables(
+                syllables,
+                expected_count=2,
+                pitch=FakePitch(),
+                intensity=FakeIntensity(),
+                int_times=np.arange(0.0, 0.9, 0.01),
+                int_values=np.full(90, 70.0),
+            )
+
+        self.assertEqual(result, syllables)
+
     def test_stress_runtime_uses_empirical_calibration(self):
         self.assertEqual(server.AnalysisConfig.STRESS_CALIBRATION_VERSION, "candidate-audit-20260711-447")
         self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_PITCH, 0.30)
@@ -545,6 +589,77 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertIsNone(result["primaryStress"])
         self.assertFalse(result["rateable"])
         self.assertIn("LOW_STRESS_CONFIDENCE", result["reasons"])
+
+    def test_unrateable_stress_does_not_mark_legacy_syllable_hint(self):
+        raw = {
+            "duration": 0.4,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3], "values": [150.0, 151.0]},
+            "intensity": {"times": [0.1, 0.3], "values": [70.0, 70.1]},
+            "syllables": [
+                {"startTime": 0.0, "endTime": 0.2, "duration": 0.2,
+                 "vowelDuration": 0.18, "avgPitch": 150.0, "maxPitch": 150.0,
+                 "intensity": 70.0, "isStressed": True},
+                {"startTime": 0.2, "endTime": 0.4, "duration": 0.2,
+                 "vowelDuration": 0.18, "avgPitch": 151.0, "maxPitch": 151.0,
+                 "intensity": 70.1, "isStressed": False},
+            ],
+        }
+        result = server.build_analysis_v2_response(raw, expected_syllable_count=2)
+        self.assertFalse(result["observed"]["stressEvidence"]["rateable"])
+        self.assertFalse(any(item.get("isStressed") for item in result["observed"]["syllables"]))
+
+    def test_reference_conditioned_stress_verification_is_separate_from_argmax(self):
+        raw = {
+            "duration": 0.6,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3, 0.5], "values": [220.0, 180.0, 150.0]},
+            "intensity": {"times": [0.1, 0.3, 0.5], "values": [78.0, 70.0, 66.0]},
+            "syllables": [
+                {"startTime": 0.0, "endTime": 0.2, "duration": 0.2,
+                 "vowelDuration": 0.2, "avgPitch": 220.0, "maxPitch": 225.0,
+                 "intensity": 78.0},
+                {"startTime": 0.2, "endTime": 0.4, "duration": 0.2,
+                 "vowelDuration": 0.15, "avgPitch": 180.0, "maxPitch": 185.0,
+                 "intensity": 70.0},
+                {"startTime": 0.4, "endTime": 0.6, "duration": 0.2,
+                 "vowelDuration": 0.12, "avgPitch": 150.0, "maxPitch": 155.0,
+                 "intensity": 66.0},
+            ],
+        }
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=3,
+            reference_ipa="/ˈæktʃuəl/",
+        )
+        reference = result["observed"]["stressEvidence"]["referenceStress"]
+        self.assertEqual(reference["expectedPrimaryStress"], 0)
+        self.assertTrue(reference["matches"])
+        self.assertTrue(reference["rateable"])
+
+    def test_reference_count_conflict_blocks_stress_verification(self):
+        raw = {
+            "duration": 0.4,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3], "values": [220.0, 150.0]},
+            "intensity": {"times": [0.1, 0.3], "values": [78.0, 66.0]},
+            "syllables": [
+                {"startTime": 0.0, "endTime": 0.2, "duration": 0.2,
+                 "vowelDuration": 0.2, "avgPitch": 220.0, "maxPitch": 225.0,
+                 "intensity": 78.0},
+                {"startTime": 0.2, "endTime": 0.4, "duration": 0.2,
+                 "vowelDuration": 0.12, "avgPitch": 150.0, "maxPitch": 155.0,
+                 "intensity": 66.0},
+            ],
+        }
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=3,
+            reference_ipa="/ˈækʃəl/",
+        )
+        reference = result["observed"]["stressEvidence"]["referenceStress"]
+        self.assertFalse(reference["rateable"])
+        self.assertEqual(reference["reason"], "REFERENCE_COUNT_CONFLICT")
 
     def test_learner_v2_endpoint_forwards_expected_count_as_hint(self):
         server.app.testing = True

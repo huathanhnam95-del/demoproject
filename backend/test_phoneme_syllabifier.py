@@ -178,6 +178,14 @@ class TestIndependentSyllabifier(unittest.TestCase):
         self.assertEqual(result["syllable_count"], 1)
         self.assertEqual(result["nuclei_detected"], ["aɪ"])
 
+    def test_rhotic_diphthong_is_one_nucleus(self) -> None:
+        """American /aɪɚ/ in words such as *admire* is one syllable."""
+        phonemes = _quick_phonemes(["d", "m", "aɪ", "ɚ"])
+        result = self.syl.syllabify(phonemes)
+
+        self.assertEqual(result["syllable_count"], 1)
+        self.assertEqual(result["nuclei_detected"], ["aɪɚ"])
+
     def test_length_marked_vowels_are_nuclei(self) -> None:
         """Model-emitted long vowels must count as syllable nuclei."""
         phonemes = _quick_phonemes(["b", "aː", "n", "a", "n", "ə"])

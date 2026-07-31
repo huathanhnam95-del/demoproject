@@ -5,5 +5,8 @@ scipy==1.15.3
 numpy==2.2.6
 gunicorn==24.1.1
 requests==2.32.5
+# Required by local_server/phoneme_client.py to mint the Cloud Run ID token
+# when PHONEME_SERVICE_AUTH=google (the default in shadow/active mode).
+google-auth==2.48.0
 python-dotenv==1.2.1
 xlsxwriter==3.2.9

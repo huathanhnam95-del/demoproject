@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pronunciation-calibration-v1",
+  "type": "object",
+  "required": ["schema_version", "seed", "records", "exclusions", "exclusion_funnel", "coverage_denominator", "class_support", "lexical_holdout_words", "vietnamese_external"],
+  "properties": {
+    "schema_version": {"const": "pronunciation-calibration-v1"},
+    "seed": {"const": 20260730},
+    "records": {"type": "array"},
+    "exclusions": {"type": "array"},
+    "exclusion_funnel": {"type": "object"},
+    "coverage_denominator": {"type": "integer", "minimum": 0},
+    "class_support": {"type": "object"},
+    "lexical_holdout_words": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "vietnamese_external": {
+      "type": "object",
+      "required": ["manifest_path", "manifest_sha256", "discovered_count", "status_counts", "role"]
+    },
+    "provenance": {"type": ["object", "null"]}
+  },
+  "additionalProperties": true
+}

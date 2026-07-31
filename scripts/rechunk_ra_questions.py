@@ -12,8 +12,8 @@ API_KEY = os.getenv('GEMINI_API_KEY')
 if not API_KEY:
     raise ValueError("GEMINI_API_KEY not found in .env")
 
-# Use Gemini 2.5 Pro for highest quality natural language understanding
-MODEL = "gemini-2.5-pro"
+# Use Gemini 3.1 Pro for highest quality natural language understanding
+MODEL = "gemini-3.1-pro-preview"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
 
 SYSTEM_PROMPT = """You are an expert in English prosody, phonetics, and ESL pronunciation coaching.

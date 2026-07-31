@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v18';
+const CACHE_VERSION = 'bel-offline-v19';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -15,6 +15,8 @@ const SHELL_URLS = [
   '/dictionary-service.js',
   '/collocations.json',
   '/arpabet-ipa-map.js',
+  '/phonetics.js',
+  '/oxford-american-ipa.json',
   '/ipa-dict.json'
 ];
 

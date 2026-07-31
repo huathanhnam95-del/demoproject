@@ -12,12 +12,17 @@ import tempfile
 import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
 import re
+import hashlib
+import secrets
+import unicodedata
+from datetime import datetime, timezone
 try:
     from .pronunciation_reference import (
         ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
         SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
         build_pronunciation_reference,
         build_pronunciation_variant,
+        parse_pronunciation,
     )
 except ImportError:
     from pronunciation_reference import (  # type: ignore
@@ -25,6 +30,7 @@ except ImportError:
         SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
         build_pronunciation_reference,
         build_pronunciation_variant,
+        parse_pronunciation,
     )
 try:
     from scipy.ndimage import uniform_filter1d  # type: ignore
@@ -566,6 +572,46 @@ cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if orig
 # type: ignore
 cors.init_app(app, origins=cors_origins, methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
 
+LOCAL_PRONOUNCE_SAMPLE_MAX_BYTES = 5 * 1024 * 1024
+LOCAL_PRONOUNCE_SAMPLE_ORIGINS = {
+    'http://localhost:8443',
+    'https://localhost:8443',
+    'http://127.0.0.1:8443',
+    'https://127.0.0.1:8443',
+}
+
+
+def _local_pronounce_sample_dir():
+    """Return the workspace-local directory used by the Pronounce save action."""
+    configured = str(os.environ.get('PRONUNCIATION_DEBUG_SAMPLE_DIR') or '').strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+    # server.py lives at <workspace>/backend/local_server/server.py.
+    return Path(__file__).resolve().parents[2] / 'test-results' / 'pronounce-local-samples'
+
+
+def _is_local_pronounce_request():
+    """Keep the debug sample route loopback-only, even if HOST is widened."""
+    remote_addr = str(request.remote_addr or '').strip().lower()
+    if remote_addr not in {'127.0.0.1', '::1', 'localhost'}:
+        return False
+    origin = str(request.headers.get('Origin') or '').strip()
+    return not origin or origin in LOCAL_PRONOUNCE_SAMPLE_ORIGINS
+
+
+def _local_sample_id(word):
+    slug = re.sub(r'[^a-z0-9]+', '-', str(word or '').casefold()).strip('-')[:40] or 'word'
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    return f'{slug}-{timestamp}-{secrets.token_hex(4)}'
+
+
+def _workspace_relative_path(path):
+    workspace_root = Path(__file__).resolve().parents[2]
+    try:
+        return str(path.resolve().relative_to(workspace_root)).replace(os.sep, '/')
+    except ValueError:
+        return str(path.resolve())
+
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({
@@ -576,20 +622,50 @@ def home():
             '/analyze': 'POST - Analyze audio file',
             '/dictionary/<word>': 'GET - Fetch word data from Merriam-Webster',
             '/proxy-audio': 'GET - Proxy audio from MW (CORS bypass)',
-            '/analyze-url': 'POST - Analyze audio from URL'
+            '/analyze-url': 'POST - Analyze audio from URL',
+            '/debug/pronounce-samples': 'POST - Save a localhost-only Pronounce sample'
         }
     })
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({
-        'status': 'ok',
+    verifier_path = Path(os.environ.get('PRONUNCIATION_VERIFIER_ARTIFACT') or (Path(__file__).parent / 'models' / 'pronunciation-verifier-v1.json'))
+    try:
+        verifier_metadata = json.loads(verifier_path.read_text(encoding='utf-8'))
+    except Exception:
+        verifier_metadata = {}
+
+    # Reading the JSON is not enough: an active deployment whose artifact fails
+    # validation cannot score anything, and must not look healthy to
+    # deployment automation.
+    try:
+        from .pronunciation_verifier import validate_artifact
+    except ImportError:
+        from pronunciation_verifier import validate_artifact  # type: ignore
+    try:
+        validate_artifact(verifier_metadata)
+        verifier_status = 'ok'
+    except Exception as error:
+        verifier_status = str(error)
+
+    healthy = verifier_status == 'ok' or _PRONUNCIATION_V3_MODE != 'active'
+    payload = {
+        'status': 'ok' if healthy else 'degraded',
         'schemaVersion': PRONUNCIATION_SCHEMA_VERSION,
         'algorithmVersion': PRONUNCIATION_ALGORITHM_VERSION,
         'analysisVersion': 'pronunciation-analysis-v2',
         'deploymentVersion': get_deployment_version(),
         'pronunciationV3Mode': _PRONUNCIATION_V3_MODE,
-    })
+        'recognizerContract': 'recognize-v2',
+        'verifierSchema': 'pronunciation-verifier-v1',
+        'verifierFeatureSchema': verifier_metadata.get('feature_schema_version', 'unavailable'),
+        'verifierRevision': verifier_metadata.get('artifact_sha256', 'unavailable'),
+        'verifierStatus': verifier_status,
+    }
+    if not healthy:
+        payload['error'] = 'V3 is active but the verifier artifact is unusable'
+        return jsonify(payload), 503
+    return jsonify(payload)
 
 # ============================================
 # MERRIAM-WEBSTER DICTIONARY ENDPOINTS
@@ -1789,27 +1865,50 @@ def select_native_acoustic_candidates(candidates, target_count, noise_threshold=
     return result
 
 
-def score_lexical_stress_v2(syllables, confidence_threshold=None):
+def score_lexical_stress_v2(
+    syllables,
+    confidence_threshold=None,
+    expected_primary_stress=None,
+):
     """Score stress from within-recording relative pitch, duration, and intensity."""
     if confidence_threshold is None:
         confidence_threshold = AnalysisConfig.STRESS_CONFIDENCE_THRESHOLD
     syllables = list(syllables or [])
     if not syllables:
-        return {
+        result = {
             'primaryStress': None,
             'confidence': 0.0,
             'rateable': False,
             'reasons': ['NO_SPEECH'],
             'scores': [],
         }
+        if expected_primary_stress is not None:
+            result['referenceStress'] = {
+                'expectedPrimaryStress': expected_primary_stress,
+                'matches': False,
+                'rateable': False,
+                'confidence': 0.0,
+                'reason': 'NO_SPEECH',
+            }
+        return result
     if len(syllables) == 1:
-        return {
+        result = {
             'primaryStress': 0,
             'confidence': 1.0,
             'rateable': True,
             'reasons': [],
             'scores': [1.0],
         }
+        if expected_primary_stress is not None:
+            expected = int(expected_primary_stress)
+            result['referenceStress'] = {
+                'expectedPrimaryStress': expected,
+                'matches': expected == 0,
+                'rateable': expected == 0,
+                'confidence': 1.0 if expected == 0 else 0.0,
+                'reason': None if expected == 0 else 'REFERENCE_STRESS_OUT_OF_RANGE',
+            }
+        return result
 
     pitches = np.array([
         float(item.get('avgPitch') or item.get('maxPitch') or 0)
@@ -1824,13 +1923,22 @@ def score_lexical_stress_v2(syllables, confidence_threshold=None):
         for item in syllables
     ], dtype=float)
     if np.any(pitches <= 0) or np.any(durations <= 0) or np.any(~np.isfinite(intensities)):
-        return {
+        result = {
             'primaryStress': None,
             'confidence': 0.0,
             'rateable': False,
             'reasons': ['INSUFFICIENT_STRESS_EVIDENCE'],
             'scores': [],
         }
+        if expected_primary_stress is not None:
+            result['referenceStress'] = {
+                'expectedPrimaryStress': int(expected_primary_stress),
+                'matches': False,
+                'rateable': False,
+                'confidence': 0.0,
+                'reason': 'INSUFFICIENT_STRESS_EVIDENCE',
+            }
+        return result
 
     pitch_median = float(np.median(pitches))
     duration_median = float(np.median(durations))
@@ -1850,7 +1958,7 @@ def score_lexical_stress_v2(syllables, confidence_threshold=None):
     margin = float(scores[ranking[0]] - scores[ranking[1]])
     confidence = round(float(1.0 - np.exp(-max(0.0, margin) / 2.0)), 3)
     rateable = confidence >= confidence_threshold
-    return {
+    result = {
         'primaryStress': best_index if rateable else None,
         'confidence': confidence,
         'rateable': rateable,
@@ -1862,9 +1970,44 @@ def score_lexical_stress_v2(syllables, confidence_threshold=None):
             'relativeIntensityDb': [round(float(value), 4) for value in intensity_prominence],
         },
     }
+    if expected_primary_stress is not None:
+        expected = int(expected_primary_stress)
+        reference = {
+            'expectedPrimaryStress': expected,
+            'matches': False,
+            'rateable': False,
+            'confidence': 0.0,
+            'reason': None,
+        }
+        if 0 <= expected < len(scores):
+            other_scores = np.delete(scores, expected)
+            expected_margin = float(scores[expected] - np.max(other_scores)) if len(other_scores) else 0.0
+            # Reference-conditioned verification asks a narrower question:
+            # does the recording make the dictionary-stressed syllable more
+            # prominent than every alternative?  A sigmoid calibration keeps
+            # this confidence interpretable without turning a wrong argmax
+            # into a passing result.
+            expected_confidence = float(1.0 / (1.0 + np.exp(-2.0 * expected_margin)))
+            reference.update({
+                'matches': expected_margin >= 0.0,
+                'rateable': expected_confidence >= confidence_threshold,
+                'confidence': round(expected_confidence, 3),
+                'margin': round(expected_margin, 4),
+            })
+            if not reference['rateable']:
+                reference['reason'] = 'LOW_REFERENCE_STRESS_CONFIDENCE'
+        else:
+            reference['reason'] = 'REFERENCE_STRESS_OUT_OF_RANGE'
+        result['referenceStress'] = reference
+    return result
 
 
-def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, native=False):
+def build_analysis_v2_response(
+    raw_analysis,
+    expected_syllable_count=None,
+    native=False,
+    reference_ipa=None,
+):
     syllables = list(raw_analysis.get('syllables') or [])
     candidates = [_candidate_from_syllable(syllable) for syllable in syllables]
     if native:
@@ -1913,7 +2056,40 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
 
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])
-    stress = score_lexical_stress_v2(selected_syllables)
+    expected_primary_stress = None
+    reference_count_conflict = False
+    if reference_ipa:
+        try:
+            parsed_reference = parse_pronunciation(reference_ipa)
+            reference_count_conflict = bool(
+                expected_syllable_count
+                and parsed_reference.phonological_count != expected_syllable_count
+            )
+            if parsed_reference.primary_stress is not None:
+                expected_primary_stress = parsed_reference.primary_stress
+        except Exception:
+            expected_primary_stress = None
+    stress = score_lexical_stress_v2(
+        selected_syllables,
+        expected_primary_stress=expected_primary_stress,
+    )
+    if reference_count_conflict and stress.get('referenceStress'):
+        stress['referenceStress'].update({
+            'matches': False,
+            'rateable': False,
+            'reason': 'REFERENCE_COUNT_CONFLICT',
+        })
+    # ``isStressed`` is a legacy display hint from the acoustic peak finder.
+    # Never expose that hint as a lexical stress decision when the calibrated
+    # V2 scorer cannot rate the evidence; otherwise the UI can show “strongest
+    # detected” beside an explicit N/A stress decision.
+    selected_syllables = [dict(item) for item in selected_syllables]
+    for index, item in enumerate(selected_syllables):
+        item['isStressed'] = bool(
+            stress.get('rateable')
+            and stress.get('primaryStress') is not None
+            and index == int(stress['primaryStress'])
+        )
     rateable = bool(selected_syllables) and not reasons
     primary_stress = stress['primaryStress']
     public_segmentation = {
@@ -1952,7 +2128,12 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
     }
 
 
-def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
+def analyze_audio_v2(
+    audio_path,
+    expected_syllable_count=None,
+    native=False,
+    reference_ipa=None,
+):
     # Native references and learner attempts are aligned to the trusted target
     # count so every expected syllable receives measured acoustic feedback.
     if native:
@@ -1969,6 +2150,7 @@ def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
         raw_analysis,
         expected_syllable_count=expected_syllable_count,
         native=native,
+        reference_ipa=reference_ipa,
     )
 
 
@@ -1978,6 +2160,7 @@ def analyze_v2():
         return jsonify({'error': 'No audio file provided'}), 400
     audio_file = request.files['audio']
     expected_syllable_count = request.form.get('expected_syllables', type=int)
+    reference_ipa = request.form.get('reference_ipa')
     if not expected_syllable_count or not 1 <= expected_syllable_count <= 20:
         expected_syllable_count = None
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
@@ -1988,6 +2171,7 @@ def analyze_v2():
             tmp_path,
             expected_syllable_count=expected_syllable_count,
             native=False,
+            reference_ipa=reference_ipa,
         )
         return jsonify(result)
     except Exception as error:
@@ -2169,6 +2353,16 @@ def _build_v3_comparison(reference_ipa, observed_phonemes, observed_syllable_cou
     }
 
 
+def _unavailable_v3_best_effort():
+    """Return the advisory-only shape used when no reliable observation exists."""
+    return {
+        'available': False,
+        'observed_count': None,
+        'expected_stress_appears_strongest': None,
+        'advisory_only': True,
+    }
+
+
 def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_syllables=None):
     """Convert a v2 analysis result into v3 response shape."""
     quality = v2_result.get('quality', {})
@@ -2196,6 +2390,9 @@ def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_sylla
         } for s in syllables],
         'syllable_count': syllable_count,
         'comparison': comparison,
+        'reference_stress': (v2_result.get('observed', {}).get('stressEvidence', {}).get('referenceStress')
+                             if isinstance(v2_result.get('observed', {}).get('stressEvidence'), dict)
+                             else None),
         'pitch': v2_result.get('pitch', {'times': [], 'values': []}),
         'intensity': v2_result.get('intensity', {'times': [], 'values': []}),
         'total_duration': v2_result.get('duration', 0),
@@ -2205,17 +2402,24 @@ def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_sylla
             'syllable_duration': True,
             'phoneme_alignment': False,
         },
+        'verification': {
+            'status': 'unrateable',
+            'count': {'expected': expected_syllables, 'observed': syllable_count, 'status': 'unrateable', 'confidence': 0.0, 'reasons': ['V3_NOT_ACTIVE']},
+            'primary_stress': {'applicable': bool(expected_syllables and expected_syllables > 1), 'expected': None, 'matches_expected': None, 'status': 'unrateable', 'confidence': 0.0, 'pitch_evidence': [], 'reasons': ['V3_NOT_ACTIVE']},
+            'model_revision': None,
+        },
+        'best_effort': _unavailable_v3_best_effort(),
     }
 
 
 def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, expected_syllables=None):
     """Build v3 response from phoneme recognition + Praat contours."""
     phonemes = phoneme_result.get('phonemes', [])
-    syllables_from_recognizer = phoneme_result.get('syllables', [])
+    syllables_from_recognizer = phoneme_result.get('syllables', []) or (phoneme_result.get('canonical_alignment') or {}).get('syllables', [])
     confidence = phoneme_result.get('confidence', 0.0)
     is_rateable = phoneme_result.get('is_rateable', True)
     quality_reason = phoneme_result.get('quality_reason')
-    syllable_count = len(syllables_from_recognizer)
+    syllable_count = phoneme_result.get('decoded_syllable_count', len(syllables_from_recognizer))
 
     observed_phoneme_labels = [
         p.get('symbol') or p.get('label', '')
@@ -2235,8 +2439,8 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         'degraded': False,
         'observed_phonemes': phonemes,
         'observed_syllables': [{
-            'startTime': s.get('start_time', s.get('start', 0)),
-            'endTime': s.get('end_time', s.get('end', 0)),
+            'startTime': s.get('start_time', s.get('startTime', s.get('start', 0))),
+            'endTime': s.get('end_time', s.get('endTime', s.get('end', 0))),
             'duration': s.get(
                 'duration',
                 s.get('end_time', s.get('end', 0)) - s.get('start_time', s.get('start', 0)),
@@ -2244,8 +2448,12 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
             'confidence': s.get('confidence'),
             'nucleus': s.get('nucleus'),
         } for s in syllables_from_recognizer],
+        'segmentation_source': 'ctc',
         'syllable_count': syllable_count,
         'comparison': comparison,
+        'reference_stress': (praat_result.get('observed', {}).get('stressEvidence', {}).get('referenceStress')
+                             if isinstance(praat_result.get('observed', {}).get('stressEvidence'), dict)
+                             else None),
         'pitch': praat_result.get('pitch', {'times': [], 'values': []}),
         'intensity': praat_result.get('intensity', {'times': [], 'values': []}),
         'total_duration': praat_result.get('duration', 0),
@@ -2258,8 +2466,87 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
     }
 
 
+def _recognizer_syllable_count(phoneme_result):
+    """Observed syllable count from either recognizer contract.
+
+    ``recognize-v2`` reports ``decoded_syllable_count`` and puts spans under
+    ``canonical_alignment.syllables``; only the legacy v1 shape has a
+    top-level ``syllables`` list.
+    """
+    if not isinstance(phoneme_result, dict):
+        return None
+    decoded = phoneme_result.get('decoded_syllable_count')
+    if isinstance(decoded, int) and not isinstance(decoded, bool):
+        return decoded
+    for spans in (
+        phoneme_result.get('syllables'),
+        (phoneme_result.get('canonical_alignment') or {}).get('syllables'),
+    ):
+        if isinstance(spans, list):
+            return len(spans)
+    return None
+
+
+def _recognizer_confidence(phoneme_result):
+    """Confidence from either contract; v2 carries alignment confidence."""
+    if not isinstance(phoneme_result, dict):
+        return None
+    value = phoneme_result.get('confidence')
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value
+    spans = (phoneme_result.get('canonical_alignment') or {}).get('syllables') or []
+    values = [
+        float(span.get('confidence'))
+        for span in spans
+        if isinstance(span, dict) and isinstance(span.get('confidence'), (int, float))
+    ]
+    return round(sum(values) / len(values), 6) if values else None
+
+
+def _recognizer_quality_reason(phoneme_result):
+    """Quality reason from either contract."""
+    if not isinstance(phoneme_result, dict):
+        return None
+    reason = phoneme_result.get('quality_reason')
+    if reason:
+        return reason
+    if phoneme_result.get('decoded_is_rateable') is False:
+        return 'DECODED_UNRATEABLE'
+    return None
+
+
+def _praat_display_spans(praat_result):
+    """Untargeted Praat nuclei, usable for charts and playback only.
+
+    In V3 the Praat pass runs without an expected syllable count, so these
+    spans are an independent observation rather than a re-segmentation of the
+    dictionary count. They are safe to draw, but they never carry a verdict:
+    callers keep `syllable_count` unset and verification `unrateable`.
+    """
+    if not isinstance(praat_result, dict):
+        return []
+    spans = ((praat_result.get('observed') or {}).get('syllables')) or []
+    display = []
+    for span in spans:
+        start = span.get('startTime', span.get('start'))
+        end = span.get('endTime', span.get('end'))
+        if not isinstance(start, (int, float)) or not isinstance(end, (int, float)):
+            continue
+        if not (end > start):
+            continue
+        display.append({
+            'startTime': float(start),
+            'endTime': float(end),
+            'duration': float(span.get('duration', end - start)),
+            'confidence': None,
+            'nucleus': None,
+        })
+    return display
+
+
 def _build_v3_degraded_response(praat_result, reason, confidence=0.0):
     """Return contours without presenting a target-guided V2 learner count."""
+    display_spans = _praat_display_spans(praat_result)
     return {
         'analysisVersion': 'pronunciation-analysis-v3',
         'mode': 'active',
@@ -2269,7 +2556,10 @@ def _build_v3_degraded_response(praat_result, reason, confidence=0.0):
         'quality_reason': reason or 'MODEL_INFERENCE_FAILED',
         'degraded': True,
         'observed_phonemes': [],
-        'observed_syllables': [],
+        # Display-only: charts and playback keep working while the recognizer
+        # is unavailable. syllable_count stays None so no count is claimed.
+        'observed_syllables': display_spans,
+        'segmentation_source': 'praat-fallback' if display_spans else 'none',
         'syllable_count': None,
         'comparison': None,
         'pitch': praat_result.get('pitch', {'times': [], 'values': []}),
@@ -2278,10 +2568,237 @@ def _build_v3_degraded_response(praat_result, reason, confidence=0.0):
         'sample_rate': praat_result.get('sampleRate'),
         'capabilities': {
             'graphs': True,
-            'syllable_duration': False,
+            'syllable_duration': bool(display_spans),
             'phoneme_alignment': False,
         },
+        'verification': {
+            'status': 'unrateable',
+            'count': {'expected': None, 'observed': None, 'status': 'unrateable', 'confidence': 0.0, 'reasons': [reason or 'MODEL_INFERENCE_FAILED']},
+            'primary_stress': {'applicable': False, 'expected': None, 'matches_expected': None, 'status': 'unrateable', 'confidence': 0.0, 'pitch_evidence': [], 'reasons': [reason or 'MODEL_INFERENCE_FAILED']},
+            'model_revision': None,
+        },
+        'best_effort': _unavailable_v3_best_effort(),
     }
+
+
+def _derive_request_reference_id(target_word, reference_ipa, expected_syllables):
+    payload = {
+        'word': unicodedata.normalize('NFC', str(target_word or '').strip().lower()),
+        'reference_ipa': unicodedata.normalize('NFC', str(reference_ipa or '').strip()),
+        'expected_syllables': int(expected_syllables or 0),
+    }
+    return hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    ).hexdigest()[:16]
+
+
+def _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected_syllables, *, error_reason=None):
+    """Combine independent count/alignment/acoustic evidence fail-closed."""
+    unavailable = error_reason or None
+    base = {
+        'status': 'unrateable',
+        'count': {'expected': expected_syllables, 'observed': None, 'status': 'unrateable', 'confidence': 0.0, 'reasons': []},
+        'primary_stress': {'applicable': bool(expected_syllables and expected_syllables > 1), 'expected': None, 'matches_expected': None, 'status': 'unrateable', 'confidence': 0.0, 'pitch_evidence': [], 'reasons': []},
+        'model_revision': phoneme_result.get('model_revision') if isinstance(phoneme_result, dict) else None,
+    }
+    if unavailable or not reference_ipa or not phoneme_result or phoneme_result.get('contract_version') != 'recognize-v2':
+        reason = unavailable or ('CONTRACT_MISMATCH' if phoneme_result and phoneme_result.get('contract_version') != 'recognize-v2' else 'MODEL_INFERENCE_FAILED')
+        base['count']['reasons'] = [reason]
+        base['primary_stress']['reasons'] = [reason]
+        return base
+    try:
+        parsed = parse_pronunciation(reference_ipa)
+    except Exception:
+        base['count']['reasons'] = ['REFERENCE_CONFLICT']
+        base['primary_stress']['reasons'] = ['REFERENCE_CONFLICT']
+        return base
+    if parsed.conflicts or parsed.phonological_count != expected_syllables or len(parsed.syllables) != expected_syllables:
+        base['count']['reasons'] = ['REFERENCE_CONFLICT']
+        base['primary_stress']['reasons'] = ['REFERENCE_CONFLICT']
+        return base
+    observed = phoneme_result.get('decoded_syllable_count')
+    base['count']['observed'] = observed
+    if not isinstance(observed, int) or not phoneme_result.get('decoded_is_rateable', True):
+        base['count']['reasons'] = ['INDEPENDENT_COUNT_UNRATEABLE']
+        base['primary_stress']['reasons'] = ['INDEPENDENT_COUNT_UNRATEABLE']
+        return base
+
+    try:
+        from .pronunciation_verifier import (
+            aligned_acoustic_features,
+            count_feature_vector,
+            evaluate_count_model,
+            evaluate_model,
+            evaluate_stress_ranker,
+            load_artifact,
+            stress_feature_vector,
+        )
+    except ImportError:
+        from pronunciation_verifier import (  # type: ignore
+            aligned_acoustic_features,
+            count_feature_vector,
+            evaluate_count_model,
+            evaluate_model,
+            evaluate_stress_ranker,
+            load_artifact,
+            stress_feature_vector,
+        )
+    artifact_path = os.environ.get('PRONUNCIATION_VERIFIER_ARTIFACT') or str(Path(__file__).parent / 'models' / 'pronunciation-verifier-v1.json')
+    try:
+        artifact = load_artifact(artifact_path)
+    except Exception:
+        base['count']['reasons'] = ['VERIFIER_ARTIFACT_UNAVAILABLE']
+        base['primary_stress']['reasons'] = ['VERIFIER_ARTIFACT_UNAVAILABLE']
+        return base
+
+    expected_stress = parsed.primary_stress
+    base['primary_stress']['expected'] = expected_stress
+    acoustic = aligned_acoustic_features(praat_result, phoneme_result)
+    stress_model = artifact.get('stress') or {}
+    stress_disabled = stress_model.get('mode') == 'disabled'
+    if stress_disabled:
+        # Count-only release: stress is never scored, so it is not part of the
+        # formal decision and must not hold an otherwise-verified count back.
+        base['primary_stress'].update({
+            'applicable': False,
+            'status': 'unrateable',
+            'confidence': 0.0,
+            'matches_expected': None,
+            'reasons': ['STRESS_SCORING_DISABLED'],
+        })
+    stress_features = [0.0] * len(stress_model.get('coefficients') or [])
+    stress_evidence_ready = expected_syllables == 1
+    if stress_disabled:
+        stress_evidence_ready = False
+    elif expected_syllables > 1:
+        stress_evidence_ready = (
+            expected_stress is not None
+            and len(acoustic) == expected_syllables
+            and all(float(row.get('voiced_confidence', 0.0)) > 0.0 for row in acoustic)
+        )
+        if stress_evidence_ready:
+            # The expected index chooses which aligned nucleus to compare. Its
+            # numeric position and the word identity are not model features.
+            stress_features = stress_feature_vector(acoustic, expected_stress)
+        else:
+            base['primary_stress']['reasons'] = ['MISSING_STRESS_EVIDENCE']
+
+    count_scored = evaluate_count_model(
+        artifact,
+        count_feature_vector(phoneme_result, expected_syllables),
+    )
+    scored = {'count': count_scored}
+    if stress_model.get('mode') not in ('ranker', 'disabled'):
+        scored['stress'] = evaluate_model(artifact, {
+            'count': count_feature_vector(phoneme_result, expected_syllables),
+            'stress': stress_features,
+        })['stress']
+    count_score = scored['count']
+    base['count'].update({
+        'status': count_score['status'],
+        'confidence': count_score['confidence'],
+        'reasons': [] if count_score['status'] == 'verified' else (
+            ['COUNT_MISMATCH'] if count_score['status'] == 'incorrect' else ['COUNT_UNCERTAIN']
+        ),
+    })
+    praat_count = (praat_result.get('observed') or {}).get('syllableCount') if isinstance(praat_result, dict) else None
+    if isinstance(praat_count, int) and praat_count != observed:
+        base['count'].update({
+            'status': 'unrateable',
+            'confidence': 0.0,
+            'reasons': ['INDEPENDENT_COUNT_DISAGREEMENT'],
+        })
+    base['model_revision'] = artifact.get('artifact_sha256')
+
+    if stress_disabled:
+        pass  # already marked not applicable above
+    elif expected_syllables == 1:
+        base['primary_stress'].update({
+            'applicable': False,
+            'status': 'unrateable',
+            'confidence': 0.0,
+            'reasons': [],
+        })
+    elif stress_evidence_ready and stress_model.get('mode') == 'ranker':
+        stress_score = evaluate_stress_ranker(
+            artifact['stress'],
+            acoustic,
+            expected_index=expected_stress,
+        )
+        base['primary_stress'].update({
+            'status': stress_score['status'],
+            'confidence': stress_score['confidence'],
+            'matches_expected': True if stress_score['status'] == 'verified' else None,
+            'pitch_evidence': [
+                {'index': index, 'f0_median': row['f0_median']}
+                for index, row in enumerate(acoustic)
+                if row.get('f0_median') is not None and row.get('voiced_confidence', 0.0) > 0.0
+            ],
+            'reasons': [] if stress_score['status'] == 'verified' else [stress_score.get('reason') or 'STRESS_UNCERTAIN'],
+        })
+    elif stress_evidence_ready:
+        stress_score = scored['stress']
+        base['primary_stress'].update({
+            'status': stress_score['status'],
+            'confidence': stress_score['confidence'],
+            'matches_expected': True if stress_score['status'] == 'verified' else (
+                False if stress_score['status'] == 'incorrect' else None
+            ),
+            'pitch_evidence': [
+                {'index': index, 'f0_median': row['f0_median']}
+                for index, row in enumerate(acoustic)
+                if row.get('f0_median') is not None and row.get('voiced_confidence', 0.0) > 0.0
+            ],
+            'reasons': [] if stress_score['status'] == 'verified' else (
+                ['STRESS_MISMATCH'] if stress_score['status'] == 'incorrect' else ['STRESS_UNCERTAIN']
+            ),
+        })
+    applicable = [base['count'], base['primary_stress']] if base['primary_stress'].get('applicable', True) else [base['count']]
+    if any(component['status'] == 'incorrect' for component in applicable):
+        base['status'] = 'incorrect'
+    elif all(component['status'] == 'verified' for component in applicable):
+        base['status'] = 'verified'
+    return base
+
+
+def _build_v3_best_effort(praat_result, phoneme_result, reference_ipa, expected_syllables):
+    """Return advisory observations without changing formal verification."""
+    result = {
+        'available': False,
+        'observed_count': None,
+        'expected_stress_appears_strongest': None,
+        'advisory_only': True,
+    }
+    if not isinstance(phoneme_result, dict) or not phoneme_result.get('decoded_is_rateable'):
+        return result
+    observed = phoneme_result.get('decoded_syllable_count')
+    if not isinstance(observed, int):
+        return result
+    result['observed_count'] = observed
+    if not reference_ipa or not isinstance(expected_syllables, int) or expected_syllables <= 1:
+        result['available'] = True
+        return result
+    try:
+        from .pronunciation_verifier import aligned_acoustic_features, evaluate_stress_ranker, load_artifact
+        parsed = parse_pronunciation(reference_ipa)
+        expected_stress = parsed.primary_stress
+        if expected_stress is None:
+            return result
+        acoustic = aligned_acoustic_features(praat_result, phoneme_result)
+        if len(acoustic) != expected_syllables:
+            return result
+        artifact_path = os.environ.get('PRONUNCIATION_VERIFIER_ARTIFACT') or str(Path(__file__).parent / 'models' / 'pronunciation-verifier-v1.json')
+        artifact = load_artifact(artifact_path)
+        if (artifact.get('stress') or {}).get('mode') != 'ranker':
+            # Includes the count-only profile, where no stress claim exists.
+            result['available'] = True
+            return result
+        stress = evaluate_stress_ranker(artifact['stress'], acoustic, expected_index=expected_stress)
+        result['expected_stress_appears_strongest'] = stress.get('strongest_index') == expected_stress if stress.get('strongest_index') is not None else None
+        result['available'] = True
+    except Exception:
+        return result
+    return result
 
 
 @app.route('/analyze/v3', methods=['POST'])
@@ -2294,6 +2811,12 @@ def analyze_v3():
     reference_ipa = request.form.get('reference_ipa')
     expected_syllables = request.form.get('expected_syllables', type=int)
     target_word = request.form.get('target_word')
+    variant_id = request.form.get('variant_id')
+    request_reference_id = variant_id or _derive_request_reference_id(
+        target_word,
+        reference_ipa,
+        expected_syllables,
+    )
 
     mode = _PRONUNCIATION_V3_MODE
 
@@ -2332,17 +2855,46 @@ def analyze_v3():
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
         try:
             praat_future = executor.submit(
-                analyze_audio_v2, tmp_path, native=False,
+                analyze_audio_v2,
+                tmp_path,
+                native=False,
+                reference_ipa=reference_ipa,
+                # Keep Praat untargeted in V3 so its nucleus count is an
+                # independent signal rather than a re-segmentation of the
+                # expected dictionary count.
+                expected_syllable_count=None,
             )
-            phoneme_future = executor.submit(
-                create_phoneme_client().recognize, wav_bytes,
-            )
+            try:
+                parsed_reference = parse_pronunciation(reference_ipa) if reference_ipa else None
+                reference_syllables = [item.get('ipa', '') for item in parsed_reference.syllables] if parsed_reference else []
+            except Exception:
+                parsed_reference = None
+                reference_syllables = []
+            client = create_phoneme_client()
+            recognizer_call = getattr(client, 'recognize_v2', None)
+            if recognizer_call is None:
+                # Compatibility only for old test doubles/legacy deployments;
+                # the result is marked unrateable and can never create V3
+                # verification green state.
+                recognizer_call = getattr(client, 'recognize')
+                phoneme_future = executor.submit(recognizer_call, wav_bytes)
+            else:
+                phoneme_future = executor.submit(
+                    recognizer_call,
+                    wav_bytes,
+                    reference_syllables,
+                    expected_syllables or 0,
+                    variant_id=request_reference_id,
+                )
 
             try:
                 praat_result = praat_future.result(timeout=remaining)
             except Exception as e:
                 print(f'V3 Praat analysis error: {e}')
+                # Keep the 5xx so this stays visible to monitoring, but return
+                # the full unrateable contract instead of a partial body.
                 return jsonify({
+                    **_build_v3_degraded_response({}, 'V3_PRAAT_FAILED'),
                     'error': 'Pronunciation analysis failed',
                     'code': 'V3_PRAAT_FAILED',
                 }), 500
@@ -2362,12 +2914,13 @@ def analyze_v3():
         elapsed = time.time() - start_time
 
         if mode == 'shadow':
-            # Log phoneme results for comparison, but always return v2-adapted
+            # Log phoneme results for comparison, but always return v2-adapted.
+            # These counts drive the recognizer bake-off, so they must read the
+            # recognize-v2 contract fields rather than the legacy v1 shape.
             v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
-            phoneme_syllable_count = (
-                len(phoneme_result.get('syllables', []))
-                if phoneme_result and not phoneme_error else None
-            )
+            phoneme_syllable_count = None
+            if phoneme_result and not phoneme_error:
+                phoneme_syllable_count = _recognizer_syllable_count(phoneme_result)
             disagreement_category = 'unavailable'
             if phoneme_syllable_count is not None:
                 if phoneme_syllable_count == v2_syllable_count:
@@ -2381,13 +2934,12 @@ def analyze_v3():
                 'v2_count': v2_syllable_count,
                 'v3_count': phoneme_syllable_count,
                 'disagreement_category': disagreement_category,
-                'confidence': phoneme_result.get('confidence') if phoneme_result else None,
+                'confidence': _recognizer_confidence(phoneme_result),
                 'latency_seconds': round(elapsed, 4),
-                'quality_reason': (
-                    phoneme_result.get('quality_reason') if phoneme_result else phoneme_error
-                ),
+                'quality_reason': _recognizer_quality_reason(phoneme_result) or phoneme_error,
                 'model_revision': phoneme_result.get('model_revision') if phoneme_result else None,
                 'target_word': target_word,
+                'contract_version': phoneme_result.get('contract_version') if phoneme_result else None,
             }
             print(f'V3 shadow result: {json.dumps(shadow_log, sort_keys=True)}')
             return jsonify(_adapt_v2_to_v3_response(
@@ -2411,21 +2963,116 @@ def analyze_v3():
                 phoneme_result.get('confidence', 0.0),
             ))
 
-        return jsonify(_build_v3_active_response(
+        response = _build_v3_active_response(
             praat_result, phoneme_result,
             reference_ipa=reference_ipa,
             expected_syllables=expected_syllables,
-        ))
+        )
+        response['verification'] = _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected_syllables)
+        response['best_effort'] = _build_v3_best_effort(
+            praat_result, phoneme_result, reference_ipa, expected_syllables,
+        )
+        return jsonify(response)
 
     except Exception as error:
         print(f'V3 analysis error: {error}')
-        return jsonify({
-            'error': 'Pronunciation analysis v3 unavailable',
-            'code': 'V3_ANALYSIS_FAILED',
-        }), 500
+        return jsonify(_build_v3_degraded_response({}, 'V3_ANALYSIS_FAILED'))
     finally:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
+
+
+@app.route('/debug/pronounce-samples', methods=['POST'])
+def save_local_pronounce_sample():
+    """Persist one Pronounce recording and its analysis for local debugging only."""
+    if not _is_local_pronounce_request():
+        return jsonify({
+            'error': 'This debug sample route is available from localhost only.',
+            'code': 'LOCAL_ONLY'
+        }), 403
+
+    audio_file = request.files.get('audio')
+    if not audio_file:
+        return jsonify({'error': 'No audio file provided', 'code': 'AUDIO_REQUIRED'}), 400
+
+    metadata_text = str(request.form.get('metadata') or '').strip()
+    if not metadata_text:
+        return jsonify({'error': 'Missing sample metadata', 'code': 'METADATA_REQUIRED'}), 400
+    try:
+        metadata = json.loads(metadata_text)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Sample metadata must be valid JSON', 'code': 'METADATA_INVALID'}), 400
+    if not isinstance(metadata, dict):
+        return jsonify({'error': 'Sample metadata must be an object', 'code': 'METADATA_INVALID'}), 400
+
+    if metadata.get('source') != 'pronounce-mode-local':
+        return jsonify({'error': 'Only Pronounce local samples may use this route', 'code': 'SOURCE_INVALID'}), 400
+
+    word = str(metadata.get('word') or '').strip()
+    if not word:
+        return jsonify({'error': 'Sample word is required', 'code': 'WORD_REQUIRED'}), 400
+
+    sample_id = str(metadata.get('sampleId') or '').strip().casefold()
+    if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,119}', sample_id):
+        sample_id = _local_sample_id(word)
+
+    audio_bytes = audio_file.read(LOCAL_PRONOUNCE_SAMPLE_MAX_BYTES + 1)
+    if not audio_bytes:
+        return jsonify({'error': 'Audio file is empty', 'code': 'AUDIO_EMPTY'}), 400
+    if len(audio_bytes) > LOCAL_PRONOUNCE_SAMPLE_MAX_BYTES:
+        return jsonify({'error': 'Audio file exceeds the 5 MB local debug limit', 'code': 'AUDIO_TOO_LARGE'}), 400
+    if audio_bytes[:4] != b'RIFF' or audio_bytes[8:12] != b'WAVE':
+        return jsonify({'error': 'Audio must be a PCM WAV file', 'code': 'AUDIO_NOT_WAV'}), 400
+
+    sample_dir = _local_pronounce_sample_dir()
+    audio_path = sample_dir / f'{sample_id}.wav'
+    metadata_path = sample_dir / f'{sample_id}.json'
+    saved_at = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+    sha256 = hashlib.sha256(audio_bytes).hexdigest()
+    saved_metadata = {
+        **metadata,
+        'sampleId': sample_id,
+        'savedAt': saved_at,
+        'audio': {
+            **(metadata.get('audio') if isinstance(metadata.get('audio'), dict) else {}),
+            'format': 'wav',
+            'bytes': len(audio_bytes),
+            'sha256': sha256,
+        },
+    }
+
+    try:
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        audio_tmp = sample_dir / f'.{sample_id}.wav.tmp'
+        metadata_tmp = sample_dir / f'.{sample_id}.json.tmp'
+        audio_tmp.write_bytes(audio_bytes)
+        metadata_tmp.write_text(
+            json.dumps(saved_metadata, ensure_ascii=False, indent=2),
+            encoding='utf-8'
+        )
+        audio_tmp.replace(audio_path)
+        metadata_tmp.replace(metadata_path)
+    except Exception as error:
+        for temporary_path in (locals().get('audio_tmp'), locals().get('metadata_tmp')):
+            try:
+                if temporary_path:
+                    temporary_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+        print(f'Local Pronounce sample save error: {error}')
+        return jsonify({
+            'error': 'Failed to save local Pronounce sample',
+            'code': 'SAVE_FAILED'
+        }), 500
+
+    return jsonify({
+        'success': True,
+        'sampleId': sample_id,
+        'audioPath': _workspace_relative_path(audio_path),
+        'metadataPath': _workspace_relative_path(metadata_path),
+        'bytes': len(audio_bytes),
+        'sha256': sha256,
+    })
 
 
 @app.route('/debug/syllables/<word>', methods=['GET'])
@@ -3155,7 +3802,11 @@ def split_oversized_syllables(syllables, expected_count, pitch, intensity, int_t
     """
     config = AnalysisConfig()
     
-    if not syllables or not expected_count:
+    # If the recognizer already produced the target number of spans, splitting
+    # an oversized span would manufacture an extra candidate that is later
+    # pruned. That creates artificial gaps and discards real syllable audio
+    # (for example, the unvoiced /tri/ interval in the industrial sample).
+    if not syllables or not expected_count or len(syllables) >= expected_count:
         return syllables
     
     # Calculate adaptive max duration

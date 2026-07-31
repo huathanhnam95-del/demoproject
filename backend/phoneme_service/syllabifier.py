@@ -53,7 +53,15 @@ class IndependentSyllabifier:
 
     RHOTIC_VOWELS: set[str] = {
         "ɑɹ", "ɔɹ", "ɛɹ", "ɪɹ", "ʊɹ",
-        "ɝ", "ɚ", "ɔːɹ",
+        "ɝ", "ɚ", "ɔːɹ", "oːɹ",
+    }
+
+    # Wav2Vec2 often emits the diphthong and rhotic tail as separate tokens
+    # (for example ``aɪ`` + ``ɚ`` in *admire*).  They are one vowel nucleus,
+    # not two syllables, so merge these composites before counting nuclei.
+    RHOTIC_DIPHTHONGS: set[str] = {
+        "aɪɚ", "aʊɚ", "eɪɚ", "oʊɚ", "ɔɪɚ",
+        "aɪɹ", "aʊɹ", "eɪɹ", "oʊɹ", "ɔɪɹ",
     }
 
     SYLLABIC_CONSONANTS: set[str] = {
@@ -71,10 +79,16 @@ class IndependentSyllabifier:
     # fmt: on
 
     # All multi-character units eligible for longest-match merging
-    _MULTI_CHAR_NUCLEI: set[str] = DIPHTHONGS | RHOTIC_VOWELS
+    _MULTI_CHAR_NUCLEI: set[str] = DIPHTHONGS | RHOTIC_VOWELS | RHOTIC_DIPHTHONGS
 
     # All symbols that count as a syllable nucleus
-    _ALL_NUCLEI: set[str] = VOWEL_NUCLEI | DIPHTHONGS | RHOTIC_VOWELS | SYLLABIC_CONSONANTS
+    _ALL_NUCLEI: set[str] = (
+        VOWEL_NUCLEI
+        | DIPHTHONGS
+        | RHOTIC_VOWELS
+        | RHOTIC_DIPHTHONGS
+        | SYLLABIC_CONSONANTS
+    )
 
     # ------------------------------------------------------------------
     # Construction

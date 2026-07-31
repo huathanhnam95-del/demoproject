@@ -1,5 +1,7 @@
 import io
+import json
 import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -485,6 +487,9 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v4")
         self.assertEqual(payload["analysisVersion"], "pronunciation-analysis-v2")
         self.assertTrue(payload["deploymentVersion"])
+        self.assertEqual(payload["recognizerContract"], "recognize-v2")
+        self.assertEqual(payload["verifierFeatureSchema"], "features-v1")
+        self.assertIn("verifierRevision", payload)
 
     def test_health_prefers_git_sha_over_cloud_run_revision_name(self):
         with patch.dict(
@@ -552,6 +557,84 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertIn('pronunciationV3Mode', payload)
         self.assertIn(payload['pronunciationV3Mode'], ('off', 'shadow', 'active'))
 
+    def _untrained_artifact_env(self, directory):
+        path = os.path.join(directory, "placeholder.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump({
+                "schema_version": "pronunciation-verifier-v1",
+                "feature_schema_version": "features-v1",
+                "artifact_sha256": "placeholder-untrained",
+            }, handle)
+        return {"PRONUNCIATION_VERIFIER_ARTIFACT": path}
+
+    def test_health_is_degraded_when_active_mode_has_an_unusable_verifier(self):
+        # An active instance holding an untrained artifact cannot score
+        # anything; deployment automation must not see it as healthy.
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(server, '_PRONUNCIATION_V3_MODE', 'active'), \
+                 patch.dict(os.environ, self._untrained_artifact_env(directory)):
+                response = self.client.get("/health")
+        self.assertEqual(response.status_code, 503)
+        payload = response.get_json()
+        self.assertEqual(payload['status'], 'degraded')
+        self.assertEqual(payload['pronunciationV3Mode'], 'active')
+        self.assertNotEqual(payload['verifierStatus'], 'ok')
+        self.assertIn('error', payload)
+
+    def test_health_stays_ok_with_placeholder_when_v3_is_not_active(self):
+        for mode in ('off', 'shadow'):
+            with self.subTest(mode=mode):
+                with tempfile.TemporaryDirectory() as directory:
+                    with patch.object(server, '_PRONUNCIATION_V3_MODE', mode), \
+                         patch.dict(os.environ, self._untrained_artifact_env(directory)):
+                        response = self.client.get("/health")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.get_json()['status'], 'ok')
+
+    def test_health_is_ok_when_active_mode_has_the_shipped_count_only_artifact(self):
+        with patch.object(server, '_PRONUNCIATION_V3_MODE', 'active'):
+            response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload['status'], 'ok')
+        self.assertEqual(payload['verifierStatus'], 'ok')
+
+    def test_shadow_telemetry_reads_recognize_v2_contract_fields(self):
+        recognizer_payload = {
+            'contract_version': 'recognize-v2',
+            'decoded_syllable_count': 3,
+            'decoded_is_rateable': True,
+            'canonical_alignment': {'syllables': [
+                {'confidence': 0.9}, {'confidence': 0.8}, {'confidence': 0.7},
+            ]},
+            'model_revision': 'rev-abc',
+        }
+        # The legacy v1 shape has no decoded_syllable_count and must still work.
+        legacy_payload = {
+            'syllables': [{}, {}, {}],
+            'confidence': 0.77,
+            'quality_reason': 'LOW_PHONEME_CONFIDENCE',
+        }
+        self.assertEqual(server._recognizer_syllable_count(recognizer_payload), 3)
+        self.assertEqual(server._recognizer_syllable_count(legacy_payload), 3)
+        self.assertEqual(server._recognizer_syllable_count(None), None)
+        self.assertAlmostEqual(server._recognizer_confidence(recognizer_payload), 0.8)
+        self.assertAlmostEqual(server._recognizer_confidence(legacy_payload), 0.77)
+        self.assertIsNone(server._recognizer_quality_reason(recognizer_payload))
+        self.assertEqual(server._recognizer_quality_reason(legacy_payload), 'LOW_PHONEME_CONFIDENCE')
+        self.assertEqual(
+            server._recognizer_quality_reason({'decoded_is_rateable': False}),
+            'DECODED_UNRATEABLE',
+        )
+
+    def test_request_reference_id_is_stable_and_reference_specific(self):
+        first = server._derive_request_reference_id(" Actual ", "/ˈæk.tʃu.əl/", 3)
+        normalized = server._derive_request_reference_id("actual", "/ˈæk.tʃu.əl/", 3)
+        different = server._derive_request_reference_id("actual", "/ˈæk.tʃu.əl/", 2)
+        self.assertEqual(first, normalized)
+        self.assertRegex(first, r"^[0-9a-f]{16}$")
+        self.assertNotEqual(first, different)
+
     # -- off mode --
 
     def test_v3_off_mode_returns_v3_shape_with_praat_engine(self):
@@ -583,6 +666,12 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(payload['sample_rate'], 44100)
         self.assertFalse(payload['capabilities']['phoneme_alignment'])
         self.assertTrue(payload['capabilities']['graphs'])
+        self.assertEqual(payload['best_effort'], {
+            'available': False,
+            'observed_count': None,
+            'expected_stress_appears_strongest': None,
+            'advisory_only': True,
+        })
 
     # -- shadow mode --
 
@@ -606,6 +695,8 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(payload['mode'], 'shadow')
         self.assertEqual(payload['engine'], 'praat-v2')
         self.assertFalse(payload['degraded'])
+        self.assertIn('best_effort', payload)
+        self.assertTrue(payload['best_effort']['advisory_only'])
 
     # -- active mode --
 
@@ -641,6 +732,8 @@ class PronunciationV3ApiTest(unittest.TestCase):
             for operation in payload['comparison']['edit_operations']
         ))
         self.assertTrue(payload['capabilities']['phoneme_alignment'])
+        self.assertIn('best_effort', payload)
+        self.assertTrue(payload['best_effort']['advisory_only'])
 
     # -- timeout --
 
@@ -666,6 +759,7 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertFalse(payload['is_rateable'])
         self.assertIsNone(payload['syllable_count'])
         self.assertEqual(payload['quality_reason'], 'TIMEOUT')
+        self.assertFalse(payload['best_effort']['available'])
 
     # -- active mode with unrateable recognition degrades --
 
@@ -689,7 +783,12 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertTrue(payload['degraded'])
         self.assertFalse(payload['is_rateable'])
         self.assertIsNone(payload['syllable_count'])
-        self.assertFalse(payload['capabilities']['syllable_duration'])
+        self.assertFalse(payload['best_effort']['available'])
+        # Praat spans may be exposed for charts and playback, but they are
+        # labelled as a fallback and carry neither a count nor a verdict.
+        self.assertEqual(payload['segmentation_source'], 'praat-fallback')
+        self.assertTrue(payload['capabilities']['syllable_duration'])
+        self.assertEqual(payload['verification']['status'], 'unrateable')
 
     # -- active with phoneme error degrades --
 
@@ -713,6 +812,7 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertFalse(payload['is_rateable'])
         self.assertIsNone(payload['syllable_count'])
         self.assertEqual(payload['quality_reason'], 'MODEL_INFERENCE_FAILED')
+        self.assertFalse(payload['best_effort']['available'])
 
     # -- existing v2 endpoints remain unaffected --
 
@@ -727,12 +827,39 @@ class PronunciationV3ApiTest(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload['analysisVersion'], 'pronunciation-analysis-v2')
 
+    def test_v2_forwards_reference_ipa_for_stress_verification(self):
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)) as analyze:
+            response = self.client.post(
+                "/analyze/v2",
+                data={
+                    "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
+                    "expected_syllables": "3",
+                    "reference_ipa": "/ˈæktʃuəl/",
+                },
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(analyze.call_args.kwargs["reference_ipa"], "/ˈæktʃuəl/")
+
     # -- no audio returns 400 --
 
     def test_v3_no_audio_returns_400(self):
         with patch.object(server, '_PRONUNCIATION_V3_MODE', 'off'):
             response = self.client.post("/analyze/v3", content_type="multipart/form-data")
         self.assertEqual(response.status_code, 400)
+
+    def test_v3_unexpected_failure_still_returns_complete_unrateable_shape(self):
+        with patch.object(server, '_PRONUNCIATION_V3_MODE', 'off'), \
+             patch.object(server, 'analyze_audio_v2', side_effect=RuntimeError('boom')):
+            response = self.client.post(
+                "/analyze/v3",
+                data={"audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav")},
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload['verification']['status'], 'unrateable')
+        self.assertFalse(payload['best_effort']['available'])
 
 
 if __name__ == "__main__":

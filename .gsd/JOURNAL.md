@@ -30,3 +30,36 @@
 
 - Evidence (Vertex Gemini 3.x not usable via SDK in this project): direct `@google-cloud/vertexai` call with `model=gemini-3.1-pro-preview` returned `404 Not Found` for the publisher model.
 
+## 2026-07-30 - Pronounce V3 release implementation
+
+- Restored the comprehensive phoneme-service packaging tests; backend pronunciation regression suite passed `104` tests.
+- Added fail-closed V3 verification: independent CTC/Praat count disagreement abstains, and stress uses a relative acoustic prominence ranker without a guessed wrong-stress location.
+- Added learner retry policy: initial recording plus two re-recordings, then advisory-only best effort; network/microphone errors do not consume attempts.
+- Frontend and Chrome evidence passed:
+  - `node --test tests/pronunciation-analyzer/analysis-pipeline.test.mjs tests/pronunciation-analyzer/praat-api-v2.test.mjs tests/pronunciation-analyzer/reference-ui-contract.test.mjs tests/pronunciation-analyzer/verification-attempt-policy.test.mjs`
+  - `node tests/browser/pronounce-mode-browser-check.js`
+  - `node tests/browser/pronounce-mode-syllable-playback-check.js`
+- Promotion remains blocked by design: `backend/local_server/models/pronunciation-verifier-v1.json` is still an explicit `placeholder-untrained` artifact, and the learner feature flag remains off until fresh ranker feature extraction, model-candidate comparison, and untouched holdout gates are completed.
+
+## 2026-07-31 - Fix localhost Pronounce reference loading
+
+- Root cause evidence: the localhost page was hard-wired to Cloud Run, whose `/health` and `/dictionary/v2/photograph` responses report schema `9` / `pronunciation-reference-v3`; the current frontend validator requires schema `10` / `pronunciation-reference-v4`.
+- Fix: `public/pronunciation-analyzer/config.js` now uses the local HTTPS Flask backend (`https://localhost:8081`) on localhost by default, while retaining Cloud Run for non-local hosts or an explicit override.
+- Before/after Chrome evidence on `https://localhost:8443/practice/speaking/pronounce`: before showed `Invalid pronunciation reference: schema version mismatch` and `IPA Error`; after `/health` and `/dictionary/v2/photograph` returned `200`, the reference error was empty, IPA rendered `/ˈfoʊtəˌɡræf/`, and recording remained enabled.
+- Validation: `npm run test:pronounce:logic` passed; `npm run test:pronounce:browser` passed (mode and syllable playback checks).
+
+## 2026-07-31 - Add localhost-only Pronounce sample capture
+
+- Added a local-only `Save sample locally` control to Pronounce. It appears only for `localhost` / `127.0.0.1`, converts the browser recording to WAV, and preserves the target reference, observed syllable spans, analysis output, and error state.
+- Added loopback-only Flask route `POST /debug/pronounce-samples`. It writes `test-results/pronounce-local-samples/<sampleId>.wav` and matching JSON metadata; production origins are rejected with `LOCAL_ONLY`.
+- Chrome evidence on `https://localhost:8443/practice/speaking/pronounce`: `backend_control_visible=true`, `control_count=1`, status `Saved locally: test-results/pronounce-local-samples/industrial-local-check.wav`, IPA `/ˈfoʊtəˌɡræf/`, and `page_errors=[]`. Screenshot: `C:\Users\Admin\AppData\Local\Temp\codex-pronounce-local-save-20260731.png`.
+- Validation: `npm run test:pronounce:logic` passed; `npm run test:pronounce:browser` passed; `python -m unittest backend.test_local_pronounce_samples` passed (`Ran 2 tests ... OK`); targeted ESLint and Python/JavaScript syntax checks passed.
+
+## 2026-07-31 - Add Pronounce manual syllable review
+
+- Added an explicit Manual review mode to the learner waveform. Each pair of waveform clicks creates an ordered start/end span; Undo, Clear, and a saved-state indicator prevent accidental duplicate submissions. WaveSurfer 7 shadow-root clicks are captured after audio is ready.
+- Removed the verifier A/B control and comparison playback code. Native reference playback remains available in the separate reference player.
+- Manual review saves use the existing authenticated admin corpus endpoint. The upload includes the original WAV, manual spans, automatic spans, review reason, target/reference metadata, and `needsManualReview=true`; anonymous/learner requests fail closed at the admin boundary. Local emulator saves also write `verifiedSpans` to the existing manifest contract.
+- Validation: `npm run test:pronounce:logic` passed; `npm run test:pronounce:browser` passed (including `tests/browser/pronounce-manual-review-browser-check.js`); `node tests/crm/pronunciation-corpus-production-route.test.js` passed; `python -m unittest backend.test_local_pronounce_samples` passed; JavaScript syntax checks passed.
+- Chrome evidence on `https://localhost:8443/practice/speaking/pronounce`: three direct waveform segment pairs were captured and the verifier showed `Saved to cloud: local-chrome-manual-check`; `.sv-btn-compare` was absent. Screenshot: `C:\Users\Admin\AppData\Local\Temp\codex-pronounce-manual-review-20260731.png`.
+

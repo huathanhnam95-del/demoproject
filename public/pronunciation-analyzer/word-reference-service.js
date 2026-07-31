@@ -28,6 +28,26 @@ export class WordReferenceService {
         this.sessionCache = new Map();
     }
 
+    async decorateLearnerIPA(reference) {
+        const phonetics = typeof window !== 'undefined' ? window.Phonetics : null;
+        if (!reference?.variants || !phonetics || typeof phonetics.getIPA !== 'function') {
+            return reference;
+        }
+
+        let learnerDisplayIpa = '';
+        try {
+            learnerDisplayIpa = await phonetics.getIPA(reference.word);
+        } catch (error) {
+            console.warn('[WordReferenceService] Shared learner IPA lookup failed:', error);
+        }
+
+        const variants = learnerDisplayIpa
+            ? reference.variants.map((variant) => ({ ...variant, learnerDisplayIpa }))
+            : reference.variants;
+
+        return { ...reference, variants };
+    }
+
     /**
      * Get complete word reference data with native audio analysis
      * Flow: Session Cache → Firestore → Backend (MW + Praat) → Save → Return
@@ -46,9 +66,10 @@ export class WordReferenceService {
             console.log('🚀 Session cache hit:', normalizedWord);
             const cachedReference = this.sessionCache.get(cacheKey);
             const reference = await this.refreshCachedReference(cachedReference);
-            this.sessionCache.set(cacheKey, reference);
+            const learnerReference = await this.decorateLearnerIPA(reference);
+            this.sessionCache.set(cacheKey, learnerReference);
             return {
-                ...reference,
+                ...learnerReference,
                 fromCache: true,
                 cacheSource: 'session'
             };
@@ -64,13 +85,14 @@ export class WordReferenceService {
                         expectedWord: normalizedWord
                     });
                     const refreshedReference = await this.refreshCachedReference(reference);
+                    const learnerReference = await this.decorateLearnerIPA(refreshedReference);
                     console.log('📚 Firestore v2 hit:', normalizedWord);
-                    this.sessionCache.set(cacheKey, refreshedReference);
+                    this.sessionCache.set(cacheKey, learnerReference);
                     if (refreshedReference !== reference) {
                         this.saveReference(normalizedWord, refreshedReference);
                     }
                     return {
-                        ...refreshedReference,
+                        ...learnerReference,
                         fromCache: true,
                         cacheSource: 'database'
                     };
@@ -92,10 +114,11 @@ export class WordReferenceService {
         }
 
         // 5. Cache in session with the full contract identity.
-        this.sessionCache.set(cacheKey, wordData);
+        const learnerReference = await this.decorateLearnerIPA(wordData);
+        this.sessionCache.set(cacheKey, learnerReference);
 
         return {
-            ...wordData,
+            ...learnerReference,
             fromCache: false,
             cacheSource: 'backend'
         };

@@ -15,7 +15,7 @@ PROJECT_ID = "gen-lang-client-0677756745"
 
 # Models
 MODEL_ID_STUDIO = "gemini-3-pro-image-preview"
-MODEL_ID_VERTEX_GEMINI = "gemini-2.5-flash-lite"
+MODEL_ID_VERTEX_GEMINI = "gemini-3.1-flash-lite"
 MODEL_ID_VERTEX_IMAGEN = "imagen-3.0-generate-001"
 
 # Output

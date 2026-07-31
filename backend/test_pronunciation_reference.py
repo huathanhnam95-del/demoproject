@@ -11,6 +11,7 @@ from backend.local_server.pronunciation_reference import (
     SCHEMA_VERSION,
     build_pronunciation_reference,
     build_pronunciation_variant,
+    parse_pronunciation,
     stable_variant_id,
     validate_reference_invariants,
 )
@@ -108,6 +109,16 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertTrue(
             self.build_fixture_variant(by_word[("tunnel", "noun")])["syllables"][1]
             ["syllabicConsonant"]
+        )
+
+    def test_actual_reference_preserves_three_syllables_and_first_stress(self):
+        parsed = parse_pronunciation("/ˈæk.tʃu.əl/")
+
+        self.assertEqual(parsed.phonological_count, 3)
+        self.assertEqual(parsed.primary_stress, 0)
+        self.assertEqual(
+            [item["stress"] for item in parsed.syllables],
+            ["primary", "unstressed", "unstressed"],
         )
 
     def test_explicit_breaks_can_support_implicit_syllabic_sonorants(self):

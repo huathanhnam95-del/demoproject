@@ -304,8 +304,15 @@ def require_benchmark_evidence(
     corpus: list[dict[str, Any]],
     audio_dir: Path,
     allow_composition_mismatch: bool = False,
-) -> None:
-    """Reject incomplete corpora before loading or selecting a model."""
+) -> list[str]:
+    """Reject incomplete corpora before loading or selecting a model.
+
+    Returns the list of composition requirements that were waived via
+    ``--allow-composition-mismatch``. Callers must record these in the
+    manifest: a waived gate is not the same as a satisfied one, and a
+    printed warning does not survive into the deployment artifact.
+    """
+    waived: list[str] = []
     if not corpus:
         raise BenchmarkEvidenceError("The benchmark corpus is empty.")
     if len(corpus) < 120:
@@ -337,6 +344,7 @@ def require_benchmark_evidence(
         )
         if allow_composition_mismatch:
             print(f"[WARNING] {msg} Proceeding due to --allow-composition-mismatch.")
+            waived.append("category_composition")
         else:
             raise BenchmarkEvidenceError(msg)
 
@@ -348,6 +356,7 @@ def require_benchmark_evidence(
         msg = "Accented-speech evidence must cover at least five deidentified speaker cohorts."
         if allow_composition_mismatch:
             print(f"[WARNING] {msg} Proceeding due to --allow-composition-mismatch.")
+            waived.append("accented_speaker_cohorts")
         else:
             raise BenchmarkEvidenceError(msg)
 
@@ -373,6 +382,8 @@ def require_benchmark_evidence(
             f"Audio is missing for {len(missing_audio)} corpus entries: "
             f"{', '.join(missing_audio[:5])}"
         )
+
+    return waived
 
 
 def _load_wav_for_model(path: Path) -> tuple[Any, int]:
@@ -760,8 +771,10 @@ def write_manifest(
     benchmark_data: dict[str, Any],
     verdict: str,
     quantization: dict[str, str] | None = None,
+    waived_requirements: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build and write the model manifest JSON."""
+    waived = list(waived_requirements or [])
     manifest: dict[str, Any] = {
         "schemaVersion": "1.0.0",
         "selectedEngine": verdict,
@@ -774,7 +787,10 @@ def write_manifest(
             "minNucleusConfidence": quality["minNucleusConfidence"],
         },
         "benchmark": benchmark_data,
-        "evidenceStatus": "verified",
+        # A waived composition gate is not a satisfied one. Record it so the
+        # deployment artifact cannot claim evidence the run did not produce.
+        "evidenceStatus": "composition-waived" if waived else "verified",
+        "waivedRequirements": waived,
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "verdict": verdict,
     }
@@ -926,7 +942,9 @@ def main() -> None:
     corpus = load_corpus_manifest(args.manifest)
     audio_dir = Path(args.audio_dir)
     try:
-        require_benchmark_evidence(corpus, audio_dir, allow_composition_mismatch=args.allow_composition_mismatch)
+        waived_requirements = require_benchmark_evidence(
+            corpus, audio_dir, allow_composition_mismatch=args.allow_composition_mismatch
+        )
 
     except BenchmarkEvidenceError as exc:
         print(f"[FATAL] {exc}", file=sys.stderr)
@@ -1059,8 +1077,11 @@ def main() -> None:
         benchmark_data,
         verdict,
         quantization={"type": "none", "format": "native"} if verdict == "torch" else None,
+        waived_requirements=waived_requirements,
     )
     print(f"  📄 Manifest written to {manifest_output}")
+    if waived_requirements:
+        print(f"  ⚠️  evidenceStatus=composition-waived ({', '.join(waived_requirements)})")
 
     # Raw JSON
     full_data: dict[str, Any] = {

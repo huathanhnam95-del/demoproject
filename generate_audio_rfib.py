@@ -19,7 +19,7 @@ df = pd.read_excel(EXCEL_PATH)
 def generate_voice(text, voice_name, pcm_output_path):
     print(f"Generating audio for '{text[:20]}...' using voice {voice_name}")
     response = client.models.generate_content(
-        model="gemini-2.5-flash-preview-tts",
+        model="gemini-3.1-flash-lite",
         contents=text,
         config=types.GenerateContentConfig(
             response_modalities=["AUDIO"],

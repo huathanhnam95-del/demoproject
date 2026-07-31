@@ -16,7 +16,7 @@ const CHECKPOINT_PATH = path.join(PROJECT_ROOT, 'scripts', 'read-aloud-chunking-
 const VALIDATION_REPORT_PATH = path.join(PROJECT_ROOT, 'scripts', 'read-aloud-chunking-validation.json');
 const DIFF_REPORT_PATH = path.join(PROJECT_ROOT, 'scripts', 'read-aloud-chunking-diff.json');
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-3.1-flash-lite';
 const REQUIRED_HEADERS = ['ID', 'TITLE', 'ANSWER', 'ANSWER FOR COMPARE OR TRANSCRIPT', 'Word count'];
 const FINAL_HEADERS = [...REQUIRED_HEADERS, 'ANSWER CHUNKED'];
 const BATCH_SIZE = 20;

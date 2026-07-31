@@ -14,7 +14,7 @@ load_dotenv()
 API_KEY = "AQ.Ab8RN6LiBU7Uh09wMsJ0wdLshpXFSkf6tD8R9SLwDj1WsfroTg"
 PROJECT_ID = "gen-lang-client-0677756745"
 LOCATION = "us-central1"
-MODEL = "gemini-2.5-flash-preview-tts"
+MODEL = "gemini-3.1-flash-lite"
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\RFIB\RFIB Final ver.xlsx"
 AUDIO_DIR = r"C:\Cursor AI\public\database\RFIB\audio"

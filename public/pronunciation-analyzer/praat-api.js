@@ -11,6 +11,25 @@ export class PraatAPI {
         this._v3SupportPromise = null;
     }
 
+    static ensureVerification(result, reason = 'V3_VERIFICATION_UNAVAILABLE') {
+        if (result?.verification) return result;
+        return {
+            ...result,
+            verification: {
+                status: 'unrateable',
+                count: { expected: null, observed: result?.syllable_count ?? null, status: 'unrateable', confidence: 0, reasons: [reason] },
+                primary_stress: { applicable: false, expected: null, matches_expected: null, status: 'unrateable', confidence: 0, pitch_evidence: [], reasons: [reason] },
+                model_revision: null
+            },
+            best_effort: result?.best_effort || {
+                available: false,
+                observed_count: result?.syllable_count ?? null,
+                expected_stress_appears_strongest: null,
+                advisory_only: true
+            }
+        };
+    }
+
     // detectBackendUrl removed - using config.js source of truth
 
     /**
@@ -39,10 +58,10 @@ export class PraatAPI {
     /**
      * Call the v3 analysis endpoint.
      * @param {Blob} audioBlob
-     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string }} options
+     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string, variantId?: string }} options
      * @returns {Promise<object>} v3 analysis response
      */
-    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables, targetWord } = {}) {
+    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables, targetWord, variantId } = {}) {
         const wavBlob = await this.ensureWav(audioBlob);
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
@@ -54,6 +73,9 @@ export class PraatAPI {
         }
         if (targetWord) {
             formData.append('target_word', String(targetWord));
+        }
+        if (variantId) {
+            formData.append('variant_id', String(variantId));
         }
 
         const response = await fetch(`${this.backendUrl}/analyze/v3`, {
@@ -76,13 +98,39 @@ export class PraatAPI {
             try {
                 const v3Mode = await this.checkV3Support();
                 if (v3Mode === 'active' || v3Mode === 'shadow') {
-                    return this.analyzeV3(audioBlob, {
+                    const result = await this.analyzeV3(audioBlob, {
                         ...options,
                         expectedSyllables: expectedSyllableCount
                     });
+                    return PraatAPI.ensureVerification(result);
                 }
+                return PraatAPI.ensureVerification({
+                    analysisVersion: 'pronunciation-analysis-v3',
+                    mode: v3Mode || 'unavailable',
+                    is_rateable: false,
+                    syllable_count: null,
+                    observed_syllables: [],
+                    best_effort: {
+                        available: false,
+                        observed_count: null,
+                        expected_stress_appears_strongest: null,
+                        advisory_only: true
+                    }
+                }, 'V3_NOT_ACTIVE');
             } catch {
-                // Fall through to v2
+                return PraatAPI.ensureVerification({
+                    analysisVersion: 'pronunciation-analysis-v3',
+                    mode: 'unavailable',
+                    is_rateable: false,
+                    syllable_count: null,
+                    observed_syllables: [],
+                    best_effort: {
+                        available: false,
+                        observed_count: null,
+                        expected_stress_appears_strongest: null,
+                        advisory_only: true
+                    }
+                }, 'V3_VERIFICATION_UNAVAILABLE');
             }
         }
 
@@ -94,6 +142,12 @@ export class PraatAPI {
         if (Number.isInteger(expectedSyllableCount) && expectedSyllableCount > 0) {
             formData.append('expected_syllables', String(expectedSyllableCount));
         }
+        if (options.referenceIpa) {
+            formData.append('reference_ipa', String(options.referenceIpa));
+        }
+        if (options.targetWord) {
+            formData.append('target_word', String(options.targetWord));
+        }
         const response = await fetch(`${this.backendUrl}/analyze/v2`, {
             method: 'POST',
             body: formData
@@ -104,7 +158,7 @@ export class PraatAPI {
             throw new Error(error.error || 'Analysis failed');
         }
 
-        return response.json();
+        return PraatAPI.ensureVerification(await response.json(), 'V2_FALLBACK_UNRATEABLE');
     }
 
     /**

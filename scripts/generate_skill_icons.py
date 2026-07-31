@@ -16,7 +16,7 @@ PROJECT_ID = "gen-lang-client-0677756745"
 
 # Model Selection
 MODEL_ID_STUDIO = "gemini-3-pro-image-preview"  # Layer 1: Nano Banana Pro
-MODEL_ID_VERTEX_FLASH = "gemini-2.5-flash-lite" # Layer 2
+MODEL_ID_VERTEX_FLASH = "gemini-3.1-flash-lite" # Layer 2
 MODEL_ID_VERTEX_IMAGEN = "imagen-4.0-generate-preview-06-06" # Layer 3
 
 # Output & Reference

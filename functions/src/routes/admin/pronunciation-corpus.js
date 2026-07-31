@@ -19,6 +19,38 @@ function fail(message) {
   throw new CorpusValidationError(message);
 }
 
+function normalizeTimingSegments(value, fieldName) {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value)) fail(`${fieldName} must be an array.`);
+  if (value.length > 64) fail(`${fieldName} may contain at most 64 segments.`);
+
+  let previousEnd = -1;
+  return value.map((segment, index) => {
+    if (!segment || typeof segment !== 'object') fail(`${fieldName}[${index}] must be an object.`);
+    const startValue = segment.startTime ?? segment.start;
+    const endValue = segment.endTime ?? segment.end;
+    const startTime = Number(startValue);
+    const endTime = Number(endValue);
+    if (startValue === null || startValue === '' || endValue === null || endValue === ''
+      || !Number.isFinite(startTime) || !Number.isFinite(endTime)) {
+      fail(`${fieldName}[${index}] must contain finite start and end times.`);
+    }
+    if (startTime < 0 || endTime <= startTime || endTime > MAX_AUDIO_SECONDS) {
+      fail(`${fieldName}[${index}] must be an increasing span within the 15 second limit.`);
+    }
+    if (index > 0 && startTime < previousEnd - 0.000001) {
+      fail(`${fieldName} spans must be ordered and non-overlapping.`);
+    }
+    previousEnd = endTime;
+    return {
+      index,
+      startTime: Number(startTime.toFixed(6)),
+      endTime: Number(endTime.toFixed(6)),
+      duration: Number((endTime - startTime).toFixed(6))
+    };
+  });
+}
+
 function validateCorpusMetadata(metadata) {
   if (!metadata || typeof metadata !== 'object') fail('metadata requires an object.');
   const sampleId = String(metadata.sampleId || '').trim();
@@ -29,6 +61,12 @@ function validateCorpusMetadata(metadata) {
   const rerecordReason = needsRerecording
     ? String(metadata.rerecordReason || '').trim().slice(0, 120) || 'verification_failed'
     : null;
+  const needsManualReview = metadata.needsManualReview === true;
+  const reviewReason = needsManualReview
+    ? String(metadata.reviewReason || '').trim().slice(0, 120) || 'model_acoustic_disagreement'
+    : null;
+  const manualSegments = normalizeTimingSegments(metadata.manualSegments, 'manualSegments');
+  const automaticSegments = normalizeTimingSegments(metadata.automaticSegments, 'automaticSegments');
 
   if (!SAMPLE_ID_RE.test(sampleId)) fail('sampleId must match ^[a-z0-9-]+$.');
   if (!targetWord) fail('targetWord must be a non-empty string.');
@@ -53,7 +91,16 @@ function validateCorpusMetadata(metadata) {
     category: metadata.category,
     speakerCohort,
     needsRerecording,
-    rerecordReason
+    rerecordReason,
+    needsManualReview,
+    reviewReason,
+    manualSegments,
+    automaticSegments,
+    labelProvenance: manualSegments?.length ? 'manual' : null,
+    verifiedSpans: manualSegments?.map((segment) => ({
+      start: segment.startTime,
+      end: segment.endTime
+    })) || null
   };
 }
 
@@ -264,6 +311,9 @@ function registerPronunciationCorpusRoutes(router, deps) {
 
       const normalized = validateCorpusMetadata(metadata);
       const audio = validateWavBuffer(req.file.buffer);
+      if (normalized.manualSegments?.some((segment) => segment.endTime > audio.duration + 0.02)) {
+        return sendError(res, 400, 'CORPUS_SAMPLE_ERROR', 'manualSegments must fall within the uploaded audio duration.');
+      }
       const bucket = await deps.getStorageBucket();
       if (!bucket) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage is not initialized.');
 

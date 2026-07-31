@@ -131,6 +131,45 @@ assert.throws(
   }),
   /referenceIpa/
 );
+const manualMetadata = validateCorpusMetadata({
+  sampleId: 'photograph-manual-review-1',
+  targetWord: 'photograph',
+  referenceIpa: '/ˈfoʊ.tə.ɡræf/',
+  expectedObservedCount: 4,
+  targetSyllableCount: 4,
+  category: 'clean',
+  speakerCohort: 'pronounce-manual-review',
+  needsManualReview: true,
+  reviewReason: 'manual_syllable_segmentation',
+  manualSegments: [
+    { startTime: 0.1, endTime: 0.2 },
+    { startTime: 0.22, endTime: 0.35 }
+  ],
+  automaticSegments: [{ startTime: 0.08, endTime: 0.21 }]
+});
+assert.deepStrictEqual(manualMetadata.manualSegments[0], {
+  index: 0,
+  startTime: 0.1,
+  endTime: 0.2,
+  duration: 0.1
+});
+assert.deepStrictEqual(manualMetadata.verifiedSpans, [
+  { start: 0.1, end: 0.2 },
+  { start: 0.22, end: 0.35 }
+]);
+assert.throws(
+  () => validateCorpusMetadata({
+    sampleId: 'photograph-manual-review-overlap',
+    targetWord: 'photograph',
+    referenceIpa: '/ˈfoʊ.tə.ɡræf/',
+    expectedObservedCount: 2,
+    targetSyllableCount: 4,
+    category: 'omission',
+    speakerCohort: 'pronounce-manual-review',
+    manualSegments: [{ startTime: 0.3, endTime: 0.5 }, { startTime: 0.45, endTime: 0.6 }]
+  }),
+  /ordered and non-overlapping/
+);
 
 console.log('production pronunciation corpus route contract passed');
 
@@ -200,12 +239,21 @@ console.log('production pronunciation corpus route contract passed');
       expectedObservedCount: 2,
       targetSyllableCount: 2,
       category: 'clean',
-      speakerCohort: 'l1-vn-01'
+      speakerCohort: 'l1-vn-01',
+      needsManualReview: true,
+      reviewReason: 'manual_syllable_segmentation',
+      manualSegments: [
+        { startTime: 0.1, endTime: 0.4 },
+        { startTime: 0.45, endTime: 0.8 }
+      ],
+      automaticSegments: [{ startTime: 0.08, endTime: 0.42 }]
     }) },
     file: { buffer: makeWavBuffer() }
   }, saveRes);
   assert.strictEqual(saveRes._status, 200);
   assert.strictEqual(records.get('busy-clean-l1-vn-01').storagePath, 'pronunciation-segmentation-corpus/busy-clean-l1-vn-01.wav');
+  assert.equal(records.get('busy-clean-l1-vn-01').manualSegments.length, 2);
+  assert.equal(records.get('busy-clean-l1-vn-01').automaticSegments.length, 1);
   assert.strictEqual(savedFiles.size, 1);
   console.log('production pronunciation corpus upload behavior passed');
 

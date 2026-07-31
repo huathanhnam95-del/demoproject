@@ -1,0 +1,7 @@
+numpy==2.2.6
+scipy==1.15.3
+scikit-learn==1.8.0
+librosa==0.11.0
+soundfile==0.13.1
+joblib==1.5.3
+praat-parselmouth==0.4.7

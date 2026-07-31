@@ -17,7 +17,7 @@ const {
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
-const PRIMARY_MODEL_NAME = process.env.COUNCIL_PRIMARY_MODEL || 'gemini-2.5-flash';
+const PRIMARY_MODEL_NAME = process.env.COUNCIL_PRIMARY_MODEL || 'gemini-3.1-flash-lite';
 const REPAIR_MODEL_NAME = process.env.COUNCIL_REPAIR_MODEL || PRIMARY_MODEL_NAME;
 const MAX_ROLE_ATTEMPTS = Number.parseInt(process.env.COUNCIL_MAX_ROLE_ATTEMPTS || '3', 10) || 3;
 const ALLOW_EXTERNAL_OUT = process.env.COUNCIL_ALLOW_EXTERNAL_OUT === '1';

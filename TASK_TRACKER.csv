@@ -883,3 +883,37 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 499,2026-07-30,Upgrade RFIB explanation UI from wall-of-text to inline per-blank popovers,Done,2026-07-30
 500,2026-07-30,Add Tiktok - Personal acquisition source option and rename FB Personal Account label,Done,2026-07-30
 501,2026-07-30,Deploy release V1.8.43 to Firebase Hosting and Cloud Functions,Done,2026-07-30
+502,2026-07-30,Explain BEL assistant chatbot response token cut-off issue and solutions,Done,2026-07-30
+503,2026-07-30,Explain automatic multi-chat message splitting for BEL assistant,Done,2026-07-30
+504,2026-07-30,Provide step-by-step instructions for Dialogflow CX multi-message splitting,Done,2026-07-30
+505,2026-07-30,Audit BEL assistant connection architecture and provide precise Dialogflow CX configuration instructions,Done,2026-07-30
+506,2026-07-30,Provide exact UI click instructions for Conversational Agents Playbooks UI,Done,2026-07-30
+507,2026-07-30,Provide prompt instructions to auto-detect user language and skip language preference question,Done,2026-07-30
+508,2026-07-30,Locate model token parameters in CX Agent Studio Playbooks UI,Done,2026-07-30
+509,2026-07-30,Provide exact instructions to change output token limit and save in Playbook settings,Done,2026-07-30
+510,2026-07-30,Explain solutions for clearing active chat session and reviewing past chat history,Done,2026-07-30
+511,2026-07-30,Review app services affected by Gemini Enterprise Agent Platform deprecation notice,Done,2026-07-30
+512,2026-07-30,Migrate Gemini models to 3.1 across offline pipelines and scripts,Done,2026-07-30
+513,2026-07-30,Add persistent localStorage and New Chat action button for BEL Assistant in index.html,Done,2026-07-30
+514,2026-07-30,Build RFIB post-pipeline quality audit system with auto-fix and retry,Done,2026-07-30
+515,2026-07-30,Reduce size of BEL Assistant chat trigger widget to 1/3,Done,2026-07-30
+516,2026-07-30,Adjust BEL Assistant chat bubble 2.5x larger and teacher avatar to 70 percent,Done,2026-07-30
+517,2026-07-30,Fix RFIB support panel visibility and audio controls positioning,Done,2026-07-30
+518,2026-07-30,Import Gemini and Codex skills rules and workflows to Claude,Done,2026-07-30
+
+519,2026-07-30,UI review of Speaking and Reading modes - identify weak points and improvements,Done,2026-07-30
+
+520,2026-07-30,Audit pronunciation V3 enhancement work - gap review and functionality verification,Done,2026-07-30
+521,2026-07-30,Unify Reading mode design language into read-mode-base.css and apply official PTE names,Done,2026-07-30
+522,2026-07-31,Reduce BEL Assistant chat bubble and teacher avatar to 50 percent of original size,Done,2026-07-31
+
+521,2026-07-30,Fix pronunciation V3 review findings - google-auth pin health validation recognizer outage retries shadow telemetry,Done,2026-07-30
+522,2026-07-31,Review debug and refactor Reading mode design layer - fix mobile stacking regression and cascade guard,Done,2026-07-31
+
+524,2026-07-31,Pronounce V3 count-only segmentation release - disabled stress mode count-only training and chart/playback flow,Done,2026-07-31
+523,2026-07-31,Fix remaining Reading UI issues - ROP keyboard access WCAG accent contrast card a11y and RFIB action bar,Done,2026-07-31
+525,2026-07-31,Make phoneme benchmark evidence honest - record waived composition gates and surface via readyz,Done,2026-07-31
+526,2026-07-31,Make BEL Assistant chat bubble 2x larger while keeping avatar at 50 percent,Done,2026-07-31
+527,2026-07-31,Verify all app dictionaries use latest IPA enhancement and audit IPA style accuracy,Done,2026-07-31
+524,2026-07-31,Fix ROP touch drag with pointer events and repair stray div breaking Watch mode side-by-side layout,Done,2026-07-31
+528,2026-07-31,Repository cleanup and main branch merge with production deployment,In Progress,

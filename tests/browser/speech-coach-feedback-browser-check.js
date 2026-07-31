@@ -105,7 +105,10 @@ const path = require('path');
       ]
     };
 
-    await raMode.renderConnectedSpeechResults(mockData, { transcriptText: 'Pancreatic cancer is tricky to manage because it spreads easily and early, and the tumors have a unique biological makeup.' });
+    await raMode.renderConnectedSpeechResults(mockData, {
+      transcriptText: 'Pancreatic cancer is tricky to manage because it spreads easily and early, and the tumors have a unique biological makeup.',
+      sessionViewMode: 'advanced'
+    });
 
     const checks = {};
 

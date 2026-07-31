@@ -4,14 +4,16 @@
  * High-accuracy IPA phonetic transcription pipeline for ESL learners.
  * 
  * DATA SOURCE STRATEGY (order matters!):
+ *
+ * 1. PRIMARY: Oxford-American review layer
+ *    - Explicit US entries, aliases, phrases, and weak-form profiles
+ *    - Quarantined learner-facing nonwords never fall through to another source
  * 
- * 1. PRIMARY: Wiktionary API (authoritative dictionary IPA)
- *    - Preferred US IPA, otherwise first IPA listed
- *    - NEVER modify or recompute stress for dictionary IPA
- *    - These are human-verified, accurate transcriptions
+ * 2. SECONDARY: ipa-dict's American English corpus
+ *    - Existing corpus forms are preserved unless the review layer overrides them
  * 
- * 2. SECONDARY FALLBACK: CMU Pronouncing Dictionary (ARPABET → IPA)
- *    - Only used when Wiktionary has no entry
+ * 3. FALLBACK: CMU Pronouncing Dictionary (ARPABET → IPA)
+ *    - Only used when the local ipa-dict corpus has no entry
  *    - Computed IPA, may have inaccuracies with stress/vowels
  *    - Marked internally as approximate
  * 
@@ -25,8 +27,7 @@ const Phonetics = (function () {
     const CONFIG = {
         ipaDictUrl: 'ipa-dict.json',
         cmuDictUrl: 'cmudict.json',
-        // Free Dictionary API - provides IPA from Wiktionary data
-        dictionaryApiBase: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
+        oxfordIpaUrl: 'oxford-american-ipa.json',
         cacheEnabled: true,
         debug: false
     };
@@ -36,10 +37,91 @@ const Phonetics = (function () {
     let ipaDictLoading = null;
     let cmuDict = null;
     let cmuDictLoading = null;
-    // Cache stores { ipa: string, alternatives: string[], source: 'ipa-dict'|'dictionary'|'cmu'|null }
+    let oxfordDict = null;
+    let oxfordDictLoading = null;
+    // Cache stores { ipa: string, alternatives: string[], source: 'oxford-american'|'ipa-dict'|'cmu'|null }
     const ipaCache = new Map();
 
-    // === IPA-DICT (PRIMARY SOURCE) ===
+    async function loadOxfordDict() {
+        if (oxfordDict) return oxfordDict;
+        if (oxfordDictLoading) return oxfordDictLoading;
+
+        oxfordDictLoading = (async () => {
+            try {
+                const response = await fetch(CONFIG.oxfordIpaUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to load Oxford-American IPA overrides: ${response.status}`);
+                }
+                const payload = await response.json();
+                oxfordDict = payload && typeof payload === 'object' ? payload : {};
+                return oxfordDict;
+            } catch (error) {
+                console.error('[Phonetics] Oxford-American IPA overrides load failed:', error);
+                oxfordDict = {};
+                return oxfordDict;
+            }
+        })();
+
+        return oxfordDictLoading;
+    }
+
+    function normalizeLookupKey(word) {
+        return String(word || '')
+            .normalize('NFC')
+            .toLowerCase()
+            .trim()
+            .replace(/[’]/g, "'")
+            .replace(/\s+/g, ' ')
+            .replace(/^[^a-z' -]+|[^a-z' -]+$/g, '');
+    }
+
+    function isValidLookupKey(word) {
+        return /^[a-z][a-z' -]{0,79}$/.test(word);
+    }
+
+    function asIPAArray(value) {
+        const values = Array.isArray(value)
+            ? value
+            : value && typeof value === 'object' && Array.isArray(value.variants)
+                ? value.variants
+                : value && typeof value === 'object' && typeof value.strong === 'string'
+                    ? [value.strong, ...(Array.isArray(value.alternatives) ? value.alternatives : [])]
+                    : typeof value === 'string'
+                        ? [value]
+                        : [];
+        return [...new Set(values.filter((item) => typeof item === 'string' && /^\/.+\/$/.test(item)))];
+    }
+
+    async function lookupOxfordVariants(word) {
+        const dict = await loadOxfordDict();
+        const normalized = normalizeLookupKey(word);
+        if (!isValidLookupKey(normalized)) return [];
+        return asIPAArray(dict.entries?.[normalized]);
+    }
+
+    async function isOxfordQuarantined(word) {
+        const dict = await loadOxfordDict();
+        const normalized = normalizeLookupKey(word);
+        return Array.isArray(dict.quarantine) && dict.quarantine.includes(normalized);
+    }
+
+    async function lookupOxfordFormProfile(word) {
+        const dict = await loadOxfordDict();
+        const normalized = normalizeLookupKey(word);
+        const profile = dict.formProfiles?.[normalized];
+        if (!profile || typeof profile !== 'object') return null;
+        return {
+            strong: typeof profile.strong === 'string' ? profile.strong : '',
+            strongAlternatives: Array.isArray(profile.strongAlternatives)
+                ? profile.strongAlternatives.filter((value) => typeof value === 'string')
+                : [],
+            weak: Array.isArray(profile.weak)
+                ? profile.weak.filter((value) => value && typeof value.ipa === 'string')
+                : []
+        };
+    }
+
+    // === IPA-DICT (SECONDARY SOURCE) ===
 
     /**
      * Load ipa-dict Dictionary (lazy loading)
@@ -74,11 +156,7 @@ const Phonetics = (function () {
      */
     async function lookupIpaDict(word) {
         const dict = await loadIpaDict();
-        const normalized = (word || '')
-            .toLowerCase()
-            .trim()
-            .replace(/[’]/g, "'")
-            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+        const normalized = normalizeLookupKey(word);
 
         if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) return null;
 
@@ -131,11 +209,7 @@ const Phonetics = (function () {
      */
     async function lookupCMUVariants(word) {
         const dict = await loadCMUDict();
-        const normalized = (word || '')
-            .toLowerCase()
-            .trim()
-            .replace(/[’]/g, "'")
-            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+        const normalized = normalizeLookupKey(word);
 
         // Unified Guard: Match strictness (1-30 chars)
         if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) return [];
@@ -156,8 +230,9 @@ const Phonetics = (function () {
     // === FREE DICTIONARY API (LEGACY/UNUSED) ===
 
     /**
-     * Fetch IPA from Free Dictionary API (dictionaryapi.dev)
-     * Suppressed to avoid CORS/network errors
+     * Retained as a no-op compatibility hook. IPA no longer comes from a
+     * network dictionary API; all learner-facing lookups use the shared local
+     * Oxford-American, ipa-dict, and CMU layers above.
      * 
      * @param {string} word 
      * @returns {string|null} IPA transcription or null
@@ -172,7 +247,7 @@ const Phonetics = (function () {
      * Normalize IPA to the student-facing Oxford American display convention:
      * - Repair stressed schwa only when the full U.S. reference shape agrees.
      * - Remove primary stress from monosyllables, including diphthongs.
-     * - Display rhotic vowels as /ər/ and turned-r as /r/.
+     * - Render Oxford length marks, the NURSE vowel /ɜːr/, and turned-r as /r/.
      */
     // ipa-dict occasionally marks weak function-word forms with a primary
     // stress mark. These are lexical/context exceptions, not evidence that
@@ -194,33 +269,56 @@ const Phonetics = (function () {
     // Oxford-style American weak forms for common function words. These are
     // metadata-driven forms: the lexical citation form remains available and
     // the connected-speech selector chooses a weak form only by context.
+    // Weak forms are lexical, so they keep Oxford's short weak vowels (/ə/,
+    // /i/, /u/) rather than the long citation vowels of the strong form.
     const FUNCTION_WORD_FORMS = {
         a: { strong: '/eɪ/', weak: [{ ipa: '/ə/' }] },
         an: { strong: '/æn/', weak: [{ ipa: '/ən/' }] },
         the: {
-            strong: '/ði/',
+            strong: '/ðiː/',
             weak: [
                 { ipa: '/ðə/', condition: { nextSound: 'consonant' } },
                 { ipa: '/ði/', condition: { nextSound: 'vowel' } }
             ]
         },
-        to: { strong: '/tu/', weak: [{ ipa: '/tə/' }] },
+        to: { strong: '/tuː/', weak: [{ ipa: '/tə/' }] },
         of: { strong: '/ʌv/', weak: [{ ipa: '/əv/' }, { ipa: '/ə/' }] },
         and: {
             strong: '/ænd/',
             weak: [{ ipa: '/ən/' }, { ipa: '/ənd/' }, { ipa: '/n/' }, { ipa: '/t/' }, { ipa: '/d/' }]
         },
-        for: { strong: '/fɔr/', weak: [{ ipa: '/fər/' }] },
+        for: { strong: '/fɔːr/', weak: [{ ipa: '/fər/' }] },
         can: { strong: '/kæn/', weak: [{ ipa: '/kən/' }] },
         have: { strong: '/hæv/', weak: [{ ipa: '/həv/' }, { ipa: '/əv/' }, { ipa: '/v/' }] },
         has: { strong: '/hæz/', weak: [{ ipa: '/həz/' }, { ipa: '/əz/' }, { ipa: '/z/' }] },
+        had: { strong: '/hæd/', weak: [{ ipa: '/həd/' }] },
         was: { strong: '/wʌz/', weak: [{ ipa: '/wəz/' }] },
-        were: { strong: '/wər/', weak: [{ ipa: '/wər/' }] },
+        were: { strong: '/wɜːr/', weak: [{ ipa: '/wər/' }] },
         from: {
             strong: '/frʌm/',
-            strongAlternatives: ['/frɑm/'],
+            strongAlternatives: ['/frɑːm/'],
             weak: [{ ipa: '/frəm/' }]
-        }
+        },
+        that: { strong: '/ðæt/', weak: [{ ipa: '/ðət/' }] },
+        some: { strong: '/sʌm/', weak: [{ ipa: '/səm/' }] },
+        as: { strong: '/æz/', weak: [{ ipa: '/əz/' }] },
+        at: { strong: '/æt/', weak: [{ ipa: '/ət/' }] },
+        than: { strong: '/ðæn/', weak: [{ ipa: '/ðən/' }] },
+        but: { strong: '/bʌt/', weak: [{ ipa: '/bət/' }] },
+        or: { strong: '/ɔːr/', weak: [{ ipa: '/ər/' }] },
+        are: { strong: '/ɑːr/', weak: [{ ipa: '/ər/' }] },
+        you: { strong: '/juː/', weak: [{ ipa: '/jə/' }] },
+        your: { strong: '/jɔːr/', weak: [{ ipa: '/jər/' }] },
+        them: { strong: '/ðem/', weak: [{ ipa: '/ðəm/' }] },
+        his: { strong: '/hɪz/', weak: [{ ipa: '/ɪz/' }] },
+        her: { strong: '/hɜːr/', weak: [{ ipa: '/hər/' }] },
+        do: { strong: '/duː/', weak: [{ ipa: '/də/' }] },
+        does: { strong: '/dʌz/', weak: [{ ipa: '/dəz/' }] },
+        must: { strong: '/mʌst/', weak: [{ ipa: '/məst/' }] },
+        should: { strong: '/ʃʊd/', weak: [{ ipa: '/ʃəd/' }] },
+        would: { strong: '/wʊd/', weak: [{ ipa: '/wəd/' }] },
+        could: { strong: '/kʊd/', weak: [{ ipa: '/kəd/' }] },
+        us: { strong: '/ʌs/', weak: [{ ipa: '/əs/' }] }
     };
 
     const IPA_VOWEL_NUCLEI = /(?:eɪ|aɪ|ɔɪ|aʊ|oʊ|ɪr|ɛr|ʊr|[iɪeɛæɑɔoʊuəʌɝɚɜ])/g;
@@ -236,8 +334,14 @@ const Phonetics = (function () {
         return (stripSlashes(value).match(IPA_VOWEL_NUCLEI) || []).length;
     }
 
+    // A stressed schwa directly before /r/ is the NURSE vowel (hurry, curry,
+    // burroughs), not a mis-transcribed STRUT. It is repaired by the Oxford
+    // transform below, never by the /ʌ/ rule.
+    const STRESSED_SCHWA_RE = /ˈ[bcdfghjklmnpqrstvwxyzŋʃʒθðɡrw]*ə(?!r)/;
+    const STRESSED_SCHWA_RE_G = /ˈ[bcdfghjklmnpqrstvwxyzŋʃʒθðɡrw]*?ə(?!r)/g;
+
     function hasStressedSchwa(value) {
-        return /ˈ[bcdfghjklmnpqrstvwxyzŋʃʒθðɡrw]*ə/.test(stripSlashes(value));
+        return STRESSED_SCHWA_RE.test(stripSlashes(value));
     }
 
     function canonicalTokens(value, neutralizeStrut = false) {
@@ -328,8 +432,9 @@ const Phonetics = (function () {
      * Get IPA transcription for a word
      * 
      * Strategy (order matters!):
-     * 1. PRIMARY: ipa-dict (Wiktionary dataset (~126k entries))
-     * 2. FALLBACK: CMU Dictionary (computed/approximate IPA)
+     * 1. PRIMARY: Oxford-American reviewed entries and form profiles
+     * 2. SECONDARY: ipa-dict dataset
+     * 3. FALLBACK: CMU Dictionary (computed/approximate IPA)
      * 
      * @param {string} word - The word to transcribe
      * @returns {Promise<string>} IPA transcription or empty string
@@ -339,14 +444,9 @@ const Phonetics = (function () {
             return '';
         }
 
-        const normalized = (word || '')
-            .toLowerCase()
-            .trim()
-            .replace(/[’]/g, "'")
-            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+        const normalized = normalizeLookupKey(word);
 
-        // Unified Guard: Match strictness (1-30 chars)
-        if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) return '';
+        if (!isValidLookupKey(normalized)) return '';
 
         // Check cache first
         if (CONFIG.cacheEnabled && ipaCache.has(normalized)) {
@@ -359,9 +459,21 @@ const Phonetics = (function () {
         let source = null;
         let referenceIPAs = [];
 
-        // 1. PRIMARY: Try ipa-dict dataset first (~126K Wiktionary entries)
-        const ipaDictResult = await lookupIpaDict(normalized);
-        if (ipaDictResult && ipaDictResult.length > 0) {
+        const quarantined = await isOxfordQuarantined(normalized);
+        const oxfordResult = quarantined ? [] : await lookupOxfordVariants(normalized);
+
+        // 1. PRIMARY: Oxford-American reviewed entries and aliases.
+        if (oxfordResult.length > 0) {
+            ipa = oxfordResult[0];
+            alternatives = oxfordResult.slice(1);
+            source = 'oxford-american';
+        }
+
+        // 2. SECONDARY: ipa-dict dataset.
+        const ipaDictResult = oxfordResult.length > 0 || quarantined
+            ? null
+            : await lookupIpaDict(normalized);
+        if (!ipa && ipaDictResult && ipaDictResult.length > 0) {
             ipa = ipaDictResult[0];
             alternatives = ipaDictResult.slice(1);
             source = 'ipa-dict';
@@ -391,8 +503,8 @@ const Phonetics = (function () {
             }
         }
 
-        // 2. FALLBACK: Try CMU Dictionary (computed/approximate IPA)
-        if (!ipa) {
+        // 3. FALLBACK: Try CMU Dictionary (computed/approximate IPA)
+        if (!ipa && !quarantined) {
             const arpbets = await lookupCMUVariants(normalized);
             if (arpbets.length > 0) {
                 // Convert ARPABET to IPA using the mapping
@@ -455,16 +567,12 @@ const Phonetics = (function () {
      * Useful for debugging or showing approximate markers
      * 
      * @param {string} word - The word to transcribe
-     * @returns {Promise<{ipa: string, alternatives: string[], source: 'ipa-dict'|'wiktionary'|'cmu'|null, isApproximate: boolean}>}
+     * @returns {Promise<{ipa: string, alternatives: string[], source: 'oxford-american'|'ipa-dict'|'cmu'|null, isApproximate: boolean}>}
      */
     async function getIPAWithSource(word) {
-        const normalized = (word || '')
-            .toLowerCase()
-            .trim()
-            .replace(/[’]/g, "'")
-            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+        const normalized = normalizeLookupKey(word);
 
-        if (!/^[a-z][a-z'-]{0,29}$/.test(normalized)) {
+        if (!isValidLookupKey(normalized)) {
             return { ipa: '', alternatives: [], source: null, isApproximate: false };
         }
 
@@ -474,9 +582,20 @@ const Phonetics = (function () {
         const cached = ipaCache.get(normalized);
 
         if (cached && typeof cached === 'object') {
+            const profile = FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized);
+            const explicitFormAlternatives = profile
+                ? [
+                    ...(profile.strongAlternatives || []),
+                    ...(profile.weak || []).map((form) => form.ipa)
+                ]
+                : [];
+            const alternatives = [...new Set([
+                ...(cached.alternatives || []),
+                ...explicitFormAlternatives
+            ])].filter((variant) => variant && variant !== cached.ipa);
             return {
                 ipa: cached.ipa,
-                alternatives: cached.alternatives || [],
+                alternatives,
                 source: cached.source,
                 isApproximate: cached.source === 'cmu'
             };
@@ -497,9 +616,9 @@ const Phonetics = (function () {
      * selected only for connected speech when its condition matches.
      */
     async function getPronunciations(word, context = {}) {
-        const normalized = String(word || '').trim().toLowerCase();
+        const normalized = normalizeLookupKey(word);
         const base = await getIPAWithSource(normalized);
-        const profile = FUNCTION_WORD_FORMS[normalized];
+        const profile = FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized);
         if (!profile) {
             const citation = {
                 id: `${normalized}:citation`,
@@ -551,10 +670,10 @@ const Phonetics = (function () {
     }
 
     /**
-     * Preload IPA Dictionaries (ipa-dict + CMU)
+     * Preload the Oxford-American layer, ipa-dict, and CMU fallback dictionaries.
      */
     async function preload() {
-        await Promise.all([loadIpaDict(), loadCMUDict()]);
+        await Promise.all([loadOxfordDict(), loadIpaDict(), loadCMUDict()]);
     }
 
     /**
@@ -585,17 +704,5 @@ const Phonetics = (function () {
 
         // For debugging
         _lookupIpaDict: lookupIpaDict,
-        _lookupCMU: lookupCMU,
-        _lookupDictionary: lookupDictionary,
-        _cache: ipaCache,
-
-        // Enable debug mode
-        enableDebug: () => { CONFIG.debug = true; },
-        disableDebug: () => { CONFIG.debug = false; }
-    };
-})();
-
-// Expose globally
-if (typeof window !== 'undefined') {
-    window.Phonetics = Phonetics;
-}
+        _lookupOxfordVariants: lookupOxfordVariants,
+  

@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="practice-mode-base.css">
+  <link rel="stylesheet" href="read-mode-base.css">
   <link rel="stylesheet" href="rfib-mode.css">
   <link rel="stylesheet" href="dd-mode.css">
   <link rel="stylesheet" href="rmcma-mode.css">
@@ -1068,9 +1069,9 @@
                 <div class="card-body">
                   <h3>Read Aloud</h3>
                   <p>Read text aloud to check your accuracy.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1102,9 +1103,9 @@
                 <div class="card-body">
                   <h3>Repeat Sentence</h3>
                   <p>Record your voice and verify transcription.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('speak', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('speak', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1126,7 +1127,7 @@
                 <div class="card-body">
                   <h3>Describe Image</h3>
                   <p>Study an image then describe it aloud within 40 seconds.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1160,9 +1161,9 @@
                 <div class="card-body">
                   <h3>Retell Lecture</h3>
                   <p>Watch videos and engage in note-taking.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('notes', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('notes', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1186,7 +1187,7 @@
                 <div class="card-body">
                   <h3>Answer Short Questions</h3>
                   <p>Listen to a short question and answer out loud.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1212,9 +1213,9 @@
                 <div class="card-body">
                   <h3>Summarize Group Discussion</h3>
                   <p>Summarize group conversations with multiple speakers.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link" style="display: none;"
-                    onclick="event.stopPropagation(); window.startTutorial('sgd', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link" style="display: none;"
+                    onclick="event.stopPropagation(); window.startTutorial('sgd', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1237,7 +1238,7 @@
                 <div class="card-body">
                   <h3>Respond To Situation</h3>
                   <p>Listen to a scenario and respond with your opinion.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1259,7 +1260,7 @@
                 <div class="card-body">
                   <h3>Summarize Spoken Text</h3>
                   <p>Listen once and summarize the lecture in 50-70 words.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1284,7 +1285,7 @@
                 <div class="card-body">
                   <h3>Multiple Choice, Multiple Answers</h3>
                   <p>Listen to an audio recording and select all correct answers.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1313,9 +1314,9 @@
                 <div class="card-body">
                   <h3>Fill In the Blanks</h3>
                   <p>Complete sentences with missing words.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('extended', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('extended', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1337,7 +1338,7 @@
                 <div class="card-body">
                   <h3>Highlight Correct Summary</h3>
                   <p>Listen to an audio recording and select the paragraph that best summarizes it.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1362,7 +1363,7 @@
                 <div class="card-body">
                   <h3>Multiple Choice, Single Answer</h3>
                   <p>Listen to an audio recording and select the single correct answer.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1382,7 +1383,7 @@
                 <div class="card-body">
                   <h3>Select Missing Word</h3>
                   <p>Listen to an audio recording and select the correct option that completes it.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1411,7 +1412,7 @@
                 <div class="card-body">
                   <h3>Highlight Incorrect Words</h3>
                   <p>Listen to an audio recording and select the words in the transcript that do not match what is said.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1447,9 +1448,9 @@
                 <div class="card-body">
                   <h3>Dictate</h3>
                   <p>Improve typing speed and spelling accuracy.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('type', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('type', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1482,9 +1483,9 @@
                 <div class="card-body">
                   <h3>Collo-dictate</h3>
                   <p>Listen and type collocations.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link" style="display: none;"
-                    onclick="event.stopPropagation(); window.startTutorial('collo-dictate', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link" style="display: none;"
+                    onclick="event.stopPropagation(); window.startTutorial('collo-dictate', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1513,18 +1514,17 @@
                 <div class="card-body">
                   <h3>Watch</h3>
                   <p>Interactive video-based dictation practice.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('watch', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('watch', true);">What's this?</button>
                 </div>
               </div>
 
 
               <!-- Reading Fill Mode Card -->
               <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Dropdown mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-fill">
+                onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Fill in the Blanks (Dropdown) mode">
+                                <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
                       <rect x="8" y="24" width="12" height="4" rx="2" fill="currentColor" opacity="0.55" />
@@ -1538,19 +1538,18 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Dropdown</h3>
+                  <h3>Fill in the Blanks (Dropdown)</h3>
                   <p>Read passages, fill the blanks, and compare support versions.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('rfib', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rfib', true);">What's this?</button>
                 </div>
               </div>
 
               <!-- Reading Drag & Drop Card -->
               <div id="mode-btn-dd" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('dd')" tabindex="0" role="button" aria-label="Drag & Drop mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-fill">
+                onclick="window.switchToMode('dd')" tabindex="0" role="button" aria-label="Fill in the Blanks (Drag and Drop) mode">
+                                <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
                       <!-- Representing puzzle/drag elements -->
@@ -1566,19 +1565,18 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Drag & Drop</h3>
+                  <h3>Fill in the Blanks (Drag and Drop)</h3>
                   <p>Read passages and drag option blocks into the correct blanks.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('dd', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('dd', true);">What's this?</button>
                 </div>
               </div>
 
               <!-- Reading Multiple Choice Single Answer Card -->
               <div id="mode-btn-rmcsa" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('rmcsa')" tabindex="0" role="button" aria-label="Multiple Choice Single Answer mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-fill">
+                onclick="window.switchToMode('rmcsa')" tabindex="0" role="button" aria-label="Multiple Choice, Single Answer mode">
+                                <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
                       <!-- Passages/Lines representation -->
@@ -1598,19 +1596,18 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Multiple Choice Single Answer</h3>
+                  <h3>Multiple Choice, Single Answer</h3>
                   <p>Read passages and select the single correct option to complete the questions.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('rmcsa', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rmcsa', true);">What's this?</button>
                 </div>
               </div>
 
               <!-- Reading Multiple Choice Multiple Answers Card -->
               <div id="mode-btn-rmcma" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('rmcma')" tabindex="0" role="button" aria-label="Multiple Choice Multiple Answers mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-fill">
+                onclick="window.switchToMode('rmcma')" tabindex="0" role="button" aria-label="Multiple Choice, Multiple Answers mode">
+                                <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
                       <!-- Passages/Lines representation -->
@@ -1631,19 +1628,18 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Multiple Choice Multiple Answers</h3>
+                  <h3>Multiple Choice, Multiple Answers</h3>
                   <p>Read passages and select all correct options to complete the questions.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('rmcma', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rmcma', true);">What's this?</button>
                 </div>
               </div>
 
-              <!-- Reading Re-order Paragraph Card -->
+              <!-- Reading Reorder Paragraph Card -->
               <div id="mode-btn-rop" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('rop')" tabindex="0" role="button" aria-label="Re-order Paragraph mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-fill">
+                onclick="window.switchToMode('rop')" tabindex="0" role="button" aria-label="Reorder Paragraph mode">
+                                <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
                       <!-- Left source list boxes -->
@@ -1662,11 +1658,11 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Re-order Paragraph</h3>
+                  <h3>Reorder Paragraph</h3>
                   <p>Drag and drop paragraphs from the left to target slots on the right to restore the correct sequence.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('rop', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rop', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1699,9 +1695,9 @@
                 <div class="card-body">
                   <h3>Pronounce</h3>
                   <p>Analyze stress patterns and phonemes.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('pronounce', true);">What's this?</a>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('pronounce', true);">What's this?</button>
                 </div>
               </div>
 
@@ -1723,7 +1719,7 @@
                 <div class="card-body">
                   <h3>Write Essay</h3>
                   <p>Write a 200–300 word essay on an academic topic.</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
 
@@ -1745,7 +1741,7 @@
                 <div class="card-body">
                   <h3>Summarize Written Text</h3>
                   <p>Summarize a passage in one sentence (5–75 words).</p>
-                  <button class="card-cta">Practice Now</button>
+                  <span class="card-cta" aria-hidden="true">Practice Now</span>
                 </div>
               </div>
             </div>
@@ -2728,7 +2724,7 @@
         <div class="rfib-header-card">
           <div class="rfib-header-copy">
             <div class="rfib-kicker">Reading comprehension</div>
-            <h2>Reading Fill in the blanks</h2>
+            <h2>Fill in the Blanks (Dropdown)</h2>
             <p>Fill each blank with the best option, then review Beginner or Intermediate support if you need it.</p>
           </div>
           <div class="rfib-audio-card">
@@ -2743,6 +2739,11 @@
                 <button type="button" class="rfib-voice-btn" data-voice="female">Female</button>
               </div>
             </div>
+            <div class="rfib-audio-slider-container" id="rfib-full-audio-slider-container">
+              <span id="rfib-full-audio-current-time" class="rfib-audio-time">0:00</span>
+              <input type="range" id="rfib-full-audio-slider" class="audio-slider" min="0" max="100" value="0" step="0.1" aria-label="Audio progress slider">
+              <span id="rfib-full-audio-total-time" class="rfib-audio-time">0:00</span>
+            </div>
             <audio id="rfib-full-audio-player" preload="none"></audio>
           </div>
         </div>
@@ -2751,13 +2752,13 @@
           <div id="rfib-cloze-view" class="rfib-cloze-view" aria-live="polite"></div>
         </div>
 
-        <div class="rfib-support-toggle-row" role="tablist" aria-label="Support versions">
+        <div class="rfib-support-toggle-row" role="tablist" aria-label="Support versions" style="display: none;">
           <button id="rfib-support-full-btn" class="rfib-support-toggle is-active" type="button">Full</button>
           <button id="rfib-support-beginner-btn" class="rfib-support-toggle" type="button">Beginner</button>
           <button id="rfib-support-intermediate-btn" class="rfib-support-toggle" type="button">Intermediate</button>
         </div>
 
-        <div id="rfib-support-panel" class="rfib-support-panel">
+        <div id="rfib-support-panel" class="rfib-support-panel" style="display: none;">
           <div class="rfib-support-panel-head">
             <span id="rfib-support-variant" class="rfib-support-variant">Full version</span>
             <span id="rfib-support-audio-note" class="rfib-support-audio-note"></span>
@@ -2767,9 +2768,13 @@
           <audio id="rfib-support-audio-player" preload="none"></audio>
         </div>
 
+        <!-- Order and visibility match the other four Reading tasks: primary
+             action first, Retry and Next Question only after submitting. -->
         <div class="rfib-actions">
           <button id="rfib-check-btn" class="modern-btn modern-btn--check" type="button">Check</button>
-          <button id="rfib-retry-btn" class="modern-btn modern-btn--retry" type="button">Retry</button>
+          <button id="rfib-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+          <button id="rfib-next-question-btn" class="modern-btn modern-btn--next" type="button" style="display: none;">Next Question</button>
+          <button id="rfib-easy-reading-btn" class="modern-btn modern-btn--easy-reading" type="button">📖 Easy Reading</button>
         </div>
 
         <div id="rfib-result-box" class="rfib-result-box" aria-live="polite"></div>
@@ -2814,7 +2819,7 @@
         <div class="dd-header-card">
           <div class="dd-header-copy">
             <div class="dd-kicker">Reading comprehension</div>
-            <h2>Drag & Drop (Fill in the blanks)</h2>
+            <h2>Fill in the Blanks (Drag and Drop)</h2>
             <p>Drag the words from the box at the bottom and drop them into the correct blanks in the passage, or click a word then click a blank to place it.</p>
           </div>
         </div>
@@ -2879,6 +2884,14 @@
 
   <!-- RMCMA Main Split Container -->
   <div class="rmcma-container">
+    <div class="rmcma-header-card">
+      <div class="rmcma-header-copy">
+        <div class="rmcma-kicker">Reading comprehension</div>
+        <h2>Multiple Choice, Multiple Answers</h2>
+        <p>Read the passage, then select every option that answers the question. More than one option is correct, and incorrect choices cancel out correct ones.</p>
+      </div>
+    </div>
+
     <div class="rmcma-split-layout">
       <!-- Left Panel: Reading Passage -->
       <div class="rmcma-passage-card">
@@ -2916,7 +2929,7 @@
       </div>
 
       <!-- Score Banner -->
-      <div id="rmcma-result-box" class="rmcma-result-box" style="display: none;">
+      <div id="rmcma-result-box" class="rmcma-result-box" style="display: none;" role="status" aria-live="polite">
         <!-- Correction summary will be shown here -->
       </div>
 
@@ -2971,6 +2984,14 @@
 
   <!-- RMCSA Main Split Container -->
   <div class="rmcsa-container">
+    <div class="rmcsa-header-card">
+      <div class="rmcsa-header-copy">
+        <div class="rmcsa-kicker">Reading comprehension</div>
+        <h2>Multiple Choice, Single Answer</h2>
+        <p>Read the passage, then select the one option that best answers the question.</p>
+      </div>
+    </div>
+
     <div class="rmcsa-split-layout">
       <!-- Left Panel: Reading Passage -->
       <div class="rmcsa-passage-card">
@@ -3008,7 +3029,7 @@
       </div>
 
       <!-- Score Banner -->
-      <div id="rmcsa-result-box" class="rmcsa-result-box" style="display: none;">
+      <div id="rmcsa-result-box" class="rmcsa-result-box" style="display: none;" role="status" aria-live="polite">
         <!-- Correction summary will be shown here -->
       </div>
 
@@ -3089,9 +3110,17 @@
 
   <!-- ROP Main Drag & Drop Container -->
   <div class="rop-container">
-    <div class="rop-instructions">
-      The text boxes in the left panel have been shuffled. Drag and drop them to the right panel or use the arrows in the center column to restore the original paragraph order.
+    <div class="rop-header-card">
+      <div class="rop-header-copy">
+        <div class="rop-kicker">Reading comprehension</div>
+        <h2>Reorder Paragraph</h2>
+        <p>The text boxes have been shuffled. Move them into the target list to restore the original paragraph order — drag them across, or focus a box and use the arrow buttons.</p>
+        <p class="rop-keyboard-hint">Keyboard: arrow keys move between boxes, <kbd>Space</kbd> selects, <kbd>Alt</kbd> + <kbd>←</kbd>/<kbd>→</kbd> moves a box between lists, <kbd>Alt</kbd> + <kbd>↑</kbd>/<kbd>↓</kbd> reorders it.</p>
+      </div>
     </div>
+
+    <!-- Announces moves and reordering to screen readers -->
+    <div id="rop-live-region" class="ra-v7-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <div class="rop-workspace">
       <!-- Left Column: Source Boxes -->
@@ -3106,17 +3135,21 @@
 
       <!-- Center Column: Control Buttons -->
       <div class="rop-controls-column">
-        <button id="rop-btn-move-right" class="rop-arrow-btn" type="button" title="Move to right" disabled>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        <!-- Columns stack below 900px, so "left/right" becomes "up/down".
+             Both glyphs ship; CSS shows whichever matches the layout. -->
+        <button id="rop-btn-move-right" class="rop-arrow-btn" type="button" aria-label="Move to target list" title="Move to target list" disabled>
+          <svg class="rop-arrow-icon--inline" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+          <svg class="rop-arrow-icon--stacked" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 7l-6 6-6-6M18 14l-6 6-6-6"></path></svg>
         </button>
-        <button id="rop-btn-move-left" class="rop-arrow-btn" type="button" title="Move to left" disabled>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        <button id="rop-btn-move-left" class="rop-arrow-btn" type="button" aria-label="Move back to source list" title="Move back to source list" disabled>
+          <svg class="rop-arrow-icon--inline" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+          <svg class="rop-arrow-icon--stacked" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 17l6-6 6 6M6 10l6-6 6 6"></path></svg>
         </button>
-        <button id="rop-btn-move-up" class="rop-arrow-btn" type="button" title="Move up" disabled>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg>
+        <button id="rop-btn-move-up" class="rop-arrow-btn" type="button" aria-label="Move up one position" title="Move up one position" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg>
         </button>
-        <button id="rop-btn-move-down" class="rop-arrow-btn" type="button" title="Move down" disabled>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+        <button id="rop-btn-move-down" class="rop-arrow-btn" type="button" aria-label="Move down one position" title="Move down one position" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
         </button>
       </div>
 
@@ -3159,7 +3192,7 @@
       </div>
 
       <!-- Score Banner -->
-      <div id="rop-result-box" class="rop-result-box" style="display: none;">
+      <div id="rop-result-box" class="rop-result-box" style="display: none;" role="status" aria-live="polite">
         <!-- Correction summary and scores will be shown here -->
       </div>
 
@@ -5157,7 +5190,6 @@
         <div id="ra-history-content-host" class="ra-history-content-host" aria-live="polite"></div>
 
       </div>
-  </div>
 
   </main>
 
@@ -5907,12 +5939,12 @@
     href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
   <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
   <df-messenger project-id="bel-chatbot-493104" agent-id="e12652c0-a4fe-42f0-ac63-27547b7cad18" language-code="vi"
-    max-query-length="-1">
+    max-query-length="-1" storage-option="localStorage">
     <df-messenger-chat-bubble chat-title="BEL-Assistant Teacher" chat-icon="assets/chat/teacher-avatar.png">
     </df-messenger-chat-bubble>
   </df-messenger>
 
-  <!-- Custom Chatbot Trigger Widget -->
+  <!-- Custom Chatbot Trigger & Actions Widget -->
   <div id="bel-chat-trigger" class="bel-chat-trigger"
     onclick="const bubble = document.querySelector('df-messenger-chat-bubble'); if(bubble) { bubble.openChat(); }">
     <div class="bel-chat-speech-bubble">Ask me! 💬</div>
@@ -5947,22 +5979,22 @@
     /* --- Custom Floating Trigger --- */
     .bel-chat-trigger {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 20px;
+      right: 20px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: pointer;
-      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.25));
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .bel-chat-trigger:hover {
-      transform: scale(1.15) translateY(-8px);
+      transform: scale(1.1) translateY(-5px);
     }
 
-    /* Speech bubble - Reduced by 20% */
+    /* Speech bubble - 2x larger */
     .bel-chat-speech-bubble {
       background: #1a73e8;
       color: #fff;
@@ -5992,10 +6024,10 @@
       border-top: 12px solid #1a73e8;
     }
 
-    /* Teacher avatar - larger and cleaner */
+    /* Teacher avatar - Scaled down to 50% (55px x 55px) */
     .bel-chat-avatar {
-      width: 110px;
-      height: 110px;
+      width: 55px;
+      height: 55px;
       object-fit: contain;
       border: none;
       background: transparent !important;
@@ -6012,7 +6044,7 @@
       }
 
       50% {
-        transform: translateY(-10px) scale(1.05);
+        transform: translateY(-6px) scale(1.04);
       }
     }
   </style>

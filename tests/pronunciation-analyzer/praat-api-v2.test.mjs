@@ -100,6 +100,23 @@ describe('PraatAPI v3 integration', () => {
         assert.equal(result.syllable_count, 1);
     });
 
+    it('learner mode fails closed instead of falling back to a green v2 result', async () => {
+        config.features.usePronunciationV3LearnerAnalysis = true;
+        const fetchCalls = [];
+        globalThis.fetch = async (url) => {
+            fetchCalls.push(url);
+            if (url.includes('/health')) {
+                return { ok: true, json: async () => ({ pronunciationV3Mode: 'off' }) };
+            }
+            throw new Error('unexpected v2 call');
+        };
+
+        const result = await api.analyze(new Blob(['audio'], { type: 'audio/wav' }), 3);
+        assert.ok(!fetchCalls.some((url) => url.includes('/analyze/v2')));
+        assert.equal(result.verification.status, 'unrateable');
+        assert.equal(result.verification.count.reasons[0], 'V3_NOT_ACTIVE');
+    });
+
     it('analyze() delegates to v3 when mode is shadow and sends comparison metadata', async () => {
         config.features.usePronunciationV3LearnerAnalysis = true;
         const fetchCalls = [];

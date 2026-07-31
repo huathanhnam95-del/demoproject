@@ -148,6 +148,7 @@
     // practice areas
     elements.sourceList = document.getElementById('rop-source-list');
     elements.targetList = document.getElementById('rop-target-list');
+    elements.liveRegion = document.getElementById('rop-live-region');
 
     // movement buttons
     elements.btnMoveRight = document.getElementById('rop-btn-move-right');
@@ -286,6 +287,10 @@
     // Setup drag & drop on container areas
     setupDragAndDrop(elements.sourceList);
     setupDragAndDrop(elements.targetList);
+
+    // Keyboard operation of both listboxes
+    if (elements.sourceList) elements.sourceList.addEventListener('keydown', handleListKeydown);
+    if (elements.targetList) elements.targetList.addEventListener('keydown', handleListKeydown);
 
     // Cohesion markers hover delegation
     setupCohesionHoverHandlers();
@@ -547,6 +552,13 @@
       }
       card.dataset.originalIndex = item.originalIndex;
 
+      // Real listbox option: the container carries role="listbox", so children
+      // must be options or the ARIA is invalid. Roving tabindex is applied by
+      // refreshRovingTabindex() once the whole list is in the DOM.
+      card.setAttribute('role', 'option');
+      card.setAttribute('aria-selected', state.selectedItemId === item.id ? 'true' : 'false');
+      card.tabIndex = -1;
+
       // Make draggable unless submitted
       if (!state.submitted) {
         card.setAttribute('draggable', 'true');
@@ -554,6 +566,7 @@
         card.addEventListener('dragend', handleDragEnd);
         card.addEventListener('click', () => selectCard(item.id));
       }
+      card.dataset.touchDrag = state.submitted ? 'off' : 'on';
 
       // Strip HTML tags for practice view unless submitted
       const textToDisplay = state.submitted ? item.text : stripHtml(item.text);
@@ -573,7 +586,131 @@
       `;
 
       container.appendChild(card);
+      if (!state.submitted) attachTouchDrag(card);
     });
+
+    refreshRovingTabindex(container);
+  }
+
+  /* ── Keyboard support ────────────────────────────────────────────────────
+     Each list is a listbox; exactly one option in it is tabbable at a time
+     (roving tabindex), and arrow keys move focus between options. Without
+     this the mode could only be operated with a mouse: the arrow buttons stay
+     disabled until something is selected, and nothing was focusable to select.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  function optionsIn(container) {
+    return Array.from(container.querySelectorAll('.rop-item'));
+  }
+
+  // Keep one tabbable option per list: the selected one, else the first.
+  function refreshRovingTabindex(container) {
+    const options = optionsIn(container);
+    if (options.length === 0) return;
+    const preferred = options.find((el) => el.id === state.selectedItemId) || options[0];
+    options.forEach((el) => { el.tabIndex = el === preferred ? 0 : -1; });
+  }
+
+  function refreshAllRovingTabindex() {
+    if (elements.sourceList) refreshRovingTabindex(elements.sourceList);
+    if (elements.targetList) refreshRovingTabindex(elements.targetList);
+  }
+
+  let announceToggle = false;
+  function announce(message) {
+    if (!elements.liveRegion) return;
+    // Set synchronously so the region is readable immediately. Alternating a
+    // trailing space makes consecutive identical messages differ, which is what
+    // forces a screen reader to re-announce them.
+    announceToggle = !announceToggle;
+    elements.liveRegion.textContent = announceToggle ? message : `${message} `;
+  }
+
+  function positionLabel(cardEl) {
+    const inTarget = elements.targetList.contains(cardEl);
+    const list = inTarget ? elements.targetList : elements.sourceList;
+    const options = optionsIn(list);
+    const index = options.indexOf(cardEl);
+    return `${inTarget ? 'Target order' : 'Source paragraphs'}, position ${index + 1} of ${options.length}`;
+  }
+
+  function focusCard(cardEl) {
+    if (!cardEl) return;
+    // Make cardEl the sole tabbable option in ITS list, then let the other list
+    // pick its own. Setting tabIndex after a blanket refresh would leave two
+    // tabbable options whenever cardEl is not the one the refresh preferred.
+    const list = elements.targetList.contains(cardEl) ? elements.targetList : elements.sourceList;
+    const otherList = list === elements.targetList ? elements.sourceList : elements.targetList;
+    optionsIn(list).forEach((el) => { el.tabIndex = el === cardEl ? 0 : -1; });
+    if (otherList) refreshRovingTabindex(otherList);
+    cardEl.focus();
+  }
+
+  function handleListKeydown(event) {
+    if (state.submitted) return;
+
+    const card = event.target.closest('.rop-item');
+    if (!card) return;
+
+    const inTarget = elements.targetList.contains(card);
+    const list = inTarget ? elements.targetList : elements.sourceList;
+    const options = optionsIn(list);
+    const index = options.indexOf(card);
+    const { key, altKey } = event;
+
+    // Alt + arrows act on the focused card directly, so a keyboard user never
+    // has to select first. Plain arrows just move focus.
+    if (altKey) {
+      if (key === 'ArrowRight' || key === 'ArrowLeft') {
+        const movingToTarget = key === 'ArrowRight';
+        if (movingToTarget === inTarget) return; // already in that list
+        event.preventDefault();
+        moveCardBetweenLists(card, movingToTarget);
+        return;
+      }
+      if ((key === 'ArrowUp' || key === 'ArrowDown') && inTarget) {
+        event.preventDefault();
+        shiftCard(card, key === 'ArrowUp' ? -1 : 1);
+        return;
+      }
+      return;
+    }
+
+    switch (key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        if (options.length < 2) return;
+        event.preventDefault();
+        focusCard(options[(index + 1) % options.length]);
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        if (options.length < 2) return;
+        event.preventDefault();
+        focusCard(options[(index - 1 + options.length) % options.length]);
+        break;
+      case 'Home':
+        event.preventDefault();
+        focusCard(options[0]);
+        break;
+      case 'End':
+        event.preventDefault();
+        focusCard(options[options.length - 1]);
+        break;
+      case ' ':
+      case 'Enter':
+        event.preventDefault();
+        selectCard(card.id);
+        card.focus();
+        announce(
+          state.selectedItemId === card.id
+            ? `Selected. ${positionLabel(card)}`
+            : 'Deselected'
+        );
+        break;
+      default:
+        break;
+    }
   }
 
   /* Selection logic */
@@ -591,8 +728,10 @@
     allCards.forEach((card) => {
       const isSelected = card.id === state.selectedItemId;
       card.classList.toggle('is-selected', isSelected);
+      card.setAttribute('aria-selected', isSelected ? 'true' : 'false');
     });
 
+    refreshAllRovingTabindex();
     updateControlButtons();
   }
 
@@ -638,44 +777,67 @@
   }
 
   /* Move cards using button clicks */
+  /* Move one card across lists. Shared by the arrow buttons and Alt+Arrow. */
+  function moveCardBetweenLists(cardEl, toTarget) {
+    if (!cardEl) return;
+    const toContainer = toTarget ? elements.targetList : elements.sourceList;
+    const hadFocus = document.activeElement === cardEl;
+
+    toContainer.appendChild(cardEl);
+
+    // Deselect after moving so selection state is clean
+    if (state.selectedItemId === cardEl.id) {
+      state.selectedItemId = null;
+      cardEl.classList.remove('is-selected');
+      cardEl.setAttribute('aria-selected', 'false');
+    }
+
+    // Sync array lists and refresh buttons
+    syncStateFromDOM();
+    refreshAllRovingTabindex();
+
+    // A moved card must not drop focus, or keyboard users lose their place.
+    if (hadFocus) focusCard(cardEl);
+    announce(`Moved. ${positionLabel(cardEl)}`);
+  }
+
   function moveSelectedCard(fromContainer, toContainer) {
     if (!state.selectedItemId) return;
     const cardEl = fromContainer.querySelector(`#${state.selectedItemId}`);
     if (!cardEl) return;
-
-    // Shift in DOM
-    toContainer.appendChild(cardEl);
-
-    // Deselect after moving so selection state is clean
-    state.selectedItemId = null;
-    cardEl.classList.remove('is-selected');
-
-    // Sync array lists and refresh buttons
-    syncStateFromDOM();
+    moveCardBetweenLists(cardEl, toContainer === elements.targetList);
   }
 
-  /* Shift card order inside Target box using Up/Down buttons */
-  function shiftSelectedCard(direction) {
-    if (!state.selectedItemId) return;
-    const cardEl = elements.targetList.querySelector(`#${state.selectedItemId}`);
-    if (!cardEl) return;
+  /* Shift one card within the Target list. Shared by buttons and Alt+Arrow. */
+  function shiftCard(cardEl, direction) {
+    if (!cardEl || !elements.targetList.contains(cardEl)) return;
 
     const cards = Array.from(elements.targetList.querySelectorAll('.rop-item'));
-    const index = cards.findIndex(c => c.id === state.selectedItemId);
+    const index = cards.indexOf(cardEl);
     if (index === -1) return;
 
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= cards.length) return;
 
-    // Swap elements in DOM
+    const hadFocus = document.activeElement === cardEl;
+
     if (direction === -1) {
       elements.targetList.insertBefore(cardEl, cards[targetIndex]);
     } else {
       elements.targetList.insertBefore(cardEl, cards[targetIndex].nextSibling);
     }
 
-    // Sync states
     syncStateFromDOM();
+    refreshAllRovingTabindex();
+
+    if (hadFocus) focusCard(cardEl);
+    announce(positionLabel(cardEl));
+  }
+
+  /* Shift card order inside Target box using Up/Down buttons */
+  function shiftSelectedCard(direction) {
+    if (!state.selectedItemId) return;
+    shiftCard(elements.targetList.querySelector(`#${state.selectedItemId}`), direction);
   }
 
   /* DOM to State synchronization */
@@ -715,6 +877,147 @@
     const lists = [elements.sourceList, elements.targetList];
     lists.forEach(list => {
       if (list) list.classList.remove('drag-over');
+    });
+  }
+
+  /* ── Touch dragging ──────────────────────────────────────────────────────
+     HTML5 drag-and-drop (draggable + dragstart) never fires on touch devices,
+     so on a phone the drag affordance was purely decorative. Pointer Events do
+     fire, so touch and pen get their own drag here; mouse keeps the native
+     implementation above, which already works.
+
+     The gesture starts on the grip handle only. Giving the whole card
+     touch-action: none would swallow page scrolling, whereas a handle-only
+     gesture leaves the rest of the card scrollable and tappable.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  const touchDrag = {
+    card: null, ghost: null, pointerId: null,
+    offsetX: 0, offsetY: 0, lastX: 0, lastY: 0, rafId: null
+  };
+
+  function isTouchDragging() {
+    return touchDrag.card !== null;
+  }
+
+  function beginTouchDrag(card, event) {
+    const rect = card.getBoundingClientRect();
+    touchDrag.card = card;
+    touchDrag.pointerId = event.pointerId;
+    touchDrag.offsetX = event.clientX - rect.left;
+    touchDrag.offsetY = event.clientY - rect.top;
+
+    // Track on the document, not the handle. Dragging reparents the card
+    // between the two lists, and reparenting drops pointer capture — which
+    // silently killed every pointermove and the final pointerup.
+    document.addEventListener('pointermove', moveTouchDrag, { passive: false });
+    document.addEventListener('pointerup', endTouchDrag);
+    document.addEventListener('pointercancel', endTouchDrag);
+
+    // Ghost follows the finger; the real card stays in the list, dimmed, and is
+    // live-reordered so the drop position is always visible.
+    const ghost = card.cloneNode(true);
+    ghost.classList.add('rop-ghost');
+    ghost.removeAttribute('id');
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.left = `${rect.left}px`;
+    ghost.style.top = `${rect.top}px`;
+    document.body.appendChild(ghost);
+    touchDrag.ghost = ghost;
+
+    card.classList.add('is-dragging');
+
+    touchDrag.lastX = event.clientX;
+    touchDrag.lastY = event.clientY;
+    touchDrag.rafId = window.requestAnimationFrame(autoScrollStep);
+  }
+
+  /* Below 900px the two lists stack, so the drop target is usually off-screen
+     when the drag starts. Without this the gesture is impossible on a phone:
+     the finger cannot reach the other list, and elementFromPoint returns null
+     for any point outside the viewport. Scroll when the finger nears an edge. */
+  const EDGE_ZONE = 88;
+  const EDGE_SPEED = 26;   // px per frame at the very edge (~1500px/s at 60fps)
+
+  function autoScrollStep() {
+    if (!isTouchDragging()) { touchDrag.rafId = null; return; }
+    const y = touchDrag.lastY;
+    const h = window.innerHeight;
+    let dy = 0;
+    if (y < EDGE_ZONE) dy = -EDGE_SPEED * (1 - y / EDGE_ZONE);
+    else if (y > h - EDGE_ZONE) dy = EDGE_SPEED * (1 - (h - y) / EDGE_ZONE);
+    if (dy) {
+      const before = window.scrollY;
+      window.scrollBy(0, dy);
+      // Nothing left to scroll: stop nudging so the drop target stays stable.
+      if (window.scrollY !== before) updateDropTarget(touchDrag.lastX, touchDrag.lastY);
+    }
+    touchDrag.rafId = window.requestAnimationFrame(autoScrollStep);
+  }
+
+  function updateDropTarget(clientX, clientY) {
+    // The ghost has pointer-events: none, so this returns what is underneath.
+    const under = document.elementFromPoint(clientX, clientY);
+    const list = under && under.closest ? under.closest('.rop-list-area') : null;
+    if (!list) return;
+
+    [elements.sourceList, elements.targetList].forEach((el) => {
+      if (el) el.classList.toggle('drag-over', el === list);
+    });
+
+    const after = getDragAfterElement(list, clientY);
+    if (after == null) {
+      list.appendChild(touchDrag.card);
+    } else if (after !== touchDrag.card) {
+      list.insertBefore(touchDrag.card, after);
+    }
+  }
+
+  function moveTouchDrag(event) {
+    if (!isTouchDragging() || event.pointerId !== touchDrag.pointerId) return;
+    event.preventDefault();
+
+    touchDrag.lastX = event.clientX;
+    touchDrag.lastY = event.clientY;
+    touchDrag.ghost.style.left = `${event.clientX - touchDrag.offsetX}px`;
+    touchDrag.ghost.style.top = `${event.clientY - touchDrag.offsetY}px`;
+
+    updateDropTarget(event.clientX, event.clientY);
+  }
+
+  function endTouchDrag(event) {
+    if (!isTouchDragging() || (event && event.pointerId !== touchDrag.pointerId)) return;
+
+    document.removeEventListener('pointermove', moveTouchDrag);
+    document.removeEventListener('pointerup', endTouchDrag);
+    document.removeEventListener('pointercancel', endTouchDrag);
+    if (touchDrag.rafId !== null) {
+      window.cancelAnimationFrame(touchDrag.rafId);
+      touchDrag.rafId = null;
+    }
+
+    const card = touchDrag.card;
+    touchDrag.ghost?.remove();
+    card.classList.remove('is-dragging');
+    [elements.sourceList, elements.targetList].forEach((el) => el && el.classList.remove('drag-over'));
+
+    touchDrag.card = null;
+    touchDrag.ghost = null;
+    touchDrag.pointerId = null;
+
+    syncStateFromDOM();
+    refreshAllRovingTabindex();
+    announce(`Moved. ${positionLabel(card)}`);
+  }
+
+  function attachTouchDrag(card) {
+    const handle = card.querySelector('.rop-item-handle');
+    if (!handle) return;
+    handle.addEventListener('pointerdown', (event) => {
+      // Mouse keeps the native HTML5 path, which already works on desktop.
+      if (state.submitted || event.pointerType === 'mouse' || isTouchDragging()) return;
+      event.preventDefault();
+      beginTouchDrag(card, event);
     });
   }
 

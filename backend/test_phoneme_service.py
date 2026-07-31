@@ -255,6 +255,51 @@ class TestReadyz(unittest.TestCase):
             self.assertIn("not verified", resp.get_json()["reason"])
         backend.load.assert_not_called()
 
+    def test_readyz_accepts_composition_waived_evidence_but_surfaces_it(self):
+        import tempfile
+        import os
+        from backend.phoneme_service.app import create_app
+
+        waived_manifest = dict(MOCK_MANIFEST)
+        waived_manifest["evidenceStatus"] = "composition-waived"
+        waived_manifest["waivedRequirements"] = [
+            "category_composition", "accented_speaker_cohorts",
+        ]
+        tmpdir = tempfile.mkdtemp()
+        manifest_path = os.path.join(tmpdir, "model-manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as fh:
+            json.dump(waived_manifest, fh)
+
+        backend = mock.MagicMock()
+        app = create_app(manifest_path=manifest_path, backend_override=backend)
+        app.config["TESTING"] = True
+        with app.test_client() as client:
+            resp = client.get("/readyz")
+            self.assertEqual(resp.status_code, 200)
+            payload = resp.get_json()
+            self.assertEqual(payload["status"], "ready")
+            # The waiver must be visible without reading container logs.
+            self.assertEqual(payload["evidenceStatus"], "composition-waived")
+            self.assertIn("category_composition", payload["waivedRequirements"])
+
+    def test_readyz_omits_evidence_fields_when_fully_verified(self):
+        import tempfile
+        import os
+        from backend.phoneme_service.app import create_app
+
+        tmpdir = tempfile.mkdtemp()
+        manifest_path = os.path.join(tmpdir, "model-manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as fh:
+            json.dump(dict(MOCK_MANIFEST), fh)
+
+        backend = mock.MagicMock()
+        app = create_app(manifest_path=manifest_path, backend_override=backend)
+        app.config["TESTING"] = True
+        with app.test_client() as client:
+            payload = client.get("/readyz").get_json()
+            self.assertEqual(payload["status"], "ready")
+            self.assertNotIn("evidenceStatus", payload)
+
 
 class TestRecognizeV1(unittest.TestCase):
     """POST /recognize/v1 — inference endpoint."""

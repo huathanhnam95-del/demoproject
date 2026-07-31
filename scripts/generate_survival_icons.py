@@ -60,7 +60,7 @@ NANO_ENDPOINT = _env(
 
 # These are already present in local helper scripts; keep env override first.
 VERTEX_KEY = _env("VERTEX_AI_API_KEY", "GOOGLE_VERTEX_API_KEY", default="AQ.Ab8RN6LiBU7Uh09wMsJ0wdLshpXFSkf6tD8R9SLwDj1WsfroTg")
-VERTEX_GEMINI_MODEL = _env("VERTEX_GEMINI_IMAGE_MODEL", default="gemini-2.5-flash-image")
+VERTEX_GEMINI_MODEL = _env("VERTEX_GEMINI_IMAGE_MODEL", default="gemini-3.1-flash-lite")
 VERTEX_PROJECT_ID = _env("VERTEX_PROJECT_ID", "GOOGLE_CLOUD_PROJECT", default="gen-lang-client-0677756745")
 IMAGEN_MODELS = [
     _env("VERTEX_IMAGEN_MODEL", default="imagen-4.0-generate-preview-06-06"),

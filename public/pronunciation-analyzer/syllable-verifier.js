@@ -20,6 +20,7 @@ class SyllableVerifier {
             height: 100,
             ...options
         };
+        this.manualReviewEnabled = this.options.enableManualReview !== false;
 
         this.wavesurfer = null;
         this.regions = null;
@@ -28,18 +29,16 @@ class SyllableVerifier {
         this.isPlaying = false;
         this.playingRegionId = null;
 
-        // Comparison mode
-        this.comparisonMode = false;
-        this.nativeAudio = null;
-        this.nativeSyllables = [];
+        this.manualReviewActive = false;
+        this.manualSegments = [];
+        this.pendingManualStart = null;
+        this.manualSaveInProgress = false;
+        this.manualReviewSaved = false;
+        this.lastManualInteraction = null;
+        this.manualWaveformClickHandler = null;
+        this.manualWaveformTargets = [];
 
         this.init();
-    }
-
-    hasPlayableTiming(syllable) {
-        return Number.isFinite(syllable?.startTime) &&
-            Number.isFinite(syllable?.endTime) &&
-            syllable.endTime > syllable.startTime;
     }
 
     init() {
@@ -57,6 +56,12 @@ class SyllableVerifier {
                             <option value="0.75">0.75x</option>
                             <option value="0.5">0.5x</option>
                         </select>
+                        ${this.manualReviewEnabled ? `
+                            <button class="sv-btn sv-btn-manual" id="sv-manual-review" type="button"
+                                title="Mark syllable boundaries yourself" aria-pressed="false">
+                                Manual review
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -72,7 +77,21 @@ class SyllableVerifier {
                     <p>Click on any syllable to hear it individually.</p>
                 </div>
                 
-                <div class="sv-comparison-label" id="sv-comparison-label"></div>
+                ${this.manualReviewEnabled ? `
+                    <div class="sv-manual-review-panel" id="sv-manual-review-panel" hidden>
+                        <div class="sv-manual-review-copy">
+                            <strong>Manual segmentation</strong>
+                            <span id="sv-manual-instructions">Click the start and end of each syllable on the waveform.</span>
+                        </div>
+                        <div class="sv-manual-review-actions">
+                            <span id="sv-manual-count" class="sv-manual-count">0 segments</span>
+                            <button class="sv-btn sv-btn-subtle" id="sv-manual-undo" type="button" disabled>Undo</button>
+                            <button class="sv-btn sv-btn-subtle" id="sv-manual-clear" type="button" disabled>Clear</button>
+                            <button class="sv-btn sv-btn-save" id="sv-manual-save" type="button" disabled>Save to cloud</button>
+                        </div>
+                        <div class="sv-manual-status" id="sv-manual-status" role="status" aria-live="polite"></div>
+                    </div>
+                ` : ''}
             </div>
         `;
 
@@ -113,6 +132,7 @@ class SyllableVerifier {
         // Region click handler
         this.regions.on('region-clicked', (region, e) => {
             e.stopPropagation();
+            if (this.manualReviewActive) return;
             this.playSyllable(region.id);
         });
 
@@ -134,8 +154,13 @@ class SyllableVerifier {
     }
 
     bindEvents() {
-        const playAllBtn = document.getElementById('sv-play-all');
-        const speedSelect = document.getElementById('sv-speed-select');
+        const playAllBtn = this.container.querySelector('#sv-play-all');
+        const speedSelect = this.container.querySelector('#sv-speed-select');
+        const manualReviewBtn = this.container.querySelector('#sv-manual-review');
+        const manualUndoBtn = this.container.querySelector('#sv-manual-undo');
+        const manualClearBtn = this.container.querySelector('#sv-manual-clear');
+        const manualSaveBtn = this.container.querySelector('#sv-manual-save');
+        const waveform = this.container.querySelector('#sv-waveform');
 
         if (playAllBtn) {
             playAllBtn.addEventListener('click', () => {
@@ -144,8 +169,256 @@ class SyllableVerifier {
             });
         }
 
-        // Store speed selector reference
         this.speedSelect = speedSelect;
+        manualReviewBtn?.addEventListener('click', () => {
+            this.setManualReviewActive(!this.manualReviewActive);
+        });
+        manualUndoBtn?.addEventListener('click', () => this.undoManualSegment());
+        manualClearBtn?.addEventListener('click', () => this.clearManualSegments());
+        manualSaveBtn?.addEventListener('click', () => this.saveManualReview());
+
+        // Capture clicks before a WaveSurfer region consumes them. This keeps
+        // the boundary tool tied to the actual waveform pixels, including the
+        // colored automatic regions drawn over the canvas.
+        if (waveform) {
+            this.manualWaveformClickHandler = (event) => {
+                if (!this.manualReviewActive) return;
+                event.preventDefault();
+                event.stopPropagation();
+                this.handleManualInteraction(this.getTimeFromPointerEvent(event));
+            };
+            this.bindManualWaveformClicks(waveform);
+        }
+    }
+
+    bindManualWaveformClicks(waveform) {
+        this.manualWaveformTargets.forEach((target) => {
+            target.removeEventListener('click', this.manualWaveformClickHandler, true);
+        });
+        const targets = [waveform];
+        // WaveSurfer 7 renders its canvas inside a shadow root. Events from
+        // that root are not guaranteed to cross back to #sv-waveform, so bind
+        // at both levels while keeping one handler/deduplication guard.
+        waveform.querySelectorAll('*').forEach((node) => {
+            if (node.shadowRoot) targets.push(node.shadowRoot);
+        });
+        this.manualWaveformTargets = [...new Set(targets)];
+        this.manualWaveformTargets.forEach((target) => {
+            target.addEventListener('click', this.manualWaveformClickHandler, true);
+        });
+    }
+
+    setManualReviewActive(active) {
+        this.manualReviewActive = Boolean(active);
+        if (!this.manualReviewActive) {
+            this.pendingManualStart = null;
+            this.removeManualPendingMarker();
+        }
+
+        const button = this.container.querySelector('#sv-manual-review');
+        const waveform = this.container.querySelector('#sv-waveform');
+        const panel = this.container.querySelector('#sv-manual-review-panel');
+        if (button) {
+            button.classList.toggle('is-active', this.manualReviewActive);
+            button.setAttribute('aria-pressed', String(this.manualReviewActive));
+            button.textContent = this.manualReviewActive ? 'Exit manual review' : 'Manual review';
+        }
+        if (waveform) waveform.classList.toggle('sv-manual-active', this.manualReviewActive);
+        if (panel) panel.hidden = !this.manualReviewActive;
+        if (this.manualReviewActive) this.stop();
+        this.updateManualReviewUi();
+    }
+
+    getTimeFromPointerEvent(event) {
+        const waveform = this.container.querySelector('#sv-waveform');
+        const duration = Number(this.wavesurfer?.getDuration?.() || 0);
+        if (!waveform || !duration || !Number.isFinite(event?.clientX)) return null;
+        const rect = waveform.getBoundingClientRect();
+        if (!rect.width) return null;
+        const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+        return ratio * duration;
+    }
+
+    handleManualInteraction(rawTime) {
+        if (!this.manualReviewActive || !this.wavesurfer) return false;
+        const duration = Number(this.wavesurfer.getDuration?.() || 0);
+        const time = Number(rawTime);
+        if (!Number.isFinite(time) || !Number.isFinite(duration) || duration <= 0) return false;
+
+        const clampedTime = Math.min(duration, Math.max(0, time));
+        const now = Date.now();
+        if (this.lastManualInteraction && now - this.lastManualInteraction.at < 60
+            && Math.abs(this.lastManualInteraction.time - clampedTime) < 0.002) {
+            return false;
+        }
+        this.lastManualInteraction = { at: now, time: clampedTime };
+
+        if (this.pendingManualStart === null) {
+            const lastSegment = this.manualSegments[this.manualSegments.length - 1];
+            if (lastSegment && clampedTime < lastSegment.endTime) {
+                this.setManualStatus('Choose the next start point after the previous segment.', 'error');
+                return false;
+            }
+            this.pendingManualStart = clampedTime;
+            this.renderManualPendingMarker();
+            this.updateManualReviewUi();
+            return true;
+        }
+
+        const startTime = Math.min(this.pendingManualStart, clampedTime);
+        const endTime = Math.max(this.pendingManualStart, clampedTime);
+        if (endTime - startTime < 0.01) {
+            this.setManualStatus('The two points are too close together. Choose a wider syllable span.', 'error');
+            return false;
+        }
+
+        this.manualSegments.push({
+            index: this.manualSegments.length,
+            startTime,
+            endTime,
+            duration: endTime - startTime,
+            source: 'manual-review'
+        });
+        this.pendingManualStart = null;
+        this.manualReviewSaved = false;
+        this.removeManualPendingMarker();
+        this.createManualRegions();
+        this.updateManualReviewUi();
+        this.notifyManualSegmentsChanged();
+        return true;
+    }
+
+    renderManualPendingMarker() {
+        if (!this.regions || this.pendingManualStart === null) return;
+        this.removeManualPendingMarker();
+        const duration = Number(this.wavesurfer?.getDuration?.() || 0);
+        const end = Math.min(duration, this.pendingManualStart + Math.max(0.01, duration / 500));
+        try {
+            this.regions.addRegion({
+                id: 'manual-pending',
+                start: this.pendingManualStart,
+                end,
+                color: 'rgba(239, 68, 68, 0.85)',
+                drag: false,
+                resize: false
+            });
+        } catch (error) {
+            console.warn('SyllableVerifier: Failed to draw pending manual boundary', error);
+        }
+    }
+
+    removeManualPendingMarker() {
+        const pending = this.regions?.getRegions?.().find((region) => region.id === 'manual-pending');
+        pending?.remove?.();
+    }
+
+    createManualRegions() {
+        if (!this.regions) return;
+        this.regions.getRegions?.()
+            .filter((region) => region.id.startsWith('manual-syllable-'))
+            .forEach((region) => region.remove?.());
+
+        const colors = [
+            'rgba(239, 68, 68, 0.42)',
+            'rgba(234, 88, 12, 0.42)',
+            'rgba(220, 38, 127, 0.42)',
+            'rgba(124, 58, 237, 0.42)'
+        ];
+        this.manualSegments.forEach((segment, index) => {
+            try {
+                this.regions.addRegion({
+                    id: `manual-syllable-${index}`,
+                    start: segment.startTime,
+                    end: segment.endTime,
+                    color: colors[index % colors.length],
+                    drag: false,
+                    resize: false
+                });
+            } catch (error) {
+                console.warn(`SyllableVerifier: Failed to draw manual segment ${index}`, error);
+            }
+        });
+    }
+
+    undoManualSegment() {
+        if (!this.manualSegments.length) return;
+        this.manualSegments.pop();
+        this.manualReviewSaved = false;
+        this.createManualRegions();
+        this.setManualStatus('Last manual segment removed.', 'idle');
+        this.updateManualReviewUi();
+        this.notifyManualSegmentsChanged();
+    }
+
+    clearManualSegments() {
+        this.manualSegments = [];
+        this.pendingManualStart = null;
+        this.manualReviewSaved = false;
+        this.removeManualPendingMarker();
+        this.createManualRegions();
+        this.setManualStatus('Manual segments cleared.', 'idle');
+        this.updateManualReviewUi();
+        this.notifyManualSegmentsChanged();
+    }
+
+    updateManualReviewUi() {
+        const count = this.manualSegments.length;
+        const countEl = this.container.querySelector('#sv-manual-count');
+        const instructions = this.container.querySelector('#sv-manual-instructions');
+        const undo = this.container.querySelector('#sv-manual-undo');
+        const clear = this.container.querySelector('#sv-manual-clear');
+        const save = this.container.querySelector('#sv-manual-save');
+        if (countEl) countEl.textContent = `${count} segment${count === 1 ? '' : 's'}`;
+        if (instructions) {
+            instructions.textContent = this.pendingManualStart === null
+                ? 'Click the start and end of each syllable on the waveform.'
+                : 'Now click the end of this syllable.';
+        }
+        if (undo) undo.disabled = count === 0 || this.manualSaveInProgress;
+        if (clear) clear.disabled = count === 0 || this.manualSaveInProgress;
+        if (save) {
+            save.disabled = count === 0 || this.manualSaveInProgress || this.manualReviewSaved;
+            save.textContent = this.manualReviewSaved ? 'Saved' : 'Save to cloud';
+        }
+    }
+
+    setManualStatus(message, state = 'idle') {
+        const status = this.container.querySelector('#sv-manual-status');
+        if (!status) return;
+        status.textContent = message || '';
+        status.dataset.state = state;
+    }
+
+    notifyManualSegmentsChanged() {
+        if (typeof this.options.onManualSegmentsChange === 'function') {
+            this.options.onManualSegmentsChange(this.manualSegments.map((segment) => ({ ...segment })));
+        }
+    }
+
+    async saveManualReview() {
+        if (this.manualSaveInProgress || !this.manualSegments.length) return;
+        if (typeof this.options.onManualSave !== 'function') {
+            this.setManualStatus('Cloud save is not available in this session.', 'error');
+            return;
+        }
+
+        this.manualSaveInProgress = true;
+        this.updateManualReviewUi();
+        this.setManualStatus('Saving the recording and manual boundaries…', 'saving');
+        try {
+            const result = await this.options.onManualSave(
+                this.manualSegments.map((segment) => ({ ...segment }))
+            );
+            const sampleId = result?.sampleId || result?.sample?.id || 'manual review';
+            this.manualReviewSaved = true;
+            const destination = result?.destination === 'local' ? 'Saved locally for review' : 'Saved to cloud';
+            this.setManualStatus(`${destination}: ${sampleId}`, 'saved');
+        } catch (error) {
+            this.setManualStatus(error?.message || 'Cloud save failed. Please try again.', 'error');
+        } finally {
+            this.manualSaveInProgress = false;
+            this.updateManualReviewUi();
+        }
     }
 
     /**
@@ -158,6 +431,12 @@ class SyllableVerifier {
         if (!this.wavesurfer) return;
 
         this.syllables = syllables;
+        this.manualSegments = [];
+        this.pendingManualStart = null;
+        this.manualReviewSaved = false;
+        this.removeManualPendingMarker();
+        this.setManualStatus('', 'idle');
+        this.updateManualReviewUi();
         const fallbackLabels = syllables.map((_, i) => {
             const ordinal = this.getOrdinal(i + 1);
             return `Play ${ordinal} Syl`;
@@ -206,6 +485,11 @@ class SyllableVerifier {
 
             // Wait for ready event (or successful load)
             await readyPromise;
+
+            const waveform = this.container.querySelector('#sv-waveform');
+            if (waveform && this.manualWaveformClickHandler) {
+                this.bindManualWaveformClicks(waveform);
+            }
 
             // Create regions for each syllable
             this.createSyllableRegions();
@@ -469,9 +753,6 @@ class SyllableVerifier {
         if (this.wavesurfer) {
             this.wavesurfer.stop();
         }
-        if (this.nativeAudio) {
-            this.nativeAudio.pause();
-        }
         this.isPlaying = false;
         this.clearHighlight();
         this.updatePlayButton();
@@ -481,139 +762,6 @@ class SyllableVerifier {
         const btn = document.getElementById('sv-play-all');
         if (btn) {
             btn.textContent = this.isPlaying ? '⏸️ Pause' : '▶️ Play';
-        }
-    }
-
-    // ============================================
-    // A/B COMPARISON MODE
-    // ============================================
-
-    /**
-     * Load both native and user audio for comparison
-     */
-    async loadComparison(userAudio, userSyllables, nativeAudioUrl, nativeSyllables, labels) {
-        this.nativeSyllables = Array.isArray(nativeSyllables)
-            ? nativeSyllables.filter((syllable) => this.hasPlayableTiming(syllable))
-            : [];
-        this.comparisonMode = Boolean(nativeAudioUrl && this.nativeSyllables.length > 0);
-
-        // Load user audio first
-        await this.loadAudio(userAudio, userSyllables, labels);
-
-        // Load native audio into separate element
-        if (this.comparisonMode) {
-            this.nativeAudio = new Audio(nativeAudioUrl);
-            await new Promise((resolve, reject) => {
-                this.nativeAudio.addEventListener('canplaythrough', resolve, { once: true });
-                this.nativeAudio.addEventListener('error', reject, { once: true });
-                this.nativeAudio.load();
-            });
-
-            // Add compare button
-            this.addComparisonControls();
-        }
-    }
-
-    addComparisonControls() {
-        const controls = this.container.querySelector('.sv-controls');
-        if (!controls) return;
-
-        // Check if button already exists
-        if (controls.querySelector('.sv-btn-compare')) return;
-
-        const compareBtn = document.createElement('button');
-        compareBtn.className = 'sv-btn sv-btn-compare';
-        compareBtn.innerHTML = '🔄 A/B';
-        compareBtn.title = 'Compare native vs your pronunciation';
-        compareBtn.addEventListener('click', () => this.playComparison());
-
-        controls.appendChild(compareBtn);
-    }
-
-    /**
-     * Play native and user syllables alternating for comparison
-     */
-    async playComparison() {
-        this.stop();
-        this.isPlaying = true;
-
-        const minSyllables = Math.min(
-            this.syllables.length,
-            this.nativeSyllables.length
-        );
-
-        for (let i = 0; i < minSyllables; i++) {
-            if (!this.isPlaying) break;
-
-            // Show native label
-            this.showComparisonLabel(i, 'native');
-
-            // Play native syllable
-            await this.playNativeSyllable(i);
-
-            await this.sleep(200);
-
-            // Show user label
-            this.showComparisonLabel(i, 'user');
-
-            // Play user syllable
-            this.highlightSyllable(`syllable-${i}`);
-            const region = this.regions?.getRegions().find(r => r.id === `syllable-${i}`);
-            if (region) {
-                await this.playRegionAsync(region);
-            }
-
-            await this.sleep(400);
-
-            this.clearHighlight();
-            this.clearComparisonLabel();
-        }
-
-        this.isPlaying = false;
-        this.updatePlayButton();
-    }
-
-    async playNativeSyllable(index) {
-        if (!this.nativeAudio || !this.nativeSyllables[index]) return;
-
-        const syl = this.nativeSyllables[index];
-        if (!this.hasPlayableTiming(syl)) {
-            return;
-        }
-
-        return new Promise(resolve => {
-            try {
-                this.nativeAudio.currentTime = syl.startTime;
-                this.nativeAudio.play();
-            } catch (_error) {
-                resolve();
-                return;
-            }
-
-            const duration = (syl.endTime - syl.startTime) * 1000;
-            setTimeout(() => {
-                this.nativeAudio.pause();
-                resolve();
-            }, duration);
-        });
-    }
-
-    showComparisonLabel(syllableIndex, type) {
-        const label = document.getElementById('sv-comparison-label');
-        if (!label) return;
-
-        label.innerHTML = type === 'native'
-            ? `🟢 Native: Syllable ${syllableIndex + 1}`
-            : `🔵 Yours: Syllable ${syllableIndex + 1}`;
-
-        label.className = `sv-comparison-label sv-${type}`;
-    }
-
-    clearComparisonLabel() {
-        const label = document.getElementById('sv-comparison-label');
-        if (label) {
-            label.innerHTML = '';
-            label.className = 'sv-comparison-label';
         }
     }
 
@@ -664,10 +812,6 @@ class SyllableVerifier {
         if (this.wavesurfer) {
             this.wavesurfer.destroy();
             this.wavesurfer = null;
-        }
-        if (this.nativeAudio) {
-            this.nativeAudio.pause();
-            this.nativeAudio = null;
         }
         if (this.container) {
             this.container.innerHTML = '';

@@ -19,6 +19,7 @@ import logging
 import os
 import threading
 import time
+import unicodedata
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -35,6 +36,7 @@ from backend.phoneme_service.syllabifier import (
     REASON_RECOGNIZER_BUSY,
     IndependentSyllabifier,
 )
+from backend.phoneme_service.stress_alignment import align_reference_syllables, ctc_hypothesis_features, tokenize_ipa
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -110,7 +112,19 @@ def create_app(
                 manifest = json.load(fh)
             _state["manifest"] = manifest
 
-            if manifest.get("evidenceStatus") != "verified":
+            evidence_status = manifest.get("evidenceStatus")
+            if evidence_status == "composition-waived":
+                # The benchmark ran, but the corpus did not meet its
+                # composition requirements. Accepted so a segmentation-only
+                # release can deploy, and surfaced loudly so the accuracy
+                # figure is never mistaken for fully gated evidence.
+                waived = manifest.get("waivedRequirements") or []
+                logger.warning(
+                    "Model benchmark evidence is composition-waived (%s); "
+                    "accuracy figures are not corpus-gated.",
+                    ", ".join(str(item) for item in waived) or "unspecified",
+                )
+            elif evidence_status != "verified":
                 raise RuntimeError(
                     "Model benchmark evidence is not verified; recognizer cannot become ready."
                 )
@@ -183,7 +197,14 @@ def create_app(
                 "reason": "Backend or manifest missing",
             }), 503
 
-        return jsonify({"status": "ready"}), 200
+        manifest = _state["manifest"] or {}
+        payload: Dict[str, Any] = {"status": "ready"}
+        if manifest.get("evidenceStatus") == "composition-waived":
+            # Ready, but the operator must be able to see that the benchmark
+            # corpus gate was waived without reading container logs.
+            payload["evidenceStatus"] = "composition-waived"
+            payload["waivedRequirements"] = manifest.get("waivedRequirements") or []
+        return jsonify(payload), 200
 
     # ---------------------------------------------------------------
     # GET /version — metadata
@@ -203,6 +224,8 @@ def create_app(
             "model_revision": manifest.get("modelRevision", "unknown"),
             "manifest_checksum": _state.get("manifest_checksum", "unknown"),
             "build_sha": app.config["BUILD_SHA"],
+            "recognizer_contract": "recognize-v2",
+            "alignment_feature_schema": "alignment-v2",
         }), 200
 
     # ---------------------------------------------------------------
@@ -334,6 +357,133 @@ def create_app(
                 "total_ms": total_ms,
             },
         }), 200
+
+    # ---------------------------------------------------------------
+    # POST /recognize/v2 — independent count + reference alignment
+    # ---------------------------------------------------------------
+
+    @app.route("/recognize/v2", methods=["POST"])
+    def recognize_v2() -> tuple:
+        wav_bytes: Optional[bytes] = None
+        if "audio" in request.files:
+            wav_bytes = request.files["audio"].read()
+            reference_raw = request.form.get("reference_syllables", "")
+            expected_raw = request.form.get("expected_syllable_count", "")
+            variant_raw = request.form.get("variant_id", "")
+        elif request.is_json:
+            body = request.get_json(silent=True) or {}
+            reference_raw = body.get("reference_syllables", "")
+            expected_raw = body.get("expected_syllable_count", "")
+            variant_raw = body.get("variant_id", "")
+            if body.get("audio_base64"):
+                try:
+                    wav_bytes = base64.b64decode(body["audio_base64"])
+                except Exception:
+                    return _error_response("INVALID_BASE64", "Could not decode audio_base64 field.", 400)
+        else:
+            reference_raw = expected_raw = ""
+            variant_raw = ""
+        if wav_bytes is None:
+            return _error_response("NO_AUDIO", "No audio provided.", 400)
+        if len(wav_bytes) > MAX_FILE_BYTES:
+            return _error_response("AUDIO_TOO_LARGE", "Audio exceeds the maximum size.", 400)
+        try:
+            reference = json.loads(reference_raw) if isinstance(reference_raw, str) else reference_raw
+            expected = int(expected_raw)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return _error_response("INVALID_REFERENCE", "reference_syllables must be JSON and expected count an integer.", 400)
+        if not isinstance(reference, list) or not 1 <= len(reference) <= 8 or expected != len(reference):
+            return _error_response("INVALID_REFERENCE", "Expected 1-8 reference syllables matching expected_syllable_count.", 400)
+        if any(not isinstance(item, str) or item != unicodedata.normalize("NFC", item) for item in reference):
+            return _error_response("INVALID_REFERENCE", "Reference syllables must be NFC Unicode strings.", 400)
+        if variant_raw and (
+            not isinstance(variant_raw, str)
+            or len(variant_raw) > 128
+            or variant_raw != unicodedata.normalize("NFC", variant_raw)
+        ):
+            return _error_response("INVALID_REFERENCE", "variant_id must be an NFC string of at most 128 characters.", 400)
+        request_reference_id = variant_raw or hashlib.sha256(
+            json.dumps(
+                {"reference_syllables": reference, "expected_syllable_count": expected},
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()[:16]
+        try:
+            _ensure_initialised()
+            samples, sample_rate = _preprocess_wav(wav_bytes)
+        except ValueError as exc:
+            return _error_response("INVALID_AUDIO", str(exc), 400)
+        except Exception as exc:
+            return _error_response("SERVICE_UNAVAILABLE", str(exc), 503)
+        recognizer: PhonemeRecognizer = _state["recognizer"]
+        if not recognizer._semaphore.acquire(blocking=False):
+            return _error_response("RECOGNIZER_BUSY", "Recognizer is busy.", 503)
+        try:
+            backend = recognizer._backend
+            recognize_with_logits = getattr(backend, "recognize_with_logits", None)
+            if recognize_with_logits is None:
+                return _error_response("UNRATEABLE", "Backend does not expose alignment probabilities.", 200)
+            result = recognize_with_logits(samples, sample_rate)
+            symbol_table = result.get("symbol_table") or []
+            blank_id = int(result.get("blank_id", getattr(backend, "_blank_id", 0)))
+            log_probs = result.get("log_probs")
+            if log_probs is None or not symbol_table:
+                return _error_response("UNRATEABLE", "Recognizer did not return alignment resources.", 200)
+            canonical_ids: list[int] = []
+            ranges: list[tuple[int, int]] = []
+            for ipa in reference:
+                start = len(canonical_ids)
+                canonical_ids.extend(tokenize_ipa(ipa, symbol_table))
+                ranges.append((start, len(canonical_ids)))
+            if len(canonical_ids) > 128:
+                return _error_response("RESOURCE_LIMIT", "Reference contains too many phoneme tokens.", 200)
+            syl_result = _state["syllabifier"].syllabify(result.get("phonemes", []))
+            aligned = align_reference_syllables(
+                log_probs,
+                reference,
+                symbol_table,
+                blank_id=blank_id,
+                sample_count=len(samples),
+                sample_rate=sample_rate,
+            )
+            vowel_positions = [index for index, token_id in enumerate(canonical_ids) if any(char in "aeiouəɛɪʊɔɑæɒɜɝɚʌ" for char in str(symbol_table[token_id]))]
+            omission_candidates = [
+                canonical_ids[:position] + canonical_ids[position + 1:]
+                for position in vowel_positions
+                if len(canonical_ids) > 1
+            ]
+            insertion_candidates = [
+                canonical_ids[:position + 1] + [canonical_ids[position]] + canonical_ids[position + 1:]
+                for position in vowel_positions
+            ]
+            hypotheses = ctc_hypothesis_features(
+                log_probs,
+                canonical_ids,
+                blank_id=blank_id,
+                omission_candidates=omission_candidates,
+                insertion_candidates=insertion_candidates,
+            )
+            response = {
+                "contract_version": "recognize-v2",
+                "request_reference_id": request_reference_id,
+                "audio_duration_sec": round(len(samples) / sample_rate, 6),
+                "decoded_syllable_count": syl_result.get("syllable_count"),
+                "decoded_is_rateable": syl_result.get("is_rateable"),
+                "canonical_alignment": aligned,
+                "hypotheses": hypotheses,
+                "model_revision": result.get("model_revision", "unknown"),
+                "blank_id": blank_id,
+            }
+            return jsonify(response), 200
+        except (ValueError, KeyError) as exc:
+            return _error_response("UNRATEABLE", str(exc), 200)
+        except Exception as exc:
+            logger.exception("V2 alignment error")
+            return _error_response("INFERENCE_ERROR", str(exc), 500)
+        finally:
+            recognizer._semaphore.release()
 
     return app
 

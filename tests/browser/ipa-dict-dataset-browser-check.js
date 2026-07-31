@@ -103,6 +103,21 @@ async function run() {
     assert.strictEqual(forestRes.details.source, 'ipa-dict');
     assert.ok(forestRes.details.alternatives.includes('/ˈfɔrɪst/'), 'Should include Oxford variant /ˈfɔrɪst/ as alternative');
 
+    const reviewedRes = await page.evaluate(async () => ({
+      antidumping: await window.Phonetics.getIPAWithSource('antidumping'),
+      analyze: await window.Phonetics.getIPAWithSource('analyze'),
+      augustus: await window.Phonetics.getIPAWithSource('augustus')
+    }));
+    assert.equal(reviewedRes.antidumping.ipa, '/ˌæntaɪˈdʌmpɪŋ/');
+    assert.equal(reviewedRes.antidumping.source, 'oxford-american');
+    assert.equal(reviewedRes.analyze.source, 'oxford-american');
+    assert.deepStrictEqual(reviewedRes.augustus, {
+      ipa: '',
+      alternatives: [],
+      source: null,
+      isApproximate: false
+    });
+
     // 4. Test symbol normalizations (ɹ->r, ɫ->l, ɾ->t)
     console.log('🔍 Testing symbol normalizations (flap T, dark L, turned R)...');
     const symbolNorms = await page.evaluate(async () => {
@@ -131,11 +146,11 @@ async function run() {
     assert.ok(multiWords.either.alternatives.length > 0, 'either should have alternative pronunciations');
     assert.ok(multiWords.a.alternatives.length > 0, 'a should have alternative pronunciations');
     assert.ok(multiWords.the.alternatives.length > 0, 'the should have alternative pronunciations');
-    assert.strictEqual(multiWords.the.ipa, '/ðə/', 'weak function-word stress must not become STRUT');
+    assert.strictEqual(multiWords.the.ipa, '/ði/', 'the citation form should use Oxford-American strong /ði/');
     assert.deepStrictEqual(
       [multiWords.the.ipa, ...multiWords.the.alternatives],
-      ['/ðə/', '/ði/'],
-      'the primary IPA and alternatives should expose each normalized pronunciation once'
+      ['/ði/', '/ðə/'],
+      'the strong citation and weak alternatives should be exposed once each'
     );
 
     // 6. Test edge cases: casing, whitespace, punctuation
@@ -196,6 +211,8 @@ async function run() {
       return await res.text();
     });
     assert.ok(swContent.includes('/ipa-dict.json'), 'Service worker sw.js must include /ipa-dict.json in SHELL_URLS');
+    assert.ok(swContent.includes('/phonetics.js'), 'Service worker sw.js must include /phonetics.js in SHELL_URLS');
+    assert.ok(swContent.includes('/oxford-american-ipa.json'), 'Service worker sw.js must include the Oxford-American IPA layer in SHELL_URLS');
 
     assert.deepStrictEqual(pageErrors, [], 'Should have no uncaught page errors');
     console.log('✅ ALL E2E BROWSER CHECKS PASSED SUCCESSFULLY!');

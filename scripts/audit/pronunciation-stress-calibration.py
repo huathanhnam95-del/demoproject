@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Calibrate relative acoustic stress weights on validated recording features."""
+"""Compatibility entry point for the V1 verifier calibration.
+
+Modern records are exported through ``scripts/benchmarks/train_pronunciation_verifier.py``
+and the JSON runtime. The legacy feature-only fixture path remains readable so
+older audit reports can be reproduced, but it is not used by production V3.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +12,7 @@ import argparse
 import json
 import math
 import random
+import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -220,6 +226,19 @@ def main():
         if isinstance(payload, dict)
         else payload
     )
+    if raw_records and any(isinstance(record.get("features"), dict) for record in raw_records if isinstance(record, dict)):
+        # Keep this historical CLI usable for modern calibration exports while
+        # making the production artifact come from the non-circular trainer.
+        import subprocess
+        modern_input = Path(args.output).with_suffix('.modern-input.json')
+        modern_input.write_text(json.dumps(raw_records), encoding='utf-8')
+        modern_output = Path(args.output).with_suffix('.verifier.json')
+        trainer = Path(__file__).resolve().parents[1] / 'benchmarks' / 'train_pronunciation_verifier.py'
+        completed = subprocess.run([sys.executable, str(trainer), '--input', str(modern_input), '--output', str(modern_output)], check=False)
+        if completed.returncode != 0:
+            return completed.returncode
+        print(json.dumps({"modern_artifact": str(modern_output), "schema_version": "pronunciation-verifier-v1"}))
+        return 0
     records = validate_records(raw_records)
     report = calibrate(records, args.seed)
     output_path = Path(args.output)

@@ -357,6 +357,52 @@ class TestConfidenceExtraction(unittest.TestCase):
             self.assertGreaterEqual(p["confidence"], 0.0)
             self.assertLessEqual(p["confidence"], 1.0)
 
+    def test_ctc_forced_alignment_returns_ordered_target_spans(self):
+        """Forced alignment must preserve ordered target-token spans."""
+        from backend.phoneme_service.backends import ctc_forced_align
+
+        log_probs = np.log(np.array([
+            [0.85, 0.10, 0.05],
+            [0.05, 0.90, 0.05],
+            [0.05, 0.88, 0.07],
+            [0.80, 0.10, 0.10],
+            [0.05, 0.05, 0.90],
+            [0.05, 0.05, 0.90],
+            [0.85, 0.10, 0.05],
+        ]))
+
+        result = ctc_forced_align(log_probs, [1, 2], blank_id=0)
+
+        self.assertEqual(result["target_ids"], [1, 2])
+        self.assertEqual(len(result["spans"]), 2)
+        self.assertLess(
+            result["spans"][0]["start_frame"],
+            result["spans"][0]["end_frame"],
+        )
+        self.assertLess(
+            result["spans"][0]["end_frame"],
+            result["spans"][1]["start_frame"],
+        )
+        self.assertGreater(result["spans"][0]["confidence"], 0.8)
+        self.assertGreater(result["spans"][1]["confidence"], 0.8)
+
+    def test_reference_syllable_alignment_groups_token_spans(self):
+        from backend.phoneme_service.stress_alignment import align_reference_syllables
+
+        # blank, a, b; the first syllable is "ab" and the second is "a".
+        log_probs = np.log(np.array([
+            [0.90, 0.08, 0.02],
+            [0.03, 0.94, 0.03],
+            [0.03, 0.04, 0.93],
+            [0.90, 0.08, 0.02],
+            [0.04, 0.93, 0.03],
+            [0.90, 0.08, 0.02],
+        ]))
+        result = align_reference_syllables(log_probs, ["ab", "a"], ["<pad>", "a", "b"])
+        self.assertTrue(result["aligned"])
+        self.assertEqual([item["index"] for item in result["syllables"]], [0, 1])
+        self.assertLess(result["syllables"][0]["end_frame"], result["syllables"][1]["start_frame"])
+
 
 # ===================================================================
 # Test: engine parity fixtures (structural)
@@ -437,6 +483,17 @@ class TestEngineParityFixtures(unittest.TestCase):
         self.assertIsInstance(result["effective_stride_ms"], float)
         self.assertIsInstance(result["engine_version"], str)
         self.assertIsInstance(result["symbol_table"], list)
+
+    def test_torch_backend_exposes_logits_for_constrained_alignment(self):
+        """The torch backend exposes frame logits without changing decode output."""
+        from backend.phoneme_service.backends import TorchRecognizerBackend
+
+        backend = TorchRecognizerBackend({
+            "modelId": "test/model",
+            "modelRevision": "abc1234",
+            "selectedEngine": "torch",
+        })
+        self.assertTrue(callable(backend.recognize_with_logits))
 
     def test_onnx_backend_raises_not_implemented(self):
         """OnnxRecognizerBackend.recognize() raises NotImplementedError."""

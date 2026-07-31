@@ -249,6 +249,17 @@ class TestPhonemeClient(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             PhonemeClient(_SERVICE_URL, auth_mode="disabled")
 
+    @mock.patch("backend.local_server.phoneme_client.requests.Session")
+    def test_recognize_v2_sends_contract_and_reference(self, mock_session_cls):
+        session = mock_session_cls.return_value
+        session.post.return_value = _ok_response({"contract_version": "recognize-v2"})
+        client = PhonemeClient(_LOCALHOST_URL, auth_mode="disabled")
+        result = client.recognize_v2(b"wav", ["æ", "tʃu", "əl"], 3)
+        self.assertEqual(result["contract_version"], "recognize-v2")
+        request = session.post.call_args.kwargs
+        self.assertEqual(request["data"]["expected_syllable_count"], "3")
+        self.assertEqual(json.loads(request["data"]["reference_syllables"]), ["æ", "tʃu", "əl"])
+
     # -- 9. Successful recognize --------------------------------------------
 
     @mock.patch("backend.local_server.phoneme_client.requests.Session")

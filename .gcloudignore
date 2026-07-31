@@ -10,6 +10,13 @@ backend/local_server/*
 !backend/local_server/__init__.py
 !backend/local_server/server.py
 !backend/local_server/pronunciation_reference.py
+# Every module backend/Dockerfile COPYs must be whitelisted here or the build
+# context excludes it and the image build fails on a missing path.
+!backend/local_server/phoneme_client.py
+!backend/local_server/pronunciation_verifier.py
+!backend/local_server/models
+backend/local_server/models/*
+!backend/local_server/models/pronunciation-verifier-v1.json
 !public
 public/*
 !public/cmudict.json

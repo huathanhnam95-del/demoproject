@@ -13,13 +13,50 @@
  *
  * Usage: node tests/browser/pronounce-production-verify.js
  */
+/* eslint-disable no-console */
 const assert = require('assert');
 const { chromium } = require('playwright');
 
-const BASE = 'https://listening-tasks-3ae34.web.app';
+// The custom domain is the real production origin. The listening-tasks-3ae34
+// .web.app alias serves the same hosting content but is deliberately absent
+// from the Praat backend's CORS allowlist (see cors_origins in
+// backend/local_server/server.py), so reference lookups fail there by design.
+// Verifying against the alias reports a broken Pronounce mode that is not real.
+const BASE = process.env.PRONOUNCE_VERIFY_BASE || 'https://betterenglishlearning.com';
+const PRAAT_API = 'https://praat-api-1071929245506.us-central1.run.app';
+
+// The TLS handshake to the custom domain measures ~12s from Node, over the 10s
+// default connect timeout, so plain fetch() reports a production outage that is
+// not real (curl and the browser both succeed). Raise the connect budget.
+try {
+  const { Agent, setGlobalDispatcher } = require('undici');
+  setGlobalDispatcher(new Agent({ connect: { timeout: 45000 } }));
+} catch {
+  console.warn('undici not available; using default connect timeout');
+}
+
+// Retry with a browser UA rather than reporting a production failure that is
+// not one.
+async function request(url, init = {}) {
+  const options = {
+    cache: 'no-store',
+    ...init,
+    headers: { 'User-Agent': 'Mozilla/5.0 (pronounce-production-verify)', ...(init.headers || {}) }
+  };
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+    }
+  }
+  throw new Error(`${url} unreachable after 3 attempts: ${lastError?.cause?.message || lastError?.message}`);
+}
 
 async function fetchText(url) {
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await request(url);
   assert.equal(response.status, 200, `${url} returned ${response.status}`);
   return response.text();
 }
@@ -47,18 +84,17 @@ async function fetchText(url) {
   console.log('    syllable-verifier.js: IPA annotation instruction present');
 
   console.log('[2] Checking admin API fails closed without a token...');
-  const adminResponse = await fetch(`${BASE}/api/admin/status`, { cache: 'no-store' });
+  const adminResponse = await request(`${BASE}/api/admin/status`);
   assert.ok(
     adminResponse.status === 401 || adminResponse.status === 403,
     `unauthenticated /api/admin/status should be 401/403, got ${adminResponse.status}`
   );
   console.log(`    /api/admin/status -> ${adminResponse.status} (fails closed)`);
 
-  const corpusResponse = await fetch(`${BASE}/api/admin/dev/save-corpus-sample`, {
+  const corpusResponse = await request(`${BASE}/api/admin/dev/save-corpus-sample`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: '{}',
-    cache: 'no-store'
+    body: '{}'
   });
   assert.ok(
     corpusResponse.status === 401 || corpusResponse.status === 403,
@@ -66,7 +102,21 @@ async function fetchText(url) {
   );
   console.log(`    /api/admin/dev/save-corpus-sample -> ${corpusResponse.status} (fails closed)`);
 
-  console.log('[3] Booting Pronounce mode on production...');
+  console.log('[3] Checking the Praat backend allows the production origin...');
+  const corsResponse = await request(`${PRAAT_API}/dictionary/v2/industrial`, {
+    headers: { Origin: BASE }
+  });
+  assert.equal(corsResponse.status, 200, `praat dictionary lookup returned ${corsResponse.status}`);
+  const allowOrigin = corsResponse.headers.get('access-control-allow-origin');
+  assert.equal(
+    allowOrigin,
+    BASE,
+    `praat backend must allow ${BASE}; got ${allowOrigin || '(no header)'}. `
+    + 'Without this the browser blocks every word-reference lookup.'
+  );
+  console.log(`    ${PRAAT_API} allows ${allowOrigin}`);
+
+  console.log('[4] Booting Pronounce mode on production...');
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });

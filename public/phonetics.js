@@ -406,6 +406,88 @@ const Phonetics = (function () {
         )) || '';
     }
 
+    // === OXFORD AMERICAN NOTATION ===
+
+    // Two-symbol nuclei must be consumed whole so the stress walker never
+    // mistakes the second half of /eɪ/ or /oʊ/ for a following vowel.
+    const OXFORD_DIPHTHONGS = ['eɪ', 'aɪ', 'ɔɪ', 'aʊ', 'oʊ'];
+    const OXFORD_NUCLEI = new Set(['i', 'ɪ', 'e', 'ɛ', 'æ', 'ɑ', 'ɔ', 'o', 'ʊ', 'u', 'ə', 'ʌ', 'ɝ', 'ɚ', 'ɜ']);
+
+    /**
+     * Rewrite an American transcription into Oxford American display notation:
+     * long vowels carry /ː/, DRESS is /e/, and a stressed r-coloured vowel
+     * becomes /ɜːr/ while an unstressed one stays /ər/.
+     *
+     * Stress is read from the marks already present, so this must run before
+     * monosyllabic stress marks are stripped.
+     */
+    function toOxfordAmerican(value) {
+        // Idempotent: anything already carrying length marks (the Oxford
+        // review layer, or an already-normalized value) is left untouched.
+        if (!value || /ː/.test(value)) return value;
+
+        const symbols = Array.from(value);
+        const out = [];
+        let stressPending = false;
+
+        const nucleusAt = (index) => {
+            const pair = symbols[index] + (symbols[index + 1] || '');
+            if (OXFORD_DIPHTHONGS.includes(pair)) return pair;
+            return OXFORD_NUCLEI.has(symbols[index]) ? symbols[index] : '';
+        };
+
+        for (let index = 0; index < symbols.length; index += 1) {
+            const symbol = symbols[index];
+            if (symbol === 'ˈ' || symbol === 'ˌ') {
+                stressPending = true;
+                out.push(symbol);
+                continue;
+            }
+            const nucleus = nucleusAt(index);
+            if (!nucleus) {
+                out.push(symbol);
+                continue;
+            }
+
+            const isStressed = stressPending;
+            stressPending = false;
+            index += nucleus.length - 1;
+            const followedByR = symbols[index + 1] === 'r' || symbols[index + 1] === 'ɹ';
+            const next = symbols[index + 1];
+            // Phrase entries ("ice cream", "any more") end a word at a space or
+            // hyphen, not only at the end of the string.
+            const wordFinal = index === symbols.length - 1 || next === ' ' || next === '-';
+
+            if (nucleus === 'ɝ' || nucleus === 'ɚ' || nucleus === 'ɜ') {
+                // ipa-dict writes /ɝ/ in stressed and unstressed slots alike, so
+                // position decides between NURSE and the weak r-coloured schwa.
+                out.push(isStressed ? 'ɜːr' : 'ər');
+                if (followedByR) index += 1;
+            } else if (nucleus === 'ə' && followedByR && isStressed) {
+                // hurry, curry, burroughs: NURSE written as a bare schwa.
+                out.push('ɜːr');
+                index += 1;
+            } else if (nucleus === 'ɛ') {
+                out.push('e');
+            } else if (nucleus === 'ɑ' || nucleus === 'ɔ') {
+                out.push(`${nucleus}ː`);
+            } else if (nucleus === 'i') {
+                // Oxford's weak /i/ covers every unstressed slot: happy,
+                // radio, anti-, accompaniment. Unstressed FLEECE is vanishingly
+                // rare, so stress alone decides length.
+                out.push(isStressed ? 'iː' : 'i');
+            } else if (nucleus === 'u') {
+                // Weak /u/ is the unstressed medial vowel (situation,
+                // occupation, regulation). Word-finally Oxford keeps GOOSE:
+                // menu, value, argue, into.
+                out.push(isStressed || wordFinal ? 'uː' : 'u');
+            } else {
+                out.push(nucleus);
+            }
+        }
+        return out.join('');
+    }
+
     /**
      * Normalize IPA to Oxford American display form without inventing lexical
      * stress or vowel quality. Source-backed vowel repair is enabled only when
@@ -425,14 +507,15 @@ const Phonetics = (function () {
             }
         }
 
+        // Oxford notation is applied while the stress marks are still present,
+        // because /ɜːr/ versus /ər/ depends on them.
+        cleaned = toOxfordAmerican(cleaned.replace(/ɹ/g, 'r'));
+
         if (countVowelNuclei(cleaned) === 1 && !cleaned.includes('ˌ')) {
             cleaned = cleaned.replace(/ˈ/g, '');
         }
 
-        cleaned = cleaned
-            .replace(/[ɝɚ]/g, 'ər')
-            .replace(/ɹ/g, 'r')
-            .trim();
+        cleaned = cleaned.trim();
         return ipa.trim().startsWith('/') ? `/${cleaned}/` : cleaned;
     }
 
@@ -487,12 +570,12 @@ const Phonetics = (function () {
             source = 'ipa-dict';
             log(`ipa-dict (primary): "${normalized}" → ${ipa} (alts: ${alternatives.join(', ')})`);
 
-            // Unambiguous contractions can place a conversational deletion
-            // before the full citation form (for example don't /doʊn/ before
-            // /doʊnt/). Prefer the ipa-dict variant whose complete segment
-            // shape is independently present in the U.S. CMU reference.
-            const isUnambiguousContraction = /(?:n't|'(?:re|ve|ll|d|m))$/.test(normalized);
-            if (isUnambiguousContraction && typeof arpabetToIPA === 'function') {
+            // ipa-dict orders variants arbitrarily and often lists a
+            // conversational deletion first (don't /doʊn/, next /nɛks/, going
+            // /ˈɡoʊɪn/, mostly /ˈmoʊsli/). Learners must be shown the citation
+            // form, so promote the variant whose complete segment shape is
+            // independently attested in the U.S. CMU reference.
+            if (ipaDictResult.length > 1 && typeof arpabetToIPA === 'function') {
                 const arpbets = await lookupCMUVariants(normalized);
                 referenceIPAs = arpbets.map((arpabet) => arpabetToIPA(arpabet)).filter(Boolean);
                 const citationIndex = ipaDictResult.findIndex((variant) => (
@@ -548,6 +631,18 @@ const Phonetics = (function () {
                 .filter((variant, index, values) => variant && variant !== ipa && values.indexOf(variant) === index);
         }
 
+        // A function word looked up on its own is being shown in isolation, so
+        // its citation form wins. Without this, getIPA and getPronunciations
+        // disagreed on words whose corpus entry records a weak form first.
+        const functionWordStrong = FUNCTION_WORD_FORMS[normalized]?.strong;
+        if (functionWordStrong && !quarantined && functionWordStrong !== ipa) {
+            alternatives = [ipa, ...alternatives].filter(
+                (variant, index, values) => variant && variant !== functionWordStrong && values.indexOf(variant) === index
+            );
+            ipa = functionWordStrong;
+            source = 'oxford-american-form';
+        }
+
         // Cache result with source metadata and alternatives
         if (CONFIG.cacheEnabled) {
             ipaCache.set(normalized, { ipa: ipa || '', alternatives, source });
@@ -590,7 +685,10 @@ const Phonetics = (function () {
         const cached = ipaCache.get(normalized);
 
         if (cached && typeof cached === 'object') {
-            const profile = FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized);
+            const profile = normalizeFormProfile(
+                FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized),
+                normalized
+            );
             const explicitFormAlternatives = profile
                 ? [
                     ...(profile.strongAlternatives || []),
@@ -623,10 +721,25 @@ const Phonetics = (function () {
      * connected-speech consumers. Strong is selected for isolated use; weak is
      * selected only for connected speech when its condition matches.
      */
+    // Form profiles are authored data, so they are rendered through the same
+    // Oxford transform as corpus entries. Without this the strong/weak forms
+    // were the one surface that could still emit pre-Oxford notation.
+    function normalizeFormProfile(profile, word) {
+        if (!profile) return profile;
+        return {
+            strong: profile.strong ? normalizeIPA(profile.strong, word) : profile.strong,
+            strongAlternatives: (profile.strongAlternatives || []).map((ipa) => normalizeIPA(ipa, word)),
+            weak: (profile.weak || []).map((form) => ({ ...form, ipa: normalizeIPA(form.ipa, word) }))
+        };
+    }
+
     async function getPronunciations(word, context = {}) {
         const normalized = normalizeLookupKey(word);
         const base = await getIPAWithSource(normalized);
-        const profile = FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized);
+        const profile = normalizeFormProfile(
+            FUNCTION_WORD_FORMS[normalized] || await lookupOxfordFormProfile(normalized),
+            normalized
+        );
         if (!profile) {
             const citation = {
                 id: `${normalized}:citation`,

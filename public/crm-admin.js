@@ -7418,10 +7418,21 @@
       if (!displayWord || !displayIpaCount) return;
       displayWord.textContent = currentWord;
       const rawIpaClean = String(currentIpa || '').replace(/^\/+|\/+$/g, '');
-      const normalizedIpa = typeof Phonetics !== 'undefined' && Phonetics.normalizeIPA 
-        ? Phonetics.normalizeIPA(rawIpaClean) 
+      // Pass the word so the CMU-backed vowel repair can fire. Without it the
+      // recording target rendered /əˈbəv/ where the learner app shows /əˈbʌv/.
+      const normalizedIpa = typeof Phonetics !== 'undefined' && Phonetics.normalizeIPA
+        ? Phonetics.normalizeIPA(rawIpaClean, currentWord)
         : rawIpaClean.replace(/[ɝɚ]/g, 'ər').replace(/ɹ/g, 'r').replace(/\/+/g, '/');
       displayIpaCount.textContent = `/${normalizedIpa.replace(/^\/+|\/+$/g, '')}/ (${currentSyllableCount} syllables)`;
+      if (typeof Phonetics !== 'undefined' && Phonetics.getIPA) {
+        // Prefer the learner-facing transcription so admins record against the
+        // exact form the app teaches.
+        Phonetics.getIPA(currentWord).then((learnerIpa) => {
+          if (learnerIpa && currentWord === displayWord.textContent) {
+            displayIpaCount.textContent = `${learnerIpa} (${currentSyllableCount} syllables)`;
+          }
+        }).catch(() => {});
+      }
       if (expectedObservedCountInput) {
         expectedObservedCountInput.value = currentExpectedObservedCount;
       }

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v19';
+const CACHE_VERSION = 'bel-offline-v20';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -17,7 +17,8 @@ const SHELL_URLS = [
   '/arpabet-ipa-map.js',
   '/phonetics.js',
   '/oxford-american-ipa.json',
-  '/ipa-dict.json'
+  '/ipa-dict.json',
+  '/cmudict.json'
 ];
 
 self.addEventListener('install', (event) => {

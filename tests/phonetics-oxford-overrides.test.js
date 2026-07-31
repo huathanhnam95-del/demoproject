@@ -25,7 +25,9 @@ global.fetch = async (url) => {
     };
   }
   if (target.includes('cmudict')) {
-    return { ok: true, json: async () => ({}) };
+    // CMU knows this word. Quarantine must still win, or a word removed from
+    // the learner dictionary silently reappears via the fallback.
+    return { ok: true, json: async () => ({ augustus: ['AO0 G AH1 S T AH0 S'] }) };
   }
   return {
     ok: true,
@@ -54,7 +56,12 @@ require('../public/phonetics.js');
     nextSound: 'consonant'
   });
   assert.deepEqual(accordingTo.forms.map((form) => form.formRole), ['strong', 'weak']);
-  assert.equal(accordingTo.selected.ipa, '/əˈkɔrdɪŋ tə/');
+  // Authored form profiles are rendered in Oxford notation too.
+  assert.equal(accordingTo.selected.ipa, '/əˈkɔːrdɪŋ tə/');
+  assert.equal(
+    accordingTo.forms.find((form) => form.formRole === 'strong').ipa,
+    '/əˈkɔːrdɪŋ tuː/'
+  );
 
   const quarantined = await Phonetics.getIPAWithSource('augustus');
   assert.deepEqual(quarantined, {

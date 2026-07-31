@@ -57,9 +57,12 @@
   - Local dataset: `public/collocations.json`
   - Optional online expansion (e.g., Datamuse) when online.
 - Phonetics helpers:
-  - `public/phonetics.js` (dictionary API lookup + CMU/heuristic fallback + in-memory cache)
+  - `public/phonetics.js` — source precedence is Oxford-American review layer → `ipa-dict` corpus → CMU fallback, plus an in-memory cache. No network dictionary is used for IPA.
+  - `public/oxford-american-ipa.json` — reviewed entries, strong/weak form profiles, and the quarantine list. A word removed from the corpus **must** also be quarantined, or the CMU fallback repopulates it.
   - `public/arpabet-ipa-map.js`
   - `public/cmudict.json`
+- Display notation: Oxford American. Long vowels carry `ː` (`/ˈwɔːtər/`), DRESS is `/e/` not `/ɛ/`, a stressed r-coloured vowel is `/ɜːr/` and an unstressed one is `/ər/`. The corpus files store the raw source forms; `Phonetics.normalizeIPA()` is the single point where notation is applied, so every consumer must render IPA through the shared service rather than reading the JSON directly.
+- Known divergence: the `ipa-dict` fallback writes `/ən/` and `/əl/` where Oxford uses syllabic `/n/` and `/l/` (`/ˈstuːdənt/` vs Oxford `/ˈstuːdnt/`); ~12,000 entries.
 - Optional local services (advanced / dev tooling):
   - Flask endpoints in `backend/local_server/server.py` (e.g., additional dictionary/sentences helpers and audio analysis).
 

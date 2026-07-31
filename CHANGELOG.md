@@ -1,3 +1,19 @@
+## [V1.8.44] - 2026-07-31
+
+### Changed
+- **True Oxford American IPA notation**: learner-facing IPA now matches the American entries published by Oxford Learner's Dictionaries. Long vowels carry the length mark (`/ˈwɔːtər/`, `/kəmˈpjuːtər/`, `/ˈliːtər/`), DRESS is `/e/` instead of `/ɛ/`, and a stressed r-coloured vowel renders as NURSE `/ɜːr/` (`/nɜːrs/`, `/wɜːrk/`) while an unstressed one stays `/ər/`. Oxford's weak `/i/` and `/u/` are preserved (`/ˈhæpi/`, `/ˌɑːkjuˈpeɪʃən/`). Applied in `Phonetics.normalizeIPA()` (`public/phonetics.js`), the single point where notation is decided — the corpus files are unchanged.
+
+### Fixed
+- **Quarantine bypass**: `deneuve` had been removed from `ipa-dict.json` without being quarantined, so the CMU fallback repopulated it as `/dɪˈnʌv/`. Added to the quarantine list, with a regression test covering every reviewed removal (`tests/oxford-american-ipa-data.test.mjs`).
+- **hurry/furry class**: a stressed schwa before `/r/` is NURSE, not STRUT, so the `/ʌ/` repair no longer claims it. `curry` `/ˈkʌri/` → `/ˈkɜːri/`, `burroughs` `/ˈbʌroʊz/` → `/ˈbɜːroʊz/`, consistent with `hurry` and `hurricane`.
+- **Reduced forms shown as citation forms**: the CMU-backed citation preference applies to all corpus entries instead of contractions only. `going` `/ˈɡoʊɪn/` → `/ˈɡoʊɪŋ/`, `next` `/nɛks/` → `/nekst/`, `mostly` `/ˈmoʊsli/` → `/ˈmoʊstli/`, `fifths` `/fɪfs/` → `/fɪfθs/`, `sandwich`, `restaurant`, `because`.
+- **API disagreement**: `getIPA()` and `getPronunciations()` returned different IPA for `her` (`/hər/` vs `/hɝ/`) and `was` (`/wɑz/` vs `/wʌz/`). A function word looked up on its own now returns its citation form from both.
+- **Form profiles bypassed normalization**: `FUNCTION_WORD_FORMS` and the overlay's `formProfiles` are rendered through the shared transform, closing the last surface that could emit pre-Oxford notation.
+- **Offline CMU fallback**: `cmudict.json` was missing from the service-worker shell cache, so offline lookups outside `ipa-dict` returned nothing. Added; cache version bumped to `bel-offline-v20`.
+- **CRM corpus recording target**: `public/crm-admin.js` called `normalizeIPA()` without the word, so the schwa repair could not fire and admins recorded against `/əˈbəv/` while learners saw `/əˈbʌv/`. Now renders the learner-facing transcription.
+- **Read Aloud linking**: the vowel-initial test did not recognise `/ɜ/`, which would misclassify `earth` and `early`; fixed in both the client and Cloud Functions copies, along with their duplicated strong-form table.
+- **Malformed corpus entry**: `anticorruption` carried two stress marks with the `/r/` in the wrong syllable (`/ˌæntiˌkərˈʌpʃən/` → `/ˌæntikəˈrʌpʃn/`).
+
 ## [V1.8.43] - 2026-07-30
 
 ### Added & Standardized

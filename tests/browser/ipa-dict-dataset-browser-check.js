@@ -99,9 +99,9 @@ async function run() {
       return { ipa, details };
     });
     console.log('  -> "forest":', forestRes);
-    assert.strictEqual(forestRes.ipa, '/ˈfɔrəst/');
+    assert.strictEqual(forestRes.ipa, '/ˈfɔːrəst/');
     assert.strictEqual(forestRes.details.source, 'ipa-dict');
-    assert.ok(forestRes.details.alternatives.includes('/ˈfɔrɪst/'), 'Should include Oxford variant /ˈfɔrɪst/ as alternative');
+    assert.ok(forestRes.details.alternatives.includes('/ˈfɔːrɪst/'), 'Should include Oxford variant /ˈfɔːrɪst/ as alternative');
 
     const reviewedRes = await page.evaluate(async () => ({
       antidumping: await window.Phonetics.getIPAWithSource('antidumping'),
@@ -146,10 +146,10 @@ async function run() {
     assert.ok(multiWords.either.alternatives.length > 0, 'either should have alternative pronunciations');
     assert.ok(multiWords.a.alternatives.length > 0, 'a should have alternative pronunciations');
     assert.ok(multiWords.the.alternatives.length > 0, 'the should have alternative pronunciations');
-    assert.strictEqual(multiWords.the.ipa, '/ði/', 'the citation form should use Oxford-American strong /ði/');
+    assert.strictEqual(multiWords.the.ipa, '/ðiː/', 'the citation form should use Oxford-American strong /ðiː/');
     assert.deepStrictEqual(
       [multiWords.the.ipa, ...multiWords.the.alternatives],
-      ['/ði/', '/ðə/'],
+      ['/ðiː/', '/ði/', '/ðə/'],
       'the strong citation and weak alternatives should be exposed once each'
     );
 
@@ -164,7 +164,7 @@ async function run() {
       return { uppercase, mixedCase, dont, cant, wellKnown };
     });
     console.log('  -> Edge cases:', edgeCases);
-    assert.strictEqual(edgeCases.uppercase, '/ˈfɔrəst/', 'Whitespace and uppercase should be normalized');
+    assert.strictEqual(edgeCases.uppercase, '/ˈfɔːrəst/', 'Whitespace and uppercase should be normalized');
     assert.strictEqual(edgeCases.dont, '/doʊnt/', "don't should retain its citation-form final /t/");
     assert.ok(edgeCases.cant.length > 0, "can't should return valid IPA");
 

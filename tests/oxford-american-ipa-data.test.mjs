@@ -31,3 +31,14 @@ test('Oxford-American IPA layer is structurally valid and authoritative', () => 
   assert.equal(dictionary.augustus, undefined);
   assert.equal(dictionary["in's"], undefined);
 });
+
+test('every reviewed removal is also quarantined', () => {
+  // Removing a word from ipa-dict.json is not enough on its own: the CMU
+  // fallback will repopulate it unless the word is on the quarantine list.
+  // deneuve was removed in the Oxford review pass and reappeared as /dɪˈnʌv/.
+  const removals = ['augustus', 'awb', 'banderas', 'deneuve', "in's", 'stongue'];
+  for (const word of removals) {
+    assert.equal(dictionary[word], undefined, `${word} must be absent from ipa-dict.json`);
+    assert.ok(overlay.quarantine.includes(word), `${word} must be on the quarantine list`);
+  }
+});

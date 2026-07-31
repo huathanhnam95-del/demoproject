@@ -429,6 +429,7 @@ const Phonetics = (function () {
         const symbols = Array.from(value);
         const out = [];
         let stressPending = false;
+        let primaryPending = false;
 
         const nucleusAt = (index) => {
             const pair = symbols[index] + (symbols[index + 1] || '');
@@ -440,6 +441,7 @@ const Phonetics = (function () {
             const symbol = symbols[index];
             if (symbol === 'ˈ' || symbol === 'ˌ') {
                 stressPending = true;
+                primaryPending = symbol === 'ˈ';
                 out.push(symbol);
                 continue;
             }
@@ -450,7 +452,9 @@ const Phonetics = (function () {
             }
 
             const isStressed = stressPending;
+            const isPrimary = primaryPending;
             stressPending = false;
+            primaryPending = false;
             index += nucleus.length - 1;
             const followedByR = symbols[index + 1] === 'r' || symbols[index + 1] === 'ɹ';
             const next = symbols[index + 1];
@@ -474,8 +478,10 @@ const Phonetics = (function () {
             } else if (nucleus === 'i') {
                 // Oxford's weak /i/ covers every unstressed slot: happy,
                 // radio, anti-, accompaniment. Unstressed FLEECE is vanishingly
-                // rare, so stress alone decides length.
-                out.push(isStressed ? 'iː' : 'i');
+                // rare, so stress alone decides length. Final -y stays weak
+                // even when the corpus marks it with secondary stress
+                // (probably, library); only a primary stress lengthens it.
+                out.push(isStressed && (isPrimary || !wordFinal) ? 'iː' : 'i');
             } else if (nucleus === 'u') {
                 // Weak /u/ is the unstressed medial vowel (situation,
                 // occupation, regulation). Word-finally Oxford keeps GOOSE:

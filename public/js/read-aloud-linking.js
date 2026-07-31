@@ -13,17 +13,17 @@
   const REDUCED_WORD_GUIDE_COPY = {
     a: { strongAs: '/eɪ/', spokenAs: '/ə/', explanation: 'Use the weak form in connected speech unless you want to stress the article.' },
     an: { strongAs: '/æn/', spokenAs: '/ən/', explanation: 'Keep the vowel weak and move quickly into the next word.' },
-    the: { strongAs: '/ði/', spokenAs: '/ðə/ or /ði/', explanation: 'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.' },
-    to: { strongAs: '/tu/', spokenAs: '/tə/', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
+    the: { strongAs: '/ðiː/', spokenAs: '/ðə/ or /ði/', explanation: 'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.' },
+    to: { strongAs: '/tuː/', spokenAs: '/tə/', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
     of: { strongAs: '/ʌv/', spokenAs: '/əv/ or /ə/', explanation: 'Reduce the vowel and keep it quick; the strong form is used for emphasis.' },
     and: { strongAs: '/ænd/', spokenAs: '/ən/, /ənd/, /n/, /t/, or /d/', explanation: 'Lighten or omit sounds in unstressed connected speech; use the strong form for emphasis.' },
-    for: { strongAs: '/fɔr/', spokenAs: '/fər/', explanation: 'Use a lighter vowel and do not hold the word too long.' },
+    for: { strongAs: '/fɔːr/', spokenAs: '/fər/', explanation: 'Use a lighter vowel and do not hold the word too long.' },
     can: { strongAs: '/kæn/', spokenAs: '/kən/', explanation: 'Keep it light when it is not being emphasized.' },
     have: { strongAs: '/hæv/', spokenAs: '/həv/, /əv/, or /v/', explanation: 'Shorten the vowel and let it stay unstressed.' },
     has: { strongAs: '/hæz/', spokenAs: '/həz/, /əz/, or /z/', explanation: 'Reduce the vowel and keep the word light.' },
     was: { strongAs: '/wʌz/', spokenAs: '/wəz/', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
-    were: { strongAs: '/wər/', spokenAs: '/wər/', explanation: 'Oxford American uses the same broad IPA; make the weak form shorter and unstressed.' },
-    from: { strongAs: '/frʌm/ or /frɑm/', spokenAs: '/frəm/', explanation: 'Use the weak vowel in unstressed connected speech.' }
+    were: { strongAs: '/wɜːr/', spokenAs: '/wər/', explanation: 'Oxford American uses the same broad IPA; make the weak form shorter and unstressed.' },
+    from: { strongAs: '/frʌm/ or /frɑːm/', spokenAs: '/frəm/', explanation: 'Use the weak vowel in unstressed connected speech.' }
   };
   const SOUND_CHANGE_GUIDE_COPY = {
     coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
@@ -1008,7 +1008,7 @@
   function inferStartsWithVowelSound(word, ipa) {
     const normalizedIpa = (ipa || '').replace(/^\/|\/$/g, '').replace(/^[ˈˌ'ˌ.]+/g, '');
     if (normalizedIpa) {
-      return /^[ɑæʌɔaɛeɪɪiəoʊuʊɚɝ]/.test(normalizedIpa);
+      return /^[ɑæʌɔaɛeɪɪiəoʊuʊɚɝɜ]/.test(normalizedIpa);
     }
     return VOWEL_LETTERS.test((word || '')[0] || '');
   }

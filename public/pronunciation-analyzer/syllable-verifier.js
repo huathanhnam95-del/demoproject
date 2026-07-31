@@ -370,9 +370,18 @@ class SyllableVerifier {
         const save = this.container.querySelector('#sv-manual-save');
         if (countEl) countEl.textContent = `${count} segment${count === 1 ? '' : 's'}`;
         if (instructions) {
+            // Name the IPA syllable being marked so cluster consonants land on
+            // the phonological side of the boundary. Without this the annotator
+            // falls back to the spelling and the corpus records a convention
+            // the aligner does not share.
+            const target = this.ipaSegments?.[count];
+            const targetHint = target ? ` /${target}/` : '';
+            this.manualConvention = 'ipa-phonological';
             instructions.textContent = this.pendingManualStart === null
-                ? 'Click the start and end of each syllable on the waveform.'
-                : 'Now click the end of this syllable.';
+                ? (target
+                    ? `Mark syllable ${count + 1} of ${this.ipaSegments.length}:${targetHint} — click its start, then its end. Use IPA boundaries, not spelling.`
+                    : 'Click the start and end of each syllable on the waveform. Use IPA boundaries, not spelling.')
+                : `Now click the end of syllable ${count + 1}${targetHint}.`;
         }
         if (undo) undo.disabled = count === 0 || this.manualSaveInProgress;
         if (clear) clear.disabled = count === 0 || this.manualSaveInProgress;
@@ -426,11 +435,18 @@ class SyllableVerifier {
      * @param {Blob|string} audio - Audio blob or URL
      * @param {Array} syllables - Array of syllable objects with startTime, endTime, duration
      * @param {Array} labels - Optional array of syllable text labels
+     * @param {Array} ipaSegments - Optional per-syllable IPA, in phonological
+     *   order. Manual segmentation is labelled from these rather than from
+     *   `labels`: the orthographic labels chunk a word the way it is spelled
+     *   ("in/dus/tri/al"), which assigns cluster consonants differently from
+     *   the IPA the aligner uses ("ɪn/dʌ/stri/jəl"). Annotating against the
+     *   spelling produces boundaries the aligner can never reproduce.
      */
-    async loadAudio(audio, syllables, labels = null) {
+    async loadAudio(audio, syllables, labels = null, ipaSegments = null) {
         if (!this.wavesurfer) return;
 
         this.syllables = syllables;
+        this.ipaSegments = Array.isArray(ipaSegments) ? ipaSegments.slice() : [];
         this.manualSegments = [];
         this.pendingManualStart = null;
         this.manualReviewSaved = false;

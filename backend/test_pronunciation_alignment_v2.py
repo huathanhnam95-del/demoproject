@@ -70,6 +70,104 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
 
         self.assertEqual(result, syllables)
 
+    def test_oversized_syllable_is_still_split_when_spans_are_missing(self):
+        """The count-matched guard must not disable splitting altogether.
+
+        Without this the whole function can regress to `return syllables` and
+        the count-matched test above would still pass.
+        """
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        class FakeIntensity:
+            @staticmethod
+            def get_value(_time_value):
+                return 70.0
+
+        syllables = [
+            {
+                "startTime": 0.0,
+                "endTime": 0.2,
+                "duration": 0.2,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+            {
+                "startTime": 0.2,
+                "endTime": 0.85,
+                "duration": 0.65,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+        ]
+
+        with patch.object(server, "find_pitch_transitions", return_value=[0.5]):
+            result = server.split_oversized_syllables(
+                syllables,
+                expected_count=3,
+                pitch=FakePitch(),
+                intensity=FakeIntensity(),
+                int_times=np.arange(0.0, 0.9, 0.01),
+                int_values=np.full(90, 70.0),
+            )
+
+        self.assertEqual(len(result), 3)
+        boundaries = [(round(s["startTime"], 3), round(s["endTime"], 3)) for s in result]
+        self.assertEqual(boundaries, [(0.0, 0.2), (0.2, 0.5), (0.5, 0.85)])
+        # Splitting must partition the original span, never leave a gap: the
+        # 160 ms artificial gap in the industrial sample came from a manufactured
+        # span being pruned away after a split like this one.
+        self.assertEqual(result[1]["endTime"], result[2]["startTime"])
+
+    def test_split_guard_holds_when_more_spans_than_expected(self):
+        """`>=` must cover the over-segmented case, not just the exact match."""
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        class FakeIntensity:
+            @staticmethod
+            def get_value(_time_value):
+                return 70.0
+
+        syllables = [
+            {
+                "startTime": 0.0,
+                "endTime": 0.6,
+                "duration": 0.6,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+            {
+                "startTime": 0.6,
+                "endTime": 1.3,
+                "duration": 0.7,
+                "avgPitch": 150.0,
+                "maxPitch": 150.0,
+                "intensity": 70.0,
+            },
+        ]
+
+        with patch.object(server, "find_pitch_transitions", return_value=[0.3]):
+            result = server.split_oversized_syllables(
+                syllables,
+                expected_count=1,
+                pitch=FakePitch(),
+                intensity=FakeIntensity(),
+                int_times=np.arange(0.0, 1.4, 0.01),
+                int_values=np.full(140, 70.0),
+            )
+
+        self.assertEqual(result, syllables)
+
     def test_stress_runtime_uses_empirical_calibration(self):
         self.assertEqual(server.AnalysisConfig.STRESS_CALIBRATION_VERSION, "candidate-audit-20260711-447")
         self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_PITCH, 0.30)

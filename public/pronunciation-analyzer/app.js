@@ -896,7 +896,12 @@ export class PronunciationApp {
             enableManualReview,
             onManualSave: (segments) => this.saveManualReview(segments)
         });
-        this.syllableVerifier.loadAudio(audioBlob, syllables, syllableLabels);
+        this.syllableVerifier.loadAudio(
+            audioBlob,
+            syllables,
+            syllableLabels,
+            this.getSyllableIpaSegments()
+        );
     }
 
     buildManualReviewMetadata(manualSegments) {
@@ -944,6 +949,12 @@ export class PronunciationApp {
             rerecordReason: null,
             needsManualReview: true,
             reviewReason: 'manual_syllable_segmentation',
+            // Which syllabification the manual boundaries follow. Samples saved
+            // before this field exists were annotated against the orthographic
+            // chunking and place cluster consonants differently, so they must
+            // not be pooled with these without re-labelling.
+            segmentationConvention: 'ipa-phonological',
+            referenceSyllableIpa: this.getSyllableIpaSegments(),
             manualSegments: manualSegments.map(toSpan),
             automaticSegments
         };
@@ -1110,6 +1121,23 @@ export class PronunciationApp {
         if (audioBlob) {
             this.showSyllableVerifier(audioBlob, syllables);
         }
+    }
+
+    /**
+     * Per-syllable IPA in phonological order, used to label manual segmentation.
+     *
+     * Deliberately not the same as getSyllableLabels(): those are the headword's
+     * orthographic chunks ("in/dus/tri/al") and stay that way because they are
+     * what a learner can read. The IPA segmentation ("ɪn/dʌ/stri/jəl") assigns
+     * cluster consonants differently and is the convention the aligner and the
+     * corpus use.
+     */
+    getSyllableIpaSegments() {
+        const syllables = this.currentWordRef?.syllables;
+        if (!Array.isArray(syllables) || syllables.length !== this.expectedData?.syllables) {
+            return null;
+        }
+        return syllables.map((syllable) => syllable.ipa || null);
     }
 
     /**

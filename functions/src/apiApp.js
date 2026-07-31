@@ -36,10 +36,14 @@ app.set('trust proxy', true); // Cloud Functions runs behind Google's load balan
 app.use(cors({ origin: true }));
 app.use(express.json());
 
+// Emails allowed to self-promote to admin on first sign-in. Keep this to real,
+// controlled mailboxes only: any address listed here becomes an escalation path
+// for whoever can register it. Placeholder/test addresses must never appear —
+// tests inject their own resolver, and the emulator seeds admins through
+// scripts/seed-emulator-admin.js.
 function getBootstrapAdminEmails() {
     return new Set([
         'huathanhnam95@gmail.com',
-        'admin@example.com',
         String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
     ].filter(Boolean));
 }
@@ -106,7 +110,11 @@ async function resolveAdminStatus({ req }) {
         };
     }
 
-    if (!getBootstrapAdminEmails().has(email)) {
+    // Bootstrap promotes on the strength of an email address alone, so the
+    // address must be one Firebase has actually proven the caller controls.
+    // Without this, anyone able to register an allowlisted address on an open
+    // signup project would be granted admin on their first /admin/status call.
+    if (!getBootstrapAdminEmails().has(email) || req.user.email_verified !== true) {
         return {
             isAdmin: false,
             uid,

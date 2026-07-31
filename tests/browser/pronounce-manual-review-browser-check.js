@@ -77,7 +77,7 @@ async function run() {
       await verifier.loadAudio(new Blob(['wav']), [
         { startTime: 0, endTime: 0.25, duration: 0.25 },
         { startTime: 0.25, endTime: 0.5, duration: 0.25 }
-      ], ['pho', 'to']);
+      ], ['pho', 'to'], ['foʊ', 'tə']);
       const waveform = document.getElementById('sv-waveform');
       waveform.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 80, right: 1000, bottom: 80 });
       document.getElementById('sv-manual-review').click();
@@ -86,13 +86,19 @@ async function run() {
         clientX,
         clientY: 20
       }));
+      // Annotation must name the IPA syllable, not the orthographic chunk, so
+      // cluster consonants land on the phonological side of the boundary.
+      const firstTargetInstructions = document.getElementById('sv-manual-instructions').textContent;
       clickAt(100);
+      const pendingInstructions = document.getElementById('sv-manual-instructions').textContent;
       clickAt(350);
       clickAt(500);
       clickAt(700);
       document.getElementById('sv-manual-save').click();
       await new Promise((resolve) => setTimeout(resolve, 0));
       const cloudResult = {
+        firstTargetInstructions,
+        pendingInstructions,
         count: document.getElementById('sv-manual-count').textContent,
         instructions: document.getElementById('sv-manual-instructions').textContent,
         status: document.getElementById('sv-manual-status').textContent,
@@ -121,7 +127,16 @@ async function run() {
     });
 
     assert.equal(result.cloudResult.count, '2 segments');
-    assert.equal(result.cloudResult.instructions, 'Click the start and end of each syllable on the waveform.');
+    assert.equal(
+      result.cloudResult.firstTargetInstructions,
+      'Mark syllable 1 of 2: /foʊ/ — click its start, then its end. Use IPA boundaries, not spelling.'
+    );
+    assert.equal(result.cloudResult.pendingInstructions, 'Now click the end of syllable 1 /foʊ/.');
+    // Every syllable is marked, so there is no next IPA target to name.
+    assert.equal(
+      result.cloudResult.instructions,
+      'Click the start and end of each syllable on the waveform. Use IPA boundaries, not spelling.'
+    );
     assert.match(result.cloudResult.status, /^Saved to cloud: photograph-manual-review-test$/);
     assert.equal(result.cloudResult.saveText, 'Saved');
     assert.equal(result.cloudResult.saveDisabled, true);

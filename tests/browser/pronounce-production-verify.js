@@ -116,6 +116,22 @@ async function fetchText(url) {
   );
   console.log(`    ${PRAAT_API} allows ${allowOrigin}`);
 
+  // The client rejects any reference whose schemaVersion differs, so a backend
+  // lagging behind a schema bump breaks every word lookup on production even
+  // though both services are individually healthy.
+  const clientContract = await fetchText(`${BASE}/pronunciation-analyzer/reference-contract.js`);
+  const clientSchema = Number(/export const SCHEMA_VERSION = (\d+)/.exec(clientContract)?.[1]);
+  const reference = await corsResponse.json();
+  assert.ok(Number.isFinite(clientSchema), 'could not read SCHEMA_VERSION from the deployed client');
+  assert.equal(
+    reference.schemaVersion,
+    clientSchema,
+    `schema mismatch: client expects ${clientSchema}, praat-api serves ${reference.schemaVersion}. `
+    + 'Redeploy praat-api (project parselmouth) from the current commit.'
+  );
+  console.log(`    schema aligned: client ${clientSchema} == backend ${reference.schemaVersion}`);
+  console.log(`    backend algorithm: ${reference.algorithmVersion}`);
+
   console.log('[4] Booting Pronounce mode on production...');
   const browser = await chromium.launch({ headless: true });
   try {

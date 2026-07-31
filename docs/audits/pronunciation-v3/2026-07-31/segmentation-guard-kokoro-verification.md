@@ -91,7 +91,44 @@ interpreter. The 250 WAV files used here are genuine prior Kokoro output, which
 is what the analysis pass requires; regenerating identical audio would not
 change the measurement.
 
-## 6. Verdict
+## 6. Production deployment and end-to-end verification
+
+The guard lives in `backend/local_server/server.py`, which runs **only** on the
+`praat-api` Cloud Run service — not on Firebase hosting or functions. Shipping
+hosting alone would not have deployed it.
+
+That service also turned out to be 6 commits behind (V1.8.34 -> V1.8.44) and was
+serving `schemaVersion 9` / `pronunciation-reference-v3` while the deployed
+client expects `10` / `v4`. Because `validateReferenceV2` rejects any mismatch,
+**every word-reference lookup on production was failing** before this deploy
+with `Invalid pronunciation reference: schema version mismatch`.
+
+Deployed `praat-api` revision `praat-api-00026-8j9`
+(image tag `ba3c53699cfc2fa7a01749a04d230cfa2ac47dd8`) in project `parselmouth`.
+Traffic had been pinned by name to the old `praat-api-00029-pez`, so the new
+revision was verified at 0% traffic through a `verify` tag before being promoted
+to 100%.
+
+Kokoro audio posted to the live `/analyze/v2` endpoint, 40 files sampled across
+words and voices (`scripts/benchmarks/verify_production_kokoro_analysis.py`):
+
+| Metric | Result |
+|---|---:|
+| Analyzed | 40 / 40 |
+| Segmentation matches expected count | **40 / 40 (1.000)** |
+| Responses carrying a gap artifact | **0** |
+
+Note the same caveat as section 3: `/analyze/v2` is the target-guided path, so
+the count match confirms the deployed pipeline agrees with the local one and
+produces no gap artifacts. It is not an independent accuracy measurement.
+
+A deploy-blocking bug was fixed on the way: commit `61af4a81` added `COPY` lines
+for `phoneme_client.py`, `pronunciation_verifier.py` and
+`models/pronunciation-verifier-v1.json` to `backend/Dockerfile` without updating
+the `.gcloudignore` allowlist, so any image build from `main` would have failed
+on a missing path.
+
+## 7. Verdict
 
 The guard is safe to ship: zero count regressions across 250 files, two files
 strictly improved, and no effect on the unguided path. It does not improve

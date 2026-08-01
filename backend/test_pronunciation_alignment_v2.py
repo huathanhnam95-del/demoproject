@@ -914,5 +914,33 @@ class PronunciationAlignmentV3EditOpsTest(unittest.TestCase):
         self.assertEqual(ops[0]['obs'], 'æ')
 
 
+    def test_trailing_trim_reduces_industrial_final_span_overshoot(self):
+        """The industrial sample's final span overshoots the hand-labelled
+        boundary by ~78 ms of trailing silence. trim_trailing_silence must
+        pull the final end inward (closer to 1.707) without exceeding
+        speech_end or regressing the syllable count."""
+        import os
+        wav = os.path.join(
+            os.path.dirname(__file__), os.pardir,
+            "test-results", "pronounce-local-samples",
+            "industrial-20260731043716641-c4942bdd.wav",
+        )
+        if not os.path.isfile(wav):
+            self.skipTest("industrial WAV not available")
+
+        result = server.analyze_audio(wav, expected_syllables=4)
+        spans = result["syllables"]
+        self.assertEqual(len(spans), 4)
+        final_end = float(spans[-1]["endTime"])
+        # Before the trim, final end was ~1.785.  Hand-labelled boundary is
+        # 1.707.  The trim should bring it noticeably closer — assert it is
+        # now below 1.76 (at least 25 ms of the 78 ms overshoot removed).
+        self.assertLess(final_end, 1.76,
+                        f"final span end {final_end:.3f} still overshoots")
+        # And it must not have been pushed earlier than the hand-labelled end.
+        self.assertGreater(final_end, 1.69,
+                           f"final span end {final_end:.3f} clipped too far")
+
+
 if __name__ == "__main__":
     unittest.main()

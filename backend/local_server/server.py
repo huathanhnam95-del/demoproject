@@ -131,6 +131,14 @@ class AnalysisConfig:
     # Pattern matching
     PATTERN_MATCH_THRESHOLD = 0.70   # Pearson correlation threshold
     
+    # Trailing-silence trim for the final syllable. speech_end includes low-
+    # energy out-breath/decay; the human boundary sits where energy has fallen
+    # ~15 dB below the syllable's own peak (measured on the `industrial` label:
+    # 82 dB peak, hand-cut at ~67 dB). This is deliberately tighter than the
+    # 25 dB whole-utterance speech-region floor, which is too permissive to
+    # catch a single syllable's tail.
+    TRAILING_SILENCE_DROP_DB = 15
+
     # Vowel-end clamping (prevents onset cluster leakage)
     # Based on perceptual syllable timing - boundary should be at vowel offset
     VOWEL_END_LOOKAHEAD_FACTOR = 1.5  # Multiplier of MIN_SYLLABLE_DURATION
@@ -550,8 +558,64 @@ def clamp_boundary_to_vowel_end(candidate_boundary, peak_time, start_time,
     # Sanity check: ensure syllable doesn't become too short
     min_end = start_time + config.MIN_SYLLABLE_DURATION
     clamped = max(clamped, min_end)
-    
+
     return clamped, vowel_end
+
+
+def trim_trailing_silence(final_start, speech_end, peak_time,
+                          pitch, intensity_obj, int_times, int_values, config=None):
+    """
+    Pull the final syllable's end back off trailing silence / out-breath.
+
+    speech_end is the last above-threshold intensity frame plus a fixed padding,
+    so a low-energy tail (out-breath, lingering frication) inflates the final
+    syllable's duration. Because duration is the heaviest stress cue
+    (STRESS_WEIGHT_DURATION = 0.60), that inflation biases the final syllable's
+    stress score — the `industrial` sample overshot its hand-labelled `al`
+    boundary by ~78 ms this way.
+
+    Walk back from speech_end to the last frame whose intensity is still within
+    TRAILING_SILENCE_DROP_DB of this syllable's own peak, then re-apply the same
+    2-frame (~20 ms) padding speech_end carries. The end is only ever pulled IN,
+    and never earlier than the vowel offset of the final peak nor below the
+    minimum syllable duration, so a genuinely short or voiced-coda final syllable
+    is never clipped.
+    """
+    if config is None:
+        config = AnalysisConfig()
+
+    span_idx = np.where((int_times >= final_start) & (int_times <= speech_end))[0]
+    if span_idx.size == 0:
+        return speech_end
+
+    span_values = int_values[span_idx]
+    peak_intensity = float(np.max(span_values))
+    # Perceptual speech offset for a single syllable's tail: energy has decayed
+    # this far below the syllable's own peak.
+    trailing_floor = peak_intensity - config.TRAILING_SILENCE_DROP_DB
+
+    voiced_local = np.where(span_values > trailing_floor)[0]
+    if voiced_local.size == 0:
+        return speech_end
+
+    last_voiced_idx = int(span_idx[int(voiced_local[-1])])
+    # Mirror the +2-frame (~20 ms) padding that speech_end itself carries.
+    padded_idx = min(len(int_times) - 1, last_voiced_idx + 2)
+    trimmed_end = float(int_times[padded_idx])
+
+    # Only ever pull the end in.
+    trimmed_end = min(trimmed_end, speech_end)
+    # Never cross earlier than the final vowel's offset...
+    vowel_end = find_vowel_end(
+        pitch, intensity_obj, int_times, int_values, peak_time, speech_end, config
+    )
+    trimmed_end = max(trimmed_end, vowel_end)
+    # ...nor shorten the syllable below the minimum valid duration.
+    trimmed_end = max(trimmed_end, final_start + config.MIN_SYLLABLE_DURATION)
+    # Final ceiling: the trim only ever pulls the end IN.
+    trimmed_end = min(trimmed_end, speech_end)
+
+    return trimmed_end
 
 
 app: Flask = Flask(__name__)
@@ -4059,9 +4123,16 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
             print(f"  [CLAMP] Boundary {i+1}: {candidate_time:.3f}s → {clamped_time:.3f}s (vowel_end: {vowel_end:.3f}s)")
         
         boundaries.append(clamped_time)
-    
-    boundaries.append(speech_end)
-    
+
+    # The final span otherwise runs to speech_end, which includes trailing
+    # padding and any low-energy out-breath. Pull it back off silence so the
+    # last syllable's duration reflects real speech.
+    final_end = trim_trailing_silence(
+        boundaries[-1], speech_end, peaks[-1]['time'],
+        pitch, intensity, int_times, int_values, config
+    )
+    boundaries.append(final_end)
+
     # Debug logging
     print("\n" + "="*70)
     print("MULTI-CUE SYLLABLE BOUNDARY DETECTION")

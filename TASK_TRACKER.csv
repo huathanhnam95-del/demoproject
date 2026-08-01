@@ -922,3 +922,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 530,2026-07-31,Harden admin bootstrap (remove placeholder email + require email_verified) and add split-guard + IPA segmentation convention tests,Done,2026-07-31
 531,2026-07-31,Deploy admin bootstrap security fix and IPA segmentation convention to production with Kokoro accuracy A/B verification,Done,2026-07-31
 532,2026-07-31,Redeploy Praat API Cloud Run service to fix schema v9/v10 mismatch breaking production word lookups,Done,2026-07-31
+533,2026-08-01,Fix Reading UI a11y bugs - DD keyboard-accessible blank slots (button+label) RMCSA radiogroup arrow-key pattern RMCMA checkbox semantics; verified all 5 modes end-to-end,Done,2026-08-01
+534,2026-08-01,Pagination for question pickers random toggle navigation and skill indicator,Done,2026-08-01
+535,2026-08-01,Remove Active badge box from practice skill card buttons,Done,2026-08-01
+536,2026-08-01,Fix final-span trailing-silence overshoot in pronunciation segmentation + admin bootstrap live smoke check + archive legacy orthographic samples,Done,2026-08-01

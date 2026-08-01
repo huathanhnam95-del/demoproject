@@ -133,3 +133,63 @@ on a missing path.
 The guard is safe to ship: zero count regressions across 250 files, two files
 strictly improved, and no effect on the unguided path. It does not improve
 pronunciation accuracy in general — it removes a specific segmentation artifact.
+
+## 8. Trailing-silence trim (follow-up fix)
+
+The overshoot documented in section 4 was addressed by a new
+`trim_trailing_silence()` function in `peaks_to_syllables`. It walks back from
+`speech_end` to the last intensity frame within `TRAILING_SILENCE_DROP_DB` (15 dB)
+of the final syllable's own energy peak, then re-applies the 2-frame (~20 ms)
+padding. It never extends the span past `speech_end`, never trims earlier than the
+vowel offset of the final peak, and never shortens the syllable below
+`MIN_SYLLABLE_DURATION`.
+
+Harness: `scripts/benchmarks/evaluate_trailing_trim.py`
+Raw output: `test-results/pronunciation-kokoro-benchmark/trailing-trim-ab.json`
+
+### 8.1 Kokoro A/B results (250 files)
+
+| Metric | Trim ON | Trim OFF (identity) |
+|---|---:|---:|
+| Files analyzed | 250 | 250 |
+| Count accuracy | 1.000 | 1.000 |
+| Total final-span duration | 77.883 s | 78.903 s |
+| Files trimmed | 21 | — |
+| Total trailing silence removed | 1.020 s | — |
+| Files where trim extended the span | **0** | — |
+| Analysis errors | 0 | 0 |
+
+Zero count regressions. 21 files had trailing silence removed. No file was
+extended — the final ceiling clamp (`min(trimmed_end, speech_end)`) holds after
+both floor clamps (vowel offset, minimum duration).
+
+### 8.2 `industrial` regression case (with trim)
+
+```text
+0.925 - 1.005  (0.080s)
+1.005 - 1.285  (0.280s)
+1.285 - 1.568  (0.283s)
+1.568 - 1.725  (0.157s)
+internal gaps: [0.0, 0.0, 0.0]
+```
+
+The final span end moved from 1.785 → 1.725 (hand-labelled boundary: 1.707).
+60 ms of the 78 ms trailing overshoot was removed. The remaining 18 ms is within
+one Praat analysis frame of the ground truth.
+
+## 9. Admin bootstrap live smoke check
+
+Script: `scripts/audit/verify-admin-bootstrap-live.js`
+
+Uses Admin-SDK-minted ID tokens against the production `/api/admin/status`
+endpoint. No password entry; no manual login.
+
+| Case | UID | email_verified | Result |
+|---|---|---|---|
+| Positive (owner) | V15Tp3sC… | true | 200, isAdmin: true |
+| Negative (throwaway) | smoke-test-* | false | 403 |
+
+The throwaway user is created with `emailVerified: false` and a non-bootstrap
+email, then deleted after the assertion. This proves the `email_verified` gate
+added in commit `2905b83e` holds in production, and the removed placeholder
+address cannot be exploited.

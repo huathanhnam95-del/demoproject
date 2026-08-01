@@ -5,3 +5,5 @@ flask>=3.0,<4.0
 gunicorn>=21.0,<23.0
 numpy>=1.24,<2.0
 scipy>=1.10,<2.0
+protobuf>=3.20,<6.0
+phonemizer>=3.0,<4.0

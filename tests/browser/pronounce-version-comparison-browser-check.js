@@ -1,5 +1,7 @@
 // eslint-disable-next-line
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { chromium } = require('playwright');
 const { startServer } = require('./pronounce-mode-browser-check.js');
 
@@ -98,6 +100,7 @@ async function run() {
         new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' }),
         { referenceIpa: '/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/', expectedSyllables: 3, targetWord: 'photograph', variantId: '8888888888888888' }
       );
+      window.__comparisonFixture = comparison;
       app.userAudioBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' });
       app.praatAPI.ensureWav = async (blob) => blob;
       app.renderVersionComparison(comparison, app.userAudioBlob);
@@ -158,6 +161,17 @@ async function run() {
     assert.equal(result.auth, 'Bearer comparison-admin-token');
     assert.equal(result.overflow, true);
     assert.deepEqual(pageErrors, []);
+    const screenshotDir = process.env.PRONOUNCE_SCREENSHOT_DIR;
+    if (screenshotDir) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.evaluate(async () => {
+        const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+        bootPronunciationApp().renderVersionComparison(window.__comparisonFixture, null);
+      });
+      await page.screenshot({ path: path.join(screenshotDir, 'pronunciation-v2-v3-comparison-desktop.png'), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.screenshot({ path: path.join(screenshotDir, 'pronunciation-v2-v3-comparison-mobile.png'), fullPage: true });
+    }
   } finally {
     await browser.close();
     server.close();

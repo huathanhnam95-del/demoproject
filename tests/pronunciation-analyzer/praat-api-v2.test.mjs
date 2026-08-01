@@ -70,6 +70,76 @@ describe('PraatAPI v3 integration', () => {
         assert.equal(result.syllable_count, 1);
     });
 
+    it('analyzeComparison() posts one WAV and returns both envelopes', async () => {
+        let capturedUrl = null;
+        let capturedBody = null;
+        globalThis.fetch = async (url, options) => {
+            capturedUrl = url;
+            capturedBody = options.body;
+            return {
+                ok: true,
+                json: async () => ({
+                    mode: 'comparison',
+                    v2: { status: 'available', analysis: { observed: { syllableCount: 2 } } },
+                    v3: { status: 'available', analysis: { syllable_count: 3 } }
+                })
+            };
+        };
+
+        const result = await api.analyzeComparison(
+            new Blob(['audio'], { type: 'audio/wav' }),
+            {
+                referenceIpa: '/\u02c8\u00e6k.t\u0283u.\u0259l/',
+                expectedSyllables: 3,
+                targetWord: 'actual',
+                variantId: 'cmudict:actual'
+            }
+        );
+
+        assert.equal(capturedUrl, 'https://backend.example/analyze/compare');
+        assert.equal(capturedBody.get('reference_ipa'), '/\u02c8\u00e6k.t\u0283u.\u0259l/');
+        assert.equal(capturedBody.get('expected_syllables'), '3');
+        assert.equal(capturedBody.get('target_word'), 'actual');
+        assert.equal(capturedBody.get('variant_id'), 'cmudict:actual');
+        assert.equal(result.mode, 'comparison');
+        assert.equal(result.v2.status, 'available');
+        assert.equal(result.v3.status, 'available');
+    });
+
+    it('analyzeComparison() preserves a successful partial response', async () => {
+        config.features.usePronunciationV3LearnerAnalysis = true;
+        globalThis.fetch = async () => ({
+            ok: true,
+            json: async () => ({
+                mode: 'comparison',
+                status: 'partial_failure',
+                v2: { status: 'available' },
+                v3: { status: 'unavailable', reason: 'MODEL_INFERENCE_FAILED' }
+            })
+        });
+
+        const result = await api.analyzeComparison(
+            new Blob(['audio'], { type: 'audio/wav' }),
+            { expectedSyllables: 1, targetWord: 'word' }
+        );
+
+        assert.equal(result.status, 'partial_failure');
+        assert.equal(result.v2.status, 'available');
+        assert.equal(result.v3.reason, 'MODEL_INFERENCE_FAILED');
+    });
+
+    it('analyzeComparison() throws the backend error for total failure', async () => {
+        globalThis.fetch = async () => ({
+            ok: false,
+            json: async () => ({ error: 'Both pronunciation engines unavailable' })
+        });
+
+        await assert.rejects(
+            api.analyzeComparison(new Blob(['audio'], { type: 'audio/wav' }), { expectedSyllables: 1 }),
+            /Both pronunciation engines unavailable/
+        );
+    });
+
     it('analyze() delegates to v3 when mode is active', async () => {
         config.features.usePronunciationV3LearnerAnalysis = true;
         let fetchCalls = [];

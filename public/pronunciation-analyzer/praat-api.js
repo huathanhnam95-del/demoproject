@@ -91,6 +91,44 @@ export class PraatAPI {
         return response.json();
     }
 
+    /**
+     * Run the admin-only comparison request.  This intentionally bypasses
+     * `analyze()` and the learner V3 feature flag: the comparison response is
+     * an explicit V2/V3 bake-off for the same recording.
+     * @param {Blob} audioBlob
+     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string, variantId?: string }} options
+     * @returns {Promise<object>} comparison response containing v2 and v3 envelopes
+     */
+    async analyzeComparison(audioBlob, { referenceIpa, expectedSyllables, targetWord, variantId } = {}) {
+        const wavBlob = await this.ensureWav(audioBlob);
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'recording.wav');
+        if (referenceIpa) {
+            formData.append('reference_ipa', String(referenceIpa));
+        }
+        if (Number.isInteger(expectedSyllables) && expectedSyllables > 0) {
+            formData.append('expected_syllables', String(expectedSyllables));
+        }
+        if (targetWord) {
+            formData.append('target_word', String(targetWord));
+        }
+        if (variantId) {
+            formData.append('variant_id', String(variantId));
+        }
+
+        const response = await fetch(`${this.backendUrl}/analyze/compare`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Comparison analysis failed' }));
+            throw new Error(error.error || error.message || 'Comparison analysis failed');
+        }
+
+        return response.json();
+    }
+
     async analyze(audioBlob, expectedSyllableCount = null, options = {}) {
         // Production learner feedback stays on target-aligned V2 unless a
         // future rollout explicitly opts into V3 analysis.

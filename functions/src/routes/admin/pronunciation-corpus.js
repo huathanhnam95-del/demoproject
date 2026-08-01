@@ -437,5 +437,8 @@ function registerPronunciationCorpusRoutes(router, deps) {
 }
 
 module.exports = registerPronunciationCorpusRoutes;
+module.exports.COLLECTION = COLLECTION;
+module.exports.normalizeTimingSegments = normalizeTimingSegments;
+module.exports.parseRawMultipartRequest = parseRawMultipartRequest;
 module.exports.validateCorpusMetadata = validateCorpusMetadata;
 module.exports.validateWavBuffer = validateWavBuffer;

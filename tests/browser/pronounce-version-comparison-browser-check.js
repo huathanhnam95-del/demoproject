@@ -108,14 +108,24 @@ async function run() {
       const sourceAfterToggle = app.versionComparisonBoundarySource;
       const manualAfterToggle = app.versionComparisonManualSegments;
       const saveDisabledBeforeVote = document.querySelector('#pa-version-save').disabled;
+      const v2Count = document.querySelector('#pa-version-v2 .pa-version-metric-row dd')?.textContent;
+      const v3Count = document.querySelector('#pa-version-v3 .pa-version-metric-row dd')?.textContent;
       document.querySelector('input[name="pa-version-judgment"][value="v3"]').focus();
       document.querySelector('input[name="pa-version-judgment"][value="v3"]').click();
       const saveEnabledAfterVote = document.querySelector('#pa-version-save').disabled;
       await app.saveVersionComparison();
+      const completeSavedCount = window.__savedComparisons.length;
+      const partial = {
+        ...comparison,
+        status: 'partial_failure',
+        v3: { status: 'unavailable', reason: 'MODEL_INFERENCE_FAILED', analysis: null }
+      };
+      app.renderVersionComparison(partial, null);
+      await Promise.all([app.saveVersionComparison(), app.saveVersionComparison()]);
       return {
         compareRequests: window.__comparisonRequests.length,
-        v2Count: document.querySelector('#pa-version-v2 .pa-version-metric-row dd')?.textContent,
-        v3Count: document.querySelector('#pa-version-v3 .pa-version-metric-row dd')?.textContent,
+        v2Count,
+        v3Count,
         radioCount: document.querySelectorAll('input[name="pa-version-judgment"]').length,
         visible: !document.querySelector('#pa-version-comparison').hidden,
         sourceAfterToggle,
@@ -123,6 +133,8 @@ async function run() {
         saveDisabledBeforeVote,
         saveEnabledAfterVote,
         saved: window.__savedComparisons,
+        completeSavedCount,
+        partialJudgmentHidden: document.querySelector('#pa-version-judgment').hidden,
         auth: window.__comparisonSaveAuthHeader,
         overflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth
       };
@@ -137,9 +149,12 @@ async function run() {
     assert.deepEqual(result.manualAfterToggle, [{ startTime: 0.1, endTime: 0.2, source: 'manual-review' }]);
     assert.equal(result.saveDisabledBeforeVote, true);
     assert.equal(result.saveEnabledAfterVote, false);
-    assert.equal(result.saved.length, 1);
+    assert.equal(result.saved.length, 2);
     assert.equal(result.saved[0].judgment, 'v3');
     assert.equal(result.saved[0].analyses.v2.status, 'available');
+    assert.equal(result.saved[1].judgment, null);
+    assert.equal(result.completeSavedCount, 1);
+    assert.equal(result.partialJudgmentHidden, true);
     assert.equal(result.auth, 'Bearer comparison-admin-token');
     assert.equal(result.overflow, true);
     assert.deepEqual(pageErrors, []);

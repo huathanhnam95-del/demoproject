@@ -548,6 +548,26 @@ class PronunciationV3ApiTest(unittest.TestCase):
         server.app.testing = True
         cls.client = server.app.test_client()
 
+    def _valid_comparison_form(self):
+        return {
+            "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
+            "reference_ipa": "/\u02c8h\u025b.lo\u028a/",
+            "expected_syllables": "2",
+            "target_word": "actual",
+            "variant_id": "cmudict:actual",
+        }
+
+    def _comparison_v3_pipeline(self, **overrides):
+        value = {
+            'praat_result': dict(_V2_FAKE_RESULT),
+            'phoneme_result': dict(_PHONEME_FAKE_RESULT),
+            'phoneme_error': None,
+            'elapsed': 0.12,
+            'request_reference_id': '0123456789abcdef',
+        }
+        value.update(overrides)
+        return value
+
     # -- /health includes v3 mode --
 
     def test_health_includes_pronunciation_v3_mode(self):
@@ -697,6 +717,123 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertFalse(payload['degraded'])
         self.assertIn('best_effort', payload)
         self.assertTrue(payload['best_effort']['advisory_only'])
+
+    # -- comparison mode (independent of global learner mode) --
+
+    def test_compare_returns_v2_and_v3_while_global_mode_is_shadow(self):
+        with patch.object(server, '_PRONUNCIATION_V3_MODE', 'shadow'), \
+             patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v1')
+        self.assertEqual(body['mode'], 'comparison')
+        self.assertEqual(body['v2']['status'], 'available')
+        self.assertEqual(body['v3']['status'], 'available')
+        self.assertEqual(body['context']['targetWord'], 'actual')
+        self.assertRegex(body['comparisonId'], r'^[0-9a-f]{32}$')
+
+    def test_compare_preserves_v2_when_v3_is_unavailable(self):
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(
+                 server,
+                 'run_v3_pipeline',
+                 return_value=self._comparison_v3_pipeline(
+                     phoneme_result=None,
+                     phoneme_error='MODEL_INFERENCE_FAILED',
+                 ),
+             ):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['v2']['status'], 'available')
+        self.assertEqual(body['v3']['status'], 'unavailable')
+        self.assertEqual(body['v3']['reason'], 'MODEL_INFERENCE_FAILED')
+
+    def test_compare_preserves_v3_when_v2_is_unavailable(self):
+        with patch.object(server, 'analyze_audio_v2', side_effect=RuntimeError('Praat failed')), \
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['v2']['status'], 'unavailable')
+        self.assertEqual(body['v2']['reason'], 'ANALYSIS_FAILED')
+        self.assertEqual(body['v3']['status'], 'available')
+
+    def test_compare_returns_503_when_both_engines_are_unavailable(self):
+        with patch.object(server, 'analyze_audio_v2', side_effect=RuntimeError('Praat failed')), \
+             patch.object(
+                 server,
+                 'run_v3_pipeline',
+                 return_value=self._comparison_v3_pipeline(
+                     praat_result=None,
+                     phoneme_result=None,
+                     phoneme_error='MODEL_INFERENCE_FAILED',
+                 ),
+             ):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 503)
+        body = response.get_json()
+        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v1')
+        self.assertEqual(body['status'], 'unavailable')
+        self.assertEqual(body['v2']['status'], 'unavailable')
+        self.assertEqual(body['v3']['status'], 'unavailable')
+
+    def test_compare_validates_reference_and_expected_count(self):
+        invalid_reference = self._valid_comparison_form()
+        invalid_reference['reference_ipa'] = ''
+        response = self.client.post(
+            "/analyze/compare",
+            data=invalid_reference,
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 400)
+
+        conflict = self._valid_comparison_form()
+        conflict['expected_syllables'] = '3'
+        response = self.client.post(
+            "/analyze/compare",
+            data=conflict,
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_compare_missing_audio_returns_400(self):
+        response = self.client.post(
+            "/analyze/compare",
+            data={"reference_ipa": "/\u02c8h\u025b.lo\u028a/", "expected_syllables": "2"},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_compare_ids_are_unique_for_repeated_requests(self):
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()):
+            first = self.client.post(
+                "/analyze/compare", data=self._valid_comparison_form(), content_type="multipart/form-data"
+            ).get_json()
+            second = self.client.post(
+                "/analyze/compare", data=self._valid_comparison_form(), content_type="multipart/form-data"
+            ).get_json()
+        self.assertNotEqual(first['comparisonId'], second['comparisonId'])
+        self.assertRegex(second['comparisonId'], r'^[0-9a-f]{32}$')
 
     # -- active mode --
 

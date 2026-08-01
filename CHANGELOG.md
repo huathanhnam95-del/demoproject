@@ -1,3 +1,12 @@
+## [V1.8.45] - 2026-07-31
+
+### Changed
+- **Syllabic consonants in Oxford IPA**: word-final `/ən/` and `/əl/` now render as the syllabic `/n/` and `/l/` Oxford uses — `button` `/ˈbʌtn/`, `listen` `/ˈlɪsn/`, `little` `/ˈlɪtl/`, `table` `/ˈteɪbl/`, `occupation` `/ˌɑːkjuˈpeɪʃn/` (~8,280 corpus entries). The rule is context-gated: it fires only after coronal obstruents and `/f v/` for `/n/`, and after obstruents and nasals (never `/r/` or a glide) for `/l/`, so `open` `/ˈoʊpən/`, `bacon` `/ˈbeɪkən/`, and `barrel` `/ˈbærəl/` keep their schwa. A monosyllable's schwa is its nucleus and is never swallowed (`cull` stays `/kʌl/`). Applied last in `Phonetics.normalizeIPA()`, after stress placement. Deliberately word-final only; medial clusters like `student` `/ˈstuːdənt/` are left for a later pass.
+
+### Fixed
+- **Emulator launcher on Windows**: `scripts/emulators-start.js` used `spawn('npx.cmd', …)` without a shell, which Node ≥18.20 rejects with `spawn EINVAL` (CVE-2024-27980 hardening). Now spawns with a shell on Windows and quotes space-bearing args, so `npm run emulators` — and the browser suites that depend on it — start again.
+- **Stale Read Aloud browser check**: `tests/browser/read-aloud-check.js` waited for the prompt-guides group in the default Basic view, but the Speaking Practice Controller now gates it behind Advanced. The check switches to Advanced before asserting.
+
 ## [V1.8.44] - 2026-07-31
 
 ### Changed

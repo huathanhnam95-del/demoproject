@@ -111,6 +111,13 @@ const { chromium } = require('playwright');
   await page.waitForSelector('#mode-read-aloud.active', { state: 'visible', timeout: 5000 });
   console.log('Read Aloud mode panel is active.');
 
+  // The prompt guides are an advanced-level in-place control, so the Speaking
+  // Practice Controller keeps them hidden in the default Basic view
+  // (speaking-practice-controller.css gates [data-spc-level="advanced"]).
+  // Switch to Advanced before asserting on them.
+  await page.evaluate(() => {
+    document.querySelector('.spc-view-toggle-btn[data-view="advanced"]')?.click();
+  });
   await page.waitForSelector('#ra-prompt-guides-group', { state: 'visible', timeout: 5000 });
   const guideState = await page.evaluate(() => ({
     chunkingPressed: document.getElementById('ra-toggle-chunking-btn')?.getAttribute('aria-pressed'),

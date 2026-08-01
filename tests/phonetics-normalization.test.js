@@ -63,11 +63,39 @@ assert.equal(normalizeIPA('/ˈhæpi/', 'happy'), '/ˈhæpi/');
 assert.equal(normalizeIPA('/ˈreɪdioʊ/', 'radio'), '/ˈreɪdioʊ/');
 assert.equal(normalizeIPA('/əˈkʌmpənimənt/', 'accompaniment'), '/əˈkʌmpənimənt/');
 assert.equal(normalizeIPA('/ˈprɑbəˌbli/', 'probably'), '/ˈprɑːbəˌbli/');
-assert.equal(normalizeIPA('/ˌɑkjuˈpeɪʃən/', 'occupation'), '/ˌɑːkjuˈpeɪʃən/');
+// occupation reduces its final /ʃən/ to a syllabic /ʃn/ (see syllabic block).
+assert.equal(normalizeIPA('/ˌɑkjuˈpeɪʃən/', 'occupation'), '/ˌɑːkjuˈpeɪʃn/');
 assert.equal(normalizeIPA('/ˈmɛnju/', 'menu'), '/ˈmenjuː/');
 assert.equal(normalizeIPA('/məˈʃin/', 'machine'), '/məˈʃiːn/');
 // Phrase entries end a word at a space, not only at end of string.
 assert.equal(normalizeIPA('/ˌɛni ˈmɔr/', 'any more'), '/ˌeni ˈmɔːr/');
+
+// === Syllabic consonants ===
+// /ən/ -> syllabic /n/ after coronal obstruents and /f v/, word-final.
+assert.equal(normalizeIPA('/ˈbʌtən/', 'button'), '/ˈbʌtn/');
+assert.equal(normalizeIPA('/ˈlɪsən/', 'listen'), '/ˈlɪsn/');
+assert.equal(normalizeIPA('/ˈsɛvən/', 'seven'), '/ˈsevn/');
+assert.equal(normalizeIPA('/ˈriːzən/', 'reason'), '/ˈriːzn/');
+// ...but NOT after labials or velars.
+assert.equal(normalizeIPA('/ˈoʊpən/', 'open'), '/ˈoʊpən/');
+assert.equal(normalizeIPA('/ˈbeɪkən/', 'bacon'), '/ˈbeɪkən/');
+// /əl/ -> syllabic /l/ after obstruents and nasals, word-final.
+assert.equal(normalizeIPA('/ˈlɪtəl/', 'little'), '/ˈlɪtl/');
+assert.equal(normalizeIPA('/ˈteɪbəl/', 'table'), '/ˈteɪbl/');
+assert.equal(normalizeIPA('/ˈæpəl/', 'apple'), '/ˈæpl/');
+// ...but NOT after /r/ or a glide.
+assert.equal(normalizeIPA('/ˈbærəl/', 'barrel'), '/ˈbærəl/');
+// A voiced inflection may follow the syllabic consonant.
+assert.equal(normalizeIPA('/ˈbʌtənz/', 'buttons'), '/ˈbʌtnz/');
+assert.equal(normalizeIPA('/ˈlɪsənd/', 'listened'), '/ˈlɪsnd/');
+assert.equal(normalizeIPA('/ˈlɪsənɪŋ/', 'listening'), '/ˈlɪsnɪŋ/');
+// A monosyllable's schwa is its nucleus and must never be swallowed
+// (the caret repair needs a CMU reference, absent in a direct call).
+assert.equal(normalizeIPA('/ˈkəl/', 'cull'), '/kəl/');
+assert.equal(normalizeIPA('/ˈtʃən/', 'chun'), '/tʃən/');
+// Boundary: the rule is word-final only, so a medial /ən/ before /əl/
+// (national) is deliberately left un-reduced rather than guessed.
+assert.equal(normalizeIPA('/ˈnæʃənəl/', 'national'), '/ˈnæʃənəl/');
 // Applying the transform twice must not change the result.
 assert.equal(normalizeIPA(normalizeIPA('/ˈnɝs/', 'nurse'), 'nurse'), '/nɜːrs/');
 assert.equal(normalizeIPA(normalizeIPA('/ˈwɔtɝ/', 'water'), 'water'), '/ˈwɔːtər/');

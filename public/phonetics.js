@@ -399,6 +399,52 @@ const Phonetics = (function () {
         return result;
     }
 
+    // === SYLLABIC CONSONANTS ===
+
+    // Oxford writes a syllabic /n/ after coronal obstruents and /f v/
+    // (button /ˈbʌtn/, listen /ˈlɪsn/, seven /ˈsevn/) but keeps the schwa after
+    // labials and velars (open /ˈoʊpən/, bacon /ˈbeɪkən/).
+    const SYLLABIC_N_TRIGGERS = new Set(['t', 'd', 's', 'z', 'ʃ', 'ʒ', 'θ', 'ð', 'f', 'v']);
+    // Syllabic /l/ follows obstruents and nasals, but not liquids or glides:
+    // barrel /ˈbærəl/ and usual /ˈjuːʒuəl/ keep their schwa.
+    const SYLLABIC_L_BLOCKERS = new Set(['r', 'ɹ', 'l', 'w', 'j']);
+    // Only voiced inflections attach to a syllabic consonant. Allowing /s/ here
+    // would swallow stem-final clusters such as sentence /ˈsentəns/.
+    const SYLLABIC_INFLECTION = '(z|d|ɪŋ)?';
+    const SYLLABIC_N_RE = new RegExp(`([a-zɡʃʒθðŋ])ən${SYLLABIC_INFLECTION}$`, 'u');
+    const SYLLABIC_L_RE = new RegExp(`([a-zɡʃʒθðŋmn])əl${SYLLABIC_INFLECTION}$`, 'u');
+    const FULL_VOWELS = 'aeiouɪʊæɑɔʌɜ';
+
+    /**
+     * Collapse /ən/ and /əl/ to syllabic /n/ and /l/ in Oxford's word-final
+     * contexts. Restricted to the end of the word (optionally plus one voiced
+     * inflection) because medial cases are not mechanically predictable.
+     */
+    function applySyllabicConsonants(value) {
+        let result = value.replace(SYLLABIC_N_RE, (match, consonant, inflection) => (
+            SYLLABIC_N_TRIGGERS.has(consonant) ? `${consonant}n${inflection || ''}` : match
+        ));
+
+        result = result.replace(SYLLABIC_L_RE, (match, consonant, inflection) => {
+            if (SYLLABIC_L_BLOCKERS.has(consonant)) return match;
+            // In /ənəl/ the /n/ takes the syllable and the schwa stays
+            // (national /ˈnæʃnəl/); after a full vowel the /l/ takes it
+            // (tunnel /ˈtʌnl/).
+            const index = result.lastIndexOf(match);
+            const preceding = index > 0 ? result[index - 1] : '';
+            if (consonant === 'n' && preceding && !FULL_VOWELS.includes(preceding)) return match;
+            return `${consonant}l${inflection || ''}`;
+        });
+
+        // In a monosyllable the schwa is the nucleus, not a reduction: cull
+        // /ˈkəl/ and chun /ˈtʃən/ must not collapse to /kl/ and /tʃn/.
+        if (countVowelNuclei(result) === 0 && countVowelNuclei(value) > 0) {
+            return value;
+        }
+
+        return result;
+    }
+
     function selectMatchingReferenceIPA(sourceIPA, references) {
         return (references || []).find((referenceIPA) => (
             /ʌ/.test(stripSlashes(referenceIPA))
@@ -521,7 +567,10 @@ const Phonetics = (function () {
             cleaned = cleaned.replace(/ˈ/g, '');
         }
 
-        cleaned = cleaned.trim();
+        // Syllabic consonants come last: they remove a schwa nucleus, and
+        // running them earlier made button /ˈbʌtən/ look monosyllabic and lose
+        // its stress mark.
+        cleaned = applySyllabicConsonants(cleaned).trim();
         return ipa.trim().startsWith('/') ? `/${cleaned}/` : cleaned;
     }
 

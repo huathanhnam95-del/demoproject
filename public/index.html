@@ -2028,6 +2028,54 @@
             Record and speak a word to analyze stress.
           </div>
 
+          <!-- Admin-only V2/V3 comparison. The normal learner result remains
+               above; this section is revealed only after the admin gate. -->
+          <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
+            <div class="pa-version-comparison-header">
+              <div>
+                <p class="pa-version-eyebrow">Admin comparison</p>
+                <h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3>
+                <p class="pa-version-description">Both engines analyzed the same recording. Inspect the boundaries, then save your judgment.</p>
+              </div>
+              <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
+            </div>
+
+            <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
+              <article id="pa-version-v2" class="pa-version-column" aria-labelledby="pa-version-v2-title"></article>
+              <article id="pa-version-v3" class="pa-version-column" aria-labelledby="pa-version-v3-title"></article>
+            </div>
+
+            <div class="pa-version-boundary-controls">
+              <div>
+                <strong>Waveform boundaries</strong>
+                <span class="pa-version-help">The shared waveform starts with the selected automatic set. Manual marks stay in place when you switch.</span>
+              </div>
+              <div id="pa-version-boundary-source" class="pa-version-source-toggle" role="group" aria-label="Automatic boundary source">
+                <button type="button" class="pa-version-source-btn" data-version="v2" aria-pressed="true">Show V2 boundaries</button>
+                <button type="button" class="pa-version-source-btn" data-version="v3" aria-pressed="false">Show V3 boundaries</button>
+              </div>
+            </div>
+
+            <fieldset id="pa-version-judgment" class="pa-version-judgment">
+              <legend>Which version is more accurate?</legend>
+              <div class="pa-version-judgment-options">
+                <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+                <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+                <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+                <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+              </div>
+            </fieldset>
+
+            <div class="pa-version-save-row">
+              <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
+              <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
+            </div>
+            <details id="pa-version-technical-details" class="pa-version-technical-details">
+              <summary>Technical details</summary>
+              <pre id="pa-version-technical-content"></pre>
+            </details>
+          </section>
+
           <div id="pa-charts-container" class="pa-charts-grid">
             <div class="pa-chart-card">
               <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">

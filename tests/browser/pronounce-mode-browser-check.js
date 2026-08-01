@@ -66,6 +66,34 @@ function harnessHtml() {
       </div>
       <div id="pa-loading-placeholder"></div>
       <div id="pa-results-summary"></div>
+      <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
+        <div class="pa-version-comparison-header">
+          <div><p class="pa-version-eyebrow">Admin comparison</p><h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3><p class="pa-version-description">Both engines analyzed the same recording.</p></div>
+          <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
+        </div>
+        <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
+          <article id="pa-version-v2" class="pa-version-column"></article>
+          <article id="pa-version-v3" class="pa-version-column"></article>
+        </div>
+        <div class="pa-version-boundary-controls">
+          <div><strong>Waveform boundaries</strong><span class="pa-version-help">Manual marks stay in place when you switch.</span></div>
+          <div id="pa-version-boundary-source" class="pa-version-source-toggle" role="group" aria-label="Automatic boundary source">
+            <button type="button" class="pa-version-source-btn" data-version="v2" aria-pressed="true">Show V2 boundaries</button>
+            <button type="button" class="pa-version-source-btn" data-version="v3" aria-pressed="false">Show V3 boundaries</button>
+          </div>
+        </div>
+        <fieldset id="pa-version-judgment" class="pa-version-judgment">
+          <legend>Which version is more accurate?</legend>
+          <div class="pa-version-judgment-options">
+            <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+            <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+            <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+            <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+          </div>
+        </fieldset>
+        <div class="pa-version-save-row"><button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button><span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span></div>
+        <details id="pa-version-technical-details" class="pa-version-technical-details"><summary>Technical details</summary><pre id="pa-version-technical-content"></pre></details>
+      </section>
       <div id="pa-charts-container" class="pa-charts-grid">
         <div class="pa-chart-card">
           <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -117,6 +145,9 @@ async function run() {
     window.__nativeAnalysisAttempts = {};
     window.__savedLocalSamples = [];
     window.__savedManualReviews = [];
+    window.__savedComparisons = [];
+    window.__comparisonRequests = [];
+    window.__comparisonSaveAuthHeader = null;
     window.__manualReviewAuthHeader = null;
     window.__adminStatus = false;
     window.__lastV3Form = null;
@@ -332,6 +363,38 @@ async function run() {
           capabilities: { showNativeGraphs: !contourOnly }
         });
       }
+      if (url.includes('/analyze/compare')) {
+        window.__comparisonRequests.push(options.body);
+        return jsonResponse({
+          schemaVersion: 'pronunciation-comparison-v1',
+          mode: 'comparison',
+          status: 'complete',
+          comparisonId: 'browser-comparison-1',
+          context: { targetWord: 'photograph', referenceIpa: '/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/', expectedSyllables: 3, variantId: '8888888888888888' },
+          revisions: { comparisonSchema: 'pronunciation-comparison-v1', v2: 'pronunciation-analysis-v2', v3: 'pronunciation-analysis-v3', v3Model: 'browser-model' },
+          v2: {
+            status: 'available',
+            analysis: {
+              analysisVersion: 'pronunciation-analysis-v2', quality: { confidence: 0.81 }, duration: 0.8,
+              observed: { syllableCount: 2, syllables: [
+                { startTime: 0.05, endTime: 0.35, duration: 0.3, label: 'pho' },
+                { startTime: 0.35, endTime: 0.8, duration: 0.45, label: 'graph' }
+              ] }
+            }
+          },
+          v3: {
+            status: 'available',
+            analysis: {
+              analysisVersion: 'pronunciation-analysis-v3', confidence: 0.94, total_duration: 0.78,
+              syllable_count: 3, observed_syllables: [
+                { startTime: 0.05, endTime: 0.25, duration: 0.2, label: 'pho' },
+                { startTime: 0.25, endTime: 0.48, duration: 0.23, label: 'to' },
+                { startTime: 0.48, endTime: 0.78, duration: 0.3, label: 'graph' }
+              ]
+            }
+          }
+        });
+      }
       if (url.includes('/analyze/v3')) {
         const formObj = {};
         if (options.body && typeof options.body.entries === 'function') {
@@ -381,6 +444,17 @@ async function run() {
           success: true,
           data: { sampleId: metadata.sampleId, sample: { id: metadata.sampleId } }
         });
+      }
+      if (url.includes('/api/admin/dev/save-analysis-comparison')) {
+        let metadata = {};
+        if (options.body && typeof options.body.entries === 'function') {
+          for (const [key, value] of options.body.entries()) {
+            if (key === 'metadata' && typeof value === 'string') metadata = JSON.parse(value);
+          }
+        }
+        window.__comparisonSaveAuthHeader = options.headers?.Authorization || options.headers?.authorization || null;
+        window.__savedComparisons.push(metadata);
+        return jsonResponse({ success: true, data: { comparisonId: metadata.comparisonId } });
       }
       if (url.includes('/api/admin/status')) {
         return jsonResponse({ success: true, isAdmin: window.__adminStatus === true });
@@ -984,13 +1058,15 @@ async function run() {
   }
 }
 
-if (process.argv.includes('--serve-only')) {
-  startServer().then(({ origin }) => process.stdout.write(`Pronunciation harness listening at ${origin}\n`));
-} else {
-  run().then(() => process.stdout.write('pronounce-mode browser check passed\n')).catch((error) => {
-    process.stderr.write(`${error.stack || error}\n`);
-    process.exitCode = 1;
-  });
+if (require.main === module) {
+  if (process.argv.includes('--serve-only')) {
+    startServer().then(({ origin }) => process.stdout.write(`Pronunciation harness listening at ${origin}\n`));
+  } else {
+    run().then(() => process.stdout.write('pronounce-mode browser check passed\n')).catch((error) => {
+      process.stderr.write(`${error.stack || error}\n`);
+      process.exitCode = 1;
+    });
+  }
 }
 
 module.exports = { startServer };

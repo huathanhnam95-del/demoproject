@@ -2,7 +2,7 @@
 
 Date: 2026-08-01  
 Branch: `codex/pronunciation-v2-v3-comparison`  
-Pre-deployment commit: `9fb4fb494357ff93489f3a56fabf632d90ca6c63`
+Source commit deployed: `86ed5752e0432ca071d0c9fe42f32d917db5cd73`
 
 ## Scope
 
@@ -44,17 +44,48 @@ Chrome-only comparison artifacts were captured under `test-results/pronunciation
 - `pronunciation-v2-v3-comparison-mobile.png`
 - Existing Pronounce reference screenshots were also captured by the legacy harness.
 
+The production Chrome smoke used the local admin credentials file
+`C:\\Cursor AI\\.local\\browser-test-credentials.md` without copying its
+contents into this report. It verified `/api/admin/status` with HTTP 200 and
+`isAdmin: true`, called the live comparison endpoint from the production page,
+rendered the deployed V2/V3 columns, and saved one valid WAV comparison. The
+saved smoke record is `799cc4827c8c866168156079be41cac2`.
+
+Production screenshots (ignored test artifacts) are:
+
+- `test-results/production-pronunciation-comparison/production-live-comparison-partial.png`
+- `test-results/production-pronunciation-comparison/production-comparison-ui-fixture.png`
+
+The first shows the live partial result. The second uses a non-persisted
+complete fixture only to exercise the deployed side-by-side layout, boundary
+switch, and four judgment controls; it is not accuracy evidence.
+
 The focused Chrome contract recorded one comparison request, distinct V2/V3 counts (2 and 3), a V2 → V3 boundary switch with the manual span unchanged, all four keyboard-selectable judgments, complete and partial saves, the admin bearer token, and no page errors or horizontal overflow.
 
 ## Deployment record
 
-Deployment has not yet been executed in this pre-deployment report. The authorized deployment sequence is:
+Deployment completed with the explicit approval recorded in the task:
 
-1. Push this branch and record the remote SHA.
-2. Build and verify an immutable Cloud Run image using `backend/cloudbuild.pronunciation.yaml`; preserve `PRONUNCIATION_V3_MODE=shadow`.
-3. Promote the exact verified Cloud Run revision.
-4. Deploy only Firebase `functions:api`.
-5. Deploy Firebase Hosting.
-6. Run the authenticated Chrome smoke flow and record the comparison ID, live revisions, monitoring window, and rollback targets here.
+| System | Production result |
+|---|---|
+| Git | Branch pushed to `origin/codex/pronunciation-v2-v3-comparison`; source SHA `86ed5752e0432ca071d0c9fe42f32d917db5cd73` |
+| Cloud Build | Build `122d6551-8eaa-4a1b-8487-a2b2009eb8ed`, `SUCCESS`; image `us-central1-docker.pkg.dev/parselmouth/cloud-run-source-deploy/praat-api:86ed5752e0432ca071d0c9fe42f32d917db5cd73` |
+| Cloud Run | Candidate `praat-api-00043-fac` promoted to 100%; health `ok`; `PRONUNCIATION_V3_MODE=shadow`; learner V3 flag remains disabled in the web client |
+| Firebase Functions | Project `listening-tasks-3ae34`; only `functions:api` deployed; current function hash `539ed0c952eaee2ebe18e1e4b1c273ac9b1c16eb`; URL `https://us-central1-listening-tasks-3ae34.cloudfunctions.net/api` |
+| Firebase Hosting | Release `projects/listening-tasks-3ae34/sites/listening-tasks-3ae34/channels/live/releases/1785636754996000`; version `46a1d357c943b684`; finalized at `2026-08-02T02:12:34.996Z`; verified on both `https://listening-tasks-3ae34.web.app` and `https://betterenglishlearning.com` |
+| Authenticated smoke | Admin status passed; live comparison returned V2 available and a structured V3 unavailable response; explicit save succeeded with comparison `799cc4827c8c866168156079be41cac2` |
+| Stability window | `2026-08-02T02:34:15Z`-`2026-08-02T02:49:46Z`, 17 samples; all Cloud Run health checks were `ok/praat-api-00043-fac/shadow`, Hosting contained six comparison markers, and the unauthenticated save route remained `401` |
 
-No production approval is inferred from the passing local suite alone.
+The V3 column was visible in production, but the existing phoneme recognizer
+service returned `503 RECOGNIZER_BUSY` for the smoke recordings. The compare
+contract correctly preserved V2 and marked V3 unavailable; this upstream
+capacity condition is recorded for follow-up and was not treated as a reason
+to roll back the approved comparison UI. It is separate from the temporarily
+skipped Vnese 127 sample, which remains outside this release gate.
+
+Rollback target: the pre-deployment Cloud Run revision was
+`praat-api-00033-hq8`. Restore it with:
+
+```text
+gcloud run services update-traffic praat-api --project parselmouth --region us-central1 --to-revisions praat-api-00033-hq8=100
+```

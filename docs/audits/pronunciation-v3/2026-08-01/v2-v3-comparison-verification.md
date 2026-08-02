@@ -45,7 +45,7 @@ Chrome-only comparison artifacts were captured under `test-results/pronunciation
 - Existing Pronounce reference screenshots were also captured by the legacy harness.
 
 The production Chrome smoke used the local admin credentials file
-`C:\\Cursor AI\\.local\\browser-test-credentials.md` without copying its
+`C:\Cursor AI\.local\browser-test-credentials.md` without copying its
 contents into this report. It verified `/api/admin/status` with HTTP 200 and
 `isAdmin: true`, called the live comparison endpoint from the production page,
 rendered the deployed V2/V3 columns, and saved one valid WAV comparison. The

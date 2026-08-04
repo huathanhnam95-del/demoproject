@@ -14,7 +14,10 @@
     selectedItemId: null, // ID of the currently clicked/selected card
     submitted: false,
     pickerOpen: false,
-    explanationVisible: false
+    explanationVisible: false,
+    randomMode: localStorage.getItem('pte_random_nav_mode') === 'true',
+    navHistory: [],
+    pickerPage: 1
   };
 
   const elements = {};
@@ -138,6 +141,7 @@
     // v7 question picker elements
     elements.prevBtn = document.getElementById('rop-v7-prev-btn');
     elements.nextBtn = document.getElementById('rop-v7-next-btn');
+    elements.randomToggleBtn = document.getElementById('rop-random-toggle-btn');
     elements.questionPill = document.getElementById('rop-v7-question-pill');
     elements.backdrop = document.getElementById('rop-v7-backdrop');
     elements.sheet = document.getElementById('rop-v7-sheet');
@@ -181,10 +185,29 @@
     elements.workspace = document.querySelector('.rop-workspace');
   }
 
+  function updateRandomToggleUI() {
+    if (!elements.randomToggleBtn) return;
+    elements.randomToggleBtn.classList.toggle('is-active', state.randomMode);
+    elements.randomToggleBtn.setAttribute('aria-pressed', state.randomMode ? 'true' : 'false');
+    elements.randomToggleBtn.textContent = state.randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+  }
+
   function setupEventListeners() {
+    if (elements.randomToggleBtn) {
+      updateRandomToggleUI();
+      elements.randomToggleBtn.addEventListener('click', () => {
+        state.randomMode = !state.randomMode;
+        localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
+        updateRandomToggleUI();
+      });
+    }
+
     if (elements.prevBtn) {
       elements.prevBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex > 0) {
+        if (state.randomMode && state.navHistory.length > 0) {
+          const prevIdx = state.navHistory.pop();
+          loadQuestion(prevIdx);
+        } else if (state.currentQuestionIndex > 0) {
           loadQuestion(state.currentQuestionIndex - 1);
         }
       });
@@ -192,7 +215,14 @@
 
     if (elements.nextBtn) {
       elements.nextBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex < state.filteredQuestions.length - 1) {
+        if (state.randomMode && state.filteredQuestions.length > 1) {
+          state.navHistory.push(state.currentQuestionIndex);
+          let randomIdx;
+          do {
+            randomIdx = Math.floor(Math.random() * state.filteredQuestions.length);
+          } while (randomIdx === state.currentQuestionIndex && state.filteredQuestions.length > 1);
+          loadQuestion(randomIdx);
+        } else if (state.currentQuestionIndex < state.filteredQuestions.length - 1) {
           loadQuestion(state.currentQuestionIndex + 1);
         }
       });
@@ -351,19 +381,34 @@
     }
   }
 
-  function renderJumpList(filter = '') {
+  function renderJumpList(filter = '', page = null) {
     if (!elements.jumpList) return;
     const cleanFilter = filter.toLowerCase().trim();
 
-    const itemsHtml = state.filteredQuestions
-      .map((q, idx) => {
-        const isActive = idx === state.currentQuestionIndex;
-        const matchesFilter = !cleanFilter ||
+    const filtered = state.filteredQuestions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({ q }) => {
+        return !cleanFilter ||
           String(q.id).includes(cleanFilter) ||
           q.title.toLowerCase().includes(cleanFilter);
+      });
 
-        if (!matchesFilter) return '';
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
+    if (page === null || page === undefined) {
+      const activeFilteredIndex = filtered.findIndex(item => item.idx === state.currentQuestionIndex);
+      state.pickerPage = activeFilteredIndex >= 0 ? Math.floor(activeFilteredIndex / pageSize) + 1 : 1;
+    } else {
+      state.pickerPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = state.pickerPage;
+    const pagedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const itemsHtml = pagedItems
+      .map(({ q, idx }) => {
+        const isActive = idx === state.currentQuestionIndex;
         return `
           <button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
             <span class="ra-v7-item-id">#${q.id}</span>
@@ -371,10 +416,32 @@
           </button>
         `;
       })
-      .filter(Boolean)
       .join('');
 
-    elements.jumpList.innerHTML = itemsHtml || '<div class="ra-v7-empty">No matching questions</div>';
+    const paginationHtml = totalPages > 1 ? `
+      <div class="ra-v7-pagination">
+        <button class="ra-v7-pagination-btn prev-page-btn" type="button" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="ra-v7-pagination-info">Page ${currentPage} of ${totalPages} (${filtered.length} items)</span>
+        <button class="ra-v7-pagination-btn next-page-btn" type="button" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    ` : '';
+
+    elements.jumpList.innerHTML = (itemsHtml || '<div class="ra-v7-empty">No matching questions</div>') + paginationHtml;
+
+    const prevPageBtn = elements.jumpList.querySelector('.prev-page-btn');
+    const nextPageBtn = elements.jumpList.querySelector('.next-page-btn');
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage - 1);
+      });
+    }
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage + 1);
+      });
+    }
   }
 
   function updateNavigationUI() {

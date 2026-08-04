@@ -26,14 +26,25 @@ function finiteNumber(value) {
     return Number.isFinite(number) ? number : null;
 }
 
+function nonNegativeNumber(value) {
+    const number = finiteNumber(value);
+    return number !== null && number >= 0 ? number : null;
+}
+
 function normalizeSpan(span, index) {
     const startTime = finiteNumber(span?.startTime ?? span?.start_time);
     const endTime = finiteNumber(span?.endTime ?? span?.end_time);
     if (startTime === null || endTime === null || endTime <= startTime) return null;
     const label = String(span?.label || span?.ipa || span?.symbol || '').trim();
+    // Keep analyzer-owned durations when available. The chart prefers
+    // vowelDuration over the full boundary interval for V2 timing evidence.
+    const duration = nonNegativeNumber(span?.duration);
+    const vowelDuration = nonNegativeNumber(span?.vowelDuration ?? span?.vowel_duration);
     return {
         startTime,
         endTime,
+        ...(duration !== null ? { duration } : {}),
+        ...(vowelDuration !== null ? { vowelDuration } : {}),
         ...(label ? { label } : {}),
         index
     };
@@ -136,7 +147,14 @@ export function buildComparisonViewModel(comparison) {
     });
     const rows = [
         { key: 'syllableCount', label: 'Syllable count', v2: columns[0].syllableCount, v3: columns[1].syllableCount },
-        { key: 'confidence', label: 'Confidence', v2: columns[0].confidence, v3: columns[1].confidence },
+        {
+            key: 'confidence',
+            label: 'Confidence',
+            v2: columns[0].confidence,
+            v3: columns[1].confidence,
+            v2Subtitle: 'Acoustic segmentation',
+            v3Subtitle: 'Mean forced-alignment'
+        },
         { key: 'duration', label: 'Duration', v2: columns[0].duration, v3: columns[1].duration }
     ];
     return {

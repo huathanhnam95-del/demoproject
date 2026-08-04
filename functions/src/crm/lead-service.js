@@ -250,6 +250,7 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         phone: lead.phone,
         email: lead.email,
         zalo: lead.zalo,
+        facebook: studentFacebookName,
         facebookProfileUrl: studentFacebookProfileUrl,
         facebookPersonalOwner: lead.facebookPersonalOwner || null,
         crmId: cleanOptionalString(lead.crmId) || cleanOptionalString(context.crmId) || null,

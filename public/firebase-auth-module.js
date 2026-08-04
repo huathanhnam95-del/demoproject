@@ -12,6 +12,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithCustomToken,
   signOut,
   sendPasswordResetEmail,
   sendEmailVerification,
@@ -151,6 +152,57 @@ async function signIn(email, password) {
 }
 
 /**
+ * Sign in the seeded emulator admin account during local development.
+ * The server returns a Firebase custom token; the admin password never
+ * crosses into the browser bundle or the network response.
+ * @returns {Promise<Object>} User object or a non-fatal fallback error
+ */
+async function signInAsLocalAdmin() {
+  try {
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch (persistError) {
+      log.warn('Local admin persistence note:', persistError.message);
+    }
+
+    const response = await fetch('/api/local/admin-token', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.success || typeof payload.token !== 'string' || !payload.token) {
+      return {
+        success: false,
+        error: payload?.error || 'Local admin bootstrap is unavailable.',
+        code: payload?.error || `http-${response.status}`
+      };
+    }
+
+    const userCredential = await signInWithCustomToken(auth, payload.token);
+    const user = userCredential.user;
+    try {
+      await user.reload();
+    } catch (reloadError) {
+      log.warn('Local admin user refresh note:', reloadError.message);
+    }
+
+    return {
+      success: true,
+      user: auth.currentUser || user,
+      localAdmin: true
+    };
+  } catch (error) {
+    log.warn('Local admin auto-login unavailable:', error?.message || error);
+    return {
+      success: false,
+      error: 'Local admin bootstrap is unavailable.',
+      code: error?.code || 'local-admin-bootstrap-failed'
+    };
+  }
+}
+
+/**
  * Sign out the current user
  * @returns {Promise<Object>} Success or error
  */
@@ -262,6 +314,7 @@ async function resendVerificationEmail() {
 window.firebaseAuthFunctions = {
   signUp,
   signIn,
+  signInAsLocalAdmin,
   signOut: signOutUser,
   sendPasswordReset,
   getCurrentUser,

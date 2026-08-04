@@ -68,6 +68,49 @@ describe('V2/V3 comparison model', () => {
         assert.equal(view.rows[0].label, 'Syllable count');
     });
 
+    it('preserves analyzer duration metadata for comparison charts', () => {
+        const view = buildComparisonViewModel({
+            ...completeComparison,
+            v2: {
+                status: 'available',
+                analysis: {
+                    ...completeComparison.v2.analysis,
+                    observed: {
+                        syllableCount: 2,
+                        syllables: [
+                            {
+                                startTime: 0.1,
+                                endTime: 0.4,
+                                duration: 0.3,
+                                vowelDuration: 0.18,
+                                ipa: 'ak'
+                            },
+                            {
+                                startTime: 0.4,
+                                endTime: 0.8,
+                                duration: 0.4,
+                                vowelDuration: 0.22,
+                                ipa: 'tual'
+                            }
+                        ]
+                    }
+                }
+            }
+        });
+        assert.deepEqual(
+            view.columns[0].boundarySpans.map(({ startTime, endTime, duration, vowelDuration }) => ({
+                startTime,
+                endTime,
+                duration,
+                vowelDuration
+            })),
+            [
+                { startTime: 0.1, endTime: 0.4, duration: 0.3, vowelDuration: 0.18 },
+                { startTime: 0.4, endTime: 0.8, duration: 0.4, vowelDuration: 0.22 }
+            ]
+        );
+    });
+
     it('normalizes unavailable reasons into stable readable copy', () => {
         assert.equal(
             normalizeComparisonReason('MODEL_INFERENCE_FAILED'),

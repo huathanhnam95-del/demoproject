@@ -54,11 +54,11 @@ const path = require('path');
       return !!adaptive;
     });
 
-    checks.questionTotalInsideSheet = await page.evaluate(() => {
+    checks.questionTotalRemovedFromSheet = await page.evaluate(() => {
       const sheet = document.getElementById('spc-settings-sheet-speak');
       if (!sheet) return false;
       const total = sheet.querySelector('#total-questions-speak') || sheet.querySelector('.question-total');
-      return !!total;
+      return !total;
     });
 
     checks.filtersInsideSheet = await page.evaluate(() => {

@@ -13,6 +13,8 @@ const sandbox = {
   clearTimeout
 };
 sandbox.globalThis = sandbox;
+sandbox.window = sandbox;
+sandbox.location = { hostname: 'localhost' };
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox);
 const guard = sandbox.module.exports;

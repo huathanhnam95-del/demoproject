@@ -7961,14 +7961,17 @@
 
     async function startRecording() {
       if (scriptProcessor) {
+        // eslint-disable-next-line no-console
         try { scriptProcessor.disconnect(); scriptProcessor.onaudioprocess = null; } catch (err) { console.debug('[Audio Teardown] scriptProcessor:', err); }
         scriptProcessor = null;
       }
       if (mediaStream) {
+        // eslint-disable-next-line no-console
         try { mediaStream.getTracks().forEach(track => track.stop()); } catch (err) { console.debug('[Audio Teardown] mediaStream:', err); }
         mediaStream = null;
       }
       if (audioContext && audioContext.state !== 'closed') {
+        // eslint-disable-next-line no-console
         try { audioContext.close(); } catch (err) { console.debug('[Audio Teardown] audioContext:', err); }
         audioContext = null;
       }
@@ -8070,6 +8073,7 @@
       }
       const sampleRate = audioContext ? audioContext.sampleRate : 44100;
       if (audioContext && audioContext.state !== 'closed') {
+        // eslint-disable-next-line no-console
         try { audioContext.close(); } catch (err) { console.debug('[Audio Teardown] audioContext:', err); }
       }
       analyserNode = null;
@@ -8179,6 +8183,7 @@
           analysisSummaryText = ` (${isAudioUnrateable ? 'Unrateable audio · ' : ''}Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.debug('[Auto Analysis] Praat API offline or bypassed:', err);
         analysisMatched = false;
         isAudioUnrateable = true;

@@ -28,7 +28,16 @@
   line-height: 2.3;
 }
 
+/* Rendered as a <button> so it is keyboard reachable — strip UA button chrome
+   so it still reads as an inline blank in the passage. */
 .dd-blank-slot {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -41,6 +50,15 @@
   background-color: rgba(248, 239, 226, 0.35);
   transition: all 180ms ease;
   user-select: none;
+}
+
+.dd-blank-slot:disabled {
+  cursor: default;
+}
+
+.dd-blank-slot:focus-visible {
+  outline: 2px solid var(--read-accent);
+  outline-offset: 2px;
 }
 
 .dd-blank-slot.drag-over {

@@ -50,3 +50,45 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 ## UI Design Rules
 
 - **Avoid Nested Card Structures ("Boxes in Boxes")**: When designing or styling UI layouts, avoid wrapping components in multiple layers of cards or nested container boxes. Layout elements should flow naturally on the parent `.container` background, minimizing borders, shadows, and backdrop-filters on intermediate layout cards. Set horizontal paddings on intermediate elements to 0 where necessary to align with the main container boundaries.
+
+## Codex Workflow Routes
+
+The project uses three explicit Codex workflow routes. Existing project-specific rules in this file, especially deployment restrictions, browser requirements, and the implementation-plan approval gate, take precedence over generic route guidance.
+
+### Core workflow principles
+
+- Keep modules focused, interfaces clear, coupling intentional, and changes easy to test, debug, replace, extend, and reuse.
+- Define acceptance and verification requirements proportionately before implementation.
+- Keep related tests cohesive without weakening assertions, hiding failures, or reducing meaningful coverage to save tokens.
+- Preserve unrelated user work and never let route automation broaden the user's requested scope.
+
+### Working states
+
+- `leaf state`: small changes, document work, investigation, and general questions outside a durable implementation plan.
+- `deployment state`: planning or executing a broad, durable, potentially multi-session package.
+
+### Route selection
+
+- **Light route**: default when the user does not select a route. Work directly, load only relevant context, and do not spawn subagents.
+- **Medium route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/medium_route.md`, and perform the work directly without subagents.
+- **Heavy route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/heavy_route.md`, and coordinate the installed specialist subagents.
+- Keep the selected route for the session until the user switches it or ends the session. Do not infer Medium or Heavy automatically.
+
+### Project documentation framework
+
+Workflow documentation lives under `agent_docs/`:
+
+- `project_overview.md`: goals, architecture, workflows, and major decisions.
+- `project_core_tech.md`: concise notes on specialized technologies and architecture.
+- `project_structure.md`: directory layout, components, modules, and ownership boundaries.
+- `project_progress.md`: active durable plan and cross-session execution status.
+- `project_diary.md`: durable decisions, rejected approaches, and lessons.
+- `latest_session_work.md`: the latest cross-session handoff and unfinished work.
+
+Only the main agent may edit `project_progress.md` and `latest_session_work.md`. Edit them only in deployment state or when the user explicitly requests it. Record verified facts, not temporary reasoning or raw logs. Never delete a main project document without warning the user and receiving a second explicit confirmation.
+
+On first entering deployment state, load `project_overview.md`, `project_structure.md`, `project_progress.md`, and `latest_session_work.md` in one bounded read-only batch. Interpret overview and structure before reconciling progress and handoff state, then inspect only the smallest relevant source and test surface.
+
+### Tool batching
+
+Within each bounded stage, batch independent, already-known, non-conflicting read-only operations when practical. Use partial-failure-safe batching when useful results remain valid after another operation fails. Keep dependent investigation, approvals, overlapping writes, Git mutations, agent lifecycle operations, and checks sharing mutable resources sequential.

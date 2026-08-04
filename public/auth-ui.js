@@ -48,6 +48,37 @@ let authStateCallbacks = [];
 const adminAccessCache = new Map(); // uid -> { value: boolean, atMs: number }
 const ADMIN_ACCESS_CACHE_TTL_MS = 60 * 1000;
 
+function isLocalAuthHost(hostname = window.location.hostname) {
+  let value = String(hostname || '').trim().toLowerCase();
+  if (value.startsWith('[') && value.endsWith(']')) value = value.slice(1, -1);
+  return value === 'localhost'
+    || value === '127.0.0.1'
+    || value === '::1'
+    || value.endsWith('.local')
+    || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(value)
+    || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(value)
+    || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(value);
+}
+
+async function tryLocalAdminAutoLogin() {
+  if (!isLocalAuthHost() || isGuestMode || !authFunctions?.signInAsLocalAdmin) {
+    return false;
+  }
+
+  if (authFunctions.getCurrentUser?.()) {
+    return true;
+  }
+
+  const result = await authFunctions.signInAsLocalAdmin();
+  if (result?.success) {
+    log.debug('✓ Local emulator admin session restored automatically');
+    return true;
+  }
+
+  log.debug('Local admin auto-login skipped:', result?.code || 'unavailable');
+  return false;
+}
+
 async function waitForFirebaseModules(timeoutMs = 12000) {
   if (authFunctions && firestoreFunctions) {
     return true;
@@ -1759,6 +1790,11 @@ async function checkFirstVisit() {
       nullGraceMs: 250
     })
     : (authFunctions ? authFunctions.getCurrentUser() : null);
+
+  if (!user && !isGuestMode && await tryLocalAdminAutoLogin()) {
+    hideEntryModal();
+    return;
+  }
 
   if (!user && !isGuestMode) {
     showEntryModal();

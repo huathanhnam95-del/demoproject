@@ -13,7 +13,10 @@
     placements: {}, // key: blankId, value: option object { optionId, text, kind, blankId }
     selectedOptionId: null, // selected in word bank for click-to-place fallback
     submitted: false,
-    shuffledOptions: [] // array of option objects stored per question load to keep order consistent
+    shuffledOptions: [], // array of option objects stored per question load to keep order consistent
+    randomMode: localStorage.getItem('pte_random_nav_mode') === 'true',
+    navHistory: [],
+    pickerPage: 1
   };
 
   const elements = {};
@@ -49,6 +52,7 @@
     // v7 Question Picker Elements
     elements.prevBtn = document.getElementById('dd-v7-prev-btn');
     elements.nextBtn = document.getElementById('dd-v7-next-btn');
+    elements.randomToggleBtn = document.getElementById('dd-random-toggle-btn');
     elements.questionPill = document.getElementById('dd-v7-question-pill');
     elements.backdrop = document.getElementById('dd-v7-backdrop');
     elements.sheet = document.getElementById('dd-v7-sheet');
@@ -71,10 +75,29 @@
     elements.resultsContainer = document.getElementById('dd-results');
   }
 
+  function updateRandomToggleUI() {
+    if (!elements.randomToggleBtn) return;
+    elements.randomToggleBtn.classList.toggle('is-active', state.randomMode);
+    elements.randomToggleBtn.setAttribute('aria-pressed', state.randomMode ? 'true' : 'false');
+    elements.randomToggleBtn.textContent = state.randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+  }
+
   function setupEventListeners() {
+    if (elements.randomToggleBtn) {
+      updateRandomToggleUI();
+      elements.randomToggleBtn.addEventListener('click', () => {
+        state.randomMode = !state.randomMode;
+        localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
+        updateRandomToggleUI();
+      });
+    }
+
     if (elements.prevBtn) {
       elements.prevBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex > 0) {
+        if (state.randomMode && state.navHistory.length > 0) {
+          const prevIdx = state.navHistory.pop();
+          loadQuestionByIndex(prevIdx);
+        } else if (state.currentQuestionIndex > 0) {
           loadQuestionByIndex(state.currentQuestionIndex - 1);
         }
       });
@@ -82,7 +105,14 @@
 
     if (elements.nextBtn) {
       elements.nextBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex < state.questions.length - 1) {
+        if (state.randomMode && state.questions.length > 1) {
+          state.navHistory.push(state.currentQuestionIndex);
+          let randomIdx;
+          do {
+            randomIdx = Math.floor(Math.random() * state.questions.length);
+          } while (randomIdx === state.currentQuestionIndex && state.questions.length > 1);
+          loadQuestionByIndex(randomIdx);
+        } else if (state.currentQuestionIndex < state.questions.length - 1) {
           loadQuestionByIndex(state.currentQuestionIndex + 1);
         }
       });
@@ -244,19 +274,34 @@
     }
   }
 
-  function renderJumpList(filter = '') {
+  function renderJumpList(filter = '', page = null) {
     if (!elements.jumpList) return;
     const cleanFilter = filter.toLowerCase().trim();
 
-    const itemsHtml = state.questions
-      .map((q, idx) => {
-        const isActive = idx === state.currentQuestionIndex;
-        const matchesFilter = !cleanFilter ||
+    const filtered = state.questions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({ q }) => {
+        return !cleanFilter ||
           String(q.id).includes(cleanFilter) ||
           q.title.toLowerCase().includes(cleanFilter);
+      });
 
-        if (!matchesFilter) return '';
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
+    if (page === null || page === undefined) {
+      const activeFilteredIndex = filtered.findIndex(item => item.idx === state.currentQuestionIndex);
+      state.pickerPage = activeFilteredIndex >= 0 ? Math.floor(activeFilteredIndex / pageSize) + 1 : 1;
+    } else {
+      state.pickerPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = state.pickerPage;
+    const pagedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const itemsHtml = pagedItems
+      .map(({ q, idx }) => {
+        const isActive = idx === state.currentQuestionIndex;
         return `
           <button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
             <span class="ra-v7-item-id">#${q.id}</span>
@@ -264,10 +309,32 @@
           </button>
         `;
       })
-      .filter(Boolean)
       .join('');
 
-    elements.jumpList.innerHTML = itemsHtml || '<div class="ra-v7-empty">No matching questions</div>';
+    const paginationHtml = totalPages > 1 ? `
+      <div class="ra-v7-pagination">
+        <button class="ra-v7-pagination-btn prev-page-btn" type="button" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="ra-v7-pagination-info">Page ${currentPage} of ${totalPages} (${filtered.length} items)</span>
+        <button class="ra-v7-pagination-btn next-page-btn" type="button" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    ` : '';
+
+    elements.jumpList.innerHTML = (itemsHtml || '<div class="ra-v7-empty">No matching questions</div>') + paginationHtml;
+
+    const prevPageBtn = elements.jumpList.querySelector('.prev-page-btn');
+    const nextPageBtn = elements.jumpList.querySelector('.next-page-btn');
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage - 1);
+      });
+    }
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage + 1);
+      });
+    }
   }
 
   function updateNavigationUI() {
@@ -397,32 +464,45 @@
         const textNode = document.createTextNode(seg.text);
         elements.passage.appendChild(textNode);
       } else if (seg.type === 'blank') {
-        const slot = document.createElement('div');
+        // A real <button>, not a div: the click-to-place fallback is the only
+        // way to answer without a mouse, and a div with no tabindex cannot be
+        // reached. (It also carried role="option" with no listbox parent,
+        // which is invalid ARIA.)
+        const slot = document.createElement('button');
+        slot.type = 'button';
         slot.className = 'dd-blank-slot';
         slot.dataset.blankId = seg.blankId;
         slot.dataset.index = seg.index;
-        slot.setAttribute('role', 'option');
+        if (state.submitted) slot.disabled = true;
 
         // Check if placed
         const placed = state.placements[seg.blankId];
         if (placed) {
           slot.classList.add('is-filled');
-          
+
           const chipSpan = document.createElement('span');
           chipSpan.className = 'dd-placed-chip';
           chipSpan.textContent = placed.text;
 
           if (!state.submitted) {
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'dd-placed-chip-remove';
-            removeBtn.type = 'button';
-            removeBtn.innerHTML = '&times;';
-            removeBtn.setAttribute('aria-label', `Remove ${placed.text}`);
-            chipSpan.appendChild(removeBtn);
+            // Decorative only. Activating the slot already removes the word,
+            // and a <button> cannot legally contain another button.
+            const removeMark = document.createElement('span');
+            removeMark.className = 'dd-placed-chip-remove';
+            removeMark.setAttribute('aria-hidden', 'true');
+            removeMark.innerHTML = '&times;';
+            chipSpan.appendChild(removeMark);
           }
 
           slot.appendChild(chipSpan);
         }
+
+        // seg.index arrives from the JSON as a string ("0", "1", ...), so it
+        // must be coerced before arithmetic or the label reads "Blank 01".
+        const blankNumber = Number(seg.index) + 1;
+        slot.setAttribute('aria-label', placed
+          ? `Blank ${blankNumber}, filled with ${placed.text}. Activate to remove.`
+          : `Blank ${blankNumber}, empty. Select a word, then activate to place it.`);
 
         elements.passage.appendChild(slot);
       }

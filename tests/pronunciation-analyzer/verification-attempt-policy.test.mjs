@@ -4,7 +4,8 @@ import {
     attemptStatusFor,
     createAttemptKey,
     nextAttemptState,
-    resetAttemptState
+    resetAttemptState,
+    SERVICE_UNAVAILABLE_REASONS
 } from '../../public/pronunciation-analyzer/verification-attempt-policy.js';
 
 test('three recordings allow only two re-record prompts', () => {
@@ -80,9 +81,13 @@ test('evidence-based unrateable results still consume an attempt', () => {
         count: { status: 'verified', reasons: [] },
         primary_stress: { status: 'unrateable', reasons: ['MISSING_STRESS_EVIDENCE'] }
     }), 'unrateable');
+    // The acoustic pass disagreeing with the recognizer is evidence about the
+    // recording, not a service outage, so it is deliberately absent from
+    // SERVICE_UNAVAILABLE_REASONS and consumes an attempt.
+    assert.ok(!SERVICE_UNAVAILABLE_REASONS.has('ACOUSTIC_COUNT_DISAGREEMENT'));
     assert.equal(attemptStatusFor({
         status: 'unrateable',
-        count: { status: 'unrateable', reasons: ['INDEPENDENT_COUNT_DISAGREEMENT'] },
+        count: { status: 'unrateable', reasons: ['ACOUSTIC_COUNT_DISAGREEMENT'] },
         primary_stress: { status: 'unrateable', reasons: [] }
     }), 'unrateable');
     assert.equal(attemptStatusFor({ status: 'verified', count: {}, primary_stress: {} }), 'verified');

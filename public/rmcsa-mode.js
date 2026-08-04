@@ -12,7 +12,10 @@
     shuffledChoices: [],
     submitted: false,
     pickerOpen: false,
-    explanationVisible: false
+    explanationVisible: false,
+    randomMode: localStorage.getItem('pte_random_nav_mode') === 'true',
+    navHistory: [],
+    pickerPage: 1
   };
 
   const elements = {};
@@ -106,6 +109,7 @@
     // v7 question picker elements
     elements.prevBtn = document.getElementById('rmcsa-v7-prev-btn');
     elements.nextBtn = document.getElementById('rmcsa-v7-next-btn');
+    elements.randomToggleBtn = document.getElementById('rmcsa-random-toggle-btn');
     elements.questionPill = document.getElementById('rmcsa-v7-question-pill');
     elements.backdrop = document.getElementById('rmcsa-v7-backdrop');
     elements.sheet = document.getElementById('rmcsa-v7-sheet');
@@ -129,10 +133,29 @@
     elements.explanationContent = document.getElementById('rmcsa-explanation-content');
   }
 
+  function updateRandomToggleUI() {
+    if (!elements.randomToggleBtn) return;
+    elements.randomToggleBtn.classList.toggle('is-active', state.randomMode);
+    elements.randomToggleBtn.setAttribute('aria-pressed', state.randomMode ? 'true' : 'false');
+    elements.randomToggleBtn.textContent = state.randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+  }
+
   function setupEventListeners() {
+    if (elements.randomToggleBtn) {
+      updateRandomToggleUI();
+      elements.randomToggleBtn.addEventListener('click', () => {
+        state.randomMode = !state.randomMode;
+        localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
+        updateRandomToggleUI();
+      });
+    }
+
     if (elements.prevBtn) {
       elements.prevBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex > 0) {
+        if (state.randomMode && state.navHistory.length > 0) {
+          const prevIdx = state.navHistory.pop();
+          loadQuestion(prevIdx);
+        } else if (state.currentQuestionIndex > 0) {
           loadQuestion(state.currentQuestionIndex - 1);
         }
       });
@@ -140,7 +163,14 @@
 
     if (elements.nextBtn) {
       elements.nextBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex < state.questions.length - 1) {
+        if (state.randomMode && state.questions.length > 1) {
+          state.navHistory.push(state.currentQuestionIndex);
+          let randomIdx;
+          do {
+            randomIdx = Math.floor(Math.random() * state.questions.length);
+          } while (randomIdx === state.currentQuestionIndex && state.questions.length > 1);
+          loadQuestion(randomIdx);
+        } else if (state.currentQuestionIndex < state.questions.length - 1) {
           loadQuestion(state.currentQuestionIndex + 1);
         }
       });
@@ -265,19 +295,34 @@
     resetFeedbackUI();
   }
 
-  function renderJumpList(filter = '') {
+  function renderJumpList(filter = '', page = null) {
     if (!elements.jumpList) return;
     const cleanFilter = filter.toLowerCase().trim();
 
-    const itemsHtml = state.questions
-      .map((q, idx) => {
-        const isActive = idx === state.currentQuestionIndex;
-        const matchesFilter = !cleanFilter ||
+    const filtered = state.questions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({ q }) => {
+        return !cleanFilter ||
           String(q.id).includes(cleanFilter) ||
           q.title.toLowerCase().includes(cleanFilter);
+      });
 
-        if (!matchesFilter) return '';
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
+    if (page === null || page === undefined) {
+      const activeFilteredIndex = filtered.findIndex(item => item.idx === state.currentQuestionIndex);
+      state.pickerPage = activeFilteredIndex >= 0 ? Math.floor(activeFilteredIndex / pageSize) + 1 : 1;
+    } else {
+      state.pickerPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = state.pickerPage;
+    const pagedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const itemsHtml = pagedItems
+      .map(({ q, idx }) => {
+        const isActive = idx === state.currentQuestionIndex;
         return `
           <button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
             <span class="ra-v7-item-id">#${q.id}</span>
@@ -285,10 +330,32 @@
           </button>
         `;
       })
-      .filter(Boolean)
       .join('');
 
-    elements.jumpList.innerHTML = itemsHtml || '<div class="ra-v7-empty">No matching questions</div>';
+    const paginationHtml = totalPages > 1 ? `
+      <div class="ra-v7-pagination">
+        <button class="ra-v7-pagination-btn prev-page-btn" type="button" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="ra-v7-pagination-info">Page ${currentPage} of ${totalPages} (${filtered.length} items)</span>
+        <button class="ra-v7-pagination-btn next-page-btn" type="button" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    ` : '';
+
+    elements.jumpList.innerHTML = (itemsHtml || '<div class="ra-v7-empty">No matching questions</div>') + paginationHtml;
+
+    const prevPageBtn = elements.jumpList.querySelector('.prev-page-btn');
+    const nextPageBtn = elements.jumpList.querySelector('.next-page-btn');
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage - 1);
+      });
+    }
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage + 1);
+      });
+    }
   }
 
   function updateNavigationUI() {
@@ -381,11 +448,17 @@
         card.dataset.index = idx;
         card.setAttribute('role', 'radio');
         card.setAttribute('aria-checked', 'false');
+        // A radiogroup is a single tab stop: only the checked radio (or the
+        // first, when nothing is chosen) is tabbable, and arrows move between
+        // them. Without this every option was its own tab stop and the arrow
+        // keys did nothing, which is not the pattern the role promises.
+        card.tabIndex = idx === 0 ? 0 : -1;
         card.innerHTML = `
           <div class="rmcsa-choice-radio"></div>
           <div class="rmcsa-choice-text">${escapeHtml(choice.text)}</div>
         `;
         card.addEventListener('click', () => selectChoice(idx));
+        card.addEventListener('keydown', handleChoiceKeydown);
         elements.choicesContainer.appendChild(card);
       });
     }
@@ -396,6 +469,39 @@
       elements.submitBtn.disabled = true; // Disabled until an option is selected
     }
     resetFeedbackUI();
+  }
+
+  /* Arrow keys move focus and selection together, which is how a radiogroup
+     is expected to behave; Home/End jump to the ends. */
+  function handleChoiceKeydown(event) {
+    if (state.submitted) return;
+    const cards = Array.from(elements.choicesContainer.querySelectorAll('.rmcsa-choice-card'));
+    const current = cards.indexOf(event.currentTarget);
+    if (current === -1 || cards.length === 0) return;
+
+    let next = null;
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        next = (current + 1) % cards.length;
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        next = (current - 1 + cards.length) % cards.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = cards.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    selectChoice(next);
+    cards[next].focus();
   }
 
   function selectChoice(idx) {
@@ -412,6 +518,8 @@
         const isSelected = state.selectedIndices.has(i);
         card.classList.toggle('is-selected', isSelected);
         card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+        // Keep the group a single tab stop, anchored on the chosen option.
+        card.tabIndex = isSelected ? 0 : -1;
       });
     }
 

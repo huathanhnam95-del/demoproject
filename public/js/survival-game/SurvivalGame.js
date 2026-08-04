@@ -159,8 +159,8 @@ export default class SurvivalGame {
         this.height = 0;
         this.rafId = null;
         this.now = typeof options.now === 'function' ? options.now : () => performance.now();
-        this.requestFrame = typeof options.requestFrame === 'function' ? options.requestFrame : requestAnimationFrame;
-        this.cancelFrame = typeof options.cancelFrame === 'function' ? options.cancelFrame : cancelAnimationFrame;
+        this.requestFrame = typeof options.requestFrame === 'function' ? options.requestFrame : ((cb) => window.requestAnimationFrame(cb));
+        this.cancelFrame = typeof options.cancelFrame === 'function' ? options.cancelFrame : ((id) => window.cancelAnimationFrame(id));
         this.random = typeof options.random === 'function' ? options.random : Math.random;
         this.cameraShake = 0;
         this.screenFlash = 0;

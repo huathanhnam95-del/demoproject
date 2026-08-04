@@ -1,4 +1,4 @@
-import { YIN } from "https://esm.sh/pitchfinder";
+import { YIN } from './yin.js';
 
 export class PitchAnalyzer {
     constructor(sampleRate = 44100) {
@@ -27,7 +27,7 @@ export class PitchAnalyzer {
             const chunk = float32Array.slice(i, i + windowSize);
 
             // Calculate pitch
-            // pitchfinder returns null or a frequency
+            // The local YIN detector returns null or a frequency.
             let pitch = this.detectPitch(chunk);
 
             // Filter realistic human range (50Hz - 500Hz)

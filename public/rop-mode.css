@@ -235,8 +235,9 @@
   background: #fff;
   border: 1px solid var(--rop-border);
   color: var(--rop-ink);
-  width: 42px;
-  height: 42px;
+  width: var(--read-btn-compact-size, 36px);
+  height: var(--read-btn-compact-size, 36px);
+  min-height: var(--read-btn-compact-size, 36px);
   border-radius: var(--read-radius-control);
   display: flex;
   align-items: center;
@@ -268,6 +269,19 @@
   opacity: 0.3;
   cursor: not-allowed;
   background: rgba(0, 0, 0, 0.02);
+}
+
+.rop-arrow-btn:focus-visible {
+  outline: 2px solid var(--read-btn-focus, #9a5722);
+  outline-offset: 2px;
+}
+
+@media (max-width: 390px) {
+  .rop-arrow-btn {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
 }
 
 /* Footer Actions & Scores */

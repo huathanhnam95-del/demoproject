@@ -523,11 +523,19 @@ class SyllableVerifier {
         }
     }
 
-    createSyllableRegions() {
+    createSyllableRegions({ preserveManual = false } = {}) {
         if (!this.regions) return;
 
-        // Clear existing regions
-        this.regions.clearRegions();
+        // A genuinely new recording clears everything.  Version switching
+        // only replaces automatic regions so manual spans and a pending
+        // boundary remain visible and editable.
+        if (preserveManual) {
+            this.regions.getRegions?.()
+                .filter((region) => !String(region.id || '').startsWith('manual-syllable-') && region.id !== 'manual-pending')
+                .forEach((region) => region.remove?.());
+        } else {
+            this.regions.clearRegions();
+        }
 
         const colors = [
             'rgba(59, 130, 246, 0.3)',   // Blue
@@ -551,6 +559,28 @@ class SyllableVerifier {
                 console.error(`SyllableVerifier: Failed to add region ${index}`, err);
             }
         });
+
+        if (preserveManual) this.createManualRegions();
+    }
+
+    /**
+     * Replace only the automatic syllable boundaries for a new V2/V3 view.
+     * Manual segments, pending clicks, review mode, and save state belong to
+     * the recording and must survive this inspection toggle.
+     */
+    setAutomaticSyllables(syllables = [], labels = null, ipaSegments = null) {
+        this.syllables = Array.isArray(syllables) ? syllables : [];
+        if (Array.isArray(labels) && labels.length === this.syllables.length) {
+            this.syllableLabels = this.syllables.map((_, index) => labels[index] || this.getOrdinal(index + 1));
+        } else {
+            this.syllableLabels = this.syllables.map((_, index) => `Play ${this.getOrdinal(index + 1)} Syl`);
+        }
+        if (Array.isArray(ipaSegments)) this.ipaSegments = ipaSegments.slice();
+
+        this.createSyllableRegions({ preserveManual: true });
+        this.createSyllableBar();
+        this.updateInfo();
+        this.updateManualReviewUi();
     }
 
     /**

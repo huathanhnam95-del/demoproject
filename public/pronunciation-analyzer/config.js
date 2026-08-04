@@ -35,6 +35,7 @@ export const config = {
     features: {
         useNativeReference: true,
         showComparison: true,
+        showPronunciationVersionComparison: true,
         saveToDatabase: true,
         usePraatBackend: true,
         usePronunciationV3LearnerAnalysis: false

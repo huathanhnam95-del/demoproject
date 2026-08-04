@@ -685,13 +685,48 @@ h1 {
 
 .practice-skill-btn.is-active {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2), 0 4px 12px rgba(var(--accent-rgb), 0.1);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25), 0 6px 16px rgba(var(--accent-rgb), 0.15);
+}
+
+.practice-skill-btn.card-speaking.is-active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  border-width: 2px;
+}
+
+.practice-skill-btn.card-listening.is-active {
+  background: #f5f3ff;
+  border-color: #7c3aed;
+  border-width: 2px;
+}
+
+.practice-skill-btn.card-reading.is-active {
+  background: #ecfdf5;
+  border-color: #059669;
+  border-width: 2px;
+}
+
+.practice-skill-btn.card-writing.is-active {
+  background: #fffbeb;
+  border-color: #d97706;
+  border-width: 2px;
+}
+
+.practice-skill-btn.is-active .skill-card-icon {
+  color: var(--accent-color);
+  transform: scale(1.15);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.practice-skill-btn.is-active .skill-card-text strong {
+  color: var(--accent-color);
+  font-weight: 800;
 }
 
 @supports (color: color-mix(in srgb, red, blue)) {
   .practice-skill-btn.is-active {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 20%, transparent),
-      0 4px 12px rgba(var(--accent-rgb), 0.1);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 30%, transparent),
+      0 6px 16px rgba(var(--accent-rgb), 0.15);
   }
 }
 
@@ -10044,6 +10079,24 @@ textarea:focus {
 
 .notes-audio-player audio {
   width: 100%;
+}
+
+.notes-audio-status {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+.notes-audio-status.is-unavailable {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.22);
 }
 
 .notes-textarea-wrapper {

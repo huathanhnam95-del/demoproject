@@ -25,10 +25,6 @@ function buildHarnessHtml() {
           <select id="question-select-di"><option value="0">Loading...</option></select>
           <button id="next-btn-di" type="button">Next</button>
         </div>
-        <div class="question-total">
-          <span id="total-questions-di">0</span>
-        </div>
-
         <div id="di-image-preview" class="di-image-section di-image-preview-section">
           <div class="di-image-container">
             <img id="di-preview-img" class="di-image" alt="Preview" />
@@ -150,11 +146,13 @@ async function run() {
     assert.strictEqual(state.reviewComputed, 'none', 'reset() should not reveal the review step');
     assert.strictEqual(state.practiceComputed, 'none', 'reset() should keep the practice area hidden');
 
-    // Regression check: show() must not force display:block, otherwise the prep/record grid breaks.
+    // Wait for the actual question source to load. The old visible total
+    // counter was removed from the unified UI and is not a mode contract.
     await page.waitForFunction(() => {
-      const total = document.getElementById('total-questions-di');
-      return Boolean(total) && Number(total.textContent) > 0;
+      return document.querySelectorAll('#question-select-di option').length > 0;
     });
+
+    // Regression check: show() must not force display:block, otherwise the prep/record grid breaks.
 
     await page.click('#play-di-btn');
 

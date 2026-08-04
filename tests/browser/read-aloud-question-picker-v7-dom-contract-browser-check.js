@@ -1,4 +1,5 @@
 const assert = require('assert');
+const fs = require('fs');
 const net = require('net');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -164,6 +165,16 @@ async function assertSharedControllerStructure(page, label) {
     const selected = select?.selectedOptions?.length
       ? select.selectedOptions[0]
       : Array.from(select?.options || []).find((opt) => opt.value === select?.value);
+    const styleOf = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return {
+        minHeight: style.minHeight,
+        radius: style.borderRadius,
+        backgroundImage: style.backgroundImage
+      };
+    };
     return {
       legacyPickerBarExists: !!document.getElementById('ra-v7-picker-bar'),
       pillExists: !!pill,
@@ -172,8 +183,12 @@ async function assertSharedControllerStructure(page, label) {
       prev: describeButton('.spc-picker-prev'),
       next: describeButton('.spc-picker-next'),
       filters: { exists: !!document.getElementById('ra-v7-filters-btn') },
-      playSample: describeButton('header-ra-play-audio-btn'),
-      playRecording: describeButton('header-ra-play-recording-btn')
+      playSample: describeButton('ra-play-audio-btn'),
+      playRecording: describeButton('ra-play-recording-btn'),
+      playSampleStyle: styleOf('#ra-play-audio-btn'),
+      recordStyle: styleOf('#ra-record-btn'),
+      checkStyle: styleOf('#ra-check-btn'),
+      retryStyle: styleOf('#ra-retry-btn')
     };
   });
 
@@ -190,18 +205,27 @@ async function assertSharedControllerStructure(page, label) {
   for (const [key, value] of Object.entries({
     'prev button': state.prev,
     'next button': state.next,
-    'header sample-audio button': state.playSample,
-    'header recording button': state.playRecording
+    'sample-audio button': state.playSample,
+    'recording lifecycle proxy': state.playRecording
   })) {
     assert.equal(value.exists, true, `[${label}] Missing ${key}.`);
-    if (key.startsWith('header')) {
-      assert.equal(value.hasDataLabel, true, `[${label}] Expected ${key} to contain a [data-label] span.`);
-    }
   }
   assert.equal(state.filters.exists, false, `[${label}] Expected the legacy filter action to be removed.`);
+  assert.equal(state.playSampleStyle?.radius, '12px', `[${label}] Sample audio should use the shared RFIB radius.`);
+  assert.equal(state.recordStyle?.radius, '12px', `[${label}] Record should use the shared RFIB radius.`);
+  assert.equal(state.checkStyle?.radius, '12px', `[${label}] Check should use the shared RFIB radius.`);
+  assert.equal(state.retryStyle?.radius, '12px', `[${label}] Retry should use the shared RFIB radius.`);
+  assert.ok(state.playSampleStyle?.backgroundImage.includes('59, 130, 246'), `[${label}] Sample audio should use the blue Play treatment.`);
+  assert.ok(state.recordStyle?.backgroundImage.includes('244, 63, 94'), `[${label}] Record should use the red treatment.`);
+  assert.ok(state.checkStyle?.backgroundImage.includes('34, 197, 94'), `[${label}] Check should use the green treatment.`);
+  assert.ok(state.retryStyle?.backgroundImage.includes('245, 158, 11'), `[${label}] Retry should use the amber treatment.`);
 }
 
 (async () => {
+  const v7CssPath = path.join(process.cwd(), 'public', 'read-aloud-question-picker-v7.css');
+  const v7Css = fs.readFileSync(v7CssPath, 'utf8');
+  assert(!/\.spc-(?:sheet-pagination|pagination-btn|pagination-info)/.test(v7Css), 'Speaking pagination selectors must be owned by speaking-practice-controller.css.');
+
   const port = await getFreePort();
   const baseUrl = `http://127.0.0.1:${port}`;
   let server = null;

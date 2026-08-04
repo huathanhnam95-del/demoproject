@@ -205,7 +205,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.44</div>
+  <div id="version-indicator" class="version-indicator">V1.8.45</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2028,25 +2028,83 @@
             Record and speak a word to analyze stress.
           </div>
 
-          <div id="pa-charts-container" class="pa-charts-grid">
-            <div class="pa-chart-card">
-              <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
-                <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
-                  <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
-                  <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+          <!-- Review layout: the admin comparison controls live in a sticky
+               left rail so the boundary toggle and the judgment stay in view
+               while the reviewer scrolls the charts and the waveform. The rail
+               is hidden (and the layout collapses to one column) for learners. -->
+          <div id="pa-review-layout" class="pa-review-layout">
+            <aside id="pa-version-review-rail" class="pa-version-rail" hidden aria-label="Comparison controls">
+              <div class="pa-version-boundary-controls">
+                <div>
+                  <strong>Waveform boundaries</strong>
+                  <span class="pa-version-help">The shared waveform starts with the selected automatic set. Manual marks stay in place when you switch.</span>
+                </div>
+                <div id="pa-version-boundary-source" class="pa-version-source-toggle" role="group" aria-label="Automatic boundary source">
+                  <button type="button" class="pa-version-source-btn" data-version="v2" aria-pressed="true">Show V2 boundaries</button>
+                  <button type="button" class="pa-version-source-btn" data-version="v3" aria-pressed="false">Show V3 boundaries</button>
                 </div>
               </div>
-              <canvas id="pa-pitch-chart"></canvas>
-            </div>
-            <div class="pa-chart-card">
-              <div class="pa-chart-title">Syllable Duration Comparison</div>
-              <canvas id="pa-stress-chart"></canvas>
+
+              <fieldset id="pa-version-judgment" class="pa-version-judgment">
+                <legend>Which version is more accurate?</legend>
+                <div class="pa-version-judgment-options">
+                  <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+                  <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+                  <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+                  <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+                </div>
+              </fieldset>
+
+              <div class="pa-version-save-row">
+                <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
+                <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
+              </div>
+              <details id="pa-version-technical-details" class="pa-version-technical-details">
+                <summary>Technical details</summary>
+                <pre id="pa-version-technical-content"></pre>
+              </details>
+            </aside>
+
+            <div class="pa-review-main">
+              <!-- Admin-only V2/V3 comparison. The normal learner result remains
+                   above; this section is revealed only after the admin gate. -->
+              <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
+                <div class="pa-version-comparison-header">
+                  <div>
+                    <p class="pa-version-eyebrow">Admin comparison</p>
+                    <h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3>
+                    <p class="pa-version-description">Both engines analyzed the same recording. Inspect the boundaries, then save your judgment.</p>
+                  </div>
+                  <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
+                </div>
+
+                <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
+                  <article id="pa-version-v2" class="pa-version-column" aria-labelledby="pa-version-v2-title"></article>
+                  <article id="pa-version-v3" class="pa-version-column" aria-labelledby="pa-version-v3-title"></article>
+                </div>
+              </section>
+
+              <div id="pa-charts-container" class="pa-charts-grid">
+                <div class="pa-chart-card">
+                  <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
+                    <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
+                      <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
+                      <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+                    </div>
+                  </div>
+                  <canvas id="pa-pitch-chart"></canvas>
+                </div>
+                <div class="pa-chart-card">
+                  <div class="pa-chart-title">Syllable Duration Comparison</div>
+                  <canvas id="pa-stress-chart"></canvas>
+                </div>
+              </div>
+
+              <!-- Syllable Verification (Waveform) -->
+              <div id="syllable-verifier-container"></div>
             </div>
           </div>
-
-          <!-- Syllable Verification (Waveform) -->
-          <div id="syllable-verifier-container"></div>
 
           <!-- Detailed Feedback Section -->
           <div id="pa-feedback-section" class="pa-feedback-section" style="display: none;">
@@ -2349,7 +2407,7 @@
       </div>
 
       <div id="mode-speak" class="mode-panel" style="display: none;">
-        <div class="question-selector">
+        <div class="spc-source-controls" hidden>
           <div class="question-id-display" data-spc-level="advanced">
             <label for="question-select-speak">Question ID:</label>
             <span id="current-question-id-speak" class="current-question-id">1</span>
@@ -2492,9 +2550,6 @@
             </div>
           </div>
         </div>
-        <div class="question-total" data-spc-level="advanced">
-          <span>Total number of questions: <span id="total-questions-speak">1</span></span>
-        </div>
         <div class="unified-controls">
           <div class="control-toolbar">
             <div class="function-group">
@@ -2514,7 +2569,7 @@
             </div>
           </div>
         </div>
-        <div id="score-speak" class="score" data-spc-level="advanced">Points: 0</div>
+        <div id="score-speak" class="score" data-spc-level="advanced" hidden>Points: 0</div>
 
 
 
@@ -2793,6 +2848,7 @@
               <button id="dd-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
+              <button id="dd-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
             </div>
           </div>
         </div>
@@ -2847,7 +2903,7 @@
       </div>
 
       <!-- RMCMA Mode Panel -->
-<div id="mode-rmcma" class="mode-panel" style="display: none;">
+      <div id="mode-rmcma" class="mode-panel" style="display: none;">
   <!-- v7 Question Picker -->
   <div class="ra-v7-picker-bar" id="rmcma-v7-picker-bar">
     <div class="ra-v7-picker-inner">
@@ -2859,6 +2915,7 @@
         <button id="rmcma-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
+        <button id="rmcma-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
       </div>
     </div>
   </div>
@@ -2959,6 +3016,7 @@
         <button id="rmcsa-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
+        <button id="rmcsa-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
       </div>
     </div>
   </div>
@@ -3059,6 +3117,7 @@
         <button id="rop-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
+        <button id="rop-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
       </div>
 
       <!-- ROP Difficulty Filter -->
@@ -4125,12 +4184,6 @@
 
       <!-- Notes Mode Panel (Take Notes) - Matches Type/Speak Layout -->
       <div id="mode-notes" class="mode-panel" style="display: none;">
-        <div id="notes-info-box" class="notification-box important-notice">
-          <span>📌 Based on PTE Academic's Retell Lecture task</span>
-          <button class="info-box-close"
-            onclick="this.parentElement.style.display='none'; localStorage.setItem('notesInfoDismissed','1')"
-            title="Don't show again">×</button>
-        </div>
         <div class="question-selector">
           <div class="question-id-display">
             <label for="question-select-notes">Question ID:</label>
@@ -4204,13 +4257,9 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-notes">0</span></span>
-        </div>
         <div class="controls">
           <button id="play-notes-btn" class="modern-btn modern-btn--play" type="button">Play</button>
         </div>
-        <div id="score-notes" class="score">Points: 0</div>
 
         <!-- Practice Area (hidden until Play clicked) -->
         <div id="notes-practice-area" style="display: none;">
@@ -4238,6 +4287,7 @@
             </div>
             <div class="notes-audio-player">
               <audio id="notes-audio" controls></audio>
+              <p id="notes-audio-status" class="notes-audio-status" role="status" hidden></p>
             </div>
             <div class="notes-textarea-wrapper">
               <label for="notes-user-input">Your Notes:</label>
@@ -4284,12 +4334,6 @@
 
       <!-- SGD Mode Panel (Summarize Group Discussion) -->
       <div id="mode-sgd" class="mode-panel" style="display: none;">
-        <div id="sgd-info-box" class="notification-box important-notice">
-          <span>📌 Based on PTE Academic's Summarize Group Discussion task</span>
-          <button class="info-box-close"
-            onclick="this.parentElement.style.display='none'; localStorage.setItem('sgdInfoDismissed','1')"
-            title="Don't show again">×</button>
-        </div>
         <div class="question-selector">
           <div class="question-id-display">
             <label for="question-select-sgd">Question ID:</label>
@@ -4332,13 +4376,9 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-sgd">0</span></span>
-        </div>
         <div class="controls">
           <button id="play-sgd-btn" class="modern-btn modern-btn--play" type="button">Play</button>
         </div>
-        <div id="score-sgd" class="score">Points: 0</div>
 
         <!-- Practice Area (hidden until Play clicked) -->
         <div id="sgd-practice-area" style="display: none;">
@@ -4595,7 +4635,7 @@
       <div id="mode-rts" class="mode-panel" style="display: none;">
 
         <!-- Play Button -->
-        <div style="max-width: 900px; margin: 16px auto; text-align: center;">
+        <div class="rts-start-row" style="max-width: 900px; margin: 16px auto; text-align: center;">
           <button id="play-rts-btn" class="modern-btn modern-btn--play" type="button">
             ▶ Start
           </button>
@@ -4703,12 +4743,6 @@
 
       <!-- Describe Image Mode Panel -->
       <div id="mode-describe-image" class="mode-panel" style="display: none;">
-        <div id="di-info-box" class="notification-box important-notice">
-          <span>🖼️ PTE Describe Image — 25s prep + 40s recording</span>
-          <button class="info-box-close"
-            onclick="this.parentElement.style.display='none'; localStorage.setItem('diInfoDismissed','1')"
-            title="Don't show again">×</button>
-        </div>
         <div class="question-selector" style="max-width: 900px; margin: 0 auto;">
           <div class="question-id-display">
             <label for="question-select-di">Image ID:</label>
@@ -4722,10 +4756,6 @@
             <button id="next-btn-di" class="nav-btn nav-btn-next" type="button" title="Next Image">Next →</button>
           </div>
         </div>
-        <div class="question-total" style="max-width: 900px; margin: 0 auto;">
-          <span>Total images: <span id="total-questions-di">0</span></span>
-        </div>
-
         <!-- Difficulty Filter -->
         <div id="difficulty-filter-container-di" class="difficulty-filter-container" style="margin-bottom: 8px; max-width: 900px; margin-left: auto; margin-right: auto;">
           <button id="difficulty-filter-btn-di" class="difficulty-filter-btn" type="button">
@@ -5305,7 +5335,7 @@
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
-  <script type="module" src="script.js?v=20260703_tab_swap"></script>
+  <script type="module" src="script.js?v=20260802_browser_cache_fix"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 
@@ -5633,14 +5663,6 @@
     </button>
   </div>
 
-  <!-- Init: Check localStorage for dismissed notifications -->
-  <script>
-    if (localStorage.getItem('notesInfoDismissed') === '1') {
-      const notesInfoBox = document.getElementById('notes-info-box');
-      if (notesInfoBox) notesInfoBox.style.display = 'none';
-    }
-  </script>
-
   <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -5919,6 +5941,7 @@
 
   </script>
   <script src="js/sw-register.js"></script>
+  <script src="/js/speaking-practice-steps.js"></script>
   <script src="/js/speaking-practice-controller.js"></script>
   <script src="/js/speaking-practice-adapters.js"></script>
   <script src="/js/read-aloud-prompt-grammar.js"></script>
@@ -5926,7 +5949,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.44"></script>
+  <script src="/read-aloud-mode.js?v=1.8.45"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

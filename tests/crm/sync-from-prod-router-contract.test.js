@@ -75,6 +75,7 @@ expectRoute(routes, 'GET /sync-from-prod/collections');
 expectRoute(routes, 'GET /sync-from-prod/jobs/:jobId');
 expectRoute(routes, 'GET /sync-from-prod/jobs/latest');
 expectRoute(routes, 'POST /dev/save-corpus-sample');
+expectRoute(routes, 'POST /dev/save-analysis-comparison');
 
 if (typeof previousEmulatorHost === 'string') {
     process.env.FIRESTORE_EMULATOR_HOST = previousEmulatorHost;

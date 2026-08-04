@@ -487,3 +487,228 @@
   }
 }
 
+/* Question Picker Pagination & Random Toggle Styles */
+.ra-v7-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 14px 14px;
+  gap: 8px;
+  user-select: none;
+}
+
+.ra-v7-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ra-v7-pagination-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+.ra-v7-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ra-v7-pagination-info {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.ra-v7-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ra-v7-page-num {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.ra-v7-page-num:hover {
+  background: #e5e7eb;
+}
+
+.ra-v7-page-num.is-current {
+  background: var(--primary, #2563eb);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.ra-v7-random-btn,
+.random-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.ra-v7-random-btn:hover,
+.random-toggle-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.ra-v7-random-btn.is-active,
+.ra-v7-random-btn[aria-pressed="true"],
+.random-toggle-btn.is-active,
+.random-toggle-btn[aria-pressed="true"] {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+}
+
+/* RFIB-derived Reading picker controls. These selectors intentionally use
+   panel and ID specificity because this stylesheet loads after the shared
+   Reading base and must distinguish Previous from Next without changing JS. */
+#mode-rfib .ra-v7-icon-btn,
+#mode-dd .ra-v7-icon-btn,
+#mode-rmcma .ra-v7-icon-btn,
+#mode-rmcsa .ra-v7-icon-btn,
+#mode-rop .ra-v7-icon-btn {
+  width: var(--read-btn-compact-size, 36px);
+  height: var(--read-btn-compact-size, 36px);
+  min-height: var(--read-btn-compact-size, 36px);
+  border: 1px solid var(--read-border, rgba(110, 84, 54, 0.18));
+  border-radius: var(--read-radius-control, 12px);
+  background: #fff;
+  color: var(--read-ink, #2c2418);
+  box-shadow: var(--read-shadow-control, 0 6px 14px rgba(42, 31, 18, 0.05));
+}
+
+#mode-rfib [id$="-v7-prev-btn"],
+#mode-dd [id$="-v7-prev-btn"],
+#mode-rmcma [id$="-v7-prev-btn"],
+#mode-rmcsa [id$="-v7-prev-btn"],
+#mode-rop [id$="-v7-prev-btn"] {
+  background: linear-gradient(135deg, var(--read-btn-back-start, #6b7280), var(--read-btn-back-end, #4b5563));
+  border-color: transparent;
+  color: #fff;
+}
+
+#mode-rfib [id$="-v7-next-btn"],
+#mode-dd [id$="-v7-next-btn"],
+#mode-rmcma [id$="-v7-next-btn"],
+#mode-rmcsa [id$="-v7-next-btn"],
+#mode-rop [id$="-v7-next-btn"] {
+  background: linear-gradient(135deg, var(--read-btn-next-start, #8b5cf6), var(--read-btn-next-end, #7c3aed));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(124 58 237 / 0.3);
+}
+
+#mode-rfib .ra-v7-icon-btn:hover:not(:disabled),
+#mode-dd .ra-v7-icon-btn:hover:not(:disabled),
+#mode-rmcma .ra-v7-icon-btn:hover:not(:disabled),
+#mode-rmcsa .ra-v7-icon-btn:hover:not(:disabled),
+#mode-rop .ra-v7-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--read-shadow-control-hover, 0 10px 22px rgba(42, 31, 18, 0.10));
+}
+
+#mode-rfib .ra-v7-icon-btn:active:not(:disabled),
+#mode-dd .ra-v7-icon-btn:active:not(:disabled),
+#mode-rmcma .ra-v7-icon-btn:active:not(:disabled),
+#mode-rmcsa .ra-v7-icon-btn:active:not(:disabled),
+#mode-rop .ra-v7-icon-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#mode-rfib .ra-v7-icon-btn:disabled,
+#mode-dd .ra-v7-icon-btn:disabled,
+#mode-rmcma .ra-v7-icon-btn:disabled,
+#mode-rmcsa .ra-v7-icon-btn:disabled,
+#mode-rop .ra-v7-icon-btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+#mode-rfib .ra-v7-icon-btn:focus-visible,
+#mode-dd .ra-v7-icon-btn:focus-visible,
+#mode-rmcma .ra-v7-icon-btn:focus-visible,
+#mode-rmcsa .ra-v7-icon-btn:focus-visible,
+#mode-rop .ra-v7-icon-btn:focus-visible,
+#mode-rfib .ra-v7-question-pill:focus-visible,
+#mode-dd .ra-v7-question-pill:focus-visible,
+#mode-rmcma .ra-v7-question-pill:focus-visible,
+#mode-rmcsa .ra-v7-question-pill:focus-visible,
+#mode-rop .ra-v7-question-pill:focus-visible {
+  outline: 2px solid var(--read-btn-focus, #9a5722);
+  outline-offset: 2px;
+}
+
+#mode-rfib .ra-v7-question-pill,
+#mode-dd .ra-v7-question-pill,
+#mode-rmcma .ra-v7-question-pill,
+#mode-rmcsa .ra-v7-question-pill,
+#mode-rop .ra-v7-question-pill {
+  min-height: 44px;
+  border: 1px solid var(--read-border, rgba(110, 84, 54, 0.18));
+  border-radius: var(--read-radius-control, 12px);
+  background: rgb(255 255 255 / 0.82);
+  color: var(--read-ink, #2c2418);
+}
+
+#mode-rfib .random-toggle-btn,
+#mode-dd .random-toggle-btn,
+#mode-rmcma .random-toggle-btn,
+#mode-rmcsa .random-toggle-btn,
+#mode-rop .random-toggle-btn {
+  min-height: var(--read-btn-compact-size, 36px);
+  border-radius: var(--read-radius-control, 12px);
+  border-color: var(--read-border, rgba(110, 84, 54, 0.18));
+  background: #fff;
+  color: var(--read-muted, #6f5f4e);
+}
+
+@media (max-width: 390px) {
+  #mode-rfib .ra-v7-icon-btn,
+  #mode-dd .ra-v7-icon-btn,
+  #mode-rmcma .ra-v7-icon-btn,
+  #mode-rmcsa .ra-v7-icon-btn,
+  #mode-rop .ra-v7-icon-btn,
+  #mode-rfib .random-toggle-btn,
+  #mode-dd .random-toggle-btn,
+  #mode-rmcma .random-toggle-btn,
+  #mode-rmcsa .random-toggle-btn,
+  #mode-rop .random-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+

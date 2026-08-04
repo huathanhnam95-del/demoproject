@@ -476,7 +476,7 @@ class ReadAloudMode {
     pill.textContent = label || 'Select a question…';
   }
 
-  renderQuestionPickerV7JumpList() {
+  renderQuestionPickerV7JumpList(page = null) {
     const container = document.getElementById('ra-v7-jump-list');
     const select = document.getElementById('ra-question-select');
     if (!container || !select) return;
@@ -500,7 +500,20 @@ class ReadAloudMode {
       return;
     }
 
-    filtered.forEach((opt) => {
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+    if (page === null || page === undefined) {
+      const currentIdx = filtered.findIndex((opt) => opt.value === currentValue);
+      this.v7JumpPage = currentIdx >= 0 ? Math.floor(currentIdx / pageSize) + 1 : 1;
+    } else {
+      this.v7JumpPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = this.v7JumpPage;
+    const pagedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    pagedItems.forEach((opt) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'ra-v7-list-item';
@@ -523,6 +536,40 @@ class ReadAloudMode {
       button.appendChild(secondary);
       container.appendChild(button);
     });
+
+    if (totalPages > 1) {
+      const pagContainer = document.createElement('div');
+      pagContainer.className = 'ra-v7-pagination';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.type = 'button';
+      prevBtn.className = 'ra-v7-pagination-btn';
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.textContent = '← Prev';
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.renderQuestionPickerV7JumpList(currentPage - 1);
+      });
+
+      const info = document.createElement('span');
+      info.className = 'ra-v7-pagination-info';
+      info.textContent = `Page ${currentPage} of ${totalPages} (${filtered.length} items)`;
+
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'ra-v7-pagination-btn';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.textContent = 'Next →';
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.renderQuestionPickerV7JumpList(currentPage + 1);
+      });
+
+      pagContainer.appendChild(prevBtn);
+      pagContainer.appendChild(info);
+      pagContainer.appendChild(nextBtn);
+      container.appendChild(pagContainer);
+    }
   }
 
   refreshQuestionPickerV7Filters() {
@@ -1534,7 +1581,7 @@ class ReadAloudMode {
       this.settingsSheet = window.SpeakingPracticeController.createSheet({
         id: 'ra-settings-sheet',
         title: 'Settings',
-        className: 'ra-settings-sheet'
+        className: 'ra-settings-sheet spc-mode-settings-sheet'
       });
     } catch (e) {
       console.error('[RA] Failed to create Settings sheet:', e);

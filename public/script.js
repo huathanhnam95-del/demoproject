@@ -1519,6 +1519,9 @@
     }
   }
 
+  // Single source of truth for which modes use the shared Speaking controller.
+  const SPEAKING_MODES = ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'read-aloud', 'type'];
+
   /**
    * Update the current mode indicator shown between mode cards and progress bar
    * @param {string} mode - The active mode name
@@ -1552,18 +1555,25 @@
     }
 
     if (tutorialBtn) {
-      tutorialBtn.hidden = !hasTutorial;
-      tutorialBtn.style.display = hasTutorial ? '' : 'none';
+      // Speaking modes keep the pill in every mode so their chrome stays
+      // identical; where no interactive tutorial exists yet it shows in a
+      // disabled, honest state. Every other skill keeps the original
+      // behaviour of hiding the pill when the mode has no tutorial.
+      const showPill = hasTutorial || SPEAKING_MODES.includes(mode);
+      tutorialBtn.hidden = !showPill;
+      tutorialBtn.style.display = showPill ? '' : 'none';
       tutorialBtn.disabled = !hasTutorial;
+      tutorialBtn.setAttribute('aria-disabled', hasTutorial ? 'false' : 'true');
       tutorialBtn.title = hasTutorial ? 'Learn about this mode' : 'Tutorial coming soon';
     }
   }
+
+  const speakingModes = SPEAKING_MODES;
 
   function syncSpeakingPracticeController(mode = currentActiveMode, scope = PracticeScopeManager.getScope(), leavingMode = null) {
     const controller = window.SpeakingPracticeController;
     if (!controller || !mode || typeof controller.activate !== 'function') return;
 
-    const speakingModes = ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'read-aloud', 'type'];
     if (leavingMode && leavingMode !== mode && speakingModes.includes(leavingMode)) {
       if (typeof controller.unmount === 'function') {
         controller.unmount(leavingMode);
@@ -2102,13 +2112,21 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       tabBtn.classList.add('active');
 
-      // 2. Hide all mode panels and show the selected one
+      // 2. Hide all mode panels. Speaking modes stay hidden until their async
+      // initialization and shared controller have both completed so a legacy
+      // panel cannot flash before the new controller is mounted.
+      const deferSelectedPanelReveal = speakingModes.includes(mode);
       document.querySelectorAll('.mode-panel').forEach(panel => {
         panel.classList.remove('active');
         panel.style.display = 'none';
+        delete panel.dataset.modePreparing;
       });
-      modePanel.classList.add('active');
-      modePanel.style.display = 'block';
+      if (deferSelectedPanelReveal) {
+        modePanel.dataset.modePreparing = 'true';
+      } else {
+        modePanel.classList.add('active');
+        modePanel.style.display = 'block';
+      }
 
       // 2.1 Hide Dashboard so it doesn't overlap
       const dashboard = document.querySelector('.dashboard-modern-container');
@@ -2230,6 +2248,12 @@
 
       syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
 
+      if (deferSelectedPanelReveal) {
+        modePanel.classList.add('active');
+        modePanel.style.display = 'block';
+        delete modePanel.dataset.modePreparing;
+      }
+
       // 5. Check if this is the first time using this mode - trigger tutorial
       const firstTimeKey = `${mode}ModeFirstUse`;
       const hasUsedBefore = localStorage.getItem(firstTimeKey);
@@ -2263,8 +2287,13 @@
         });
       }, 50);
 
-      // 7. Update URL for browser back/forward navigation
-      PracticeRouter.pushRoute(mode);
+      // 7. Update URL for browser back/forward navigation. Preserve a
+      // question ID that was supplied by a deep link while the mode finishes
+      // its asynchronous initialization; the mode will replace it after it
+      // has selected the matching entry.
+      const currentRoute = PracticeRouter.parseRoute(window.location.pathname);
+      const currentQuestionId = currentRoute?.mode === mode ? currentRoute.questionId : null;
+      PracticeRouter.pushRoute(mode, currentQuestionId);
     }
   };
 
@@ -8886,7 +8915,9 @@
       // Update display
       currentIdDisplay.textContent = currentId;
       const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered || (validLengthIds !== null) || (difficultyLevel !== null);
-      totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
+      if (totalDisplay) {
+        totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
+      }
 
       // Handle selection change if current question is filtered out
       const currentExists = Array.from(select.options).some(opt => opt.value == currentId);

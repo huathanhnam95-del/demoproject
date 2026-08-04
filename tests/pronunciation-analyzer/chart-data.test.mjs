@@ -5,7 +5,8 @@ import {
     buildLexicalFallbackFeedback,
     buildNativeOnlyChartData,
     canShowDetailedFeedback,
-    hzToRelativeSemitones
+    hzToRelativeSemitones,
+    normalizeChartSpans
 } from '../../public/pronunciation-analyzer/chart-data.js';
 
 assert.equal(hzToRelativeSemitones(200, 100), 12);
@@ -119,4 +120,29 @@ assert.equal(canShowDetailedFeedback({
     learnerQuality: { rateable: true, confidence: 0.4 }
 }), false);
 
-console.log('chart-data tests passed');
+// normalizeChartSpans(): comparison boundary spans carry only the boundary
+// times, so the duration lanes would render every bar at zero without this.
+assert.deepEqual(
+    normalizeChartSpans([{ startTime: 0.6, endTime: 0.9 }]),
+    [{ startTime: 0.6, endTime: 0.9, duration: 0.30000000000000004 }]
+);
+// An existing duration is authoritative and must not be recomputed: v2 spans
+// report a vowel-trimmed duration that is deliberately shorter than the span.
+assert.deepEqual(
+    normalizeChartSpans([{ startTime: 0, endTime: 1, duration: 0.4 }]),
+    [{ startTime: 0, endTime: 1, duration: 0.4 }]
+);
+// Degenerate and malformed spans are dropped rather than drawn.
+assert.deepEqual(normalizeChartSpans([{ startTime: 0.5, endTime: 0.5 }]), []);
+assert.deepEqual(normalizeChartSpans([{ startTime: 0.9, endTime: 0.2 }]), []);
+assert.deepEqual(normalizeChartSpans([{ startTime: null, endTime: 0.2 }]), []);
+assert.deepEqual(normalizeChartSpans(null), []);
+assert.deepEqual(normalizeChartSpans(undefined), []);
+// Zero-duration lanes were the visible symptom; guard the end-to-end shape.
+assert.deepEqual(
+    buildDurationLanes([], normalizeChartSpans([
+        { startTime: 0.646957, endTime: 0.748043 },
+        { startTime: 0.950217, endTime: 1.152391 }
+    ])).observed.durations.map((value) => Number(value.toFixed(6))),
+    [0.101086, 0.202174]
+);

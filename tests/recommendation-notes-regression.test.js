@@ -160,7 +160,7 @@ async function run() {
         return { optionCount: select?.options?.length || 0, beforeId: null, afterId: null, afterValue: null };
       }
 
-      select.value = '1';
+      select.value = '2';
       select.dispatchEvent(new Event('change'));
       const beforeId = document.getElementById('current-question-id-notes')?.textContent?.trim() || '';
 
@@ -177,7 +177,7 @@ async function run() {
     assert.ok(selectionRetention.optionCount >= 2);
     assert.equal(selectionRetention.beforeId, '2');
     assert.equal(selectionRetention.afterId, '2');
-    assert.equal(selectionRetention.afterValue, '1');
+    assert.equal(selectionRetention.afterValue, '2');
     console.log('notes selection retention regression test passed');
   } catch (error) {
     const tail = serverLogs.slice(-10000);

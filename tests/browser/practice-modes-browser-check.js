@@ -110,7 +110,9 @@ async function checkMode(page, mode) {
     type: { difficulty: true, status: true },
     speak: { difficulty: true, status: true },
     extended: { difficulty: true, status: false },
-    sgd: { difficulty: false, status: false },
+    // SGD ships #difficulty-filter-container-sgd (unlock-gated, surfaced in
+    // the Speaking settings sheet); it has no status filter.
+    sgd: { difficulty: true, status: false },
     rfib: { difficulty: false, status: false },
     rmcsa: { difficulty: false, status: false },
     rmcma: { difficulty: false, status: false },
@@ -403,7 +405,8 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     assert.equal(rfibState.panelVisible, true, 'switchToMode(rfib) should activate the rfib panel');
     assert.equal(rfibState.launcherVisible, true, 'switchToMode(rfib) should show the Reading launcher card');
     assert.equal(rfibState.tutorialVisible, false, 'switchToMode(rfib) should keep the tutorial button hidden');
-    assert.equal(rfibState.modeName, 'Fill in the blanks', 'switchToMode(rfib) should update the current mode display');
+    // rfib's label was disambiguated from the drag-and-drop variant (`dd`).
+    assert.equal(rfibState.modeName, 'Fill in the Blanks (Dropdown)', 'switchToMode(rfib) should update the current mode display');
 
     await page.screenshot({ path: 'tmp/practice-modes-browser-check.png', fullPage: true });
     console.log('Practice modes browser verification complete.');

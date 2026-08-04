@@ -12,13 +12,49 @@
   --spc-z-sheet: 8010;
   --spc-radius: 10px;
   --spc-gap: 8px;
-  --spc-control-h: 44px;
+  --spc-control-height: 44px;
+  --spc-control-h: var(--spc-control-height);
   --spc-transition: 200ms ease;
   --spc-bg: #fff;
   --spc-color-primary: #2563eb;
   --spc-color-surface: #f5f5f7;
   --spc-color-surface-hover: #ededf0;
   --spc-color-border: rgba(0, 0, 0, 0.08);
+
+  /* RFIB-aligned semantic action aliases. Keep these local to the Speaking
+     shell so it remains independent from Reading panel token scope. */
+  --spc-action-back-start: #6b7280;
+  --spc-action-back-end: #4b5563;
+  --spc-action-back-hover-start: #4b5563;
+  --spc-action-back-hover-end: #374151;
+  --spc-action-next-start: #8b5cf6;
+  --spc-action-next-end: #7c3aed;
+  --spc-action-next-hover-start: #7c3aed;
+  --spc-action-next-hover-end: #6d28d9;
+  --spc-action-play-start: #3b82f6;
+  --spc-action-play-end: #2563eb;
+  --spc-action-play-hover-start: #2563eb;
+  --spc-action-play-hover-end: #1d4ed8;
+  --spc-action-primary-start: #22c55e;
+  --spc-action-primary-end: #16a34a;
+  --spc-action-primary-hover-start: #16a34a;
+  --spc-action-primary-hover-end: #15803d;
+  --spc-action-retry-start: #f59e0b;
+  --spc-action-retry-end: #d97706;
+  --spc-action-retry-hover-start: #d97706;
+  --spc-action-retry-hover-end: #b45309;
+  --spc-action-record-start: #f43f5e;
+  --spc-action-record-end: #e11d48;
+  --spc-action-record-hover-start: #e11d48;
+  --spc-action-record-hover-end: #be123c;
+  --spc-action-support-start: #fff7ed;
+  --spc-action-support-end: #ffedd5;
+  --spc-action-support-hover-start: #ffedd5;
+  --spc-action-support-hover-end: #fed7aa;
+  --spc-action-border: #e5e7eb;
+  --spc-action-focus: #9a5722;
+  --spc-control-min-height: var(--spc-control-height);
+  --spc-control-radius: 12px;
 }
 
 /* --------------------------------------------------------------------------
@@ -36,6 +72,131 @@
   gap: var(--spc-gap);
 }
 
+/* Shared Speaking flow preview. It intentionally lives on the panel
+   background, without another card, border, or shadow layer. */
+.spc-steps {
+  box-sizing: border-box;
+  width: 100%;
+  /* Clear the controller's bottom border so the step markers do not sit
+     flush against (and visually clip) the card edge. */
+  margin-top: 12px;
+  padding: 4px 12px 8px;
+  color: #64748b;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+.spc-steps__list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.spc-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition: color 180ms ease;
+}
+
+.spc-step__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.spc-step__label {
+  min-width: 0;
+  /* Wrap between words only. `anywhere` split short labels mid-word at 390px
+     ("Recor/d", "Result/s"); truncate instead if a label cannot fit. */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spc-step-connector {
+  flex: 0 1 44px;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.spc-step[data-state="complete"],
+.spc-step[data-state="current"] {
+  color: #334155;
+}
+
+.spc-step[data-state="complete"] .spc-step__marker {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.spc-step[data-state="current"] .spc-step__marker {
+  border-color: #8b5cf6;
+  background: #ede9fe;
+  color: #6d28d9;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+@media (max-width: 640px) {
+  .spc-steps {
+    padding: 4px 4px 8px;
+  }
+
+  .spc-steps__list {
+    gap: 4px;
+  }
+
+  .spc-step {
+    gap: 4px;
+    font-size: 0.68rem;
+  }
+
+  .spc-step__marker {
+    flex-basis: 22px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.66rem;
+  }
+
+  .spc-step-connector {
+    flex-basis: 16px;
+  }
+}
+
+/* Legacy mode-owned progress nodes remain in the DOM because their mode
+   state machines still update them. The shared preview above is the only
+   learner-facing step indicator. */
+#mode-rts #rts-step-progress,
+#mode-describe-image #di-step-progress,
+#mode-sgd #sgd-step-progress {
+  display: none !important;
+}
+
 /* --------------------------------------------------------------------------
    3. Rows
    -------------------------------------------------------------------------- */
@@ -51,9 +212,16 @@
   flex-wrap: nowrap;
 }
 
-/* Actions row: media left, attempt right */
+/* Actions row: keep related controls together within the controller surface. */
 .spc-row--actions {
-  justify-content: space-between;
+  justify-content: flex-start;
+  column-gap: 12px;
+}
+
+.spc-row--actions .spc-slot-media,
+.spc-row--actions .spc-slot-attempt {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 /* Advanced row: visibility controlled via data attribute (see §8) */
@@ -179,7 +347,8 @@
 }
 
 .spc-view-toggle-btn {
-  height: 36px;
+  height: var(--spc-control-height);
+  min-height: var(--spc-control-height);
   padding: 0 14px;
   border: none;
   border-radius: 6px;
@@ -497,6 +666,14 @@
   display: none;
 }
 
+.spc-controller[data-spc-view="advanced"] .spc-row--advanced:not(:has(
+  .spc-active-chip:not([data-count="0"]),
+  .spc-slot-advanced-action > *,
+  .spc-slot-advanced-setting > *
+)) {
+  display: none;
+}
+
 /* --------------------------------------------------------------------------
    9. Visibility Rules
    -------------------------------------------------------------------------- */
@@ -771,11 +948,984 @@
 #mode-speak .spc-slot-media .badge-replay {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 0;
+  height: auto;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
   margin: 0;
+}
+
+/* Read Aloud adopts its two-line prep/record timer stack into the action row.
+   The legacy 2rem stack measures 58px against the 44px control height, which
+   knocks the record button off the row baseline. Inside the controller only,
+   lay each timer out inline so the media slot matches the shared control
+   height. The source markup carries inline font sizes, so these need
+   !important to win. */
+#mode-read-aloud .spc-slot-media .ra-status-bar {
+  gap: 16px !important;
+  align-items: center;
+  margin-bottom: 0 !important;
+  min-height: var(--spc-control-height);
+}
+
+#mode-read-aloud .spc-slot-media .ra-timer-box {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  text-align: left !important;
+}
+
+#mode-read-aloud .spc-slot-media .ra-timer-label {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.02em;
+}
+
+#mode-read-aloud .spc-slot-media .ra-timer-value {
+  font-size: 1.15rem !important;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Legacy control wrappers keep their own margins after the controller adopts
+   their buttons, leaving dead space under the last visible element (16px in
+   Repeat Sentence, 20px in Retell Lecture / SGD / Describe Image). Once a
+   wrapper holds nothing but the controller's restore anchor it has no element
+   children, so hide it. `:has()` is live — the wrapper reappears the moment
+   its buttons are restored. Scoped to these two wrapper classes rather than
+   "any empty div" because text-only panels (e.g. #transcription-display) also
+   have no element children. */
+.mode-panel > .controls:not(:has(*)),
+.mode-panel > .rts-start-row:not(:has(*)) {
+  display: none !important;
+}
+
+#mode-read-aloud .ra-status-bar:not(:has(*)),
+#mode-read-aloud #ra-read-aloud-controls:not(:has(button, audio)) {
+  display: none !important;
 }
 
 #mode-speak > .unified-controls:empty,
 #mode-speak > .unified-controls:not(:has(*)) {
   display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   13. RFIB-aligned navigation and adopted action recipes
+   -------------------------------------------------------------------------- */
+
+.spc-controller {
+  background: #fff;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  padding: 12px;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+/* Generated controller controls must not fall back to the browser's Arial
+   button face. The same contract also overrides legacy inline 36/40px
+   declarations after mode-owned controls are adopted into the shell. */
+.spc-controller button,
+.spc-controller select,
+.spc-controller input,
+.spc-controller [role="button"] {
+  min-height: var(--spc-control-height) !important;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+.spc-picker-prev,
+.spc-picker-next {
+  width: 36px;
+  height: var(--spc-control-height);
+  min-height: var(--spc-control-height);
+  border: 1px solid transparent;
+  border-radius: var(--spc-control-radius);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.spc-picker-prev {
+  background: linear-gradient(135deg, var(--spc-action-back-start), var(--spc-action-back-end));
+}
+
+.spc-picker-next {
+  background: linear-gradient(135deg, var(--spc-action-next-start), var(--spc-action-next-end));
+}
+
+.spc-picker-prev:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-back-hover-start), var(--spc-action-back-hover-end));
+  border-color: transparent;
+  box-shadow: 0 4px 10px rgba(75, 85, 99, 0.24);
+  transform: translateY(-1px);
+}
+
+.spc-picker-next:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-next-hover-start), var(--spc-action-next-hover-end));
+  border-color: transparent;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.24);
+  transform: translateY(-1px);
+}
+
+.spc-picker-prev:active:not(:disabled),
+.spc-picker-next:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.spc-controller .spc-picker-prev:disabled,
+.spc-controller .spc-picker-next:disabled {
+  opacity: 0.5;
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.spc-picker-pill {
+  height: var(--spc-control-min-height);
+  min-height: var(--spc-control-min-height);
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.spc-picker-pill:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+.spc-picker-pill-id {
+  color: var(--spc-action-next-end);
+}
+
+.spc-controller [data-spc-action-role] {
+  min-height: var(--spc-control-min-height);
+  border-radius: var(--spc-control-radius);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.spc-controller [data-spc-action-role="play"] {
+  background: linear-gradient(135deg, var(--spc-action-play-start), var(--spc-action-play-end));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22);
+}
+
+.spc-controller [data-spc-action-role="play"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-play-hover-start), var(--spc-action-play-hover-end));
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="primary"] {
+  background: linear-gradient(135deg, var(--spc-action-primary-start), var(--spc-action-primary-end));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.22);
+}
+
+.spc-controller [data-spc-action-role="primary"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-primary-hover-start), var(--spc-action-primary-hover-end));
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.28);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="retry"] {
+  background: linear-gradient(135deg, var(--spc-action-retry-start), var(--spc-action-retry-end));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.22);
+}
+
+.spc-controller [data-spc-action-role="retry"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-retry-hover-start), var(--spc-action-retry-hover-end));
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.28);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="record"],
+.spc-controller [data-spc-action-role="stop"] {
+  background: linear-gradient(135deg, var(--spc-action-record-start), var(--spc-action-record-end));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.22);
+}
+
+.spc-controller [data-spc-action-role="record"]:hover:not(:disabled),
+.spc-controller [data-spc-action-role="stop"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-record-hover-start), var(--spc-action-record-hover-end));
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.28);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="record"].recording,
+.spc-controller [data-spc-action-role="stop"].recording {
+  background: linear-gradient(135deg, #be123c, #9f1239);
+  animation: pulse 1.5s infinite;
+}
+
+.spc-controller [data-spc-action-role="next"] {
+  background: linear-gradient(135deg, var(--spc-action-next-start), var(--spc-action-next-end));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.22);
+}
+
+.spc-controller [data-spc-action-role="next"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-next-hover-start), var(--spc-action-next-hover-end));
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.28);
+  transform: translateY(-1px);
+}
+
+/* The existing indigo AI treatment remains recognizable while adopting the
+   shared geometry and states. */
+.spc-controller [data-spc-action-role="ai"] {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.22);
+}
+
+.spc-controller [data-spc-action-role="ai"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.28);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="support"] {
+  background: linear-gradient(135deg, var(--spc-action-support-start), var(--spc-action-support-end));
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  box-shadow: 0 2px 6px rgba(194, 65, 12, 0.12);
+}
+
+.spc-controller [data-spc-action-role="support"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-support-hover-start), var(--spc-action-support-hover-end));
+  border-color: #fdba74;
+  box-shadow: 0 4px 10px rgba(194, 65, 12, 0.18);
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role="secondary"],
+.spc-controller [data-spc-action-role="utility"] {
+  background: #fff;
+  border: 1px solid var(--spc-action-border);
+  color: #4b5563;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.spc-controller [data-spc-action-role="secondary"]:hover:not(:disabled),
+.spc-controller [data-spc-action-role="utility"]:hover:not(:disabled) {
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #92400e;
+  transform: translateY(-1px);
+}
+
+.spc-controller [data-spc-action-role]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.spc-picker-prev:focus-visible,
+.spc-picker-next:focus-visible,
+.spc-picker-pill:focus-visible,
+.spc-controller [data-spc-action-role]:focus-visible {
+  outline: 2px solid var(--spc-action-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(154, 87, 34, 0.2);
+}
+
+@media (max-width: 390px) {
+  .spc-picker-prev,
+  .spc-picker-next {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   14. RFIB-aligned picker and settings sheets
+   -------------------------------------------------------------------------- */
+
+.spc-sheet {
+  border: 1px solid var(--spc-action-border);
+  background: #fff;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+@media (min-width: 641px) {
+  .spc-sheet {
+    border-radius: var(--spc-control-radius) 0 0 var(--spc-control-radius);
+  }
+}
+
+@media (max-width: 640px) {
+  .spc-sheet {
+    border-radius: var(--spc-control-radius) var(--spc-control-radius) 0 0;
+  }
+}
+
+.spc-sheet-header {
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.spc-sheet-title {
+  color: #1f2937;
+}
+
+.spc-sheet-close {
+  width: var(--spc-control-height);
+  height: var(--spc-control-height);
+  min-height: var(--spc-control-height) !important;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  color: #4b5563;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.spc-sheet-close:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1f2937;
+}
+
+/* Picker sheets keep their compact dismissal affordance; the 44px target is
+   reserved for mode Settings sheets and their learner-facing controls. */
+.spc-picker-sheet .spc-sheet-close {
+  width: 36px;
+  height: 36px;
+  min-height: 36px !important;
+  border: none;
+  border-radius: 50%;
+  background: var(--spc-color-surface);
+}
+
+.spc-sheet-body {
+  background: #fff;
+  padding: 12px 16px 16px;
+}
+
+.spc-sheet-search {
+  height: var(--spc-control-min-height);
+  min-height: var(--spc-control-min-height);
+  margin: 0 0 10px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  box-shadow: none;
+}
+
+.spc-sheet-search:focus {
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16);
+}
+
+.spc-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spc-sheet-item {
+  min-height: var(--spc-control-min-height);
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.spc-sheet-item:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.spc-sheet-item.is-current {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a5722;
+  font-weight: 700;
+}
+
+.spc-sheet-item-id {
+  color: #7c3aed;
+}
+
+.spc-sheet-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0 0;
+  margin-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  user-select: none;
+}
+
+.spc-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.spc-pagination-btn:hover:not(:disabled) {
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #92400e;
+  box-shadow: 0 2px 6px rgba(146, 64, 14, 0.12);
+  transform: translateY(-1px);
+}
+
+.spc-pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.spc-pagination-info {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.spc-mode-settings-sheet .spc-sheet-body {
+  gap: 0;
+  padding: 12px 16px 20px;
+}
+
+.spc-settings-section {
+  padding: 0 0 16px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.spc-settings-section:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.spc-settings-section-title {
+  margin: 0 0 10px;
+  color: #374151;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+}
+
+.spc-settings-section .adaptive-toggle-container,
+.spc-settings-section .question-filters-row,
+.spc-settings-section .recommendation-controls,
+.spc-settings-section .attempts-history-container,
+.spc-settings-section .history-section {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.spc-settings-section .status-filter-btn,
+.spc-settings-section .length-filter-btn,
+.spc-settings-section .difficulty-filter-btn,
+.spc-settings-section .adaptive-toggle-container button,
+.spc-settings-section .recommended-jump-btn {
+  min-height: var(--spc-control-height) !important;
+  border-radius: var(--spc-control-radius);
+}
+
+/* Every visible settings control follows the same RFIB-aligned recipe. The
+   radio/checkbox inputs remain compact because their labels are the touch
+   target and the inputs are visually hidden by the mode's segmented control. */
+.spc-mode-settings-sheet button,
+.spc-mode-settings-sheet select,
+.spc-mode-settings-sheet input {
+  min-height: var(--spc-control-height) !important;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  appearance: none;
+}
+
+.spc-mode-settings-sheet button:not(.spc-sheet-tab):not(.spc-sheet-close),
+.spc-mode-settings-sheet select,
+.spc-mode-settings-sheet input:not([type="radio"]):not([type="checkbox"]) {
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+}
+
+.spc-mode-settings-sheet input[type="radio"],
+.spc-mode-settings-sheet input[type="checkbox"] {
+  min-height: 0 !important;
+  appearance: auto;
+}
+
+.spc-settings-section .status-filter-btn,
+.spc-settings-section .length-filter-btn,
+.spc-settings-section .difficulty-filter-btn {
+  border: 1px solid var(--spc-action-border);
+  background: #fff;
+  color: #4b5563;
+  box-shadow: none;
+}
+
+.spc-settings-section .status-filter-btn:hover,
+.spc-settings-section .length-filter-btn:hover,
+.spc-settings-section .difficulty-filter-btn:hover {
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.spc-settings-section .recommended-jump-btn {
+  border: 1px solid #fed7aa;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #c2410c;
+  box-shadow: none;
+}
+
+.spc-settings-section .question-total,
+.spc-settings-section .question-count-info {
+  border-top: 1px dashed #e5e7eb;
+}
+
+.spc-mode-settings-sheet .spc-sheet-tabs {
+  margin: 0 -16px 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.spc-mode-settings-sheet .spc-sheet-tab {
+  min-height: 44px;
+  border-bottom-width: 3px;
+  color: #6b7280;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  appearance: none;
+}
+
+.spc-mode-settings-sheet .spc-sheet-tab:hover {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.spc-mode-settings-sheet .spc-sheet-tab[aria-selected="true"],
+.spc-mode-settings-sheet .spc-sheet-tab.active {
+  border-bottom-color: #8b5cf6;
+  color: #7c3aed;
+}
+
+.spc-mode-settings-sheet .question-filters-row {
+  gap: 10px;
+}
+
+/* Read Aloud owns these generated difficulty controls, but they use the same
+   settings-sheet contract as every other Speaking mode. */
+.spc-mode-settings-sheet .read-aloud-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-btn {
+  min-height: var(--spc-control-min-height);
+  padding: 8px 12px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  color: #4b5563;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+  box-shadow: none;
+  transition: background var(--spc-transition), border-color var(--spc-transition),
+    color var(--spc-transition), box-shadow var(--spc-transition), transform var(--spc-transition);
+}
+
+.spc-mode-settings-sheet .ra-filter-pill {
+  min-height: var(--spc-control-height) !important;
+  padding: 8px 12px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  color: #4b5563;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+  box-shadow: none;
+  transition: background var(--spc-transition), border-color var(--spc-transition),
+    color var(--spc-transition), box-shadow var(--spc-transition), transform var(--spc-transition);
+}
+
+.spc-mode-settings-sheet .ra-filter-pill:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #92400e;
+  transform: translateY(-1px);
+}
+
+.spc-mode-settings-sheet .ra-filter-pill.active,
+.spc-mode-settings-sheet .ra-filter-pill[aria-pressed="true"] {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #6d28d9;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.16);
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-btn:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #92400e;
+  transform: translateY(-1px);
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-btn.active,
+.spc-mode-settings-sheet .read-aloud-filter-btn[aria-pressed="true"] {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #6d28d9;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.16);
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-btn:focus-visible,
+.spc-mode-settings-sheet .spc-sheet-tab:focus-visible {
+  outline: 2px solid var(--spc-action-focus);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Unified segmented filter groups
+   --------------------------------------------------------------------------
+   Speak / Retell Lecture / SGD / Describe Image author their status, length
+   and difficulty filters as `▼` dropdowns. Inside a Speaking settings sheet
+   they render as the same always-visible segmented pills Read Aloud uses, so
+   one mental model covers every Speaking mode. The trigger button and popup
+   positioning are suppressed here; the option nodes, their IDs and their
+   click handlers are untouched. The `!important` flags override the inline
+   `display:none` the owning modules set when the popup is closed. */
+.spc-mode-settings-sheet .status-filter-dropdown,
+.spc-mode-settings-sheet .length-filter-dropdown,
+.spc-mode-settings-sheet .difficulty-filter-dropdown {
+  position: static;
+  width: 100%;
+  margin: 0 0 16px;
+}
+
+.spc-mode-settings-sheet .status-filter-btn,
+.spc-mode-settings-sheet .length-filter-btn,
+.spc-mode-settings-sheet .difficulty-filter-btn {
+  display: none !important;
+}
+
+.spc-filter-group-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #475569;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.spc-mode-settings-sheet .status-filter-menu,
+.spc-mode-settings-sheet .length-filter-menu,
+.spc-mode-settings-sheet .difficulty-filter-menu {
+  display: flex !important;
+  position: static !important;
+  flex-wrap: wrap;
+  /* Size each pill to its own content — the default `stretch` made every
+     option as tall as the tallest wrapping one. */
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.spc-mode-settings-sheet .filter-option {
+  /* The authored option is content-box, which turned a 44px min-height into
+     a 62px pill once padding and border were added. */
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--spc-control-height);
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: var(--spc-control-radius);
+  background: #fff;
+  color: #4b5563;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background var(--spc-transition), border-color var(--spc-transition),
+    color var(--spc-transition), box-shadow var(--spc-transition), transform var(--spc-transition);
+}
+
+.spc-mode-settings-sheet .filter-option:hover {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #92400e;
+  transform: translateY(-1px);
+}
+
+.spc-mode-settings-sheet .filter-option.selected {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #6d28d9;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.16);
+}
+
+/* The dropdown-era selected state was "bold and underlined" text. The pill
+   itself now carries the selection, so drop the underline and inherit the
+   pill colour — matching the Read Aloud filters. */
+.spc-mode-settings-sheet .filter-option.selected .filter-option-text {
+  text-decoration: none;
+}
+
+.spc-mode-settings-sheet .filter-option.selected .filter-option-icon,
+.spc-mode-settings-sheet .filter-option.selected .filter-option-text {
+  color: inherit;
+}
+
+.spc-mode-settings-sheet .filter-option.selected:hover {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+}
+
+.spc-mode-settings-sheet .filter-option:focus-visible {
+  outline: 2px solid var(--spc-action-focus);
+  outline-offset: 2px;
+}
+
+/* The authored option markup nests icon/text/badge spans; keep them inline so
+   each option stays a single pill. */
+.spc-mode-settings-sheet .filter-option .filter-option-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* The authored rule sets `flex: 1`, which stretched the pill to the row. */
+  flex: 0 1 auto;
+}
+
+.spc-mode-settings-sheet .filter-option .filter-option-icon {
+  width: auto;
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+@media (max-width: 390px) {
+  .spc-mode-settings-sheet .read-aloud-filter-btn {
+    min-height: 44px;
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 390px) {
+  .spc-row--actions {
+    column-gap: 12px;
+  }
+
+  .spc-sheet-header {
+    padding: 10px 14px;
+  }
+
+  .spc-sheet-body {
+    padding: 10px 14px 16px;
+  }
+
+  .spc-sheet-close {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Read Aloud keeps its native recording lifecycle and mode-owned nodes. The
+   shared visual recipes are applied by stable IDs only; hidden lifecycle
+   proxies remain hidden and are intentionally not styled as visible actions. */
+#mode-read-aloud #ra-play-audio-btn,
+#ra-settings-sheet #ra-play-audio-btn {
+  min-height: var(--spc-control-min-height);
+  border: 1px solid transparent;
+  border-radius: var(--spc-control-radius);
+  background: linear-gradient(135deg, var(--spc-action-play-start), var(--spc-action-play-end));
+  color: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22);
+}
+
+#mode-read-aloud #ra-play-audio-btn:hover:not(:disabled),
+#ra-settings-sheet #ra-play-audio-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-play-hover-start), var(--spc-action-play-hover-end));
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+  transform: translateY(-1px);
+}
+
+#mode-read-aloud #ra-record-btn,
+#mode-read-aloud #ra-stop-btn {
+  min-height: var(--spc-control-min-height);
+  border: 1px solid transparent;
+  border-radius: var(--spc-control-radius);
+  background: linear-gradient(135deg, var(--spc-action-record-start), var(--spc-action-record-end));
+  color: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.22);
+}
+
+#mode-read-aloud #ra-stop-btn {
+  background: linear-gradient(135deg, #be123c, #9f1239);
+  animation: pulse 1.5s infinite;
+}
+
+#mode-read-aloud #ra-check-btn,
+#mode-read-aloud #ra-next-btn {
+  min-height: var(--spc-control-min-height);
+  border: 1px solid transparent;
+  border-radius: var(--spc-control-radius);
+  background: linear-gradient(135deg, var(--spc-action-primary-start), var(--spc-action-primary-end));
+  color: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.22);
+}
+
+#mode-read-aloud #ra-retry-btn {
+  min-height: var(--spc-control-min-height);
+  border: 1px solid transparent;
+  border-radius: var(--spc-control-radius);
+  background: linear-gradient(135deg, var(--spc-action-retry-start), var(--spc-action-retry-end));
+  color: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.22);
+}
+
+#mode-read-aloud #ra-next-btn {
+  background: linear-gradient(135deg, var(--spc-action-next-start), var(--spc-action-next-end));
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.22);
+}
+
+#mode-read-aloud #ra-check-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-primary-hover-start), var(--spc-action-primary-hover-end));
+  transform: translateY(-1px);
+}
+
+#mode-read-aloud #ra-next-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-next-hover-start), var(--spc-action-next-hover-end));
+}
+
+#mode-read-aloud #ra-retry-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spc-action-retry-hover-start), var(--spc-action-retry-hover-end));
+  transform: translateY(-1px);
+}
+
+#mode-read-aloud #ra-record-btn:disabled,
+#mode-read-aloud #ra-stop-btn:disabled,
+#mode-read-aloud #ra-play-audio-btn:disabled,
+#ra-settings-sheet #ra-play-audio-btn:disabled,
+#mode-read-aloud #ra-check-btn:disabled,
+#mode-read-aloud #ra-next-btn:disabled,
+#mode-read-aloud #ra-retry-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
+#mode-read-aloud #read-aloud-history-toggle {
+  min-height: 36px;
+  border: 1px solid var(--spc-action-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #4b5563;
+  box-shadow: none;
+}
+
+#mode-read-aloud #read-aloud-history-toggle:hover:not(:disabled) {
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+#mode-read-aloud #ra-record-btn:focus-visible,
+#mode-read-aloud #ra-stop-btn:focus-visible,
+#mode-read-aloud #ra-play-audio-btn:focus-visible,
+#ra-settings-sheet #ra-play-audio-btn:focus-visible,
+#mode-read-aloud #ra-check-btn:focus-visible,
+#mode-read-aloud #ra-next-btn:focus-visible,
+#mode-read-aloud #ra-retry-btn:focus-visible,
+#mode-read-aloud #read-aloud-history-toggle:focus-visible {
+  outline: 2px solid var(--spc-action-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(154, 87, 34, 0.2);
 }

@@ -125,6 +125,7 @@ class StressVisualizer {
 
         this.comparisonChartMode = 'pitch'; // 'pitch' or 'intensity'
         this.lastUserAnalysis = null;
+        this.lastLearnerSyllables = null;
         this.lastNativeAnalysis = null;
         this.lastReferenceSyllables = null;
         this.initChartModeToggle();
@@ -143,7 +144,8 @@ class StressVisualizer {
                     this.drawComparisonPitchContour(
                         this.lastUserAnalysis,
                         this.lastNativeAnalysis,
-                        this.lastReferenceSyllables
+                        this.lastReferenceSyllables,
+                        { learnerSyllables: this.lastLearnerSyllables }
                     );
                 } else if (this.lastNativeAnalysis) {
                     this.drawNativePitchContour(
@@ -165,6 +167,11 @@ class StressVisualizer {
             this.stressChart.destroy();
             this.stressChart = null;
         }
+        this.lastUserAnalysis = null;
+        this.lastLearnerSyllables = null;
+        this.lastNativeAnalysis = null;
+        this.lastReferenceSyllables = null;
+        this.lastAcousticSyllables = null;
         this.toggleFeedbackSection(false);
     }
 
@@ -796,9 +803,23 @@ class StressVisualizer {
     drawComparisonPitchContour(
         userAnalysis,
         nativeAnalysis = null,
-        referenceSyllables = []
+        referenceSyllables = [],
+        options = {}
     ) {
+        const {
+            drawDuration = true,
+            learnerSyllables: requestedLearnerSyllables = null
+        } = options || {};
+        const analysisSyllables = userAnalysis?.observed?.syllables;
+        const resolvedLearnerSyllables = Array.isArray(requestedLearnerSyllables)
+            ? requestedLearnerSyllables
+            : Array.isArray(analysisSyllables)
+                ? analysisSyllables
+                : (Array.isArray(userAnalysis?.observed_syllables)
+                    ? userAnalysis.observed_syllables
+                    : (Array.isArray(userAnalysis?.syllables) ? userAnalysis.syllables : []));
         this.lastUserAnalysis = userAnalysis;
+        this.lastLearnerSyllables = resolvedLearnerSyllables;
         this.lastNativeAnalysis = nativeAnalysis;
         this.lastReferenceSyllables = referenceSyllables;
 
@@ -807,7 +828,7 @@ class StressVisualizer {
                 userAnalysis?.pitch?.times || [],
                 userAnalysis?.pitch?.values || [],
                 userAnalysis?.intensity?.values || [],
-                userAnalysis?.observed?.syllables || userAnalysis?.syllables || []
+                resolvedLearnerSyllables
             );
             return;
         }
@@ -883,24 +904,23 @@ class StressVisualizer {
         });
 
         const nativeSyllables = nativeAnalysis?.observed?.syllables || [];
-        const learnerSyllables = userAnalysis?.observed?.syllables || userAnalysis?.syllables || [];
         const targetDurations = nativeSyllables.map((syllable, index) => ({
             ...syllable,
             ipa: referenceSyllables[index]?.ipa || null,
             isStressed: referenceSyllables[index]?.stress === 'primary'
         }));
-        this.drawDurationChart(targetDurations, learnerSyllables);
+        if (drawDuration) this.drawDurationChart(targetDurations, resolvedLearnerSyllables);
 
         const detailed = canShowDetailedFeedback({
             targetCount: referenceSyllables.length || nativeSyllables.length,
-            observedCount: learnerSyllables.length,
+            observedCount: resolvedLearnerSyllables.length,
             nativeQuality: nativeAnalysis.quality,
             learnerQuality: userAnalysis.quality,
             nativeStressEvidence: nativeAnalysis?.observed?.stressEvidence,
             learnerStressEvidence: userAnalysis?.observed?.stressEvidence
         });
         if (detailed) {
-            this.generateFeedback(targetDurations, learnerSyllables, nativeSyllables);
+            this.generateFeedback(targetDurations, resolvedLearnerSyllables, nativeSyllables);
         } else {
             this.toggleFeedbackSection(false);
         }

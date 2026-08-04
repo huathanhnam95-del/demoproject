@@ -949,3 +949,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 554,2026-08-04,Update stale INDEPENDENT_COUNT_DISAGREEMENT fixture and wire 3 unrun pronunciation-analyzer test files into test:pronounce:logic,Done,2026-08-04
 555,2026-08-04,Add end-to-end chart+rail assertions to pronounce version-comparison browser check and sync the harness markup with index.html,Done,2026-08-04
 553,2026-08-04,Write V3 release status and next-steps report,Done,2026-08-04
+556,2026-08-04,Write session report for comparison review UI fixes and V3 recognizer contract drift,Done,2026-08-04
+557,2026-08-04,Update V3 pronunciation release status report with audit findings,Done,2026-08-04
+558,2026-08-04,Fix Pronunciation V3 audit findings and harden browser/contract tests,Done,2026-08-04
+559,2026-08-04,Review verify and push all changes to production,Done,2026-08-04

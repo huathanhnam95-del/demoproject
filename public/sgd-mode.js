@@ -161,11 +161,6 @@
         setupEventListeners();
         isInitialized = true;
 
-        // Honor localStorage dismissal for info box
-        const infoBox = document.getElementById('sgd-info-box');
-        if (infoBox && localStorage.getItem('sgdInfoDismissed') === '1') {
-            infoBox.style.display = 'none';
-        }
     }
 
     function reset() {
@@ -234,9 +229,7 @@
         el.backBtn = document.getElementById('back-btn-sgd');
         el.nextBtn = document.getElementById('next-btn-sgd');
         el.questionSelect = document.getElementById('question-select-sgd');
-        el.totalQuestions = document.getElementById('total-questions-sgd');
         el.playBtn = document.getElementById('play-sgd-btn');
-        el.score = document.getElementById('score-sgd');
         el.recommendedBtn = document.getElementById('recommended-btn-sgd');
         el.recommendationSummary = document.getElementById('recommendation-summary-sgd');
 
@@ -606,7 +599,6 @@
                 hasLoadedEntries = false;
                 console.error('[SGD] Error loading entries:', error);
                 setSelectSingleOption(el.questionSelect, 'Error loading');
-                if (el.totalQuestions) el.totalQuestions.textContent = '0';
                 refreshRecommendationUI();
             }
         })();
@@ -642,7 +634,6 @@
             setSelectSingleOption(el.questionSelect, 'No matching questions');
             el.questionSelect.disabled = true;
         }
-        if (el.totalQuestions) el.totalQuestions.textContent = '0';
         if (el.currentQuestionId) el.currentQuestionId.textContent = '-';
         if (el.playBtn) el.playBtn.disabled = true;
         currentEntry = null;
@@ -661,7 +652,6 @@
             fragment.appendChild(option);
         });
         el.questionSelect.replaceChildren(fragment);
-        if (el.totalQuestions) el.totalQuestions.textContent = filteredEntries.length;
     }
 
     function onQuestionSelectChange() {

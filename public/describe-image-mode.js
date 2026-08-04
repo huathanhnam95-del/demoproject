@@ -58,7 +58,7 @@
     function cacheElements() {
         const ids = [
             'question-select-di', 'current-question-id-di', 'back-btn-di', 'next-btn-di',
-            'total-questions-di', 'play-di-btn', 'di-practice-area', 'di-step-progress',
+            'play-di-btn', 'di-practice-area', 'di-step-progress',
             'di-step-prepare', 'di-step-record', 'di-step-review', 'di-step-results',
             'di-image', 'di-image-record', 'di-image-container', 'di-preview-img',
             'di-prep-timer', 'di-prep-bar-fill', 'di-record-timer', 'di-record-bar-fill',
@@ -67,8 +67,7 @@
             'di-retry-btn', 'di-submit-btn',
             'di-sample-answer', 'di-key-points',
             'di-ai-btn', 'di-results-retry-btn', 'di-next-question-btn',
-            'di-zoom-overlay', 'di-zoom-image', 'di-zoom-close', 'di-zoom-btn',
-            'di-info-box', 'di-image-preview',
+            'di-zoom-overlay', 'di-zoom-image', 'di-zoom-close', 'di-zoom-btn', 'di-image-preview',
             'difficulty-filter-btn-di', 'difficulty-filter-menu-di', 'difficulty-filter-label-di',
             'difficulty-filter-container-di',
             'recommended-btn-di', 'recommendation-summary-di'
@@ -90,10 +89,6 @@
         loadEntries();
         isInitialized = true;
 
-        // Dismiss info box if previously dismissed
-        if (localStorage.getItem('diInfoDismissed') === '1' && el.diInfoBox) {
-            el.diInfoBox.style.display = 'none';
-        }
     }
 
     function reset() {
@@ -160,7 +155,6 @@
             opt.textContent = `#${entry.id} - ${entry.title || 'Untitled'}`;
             el.questionSelectDi.appendChild(opt);
         });
-        if (el.totalQuestionsDi) el.totalQuestionsDi.textContent = filteredEntries.length;
     }
 
     function getImageSrc(entry) {

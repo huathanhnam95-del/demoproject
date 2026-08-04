@@ -12,7 +12,7 @@ import {
     hasUsableNativeContours,
     selectReferenceVariant
 } from './reference-contract.js';
-import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
+import { buildLexicalFallbackFeedback, canShowDetailedFeedback, normalizeChartSpans } from './chart-data.js';
 import { buildPronunciationSummary } from './pronunciation-summary.js';
 import {
     buildComparisonSaveMetadata,
@@ -381,12 +381,15 @@ export class PronunciationApp {
             </div>
             <p class="pa-version-column-status">${escapeHtml(statusCopy)}</p>
             <dl class="pa-version-metrics">
-                ${rows.map((row) => `
+                ${rows.map((row) => {
+                    const subtitle = row[`${column.version}Subtitle`];
+                    return `
                     <div class="pa-version-metric-row">
-                        <dt>${escapeHtml(row.label)}</dt>
+                        <dt>${escapeHtml(row.label)}${subtitle ? ` <small class="pa-version-metric-subtitle">(${escapeHtml(subtitle)})</small>` : ''}</dt>
                         <dd>${escapeHtml(formatComparisonMetric(row[column.version], row.key))}</dd>
                     </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </dl>
             <div class="pa-version-boundaries" data-boundary-status="${escapeHtml(column.boundaryStatus)}" data-boundary-source="${escapeHtml(column.boundarySource)}" aria-label="${escapeHtml(`${column.label} ${column.boundaryLabel}`)}">
                 <p class="pa-version-boundary-label">${escapeHtml(column.boundaryLabel)}</p>
@@ -433,7 +436,7 @@ export class PronunciationApp {
         this.renderVersionComparisonCharts();
 
         if (audioBlob && this.versionComparisonView.columns.some((column) => column.status === 'available')) {
-            const initial = this.versionComparisonView.columns.find((column) => column.version === this.versionComparisonBoundarySource);
+            const initial = this.getSelectedVersionComparisonColumn();
             this.showSyllableVerifier(audioBlob, initial?.boundarySpans || [], {
                 comparisonMode: true,
                 labels: initial?.boundarySpans?.map((span) => span.label) || []
@@ -441,39 +444,24 @@ export class PronunciationApp {
         }
     }
 
+    /** The column whose boundaries are currently selected, if any. */
+    getSelectedVersionComparisonColumn() {
+        return this.versionComparisonView?.columns?.find(
+            (item) => item.version === this.versionComparisonBoundarySource
+        ) || null;
+    }
+
     /**
-     * Draw the prosody and duration charts from the engine whose boundaries are
-     * currently selected. Without this the comparison left both charts showing
-     * the native-only reference drawn at word load, so the recording the
-     * reviewer is judging never appeared on them.
+     * Draw the charts from the engine whose boundaries are selected. Without
+     * this the comparison left both charts showing the native-only reference
+     * drawn at word load, so the recording under review never appeared on them.
      */
     renderVersionComparisonCharts() {
-        if (!this.visualizer || !this.versionComparisonView) return;
-        const column = this.versionComparisonView.columns.find(
-            (item) => item.version === this.versionComparisonBoundarySource
+        const column = this.getSelectedVersionComparisonColumn();
+        this.drawLearnerCharts(
+            column?.analysis,
+            normalizeChartSpans(column?.boundarySpans)
         );
-        if (!column?.analysis) {
-            this.chartsContainer?.classList.add('hidden');
-            return;
-        }
-        this.chartsContainer?.classList.remove('hidden');
-
-        // Both engines publish the same pitch/intensity contour shape, so the
-        // engine analysis can be handed straight to the learner-vs-native draw.
-        this.visualizer.drawComparisonPitchContour(
-            column.analysis,
-            this.currentWordRef?.nativeAnalysis,
-            this.currentWordRef?.syllables || []
-        );
-
-        // Normalized spans carry only the boundary times; the duration lanes
-        // read `duration`, so derive it here rather than trusting either
-        // engine's own field name.
-        const observedSpans = column.boundarySpans.map((span) => ({
-            ...span,
-            duration: span.endTime - span.startTime
-        }));
-        this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), observedSpans);
     }
 
     updateVersionComparisonBoundaryButtons() {
@@ -1107,41 +1095,45 @@ export class PronunciationApp {
     }
 
     /**
-     * Draw the pitch and duration charts and arm syllable playback from V3
-     * recognizer output. Independent of the formal verdict: a learner whose
-     * count could not be confirmed still gets working charts and playback.
+     * Draw the learner prosody and duration charts for one engine's output.
+     * Both the learner V3 path and the admin comparison feed through here so
+     * the charts always describe the recording, never the native reference
+     * left over from word load. Returns whether anything was drawn.
      */
-    renderV3Segmentation(analysis, syllables = [], audioBlob = null) {
-        const spans = (Array.isArray(syllables) ? syllables : []).filter((syllable) => (
-            Number.isFinite(syllable?.startTime) &&
-            Number.isFinite(syllable?.endTime) &&
-            syllable.endTime > syllable.startTime
-        ));
-
-        if (!analysis || spans.length === 0) {
+    drawLearnerCharts(analysis, spans = []) {
+        if (!this.visualizer || !analysis) {
             this.visualizer?.clear();
             this.chartsContainer?.classList.add('hidden');
-            if (audioBlob) {
-                this.showSyllableVerifier(audioBlob, []);
-            }
-            return;
+            return false;
         }
 
         this.chartsContainer?.classList.remove('hidden');
 
-        // Pitch contour: learner (Praat contours aligned to V3 spans) vs native.
+        // Pitch contour: learner (Praat contours aligned to the engine's spans)
+        // against the native reference.
         this.visualizer.drawComparisonPitchContour(
             analysis,
             this.currentWordRef?.nativeAnalysis,
-            this.currentWordRef?.syllables || []
+            this.currentWordRef?.syllables || [],
+            { learnerSyllables: spans, drawDuration: false }
         );
 
-        // Duration lanes: recognizer spans against the native pattern when we
+        // Duration lanes: observed spans against the native pattern when we
         // have one, otherwise the learner's own spans alone.
         this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), spans);
+        return true;
+    }
 
+    /**
+     * Draw the charts and arm syllable playback from V3 recognizer output.
+     * Independent of the formal verdict: a learner whose count could not be
+     * confirmed still gets working charts and playback.
+     */
+    renderV3Segmentation(analysis, syllables = [], audioBlob = null) {
+        const spans = normalizeChartSpans(syllables);
+        const drawn = this.drawLearnerCharts(analysis, spans);
         if (audioBlob) {
-            this.showSyllableVerifier(audioBlob, spans);
+            this.showSyllableVerifier(audioBlob, drawn ? spans : []);
         }
     }
 

@@ -22,6 +22,8 @@
     let isInitialized = false;
     let hasLoadedEntries = false;
     let loadEntriesPromise = null;
+    let pendingRouteQuestionId = null;
+    let audioLoadToken = 0;
     let notesRecommendationEngine = null;
     let notesRecommendationIndex = null;
     let recentRecommendedIds = [];
@@ -52,6 +54,15 @@
             return;
         }
 
+        try {
+            const route = window.PracticeRouter?.parseRoute?.(window.location.pathname);
+            if (route?.mode === 'notes' && route.questionId) {
+                pendingRouteQuestionId = String(route.questionId);
+            }
+        } catch (_) {
+            // Deep-link capture is best effort; the route event remains a fallback.
+        }
+
         setupEventListeners();
         loadEntries();
         isInitialized = true;
@@ -76,9 +87,16 @@
         }
 
         // Stop any playing audio
+        audioLoadToken += 1;
         if (elements.audio) {
             elements.audio.pause();
-            elements.audio.src = '';
+            elements.audio.removeAttribute('src');
+            elements.audio.load();
+        }
+        if (elements.audioStatus) {
+            elements.audioStatus.hidden = true;
+            elements.audioStatus.textContent = '';
+            elements.audioStatus.className = 'notes-audio-status';
         }
         // Clear user input
         if (elements.userInput) {
@@ -95,9 +113,7 @@
         elements.backBtn = document.getElementById('back-btn-notes');
         elements.nextBtn = document.getElementById('next-btn-notes');
         elements.questionSelect = document.getElementById('question-select-notes');
-        elements.totalQuestions = document.getElementById('total-questions-notes');
         elements.playBtn = document.getElementById('play-notes-btn');
-        elements.score = document.getElementById('score-notes');
         elements.recommendedBtn = document.getElementById('recommended-btn-notes');
         elements.recommendationSummary = document.getElementById('recommendation-summary-notes');
 
@@ -117,6 +133,7 @@
         // Step 2: Audio + Notes
         elements.stepAudio = document.getElementById('notes-step-audio');
         elements.audio = document.getElementById('notes-audio');
+        elements.audioStatus = document.getElementById('notes-audio-status');
         elements.userInput = document.getElementById('notes-user-input');
         elements.submitBtn = document.getElementById('notes-submit-btn');
 
@@ -369,7 +386,13 @@
      */
     async function loadEntries() {
         if (!elements.questionSelect) return;
-        if (loadEntriesPromise) return loadEntriesPromise;
+        if (loadEntriesPromise) {
+            await loadEntriesPromise;
+            if (hasLoadedEntries && entries.length > 0) {
+                applyFilter(currentFilter);
+            }
+            return;
+        }
 
         if (hasLoadedEntries && entries.length > 0) {
             applyFilter(currentFilter);
@@ -466,7 +489,6 @@
                 hasLoadedEntries = false;
                 console.error('[TakeNotes] Error loading entries:', error);
                 elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
-                if (elements.totalQuestions) elements.totalQuestions.textContent = '0';
                 refreshRecommendationUI();
             }
         })();
@@ -523,8 +545,14 @@
         } else {
             if (elements.playBtn) elements.playBtn.disabled = false;
             if (elements.questionSelect) elements.questionSelect.disabled = false;
-            currentEntryIndex = getPreferredEntryIndex();
+            const routeIndex = pendingRouteQuestionId
+                ? filteredEntries.findIndex((entry) => String(entry.id) === pendingRouteQuestionId)
+                : -1;
+            currentEntryIndex = routeIndex >= 0 ? routeIndex : getPreferredEntryIndex();
             selectEntry(currentEntryIndex);
+            if (routeIndex >= 0 || pendingRouteQuestionId) {
+                pendingRouteQuestionId = null;
+            }
         }
     }
 
@@ -535,9 +563,6 @@
         if (elements.questionSelect) {
             elements.questionSelect.innerHTML = '<option value="">No matching questions</option>';
             elements.questionSelect.disabled = true;
-        }
-        if (elements.totalQuestions) {
-            elements.totalQuestions.textContent = '0';
         }
         if (elements.currentQuestionId) {
             elements.currentQuestionId.textContent = '-';
@@ -569,23 +594,21 @@
 
         if (filteredEntries.length === 0) return;
 
-        elements.questionSelect.innerHTML = filteredEntries.map((entry, index) => {
+        elements.questionSelect.innerHTML = filteredEntries.map((entry) => {
             const hasVideo = entry.videoUrl && entry.videoUrl.trim().length > 0;
             const videoLabel = hasVideo ? ` 🎥` : ``;
-            return `<option value="${index}">[Lvl ${entry.level}] ${entry.id}${videoLabel}</option>`;
+            return `<option value="${entry.id}">[Lvl ${entry.level}] ${entry.id}${videoLabel}</option>`;
         }).join('');
 
-        if (elements.totalQuestions) {
-            elements.totalQuestions.textContent = filteredEntries.length;
-        }
     }
 
     /**
      * Handle question select change
      */
     function onQuestionSelectChange() {
-        const index = parseInt(elements.questionSelect.value, 10);
-        if (!isNaN(index)) {
+        const selectedId = String(elements.questionSelect.value || '').trim();
+        const index = filteredEntries.findIndex((entry) => String(entry.id) === selectedId);
+        if (index >= 0) {
             selectEntry(index);
         }
     }
@@ -622,7 +645,7 @@
             elements.currentQuestionId.textContent = currentEntry.id;
         }
         if (elements.questionSelect) {
-            elements.questionSelect.value = index;
+            elements.questionSelect.value = currentEntry.id;
         }
 
         // Reset practice area
@@ -632,6 +655,12 @@
         // Update URL with current question ID (replaceState — no history entry per question)
         if (window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('notes', currentEntry.id);
+        }
+
+        try {
+            window.SpeakingPracticeController?.sync?.('notes');
+        } catch (_) {
+            // The shared controller is optional outside PTE Retell Lecture.
         }
 
     }
@@ -705,6 +734,8 @@
      */
     function goToAudioStep() {
 
+        if (!currentEntry) return;
+
         // Clear video iframe
         if (elements.youtubePlayer) {
             elements.youtubePlayer.innerHTML = '';
@@ -722,19 +753,44 @@
      * Load audio file with extension fallback
      */
     async function loadAudio(audioId) {
+        const requestToken = ++audioLoadToken;
         const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
         const basePath = `database/Take%20Notes/RL/audio/${audioId}`;
+
+        if (elements.audio) {
+            elements.audio.pause();
+            elements.audio.removeAttribute('src');
+            elements.audio.load();
+        }
+        if (elements.audioStatus) {
+            elements.audioStatus.hidden = false;
+            elements.audioStatus.className = 'notes-audio-status is-loading';
+            elements.audioStatus.textContent = `Loading audio for question ${audioId}...`;
+        }
 
         for (const ext of tryExtensions) {
             const audioPath = `${basePath}.${ext}`;
             const exists = await checkFileExists(audioPath);
             if (exists) {
+                if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
                 elements.audio.src = audioPath;
+                elements.audio.load();
+                if (elements.audioStatus) {
+                    elements.audioStatus.hidden = true;
+                    elements.audioStatus.textContent = '';
+                    elements.audioStatus.className = 'notes-audio-status';
+                }
                 return;
             }
         }
 
+        if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
         console.warn(`[TakeNotes] No audio file found for ${audioId}`);
+        if (elements.audioStatus) {
+            elements.audioStatus.hidden = false;
+            elements.audioStatus.className = 'notes-audio-status is-unavailable';
+            elements.audioStatus.textContent = `Audio is not available for question ${audioId}. Please choose another question.`;
+        }
     }
 
     /**
@@ -948,9 +1004,11 @@
     window.addEventListener('practice-route-question', (event) => {
         const { mode, questionId } = event.detail || {};
         if (mode !== 'notes' || !questionId) return;
+        pendingRouteQuestionId = String(questionId);
         if (!hasLoadedEntries || filteredEntries.length === 0) return;
         const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
         if (idx >= 0) {
+            pendingRouteQuestionId = null;
             selectEntry(idx);
         }
     });

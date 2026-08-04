@@ -11,7 +11,7 @@ const js = read('public/crm-admin.js');
 const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const schedulerWorkspace = read('public/js/crm/scheduler-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260731-v1.8.44';
+const CRM_ADMIN_ASSET_VERSION = '20260804-v1.8.45';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
 const localAssetRefs = Array.from(

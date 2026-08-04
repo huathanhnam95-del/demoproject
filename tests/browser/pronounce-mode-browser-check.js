@@ -66,24 +66,71 @@ function harnessHtml() {
       </div>
       <div id="pa-loading-placeholder"></div>
       <div id="pa-results-summary"></div>
-      <div id="pa-charts-container" class="pa-charts-grid">
-        <div class="pa-chart-card">
-          <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
-            <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
-              <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
-              <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+      <div id="pa-review-layout" class="pa-review-layout">
+        <aside id="pa-version-review-rail" class="pa-version-rail" hidden aria-label="Comparison controls">
+          <div class="pa-version-boundary-controls">
+            <div>
+              <strong>Waveform boundaries</strong>
+              <span class="pa-version-help">The shared waveform starts with the selected automatic set. Manual marks stay in place when you switch.</span>
+            </div>
+            <div id="pa-version-boundary-source" class="pa-version-source-toggle" role="group" aria-label="Automatic boundary source">
+              <button type="button" class="pa-version-source-btn" data-version="v2" aria-pressed="true">Show V2 boundaries</button>
+              <button type="button" class="pa-version-source-btn" data-version="v3" aria-pressed="false">Show V3 boundaries</button>
             </div>
           </div>
-          <canvas id="pa-pitch-chart"></canvas>
-        </div>
-        <div class="pa-chart-card">
-          <div class="pa-chart-title">Syllable Duration Comparison</div>
-          <canvas id="pa-stress-chart"></canvas>
+          <fieldset id="pa-version-judgment" class="pa-version-judgment">
+            <legend>Which version is more accurate?</legend>
+            <div class="pa-version-judgment-options">
+              <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+              <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+              <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+              <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+            </div>
+          </fieldset>
+          <div class="pa-version-save-row">
+            <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
+            <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
+          </div>
+          <details id="pa-version-technical-details" class="pa-version-technical-details">
+            <summary>Technical details</summary>
+            <pre id="pa-version-technical-content"></pre>
+          </details>
+        </aside>
+        <div class="pa-review-main">
+          <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
+            <div class="pa-version-comparison-header">
+              <div>
+                <p class="pa-version-eyebrow">Admin comparison</p>
+                <h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3>
+                <p class="pa-version-description">Both engines analyzed the same recording. Inspect the boundaries, then save your judgment.</p>
+              </div>
+              <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
+            </div>
+            <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
+              <article id="pa-version-v2" class="pa-version-column" aria-labelledby="pa-version-v2-title"></article>
+              <article id="pa-version-v3" class="pa-version-column" aria-labelledby="pa-version-v3-title"></article>
+            </div>
+          </section>
+          <div id="pa-charts-container" class="pa-charts-grid">
+            <div class="pa-chart-card">
+              <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
+                <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
+                  <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
+                  <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+                </div>
+              </div>
+              <canvas id="pa-pitch-chart"></canvas>
+            </div>
+            <div class="pa-chart-card">
+              <div class="pa-chart-title">Syllable Duration Comparison</div>
+              <canvas id="pa-stress-chart"></canvas>
+            </div>
+          </div>
+          <div id="pa-timeline-container"></div>
+          <div id="syllable-verifier-container"></div>
         </div>
       </div>
-      <div id="pa-timeline-container"></div>
-      <div id="syllable-verifier-container"></div>
       <div id="pa-feedback-section"><div id="pa-syllable-tabs"></div><div id="pa-feedback-content"></div></div>
     </div>
     <script type="module" src="/pronunciation-analyzer/main.js"></script>
@@ -97,19 +144,33 @@ function startServer() {
   });
   app.use(express.static('public'));
   app.get('/pronounce-v2-harness', (_request, response) => response.type('html').send(harnessHtml()));
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = http.createServer(app);
-    server.listen(Number(process.env.PRONOUNCE_HARNESS_PORT || 0), '127.0.0.1', () => resolve({
-      server,
-      origin: `http://127.0.0.1:${server.address().port}`
-    }));
+    const onError = (error) => reject(error);
+    server.once('error', onError);
+    server.listen(Number(process.env.PRONOUNCE_HARNESS_PORT || 0), '127.0.0.1', () => {
+      server.removeListener('error', onError);
+      resolve({
+        server,
+        origin: `http://127.0.0.1:${server.address().port}`
+      });
+    });
+  });
+}
+
+function closeServer(server) {
+  if (!server?.listening) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
   });
 }
 
 async function run() {
   const { server, origin } = await startServer();
-  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true, channel: 'chrome' });
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 
   await context.addInitScript(() => {
     window.__charts = [];
@@ -265,6 +326,7 @@ async function run() {
     window.fetch = async (resource, options = {}) => {
       const url = String(resource?.url || resource || '');
       if (url.endsWith('/health')) return jsonResponse({ status: 'ok' });
+      if (url.includes('/warm/v3')) return jsonResponse({ status: 'ok', warmed: true });
       if (url.includes('/dictionary/v2/')) {
         const word = decodeURIComponent(url.split('/').pop());
         window.__dictionaryCalls[word] = (window.__dictionaryCalls[word] || 0) + 1;
@@ -422,14 +484,32 @@ async function run() {
 
   const page = await context.newPage();
   const pageErrors = [];
+  const requestFailures = [];
+  const consoleMessages = [];
+  const moduleResponses = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  try {
+  page.on('requestfailed', (request) => requestFailures.push({
+    url: request.url(),
+    failure: request.failure()?.errorText || 'unknown'
+  }));
+  page.on('console', (message) => consoleMessages.push({
+    type: message.type(),
+    text: message.text()
+  }));
+  page.on('response', (response) => {
+    if (response.url().includes('/pronunciation-analyzer/')) {
+      moduleResponses.push({ url: response.url(), status: response.status() });
+    }
+  });
     await page.goto(`${origin}/pronounce-v2-harness`, { waitUntil: 'networkidle' });
     try {
       await page.waitForFunction(() => document.querySelector('#pa-pattern-display')?.textContent.includes('Single-syllable'));
     } catch (error) {
       console.error('pronunciation harness boot diagnostics', {
         pageErrors,
+        requestFailures,
+        consoleMessages,
+        moduleResponses,
         ipa: await page.locator('#pa-ipa-display').textContent(),
         pattern: await page.locator('#pa-pattern-display').textContent(),
         status: await page.locator('#pa-status').textContent()
@@ -978,19 +1058,26 @@ async function run() {
     });
     assert.deepEqual(mismatchLanes, ['Target duration', 'Observed duration']);
     assert.deepEqual(pageErrors, []);
+    assert.equal(
+      requestFailures.length,
+      0,
+      `browser requests failed: ${JSON.stringify(requestFailures)}`
+    );
   } finally {
-    await browser.close();
-    server.close();
+    if (browser) await browser.close();
+    await closeServer(server);
   }
 }
 
-if (process.argv.includes('--serve-only')) {
-  startServer().then(({ origin }) => process.stdout.write(`Pronunciation harness listening at ${origin}\n`));
-} else {
-  run().then(() => process.stdout.write('pronounce-mode browser check passed\n')).catch((error) => {
-    process.stderr.write(`${error.stack || error}\n`);
-    process.exitCode = 1;
-  });
+if (require.main === module) {
+  if (process.argv.includes('--serve-only')) {
+    startServer().then(({ origin }) => process.stdout.write(`Pronunciation harness listening at ${origin}\n`));
+  } else {
+    run().then(() => process.stdout.write('pronounce-mode browser check passed\n')).catch((error) => {
+      process.stderr.write(`${error.stack || error}\n`);
+      process.exitCode = 1;
+    });
+  }
 }
 
-module.exports = { startServer };
+module.exports = { closeServer, startServer };

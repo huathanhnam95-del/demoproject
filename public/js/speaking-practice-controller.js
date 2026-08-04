@@ -379,6 +379,7 @@
     const sheet = createSheet({
       id: 'spc-picker-sheet-' + config.modeId,
       title: 'Select Question',
+      className: 'spc-picker-sheet',
       onOpen: () => pillEl.setAttribute('aria-expanded', 'true'),
       onClose: () => pillEl.setAttribute('aria-expanded', 'false')
     });
@@ -451,7 +452,7 @@
     searchInput.addEventListener('input', () => {
       if (searchTimer) cancelAnimationFrame(searchTimer);
       searchTimer = requestAnimationFrame(() => {
-        filterPickerSheet(controllerState, searchInput.value);
+        syncPickerSheet(config, controllerState, 1);
       });
     });
 
@@ -537,25 +538,45 @@
     }
   }
 
-  function syncPickerSheet(config, controllerState) {
+  function syncPickerSheet(config, controllerState, page = null) {
     const items = getPickerItems(config, controllerState);
     const currentId = getCurrentPickerId(config, controllerState);
     const listEl = controllerState.pickerListEl;
     const emptyEl = controllerState.pickerEmptyEl;
     const searchInput = controllerState.pickerSearchInput;
+    const query = (searchInput.value || '').toLowerCase().trim();
 
-    searchInput.value = '';
     listEl.innerHTML = '';
+    const oldPag = controllerState.pickerSheet.body.querySelector('.spc-sheet-pagination');
+    if (oldPag) oldPag.remove();
 
-    if (items.length === 0) {
-      emptyEl.textContent = 'No questions available';
+    const filtered = items.filter(item => {
+      const searchStr = (item.id + ' ' + item.label + ' ' + (item.searchText || '')).toLowerCase();
+      return !query || searchStr.includes(query);
+    });
+
+    if (filtered.length === 0) {
+      emptyEl.textContent = query ? 'No questions found' : 'No questions available';
       emptyEl.style.display = '';
       return;
     }
 
     emptyEl.style.display = 'none';
 
-    items.forEach(item => {
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+    if (page === null || page === undefined) {
+      const currentIdx = filtered.findIndex(i => String(i.id) === String(currentId));
+      controllerState.pickerPage = currentIdx >= 0 ? Math.floor(currentIdx / pageSize) + 1 : 1;
+    } else {
+      controllerState.pickerPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = controllerState.pickerPage;
+    const pagedItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    pagedItems.forEach(item => {
       const li = document.createElement('li');
       const isCurrent = String(item.id) === String(currentId);
       li.className = 'spc-sheet-item' + (isCurrent ? ' is-current' : '');
@@ -564,7 +585,6 @@
       li.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
       if (item.disabled) li.setAttribute('aria-disabled', 'true');
       li.dataset.id = item.id;
-      li.dataset.search = (item.id + ' ' + item.label + ' ' + (item.searchText || '')).toLowerCase();
 
       const idSpan = document.createElement('span');
       idSpan.className = 'spc-sheet-item-id';
@@ -587,23 +607,40 @@
 
       listEl.appendChild(li);
     });
-  }
 
-  function filterPickerSheet(controllerState, query) {
-    const normalized = query.toLowerCase().trim();
-    const items = controllerState.pickerListEl.children;
-    const emptyEl = controllerState.pickerEmptyEl;
-    let visibleCount = 0;
+    if (totalPages > 1) {
+      const pagDiv = document.createElement('div');
+      pagDiv.className = 'spc-sheet-pagination';
 
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const matches = !normalized || item.dataset.search.includes(normalized);
-      item.style.display = matches ? '' : 'none';
-      if (matches) visibleCount++;
+      const prevBtn = document.createElement('button');
+      prevBtn.type = 'button';
+      prevBtn.className = 'spc-pagination-btn';
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.textContent = '← Prev';
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        syncPickerSheet(config, controllerState, currentPage - 1);
+      });
+
+      const info = document.createElement('span');
+      info.className = 'spc-pagination-info';
+      info.textContent = `Page ${currentPage} of ${totalPages} (${filtered.length} items)`;
+
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'spc-pagination-btn';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.textContent = 'Next →';
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        syncPickerSheet(config, controllerState, currentPage + 1);
+      });
+
+      pagDiv.appendChild(prevBtn);
+      pagDiv.appendChild(info);
+      pagDiv.appendChild(nextBtn);
+      controllerState.pickerSheet.body.appendChild(pagDiv);
     }
-
-    emptyEl.textContent = 'No matching questions';
-    emptyEl.style.display = visibleCount === 0 ? '' : 'none';
   }
 
   /* ═══════════════════════════ DOM CONSTRUCTION ═══════════════════════════ */
@@ -798,12 +835,19 @@
           sourceId: ctrl.sourceId,
           element: el,
           anchor: anchor,
-          originalDisplay: el.style.display
+          originalDisplay: el.style.display,
+          originalActionRole: el.dataset.spcActionRole
         });
 
         // Set level attribute for CSS visibility
         if (ctrl.level === 'advanced') {
           el.dataset.spcLevel = 'advanced';
+        }
+
+        // Add a stable semantic hook for shared action styling without
+        // changing the control's existing ID, listeners, or mode ownership.
+        if (ctrl.actionRole) {
+          el.dataset.spcActionRole = ctrl.actionRole;
         }
 
         // Move into slot
@@ -874,6 +918,11 @@
       // Remove level attribute
       delete el.dataset.spcLevel;
       delete el.dataset.spcScopeHidden;
+      if (record.originalActionRole === undefined) {
+        delete el.dataset.spcActionRole;
+      } else {
+        el.dataset.spcActionRole = record.originalActionRole;
+      }
     });
 
     // Restore in-place controls
@@ -902,7 +951,11 @@
   // mode switch cannot strand controls in a detached sheet.
   function restoreSettingsNodes(controllerState) {
     const moved = controllerState.settingsMovedNodes || [];
-    moved.forEach(record => {
+    // Restore outer containers before descendants. Settings initialization may
+    // move a filter row after moving its individual controls; reversing the
+    // move order keeps every descendant anchor attached to its original
+    // parent during restoration.
+    moved.slice().reverse().forEach(record => {
       const { element, anchor } = record;
       if (!element) return;
       if (anchor && anchor.parentNode) {
@@ -911,6 +964,22 @@
       }
       if (record.originalDisplay !== undefined) {
         element.style.display = record.originalDisplay;
+      }
+      // Undo the segmented-group decoration so the node returns to the mode
+      // panel exactly as it was authored.
+      if (element.dataset && element.dataset.spcFilterGroup === 'true') {
+        element.querySelectorAll('[data-spc-injected="filter-label"]').forEach(node => node.remove());
+        element.querySelectorAll('.filter-option').forEach(option => {
+          option.removeAttribute('role');
+          option.removeAttribute('tabindex');
+          option.removeAttribute('aria-checked');
+        });
+        const menu = element.querySelector('.status-filter-menu, .length-filter-menu, .difficulty-filter-menu');
+        if (menu) {
+          menu.removeAttribute('role');
+          menu.removeAttribute('aria-label');
+        }
+        delete element.dataset.spcFilterGroup;
       }
     });
     controllerState.settingsMovedNodes = [];
@@ -969,6 +1038,31 @@
 
     chip.dataset.count = String(activeCount);
     chip.textContent = 'Advanced settings active (' + activeCount + ')';
+  }
+
+  function createStepPreview(config) {
+    if (!Array.isArray(config.steps) || !window.SpeakingPracticeSteps?.create) return null;
+    try {
+      return window.SpeakingPracticeSteps.create({
+        modeId: config.modeId,
+        steps: config.steps,
+        currentIndex: typeof config.getStepIndex === 'function' ? config.getStepIndex() : 0
+      });
+    } catch (error) {
+      console.warn('[SPC] Step preview could not be created:', error);
+      return null;
+    }
+  }
+
+  function syncStepPreview(controllerState) {
+    if (!controllerState.steps?.setCurrent) return;
+    let currentIndex = 0;
+    if (typeof controllerState.config.getStepIndex === 'function') {
+      try {
+        currentIndex = controllerState.config.getStepIndex();
+      } catch (_) { /* keep the first step as the safe preview */ }
+    }
+    controllerState.steps.setCurrent(currentIndex);
   }
 
   function wireViewToggle(controllerState) {
@@ -1056,6 +1150,59 @@
       destination.appendChild(element);
     };
 
+    /**
+     * Present a legacy filter dropdown as an always-visible segmented pill
+     * group, matching the Read Aloud settings pattern. The trigger button and
+     * popup behaviour are hidden by CSS; the original option nodes, their IDs
+     * and their click handlers are untouched, so every mode module keeps
+     * working exactly as before.
+     *
+     * `multi` selects checkbox semantics (question status, where several
+     * options are selected at once) over radio semantics (length/difficulty).
+     */
+    const decorateFilterGroup = (container, labelText, multi) => {
+      if (!container || container.dataset.spcFilterGroup === 'true') return;
+      container.dataset.spcFilterGroup = 'true';
+
+      // Label lives inside the container so it inherits the container's
+      // display state — these filters stay hidden until unlocked.
+      const label = document.createElement('span');
+      label.className = 'spc-filter-group-label';
+      label.dataset.spcInjected = 'filter-label';
+      label.textContent = labelText;
+      container.insertBefore(label, container.firstChild);
+
+      const menu = container.querySelector('.status-filter-menu, .length-filter-menu, .difficulty-filter-menu');
+      if (!menu) return;
+      menu.setAttribute('role', multi ? 'group' : 'radiogroup');
+      menu.setAttribute('aria-label', labelText);
+
+      const options = [...menu.querySelectorAll('.filter-option')];
+      const syncChecked = () => {
+        options.forEach((option) => {
+          option.setAttribute('aria-checked', String(option.classList.contains('selected')));
+        });
+      };
+
+      options.forEach((option) => {
+        option.setAttribute('role', multi ? 'checkbox' : 'radio');
+        option.setAttribute('tabindex', '0');
+        option.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+            event.preventDefault();
+            option.click();
+          }
+        });
+        // The owning module toggles `.selected`; mirror it onto aria-checked
+        // once its handler has run. This must be bound per option rather than
+        // on the menu — those handlers call stopPropagation(), so a
+        // menu-level listener never sees the click.
+        option.addEventListener('click', () => { setTimeout(syncChecked, 0); });
+      });
+
+      syncChecked();
+    };
+
     // Build tabbed navigation
     const tabs = document.createElement('div');
     tabs.className = 'spc-sheet-tabs';
@@ -1116,6 +1263,7 @@
     ) : null;
     if (statusFilter) {
       moveToSettings(statusFilter, filterSection);
+      decorateFilterGroup(statusFilter, '🗂️ Question Status:', true);
       filterControlCount++;
     }
 
@@ -1125,15 +1273,18 @@
     ) : null;
     if (lengthFilter) {
       moveToSettings(lengthFilter, filterSection);
+      decorateFilterGroup(lengthFilter, '📏 Sentence Length:', false);
       filterControlCount++;
     }
 
     const diffFilter = panel ? (
       panel.querySelector('#difficulty-filter-container-' + modeId) ||
-      panel.querySelector('.difficulty-filter-dropdown')
+      panel.querySelector('.difficulty-filter-dropdown') ||
+      panel.querySelector('.difficulty-filter-container')
     ) : null;
     if (diffFilter) {
       moveToSettings(diffFilter, filterSection);
+      decorateFilterGroup(diffFilter, '📊 Difficulty Level:', false);
       filterControlCount++;
     }
 
@@ -1209,6 +1360,7 @@
 
     updatePillDisplay(state.config, state);
     updateActiveChip(state);
+    syncStepPreview(state);
   }
 
   /* ═══════════════════════════ PUBLIC API ═══════════════════════════ */
@@ -1254,10 +1406,15 @@
 
     // Build DOM
     const dom = buildControllerDOM(config);
+    const steps = createStepPreview(config);
 
-    // Check if has advanced capability
-    if (!hasAdvancedCapability(config)) {
+    // Modes without advanced/settings data do not expose an empty Settings
+    // entry point. Their picker remains available, while the Basic/Advanced
+    // group is omitted until the adapter supplies real controls.
+    const hasAdvanced = hasAdvancedCapability(config);
+    if (!hasAdvanced) {
       dom.controller.dataset.spcNoToggle = '';
+      dom.toggle.remove();
     }
 
     // Create state
@@ -1266,6 +1423,7 @@
       scope: scope,
       config: config,
       dom: dom,
+      steps: steps,
       panel: panel,
       adoptedNodes: [],
       inPlaceNodes: [],
@@ -1290,6 +1448,9 @@
 
     // Insert controller as first child of panel
     panel.insertBefore(dom.controller, panel.firstChild);
+    if (steps?.element) {
+      panel.insertBefore(steps.element, dom.controller.nextSibling);
+    }
 
     // Build picker
     buildPicker(config, state);
@@ -1308,7 +1469,7 @@
     // settings sheet setup and unmount cleanup. Other practice modes use the generic controller sheet.
     if (modeId === 'read-aloud' && window.ReadAloudMode) {
       try { window.ReadAloudMode.initSettingsSheet(); } catch (_) {}
-    } else {
+    } else if (hasAdvanced) {
       try { initModeSettingsSheet(state); } catch (_) {}
     }
   }
@@ -1345,6 +1506,9 @@
     // Remove controller DOM
     if (state.dom.controller.parentNode) {
       state.dom.controller.remove();
+    }
+    if (state.steps?.element?.parentNode) {
+      state.steps.element.remove();
     }
 
     // Remove panel-level view attribute

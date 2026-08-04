@@ -34,21 +34,33 @@
     return text !== undefined && text !== defaultText;
   }
 
+  function shiftSelectOption(selectId, direction) {
+    const select = document.getElementById(selectId);
+    if (!select || !select.options.length) return;
+    const nextIndex = select.selectedIndex + direction;
+    if (nextIndex < 0 || nextIndex >= select.options.length) return;
+    select.selectedIndex = nextIndex;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
   // Wave 1: Answer Short Question. The native select remains the state source;
   // the controller only adopts the existing lifecycle controls.
   controller.register({
     modeId: 'asq',
     enabledScopes: ['pte'],
     panelId: 'mode-asq',
+    steps: ['Listen', 'Answer', 'Results'],
     picker: {
-      sourceSelectId: 'asq-question-select'
+      sourceSelectId: 'asq-question-select',
+      previous: () => shiftSelectOption('asq-question-select', -1),
+      next: () => shiftSelectOption('asq-question-select', 1)
     },
     legacyContainerSelector: '#mode-asq > .question-selector',
     controls: [
-      { sourceId: 'asq-play-prompt-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1 },
-      { sourceId: 'asq-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
-      { sourceId: 'asq-redo-btn', slot: 'attempt', level: 'basic', order: 3 }
+      { sourceId: 'asq-play-prompt-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record' },
+      { sourceId: 'asq-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop' },
+      { sourceId: 'asq-redo-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'retry' }
     ]
   });
 
@@ -58,6 +70,7 @@
     modeId: 'rts',
     enabledScopes: ['pte'],
     panelId: 'mode-rts',
+    steps: ['Audio', 'Prep', 'Record', 'Results'],
     picker: {
       getItems: () => window.RTSMode?.getItems?.() ?? [],
       getCurrentId: () => window.RTSMode?.getCurrentId?.() ?? null,
@@ -85,11 +98,11 @@
       legacyContainerId: 'rts-v7-picker-bar'
     },
     controls: [
-      { sourceId: 'play-rts-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'rts-step-record' },
-      { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'rts-step-results' },
-      { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'rts-step-results' },
-      { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'rts-step-results' }
+      { sourceId: 'play-rts-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'stop', visibilityScopeId: 'rts-step-record' },
+      { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'retry', visibilityScopeId: 'rts-step-results' },
+      { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'ai', visibilityScopeId: 'rts-step-results' },
+      { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'next', visibilityScopeId: 'rts-step-results' }
     ],
     legacyContainerSelector: '#mode-rts > .question-selector'
   });
@@ -100,6 +113,7 @@
     modeId: 'describe-image',
     enabledScopes: ['pte'],
     panelId: 'mode-describe-image',
+    steps: ['Image', 'Prep (25 s)', 'Record (40 s)', 'Results'],
     picker: {
       sourceSelectId: 'question-select-di',
       previousButtonId: 'back-btn-di',
@@ -107,14 +121,13 @@
     },
     legacyContainerSelector: '#mode-describe-image > .question-selector',
     controls: [
-      { sourceId: 'play-di-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'di-stop-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'di-step-record' },
-      { sourceId: 'di-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'di-step-review' },
-      { sourceId: 'di-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'di-step-review' },
-      { sourceId: 'di-results-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'di-step-results' },
-      { sourceId: 'di-next-question-btn', slot: 'attempt', level: 'basic', order: 5, visibilityScopeId: 'di-step-results' },
-      { sourceId: 'di-ai-btn', slot: 'advanced-action', level: 'advanced', order: 1, visibilityScopeId: 'di-step-results' },
-      { sourceId: 'recommended-btn-di', slot: 'advanced-action', level: 'advanced', order: 2 },
+      { sourceId: 'play-di-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'di-stop-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'stop', visibilityScopeId: 'di-step-record' },
+      { sourceId: 'di-retry-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'retry', visibilityScopeId: 'di-step-review' },
+      { sourceId: 'di-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'di-step-review' },
+      { sourceId: 'di-results-retry-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'retry', visibilityScopeId: 'di-step-results' },
+      { sourceId: 'di-next-question-btn', slot: 'attempt', level: 'basic', order: 5, actionRole: 'next', visibilityScopeId: 'di-step-results' },
+      { sourceId: 'di-ai-btn', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'ai', visibilityScopeId: 'di-step-results' },
       { sourceId: 'difficulty-filter-container-di', slot: 'advanced-setting', level: 'advanced', order: 1 }
     ],
     advancedSettings: [
@@ -133,6 +146,7 @@
     modeId: 'notes',
     enabledScopes: ['pte'],
     panelId: 'mode-notes',
+    steps: ['Audio', 'Notes', 'Record', 'Results'],
     picker: {
       sourceSelectId: 'question-select-notes',
       previousButtonId: 'back-btn-notes',
@@ -140,10 +154,10 @@
     },
     legacyContainerSelector: '#mode-notes > .question-selector',
     controls: [
-      { sourceId: 'play-notes-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'notes-step-audio' },
-      { sourceId: 'notes-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'notes-step-results' },
-      { sourceId: 'recommended-btn-notes', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'play-notes-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'notes-step-audio' },
+      { sourceId: 'notes-retry-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'retry', visibilityScopeId: 'notes-step-results' },
+      { sourceId: 'recommended-btn-notes', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
       { sourceId: 'difficulty-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 1 },
       { sourceId: 'status-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 2 }
     ],
@@ -170,18 +184,19 @@
     modeId: 'sgd',
     enabledScopes: ['pte'],
     panelId: 'mode-sgd',
+    steps: ['Discussion', 'Prep', 'Record', 'Results'],
     picker: {
       sourceSelectId: 'question-select-sgd',
       previousButtonId: 'back-btn-sgd',
       nextButtonId: 'next-btn-sgd'
     },
     controls: [
-      { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'sgd-step-results' },
-      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'retry', visibilityScopeId: 'sgd-step-results' },
+      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
       { sourceId: 'difficulty-filter-container-sgd', slot: 'advanced-setting', level: 'advanced', order: 1 }
     ],
     legacyContainerSelector: '#mode-sgd > .question-selector',
@@ -201,19 +216,20 @@
     modeId: 'speak',
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-speak',
+    steps: ['Listen', 'Record', 'Results'],
     picker: {
       sourceSelectId: 'question-select-speak',
       previousButtonId: 'back-btn-speak',
       nextButtonId: 'next-btn-speak'
     },
     controls: [
-      { sourceId: 'play-btn-speak', slot: 'media', level: 'basic', order: 1 },
-      { sourceId: 'record-btn', slot: 'attempt', level: 'basic', order: 1 },
-      { sourceId: 'check-btn-speak', slot: 'attempt', level: 'basic', order: 2 },
-      { sourceId: 'retry-btn-speak', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'play-btn-speak', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record' },
+      { sourceId: 'check-btn-speak', slot: 'attempt', level: 'basic', order: 2, actionRole: 'primary' },
+      { sourceId: 'retry-btn-speak', slot: 'attempt', level: 'basic', order: 3, actionRole: 'retry' },
       { sourceId: 'replay-counter-speak', slot: 'media', level: 'basic', order: 2 },
-      { sourceId: 'shadow-mode-btn', slot: 'advanced-action', level: 'advanced', order: 2 },
-      { sourceId: 'recommended-btn-speak', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'shadow-mode-btn', slot: 'advanced-action', level: 'advanced', order: 2, actionRole: 'support' },
+      { sourceId: 'recommended-btn-speak', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
       { sourceId: 'progress-bar-speak', slot: 'advanced-setting', level: 'advanced', order: 1 },
       { sourceId: 'status-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 2 },
       { sourceId: 'length-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 3 },
@@ -306,14 +322,22 @@
     modeId: 'read-aloud',
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-read-aloud',
+    steps: ['Read', 'Prep', 'Record', 'Results'],
     picker: {
       sourceSelectId: 'ra-question-select',
       previous: () => { try { window.ReadAloudMode?.loadPreviousPrompt?.(); } catch (e) { console.error('[SPC Adapters] previous error:', e); } },
       next: () => { try { window.ReadAloudMode?.loadNextPrompt?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } }
     },
     controls: [
-      // All advanced controls now live in the Settings sheet (side panel).
-      // No SPC slot adoption needed.
+      // Keep Read Aloud's state-machine-owned controls intact while adopting
+      // their existing DOM nodes into the shared action row.
+      { sourceId: 'ra-prep-timer-box', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'ra-record-timer-box', slot: 'media', level: 'basic', order: 2 },
+      { sourceId: 'ra-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record' },
+      { sourceId: 'ra-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop' },
+      { sourceId: 'ra-play-recording-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'play' },
+      { sourceId: 'ra-check-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'primary' },
+      { sourceId: 'ra-retry-btn', slot: 'attempt', level: 'basic', order: 5, actionRole: 'retry' }
     ],
     inPlaceControls: [
       { sourceId: 'ra-prompt-guides-group', level: 'advanced' }

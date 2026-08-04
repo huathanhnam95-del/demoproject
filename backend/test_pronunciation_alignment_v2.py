@@ -942,5 +942,245 @@ class PronunciationAlignmentV3EditOpsTest(unittest.TestCase):
                            f"final span end {final_end:.3f} clipped too far")
 
 
+class PronunciationV3RecognizerContractTest(unittest.TestCase):
+    """The active V3 response must read whichever recognizer contract it got.
+
+    ``recognize-v2`` force-aligns the reference and reports confidence per
+    aligned syllable; it has no free phoneme decode and no top-level
+    ``confidence``. Reading the v1 keys directly made every v2 response claim
+    0.0 confidence and an all-deletion edit script.
+    """
+
+    PRAAT = {
+        "pitch": {"times": [0.0, 0.1], "values": [120.0, 130.0]},
+        "intensity": {"times": [0.0, 0.1], "values": [70.0, 72.0]},
+        "duration": 1.86,
+        "sampleRate": 48000,
+        "observed": {},
+    }
+
+    def _recognize_v2_result(self, confidences=(0.7707765, 0.845399, 0.621947)):
+        return {
+            "contract_version": "recognize-v2",
+            "decoded_syllable_count": len(confidences),
+            "decoded_is_rateable": True,
+            "canonical_alignment": {
+                "aligned": True,
+                "syllables": [
+                    {
+                        "index": index,
+                        "ipa": ipa,
+                        "start_time": 0.2 * index,
+                        "end_time": 0.2 * index + 0.15,
+                        "confidence": confidence,
+                    }
+                    for index, (ipa, confidence) in enumerate(
+                        zip(["foʊ", "tə", "ɡræf"], confidences)
+                    )
+                ],
+            },
+            "model_revision": "abc123",
+        }
+
+    def _build(self, phoneme_result):
+        return server._build_v3_active_response(
+            self.PRAAT,
+            phoneme_result,
+            reference_ipa="/ˈfoʊtəˌɡræf/",
+            expected_syllables=3,
+        )
+
+    def test_v2_confidence_is_the_aligned_syllable_mean_not_zero(self):
+        response = self._build(self._recognize_v2_result())
+        self.assertNotEqual(response["confidence"], 0.0)
+        self.assertAlmostEqual(
+            response["confidence"],
+            (0.7707765 + 0.845399 + 0.621947) / 3,
+            places=5,
+        )
+
+    def test_v2_reports_no_phoneme_alignment_capability(self):
+        response = self._build(self._recognize_v2_result())
+        self.assertEqual(response["observed_phonemes"], [])
+        self.assertFalse(response["capabilities"]["phoneme_alignment"])
+
+    def test_v2_does_not_emit_phantom_deletions(self):
+        response = self._build(self._recognize_v2_result())
+        # count_delta is real evidence and survives; the edit script does not
+        # exist, and must not be faked as "every phoneme was omitted".
+        self.assertEqual(response["comparison"]["count_delta"], 0)
+        self.assertIsNone(response["comparison"]["edit_operations"])
+
+    def test_v2_syllable_count_and_spans_come_from_the_alignment(self):
+        response = self._build(self._recognize_v2_result())
+        self.assertEqual(response["syllable_count"], 3)
+        self.assertEqual(len(response["observed_syllables"]), 3)
+
+    def test_v2_unrateable_decode_surfaces_a_quality_reason(self):
+        payload = self._recognize_v2_result()
+        payload["decoded_is_rateable"] = False
+        self.assertEqual(self._build(payload)["quality_reason"], "DECODED_UNRATEABLE")
+
+    def test_v1_decode_keeps_its_own_confidence_and_edit_script(self):
+        response = self._build({
+            "phonemes": [
+                {"symbol": "f"}, {"symbol": "oʊ"}, {"symbol": "t"}, {"symbol": "ə"},
+                {"symbol": "ɡ"}, {"symbol": "r"}, {"symbol": "æ"}, {"symbol": "f"},
+            ],
+            "syllables": [
+                {"start_time": 0.0, "end_time": 0.2, "confidence": 0.9},
+                {"start_time": 0.2, "end_time": 0.4, "confidence": 0.9},
+                {"start_time": 0.4, "end_time": 0.6, "confidence": 0.9},
+            ],
+            "confidence": 0.92,
+        })
+        self.assertEqual(response["confidence"], 0.92)
+        self.assertTrue(response["capabilities"]["phoneme_alignment"])
+        self.assertEqual(
+            [op["op"] for op in response["comparison"]["edit_operations"]],
+            ["match"] * 8,
+        )
+
+
+class PronunciationV3RateabilityContractTest(unittest.TestCase):
+    """Rateability must be read from the recognizer contract in use.
+
+    The flag is ``is_rateable`` under v1 and ``decoded_is_rateable`` under v2.
+    A missing or invalid required flag is malformed input and must fail closed.
+    """
+
+    PRAAT = {
+        "pitch": {"times": [0.0, 0.1], "values": [120.0, 130.0]},
+        "intensity": {"times": [0.0, 0.1], "values": [70.0, 72.0]},
+        "duration": 1.0,
+        "sampleRate": 48000,
+        "observed": {"syllableCount": 3, "syllables": []},
+    }
+
+    def _recognize_v2_result(self):
+        return {
+            "contract_version": "recognize-v2",
+            "decoded_syllable_count": 3,
+            "decoded_is_rateable": True,
+            "canonical_alignment": {"syllables": [{"confidence": 0.9}]},
+        }
+
+    def test_reader_uses_the_contract_specific_flag(self):
+        self.assertFalse(server._recognizer_is_rateable({"is_rateable": False}))
+        self.assertTrue(server._recognizer_is_rateable({"is_rateable": True}))
+        self.assertFalse(server._recognizer_is_rateable({
+            "contract_version": "recognize-v2",
+            "decoded_is_rateable": False,
+        }))
+        self.assertTrue(server._recognizer_is_rateable({
+            "contract_version": "recognize-v2",
+            "decoded_is_rateable": True,
+        }))
+
+    def test_missing_or_invalid_rateability_fails_closed(self):
+        self.assertFalse(server._recognizer_is_rateable({}))
+        self.assertFalse(server._recognizer_is_rateable({
+            "contract_version": "recognize-v2",
+            "is_rateable": True,
+        }))
+        self.assertFalse(server._recognizer_is_rateable({
+            "contract_version": "recognize-v2",
+        }))
+        self.assertFalse(server._recognizer_is_rateable({
+            "contract_version": "unknown",
+            "is_rateable": True,
+        }))
+        self.assertFalse(server._recognizer_is_rateable(None))
+
+    def test_v2_decoded_flag_wins_over_conflicting_legacy_flag(self):
+        self.assertFalse(server._recognizer_is_rateable({
+            "contract_version": "recognize-v2",
+            "is_rateable": True,
+            "decoded_is_rateable": False,
+        }))
+
+    def test_v2_shaped_payload_without_contract_fails_closed(self):
+        self.assertFalse(server._recognizer_is_rateable({
+            "decoded_syllable_count": 3,
+            "canonical_alignment": {"syllables": []},
+            "is_rateable": True,
+        }))
+
+    def _pipeline(self, phoneme_result):
+        return server._build_v3_active_result_from_pipeline(
+            {"praat_result": self.PRAAT, "phoneme_result": phoneme_result},
+            reference_ipa="/ˈhɛloʊ/",
+            expected_syllables=2,
+        )
+
+    def test_unrateable_v2_decode_is_held_back_as_degraded(self):
+        response, reason = self._pipeline({
+            "contract_version": "recognize-v2",
+            "decoded_syllable_count": 3,
+            "decoded_is_rateable": False,
+            "canonical_alignment": {"syllables": [{"confidence": 0.4}]},
+        })
+        self.assertTrue(response["degraded"])
+        self.assertEqual(reason, "DECODED_UNRATEABLE")
+
+    def test_v2_missing_flag_is_held_back_even_with_legacy_true(self):
+        payload = self._recognize_v2_result()
+        payload.pop("decoded_is_rateable")
+        payload["is_rateable"] = True
+        response, reason = self._pipeline(payload)
+        self.assertTrue(response["degraded"])
+        self.assertIsNotNone(reason)
+
+    def test_formal_v2_verification_fails_closed_when_flag_is_missing(self):
+        payload = self._recognize_v2_result()
+        payload.pop("decoded_is_rateable")
+        verification = server._build_v3_verification(
+            self.PRAAT,
+            payload,
+            "/ˈhɛloʊ/",
+            2,
+        )
+        self.assertEqual(verification["status"], "unrateable")
+        self.assertEqual(
+            verification["count"]["reasons"],
+            ["INDEPENDENT_COUNT_UNRATEABLE"],
+        )
+
+    def test_rateable_v2_decode_still_goes_active(self):
+        response, reason = self._pipeline({
+            "contract_version": "recognize-v2",
+            "decoded_syllable_count": 3,
+            "decoded_is_rateable": True,
+            "canonical_alignment": {"syllables": [{"confidence": 0.9}]},
+        })
+        self.assertFalse(response["degraded"])
+        self.assertIsNone(reason)
+
+    def test_v1_payload_produces_a_best_effort_observation(self):
+        best_effort = server._build_v3_best_effort(
+            self.PRAAT,
+            {
+                "phonemes": [{"symbol": "h"}],
+                "syllables": [{"start_time": 0.0, "end_time": 0.2}] * 3,
+                "confidence": 0.9,
+                "is_rateable": True,
+            },
+            None,
+            None,
+        )
+        self.assertTrue(best_effort["available"])
+        self.assertEqual(best_effort["observed_count"], 3)
+
+    def test_unrateable_decode_has_no_best_effort_observation(self):
+        best_effort = server._build_v3_best_effort(
+            self.PRAAT,
+            {"decoded_syllable_count": 3, "decoded_is_rateable": False},
+            None,
+            None,
+        )
+        self.assertFalse(best_effort["available"])
+        self.assertIsNone(best_effort["observed_count"])
+
+
 if __name__ == "__main__":
     unittest.main()

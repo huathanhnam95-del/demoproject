@@ -73,6 +73,22 @@
 
   /* Motion — one curve */
   --read-ease: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* RFIB-derived action recipes. Keep these scoped to Reading panels so the
+     global button system remains unchanged for other practice surfaces. */
+  --read-btn-back-start: #6b7280;
+  --read-btn-back-end: #4b5563;
+  --read-btn-next-start: #8b5cf6;
+  --read-btn-next-end: #7c3aed;
+  --read-btn-play-start: #3b82f6;
+  --read-btn-play-end: #2563eb;
+  --read-btn-primary-start: #22c55e;
+  --read-btn-primary-end: #16a34a;
+  --read-btn-retry-start: #f59e0b;
+  --read-btn-retry-end: #d97706;
+  --read-btn-control-min-height: 44px;
+  --read-btn-compact-size: 36px;
+  --read-btn-focus: #9a5722;
 }
 
 /* --------------------------------------------------------------------------
@@ -221,6 +237,14 @@
   border-top: 1px solid var(--read-border-soft);
   padding: 18px 0 8px;
   margin-bottom: 14px;
+}
+
+/* ROP already presents two flat workspace regions side by side. The outer
+   workspace cards must not acquire the section divider used by linear
+   Reading sections. */
+.rop-source-card,
+.rop-target-card {
+  border-top: 0;
 }
 
 /* Section label — replaces the old underlined ".{mode}-card-header" rhythm */
@@ -484,4 +508,151 @@
   .rfib-support-toggle:hover {
     transform: none;
   }
+}
+
+/* --------------------------------------------------------------------------
+   14. RFIB-derived semantic controls
+   Keep this layer under the five Reading panels. The global .nav-btn and
+   .modern-btn recipes remain available to unrelated modes. */
+#mode-rfib .nav-btn,
+#mode-dd .modern-btn,
+#mode-rmcma .modern-btn,
+#mode-rmcsa .modern-btn,
+#mode-rop .modern-btn,
+#mode-rfib .modern-btn,
+#mode-rfib .difficulty-filter-btn,
+#mode-dd .difficulty-filter-btn,
+#mode-rmcma .difficulty-filter-btn,
+#mode-rmcsa .difficulty-filter-btn,
+#mode-rop .difficulty-filter-btn {
+  min-height: var(--read-btn-control-min-height);
+  border-radius: var(--read-radius-control);
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-weight: 600;
+  transition: transform var(--read-ease), box-shadow var(--read-ease),
+    background var(--read-ease), border-color var(--read-ease), color var(--read-ease);
+}
+
+#mode-rfib .nav-btn-back,
+#mode-rfib #rfib-back-btn {
+  background: linear-gradient(135deg, var(--read-btn-back-start), var(--read-btn-back-end));
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(75 85 99 / 0.3);
+}
+
+#mode-rfib .nav-btn-next,
+#mode-rfib #rfib-next-btn,
+#mode-rfib .modern-btn--next,
+#mode-dd .modern-btn--next,
+#mode-rmcma .modern-btn--next,
+#mode-rmcsa .modern-btn--next,
+#mode-rop .modern-btn--next {
+  background: linear-gradient(135deg, var(--read-btn-next-start), var(--read-btn-next-end));
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(124 58 237 / 0.3);
+}
+
+#mode-rfib .modern-btn--play,
+#mode-dd .modern-btn--play,
+#mode-rmcma .modern-btn--play,
+#mode-rmcsa .modern-btn--play,
+#mode-rop .modern-btn--play {
+  background: linear-gradient(135deg, var(--read-btn-play-start), var(--read-btn-play-end));
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(37 99 235 / 0.3);
+}
+
+#mode-rfib .modern-btn--check,
+#mode-dd .modern-btn--check,
+#mode-rmcma .modern-btn--check,
+#mode-rmcsa .modern-btn--check,
+#mode-rop .modern-btn--check {
+  background: linear-gradient(135deg, var(--read-btn-primary-start), var(--read-btn-primary-end));
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(22 163 74 / 0.3);
+}
+
+#mode-rfib .modern-btn--retry,
+#mode-dd .modern-btn--retry,
+#mode-rmcma .modern-btn--retry,
+#mode-rmcsa .modern-btn--retry,
+#mode-rop .modern-btn--retry {
+  background: linear-gradient(135deg, var(--read-btn-retry-start), var(--read-btn-retry-end));
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(217 119 6 / 0.3);
+}
+
+#mode-rfib .modern-btn--easy-reading,
+#mode-rfib .rfib-support-toggle,
+#mode-rfib .modern-btn--hint {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #c2410c;
+  border: 1px solid rgb(194 65 12 / 0.25);
+}
+
+#mode-rfib .modern-btn--easy-reading:hover,
+#mode-rfib .rfib-support-toggle:hover,
+#mode-rfib .modern-btn--hint:hover {
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  border-color: rgb(194 65 12 / 0.4);
+}
+
+#mode-rfib .modern-btn--secondary,
+#mode-dd .modern-btn--secondary,
+#mode-rmcma .modern-btn--secondary,
+#mode-rmcsa .modern-btn--secondary,
+#mode-rop .modern-btn--secondary,
+#mode-rfib .difficulty-filter-btn,
+#mode-dd .difficulty-filter-btn,
+#mode-rmcma .difficulty-filter-btn,
+#mode-rmcsa .difficulty-filter-btn,
+#mode-rop .difficulty-filter-btn {
+  background: #fff;
+  color: #4b5563;
+  border: 1px solid var(--read-border);
+  box-shadow: var(--read-shadow-control);
+}
+
+#mode-rfib .modern-btn:hover:not(:disabled),
+#mode-dd .modern-btn:hover:not(:disabled),
+#mode-rmcma .modern-btn:hover:not(:disabled),
+#mode-rmcsa .modern-btn:hover:not(:disabled),
+#mode-rop .modern-btn:hover:not(:disabled),
+#mode-rfib .nav-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+#mode-rfib .modern-btn:active:not(:disabled),
+#mode-dd .modern-btn:active:not(:disabled),
+#mode-rmcma .modern-btn:active:not(:disabled),
+#mode-rmcsa .modern-btn:active:not(:disabled),
+#mode-rop .modern-btn:active:not(:disabled),
+#mode-rfib .nav-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#mode-rfib .modern-btn:disabled,
+#mode-dd .modern-btn:disabled,
+#mode-rmcma .modern-btn:disabled,
+#mode-rmcsa .modern-btn:disabled,
+#mode-rop .modern-btn:disabled,
+#mode-rfib .nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#mode-rfib .modern-btn:focus-visible,
+#mode-dd .modern-btn:focus-visible,
+#mode-rmcma .modern-btn:focus-visible,
+#mode-rmcsa .modern-btn:focus-visible,
+#mode-rop .modern-btn:focus-visible,
+#mode-rfib .nav-btn:focus-visible,
+#mode-dd .difficulty-filter-btn:focus-visible,
+#mode-rmcma .difficulty-filter-btn:focus-visible,
+#mode-rmcsa .difficulty-filter-btn:focus-visible,
+#mode-rop .difficulty-filter-btn:focus-visible {
+  outline: 2px solid var(--read-btn-focus);
+  outline-offset: 2px;
 }

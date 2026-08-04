@@ -165,6 +165,26 @@ export function buildNativeOnlyChartData(nativeAnalysis) {
     };
 }
 
+/**
+ * Keep only spans that describe a real, forward-running interval, and fill in
+ * `duration` when the source omits it. Engines disagree on which fields they
+ * publish — the comparison view model keeps only the boundary times — while
+ * `buildDurationLanes` reads `duration`, so normalize once here.
+ */
+export function normalizeChartSpans(syllables) {
+    return (Array.isArray(syllables) ? syllables : [])
+        .filter((syllable) => (
+            Number.isFinite(syllable?.startTime) &&
+            Number.isFinite(syllable?.endTime) &&
+            syllable.endTime > syllable.startTime
+        ))
+        .map((syllable) => (
+            Number.isFinite(syllable.duration)
+                ? syllable
+                : { ...syllable, duration: syllable.endTime - syllable.startTime }
+        ));
+}
+
 export function buildDurationLanes(targetSyllables = [], observedSyllables = []) {
     const duration = (syllable) => Number(
         syllable?.vowelDuration ?? syllable?.duration ?? 0

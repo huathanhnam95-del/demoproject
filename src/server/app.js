@@ -7,6 +7,11 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const { sendError } = require('../utils/response-helper');
+const {
+  isLocalHostname,
+  shouldAllowLocalAdminBootstrap,
+  resolveLocalAdminEmail
+} = require('./local-admin');
 /* eslint-disable no-console */
 
 function hasFingerprint(filePath) {
@@ -33,23 +38,21 @@ function setStaticCacheHeaders(res, filePath) {
     return;
   }
 
+  // Local browser sessions must revalidate code assets. Development keeps the
+  // same versioned URLs while the files change, so immutable caching leaves
+  // Chrome and the service worker executing stale JavaScript after edits.
+  if (isLocalHostname(res?.req?.hostname)
+    && (hasVersionQuery(res.req) || /\.(?:js|css)$/i.test(filePath))) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return;
+  }
+
   if (hasVersionQuery(res.req) || hasFingerprint(filePath)) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     return;
   }
 
   res.setHeader('Cache-Control', 'public, max-age=3600');
-}
-
-function isLocalHostname(hostname) {
-  const h = String(hostname || '').trim().toLowerCase();
-  if (!h) return false;
-  if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
-  if (h.endsWith('.local')) return true;
-  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
-  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
-  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
-  return false;
 }
 
 function addConnectSrcAllowlist(policy, extraSources) {
@@ -249,7 +252,7 @@ function createApp(options = {}) {
       if (idToken) {
         try {
           let decodedToken;
-          if (!!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+          if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
             const parts = idToken.split('.');
             if (parts.length >= 2) {
               const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
@@ -342,6 +345,38 @@ function createApp(options = {}) {
         measurementId: process.env.FIREBASE_MEASUREMENT_ID
       }
     });
+  });
+
+  // Local development convenience only. The endpoint is deliberately
+  // emulator-gated and never issues a token on production Firebase.
+  app.post('/api/local/admin-token', async (req, res) => {
+    if (!shouldAllowLocalAdminBootstrap(req)) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND' });
+    }
+
+    const email = resolveLocalAdminEmail({ repoRoot: projectRoot });
+    const auth = typeof firebase?.admin?.auth === 'function' ? firebase.admin.auth() : null;
+    if (!email || !auth) {
+      return res.status(503).json({ success: false, error: 'LOCAL_ADMIN_UNAVAILABLE' });
+    }
+
+    try {
+      const user = await auth.getUserByEmail(email);
+      if (!user?.uid || user.emailVerified !== true) {
+        return res.status(503).json({ success: false, error: 'LOCAL_ADMIN_UNAVAILABLE' });
+      }
+
+      const token = await auth.createCustomToken(user.uid);
+      if (!token) {
+        return res.status(503).json({ success: false, error: 'LOCAL_ADMIN_UNAVAILABLE' });
+      }
+
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json({ success: true, token });
+    } catch (error) {
+      console.warn('[LocalAdmin] Auto-login token unavailable:', error?.message || error);
+      return res.status(503).json({ success: false, error: 'LOCAL_ADMIN_UNAVAILABLE' });
+    }
   });
 
   app.use((err, _req, res, _next) => {

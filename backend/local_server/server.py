@@ -2413,19 +2413,30 @@ def _phoneme_align_edit_ops(reference_phonemes, observed_phonemes):
 
 
 def _build_v3_comparison(reference_ipa, observed_phonemes, observed_syllable_count, expected_syllables):
-    """Build the comparison block for v3 response when reference_ipa is provided."""
+    """Build the comparison block for v3 response when reference_ipa is provided.
+
+    ``edit_operations`` is None — not an empty list, and never an all-deletion
+    script — when nothing was decoded. Aligning the reference against an empty
+    observation yields one deletion per reference phoneme, which reads as "the
+    learner said nothing"; that is an artifact of a missing decode, not
+    evidence about the recording.
+    """
     if not reference_ipa:
         return None
+    count_delta = observed_syllable_count - (expected_syllables or 0) if expected_syllables else None
+    if not observed_phonemes:
+        return {
+            'count_delta': count_delta,
+            'edit_operations': None,
+        }
     ref_phonemes = (
         _tokenize_reference_ipa(reference_ipa)
         if isinstance(reference_ipa, str)
         else list(reference_ipa or [])
     )
-    edit_ops = _phoneme_align_edit_ops(ref_phonemes, observed_phonemes)
-    count_delta = observed_syllable_count - (expected_syllables or 0) if expected_syllables else None
     return {
         'count_delta': count_delta,
-        'edit_operations': edit_ops,
+        'edit_operations': _phoneme_align_edit_ops(ref_phonemes, observed_phonemes),
     }
 
 
@@ -2489,13 +2500,24 @@ def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_sylla
 
 
 def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, expected_syllables=None):
-    """Build v3 response from phoneme recognition + Praat contours."""
-    phonemes = phoneme_result.get('phonemes', [])
+    """Build v3 response from phoneme recognition + Praat contours.
+
+    Both recognizer contracts land here. ``recognize`` (v1) reports a free
+    phoneme decode with its own ``confidence``; ``recognize-v2`` force-aligns
+    the reference instead and reports confidence per aligned syllable. Reading
+    the v1 keys directly made every v2 response claim 0.0 confidence and an
+    empty decode, so the shared ``_recognizer_*`` readers are used instead.
+    """
+    phonemes = phoneme_result.get('phonemes', []) or []
     syllables_from_recognizer = phoneme_result.get('syllables', []) or (phoneme_result.get('canonical_alignment') or {}).get('syllables', [])
-    confidence = phoneme_result.get('confidence', 0.0)
-    is_rateable = phoneme_result.get('is_rateable', True)
-    quality_reason = phoneme_result.get('quality_reason')
-    syllable_count = phoneme_result.get('decoded_syllable_count', len(syllables_from_recognizer))
+    confidence = _recognizer_confidence(phoneme_result)
+    if confidence is None:
+        confidence = 0.0
+    is_rateable = _recognizer_is_rateable(phoneme_result)
+    quality_reason = _recognizer_quality_reason(phoneme_result)
+    syllable_count = _recognizer_syllable_count(phoneme_result)
+    if syllable_count is None:
+        syllable_count = len(syllables_from_recognizer)
 
     observed_phoneme_labels = [
         p.get('symbol') or p.get('label', '')
@@ -2537,7 +2559,9 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         'capabilities': {
             'graphs': True,
             'syllable_duration': True,
-            'phoneme_alignment': True,
+            # Only a free phoneme decode supports a phoneme-level alignment.
+            # recognize-v2 force-aligns the reference, so it has none to offer.
+            'phoneme_alignment': bool(phonemes),
         },
     }
 
@@ -2564,7 +2588,12 @@ def _recognizer_syllable_count(phoneme_result):
 
 
 def _recognizer_confidence(phoneme_result):
-    """Confidence from either contract; v2 carries alignment confidence."""
+    """Confidence metric from either contract.
+
+    v2 reports per-syllable forced-alignment confidence in ``canonical_alignment``,
+    so we return the mean forced-alignment confidence across syllables.
+    v1 (legacy) reports top-level acoustic decoding confidence.
+    """
     if not isinstance(phoneme_result, dict):
         return None
     value = phoneme_result.get('confidence')
@@ -2579,6 +2608,46 @@ def _recognizer_confidence(phoneme_result):
     return round(sum(values) / len(values), 6) if values else None
 
 
+_RECOGNIZER_V2_CONTRACT = 'recognize-v2'
+_RECOGNIZER_V2_FIELDS = frozenset({
+    'decoded_syllable_count',
+    'decoded_is_rateable',
+    'canonical_alignment',
+    'hypotheses',
+})
+
+
+def _recognizer_contract_kind(phoneme_result):
+    """Classify a recognizer payload without accepting ambiguous shapes."""
+    if not isinstance(phoneme_result, dict):
+        return None
+    contract_version = phoneme_result.get('contract_version')
+    if contract_version == _RECOGNIZER_V2_CONTRACT:
+        return _RECOGNIZER_V2_CONTRACT
+    if contract_version in (None, 'recognize-v1'):
+        if contract_version is None and _RECOGNIZER_V2_FIELDS.intersection(phoneme_result):
+            return 'invalid'
+        return 'recognize-v1'
+    return 'invalid'
+
+
+def _recognizer_is_rateable(phoneme_result):
+    """Return rateability only when the active recognizer contract proves it.
+
+    ``recognize`` (v1) reports ``is_rateable``; ``recognize-v2`` reports
+    ``decoded_is_rateable``. A missing, invalid, or unknown contract must fail
+    closed rather than treating a malformed recognizer response as rateable.
+    """
+    contract = _recognizer_contract_kind(phoneme_result)
+    if contract == _RECOGNIZER_V2_CONTRACT:
+        value = phoneme_result.get('decoded_is_rateable')
+    elif contract == 'recognize-v1':
+        value = phoneme_result.get('is_rateable')
+    else:
+        return False
+    return value if isinstance(value, bool) else False
+
+
 def _recognizer_quality_reason(phoneme_result):
     """Quality reason from either contract."""
     if not isinstance(phoneme_result, dict):
@@ -2586,8 +2655,14 @@ def _recognizer_quality_reason(phoneme_result):
     reason = phoneme_result.get('quality_reason')
     if reason:
         return reason
-    if phoneme_result.get('decoded_is_rateable') is False:
-        return 'DECODED_UNRATEABLE'
+    contract = _recognizer_contract_kind(phoneme_result)
+    if contract == _RECOGNIZER_V2_CONTRACT:
+        if phoneme_result.get('decoded_is_rateable') is False:
+            return 'DECODED_UNRATEABLE'
+        if not isinstance(phoneme_result.get('decoded_is_rateable'), bool):
+            return 'RECOGNIZER_CONTRACT_INVALID'
+    elif contract == 'invalid':
+        return 'RECOGNIZER_CONTRACT_INVALID'
     return None
 
 
@@ -2677,8 +2752,8 @@ def _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected
         'primary_stress': {'applicable': bool(expected_syllables and expected_syllables > 1), 'expected': None, 'matches_expected': None, 'status': 'unrateable', 'confidence': 0.0, 'pitch_evidence': [], 'reasons': []},
         'model_revision': phoneme_result.get('model_revision') if isinstance(phoneme_result, dict) else None,
     }
-    if unavailable or not reference_ipa or not phoneme_result or phoneme_result.get('contract_version') != 'recognize-v2':
-        reason = unavailable or ('CONTRACT_MISMATCH' if phoneme_result and phoneme_result.get('contract_version') != 'recognize-v2' else 'MODEL_INFERENCE_FAILED')
+    if unavailable or not reference_ipa or not phoneme_result or phoneme_result.get('contract_version') != _RECOGNIZER_V2_CONTRACT:
+        reason = unavailable or ('CONTRACT_MISMATCH' if phoneme_result and phoneme_result.get('contract_version') != _RECOGNIZER_V2_CONTRACT else 'MODEL_INFERENCE_FAILED')
         base['count']['reasons'] = [reason]
         base['primary_stress']['reasons'] = [reason]
         return base
@@ -2694,7 +2769,7 @@ def _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected
         return base
     observed = phoneme_result.get('decoded_syllable_count')
     base['count']['observed'] = observed
-    if not isinstance(observed, int) or not phoneme_result.get('decoded_is_rateable', True):
+    if not isinstance(observed, int) or not _recognizer_is_rateable(phoneme_result):
         base['count']['reasons'] = ['INDEPENDENT_COUNT_UNRATEABLE']
         base['primary_stress']['reasons'] = ['INDEPENDENT_COUNT_UNRATEABLE']
         return base
@@ -2777,13 +2852,22 @@ def _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected
             ['COUNT_MISMATCH'] if count_score['status'] == 'incorrect' else ['COUNT_UNCERTAIN']
         ),
     })
+    # The acoustic (Praat) pass runs untargeted in V3, so its count is a second
+    # opinion on the recognizer's. When the two disagree neither is trusted.
+    # `INDEPENDENT_` is already the recognizer's prefix here (see
+    # INDEPENDENT_COUNT_UNRATEABLE above), so this one is named for the
+    # acoustic side; and the disagreeing count is recorded, because a reason
+    # citing evidence the payload does not contain reads as expected-vs-observed
+    # and sends the reviewer chasing the wrong two numbers.
     praat_count = (praat_result.get('observed') or {}).get('syllableCount') if isinstance(praat_result, dict) else None
-    if isinstance(praat_count, int) and praat_count != observed:
-        base['count'].update({
-            'status': 'unrateable',
-            'confidence': 0.0,
-            'reasons': ['INDEPENDENT_COUNT_DISAGREEMENT'],
-        })
+    if isinstance(praat_count, int) and not isinstance(praat_count, bool):
+        base['count']['acoustic_observed'] = praat_count
+        if praat_count != observed:
+            base['count'].update({
+                'status': 'unrateable',
+                'confidence': 0.0,
+                'reasons': ['ACOUSTIC_COUNT_DISAGREEMENT'],
+            })
     base['model_revision'] = artifact.get('artifact_sha256')
 
     if stress_disabled:
@@ -2845,10 +2929,10 @@ def _build_v3_best_effort(praat_result, phoneme_result, reference_ipa, expected_
         'expected_stress_appears_strongest': None,
         'advisory_only': True,
     }
-    if not isinstance(phoneme_result, dict) or not phoneme_result.get('decoded_is_rateable'):
+    if not _recognizer_is_rateable(phoneme_result):
         return result
-    observed = phoneme_result.get('decoded_syllable_count')
-    if not isinstance(observed, int):
+    observed = _recognizer_syllable_count(phoneme_result)
+    if not isinstance(observed, int) or isinstance(observed, bool):
         return result
     result['observed_count'] = observed
     if not reference_ipa or not isinstance(expected_syllables, int) or expected_syllables <= 1:
@@ -3034,12 +3118,12 @@ def _build_v3_active_result_from_pipeline(
     if reason or not phoneme_result:
         reason = reason or 'MODEL_INFERENCE_FAILED'
         return _build_v3_degraded_response(praat_result, reason), reason
-    if not phoneme_result.get('is_rateable', True):
-        reason = phoneme_result.get('quality_reason') or 'LOW_PHONEME_CONFIDENCE'
+    if not _recognizer_is_rateable(phoneme_result):
+        reason = _recognizer_quality_reason(phoneme_result) or 'LOW_PHONEME_CONFIDENCE'
         return _build_v3_degraded_response(
             praat_result,
             reason,
-            phoneme_result.get('confidence', 0.0),
+            _recognizer_confidence(phoneme_result) or 0.0,
         ), reason
 
     response = _build_v3_active_response(

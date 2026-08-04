@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.44",
+  "version": "1.8.45",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -26,7 +26,7 @@
     "test:preloader:browser:reduced": "node tests/browser/preloader-browser-check.js --reduced-motion",
     "test:preloader:browser:mobile": "node tests/browser/preloader-browser-check.js --mobile-low",
     "test:pronunciation-test:browser": "node tests/browser/pronunciation-test-browser-check.js",
-    "test:pronounce:logic": "node --no-warnings tests/pronunciation-analyzer/analysis-pipeline.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-detector.test.mjs && node --no-warnings tests/pronunciation-analyzer/stress-utils.test.mjs && node --no-warnings tests/pronunciation-analyzer/native-audio-player.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/pronunciation-summary.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-ui-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/praat-api-v2.test.mjs && node --no-warnings tests/pronunciation-analyzer/chart-data.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-verifier.test.mjs",
+    "test:pronounce:logic": "node --no-warnings tests/pronunciation-analyzer/analysis-pipeline.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-detector.test.mjs && node --no-warnings tests/pronunciation-analyzer/stress-utils.test.mjs && node --no-warnings tests/pronunciation-analyzer/native-audio-player.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/pronunciation-summary.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-ui-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/praat-api-v2.test.mjs && node --no-warnings tests/pronunciation-analyzer/version-comparison.test.mjs && node --no-warnings tests/pronunciation-analyzer/version-comparison-ui-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/chart-data.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-verifier.test.mjs && node --no-warnings tests/pronunciation-analyzer/verification-attempt-policy.test.mjs && node --no-warnings tests/pronunciation-analyzer/crm-verification-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/local-launcher-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/pitch-analyzer.test.mjs",
     "audit:pronounce:100": "python scripts/audit/pronunciation-reference-audit.py --base-url http://127.0.0.1:8081 --sample-size 100 --seed 20260711 --output test-results/pronunciation-audit-100.json",
     "audit:pronounce:1000": "python scripts/audit/pronunciation-reference-audit.py --base-url http://127.0.0.1:8081 --sample-size 1000 --seed 20260711 --output test-results/pronunciation-audit-1000.json",
     "campaign:pronounce:manifest": "python scripts/audit/pronunciation-reference-audit.py --create-manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --sample-size 3000 --seed 20260712",
@@ -36,11 +36,12 @@
     "campaign:pronounce:report1000": "python scripts/audit/pronunciation-reference-audit.py --manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --aggregate-through 1 --output test-results/pronunciation-audit-3000/report-1000.json",
     "campaign:pronounce:report2000": "python scripts/audit/pronunciation-reference-audit.py --manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --aggregate-through 2 --output test-results/pronunciation-audit-3000/report-2000.json",
     "campaign:pronounce:report3000": "python scripts/audit/pronunciation-reference-audit.py --manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --aggregate-through 3 --output test-results/pronunciation-audit-3000/report-3000.json",
-    "test:pronounce:browser": "node tests/browser/pronounce-mode-browser-check.js && node tests/browser/pronounce-mode-syllable-playback-check.js && node tests/browser/pronounce-manual-review-browser-check.js",
+    "test:pronounce:browser": "node tests/browser/pronounce-harness-module-contract.test.js && node tests/browser/pronounce-mode-browser-check.js && node tests/browser/pronounce-version-comparison-browser-check.js && node tests/browser/pronounce-mode-syllable-playback-check.js && node tests/browser/pronounce-manual-review-browser-check.js",
     "verify:pronounce": "npm run test:pronounce:logic && npm run test:pronounce:browser",
     "test:crm:scheduler:browser": "node tests/browser/crm-scheduler-browser-check.js",
     "test:crm:entrance-test-result-pdf:browser": "node tests/browser/crm-entrance-test-result-pdf-browser-check.js",
     "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
+    "test:survival:browser": "node tests/browser/survival-mode-browser-check.js",
     "test:rfib:browser": "node tests/browser/rfib-mode-browser-check.js",
     "test:rmcsa:guardrails": "node tests/rmcsa-explanation-guardrails.test.js && python tests/rmcsa_enrichment_parser.test.py",
     "test:rmcsa:browser": "node tests/browser/rmcsa-mode-browser-check.js",
@@ -89,7 +90,6 @@
     "multer": "^2.1.1",
     "openai": "^6.16.0",
     "opossum": "^9.0.0",
-    "pitchfinder": "^2.3.4",
     "retry-axios": "^4.0.1",
     "ts-fsrs": "5.2.3",
     "youtube-transcript": "^1.2.1"

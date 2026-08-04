@@ -773,7 +773,365 @@
     margin-bottom: 12px;
 }
 
+/* Review layout. One column for learners; a sticky left rail is added only
+   when the admin comparison is live, so the boundary toggle and the judgment
+   stay reachable while the charts and the waveform scroll past. */
+.pa-review-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    align-items: start;
+}
+
+.pa-review-layout--with-rail {
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    gap: 28px;
+}
+
+.pa-review-main {
+    min-width: 0;
+}
+
+.pa-version-rail[hidden] {
+    display: none;
+}
+
+.pa-version-rail {
+    position: sticky;
+    top: 12px;
+    align-self: start;
+    max-height: calc(100vh - 24px);
+    padding-right: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* The rail is narrow, so its controls stack instead of sitting on one row. */
+.pa-version-rail .pa-version-boundary-controls,
+.pa-version-rail .pa-version-save-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.pa-version-rail .pa-version-boundary-controls {
+    padding: 0 0 14px;
+    border-top: 0;
+}
+
+.pa-version-rail .pa-version-source-toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.pa-version-rail .pa-version-judgment-options {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* Admin V2/V3 comparison. This is a single review surface on the parent
+   pronunciation background; columns are content lanes, not nested cards. */
+.pa-version-comparison[hidden] {
+    display: none;
+}
+
+.pa-version-comparison {
+    margin: 22px 0 26px;
+    padding: 20px 0 0;
+    border-top: 1px solid #cbd5e1;
+}
+
+.pa-version-comparison-header,
+.pa-version-boundary-controls,
+.pa-version-save-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.pa-version-comparison-header {
+    margin-bottom: 18px;
+}
+
+.pa-version-eyebrow {
+    margin: 0 0 4px;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.pa-version-comparison h3,
+.pa-version-comparison h4 {
+    margin: 0;
+    color: #1e293b;
+}
+
+.pa-version-comparison h3 {
+    font-size: 1.15rem;
+}
+
+.pa-version-comparison h4 {
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+}
+
+.pa-version-description,
+.pa-version-help,
+.pa-version-column-status {
+    color: #64748b;
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.pa-version-description {
+    margin: 5px 0 0;
+}
+
+.pa-version-state,
+.pa-version-availability {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pa-version-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    margin-bottom: 22px;
+}
+
+.pa-version-column {
+    min-width: 0;
+    padding: 0 0 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pa-version-column + .pa-version-column {
+    border-left: 1px solid #e2e8f0;
+    padding-left: 28px;
+}
+
+.pa-version-column-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pa-version-availability--available {
+    color: #166534;
+}
+
+.pa-version-availability--unavailable {
+    color: #9a3412;
+}
+
+.pa-version-column-status {
+    min-height: 2.6em;
+    margin: 8px 0 12px;
+}
+
+.pa-version-metrics {
+    margin: 0;
+}
+
+.pa-version-metric-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-top: 1px solid #f1f5f9;
+}
+
+.pa-version-metric-row dt {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.pa-version-metric-row dd {
+    margin: 0;
+    color: #0f172a;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.pa-version-boundaries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.pa-version-boundary {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 72px;
+    padding: 6px 8px;
+    border-left: 3px solid #64748b;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.75rem;
+}
+
+.pa-version-boundary small {
+    color: #64748b;
+    font-size: 0.68rem;
+}
+
+.pa-version-empty {
+    color: #9a3412;
+    font-size: 0.78rem;
+}
+
+.pa-version-boundary-controls {
+    align-items: center;
+    padding: 14px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pa-version-help {
+    display: block;
+    margin-top: 3px;
+}
+
+.pa-version-source-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.pa-version-source-btn,
+.pa-version-save {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #94a3b8;
+    border-radius: 7px;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.pa-version-source-btn:hover:not(:disabled),
+.pa-version-source-btn:focus-visible,
+.pa-version-source-btn.is-selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.pa-version-source-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pa-version-judgment {
+    margin: 18px 0 14px;
+    padding: 0;
+    border: 0;
+}
+
+.pa-version-judgment legend {
+    margin-bottom: 10px;
+    color: #1e293b;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.pa-version-judgment-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 20px;
+}
+
+.pa-version-judgment-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    color: #334155;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.pa-version-judgment-options input {
+    accent-color: #2563eb;
+}
+
+.pa-version-save-row {
+    align-items: center;
+}
+
+.pa-version-save {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+    color: #fff;
+}
+
+.pa-version-save:hover:not(:disabled),
+.pa-version-save:focus-visible {
+    background: #1e40af;
+}
+
+.pa-version-save:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.pa-version-save-status {
+    color: #475569;
+    font-size: 0.8rem;
+}
+
+.pa-version-save-status[data-state="saved"] {
+    color: #166534;
+}
+
+.pa-version-save-status[data-state="error"] {
+    color: #b91c1c;
+}
+
+.pa-version-technical-details {
+    margin-top: 14px;
+    color: #64748b;
+    font-size: 0.76rem;
+}
+
+.pa-version-technical-details pre {
+    max-width: 100%;
+    overflow: auto;
+    margin: 8px 0 0;
+    padding: 10px 0;
+    color: #475569;
+    white-space: pre-wrap;
+}
+
 /* Mobile Responsive */
+/* Below the two-column threshold the rail becomes a frozen header strip so the
+   toggle and the judgment are still one glance away from the waveform. */
+@media (max-width: 1024px) {
+    .pa-review-layout--with-rail {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .pa-version-rail {
+        top: 0;
+        z-index: 5;
+        max-height: 60vh;
+        padding: 12px 0;
+        border-bottom: 1px solid #cbd5e1;
+        background: var(--bg-primary, #fff);
+    }
+}
+
 @media (max-width: 640px) {
     .pa-container {
         padding: 12px;
@@ -912,6 +1270,38 @@
 
     .pa-syllable {
         flex: 1 1 72px;
+    }
+
+    .pa-version-comparison-header,
+    .pa-version-boundary-controls,
+    .pa-version-save-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pa-version-columns {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .pa-version-column + .pa-version-column {
+        border-left: 0;
+        border-top: 1px solid #e2e8f0;
+        padding-left: 0;
+        padding-top: 18px;
+    }
+
+    .pa-version-source-toggle {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .pa-version-source-btn {
+        min-height: 44px;
+    }
+
+    .pa-version-judgment-options {
+        grid-template-columns: 1fr;
     }
 }
 

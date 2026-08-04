@@ -12,7 +12,8 @@ const { mapStudentRecord } = require('../../functions/src/crm/student-service');
 
 function loadBrowserHelper(relativePath, globalName) {
     const source = fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8');
-    const sandbox = { window: {} };
+    const documentStub = { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] };
+    const sandbox = { window: { document: documentStub }, document: documentStub };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
     return sandbox.window[globalName];

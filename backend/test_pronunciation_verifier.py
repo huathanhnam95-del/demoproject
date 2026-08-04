@@ -222,7 +222,13 @@ class PronunciationVerifierTest(unittest.TestCase):
                     2,
                 )
         self.assertEqual(result["count"]["status"], "unrateable")
-        self.assertIn("INDEPENDENT_COUNT_DISAGREEMENT", result["count"]["reasons"])
+        self.assertIn("ACOUSTIC_COUNT_DISAGREEMENT", result["count"]["reasons"])
+        # The reason must be self-explanatory in the payload: expected and
+        # observed agree here, so without the acoustic count a reviewer reads
+        # "disagreement" as a mismatch between those two.
+        self.assertEqual(result["count"]["expected"], 2)
+        self.assertEqual(result["count"]["observed"], 2)
+        self.assertEqual(result["count"]["acoustic_observed"], 1)
 
     def test_aligned_acoustic_features_use_ctc_times_and_praat_contours(self):
         from backend.local_server.pronunciation_verifier import aligned_acoustic_features

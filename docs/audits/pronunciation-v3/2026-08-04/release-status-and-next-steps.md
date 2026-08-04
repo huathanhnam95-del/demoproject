@@ -3,7 +3,7 @@
 **Date:** 2026-08-04 (Vietnam Time)
 **Release commit:** `18b65ed4` · follow-ups `45521852`, `65f675b0`
 **Branch:** `codex/speaking-ui-review-repair` (not merged, not pushed)
-**Status:** shipped and verified in production; three release gates remain open
+**Status:** Core V3 backend fix is healthy in production; release sign-off remains blocked.
 
 **Related:**
 `docs/plans/2026-08-03-v3-production-issues-and-keepalive-plan.md` (current source of truth) ·
@@ -24,9 +24,9 @@ recognizer did produce.
 | Timeout budget widened at 6 layers, enumerated browser-inward | A cold start completes instead of failing |
 | `requests.Timeout` → `TIMEOUT`, `ConnectionError` → `RECOGNIZER_UNREACHABLE` | Failures name the real cause instead of blaming the model |
 | Eager model load + `/readyz` startup probe (was `tcpSocket`) | The ~50 s load runs during startup, not inside a learner's request |
-| CPU-only torch wheels | Image 4,436 MB → 2,001 MB |
+| CPU-only torch wheels | Image 4,435.8 MiB → 2,000.7 MiB |
 | `POST /warm/v3` + calls on Pronounce entry and word change | Cold load overlaps the learner's reading time (**committed, not deployed**) |
-| Cloud Scheduler ping, every 10 min, 06:00–23:50 `Asia/Ho_Chi_Minh` | Holds an instance during active hours |
+| Cloud Scheduler ping, every 10 min, 06:00–23:50 `Asia/Ho_Chi_Minh` | Intended best-effort warm instance retention during active hours |
 | Local launcher: wall-clock readiness gate + loud V3-disabled banner | A misconfigured local session is obvious, not silent |
 
 ### Live production state
@@ -46,7 +46,7 @@ Rollback targets: `praat-api-00040-gr4`, `phoneme-recognizer-00004-bbc`.
 |---|---|---|
 | First recording after idle | ✗ failed at 15 s | ✓ **HTTP 200 in 41.2 s**, `complete`, 3 syllables, `source: ctc` |
 | Subsequent recordings | 1 s | ✓ **2.6–2.7 s** |
-| During 06:00–23:59, instance held | — | ~3 s |
+| During 06:00–23:59, instance held (best-effort) | — | ~3 s (partial post-promotion window: 10/10 matching, 0 failures, 0 unplanned starts, 3.08 ms median `/readyz`) |
 | Recognizer down | `MODEL_INFERENCE_FAILED` | `RECOGNIZER_UNREACHABLE` |
 | Minimum-instance idle charge | none | **none** |
 
@@ -68,21 +68,52 @@ private with only the compute SA as invoker · no `minScale` on either · traffi
 pinned to one explicit revision each, no `latestRevision` · rollback targets
 intact · rollback exercised in both directions on `praat-api`.
 
-**Tests:** 20 ops · 52 pronunciation · 119 backend — all passing.
+**Tests:** 20 ops (`npm run test:pronounce:ops`) · 43 pronunciation (`npm run test:pronounce:logic`, covering named release files, all passing) · 119 backend (`pytest backend/tests/test_recognizer_v3.py`) — all totals reproduced exactly.
 
 ---
 
-## 3. Open items
+## 3. Plan Issue Verdicts
+
+| Plan Issue | Verdict |
+|---|---|
+| 1. Cold start exceeded timeout | Fixed in production |
+| 2. Transport failures mislabeled | Code-fixed and unit-tested; no fresh production failure injection |
+| 3. Traffic entered half-loaded recognizer | Fixed: live `/readyz` startup probe |
+| 4. CUDA-heavy image | Fixed: 4,435.8 MiB → 2,000.7 MiB |
+| 5. Traffic pinned incorrectly | Fixed currently; explicit revisions receive 100% |
+| 6. PowerShell flag corruption | Guarded by release script and passing contract tests |
+| 7. API timeout layers missed | Fixed: live API and recognizer timeouts are 120 seconds |
+| 8. Local launcher silently disabled V3 | Code and contract test fixed; full local-stack run not repeated |
+| 9. `/warm/v3` background thread | Open and not deployed to Hosting |
+
+---
+
+## 4. Fresh Production Verification
+
+- **Revisions & Digests:** Exact revisions (`praat-api-00057-fiv`, `phoneme-recognizer-00010-rir`) and digests match the report.
+- **Access Controls:** API is public; recognizer is private to the compute service account (`1071929245506-compute@developer.gserviceaccount.com`).
+- **Feature Flags:** Shadow mode is active and learner V3 remains disabled.
+- **Auth Guarding:** Admin and corpus endpoints return unauthenticated 401.
+- **Chrome E2E:** Authenticated Chrome completed record → analyze with V2 and V3 available, three syllables, `source: ctc`.
+- **Direct Warm Replay:** Returned HTTP 200 in 2.888 seconds.
+- **Warm-up Telemetry:** `/warm/v3` calls observed in production: **zero**.
+- **Rollback Readiness:** Both rollback revisions (`praat-api-00040-gr4`, `phoneme-recognizer-00004-bbc`) remain ready.
+- **Git Status:** The branch remains absent from `origin`.
+
+---
+
+## 5. Open items
 
 ### Blocking a clean sign-off
 
 | # | Item | Why it matters |
 |---|---|---|
-| 1 | **24 h keep-alive observation** | The keep-alive premise has never been measured over a full window. Everything about cold-start frequency is currently assumed. |
+| 1 | **24 h keep-alive observation** | The keep-alive premise has never been measured over a full 24-hour window. The exact 24-hour verifier currently fails closed because the Scheduler and revision are younger than 24 hours (38 Scheduler finishes vs 11 matching `/readyz` rows). |
 | 2 | **Hosting not deployed (R5)** | The committed frontend does not match live bytes. `/warm/v3` calls observed in production: **0**. |
 | 3 | **Cost is arithmetic, not telemetry** | The ~1.7% free-tier figure was calculated, never measured. |
+| 4 | **Release-control gaps (R3, R6, R10, SHA)** | Outstanding release controls prevent complete sign-off (missing R3 allowlist, unverified R6 candidate, incomplete R10 recognizer rollback rehearsal, and image-baked SHA not deployed). |
 
-### Smaller gaps
+### Release-control gaps & smaller items
 
 - **R3** — commit exists, but no `release-source-allowlist.txt` enumerating reviewed paths.
 - **R6** — private candidate revisions cannot be smoke-tested; the CLI is a user
@@ -98,13 +129,11 @@ intact · rollback exercised in both directions on `praat-api`.
 
 ### Not release-related
 
-**84 uncommitted files** remain in the working tree from the earlier Speaking UI
-session — untouched by this work, but a large amount of unsaved change on one
-branch.
+**97 uncommitted entries** (62 tracked changes and 35 untracked files) remain in the working tree from the earlier Speaking UI session — untouched by this work, but a large amount of unsaved change on one branch.
 
 ---
 
-## 4. Next steps, in order
+## 6. Next steps, in order
 
 ### Step 1 — Measure the keep-alive (do this first)
 
@@ -136,11 +165,13 @@ belt-and-braces. Ship it when the Speaking UI work is ready to ship anyway.
 
 ### Step 3 — Replace the cost estimate with telemetry
 
-Once several days of data exist:
+Once several days of data exist, execute the tested Monitoring REST helper required by plan §7/L2:
 
 ```bash
-gcloud monitoring time-series list --project=parselmouth --filter='metric.type="run.googleapis.com/container/billable_instance_time" AND resource.labels.service_name="phoneme-recognizer"' --format=json
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/measure-phoneme-billable-time.ps1 -Hours 24 -Revision phoneme-recognizer-00010-rir
 ```
+
+(Note: `gcloud monitoring time-series list` is an invalid gcloud command. The Monitoring REST API helper `scripts/measure-phoneme-billable-time.ps1` queries `projects.timeSeries.list` directly.)
 
 Report actual billed instance time against the free allowance, remembering the
 allowance is **billing-account-wide** and shared with `praat-api`,
@@ -165,7 +196,7 @@ Both free, neither urgent while the ping holds:
 
 ---
 
-## 5. Process notes worth keeping
+## 7. Process notes worth keeping
 
 Three things went wrong in the *execution*, all now guarded:
 
@@ -194,10 +225,17 @@ repaired version fails closed, and on its first live run immediately did so.
 
 ---
 
-## 6. Recommendation
+## 8. Summary & Recommendation
 
-Stop here. Let it run overnight, and start with Step 1 tomorrow.
+**Status:** Core V3 backend fix is healthy in production; release sign-off remains blocked.
 
-Production is working and verified. Every remaining item is either a
-measurement that needs time to elapse, a decision that is yours, or an
-optimisation that is not urgent.
+While the core backend fixes are functioning cleanly in live production, full release sign-off remains blocked by outstanding release-control gaps and verification gates:
+- Missing R3 `release-source-allowlist.txt` enumerating reviewed paths.
+- Unverified R6 private candidate revision smoke test (`roles/iam.serviceAccountTokenCreator` permission needed).
+- Incomplete R10 recognizer rollback rehearsal (`phoneme-recognizer` un-rehearsed).
+- Image-baked `GIT_SHA` / `BUILD_SHA` not yet deployed to production.
+- Unverified 24h keep-alive observation window (fails closed until 24h elapses).
+- Frontend `/warm/v3` integration not deployed to Hosting.
+- Telemetry-based cost verification pending via `scripts/measure-phoneme-billable-time.ps1`.
+
+Let the service run overnight, and proceed with Step 1 (`scripts/verify-phoneme-keepalive.ps1`) once 24 hours have elapsed.

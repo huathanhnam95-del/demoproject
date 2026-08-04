@@ -20,7 +20,9 @@
       beginner: 'male',
       intermediate: 'male'
     },
-    reviewMetadata: {}
+    reviewMetadata: {},
+    randomMode: localStorage.getItem('pte_random_nav_mode') === 'true',
+    navHistory: []
   };
 
   const elements = {};
@@ -155,7 +157,22 @@
     }
   }
 
+  function updateRandomToggleUI() {
+    if (!elements.randomToggleBtn) return;
+    elements.randomToggleBtn.classList.toggle('is-active', state.randomMode);
+    elements.randomToggleBtn.setAttribute('aria-pressed', state.randomMode ? 'true' : 'false');
+    elements.randomToggleBtn.textContent = state.randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+  }
+
   function setupEventListeners() {
+    if (elements.randomToggleBtn) {
+      updateRandomToggleUI();
+      elements.randomToggleBtn.addEventListener('click', () => {
+        state.randomMode = !state.randomMode;
+        localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
+        updateRandomToggleUI();
+      });
+    }
     if (elements.questionSelect) {
       elements.questionSelect.addEventListener('change', () => {
         const nextId = Number.parseInt(elements.questionSelect.value, 10);
@@ -1080,7 +1097,24 @@
   async function navigateQuestion(delta) {
     await loadData();
     if (!state.questions.length) return;
-    const nextIndex = Math.max(0, Math.min(state.questions.length - 1, state.currentQuestionIndex + delta));
+    let nextIndex;
+    if (delta < 0) {
+      if (state.randomMode && state.navHistory.length > 0) {
+        nextIndex = state.navHistory.pop();
+      } else {
+        nextIndex = Math.max(0, state.currentQuestionIndex - 1);
+      }
+    } else {
+      if (state.randomMode && state.questions.length > 1) {
+        state.navHistory.push(state.currentQuestionIndex);
+        do {
+          nextIndex = Math.floor(Math.random() * state.questions.length);
+        } while (nextIndex === state.currentQuestionIndex && state.questions.length > 1);
+      } else {
+        nextIndex = Math.min(state.questions.length - 1, state.currentQuestionIndex + 1);
+      }
+    }
+
     if (nextIndex === state.currentQuestionIndex) return;
     state.currentQuestionIndex = nextIndex;
     state.currentQuestion = state.questions[nextIndex];

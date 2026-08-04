@@ -30,6 +30,7 @@ const registerAutomationRoutes = require('./automations');
 const registerReportingRoutes = require('./reporting');
 const registerReadAloudReportingRoutes = require('./read-aloud-reporting');
 const registerPronunciationCorpusRoutes = require('./pronunciation-corpus');
+const registerPronunciationComparisonRoutes = require('./pronunciation-comparisons');
 const registerGovernanceRoutes = require('./governance');
 const registerLiveSessionRoutes = require('./live-sessions');
 const { buildAuditLogEntry } = require('../../crm/governance-service');
@@ -268,6 +269,7 @@ module.exports = function createCrmRouter(rawDeps) {
     // production-only so local development routes remain isolated.
     if (typeof deps.getStorageBucket === 'function') {
         registerPronunciationCorpusRoutes(router, routeDeps);
+        registerPronunciationComparisonRoutes(router, routeDeps);
     }
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);

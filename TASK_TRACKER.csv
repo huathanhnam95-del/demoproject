@@ -946,3 +946,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 551,2026-08-04,Execute Phase R release (commit 18b65ed4) + production browser E2E verification,Done,2026-08-04
 553,2026-08-04,Fix V3 rateability contract drift (dead degraded gate for recognize-v2 and dead best-effort for v1) and make the acoustic count disagreement reason self-explanatory,Done,2026-08-04
 552,2026-08-04,Retrofit skipped Phase R1/R2 (verifier repair + release entrypoint + contract tests) and bake GIT_SHA into praat-api image,Done,2026-08-04
+554,2026-08-04,Update stale INDEPENDENT_COUNT_DISAGREEMENT fixture and wire 3 unrun pronunciation-analyzer test files into test:pronounce:logic,Done,2026-08-04
+555,2026-08-04,Add end-to-end chart+rail assertions to pronounce version-comparison browser check and sync the harness markup with index.html,Done,2026-08-04
+553,2026-08-04,Write V3 release status and next-steps report,Done,2026-08-04

@@ -1,5 +1,14 @@
 FROM python:3.10-slim
 
+# Embed the source commit in the image, matching Dockerfile.phoneme. A tag named
+# after a SHA is not enough: BUILD_SHA/GIT_SHA can also be set as service-level
+# environment variables, which OVERRIDE the image and made /health report a
+# stale commit after an otherwise correct deploy. Baking it here means the image
+# always knows its own provenance.
+ARG GIT_SHA="unknown"
+ENV BUILD_SHA=${GIT_SHA}
+ENV GIT_SHA=${GIT_SHA}
+
 WORKDIR /app
 
 # Install system dependencies for Parselmouth

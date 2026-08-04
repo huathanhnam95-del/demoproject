@@ -1,0 +1,40 @@
+{
+  "$comment": [
+    "Healthy 06:00-07:00 slice for phoneme-recognizer-00010-rir (Asia/Ho_Chi_Minh = UTC+7).",
+    "Five Scheduler AttemptFinished entries and five matching /readyz rows.",
+    "The Scheduler query deliberately carries only AttemptFinished rows: counting",
+    "every scheduler log line would report ten executions for these five runs.",
+    "Contains the designed 06:00 warm-up start AND a second start at 06:30, which",
+    "must be classified UNPLANNED - it is an eviction, not the daily warm-up."
+  ],
+  "queries": {
+    "instanceStarts": {
+      "ok": true,
+      "rows": [
+        "2026-08-03T23:00:12.000000Z\tphoneme-recognizer-00010-rir\tStarting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors.",
+        "2026-08-03T23:30:41.000000Z\tphoneme-recognizer-00010-rir\tStarting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors.",
+        "2026-08-03T22:10:03.000000Z\tphoneme-recognizer-00010-rir\tStarting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions."
+      ]
+    },
+    "scheduler": {
+      "ok": true,
+      "rows": [
+        "2026-08-03T23:00:10.000000Z\tOK",
+        "2026-08-03T23:10:10.000000Z\tOK",
+        "2026-08-03T23:20:10.000000Z\tOK",
+        "2026-08-03T23:30:40.000000Z\tOK",
+        "2026-08-03T23:40:10.000000Z\tOK"
+      ]
+    },
+    "readyz": {
+      "ok": true,
+      "rows": [
+        "2026-08-03T23:00:52.000000Z\tphoneme-recognizer-00010-rir\t200\t40.037s",
+        "2026-08-03T23:10:10.000000Z\tphoneme-recognizer-00010-rir\t200\t0.004s",
+        "2026-08-03T23:20:10.000000Z\tphoneme-recognizer-00010-rir\t200\t0.003s",
+        "2026-08-03T23:30:59.000000Z\tphoneme-recognizer-00010-rir\t200\t18.221s",
+        "2026-08-03T23:40:10.000000Z\tphoneme-recognizer-00010-rir\t200\t0.005s"
+      ]
+    }
+  }
+}

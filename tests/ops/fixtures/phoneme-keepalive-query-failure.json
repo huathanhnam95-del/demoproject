@@ -1,0 +1,25 @@
+{
+  "$comment": [
+    "The Scheduler query failed. The other two succeeded and look perfectly",
+    "healthy - which is exactly the trap: a partial outage must not be reported",
+    "as zero evictions. evidenceComplete must be false and the exit code non-zero."
+  ],
+  "queries": {
+    "instanceStarts": {
+      "ok": true,
+      "rows": [
+        "2026-08-03T23:00:12.000000Z\tphoneme-recognizer-00010-rir\tStarting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors."
+      ]
+    },
+    "scheduler": {
+      "ok": false,
+      "error": "gcloud exit 1 - ERROR: (gcloud.logging.read) unrecognized arguments:"
+    },
+    "readyz": {
+      "ok": true,
+      "rows": [
+        "2026-08-03T23:00:52.000000Z\tphoneme-recognizer-00010-rir\t200\t40.037s"
+      ]
+    }
+  }
+}

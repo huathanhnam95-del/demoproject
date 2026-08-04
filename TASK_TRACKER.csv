@@ -944,3 +944,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 551,2026-08-04,Comparison review UI: draw learner prosody/duration charts in V2-V3 comparison mode and freeze boundary toggle + judgment in a sticky left rail,Done,2026-08-04
 552,2026-08-04,Fix V3 0% confidence: read recognize-v2 alignment confidence instead of legacy v1 keys and stop emitting phantom all-deletion edit scripts,Done,2026-08-04
 551,2026-08-04,Execute Phase R release (commit 18b65ed4) + production browser E2E verification,Done,2026-08-04
+553,2026-08-04,Fix V3 rateability contract drift (dead degraded gate for recognize-v2 and dead best-effort for v1) and make the acoustic count disagreement reason self-explanatory,Done,2026-08-04
+552,2026-08-04,Retrofit skipped Phase R1/R2 (verifier repair + release entrypoint + contract tests) and bake GIT_SHA into praat-api image,Done,2026-08-04

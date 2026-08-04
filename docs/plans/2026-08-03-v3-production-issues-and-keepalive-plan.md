@@ -381,7 +381,56 @@ by `metadata.creationTimestamp` and image digest, never by revision number.
 
 ---
 
-## 6. Phase R — Reproducible release (next, blocking)
+## 6. Phase R — Reproducible release
+
+> ### Execution status — 2026-08-04
+>
+> **Approved and executed** ("execute if nothing else is needed for revision").
+>
+> **Process failure to record:** this section was rewritten by review while work
+> was in progress. The rewrite was committed in `18b65ed4` **without being
+> read**, and a compressed 7-step version was executed from memory instead of
+> the 10-step spec below. R3–R10 were completed out of order relative to R1–R2,
+> which were meant to gate the commit. Retrofitted afterwards, in
+> `docs/plans/…` order:
+>
+> | Task | State |
+> |---|---|
+> | R1 verifier repair + fixtures + contract tests | ✅ done (retrofit) — 9 contract tests |
+> | R2 release entrypoint + JSON config + contract tests | ✅ done (retrofit) — 11 contract tests |
+> | R3 allowlisted source commit | ⚠️ commit `18b65ed4` exists; no `release-source-allowlist.txt` |
+> | R4 immutable digests | ✅ recorded |
+> | R5 Hosting matches live bytes | ❌ **not done** — Hosting never deployed; needs approval (blast radius includes unrelated in-flight UI work) |
+> | R6 recognizer candidate verified at 0% | ⚠️ deployed at 0%, **not** directly smoke-tested (see below) |
+> | R7 recognizer promoted | ✅ `phoneme-recognizer-00010-rir` |
+> | R8 API candidate verified | ✅ against the promoted recognizer |
+> | R9 both at 100% + browser gate | ✅ production E2E passed |
+> | R10 rollback + re-promotion + evidence | ⚠️ exercised for `praat-api` only |
+>
+> **Live release:** commit `18b65ed4`; `praat-api-00057-fiv`
+> (`sha256:8d005aea…`), `phoneme-recognizer-00010-rir` (`sha256:dc1f139a…`).
+> Both report `deploymentVersion`/`BUILD_SHA` = the release commit.
+>
+> **Invariants verified after deploy:** `praat-api` public; `phoneme-recognizer`
+> private with only the compute SA as invoker; no `minScale` on either; traffic
+> pinned to one explicit revision each with no `latestRevision`; rollback
+> targets `praat-api-00040-gr4` and `phoneme-recognizer-00004-bbc` intact.
+>
+> **R6 could not be met as specified.** A private candidate needs an
+> audience-scoped ID token. The CLI is authenticated as a *user* account, which
+> cannot mint one, and impersonating the invoker SA is denied
+> (`iam.serviceAccounts.getAccessToken`). Mitigation: each service was promoted
+> separately with end-to-end verification after each, rollback ready. To close
+> it, grant `roles/iam.serviceAccountTokenCreator` on the compute SA.
+>
+> **Two release-time defects found and fixed:**
+> 1. `BUILD_SHA`/`GIT_SHA` set as *service-level* env vars **override the
+>    image**, so a correct deploy still reported a stale commit. `backend/Dockerfile`
+>    now bakes `ARG GIT_SHA` / `ENV BUILD_SHA`, matching `Dockerfile.phoneme`,
+>    and `cloudbuild.pronunciation.yaml` passes `--build-arg` (R2).
+> 2. Issue 6 struck a third time: an unquoted `--update-env-vars=a=1,b=2` was
+>    split by PowerShell so `GIT_SHA` swallowed the whole string. Caught by
+>    asserting equality with the SHA, not containment.
 
 **Approval gate:** this section is a plan, not authorization. Do not create a
 commit, submit a build, change IAM, deploy a revision, move traffic, or deploy

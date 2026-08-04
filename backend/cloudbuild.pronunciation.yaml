@@ -4,6 +4,8 @@ steps:
       - build
       - --file
       - backend/Dockerfile
+      - --build-arg
+      - GIT_SHA=${_GIT_SHA}
       - --tag
       - us-central1-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/praat-api:${_GIT_SHA}
       - .

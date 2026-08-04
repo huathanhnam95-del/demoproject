@@ -108,6 +108,17 @@ class TestRequirementsFiles(unittest.TestCase):
     def test_torch_requirements(self):
         self._assert_packages(self._read_req("requirements.phoneme-torch.txt"), ["torch", "transformers", "flask", "gunicorn", "numpy", "scipy"])
 
+    def test_praat_api_image_embeds_its_source_sha(self):
+        # /health must report the commit baked into the image. Relying on a
+        # service-level BUILD_SHA lets a stale env var override a correct
+        # deploy, which is exactly what happened during the 18b65ed4 release.
+        dockerfile = self._read_req("Dockerfile")
+        self.assertIn("ARG GIT_SHA", dockerfile)
+        self.assertRegex(dockerfile, r"(?m)^ENV BUILD_SHA=\$\{GIT_SHA\}")
+        cloudbuild = self._read_req("cloudbuild.pronunciation.yaml")
+        self.assertIn("--build-arg", cloudbuild)
+        self.assertIn("GIT_SHA=${_GIT_SHA}", cloudbuild)
+
     def test_torch_pins_the_cpu_wheel_index(self):
         # Cloud Run runs this CPU-only. Without the CPU index, pip resolves the
         # CUDA build and adds multiple GB of unused nvidia-* wheels that Cloud

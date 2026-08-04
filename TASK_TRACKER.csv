@@ -942,3 +942,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 549,2026-08-03,Address second V3 keep-alive review round (Phase R release plan + measurable keep-alive gate + cost scenarios),Done,2026-08-03
 550,2026-08-03,Sync cold-start plan doc with review corrections (forbid --to-latest; add missing praat-api timeout task; drop $0 claims),Done,2026-08-03
 551,2026-08-04,Comparison review UI: draw learner prosody/duration charts in V2-V3 comparison mode and freeze boundary toggle + judgment in a sticky left rail,Done,2026-08-04
+552,2026-08-04,Fix V3 0% confidence: read recognize-v2 alignment confidence instead of legacy v1 keys and stop emitting phantom all-deletion edit scripts,Done,2026-08-04
+551,2026-08-04,Execute Phase R release (commit 18b65ed4) + production browser E2E verification,Done,2026-08-04

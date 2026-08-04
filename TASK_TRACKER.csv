@@ -953,3 +953,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 557,2026-08-04,Update V3 pronunciation release status report with audit findings,Done,2026-08-04
 558,2026-08-04,Fix Pronunciation V3 audit findings and harden browser/contract tests,Done,2026-08-04
 559,2026-08-04,Review verify and push all changes to production,Done,2026-08-04
+554,2026-08-04,Verify V1.8.45 UI changes and live V3 deployment (tests, browser E2E, drift, provenance),Done,2026-08-04

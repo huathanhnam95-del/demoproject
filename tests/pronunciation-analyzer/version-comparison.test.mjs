@@ -111,6 +111,23 @@ describe('V2/V3 comparison model', () => {
         );
     });
 
+    it('labels each engine confidence with its provenance', () => {
+        // V2 reports Praat acoustic segmentation confidence; V3 reports mean
+        // forced-alignment confidence across syllables. Presenting both as a
+        // bare "Confidence" implies a comparability that does not exist, so the
+        // row must carry per-engine provenance for the renderer to show.
+        const view = buildComparisonViewModel(completeComparison);
+        const row = view.rows.find((entry) => entry.key === 'confidence');
+        assert.ok(row, 'comparison must expose a confidence row');
+        assert.equal(row.v2Subtitle, 'Acoustic segmentation');
+        assert.equal(row.v3Subtitle, 'Mean forced-alignment');
+        // The renderer reads row[`${column.version}Subtitle`], so the keys must
+        // match the column version ids exactly.
+        for (const column of view.columns) {
+            assert.ok(row[`${column.version}Subtitle`], `no provenance for ${column.version}`);
+        }
+    });
+
     it('normalizes unavailable reasons into stable readable copy', () => {
         assert.equal(
             normalizeComparisonReason('MODEL_INFERENCE_FAILED'),

@@ -419,5 +419,67 @@ class TestRecognizeV1(unittest.TestCase):
             self.assertGreaterEqual(timing["total_ms"], 0)
 
 
+class EagerLoadTest(unittest.TestCase):
+    """Cloud Run gates traffic on /readyz, so the model must load at startup.
+
+    With a lazy load, gunicorn binds the port in under a second, the platform
+    marks the instance ready, and the first learner's request absorbs the whole
+    46-52s model load. Loading during create_app() moves that cost into startup
+    where CPU boost applies and where the probe holds traffic back.
+    """
+
+    def _manifest_path(self, temp):
+        import json as _json
+        from pathlib import Path as _Path
+
+        manifest = {
+            "evidenceStatus": "verified", "selectedEngine": "torch",
+            "verdict": "torch", "modelId": "fake", "modelRevision": "fake",
+            "quality": {},
+        }
+        path = _Path(temp) / "manifest.json"
+        path.write_text(_json.dumps(manifest), encoding="utf-8")
+        return str(path)
+
+    class _CountingBackend:
+        def __init__(self):
+            self.loads = 0
+
+        def load(self):
+            self.loads += 1
+
+        def recognize(self, samples, sample_rate):
+            return {"phonemes": [], "symbol_table": [], "model_revision": "fake", "blank_id": 0}
+
+    def test_eager_load_leaves_instance_ready_before_first_request(self):
+        import os
+        import tempfile
+
+        from backend.phoneme_service.app import create_app
+
+        backend = self._CountingBackend()
+        with tempfile.TemporaryDirectory() as temp:
+            with mock.patch.dict(os.environ, {"PHONEME_EAGER_LOAD": "1"}):
+                app = create_app(self._manifest_path(temp), backend_override=backend)
+                response = app.test_client().get("/readyz")
+
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+
+    def test_lazy_path_is_preserved_when_eager_load_is_off(self):
+        import os
+        import tempfile
+
+        from backend.phoneme_service.app import create_app
+
+        backend = self._CountingBackend()
+        with tempfile.TemporaryDirectory() as temp:
+            with mock.patch.dict(os.environ, {"PHONEME_EAGER_LOAD": "0"}):
+                create_app(self._manifest_path(temp), backend_override=backend)
+
+        # Construction alone must not initialise, or every unit test using a
+        # mocked backend would pay a load it never asked for.
+        self.assertEqual(backend.loads, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

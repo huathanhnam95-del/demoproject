@@ -1,5 +1,12 @@
 # Phoneme Recognizer – PyTorch inference engine
-torch>=2.0,<3.0
+#
+# Pin the CPU wheel index. The default PyPI index resolves torch to the CUDA
+# build on linux/amd64, which drags in several GB of nvidia-* wheels that are
+# dead weight on a CPU-only Cloud Run instance and dominate cold-start layer
+# streaming. Measured 2026-08-03: the deployed image was 4.4 GB compressed,
+# of which the pip layer alone was 2.76 GB.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.9.1+cpu
 transformers>=4.30,<5.0
 flask>=3.0,<4.0
 gunicorn>=21.0,<23.0

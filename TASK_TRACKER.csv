@@ -926,3 +926,19 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 534,2026-08-01,Pagination for question pickers random toggle navigation and skill indicator,Done,2026-08-01
 535,2026-08-01,Remove Active badge box from practice skill card buttons,Done,2026-08-01
 536,2026-08-01,Fix final-span trailing-silence overshoot in pronunciation segmentation + admin bootstrap live smoke check + archive legacy orthographic samples,Done,2026-08-01
+537,2026-08-01,Speaking modes full UI browser audit + unification repair plan,Done,2026-08-01
+538,2026-08-02,Verify Speaking modes UI unification fixes via browser audit,Done,2026-08-02
+539,2026-08-02,Fix stepper spacing/box-sizing and Read Aloud timer baseline in Speaking controller,Done,2026-08-02
+540,2026-08-02,Unify Speaking difficulty/status/length filters as shared segmented pills (G1),Done,2026-08-02
+541,2026-08-02,Audit difficulty categorization across all Speaking modes against PTE baseline + input materials,Done,2026-08-02
+541,2026-08-02,Clear Speaking UI residues: empty control wrapper dead space + tutorial pill scope + stale practice-modes expectations,Done,2026-08-02
+542,2026-08-03,Diagnose V3 phoneme-recognizer unavailability on local + production Pronounce comparison,Done,2026-08-03
+543,2026-08-03,Write V3 recognizer root-cause report + no-cost remediation plan,Done,2026-08-03
+544,2026-08-03,Write no-cost implementation plan for V3 recognizer cold-start remediation,Done,2026-08-03
+545,2026-08-03,Implement V3 recognizer no-cost remediation Phases 1-6 (timeouts, transport reasons, warm-up, eager load, CPU torch pin, launcher),Done,2026-08-03
+546,2026-08-03,Deploy V3 no-cost cold-start fix to production (praat-api + phoneme-recognizer),Done,2026-08-03
+547,2026-08-03,Add Cloud Scheduler keep-alive ping for V3 recognizer (06:00-23:59 ICT) + issues log doc,Done,2026-08-03
+548,2026-08-03,Address V3 keep-alive review findings (traffic pinning + wall-clock launcher + corrected cost claims),Done,2026-08-03
+549,2026-08-03,Address second V3 keep-alive review round (Phase R release plan + measurable keep-alive gate + cost scenarios),Done,2026-08-03
+550,2026-08-03,Sync cold-start plan doc with review corrections (forbid --to-latest; add missing praat-api timeout task; drop $0 claims),Done,2026-08-03
+551,2026-08-04,Comparison review UI: draw learner prosody/duration charts in V2-V3 comparison mode and freeze boundary toggle + judgment in a sticky left rail,Done,2026-08-04

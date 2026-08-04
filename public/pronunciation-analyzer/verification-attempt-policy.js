@@ -17,9 +17,11 @@ export const SERVICE_UNAVAILABLE_REASONS = new Set([
     'V3_ANALYSIS_FAILED',
     'MODEL_INFERENCE_FAILED',
     'TIMEOUT',
+    'RECOGNIZER_UNREACHABLE',
     // Phoneme recognizer (see RecognizerError reasons in phoneme_client.py)
     'RECOGNIZER_BUSY',
     'RECOGNIZER_AUTH_FAILED',
+    'RECOGNIZER_CONFIG_MISSING',
     'CONTRACT_MISMATCH',
     'INFERENCE_ERROR',
     // Server-side configuration and reference problems

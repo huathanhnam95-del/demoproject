@@ -71,8 +71,12 @@ except Exception as e:
     lemmatizer = None
 
 import concurrent.futures
+import logging
+import threading
 import time
 import unicodedata
+
+logger = logging.getLogger(__name__)
 
 # V3 mode: off | shadow | active
 _PRONUNCIATION_V3_MODE = os.environ.get('PRONUNCIATION_V3_MODE', 'off').strip().lower()
@@ -721,6 +725,10 @@ def health():
         'deploymentVersion': get_deployment_version(),
         'pronunciationV3Mode': _PRONUNCIATION_V3_MODE,
         'recognizerContract': 'recognize-v2',
+        # Presence only, never the URL itself — one curl answers "is V3 wired
+        # up?" without reading a running process's environment. A local session
+        # that silently lost its recognizer wiring is otherwise invisible.
+        'recognizerConfigured': bool(os.environ.get('PHONEME_SERVICE_URL')),
         'verifierSchema': 'pronunciation-verifier-v1',
         'verifierFeatureSchema': verifier_metadata.get('feature_schema_version', 'unavailable'),
         'verifierRevision': verifier_metadata.get('artifact_sha256', 'unavailable'),
@@ -2292,7 +2300,11 @@ def analyze_from_url_v2():
 # V3 PRONUNCIATION ANALYSIS ENDPOINT
 # ============================================
 
-_V3_HARD_TIMEOUT_SECONDS = 18
+# Must stay above phoneme_client._RECOGNIZER_HTTP_TIMEOUT_SEC so a genuine HTTP
+# read timeout surfaces as TIMEOUT from the client instead of being pre-empted
+# here as an opaque future cancellation. See
+# docs/plans/2026-08-03-v3-recognizer-cold-start-no-cost-plan.md.
+_V3_HARD_TIMEOUT_SECONDS = 80
 
 _IPA_IGNORED_MARKS = frozenset('/[]ˈˌ.·| ‿')
 _IPA_MULTI_SYMBOL_UNITS = tuple(sorted({
@@ -2865,6 +2877,192 @@ def _build_v3_best_effort(praat_result, phoneme_result, reference_ipa, expected_
     return result
 
 
+def run_v3_pipeline(
+    tmp_path,
+    *,
+    wav_bytes=None,
+    reference_ipa=None,
+    expected_syllables=None,
+    target_word=None,
+    variant_id=None,
+):
+    """Run the independent V3 recognizer and Praat work for one WAV.
+
+    This helper deliberately has no Flask response behavior.  The legacy V3
+    endpoint can keep its shadow/active response contract while the comparison
+    endpoint can expose the same work as an independently labelled result.
+    """
+    start_time = time.time()
+    request_reference_id = variant_id or _derive_request_reference_id(
+        target_word,
+        reference_ipa,
+        expected_syllables,
+    )
+    if wav_bytes is None:
+        with open(tmp_path, 'rb') as audio_handle:
+            wav_bytes = audio_handle.read()
+
+    try:
+        from .phoneme_client import (
+            ConfigurationError,
+            REASON_RECOGNIZER_CONFIG_MISSING,
+            create_phoneme_client,
+        )
+    except ImportError:
+        from phoneme_client import (  # type: ignore
+            ConfigurationError,
+            REASON_RECOGNIZER_CONFIG_MISSING,
+            create_phoneme_client,
+        )
+
+    praat_result = None
+    phoneme_result = None
+    phoneme_error = None
+    praat_error = None
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+    try:
+        praat_future = executor.submit(
+            analyze_audio_v2,
+            tmp_path,
+            native=False,
+            reference_ipa=reference_ipa,
+            # Keep Praat untargeted in V3 so its nucleus count remains an
+            # independent signal rather than a re-segmentation of the target.
+            expected_syllable_count=None,
+        )
+        try:
+            parsed_reference = parse_pronunciation(reference_ipa) if reference_ipa else None
+            reference_syllables = [item.get('ipa', '') for item in parsed_reference.syllables] if parsed_reference else []
+        except Exception:
+            reference_syllables = []
+
+        try:
+            client = create_phoneme_client()
+            recognizer_call = getattr(client, 'recognize_v2', None)
+            if recognizer_call is None:
+                # Compatibility for legacy test doubles/deployments.  The
+                # resulting payload remains unrateable for formal V3 claims.
+                recognizer_call = getattr(client, 'recognize')
+                phoneme_future = executor.submit(recognizer_call, wav_bytes)
+            else:
+                phoneme_future = executor.submit(
+                    recognizer_call,
+                    wav_bytes,
+                    reference_syllables,
+                    expected_syllables or 0,
+                    variant_id=request_reference_id,
+                )
+        except ConfigurationError as error:
+            phoneme_future = None
+            phoneme_error = getattr(error, 'reason', None) or REASON_RECOGNIZER_CONFIG_MISSING
+            # Diagnostics intentionally expose only configuration presence and
+            # auth mode. Never log a URL, token, or exception text here.
+            logger.warning(
+                'V3 phoneme recognizer unavailable: reason=%s service_url_configured=%s auth_mode=%s',
+                phoneme_error,
+                bool(os.environ.get('PHONEME_SERVICE_URL')),
+                (os.environ.get('PHONEME_SERVICE_AUTH') or 'google').strip().lower(),
+            )
+        except http_requests.exceptions.Timeout:
+            phoneme_future = None
+            phoneme_error = 'TIMEOUT'
+        except http_requests.exceptions.ConnectionError:
+            phoneme_future = None
+            phoneme_error = 'RECOGNIZER_UNREACHABLE'
+        except Exception as error:
+            phoneme_future = None
+            phoneme_error = getattr(error, 'reason', None) or 'MODEL_INFERENCE_FAILED'
+
+        remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+        try:
+            praat_result = praat_future.result(timeout=remaining)
+        except Exception as error:
+            praat_error = 'V3_PRAAT_FAILED'
+            print(f'V3 Praat analysis error: {error}')
+
+        if phoneme_future is not None and not praat_error:
+            phoneme_remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+            try:
+                phoneme_result = phoneme_future.result(timeout=phoneme_remaining)
+            except concurrent.futures.TimeoutError:
+                phoneme_error = 'TIMEOUT'
+                print('V3 phoneme recognition timed out', flush=True)
+            except ConfigurationError as error:
+                phoneme_error = getattr(error, 'reason', None) or REASON_RECOGNIZER_CONFIG_MISSING
+                logger.warning(
+                    'V3 phoneme recognizer unavailable during inference: reason=%s',
+                    phoneme_error,
+                )
+            # Transport failures must not be reported as model failures: the
+            # model was never reached, so blaming inference sends every future
+            # investigation to the wrong service.
+            except http_requests.exceptions.Timeout:
+                phoneme_error = 'TIMEOUT'
+                print('V3 phoneme recognition timed out (transport)', flush=True)
+            except http_requests.exceptions.ConnectionError:
+                phoneme_error = 'RECOGNIZER_UNREACHABLE'
+                print('V3 phoneme recognizer unreachable', flush=True)
+            except Exception as error:
+                phoneme_error = getattr(error, 'reason', None) or 'MODEL_INFERENCE_FAILED'
+                print(f'V3 phoneme recognition error: {error}')
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    return {
+        'praat_result': praat_result,
+        'phoneme_result': phoneme_result,
+        'phoneme_error': phoneme_error,
+        'praat_error': praat_error,
+        'elapsed': time.time() - start_time,
+        'request_reference_id': request_reference_id,
+    }
+
+
+def _build_v3_active_result_from_pipeline(
+    pipeline,
+    *,
+    reference_ipa=None,
+    expected_syllables=None,
+):
+    """Build the active V3 response and its stable unavailable reason."""
+    pipeline = pipeline or {}
+    praat_result = pipeline.get('praat_result') or {}
+    phoneme_result = pipeline.get('phoneme_result')
+    reason = pipeline.get('praat_error') or pipeline.get('phoneme_error')
+    if pipeline.get('praat_error'):
+        return _build_v3_degraded_response({}, pipeline['praat_error']), pipeline['praat_error']
+    if reason or not phoneme_result:
+        reason = reason or 'MODEL_INFERENCE_FAILED'
+        return _build_v3_degraded_response(praat_result, reason), reason
+    if not phoneme_result.get('is_rateable', True):
+        reason = phoneme_result.get('quality_reason') or 'LOW_PHONEME_CONFIDENCE'
+        return _build_v3_degraded_response(
+            praat_result,
+            reason,
+            phoneme_result.get('confidence', 0.0),
+        ), reason
+
+    response = _build_v3_active_response(
+        praat_result,
+        phoneme_result,
+        reference_ipa=reference_ipa,
+        expected_syllables=expected_syllables,
+    )
+    response['verification'] = _build_v3_verification(
+        praat_result,
+        phoneme_result,
+        reference_ipa,
+        expected_syllables,
+    )
+    response['best_effort'] = _build_v3_best_effort(
+        praat_result,
+        phoneme_result,
+        reference_ipa,
+        expected_syllables,
+    )
+    return response, None
+
+
 @app.route('/analyze/v3', methods=['POST'])
 def analyze_v3():
     """V3 pronunciation analysis with optional phoneme recognition."""
@@ -2881,106 +3079,40 @@ def analyze_v3():
         reference_ipa,
         expected_syllables,
     )
-
     mode = _PRONUNCIATION_V3_MODE
 
-    # Save audio to temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
         audio_file.save(tmp.name)
         tmp_path = tmp.name
 
     try:
-        start_time = time.time()
-
         if mode == 'off':
-            # Pure v2: run Praat only, adapt output to v3 shape
             v2_result = analyze_audio_v2(tmp_path, native=False)
             return jsonify(_adapt_v2_to_v3_response(
-                v2_result, mode,
+                v2_result,
+                mode,
                 reference_ipa=reference_ipa,
                 expected_syllables=expected_syllables,
             ))
 
-        # shadow or active: run Praat + phoneme recognition concurrently
-        try:
-            from .phoneme_client import create_phoneme_client
-        except ImportError:
-            from phoneme_client import create_phoneme_client  # type: ignore
-
-        with open(tmp_path, 'rb') as f:
-            wav_bytes = f.read()
-
-        praat_result = None
-        phoneme_result = None
-        phoneme_error = None
-
-        remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
-
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
-        try:
-            praat_future = executor.submit(
-                analyze_audio_v2,
-                tmp_path,
-                native=False,
-                reference_ipa=reference_ipa,
-                # Keep Praat untargeted in V3 so its nucleus count is an
-                # independent signal rather than a re-segmentation of the
-                # expected dictionary count.
-                expected_syllable_count=None,
-            )
-            try:
-                parsed_reference = parse_pronunciation(reference_ipa) if reference_ipa else None
-                reference_syllables = [item.get('ipa', '') for item in parsed_reference.syllables] if parsed_reference else []
-            except Exception:
-                parsed_reference = None
-                reference_syllables = []
-            client = create_phoneme_client()
-            recognizer_call = getattr(client, 'recognize_v2', None)
-            if recognizer_call is None:
-                # Compatibility only for old test doubles/legacy deployments;
-                # the result is marked unrateable and can never create V3
-                # verification green state.
-                recognizer_call = getattr(client, 'recognize')
-                phoneme_future = executor.submit(recognizer_call, wav_bytes)
-            else:
-                phoneme_future = executor.submit(
-                    recognizer_call,
-                    wav_bytes,
-                    reference_syllables,
-                    expected_syllables or 0,
-                    variant_id=request_reference_id,
-                )
-
-            try:
-                praat_result = praat_future.result(timeout=remaining)
-            except Exception as e:
-                print(f'V3 Praat analysis error: {e}')
-                # Keep the 5xx so this stays visible to monitoring, but return
-                # the full unrateable contract instead of a partial body.
-                return jsonify({
-                    **_build_v3_degraded_response({}, 'V3_PRAAT_FAILED'),
-                    'error': 'Pronunciation analysis failed',
-                    'code': 'V3_PRAAT_FAILED',
-                }), 500
-
-            phoneme_remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
-            try:
-                phoneme_result = phoneme_future.result(timeout=phoneme_remaining)
-            except concurrent.futures.TimeoutError:
-                phoneme_error = 'TIMEOUT'
-                print('V3 phoneme recognition timed out')
-            except Exception as e:
-                phoneme_error = getattr(e, 'reason', None) or 'MODEL_INFERENCE_FAILED'
-                print(f'V3 phoneme recognition error: {e}')
-        finally:
-            executor.shutdown(wait=False, cancel_futures=True)
-
-        elapsed = time.time() - start_time
+        pipeline = run_v3_pipeline(
+            tmp_path,
+            reference_ipa=reference_ipa,
+            expected_syllables=expected_syllables,
+            target_word=target_word,
+            variant_id=request_reference_id,
+        )
+        praat_result = pipeline.get('praat_result') or {}
+        phoneme_result = pipeline.get('phoneme_result')
+        phoneme_error = pipeline.get('phoneme_error')
+        if pipeline.get('praat_error'):
+            return jsonify({
+                **_build_v3_degraded_response({}, pipeline['praat_error']),
+                'error': 'Pronunciation analysis failed',
+                'code': pipeline['praat_error'],
+            }), 500
 
         if mode == 'shadow':
-            # Log phoneme results for comparison, but always return v2-adapted.
-            # These counts drive the recognizer bake-off, so they must read the
-            # recognize-v2 contract fields rather than the legacy v1 shape.
             v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
             phoneme_syllable_count = None
             if phoneme_result and not phoneme_error:
@@ -2999,48 +3131,189 @@ def analyze_v3():
                 'v3_count': phoneme_syllable_count,
                 'disagreement_category': disagreement_category,
                 'confidence': _recognizer_confidence(phoneme_result),
-                'latency_seconds': round(elapsed, 4),
+                'latency_seconds': round(pipeline.get('elapsed', 0.0), 4),
                 'quality_reason': _recognizer_quality_reason(phoneme_result) or phoneme_error,
                 'model_revision': phoneme_result.get('model_revision') if phoneme_result else None,
                 'target_word': target_word,
                 'contract_version': phoneme_result.get('contract_version') if phoneme_result else None,
             }
-            print(f'V3 shadow result: {json.dumps(shadow_log, sort_keys=True)}')
+            print(f'V3 shadow result: {json.dumps(shadow_log, sort_keys=True)}', flush=True)
             return jsonify(_adapt_v2_to_v3_response(
-                praat_result, mode,
+                praat_result,
+                mode,
                 reference_ipa=reference_ipa,
                 expected_syllables=expected_syllables,
             ))
 
-        # mode == 'active'
-        if phoneme_error or not phoneme_result:
-            return jsonify(_build_v3_degraded_response(
-                praat_result,
-                phoneme_error or 'MODEL_INFERENCE_FAILED',
-            ))
-
-        # Check if phoneme recognition is rateable
-        if not phoneme_result.get('is_rateable', True):
-            return jsonify(_build_v3_degraded_response(
-                praat_result,
-                phoneme_result.get('quality_reason') or 'LOW_PHONEME_CONFIDENCE',
-                phoneme_result.get('confidence', 0.0),
-            ))
-
-        response = _build_v3_active_response(
-            praat_result, phoneme_result,
+        response, _ = _build_v3_active_result_from_pipeline(
+            pipeline,
             reference_ipa=reference_ipa,
             expected_syllables=expected_syllables,
         )
-        response['verification'] = _build_v3_verification(praat_result, phoneme_result, reference_ipa, expected_syllables)
-        response['best_effort'] = _build_v3_best_effort(
-            praat_result, phoneme_result, reference_ipa, expected_syllables,
-        )
         return jsonify(response)
-
     except Exception as error:
-        print(f'V3 analysis error: {error}')
+        print(f'V3 analysis error: {error}', flush=True)
         return jsonify(_build_v3_degraded_response({}, 'V3_ANALYSIS_FAILED'))
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+def _comparison_reference_error(reference_ipa, expected_syllables):
+    """Return a stable validation reason, or ``None`` for a valid target."""
+    if not isinstance(reference_ipa, str) or not reference_ipa.strip():
+        return 'REFERENCE_IPA_REQUIRED'
+    if not isinstance(expected_syllables, int) or not 1 <= expected_syllables <= 20:
+        return 'EXPECTED_SYLLABLES_INVALID'
+    try:
+        parsed = parse_pronunciation(reference_ipa)
+    except Exception:
+        return 'REFERENCE_IPA_INVALID'
+    if parsed.conflicts:
+        return 'REFERENCE_CONFLICT'
+    if parsed.phonological_count != expected_syllables or len(parsed.syllables) != expected_syllables:
+        return 'REFERENCE_COUNT_CONFLICT'
+    return None
+
+
+_WARM_V3_DEBOUNCE_SECONDS = 60
+_warm_v3_state = {'last_dispatch': 0.0}
+_warm_v3_lock = threading.Lock()
+
+
+def _warm_v3_worker():
+    """Poke the recognizer so it loads its model outside a learner's request."""
+    try:
+        from .phoneme_client import create_phoneme_client
+    except ImportError:
+        from phoneme_client import create_phoneme_client  # type: ignore
+    try:
+        create_phoneme_client().warm()
+    except Exception as error:
+        # Best effort by contract. A failed warm-up must never be visible to a
+        # learner, and must never mark the service unhealthy.
+        logger.info('V3 warm-up did not complete: %s', type(error).__name__)
+
+
+@app.route('/warm/v3', methods=['GET', 'POST'])
+def warm_v3():
+    """Fire-and-forget recognizer warm-up. Never blocks, never fails the caller.
+
+    Pronounce mode calls this on entry, long before the learner records. The
+    recognizer scales to zero, so this moves its 46-52s model load into the
+    time a learner spends reading the word instead of into their analysis
+    request. Returns immediately in every case.
+    """
+    if not os.environ.get('PHONEME_SERVICE_URL'):
+        return jsonify({'status': 'disabled'}), 202
+
+    now = time.time()
+    with _warm_v3_lock:
+        if now - _warm_v3_state['last_dispatch'] < _WARM_V3_DEBOUNCE_SECONDS:
+            return jsonify({'status': 'debounced'}), 202
+        _warm_v3_state['last_dispatch'] = now
+
+    threading.Thread(target=_warm_v3_worker, daemon=True).start()
+    return jsonify({'status': 'warming'}), 202
+
+
+@app.route('/analyze/compare', methods=['POST'])
+def analyze_comparison():
+    """Return independent V2 and V3 analyses for one comparison recording."""
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided', 'code': 'AUDIO_REQUIRED'}), 400
+
+    reference_ipa = request.form.get('reference_ipa')
+    expected_syllables = request.form.get('expected_syllables', type=int)
+    target_word = (request.form.get('target_word') or '').strip()
+    variant_id = (request.form.get('variant_id') or '').strip() or None
+    reference_error = _comparison_reference_error(reference_ipa, expected_syllables)
+    if reference_error:
+        return jsonify({'error': reference_error, 'code': reference_error}), 400
+    if not target_word:
+        return jsonify({'error': 'TARGET_WORD_REQUIRED', 'code': 'TARGET_WORD_REQUIRED'}), 400
+
+    comparison_id = secrets.token_hex(16)
+    request_reference_id = variant_id or _derive_request_reference_id(
+        target_word,
+        reference_ipa,
+        expected_syllables,
+    )
+    audio_file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+
+    v2_envelope = {'status': 'unavailable', 'reason': 'ANALYSIS_FAILED', 'analysis': None}
+    v3_envelope = {'status': 'unavailable', 'reason': 'MODEL_INFERENCE_FAILED', 'analysis': None}
+    try:
+        try:
+            v2_result = analyze_audio_v2(
+                tmp_path,
+                expected_syllable_count=expected_syllables,
+                native=False,
+                reference_ipa=reference_ipa,
+            )
+            v2_envelope = {
+                'status': 'available',
+                'reason': None,
+                'analysis': v2_result,
+            }
+        except Exception as error:
+            print(f'Comparison V2 analysis error: {error}')
+
+        try:
+            pipeline = run_v3_pipeline(
+                tmp_path,
+                reference_ipa=reference_ipa,
+                expected_syllables=expected_syllables,
+                target_word=target_word,
+                variant_id=request_reference_id,
+            )
+            v3_result, v3_reason = _build_v3_active_result_from_pipeline(
+                pipeline,
+                reference_ipa=reference_ipa,
+                expected_syllables=expected_syllables,
+            )
+            if v3_reason:
+                v3_envelope = {
+                    'status': 'unavailable',
+                    'reason': v3_reason,
+                    'analysis': v3_result,
+                }
+            else:
+                v3_envelope = {
+                    'status': 'available',
+                    'reason': None,
+                    'analysis': v3_result,
+                }
+        except Exception as error:
+            print(f'Comparison V3 analysis error: {error}')
+
+        any_available = v2_envelope['status'] == 'available' or v3_envelope['status'] == 'available'
+        both_available = v2_envelope['status'] == 'available' and v3_envelope['status'] == 'available'
+        body = {
+            'schemaVersion': 'pronunciation-comparison-v1',
+            'mode': 'comparison',
+            'status': 'complete' if both_available else ('partial_failure' if any_available else 'unavailable'),
+            'comparisonId': comparison_id,
+            'context': {
+                'targetWord': target_word,
+                'referenceIpa': reference_ipa,
+                'expectedSyllables': expected_syllables,
+                'variantId': variant_id,
+                'requestReferenceId': request_reference_id,
+            },
+            'revisions': {
+                'comparisonSchema': 'pronunciation-comparison-v1',
+                'v2': 'pronunciation-analysis-v2',
+                'v3': (v3_envelope.get('analysis') or {}).get('analysisVersion') or 'pronunciation-analysis-v3',
+                'v3Model': ((v3_envelope.get('analysis') or {}).get('verification') or {}).get('model_revision'),
+            },
+            'v2': v2_envelope,
+            'v3': v3_envelope,
+        }
+        return jsonify(body), (200 if any_available else 503)
     finally:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)

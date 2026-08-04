@@ -13,6 +13,68 @@ describe('SyllableVerifier v3 features', () => {
         verifier.syllableLabels = ['car', 'pet'];
     });
 
+    it('setAutomaticSyllables() replaces automatic regions without clearing manual state', () => {
+        const originalManualSegments = [{ index: 0, startTime: 0.1, endTime: 0.35, source: 'manual-review' }];
+        const automaticSyllables = [
+            { startTime: 0.05, endTime: 0.2, duration: 0.15 },
+            { startTime: 0.2, endTime: 0.5, duration: 0.3 },
+            { startTime: 0.5, endTime: 0.75, duration: 0.25 }
+        ];
+        const calls = [];
+        verifier.manualSegments = originalManualSegments.map((segment) => ({ ...segment }));
+        verifier.manualReviewActive = true;
+        verifier.pendingManualStart = 0.82;
+        verifier.manualReviewSaved = false;
+        verifier.manualConvention = 'ipa-phonological';
+        verifier.createSyllableRegions = () => calls.push('regions');
+        verifier.createSyllableBar = () => calls.push('bar');
+        verifier.updateInfo = () => calls.push('info');
+        verifier.updateManualReviewUi = () => calls.push('manual-ui');
+
+        verifier.setAutomaticSyllables(automaticSyllables, ['ac', 'tu', 'al'], ['æk', 'tʃu', 'əl']);
+
+        assert.deepEqual(verifier.syllables, automaticSyllables);
+        assert.deepEqual(verifier.manualSegments, originalManualSegments);
+        assert.equal(verifier.manualReviewActive, true);
+        assert.equal(verifier.pendingManualStart, 0.82);
+        assert.equal(verifier.manualConvention, 'ipa-phonological');
+        assert.deepEqual(verifier.syllableLabels, ['ac', 'tu', 'al']);
+        assert.deepEqual(verifier.ipaSegments, ['æk', 'tʃu', 'əl']);
+        assert.deepEqual(calls, ['regions', 'bar', 'info', 'manual-ui']);
+    });
+
+    it('setAutomaticSyllables() redraws automatic playback spans and preserves manual regions', () => {
+        const addedRegions = [];
+        verifier.syllableLabels = ['old'];
+        verifier.syllables = [{ startTime: 0, endTime: 0.4, duration: 0.4 }];
+        verifier.manualSegments = [{ startTime: 0.4, endTime: 0.6, source: 'manual-review' }];
+        verifier.regions = {
+            clearRegions: () => { addedRegions.length = 0; },
+            addRegion: (region) => addedRegions.push(region)
+        };
+        verifier.createSyllableBar = () => {};
+        verifier.updateInfo = () => {};
+        verifier.updateManualReviewUi = () => {};
+        verifier.setAutomaticSyllables([
+            { startTime: 0.05, endTime: 0.25, duration: 0.2 },
+            { startTime: 0.25, endTime: 0.7, duration: 0.45 }
+        ], ['new-1', 'new-2']);
+
+        assert.deepEqual(addedRegions.filter((region) => region.id.startsWith('syllable-')).map((region) => [region.id, region.start, region.end]), [
+            ['syllable-0', 0.05, 0.25],
+            ['syllable-1', 0.25, 0.7]
+        ]);
+        assert.deepEqual(addedRegions.find((region) => region.id === 'manual-syllable-0'), {
+            id: 'manual-syllable-0',
+            start: 0.4,
+            end: 0.6,
+            color: 'rgba(239, 68, 68, 0.42)',
+            drag: false,
+            resize: false
+        });
+        assert.deepEqual(verifier.manualSegments, [{ startTime: 0.4, endTime: 0.6, source: 'manual-review' }]);
+    });
+
     describe('formatSyllableDuration()', () => {
         it('shows total duration when finite', () => {
             const result = verifier.formatSyllableDuration({

@@ -485,6 +485,23 @@ def create_app(
         finally:
             recognizer._semaphore.release()
 
+    # ---------------------------------------------------------------
+    # Eager initialisation
+    # ---------------------------------------------------------------
+    # Cloud Run's startup probe gates traffic on /readyz. Loading here means an
+    # instance is only advertised once the model is resident, so the load is
+    # paid during startup (where CPU boost applies) instead of inside the first
+    # learner's request. Off by default so unit tests and mocked backends keep
+    # the lazy path; the container sets PHONEME_EAGER_LOAD=1.
+    if os.environ.get("PHONEME_EAGER_LOAD", "").strip().lower() in {"1", "true", "yes"}:
+        try:
+            _ensure_initialised()
+            logger.info("Eager model load complete; instance ready for traffic")
+        except Exception:
+            # Never block app construction: /readyz will retry and report the
+            # real reason, which is what the startup probe reads anyway.
+            logger.exception("Eager model load failed; falling back to lazy load")
+
     return app
 
 

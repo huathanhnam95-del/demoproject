@@ -18,6 +18,8 @@ import time
 import unittest
 from unittest import mock
 
+import requests
+
 # ---------------------------------------------------------------------------
 # Mock google.auth / google.oauth2 BEFORE importing the module under test.
 # This avoids ImportError when google-auth is not installed locally.
@@ -276,7 +278,35 @@ class TestPhonemeClient(unittest.TestCase):
         # Verify the correct URL was called.
         call_url = session.post.call_args[0][0]
         self.assertTrue(call_url.endswith("/recognize/v1"))
-        self.assertLessEqual(session.post.call_args.kwargs["timeout"], 15)
+        # The bound must clear a scale-to-zero cold start (46-52s measured on
+        # Cloud Run) while still capping a genuinely hung request. It was 15s,
+        # which failed every first request of a session.
+        self.assertLessEqual(session.post.call_args.kwargs["timeout"], 90)
+        self.assertGreaterEqual(session.post.call_args.kwargs["timeout"], 60)
+
+    # -- 9b. warm-up ---------------------------------------------------------
+
+    @mock.patch("backend.local_server.phoneme_client.requests.Session")
+    def test_warm_hits_readyz_and_reports_success(self, mock_session_cls):
+        """warm() pokes /readyz so a cold instance loads off the hot path."""
+        session = mock_session_cls.return_value
+        session.get.return_value = _ok_response({"status": "ready"})
+
+        client = PhonemeClient(_SERVICE_URL, auth_mode="google")
+        self.assertTrue(client.warm())
+        self.assertTrue(session.get.call_args[0][0].endswith("/readyz"))
+        # A warm-up deliberately waits longer than an inference request would:
+        # absorbing the cold load is the entire point of the call.
+        self.assertGreaterEqual(session.get.call_args.kwargs["timeout"][1], 90)
+
+    @mock.patch("backend.local_server.phoneme_client.requests.Session")
+    def test_warm_never_raises(self, mock_session_cls):
+        """A failed warm-up must never surface to the caller."""
+        session = mock_session_cls.return_value
+        session.get.side_effect = requests.exceptions.ConnectionError("refused")
+
+        client = PhonemeClient(_SERVICE_URL, auth_mode="google")
+        self.assertFalse(client.warm())
 
     # -- 10. 503 busy handling -----------------------------------------------
 

@@ -15,6 +15,11 @@ import {
 import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
 import { buildPronunciationSummary } from './pronunciation-summary.js';
 import {
+    buildComparisonSaveMetadata,
+    buildComparisonViewModel,
+    isCompleteComparison
+} from './version-comparison.js';
+import {
     attemptStatusFor,
     createAttemptKey,
     nextAttemptState,
@@ -45,6 +50,24 @@ function toSerializable(value) {
     }
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function formatComparisonMetric(value, key) {
+    if (value === null || value === undefined || value === '') return 'Unavailable';
+    const number = Number(value);
+    if (!Number.isFinite(number)) return 'Unavailable';
+    if (key === 'confidence') return `${Math.round(number * 100)}%`;
+    if (key === 'duration') return `${number.toFixed(2)}s`;
+    return String(number);
+}
+
 export class PronunciationApp {
     constructor() {
         this.audioCapture = new AudioCapture();
@@ -70,6 +93,12 @@ export class PronunciationApp {
         this.localSampleSaveButton = null;
         this.localSampleStatus = null;
         this._verificationAttemptState = resetAttemptState();
+        this.versionComparison = null;
+        this.versionComparisonView = null;
+        this.versionComparisonManualSegments = [];
+        this.versionComparisonBoundarySource = 'v2';
+        this.versionComparisonJudgment = null;
+        this.versionComparisonSaving = false;
 
         this.recordBtn = document.getElementById('pa-record-btn');
         this.stopBtn = document.getElementById('pa-stop-btn');
@@ -93,6 +122,16 @@ export class PronunciationApp {
         this.referenceStatus = document.getElementById('pa-reference-status');
         this.chartsContainer = document.getElementById('pa-charts-container');
         this.feedbackSection = document.getElementById('pa-feedback-section');
+        this.versionComparisonSection = document.getElementById('pa-version-comparison');
+        this.versionComparisonV2 = document.getElementById('pa-version-v2');
+        this.versionComparisonV3 = document.getElementById('pa-version-v3');
+        this.versionComparisonState = document.getElementById('pa-version-comparison-state');
+        this.versionComparisonJudgmentFieldset = document.getElementById('pa-version-judgment');
+        this.versionComparisonSaveButton = document.getElementById('pa-version-save');
+        this.versionComparisonSaveStatus = document.getElementById('pa-version-save-status');
+        this.versionComparisonTechnicalContent = document.getElementById('pa-version-technical-content');
+        this.versionComparisonRail = document.getElementById('pa-version-review-rail');
+        this.reviewLayout = document.getElementById('pa-review-layout');
 
         // Native audio element
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
@@ -100,6 +139,7 @@ export class PronunciationApp {
         this.nativeAudioPlayer = new NativeAudioPlayer(this.audioCapture.audioContext, this.nativeAudio);
 
         this.initLocalSampleTools();
+        this.initVersionComparisonControls();
 
         this.expectedData = {
             ipa: '/ˈfoʊ.tə.ɡræf/',
@@ -122,8 +162,24 @@ export class PronunciationApp {
         // Initialize v3 support check (fire-and-forget, caches the result)
         this.praatAPI.checkV3Support().catch(() => {});
 
+        // Wake the V3 recognizer now so its cold start overlaps the time the
+        // learner spends reading the word rather than their analysis request.
+        this.warmV3Recognizer();
+
         // Initial fetch for default word
         this.updateWordData();
+    }
+
+    /**
+     * Fire a debounced recognizer warm-up. Safe to call on every word change:
+     * the backend collapses repeats inside its own window, and this guard
+     * keeps a browsing learner from issuing a request per click.
+     */
+    warmV3Recognizer() {
+        const now = Date.now();
+        if (this._lastV3Warm && now - this._lastV3Warm < 60000) return;
+        this._lastV3Warm = now;
+        this.praatAPI.warmV3();
     }
 
     async checkPraatBackend() {
@@ -247,6 +303,265 @@ export class PronunciationApp {
         this.localSampleStatus = status;
         button.addEventListener('click', () => this.saveLocalSample());
         this.clearLocalSampleSnapshot();
+    }
+
+    initVersionComparisonControls() {
+        const sourceToggle = document.getElementById('pa-version-boundary-source');
+        sourceToggle?.querySelectorAll('[data-version]').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.setVersionComparisonBoundarySource(button.dataset.version);
+            });
+        });
+        this.versionComparisonJudgmentFieldset?.querySelectorAll('input[name="pa-version-judgment"]').forEach((input) => {
+            input.addEventListener('change', () => {
+                this.versionComparisonJudgment = input.value;
+                this.updateVersionComparisonSaveState();
+            });
+        });
+        this.versionComparisonSaveButton?.addEventListener('click', () => {
+            this.saveVersionComparison();
+        });
+        this.resetVersionComparisonState();
+    }
+
+    async canUseVersionComparison() {
+        if (config.features?.showPronunciationVersionComparison !== true) return false;
+        // Manual review and comparison share the same admin-status promise so
+        // a production recording never makes two auth/status requests.
+        return this.canUseManualReview();
+    }
+
+    resetVersionComparisonState({ hide = true } = {}) {
+        this.versionComparison = null;
+        this.versionComparisonView = null;
+        this.versionComparisonManualSegments = [];
+        this.versionComparisonBoundarySource = 'v2';
+        this.versionComparisonJudgment = null;
+        this.versionComparisonSaving = false;
+        this.versionComparisonJudgmentFieldset?.querySelectorAll('input[name="pa-version-judgment"]').forEach((input) => {
+            input.checked = false;
+        });
+        if (this.versionComparisonJudgmentFieldset) this.versionComparisonJudgmentFieldset.hidden = false;
+        if (this.versionComparisonSaveButton) this.versionComparisonSaveButton.disabled = true;
+        if (this.versionComparisonSaveStatus) {
+            this.versionComparisonSaveStatus.textContent = '';
+            this.versionComparisonSaveStatus.dataset.state = 'idle';
+        }
+        if (this.versionComparisonState) this.versionComparisonState.textContent = 'Ready for review';
+        if (this.versionComparisonTechnicalContent) this.versionComparisonTechnicalContent.textContent = '';
+        if (hide) {
+            if (this.versionComparisonSection) this.versionComparisonSection.hidden = true;
+            this.setVersionComparisonRailVisible(false);
+        }
+    }
+
+    /**
+     * Show or hide the sticky review rail. The layout only becomes two-column
+     * while the rail is present, so learners keep the full-width single column.
+     */
+    setVersionComparisonRailVisible(visible) {
+        if (this.versionComparisonRail) this.versionComparisonRail.hidden = !visible;
+        this.reviewLayout?.classList.toggle('pa-review-layout--with-rail', Boolean(visible));
+    }
+
+    renderVersionComparisonColumn(column) {
+        const target = column.version === 'v2' ? this.versionComparisonV2 : this.versionComparisonV3;
+        if (!target) return;
+        const statusCopy = column.status === 'available'
+            ? `${column.syllableCount} automatic boundaries`
+            : column.reason;
+        const rows = this.versionComparisonView?.rows || [];
+        target.innerHTML = `
+            <div class="pa-version-column-heading">
+                <div>
+                    <p class="pa-version-eyebrow">Engine</p>
+                    <h4 id="pa-version-${column.version}-title">${escapeHtml(column.label)}</h4>
+                </div>
+                <span class="pa-version-availability pa-version-availability--${column.status}">${column.status === 'available' ? 'Available' : 'Unavailable'}</span>
+            </div>
+            <p class="pa-version-column-status">${escapeHtml(statusCopy)}</p>
+            <dl class="pa-version-metrics">
+                ${rows.map((row) => `
+                    <div class="pa-version-metric-row">
+                        <dt>${escapeHtml(row.label)}</dt>
+                        <dd>${escapeHtml(formatComparisonMetric(row[column.version], row.key))}</dd>
+                    </div>
+                `).join('')}
+            </dl>
+            <div class="pa-version-boundaries" data-boundary-status="${escapeHtml(column.boundaryStatus)}" data-boundary-source="${escapeHtml(column.boundarySource)}" aria-label="${escapeHtml(`${column.label} ${column.boundaryLabel}`)}">
+                <p class="pa-version-boundary-label">${escapeHtml(column.boundaryLabel)}</p>
+                ${column.boundarySpans.length
+                    ? column.boundarySpans.map((span, index) => `<span class="pa-version-boundary" data-index="${index}">${escapeHtml(span.label || `Boundary ${index + 1}`)} <small>${span.startTime.toFixed(2)}–${span.endTime.toFixed(2)}s</small></span>`).join('')
+                    : '<span class="pa-version-empty">No automatic boundaries available.</span>'}
+            </div>
+        `;
+    }
+
+    renderVersionComparison(comparison, audioBlob = null) {
+        this.versionComparison = comparison;
+        this.versionComparisonView = buildComparisonViewModel(comparison);
+        this.versionComparisonManualSegments = [];
+        this.versionComparisonBoundarySource = this.versionComparisonView.columns.find((column) => column.version === 'v2' && column.status === 'available')
+            ? 'v2'
+            : 'v3';
+        this.versionComparisonJudgment = null;
+        if (this.versionComparisonSection) this.versionComparisonSection.hidden = false;
+        this.setVersionComparisonRailVisible(true);
+        if (this.resultsSummary) {
+            this.resultsSummary.textContent = this.versionComparisonView.status === 'complete'
+                ? 'Both pronunciation analyses are ready for your review.'
+                : 'One pronunciation analysis was unavailable. Save this comparison as a failure after reviewing the available result.';
+        }
+        this.versionComparisonView.columns.forEach((column) => this.renderVersionComparisonColumn(column));
+        if (this.versionComparisonJudgmentFieldset) {
+            this.versionComparisonJudgmentFieldset.hidden = !isCompleteComparison(comparison);
+        }
+        if (this.versionComparisonState) {
+            this.versionComparisonState.textContent = this.versionComparisonView.status === 'complete'
+                ? 'Both analyses ready'
+                : 'Partial result — save as a comparison failure';
+        }
+        if (this.versionComparisonTechnicalContent) {
+            this.versionComparisonTechnicalContent.textContent = JSON.stringify({
+                comparisonId: comparison?.comparisonId || null,
+                context: comparison?.context || null,
+                revisions: comparison?.revisions || null
+            }, null, 2);
+        }
+        this.updateVersionComparisonBoundaryButtons();
+        this.updateVersionComparisonSaveState();
+        this.renderVersionComparisonCharts();
+
+        if (audioBlob && this.versionComparisonView.columns.some((column) => column.status === 'available')) {
+            const initial = this.versionComparisonView.columns.find((column) => column.version === this.versionComparisonBoundarySource);
+            this.showSyllableVerifier(audioBlob, initial?.boundarySpans || [], {
+                comparisonMode: true,
+                labels: initial?.boundarySpans?.map((span) => span.label) || []
+            });
+        }
+    }
+
+    /**
+     * Draw the prosody and duration charts from the engine whose boundaries are
+     * currently selected. Without this the comparison left both charts showing
+     * the native-only reference drawn at word load, so the recording the
+     * reviewer is judging never appeared on them.
+     */
+    renderVersionComparisonCharts() {
+        if (!this.visualizer || !this.versionComparisonView) return;
+        const column = this.versionComparisonView.columns.find(
+            (item) => item.version === this.versionComparisonBoundarySource
+        );
+        if (!column?.analysis) {
+            this.chartsContainer?.classList.add('hidden');
+            return;
+        }
+        this.chartsContainer?.classList.remove('hidden');
+
+        // Both engines publish the same pitch/intensity contour shape, so the
+        // engine analysis can be handed straight to the learner-vs-native draw.
+        this.visualizer.drawComparisonPitchContour(
+            column.analysis,
+            this.currentWordRef?.nativeAnalysis,
+            this.currentWordRef?.syllables || []
+        );
+
+        // Normalized spans carry only the boundary times; the duration lanes
+        // read `duration`, so derive it here rather than trusting either
+        // engine's own field name.
+        const observedSpans = column.boundarySpans.map((span) => ({
+            ...span,
+            duration: span.endTime - span.startTime
+        }));
+        this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), observedSpans);
+    }
+
+    updateVersionComparisonBoundaryButtons() {
+        document.querySelectorAll('#pa-version-boundary-source [data-version]').forEach((button) => {
+            const version = button.dataset.version;
+            const column = this.versionComparisonView?.columns?.find((item) => item.version === version);
+            const enabled = column?.status === 'available';
+            button.disabled = !enabled;
+            button.setAttribute('aria-pressed', String(enabled && version === this.versionComparisonBoundarySource));
+            button.classList.toggle('is-selected', enabled && version === this.versionComparisonBoundarySource);
+        });
+    }
+
+    setVersionComparisonBoundarySource(version) {
+        if (!this.versionComparisonView || !['v2', 'v3'].includes(version)) return;
+        const column = this.versionComparisonView.columns.find((item) => item.version === version);
+        if (!column || column.status !== 'available') return;
+        this.versionComparisonBoundarySource = version;
+        this.updateVersionComparisonBoundaryButtons();
+        this.renderVersionComparisonCharts();
+        if (this.syllableVerifier) {
+            this.syllableVerifier.setAutomaticSyllables(
+                column.boundarySpans,
+                column.boundarySpans.map((span) => span.label),
+                this.getSyllableIpaSegments()
+            );
+        }
+    }
+
+    updateVersionComparisonSaveState() {
+        if (!this.versionComparisonSaveButton) return;
+        const canSave = Boolean(
+            this.versionComparison &&
+            !this.versionComparisonSaving &&
+            (!isCompleteComparison(this.versionComparison) || this.versionComparisonJudgment)
+        );
+        this.versionComparisonSaveButton.disabled = !canSave;
+    }
+
+    async saveVersionComparison() {
+        if (this.versionComparisonSaving || !this.versionComparison || !this.userAudioBlob) return;
+        if (isCompleteComparison(this.versionComparison) && !this.versionComparisonJudgment) return;
+        const user = window.firebaseAuthFunctions?.getCurrentUser?.() || window.auth?.currentUser;
+        if (!user?.getIdToken) {
+            if (this.versionComparisonSaveStatus) {
+                this.versionComparisonSaveStatus.textContent = 'Cloud save requires an authenticated admin account.';
+                this.versionComparisonSaveStatus.dataset.state = 'error';
+            }
+            return;
+        }
+
+        this.versionComparisonSaving = true;
+        this.updateVersionComparisonSaveState();
+        if (this.versionComparisonSaveStatus) {
+            this.versionComparisonSaveStatus.textContent = 'Saving the WAV, both analyses, and your judgment…';
+            this.versionComparisonSaveStatus.dataset.state = 'saving';
+        }
+        try {
+            const metadata = buildComparisonSaveMetadata(this.versionComparison, {
+                judgment: this.versionComparisonJudgment,
+                manualSegments: this.versionComparisonManualSegments
+            });
+            const wavBlob = await this.praatAPI.ensureWav(this.userAudioBlob);
+            const formData = new FormData();
+            formData.append('audio', wavBlob, `${metadata.comparisonId || 'comparison'}.wav`);
+            formData.append('metadata', JSON.stringify(metadata));
+            const idToken = await user.getIdToken();
+            const response = await fetch('/api/admin/dev/save-analysis-comparison', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${idToken}` },
+                body: formData
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(payload.message || payload.error || `Comparison save failed (${response.status})`);
+            const comparisonId = payload?.data?.comparisonId || payload?.comparisonId || metadata.comparisonId;
+            if (this.versionComparisonSaveStatus) {
+                this.versionComparisonSaveStatus.textContent = `Saved comparison ${comparisonId}.`;
+                this.versionComparisonSaveStatus.dataset.state = 'saved';
+            }
+        } catch (error) {
+            if (this.versionComparisonSaveStatus) {
+                this.versionComparisonSaveStatus.textContent = error?.message || 'Comparison save failed. Try again.';
+                this.versionComparisonSaveStatus.dataset.state = 'error';
+            }
+        } finally {
+            this.versionComparisonSaving = false;
+            this.updateVersionComparisonSaveState();
+        }
     }
 
     clearLocalSampleSnapshot(message = 'Local only · available after a recording is analyzed.') {
@@ -384,6 +699,9 @@ export class PronunciationApp {
         const word = this.wordInput.value.trim();
         if (!word) return;
 
+        // Selecting a word is the strongest signal that a recording is coming.
+        this.warmV3Recognizer();
+
         try {
             this.statusIndicator.textContent = "Loading native reference...";
             this.spinner.style.display = 'block';
@@ -400,6 +718,7 @@ export class PronunciationApp {
 
             // Clear previous results
             if (this.resultsSummary) this.resultsSummary.innerHTML = "";
+            this.resetVersionComparisonState();
             if (this.syllableVerifier) {
                 this.syllableVerifier.destroy();
                 this.syllableVerifier = null;
@@ -464,6 +783,7 @@ export class PronunciationApp {
         this.nativeAudioUrl = null;
         this.userAudioBlob = null;
         this.clearLocalSampleSnapshot();
+        this.resetVersionComparisonState();
         this._verificationAttemptState = resetAttemptState();
         this.visualizer?.clear();
         this.nativeAudioPlayer.clearSource();
@@ -499,6 +819,7 @@ export class PronunciationApp {
         this._verificationAttemptState = resetAttemptState();
         this.userAudioBlob = null;
         this.clearLocalSampleSnapshot();
+        this.resetVersionComparisonState();
         if (this.syllableVerifier) {
             this.syllableVerifier.destroy();
             this.syllableVerifier = null;
@@ -542,6 +863,7 @@ export class PronunciationApp {
             this.statusIndicator.classList.add('recording');
             this.statusIndicator.textContent = "Recording...";
             this.resultsSummary.innerHTML = "";
+            this.resetVersionComparisonState();
             this.clearLocalSampleSnapshot('Local only · recording in progress…');
 
             // Clear charts
@@ -575,6 +897,29 @@ export class PronunciationApp {
                 this.userAudioBlob = audioBlob;
 
                 const expectedCount = this.expectedData?.syllables || null;
+                const comparisonAuthorized = await this.canUseVersionComparison();
+                if (comparisonAuthorized) {
+                    try {
+                        const comparison = await this.praatAPI.analyzeComparison(audioBlob, {
+                            referenceIpa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
+                            expectedSyllables: expectedCount,
+                            targetWord: this.currentReference?.word,
+                            variantId: this.currentWordRef?.id
+                        });
+                        result = { engine: 'comparison', quality: { rateable: true }, analysis: comparison };
+                        this.setLocalSampleSnapshot(audioBlob, result);
+                        localSamplePrepared = true;
+                        this.renderVersionComparison(comparison, audioBlob);
+                        this._finishAnalysis('Comparison ready');
+                        return;
+                    } catch (comparisonError) {
+                        result = { engine: 'comparison', quality: { rateable: false }, analysis: null };
+                        this.setLocalSampleSnapshot(audioBlob, result, comparisonError);
+                        localSamplePrepared = true;
+                        throw comparisonError;
+                    }
+                }
+
                 result = await analyzeRecordedAttempt({
                     audioBlob,
                     expectedSyllables: expectedCount,
@@ -865,7 +1210,10 @@ export class PronunciationApp {
     /**
      * Show syllable verification waveform with click-to-play
      */
-    async showSyllableVerifier(audioBlob, syllables) {
+    async showSyllableVerifier(audioBlob, syllables, {
+        comparisonMode = false,
+        labels = null
+    } = {}) {
         Logger.log('Main: showSyllableVerifier called with:', {
             audioBlobSize: audioBlob?.size,
             syllablesCount: syllables?.length,
@@ -886,7 +1234,9 @@ export class PronunciationApp {
         }
 
         // Get syllable labels from IPA if available
-        const syllableLabels = this.getSyllableLabels();
+        const syllableLabels = Array.isArray(labels) && labels.length === syllables.length
+            ? labels
+            : this.getSyllableLabels();
         const enableManualReview = await this.canUseManualReview();
 
         // Create a single learner waveform. Native audio remains available in
@@ -894,9 +1244,15 @@ export class PronunciationApp {
         // segmentation and manual review.
         this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container', {
             enableManualReview,
-            onManualSave: (segments) => this.saveManualReview(segments)
+            onManualSave: (segments) => this.saveManualReview(segments),
+            onManualSegmentsChange: comparisonMode
+                ? (segments) => {
+                    this.versionComparisonManualSegments = segments.map((segment) => ({ ...segment }));
+                    this.updateVersionComparisonSaveState();
+                }
+                : undefined
         });
-        this.syllableVerifier.loadAudio(
+        await this.syllableVerifier.loadAudio(
             audioBlob,
             syllables,
             syllableLabels,

@@ -47,6 +47,11 @@ Wav2Vec2ForCTC.from_pretrained( \
 ENV TRANSFORMERS_OFFLINE=1
 ENV HF_HUB_OFFLINE=1
 
+# Load the model during startup rather than inside the first request, so the
+# Cloud Run startup probe on /readyz holds traffic back until inference is
+# actually possible. Requires the probe to be httpGet:/readyz, not tcpSocket.
+ENV PHONEME_EAGER_LOAD=1
+
 # ── Networking ──────────────────────────────────────────────
 EXPOSE ${PORT}
 
@@ -62,5 +67,5 @@ CMD gunicorn \
     --bind 0.0.0.0:${PORT} \
     --workers 1 \
     --threads 2 \
-    --timeout 30 \
+    --timeout 120 \
     "backend.phoneme_service.app:create_app()"

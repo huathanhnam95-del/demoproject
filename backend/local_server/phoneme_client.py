@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 REASON_RECOGNIZER_AUTH_FAILED = "RECOGNIZER_AUTH_FAILED"
 REASON_RECOGNIZER_BUSY = "RECOGNIZER_BUSY"
+REASON_RECOGNIZER_CONFIG_MISSING = "RECOGNIZER_CONFIG_MISSING"
 
 # ---------------------------------------------------------------------------
 # Exceptions
@@ -47,7 +48,15 @@ REASON_RECOGNIZER_BUSY = "RECOGNIZER_BUSY"
 
 
 class ConfigurationError(Exception):
-    """Raised when the client detects an unsafe or invalid configuration."""
+    """Raised when the client detects an unsafe or invalid configuration.
+
+    ``reason`` is intentionally safe to propagate to an analysis envelope:
+    it is a stable code, never a URL, token, or exception detail.
+    """
+
+    def __init__(self, message: str, *, reason: str = REASON_RECOGNIZER_CONFIG_MISSING):
+        super().__init__(message)
+        self.reason = reason
 
 
 class RecognizerError(Exception):
@@ -66,7 +75,17 @@ class RecognizerError(Exception):
 # Refresh the token 5 minutes before its actual expiry so that in-flight
 # requests are unlikely to hit an expired credential.
 _TOKEN_REFRESH_MARGIN_SEC = 5 * 60
-_RECOGNIZER_HTTP_TIMEOUT_SEC = 15
+# A scale-to-zero recognizer pays its model load inside the first request after
+# an idle period; that cold path has been measured at 46-52s on Cloud Run. The
+# budget must clear that worst case with headroom, otherwise every first
+# recording of a session fails while the recognizer answers correctly into a
+# socket nobody is listening on. Warm requests remain 0.3-1.3s, so this ceiling
+# is never approached once an instance is live.
+_RECOGNIZER_HTTP_TIMEOUT_SEC = 75
+_RECOGNIZER_CONNECT_TIMEOUT_SEC = 5
+# The warm-up call exists to absorb the cold load, so it deliberately waits
+# longer than an inference request would.
+_RECOGNIZER_WARM_READ_TIMEOUT_SEC = 120
 
 _LOCALHOST_HOSTS = frozenset({"localhost", "127.0.0.1"})
 
@@ -111,13 +130,15 @@ class PhonemeClient:
                 raise ConfigurationError(
                     "PHONEME_SERVICE_AUTH=disabled is not allowed when "
                     "running on Cloud Run (K_SERVICE is set). "
-                    "Set PHONEME_SERVICE_AUTH=google for production."
+                    "Set PHONEME_SERVICE_AUTH=google for production.",
+                    reason=REASON_RECOGNIZER_CONFIG_MISSING,
                 )
             if not _is_localhost(self.service_url):
                 raise ConfigurationError(
                     "PHONEME_SERVICE_AUTH=disabled is only permitted when "
                     f"the target is localhost or 127.0.0.1, got: "
-                    f"{urlparse(self.service_url).hostname}"
+                    f"{urlparse(self.service_url).hostname}",
+                    reason=REASON_RECOGNIZER_CONFIG_MISSING,
                 )
             logger.info(
                 "Phoneme client initialised with auth DISABLED (localhost dev mode)"
@@ -257,6 +278,24 @@ class PhonemeClient:
         # Fallback (should not be reached after raise_for_status)
         return response.json()
 
+    def warm(self) -> bool:
+        """Poke ``/readyz`` so a cold instance loads its model off the hot path.
+
+        Best effort by contract: returns ``True`` when the recognizer reported
+        ready, ``False`` for any failure.  Never raises — callers use this to
+        absorb a cold start on behalf of a user request, and a failed warm-up
+        must never become a visible error.
+        """
+        try:
+            response = self._session.get(
+                f"{self.service_url}/readyz",
+                headers=self._auth_headers(),
+                timeout=(_RECOGNIZER_CONNECT_TIMEOUT_SEC, _RECOGNIZER_WARM_READ_TIMEOUT_SEC),
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
+
     def recognize_v2(self, wav_bytes: bytes, reference_syllables: list[str], expected_syllable_count: int, *, variant_id: str | None = None) -> dict:
         """Call the reference-constrained recognizer contract.
 
@@ -317,7 +356,8 @@ def create_phoneme_client() -> PhonemeClient:
     service_url = os.environ.get("PHONEME_SERVICE_URL")
     if not service_url:
         raise ConfigurationError(
-            "PHONEME_SERVICE_URL environment variable is required"
+            "PHONEME_SERVICE_URL environment variable is required",
+            reason=REASON_RECOGNIZER_CONFIG_MISSING,
         )
 
     auth_mode = os.environ.get("PHONEME_SERVICE_AUTH", "google")

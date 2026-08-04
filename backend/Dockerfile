@@ -25,7 +25,12 @@ COPY public/cmudict.json ./local_server/cmudict.json
 
 # Cloud Run uses PORT env variable
 ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Run with gunicorn
-CMD ["sh", "-c", "exec gunicorn --bind :${PORT} --workers 1 --threads 8 --timeout 60 local_server.server:app"]
+# --timeout must clear _V3_HARD_TIMEOUT_SECONDS (80s) in local_server/server.py.
+# A V3 comparison waits on the phoneme recognizer, whose scale-to-zero cold
+# start is ~50s; at 60s this worker was killed mid-wait and the browser saw a
+# 504 even though every downstream budget had been widened.
+CMD ["sh", "-c", "exec gunicorn --bind :${PORT} --workers 1 --threads 8 --timeout 120 local_server.server:app"]

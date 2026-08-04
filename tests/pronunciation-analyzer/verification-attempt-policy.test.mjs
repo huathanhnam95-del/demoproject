@@ -38,7 +38,11 @@ test('service outages are classified as unavailable and never consume an attempt
         'V3_NOT_ACTIVE', 'V3_VERIFICATION_UNAVAILABLE', 'V3_PRAAT_FAILED',
         'MODEL_INFERENCE_FAILED', 'TIMEOUT', 'VERIFIER_ARTIFACT_UNAVAILABLE',
         // RecognizerError reasons raised by phoneme_client.py
-        'RECOGNIZER_BUSY', 'RECOGNIZER_AUTH_FAILED', 'CONTRACT_MISMATCH', 'INFERENCE_ERROR'
+        'RECOGNIZER_BUSY', 'RECOGNIZER_AUTH_FAILED', 'RECOGNIZER_CONFIG_MISSING',
+        'CONTRACT_MISMATCH', 'INFERENCE_ERROR',
+        // Transport failure: the recognizer was never reached, so the
+        // learner's audio was never judged and no attempt may be consumed.
+        'RECOGNIZER_UNREACHABLE'
     ]) {
         assert.equal(attemptStatusFor(outage(reason)), 'unavailable', reason);
     }

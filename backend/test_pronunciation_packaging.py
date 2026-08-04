@@ -108,6 +108,14 @@ class TestRequirementsFiles(unittest.TestCase):
     def test_torch_requirements(self):
         self._assert_packages(self._read_req("requirements.phoneme-torch.txt"), ["torch", "transformers", "flask", "gunicorn", "numpy", "scipy"])
 
+    def test_torch_pins_the_cpu_wheel_index(self):
+        # Cloud Run runs this CPU-only. Without the CPU index, pip resolves the
+        # CUDA build and adds multiple GB of unused nvidia-* wheels that Cloud
+        # Run must stream on every cold start.
+        content = self._read_req("requirements.phoneme-torch.txt")
+        self.assertIn("https://download.pytorch.org/whl/cpu", content)
+        self.assertRegex(content, r"(?m)^torch==[\d.]+\+cpu\b")
+
     def test_onnx_requirements(self):
         self._assert_packages(self._read_req("requirements.phoneme-onnx.txt"), ["onnxruntime", "transformers", "flask", "gunicorn", "numpy", "scipy"])
 

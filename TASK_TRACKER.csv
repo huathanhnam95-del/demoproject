@@ -968,3 +968,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 571,2026-08-06,Review all recent work and prepare deployment plan and release package,Done,2026-08-06
 572,2026-08-06,Deploy V1.8.46 release to production,Done,2026-08-06
 573,2026-08-06,Auto-extract title/author from PDF filename + fix 500 error on POST /api/admin/books,Done,2026-08-06
+574,2026-08-06,"CRM Books: Production E2E verification — fix embedQuery title param, VectorValue bruteforce check, create Firestore vector index, verify upload+summary+chat with real 315-page PDF",Done,2026-08-06
+575,2026-08-06,CRM Books: NotebookLM-inspired UI/UX redesign for book summarize feature,Done,2026-08-06
+576,2026-08-06,"CRM Books: Review debug and refactor — fix 7 bugs + 4 CSS issues + 4 refactors (error object handling, citation tooltip anchoring, dead code removal, SVG icon extraction, inline style cleanup)",Done,2026-08-06
+577,2026-08-06,"CRM Books UI overhaul: text overflow fix, Lora font, pages viewer, dark mode, cost tracking ($10/mo budget with admin approval), citation flicker fix, route ordering fix",Done,2026-08-06
+578,2026-08-06,Deploy V1.8.47 release to production - CRM Books UI Overhaul and Cost Tracking,Done,2026-08-06
+

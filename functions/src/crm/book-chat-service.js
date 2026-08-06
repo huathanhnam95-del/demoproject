@@ -12,9 +12,10 @@ const {
 } = require('../assessWriting.helpers');
 const { retrieveTopChunks } = require('./book-retrieval');
 const { CRM_BOOKS } = require('./collections');
+const { recordUsage, checkBudget } = require('./book-usage-tracker');
 
-const DEFAULT_MODEL = 'gemini-2.5-flash-preview-05-20';
-const FALLBACK_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-3-flash-preview';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 const MAX_HISTORY_MESSAGES = 6;
 const ROLLING_SUMMARY_INTERVAL = 10;
 const MAX_DAILY_CHATS = 200;
@@ -77,19 +78,27 @@ Return a JSON object:
 If the excerpts don't answer the question, set answered to false and explain what you found instead.`;
 }
 
+function extractUsage(result) {
+    const u = result?.usageMetadata;
+    return {
+        inputTokens: u?.promptTokenCount || 0,
+        outputTokens: u?.candidatesTokenCount || 0
+    };
+}
+
 async function generateWithFallback(models, prompt) {
     let rawText = '';
     try {
         const result = await models.primary.generateContent(prompt);
         rawText = await extractGeneratedText(result);
-        return { json: extractJsonObject(rawText), model: models.primaryName };
+        return { json: extractJsonObject(rawText), model: models.primaryName, usage: extractUsage(result) };
     } catch (error) {
         if (!shouldUseGeminiFallback(error)) throw error;
         console.log('[book-chat] Falling back to', models.fallbackName);
         try {
             const result = await models.fallback.generateContent(prompt);
             rawText = await extractGeneratedText(result);
-            return { json: extractJsonObject(rawText), model: models.fallbackName };
+            return { json: extractJsonObject(rawText), model: models.fallbackName, usage: extractUsage(result) };
         } catch (fallbackError) {
             console.error('[book-chat] Fallback failed:', truncateForLog(fallbackError?.message));
             throw fallbackError;
@@ -175,9 +184,20 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
     const recentSnap = await messagesCol.orderBy('createdAt', 'desc').limit(MAX_HISTORY_MESSAGES).get();
     const history = recentSnap.docs.map((d) => d.data()).reverse();
 
+    const budget = await checkBudget(db);
+    if (!budget.allowed) {
+        throw Object.assign(
+            new Error(`Monthly AI budget ($${budget.budgetLimitUsd.toFixed(2)}) exceeded. Admin approval required.`),
+            { code: 'resource-exhausted', budgetExceeded: true }
+        );
+    }
+
     const models = getModels();
     const prompt = buildChatPrompt(question, chunks, history, threadData.rollingSummary, bookData.title);
-    const { json, model } = await generateWithFallback(models, prompt);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'chat', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-chat] Usage tracking failed:', err?.message));
 
     const citations = validateCitations(json.citations, chunks);
     const latencyMs = Date.now() - startMs;
@@ -216,7 +236,7 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         messageCount: totalMessages,
         updatedAt: FieldValue.serverTimestamp()
     });
-    batch.commit();
+    await batch.commit();
 
     await incrementQuota(db, uid);
 

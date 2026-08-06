@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const { getGenAiClient } = require('../geminiVertexModels');
+const { recordUsage } = require('./book-usage-tracker');
 
 const DEFAULT_EMBED_MODEL = 'gemini-embedding-001';
 const DEFAULT_EMBED_DIM = 768;
@@ -43,35 +44,50 @@ function cosineSimilarity(a, b) {
 
 let forceSingleMode = false;
 
+function estimateTokens(texts) {
+    let chars = 0;
+    for (const t of texts) chars += t.length;
+    return Math.ceil(chars / 4);
+}
+
 async function embedTexts(texts, options = {}) {
     const cfg = getConfig();
     const model = options.model || cfg.model;
     const dimensions = options.dimensions || cfg.dimensions;
     const taskType = options.taskType || 'RETRIEVAL_DOCUMENT';
-    const title = options.title || undefined;
+    const title = taskType === 'RETRIEVAL_DOCUMENT' ? (options.title || undefined) : undefined;
     const client = getGenAiClient(cfg.location);
 
+    let embeddings;
     if (forceSingleMode || texts.length === 1) {
-        return embedSingle(client, texts, { model, dimensions, taskType, title });
+        embeddings = await embedSingle(client, texts, { model, dimensions, taskType, title });
+    } else {
+        try {
+            const res = await client.models.embedContent({
+                model,
+                contents: texts.map((t) => ({ parts: [{ text: t }] })),
+                config: { taskType, outputDimensionality: dimensions, title }
+            });
+            embeddings = (res.embeddings || []).map((e) => l2Normalize(e.values.slice(0, dimensions)));
+        } catch (err) {
+            const msg = String(err?.message || '');
+            if (msg.includes('INVALID_ARGUMENT') || msg.includes('instances')) {
+                console.log('[book-embeddings] Batch rejected, switching to single-item mode');
+                forceSingleMode = true;
+                embeddings = await embedSingle(client, texts, { model, dimensions, taskType, title });
+            } else {
+                throw err;
+            }
+        }
     }
 
-    try {
-        const res = await client.models.embedContent({
-            model,
-            contents: texts.map((t) => ({ parts: [{ text: t }] })),
-            config: { taskType, outputDimensionality: dimensions, title }
-        });
-        const embeddings = (res.embeddings || []).map((e) => l2Normalize(e.values.slice(0, dimensions)));
-        return embeddings;
-    } catch (err) {
-        const msg = String(err?.message || '');
-        if (msg.includes('INVALID_ARGUMENT') || msg.includes('instances')) {
-            console.log('[book-embeddings] Batch rejected, switching to single-item mode');
-            forceSingleMode = true;
-            return embedSingle(client, texts, { model, dimensions, taskType, title });
-        }
-        throw err;
+    if (options.db) {
+        const inputTokens = estimateTokens(texts);
+        recordUsage(options.db, { type: 'embedding', inputTokens, outputTokens: 0 })
+            .catch(err => console.error('[book-embeddings] Usage tracking failed:', err?.message));
     }
+
+    return embeddings;
 }
 
 async function embedSingle(client, texts, { model, dimensions, taskType, title }) {

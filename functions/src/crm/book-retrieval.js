@@ -61,10 +61,11 @@ async function bruteforceSearch(chunksCol, queryVector, topK) {
 
     for (const doc of snap.docs) {
         const data = doc.data();
-        if (!data.embedding || !Array.isArray(data.embedding)) continue;
+        if (!data.embedding) continue;
         const rawEmbed = typeof data.embedding.toArray === 'function'
             ? data.embedding.toArray()
-            : data.embedding;
+            : (Array.isArray(data.embedding) ? data.embedding : null);
+        if (!rawEmbed) continue;
         const similarity = cosineSimilarity(queryVector, rawEmbed);
         scored.push({
             chunkId: doc.id,

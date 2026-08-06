@@ -1,7 +1,9 @@
 const MIN_AVG_CHARS_PER_PAGE = 50;
 
 async function extractPdfPages(buffer) {
-    const uint8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    const uint8 = Buffer.isBuffer(buffer)
+        ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+        : (buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer));
     const { extractText } = await import('unpdf');
 
     const result = await extractText(uint8, { mergePages: false });

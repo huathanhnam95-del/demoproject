@@ -275,8 +275,8 @@ async function runEmbedStage(db, job, startTime) {
 
         const batchSize = Math.min(EMBED_ITERATION_SIZE, totalChunks - embedded);
         const snap = await chunksCol
-            .where('embedding', '==', null)
             .orderBy('index')
+            .startAt(embedded)
             .limit(batchSize)
             .get();
 
@@ -290,7 +290,7 @@ async function runEmbedStage(db, job, startTime) {
 
         let vectors;
         try {
-            vectors = await embedTexts(texts, { taskType: 'RETRIEVAL_DOCUMENT', title: bookTitle });
+            vectors = await embedTexts(texts, { taskType: 'RETRIEVAL_DOCUMENT', title: bookTitle, db });
         } catch (err) {
             const msg = String(err?.message || '');
             if (msg.includes('quota') || msg.includes('429')) {

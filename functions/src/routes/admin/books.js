@@ -5,6 +5,7 @@ const {
     CRM_RECYCLE_BIN
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
+const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
 
 function cleanStr(value, fallback = '') {
     return String(value ?? '').trim() || fallback;
@@ -51,6 +52,30 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { books, count: books.length });
         } catch (error) {
             return sendError(res, 500, 'LIST_BOOKS_ERROR', 'Failed to list books.', error?.message || error);
+        }
+    });
+
+    // ─── Usage (before :bookId wildcard) ───
+    router.get('/books/usage', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const summary = await getUsageSummary(db);
+            return sendSuccess(res, summary);
+        } catch (error) {
+            return sendError(res, 500, 'USAGE_ERROR', 'Failed to load usage.', error?.message || error);
+        }
+    });
+
+    router.post('/books/usage/approve', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const confirm = cleanStr(req.body?.confirm);
+            if (confirm !== 'approve') {
+                return sendError(res, 400, 'INVALID_CONFIRM', 'You must send { confirm: "approve" }.');
+            }
+            const email = req.user?.email || req.user?.uid || 'unknown';
+            await approveOverage(db, email);
+            return sendSuccess(res, { success: true }, 'Budget approved and reset.');
+        } catch (error) {
+            return sendError(res, 500, 'APPROVE_ERROR', 'Failed to approve budget.', error?.message || error);
         }
     });
 
@@ -182,7 +207,7 @@ module.exports = function registerBookRoutes(router, deps) {
                     if (!storagePath) {
                         return { error: { status: 400, code: 'NO_STORAGE_PATH', message: 'No storage path configured.' } };
                     }
-                    const bucket = getStorageBucket();
+                    const bucket = await getStorageBucket();
                     const [exists] = await bucket.file(storagePath).exists();
                     if (!exists) {
                         return { error: { status: 400, code: 'FILE_NOT_UPLOADED', message: 'PDF file has not been uploaded yet.' } };
@@ -293,7 +318,7 @@ module.exports = function registerBookRoutes(router, deps) {
 
             if (getStorageBucket && bookData.source?.storagePath) {
                 try {
-                    const bucket = getStorageBucket();
+                    const bucket = await getStorageBucket();
                     const [files] = await bucket.getFiles({ prefix: `crm-books/${bookId}/` });
                     await Promise.all(files.map((f) => f.delete().catch(() => {})));
                 } catch (_) { /* best-effort storage cleanup */ }
@@ -485,4 +510,43 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendError(res, 500, 'DELETE_THREAD_ERROR', 'Failed to delete thread.', error?.message || error);
         }
     });
+
+    // ─── Pages ───
+    const pagesCache = new Map();
+    const PAGES_CACHE_TTL = 5 * 60 * 1000;
+
+    router.get('/books/:bookId/pages', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
+
+            const cached = pagesCache.get(bookId);
+            if (cached && Date.now() - cached.ts < PAGES_CACHE_TTL) {
+                return sendSuccess(res, { totalPages: cached.data.totalPages, pages: cached.data.pages });
+            }
+
+            if (!getStorageBucket) return sendError(res, 500, 'NO_STORAGE', 'Storage not configured.');
+
+            const bucket = await getStorageBucket();
+            const pagesPath = `crm-books/${bookId}/pages.json`;
+            const file = bucket.file(pagesPath);
+            const [exists] = await file.exists();
+            if (!exists) return sendSuccess(res, { totalPages: 0, pages: [] });
+
+            const [buffer] = await file.download();
+            const parsed = JSON.parse(buffer.toString('utf8'));
+            const result = { totalPages: parsed.totalPages || 0, pages: parsed.pages || [] };
+
+            pagesCache.set(bookId, { data: result, ts: Date.now() });
+            if (pagesCache.size > 50) {
+                const oldest = pagesCache.keys().next().value;
+                pagesCache.delete(oldest);
+            }
+
+            return sendSuccess(res, result);
+        } catch (error) {
+            return sendError(res, 500, 'PAGES_ERROR', 'Failed to load pages.', error?.message || error);
+        }
+    });
+
 };

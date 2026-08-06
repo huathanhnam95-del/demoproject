@@ -1,3 +1,13 @@
+## [V1.8.47] - 2026-08-06
+
+### Added & Enhanced
+- **CRM Books UI Overhaul & AI Cost Tracking**:
+  - NotebookLM-inspired UI overhaul with Lora serif typography for comfortable long-form reading, dark mode design tokens, dynamic reader panels, and integrated page viewer.
+  - Backend cost tracking instrumentation in `book-usage-tracker.js` ($10/month configurable budget limit, token estimation for embeddings, token usage tracking across chat, summary, and embedding stages).
+  - Admin approval flow (`POST /api/admin/books/usage/approve`) to reset/approve overage when monthly AI budget is exceeded.
+  - Budget guard (`checkBudget`) in `book-chat-service.js` blocking chat with `resource-exhausted` error when budget is exceeded until admin approval.
+  - Route ordering optimization in `functions/src/routes/admin/books.js` putting usage endpoints before `:bookId` wildcard.
+
 ## [V1.8.46] - 2026-08-06
 
 ### Added

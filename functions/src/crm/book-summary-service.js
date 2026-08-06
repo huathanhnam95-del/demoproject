@@ -10,9 +10,10 @@ const {
     truncateForLog
 } = require('../assessWriting.helpers');
 const { CRM_BOOKS } = require('./collections');
+const { recordUsage } = require('./book-usage-tracker');
 
-const DEFAULT_MODEL = 'gemini-2.5-flash-preview-05-20';
-const FALLBACK_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-3-flash-preview';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 const SECTION_TARGET_CHARS = 25000;
 const JSON_GENERATION_CONFIG = {
     responseMimeType: 'application/json',
@@ -116,12 +117,17 @@ Guidelines:
 - Keep the overview informative but concise`;
 }
 
+function extractUsage(result) {
+    const u = result?.usageMetadata;
+    return { inputTokens: u?.promptTokenCount || 0, outputTokens: u?.candidatesTokenCount || 0 };
+}
+
 async function generateWithFallback(models, prompt) {
     let rawText = '';
     try {
         const result = await models.primary.generateContent(prompt);
         rawText = await extractGeneratedText(result);
-        return { json: extractJsonObject(rawText), model: models.primaryName };
+        return { json: extractJsonObject(rawText), model: models.primaryName, usage: extractUsage(result) };
     } catch (error) {
         if (!shouldUseGeminiFallback(error)) {
             console.error('[book-summary] Primary model failed:', truncateForLog(error?.message || String(error)));
@@ -131,7 +137,7 @@ async function generateWithFallback(models, prompt) {
         try {
             const result = await models.fallback.generateContent(prompt);
             rawText = await extractGeneratedText(result);
-            return { json: extractJsonObject(rawText), model: models.fallbackName };
+            return { json: extractJsonObject(rawText), model: models.fallbackName, usage: extractUsage(result) };
         } catch (fallbackError) {
             console.error('[book-summary] Fallback model failed:', truncateForLog(fallbackError?.message || String(fallbackError)));
             throw fallbackError;
@@ -142,7 +148,10 @@ async function generateWithFallback(models, prompt) {
 async function summarizeSection(db, bookId, sectionIndex, sectionChunks, totalSections) {
     const models = getModels();
     const prompt = buildMapPrompt(sectionChunks, sectionIndex, totalSections);
-    const { json, model } = await generateWithFallback(models, prompt);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'summary', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed:', err?.message));
 
     const digest = {
         title: json.title || `Section ${sectionIndex + 1}`,
@@ -179,7 +188,10 @@ async function reduceSummary(db, bookId) {
 
     const models = getModels();
     const prompt = buildReducePrompt(digests, bookData.title || '', bookData.author || '');
-    const { json, model } = await generateWithFallback(models, prompt);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'summary', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed:', err?.message));
 
     const summary = {
         oneLiner: json.oneLiner || '',

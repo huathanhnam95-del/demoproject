@@ -4,6 +4,8 @@ node_modules/
 # Database audio files (too large for git)
 database/type/audio/
 database/speak/audio/
+database/Take Notes/RL/audio/*.csv
+.claude/
 public/database/RA/Voice/audio/
 !public/database/RA/Voice/audio/manifest.json
 public/database/Highlight Incorrect Words/audio/*/

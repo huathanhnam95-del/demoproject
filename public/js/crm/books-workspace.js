@@ -1,6 +1,16 @@
 window.CrmBooksWorkspace = (function () {
     'use strict';
 
+    // ─── SVG Icon Constants ───
+    const ICON_BOOK = '<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>';
+    const ICON_TRASH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+    const ICON_PLUS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>';
+    const ICON_SEND = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
+    const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+    const ICON_ERROR = '<svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+    const ICON_UPLOAD = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>';
+    const ICON_DOC = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+
     function fallbackEscapeHtml(value) {
         const div = document.createElement('div');
         div.textContent = String(value ?? '');
@@ -36,9 +46,12 @@ window.CrmBooksWorkspace = (function () {
         const stage = clean(ingest.stage);
         const percent = typeof ingest.percent === 'number' ? ingest.percent : 0;
         if (status === 'failed') {
-            const rawError = clean(ingest.error) || clean(ingest.error?.message);
+            const errRaw = ingest.error;
+            const rawError = (typeof errRaw === 'string') ? clean(errRaw)
+                : clean(errRaw?.message) || clean(errRaw?.code) || '';
             const codeMatch = rawError.match(/^\[([A-Z_]+)\]/);
-            const code = codeMatch ? codeMatch[1] : clean(ingest.error?.code);
+            const code = codeMatch ? codeMatch[1]
+                : (typeof errRaw === 'object' ? clean(errRaw?.code) : '');
             const map = {
                 SCANNED_PDF_NO_TEXT: 'This PDF is scanned images with no selectable text. Run OCR on it first, then re-upload.',
                 PDF_PARSE_FAILED: 'Could not read this PDF. It may be encrypted or corrupt.',
@@ -86,18 +99,19 @@ window.CrmBooksWorkspace = (function () {
 
     function renderCitations(citations, escHtml) {
         if (!Array.isArray(citations) || citations.length === 0) return '';
-        return citations.map((c, i) => {
+        return `<div class="crm-books-msg-citations">${citations.map((c, i) => {
             const num = i + 1;
             const pages = c.pageStart === c.pageEnd
                 ? `p. ${c.pageStart}`
-                : `pp. ${c.pageStart}–${c.pageEnd}`;
+                : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
             const snippet = escHtml(clean(c.snippet).slice(0, 200));
-            return `<span class="crm-books-citation-ref" data-citation-idx="${num}" title="${escHtml(pages)}">[${num}]</span>` +
-                `<span class="crm-books-citation-detail" data-citation-idx="${num}" style="display:none;">` +
-                `<span class="crm-books-citation-pages">${escHtml(pages)}</span> ` +
+            return `<span class="crm-books-citation-wrap" data-citation-idx="${num}">` +
+                `<span class="crm-books-citation-ref" title="${escHtml(pages)}">${num}</span>` +
+                `<span class="crm-books-citation-detail">` +
+                `<span class="crm-books-citation-pages">${escHtml(pages)}</span>` +
                 `<span class="crm-books-citation-snippet">${snippet}</span>` +
                 `</span>`;
-        }).join('');
+        }).join('')}</div>`;
     }
 
     function ingestWeightedPercent(ingest, status) {
@@ -199,12 +213,13 @@ window.CrmBooksWorkspace = (function () {
         });
     }
 
+    // ─── Controller ───
     function createController(deps = {}) {
         const elements = deps.elements || {};
         const showToast = typeof deps.showToast === 'function' ? deps.showToast : null;
         const apiFetchJson = typeof deps.apiFetchJson === 'function' ? deps.apiFetchJson : null;
         const escapeHtml = typeof deps.escapeHtml === 'function' ? deps.escapeHtml : fallbackEscapeHtml;
-        const formatDateTime = typeof deps.formatDateTime === 'function' ? deps.formatDateTime : (v) => clean(v) || '-';
+        const formatDateTime = typeof deps.formatDateTime === 'function' ? deps.formatDateTime : (v) => clean(v) || '-'; // Reserved — kept for controller interface contract
         const firebaseApp = deps.firebase || (typeof firebase !== 'undefined' ? firebase : null);
 
         let bound = false;
@@ -220,8 +235,12 @@ window.CrmBooksWorkspace = (function () {
         let selectedThreadId = '';
         let messages = [];
         let renderListTimer = null;
+        let searchQuery = '';
+        let collapsedOutline = {};
+        let currentPage = 1;
+        let pagesData = null;
+        let usageData = null;
 
-        // --- DOM references ---
         const panel = elements.booksPanel || document.querySelector('[data-panel="books"]');
 
         function qs(sel) { return panel ? panel.querySelector(sel) : document.querySelector(sel); }
@@ -242,39 +261,51 @@ window.CrmBooksWorkspace = (function () {
             return apiFetchJson(path, { method: 'DELETE' });
         }
 
-        // --- Render: book list ---
-        function renderList() {
+        // --- Render: Sources Panel (left) ---
+        function renderSourcesPanel() {
             const list = qs('.crm-books-list');
+            const countBadge = qs('.crm-books-sources-count');
             if (!list) return;
-            if (books.length === 0) {
-                list.innerHTML = '<li class="crm-books-empty-item">No books yet. Click <strong>+ Add book</strong> to upload a PDF.</li>';
+
+            const filtered = searchQuery
+                ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.author.toLowerCase().includes(searchQuery.toLowerCase()))
+                : books;
+
+            if (countBadge) countBadge.textContent = String(books.length);
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<li class="crm-books-empty-item">${books.length === 0 ? 'No books yet. Add a source to get started.' : 'No matching books.'}</li>`;
                 return;
             }
-            list.innerHTML = books.map((b) => {
+            list.innerHTML = filtered.map((b) => {
                 const isSelected = b.bookId === selectedBookId;
                 const statusIcon = b.status === 'ready' ? '<span class="crm-books-status-icon ready" title="Ready">&#10003;</span>'
                     : b.status === 'failed' ? '<span class="crm-books-status-icon failed" title="Failed">&#9888;</span>'
                         : '';
                 const ingestLine = (b.status !== 'ready' && b.status !== 'awaiting_upload')
-                    ? `<div class="crm-books-ingest-line"><div class="crm-books-progress-bar"><div class="crm-books-progress-fill" style="width:${ingestWeightedPercent(b.ingest, b.status)}%"></div></div><span class="crm-muted" style="font-size:0.75rem;">${escapeHtml(buildIngestLabel(b.ingest, b.status))}</span></div>`
+                    ? `<div class="crm-books-ingest-line"><div class="crm-books-progress-bar"><div class="crm-books-progress-fill" style="width:${ingestWeightedPercent(b.ingest, b.status)}%"></div></div><span class="crm-books-list-stage">${escapeHtml(buildIngestLabel(b.ingest, b.status))}</span></div>`
                     : b.status === 'awaiting_upload'
-                        ? `<div class="crm-books-ingest-line"><span class="crm-muted" style="font-size:0.75rem;">Upload incomplete</span></div>`
+                        ? `<div class="crm-books-ingest-line"><span class="crm-books-list-stage">Upload incomplete</span></div>`
                         : '';
                 return `<li class="crm-books-list-item${isSelected ? ' selected' : ''}" data-book-id="${escapeHtml(b.bookId)}">` +
                     `<div class="crm-books-list-item-header"><span class="crm-books-list-title">${escapeHtml(b.title)}</span>${statusIcon}</div>` +
-                    `<div class="crm-books-list-author crm-muted">${escapeHtml(b.author || '')}</div>` +
+                    `<div class="crm-books-list-author">${escapeHtml(b.author || '')}</div>` +
                     ingestLine +
                     `</li>`;
             }).join('');
         }
 
-        // --- Render: detail (right column) ---
-        function renderDetail() {
+        // --- Render: Explorer Panel (center) ---
+        function renderExplorerPanel() {
             const detail = qs('.crm-books-detail');
             if (!detail) return;
 
             if (!selectedBook) {
-                detail.innerHTML = '<div class="crm-books-empty-detail"><p class="crm-muted">Select a book from the library to view its summary, chat, or pages.</p></div>';
+                detail.innerHTML = `<div class="crm-books-empty-detail">` +
+                    `<div class="crm-books-empty-icon">${ICON_BOOK}</div>` +
+                    `<h3 style="margin:12px 0 6px; font-weight:600;">Select a book</h3>` +
+                    `<p class="crm-muted">Choose a source from the library to explore its summary, chat, or pages.</p>` +
+                    `</div>`;
                 return;
             }
 
@@ -289,6 +320,7 @@ window.CrmBooksWorkspace = (function () {
                     `<button class="crm-books-tab${activeTab === 'summary' ? ' active' : ''}" data-books-tab="summary">Summary</button>` +
                     `<button class="crm-books-tab${activeTab === 'chat' ? ' active' : ''}" data-books-tab="chat">Chat</button>` +
                     `<button class="crm-books-tab${activeTab === 'pages' ? ' active' : ''}" data-books-tab="pages">Pages</button>` +
+                    `<button class="crm-books-tab${activeTab === 'notes' ? ' active' : ''}" data-books-tab="notes">Notes</button>` +
                     `</div>`;
                 contentHtml = renderTabContent();
             } else if (b.status === 'failed') {
@@ -299,82 +331,148 @@ window.CrmBooksWorkspace = (function () {
                 contentHtml = renderProcessingState(b);
             }
 
-            detail.innerHTML =
-                `<div class="crm-section-header" style="border-bottom:1px solid var(--border-color, #e2e8f0); padding-bottom:12px; margin-bottom:16px;">` +
-                `<div><h3>${escapeHtml(b.title)}</h3>` +
-                `<p class="crm-muted">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' · ')}</p></div>` +
-                `<button class="crm-btn-secondary crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book" style="color:var(--danger-color, #e53e3e);">Delete</button>` +
+            const isDark = panel?.classList.contains('books-dark');
+            const darkIcon = isDark
+                ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>'
+                : '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
+            const usageHtml = renderUsageIndicator();
+            const headerHtml = `<div class="crm-books-explorer-header">` +
+                `<button class="crm-books-sources-toggle" title="Toggle sources panel"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>` +
+                `<div class="crm-books-explorer-title-group">` +
+                `<h3 class="crm-books-explorer-title">${escapeHtml(b.title)}</h3>` +
+                `<p class="crm-books-explorer-meta">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' \u00b7 ')}</p>` +
                 `</div>` +
-                tabsHtml +
-                `<div class="crm-books-tab-body">${contentHtml}</div>`;
+                usageHtml +
+                `<button class="crm-books-dark-toggle" title="Toggle dark mode">${darkIcon}</button>` +
+                `<button class="crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book">${ICON_TRASH}</button>` +
+                `</div>`;
+
+            const budgetHtml = renderBudgetBanner();
+            detail.innerHTML = headerHtml + tabsHtml + budgetHtml +
+                `<div class="crm-books-tab-body${activeTab === 'chat' ? ' chat-active' : ''}">${contentHtml}</div>`;
+
+            // Auto-scroll chat to bottom
+            if (activeTab === 'chat') {
+                const msgContainer = detail.querySelector('.crm-books-chat-messages');
+                if (msgContainer) {
+                    requestAnimationFrame(() => { msgContainer.scrollTop = msgContainer.scrollHeight; });
+                }
+            }
         }
 
+        // --- Combined render ---
+        function renderAll() {
+            renderSourcesPanel();
+            renderExplorerPanel();
+        }
+
+
+        // --- Tab content ---
         function renderTabContent() {
             if (activeTab === 'summary') return renderSummaryTab();
             if (activeTab === 'chat') return renderChatTab();
-            if (activeTab === 'pages') return '<div class="crm-muted" style="padding:24px;">Pages viewer will be available after full implementation.</div>';
+            if (activeTab === 'pages') return renderPagesTab();
+            if (activeTab === 'notes') return renderNotesTab();
             return '';
         }
 
         function renderSummaryTab() {
-            if (!selectedSummary) return '<div class="crm-muted" style="padding:24px;">No summary available yet.</div>';
+            if (!selectedSummary) return '<div class="crm-books-summary-empty"><p class="crm-muted">No summary available yet.</p></div>';
             const s = selectedSummary;
             let html = '';
-            if (s.oneLiner) html += `<p style="font-size:1.15rem; font-weight:600; margin-bottom:16px;">${escapeHtml(s.oneLiner)}</p>`;
-            if (s.overview) html += `<div class="crm-books-overview">${escapeHtml(s.overview).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</div>`;
-            if (s.audience) html += `<p class="crm-muted" style="margin:12px 0;"><strong>Audience:</strong> ${escapeHtml(s.audience)}</p>`;
+
+            // One-liner
+            if (s.oneLiner) {
+                html += `<div class="crm-books-section-card">` +
+                    `<p class="crm-books-one-liner">${escapeHtml(s.oneLiner)}</p>` +
+                    `</div>`;
+            }
+
+            // Overview
+            if (s.overview) {
+                html += `<div class="crm-books-section-card">` +
+                    `<h4 class="crm-books-section-title">Overview</h4>` +
+                    `<div class="crm-books-overview"><p>${escapeHtml(s.overview).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p></div>` +
+                    `</div>`;
+            }
+
+            // Audience
+            if (s.audience) {
+                html += `<div class="crm-books-section-card" data-section="audience">` +
+                    `<h4 class="crm-books-section-title">Target Audience</h4>` +
+                    `<p class="crm-books-audience-text">${escapeHtml(s.audience)}</p>` +
+                    `</div>`;
+            }
+
+            // Key Topics
             if (Array.isArray(s.keyTopics) && s.keyTopics.length > 0) {
-                html += `<div class="crm-books-topics-header" style="margin-top:20px;"><strong>Key topics</strong></div>`;
-                html += `<div class="crm-books-topics">${s.keyTopics.map((t) =>
-                    `<span class="crm-books-topic-chip">${escapeHtml(t.topic)}${t.pages?.length ? ` <span class="crm-muted">(p. ${escapeHtml(String(t.pages.join(', ')))})</span>` : ''}</span>`
-                ).join('')}</div>`;
+                html += `<div class="crm-books-section-card" data-section="topics">` +
+                    `<h4 class="crm-books-section-title">Key Topics</h4>` +
+                    `<div class="crm-books-topics">${s.keyTopics.map((t) =>
+                        `<button class="crm-books-topic-chip" data-topic="${escapeHtml(t.topic)}">${escapeHtml(t.topic)}${t.pages?.length ? ` <span class="crm-books-topic-pages">p. ${escapeHtml(String(t.pages.join(', ')))}</span>` : ''}</button>`
+                    ).join('')}</div>` +
+                    `</div>`;
             }
+
+            // Outline
             if (Array.isArray(s.outline) && s.outline.length > 0) {
-                html += `<div style="margin-top:20px;"><strong>Outline</strong></div>`;
-                html += renderOutline(s.outline);
+                html += `<div class="crm-books-section-card" data-section="outline">` +
+                    `<h4 class="crm-books-section-title">Outline</h4>` +
+                    renderOutline(s.outline) +
+                    `</div>`;
             }
-            return html || '<div class="crm-muted" style="padding:24px;">Summary is empty.</div>';
+
+            return html || '<div class="crm-books-summary-empty"><p class="crm-muted">Summary is empty.</p></div>';
         }
 
         function renderOutline(items, depth = 0) {
             if (!Array.isArray(items) || items.length === 0) return '';
             return `<ol class="crm-books-outline" style="padding-left:${depth > 0 ? 20 : 0}px;">` +
-                items.map((item) => {
+                items.map((item, idx) => {
+                    const key = `${depth}-${idx}`;
+                    const isCollapsed = collapsedOutline[key];
+                    const hasChildren = Array.isArray(item.children) && item.children.length > 0;
                     const pages = item.pageStart != null && item.pageEnd != null
-                        ? ` <span class="crm-muted">(pp. ${escapeHtml(String(item.pageStart))}–${escapeHtml(String(item.pageEnd))})</span>` : '';
-                    const summary = item.summary ? `<p class="crm-muted" style="margin:2px 0 6px;">${escapeHtml(item.summary)}</p>` : '';
-                    const children = renderOutline(item.children, depth + 1);
-                    return `<li><strong>${escapeHtml(item.title || '')}</strong>${pages}${summary}${children}</li>`;
+                        ? ` <span class="crm-books-outline-pages">pp. ${escapeHtml(String(item.pageStart))}\u2013${escapeHtml(String(item.pageEnd))}</span>` : '';
+                    const summary = item.summary ? `<p class="crm-books-outline-summary">${escapeHtml(item.summary)}</p>` : '';
+                    const toggleBtn = hasChildren
+                        ? `<button class="crm-books-outline-toggle" data-outline-key="${key}">${isCollapsed ? '\u25b6' : '\u25bc'}</button>`
+                        : '<span class="crm-books-outline-toggle-spacer"></span>';
+                    const children = (hasChildren && !isCollapsed) ? renderOutline(item.children, depth + 1) : '';
+                    return `<li>${toggleBtn}<strong>${escapeHtml(item.title || '')}</strong>${pages}${summary}${children}</li>`;
                 }).join('') +
                 `</ol>`;
         }
 
         function renderChatTab() {
-            const threadSelect = threads.length > 0
-                ? `<select class="crm-input crm-books-thread-select" style="max-width:240px;">${threads.map((t) =>
+            const threadOptions = threads.length > 0
+                ? threads.map((t) =>
                     `<option value="${escapeHtml(t.threadId)}"${t.threadId === selectedThreadId ? ' selected' : ''}>${escapeHtml(t.title)}</option>`
-                ).join('')}</select>`
+                ).join('')
                 : '';
+
+            const threadSelector = threads.length > 0
+                ? `<select class="crm-books-thread-select">${threadOptions}</select>` : '';
 
             let messagesHtml = '';
             if (messages.length === 0) {
                 const starters = buildStarterQuestions();
                 messagesHtml = `<div class="crm-books-chat-starters">` +
-                    `<p class="crm-muted" style="margin-bottom:12px;">Ask a question about this book, or try one of these:</p>` +
-                    starters.map((q) => `<button class="crm-books-starter-btn">${escapeHtml(q)}</button>`).join('') +
+                    `<p class="crm-books-starters-label">Ask a question about this book, or try one of these:</p>` +
+                    `<div class="crm-books-starters-grid">${starters.map((q) => `<button class="crm-books-starter-btn">${escapeHtml(q)}</button>`).join('')}</div>` +
                     `</div>`;
             } else {
                 messagesHtml = `<div class="crm-books-chat-messages">${messages.map(renderMessage).join('')}</div>`;
             }
 
-            return `<div class="crm-books-chat-header" style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">` +
-                threadSelect +
-                `<button class="crm-btn-secondary crm-books-new-thread-btn" style="font-size:0.8rem;">+ New thread</button>` +
+            return `<div class="crm-books-chat-header">` +
+                `<div class="crm-books-chat-header-left">${threadSelector}</div>` +
+                `<button class="crm-books-new-thread-btn" title="New thread">${ICON_PLUS} New</button>` +
                 `</div>` +
                 messagesHtml +
                 `<div class="crm-books-composer">` +
-                `<textarea class="crm-input crm-books-composer-input" placeholder="Ask about the book..." rows="2"></textarea>` +
-                `<button class="crm-btn-primary crm-books-send-btn" style="align-self:flex-end;">Send</button>` +
+                `<textarea class="crm-books-composer-input" placeholder="Ask about the book\u2026" rows="1"></textarea>` +
+                `<button class="crm-books-send-btn" title="Send">${ICON_SEND}</button>` +
                 `</div>`;
         }
 
@@ -384,18 +482,21 @@ window.CrmBooksWorkspace = (function () {
 
             if (msg._loading) {
                 return `<div class="crm-books-msg ${cls}">` +
-                    `<div class="crm-books-msg-text crm-books-msg-loading crm-muted">Searching the book...</div>` +
-                    `</div>`;
+                    `<div class="crm-books-msg-text crm-books-msg-loading">` +
+                    `<span class="crm-books-typing-indicator"><span></span><span></span><span></span></span> Searching the book\u2026` +
+                    `</div></div>`;
             }
 
             const answered = msg.answered !== false;
             const textCls = answered ? '' : ' crm-books-msg-unanswered';
             const citationsHtml = !isUser && msg.citations?.length > 0
-                ? `<div class="crm-books-msg-citations">${renderCitations(msg.citations, escapeHtml)}</div>`
-                : '';
+                ? renderCitations(msg.citations, escapeHtml) : '';
+            const saveBtn = !isUser && msg.text
+                ? `<div class="crm-books-msg-actions"><button class="crm-books-msg-save-btn" title="Save to Notes"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM6 6h9v4H6z"/></svg> Save</button></div>` : '';
             return `<div class="crm-books-msg ${cls}${textCls}">` +
                 `<div class="crm-books-msg-text">${escapeHtml(msg.text || '')}</div>` +
                 citationsHtml +
+                saveBtn +
                 `</div>`;
         }
 
@@ -408,6 +509,91 @@ window.CrmBooksWorkspace = (function () {
             );
         }
 
+        function renderPagesTab() {
+            if (!pagesData) {
+                loadPagesMetadata();
+                return `<div class="crm-books-pages-placeholder">` +
+                    `<div class="crm-books-empty-icon" style="margin-bottom:12px;">${ICON_DOC}</div>` +
+                    `<p class="crm-muted">Loading pages…</p></div>`;
+            }
+            if (pagesData.totalPages === 0) {
+                return `<div class="crm-books-pages-placeholder">` +
+                    `<div class="crm-books-empty-icon" style="margin-bottom:12px;">${ICON_DOC}</div>` +
+                    `<h4>No Pages</h4><p class="crm-muted">Page data is not available for this book.</p></div>`;
+            }
+            const pageText = pagesData.pages?.[currentPage - 1] ?? '';
+            const prevDisabled = currentPage <= 1 ? ' disabled' : '';
+            const nextDisabled = currentPage >= pagesData.totalPages ? ' disabled' : '';
+            return `<div class="crm-books-pages-nav">` +
+                `<button class="crm-books-page-prev"${prevDisabled}>← Prev</button>` +
+                `<span class="crm-books-pages-indicator">Page <input type="number" class="crm-books-page-input" value="${currentPage}" min="1" max="${pagesData.totalPages}"> of ${pagesData.totalPages}</span>` +
+                `<button class="crm-books-page-next"${nextDisabled}>Next →</button>` +
+                `</div>` +
+                `<div class="crm-books-page-content">${escapeHtml(pageText)}</div>`;
+        }
+
+        async function loadPagesMetadata() {
+            if (!selectedBookId || pagesData) return;
+            try {
+                const res = await apiGet(`/api/admin/books/${selectedBookId}/pages`);
+                pagesData = res;
+                currentPage = 1;
+                if (activeTab === 'pages') renderExplorerPanel();
+            } catch (err) {
+                console.error('[CRM Books] Failed to load pages:', err);
+                pagesData = { totalPages: 0, pages: [] };
+                if (activeTab === 'pages') renderExplorerPanel();
+            }
+        }
+
+        function renderNotesTab() {
+            if (!selectedBookId) return '<div class="crm-books-notes-empty">Select a book first.</div>';
+            const notes = loadStudioNotes(selectedBookId);
+            if (notes.length === 0) {
+                return `<div class="crm-books-notes-empty">` +
+                    `<p>No saved notes yet.</p>` +
+                    `<p style="font-size:0.8rem; margin-top:8px; color:var(--books-text-muted);">Save interesting chat responses using the Save button on messages.</p>` +
+                    `</div>`;
+            }
+            return `<div class="crm-books-notes-list">${notes.map((n) => {
+                const timeStr = n.savedAt ? new Date(n.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                return `<div class="crm-books-note-card" data-note-id="${escapeHtml(n.id)}">` +
+                    `<div class="crm-books-note-card-text">${escapeHtml(n.text)}</div>` +
+                    `<div class="crm-books-note-card-meta">` +
+                    `<span>${escapeHtml(timeStr)}</span>` +
+                    `<button class="crm-books-note-delete-btn" data-note-id="${escapeHtml(n.id)}" title="Remove note">&times;</button>` +
+                    `</div></div>`;
+            }).join('')}</div>`;
+        }
+
+        function renderUsageIndicator() {
+            if (!usageData) return '';
+            const pct = Math.min(100, Math.round((usageData.estimatedCostUsd / usageData.budgetLimitUsd) * 100));
+            const colorCls = pct < 60 ? 'green' : pct < 90 ? 'yellow' : 'red';
+            return `<div class="crm-books-usage-wrap">` +
+                `<span class="crm-books-usage-label">$${usageData.estimatedCostUsd.toFixed(2)} / $${usageData.budgetLimitUsd.toFixed(2)}</span>` +
+                `<div class="crm-books-usage-bar"><div class="crm-books-usage-fill ${colorCls}" style="width:${pct}%"></div></div>` +
+                `</div>`;
+        }
+
+        function renderBudgetBanner() {
+            if (!usageData || usageData.estimatedCostUsd < usageData.budgetLimitUsd || usageData.approved) return '';
+            return `<div class="crm-books-budget-banner">` +
+                `<span>Monthly AI budget ($${usageData.budgetLimitUsd.toFixed(2)}) exceeded.</span>` +
+                `<input type="text" class="crm-books-approve-input" placeholder="Type approve">` +
+                `<button class="crm-books-approve-btn">Confirm</button>` +
+                `</div>`;
+        }
+
+        async function loadUsage() {
+            try {
+                const res = await apiGet('/api/admin/books/usage');
+                usageData = res;
+            } catch (_) {
+                usageData = null;
+            }
+        }
+
         function renderFailedState(b) {
             const label = buildIngestLabel(b.ingest, b.status);
             const rawError = clean(b.ingest?.error);
@@ -415,21 +601,24 @@ window.CrmBooksWorkspace = (function () {
             const code = codeMatch ? codeMatch[1] : clean(b.ingest?.error?.code);
             const nonRetryable = new Set(['SCANNED_PDF_NO_TEXT', 'PDF_PARSE_FAILED']);
             const canRetry = !nonRetryable.has(code);
-            return `<div class="crm-books-state-notice" style="padding:24px;">` +
-                `<p style="color:var(--danger-color, #e53e3e); font-weight:600; margin-bottom:8px;">Processing failed</p>` +
+            return `<div class="crm-books-state-notice">` +
+                `<div class="crm-books-state-icon danger">${ICON_ERROR}</div>` +
+                `<p class="crm-books-state-notice-title">Processing failed</p>` +
                 `<p class="crm-muted">${escapeHtml(label)}</p>` +
-                `<div style="margin-top:16px; display:flex; gap:8px;">` +
-                (canRetry ? `<button class="crm-btn-secondary crm-books-retry-btn" data-book-id="${escapeHtml(b.bookId)}">Retry</button>` : '') +
-                `<button class="crm-btn-secondary crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" style="color:var(--danger-color, #e53e3e);">Remove</button>` +
+                `<div class="crm-books-state-notice-actions">` +
+                (canRetry ? `<button class="crm-books-retry-btn" data-book-id="${escapeHtml(b.bookId)}">Retry</button>` : '') +
+                `<button class="crm-books-delete-btn danger" data-book-id="${escapeHtml(b.bookId)}">Remove</button>` +
                 `</div></div>`;
         }
 
         function renderAwaitingUpload(b) {
-            return `<div class="crm-books-state-notice" style="padding:24px;">` +
-                `<p class="crm-muted" style="margin-bottom:8px;">This book's PDF has not been uploaded yet.</p>` +
-                `<div style="display:flex; gap:8px;">` +
-                `<button class="crm-btn-primary crm-books-reupload-btn" data-book-id="${escapeHtml(b.bookId)}">Upload PDF</button>` +
-                `<button class="crm-btn-secondary crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" style="color:var(--danger-color, #e53e3e);">Remove</button>` +
+            return `<div class="crm-books-state-notice">` +
+                `<div class="crm-books-state-icon">${ICON_UPLOAD}</div>` +
+                `<p class="crm-books-state-notice-title">Upload needed</p>` +
+                `<p class="crm-muted">This book's PDF has not been uploaded yet.</p>` +
+                `<div class="crm-books-state-notice-actions">` +
+                `<button class="crm-books-reupload-btn" data-book-id="${escapeHtml(b.bookId)}">Upload PDF</button>` +
+                `<button class="crm-books-delete-btn danger" data-book-id="${escapeHtml(b.bookId)}">Remove</button>` +
                 `</div></div>`;
         }
 
@@ -437,11 +626,14 @@ window.CrmBooksWorkspace = (function () {
             const percent = ingestWeightedPercent(b.ingest, b.status);
             const label = buildIngestLabel(b.ingest, b.status);
             const eta = formatEta(b.ingest);
-            return `<div class="crm-books-state-notice" style="padding:24px;">` +
-                `<p style="font-weight:600; margin-bottom:8px;">Processing...</p>` +
-                `<div class="crm-books-progress-bar" style="height:8px; margin-bottom:8px;"><div class="crm-books-progress-fill" style="width:${percent}%"></div></div>` +
+            return `<div class="crm-books-state-notice">` +
+                `<div class="crm-books-processing-ring">` +
+                `<svg viewBox="0 0 48 48" width="56" height="56"><circle cx="24" cy="24" r="20" fill="none" stroke="#E8E2D9" stroke-width="3"/><circle cx="24" cy="24" r="20" fill="none" stroke="#B8860B" stroke-width="3" stroke-dasharray="${Math.round(125.6 * percent / 100)} 125.6" stroke-linecap="round" transform="rotate(-90 24 24)" style="transition:stroke-dasharray 0.5s;"/></svg>` +
+                `<span class="crm-books-processing-pct">${percent}%</span>` +
+                `</div>` +
+                `<p class="crm-books-state-notice-title">Processing…</p>` +
                 `<p class="crm-muted">${escapeHtml(label)}</p>` +
-                (eta ? `<p class="crm-muted" style="font-size:0.8rem;">${escapeHtml(eta)}</p>` : '') +
+                (eta ? `<p class="crm-muted crm-books-eta">${escapeHtml(eta)}</p>` : '') +
                 `</div>`;
         }
 
@@ -450,11 +642,11 @@ window.CrmBooksWorkspace = (function () {
             try {
                 const res = await apiGet('/api/admin/books');
                 books = normalizeBooks(res.books);
-                renderList();
+                renderSourcesPanel();
                 if (selectedBookId) {
                     selectedBook = books.find((b) => b.bookId === selectedBookId) || null;
                     if (selectedBook) {
-                        renderDetail();
+                        renderExplorerPanel();
                     }
                 }
             } catch (err) {
@@ -471,12 +663,15 @@ window.CrmBooksWorkspace = (function () {
             messages = [];
             selectedThreadId = '';
             activeTab = 'summary';
+            collapsedOutline = {};
+            pagesData = null;
+            currentPage = 1;
 
             detachSnapshot();
-            renderList();
+            renderSourcesPanel();
 
             if (!selectedBook) {
-                renderDetail();
+                renderExplorerPanel();
                 return;
             }
 
@@ -494,7 +689,7 @@ window.CrmBooksWorkspace = (function () {
                 console.error('[CRM Books] Failed to load book detail:', err);
             }
 
-            renderDetail();
+            renderExplorerPanel();
 
             if (selectedBook.status === 'ready') {
                 loadThreads().catch(console.error);
@@ -516,7 +711,7 @@ window.CrmBooksWorkspace = (function () {
                     selectedThreadId = threads[0].threadId;
                     await loadMessages();
                 }
-                renderDetail();
+                renderExplorerPanel();
             } catch (err) {
                 console.error('[CRM Books] Failed to load threads:', err);
             }
@@ -553,9 +748,9 @@ window.CrmBooksWorkspace = (function () {
                         if (idx >= 0) books[idx] = updated;
                         if (selectedBookId === bookId) {
                             selectedBook = updated;
-                            renderDetail();
+                            renderExplorerPanel();
                         }
-                        renderList();
+                        renderSourcesPanel();
                         if (data.status === 'ready' || data.status === 'failed') {
                             detachSnapshot();
                             if (data.status === 'ready' && selectedBookId === bookId) {
@@ -600,7 +795,7 @@ window.CrmBooksWorkspace = (function () {
             modal.innerHTML =
                 `<div class="crm-modal-container" style="max-width:480px;">` +
                 `<div class="crm-modal-header"><h2>Add Book</h2>` +
-                `<button class="crm-icon-btn crm-books-modal-close" title="Close"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>` +
+                `<button class="crm-icon-btn crm-books-modal-close" title="Close">${ICON_CLOSE}</button>` +
                 `</div>` +
                 `<div class="crm-modal-body" style="flex-direction:column; padding:20px;">` +
                 `<div class="crm-form-grid" style="grid-template-columns:1fr;">` +
@@ -703,7 +898,7 @@ window.CrmBooksWorkspace = (function () {
                         sha256,
                         source: { storagePath: book.storagePath }
                     });
-                    renderList();
+                    renderSourcesPanel();
 
                     await startUpload(book.bookId, book.storagePath || `crm-books/${book.bookId}/source.pdf`, file);
                 } catch (err) {
@@ -732,11 +927,11 @@ window.CrmBooksWorkspace = (function () {
                                 ingest: { stage: 'upload', percent: pct, totalPages: 0, totalChunks: 0, embeddedChunks: 0, error: null }
                             };
                             if (!renderListTimer) {
-                                renderListTimer = setTimeout(() => { renderListTimer = null; renderList(); }, 250);
+                                renderListTimer = setTimeout(() => { renderListTimer = null; renderSourcesPanel(); }, 250);
                             }
                             if (selectedBookId === bookId) {
                                 selectedBook = books[idx];
-                                renderDetail();
+                                renderExplorerPanel();
                             }
                         }
                     },
@@ -751,8 +946,8 @@ window.CrmBooksWorkspace = (function () {
                         if (idx >= 0) {
                             books[idx].status = 'awaiting_upload';
                             books[idx].ingest = null;
-                            renderList();
-                            if (selectedBookId === bookId) { selectedBook = books[idx]; renderDetail(); }
+                            renderSourcesPanel();
+                            if (selectedBookId === bookId) { selectedBook = books[idx]; renderExplorerPanel(); }
                         }
                     },
                     async () => {
@@ -790,8 +985,7 @@ window.CrmBooksWorkspace = (function () {
                     selectedSummary = null;
                     detachSnapshot();
                 }
-                renderList();
-                renderDetail();
+                renderAll();
             } catch (err) {
                 console.error('[CRM Books] Delete error:', err);
                 showToast?.('Failed to delete book.', 'error');
@@ -852,14 +1046,12 @@ window.CrmBooksWorkspace = (function () {
 
             messages.push({ role: 'user', text, citations: [] });
             messages.push({ role: 'assistant', text: '', citations: [], _loading: true });
-            renderDetail();
+            renderExplorerPanel();
 
             let liveInput = qs('.crm-books-composer-input');
             let liveSendBtn = qs('.crm-books-send-btn');
             if (liveSendBtn) liveSendBtn.disabled = true;
             if (liveInput) { liveInput.value = ''; liveInput.disabled = true; }
-
-            updateLoadingIndicator('Searching the book...');
 
             try {
                 const res = await apiPost(
@@ -877,7 +1069,7 @@ window.CrmBooksWorkspace = (function () {
                     showToast?.(`${res.quota.remaining} chat messages remaining today.`, 'info');
                 }
 
-                renderDetail();
+                renderExplorerPanel();
             } catch (err) {
                 console.error('[CRM Books] Chat error:', err);
                 messages.pop();
@@ -887,9 +1079,9 @@ window.CrmBooksWorkspace = (function () {
                 if (errorCode === 'QUOTA_EXHAUSTED') {
                     showToast?.('Daily chat limit reached. Resets tomorrow.', 'error');
                 } else {
-                    showToast?.('Failed to get a response. Your message is still in the box — try again.', 'error');
+                    showToast?.('Failed to get a response. Your message is still in the box \u2014 try again.', 'error');
                 }
-                renderDetail();
+                renderExplorerPanel();
                 const retryInput = qs('.crm-books-composer-input');
                 if (retryInput && errorCode !== 'QUOTA_EXHAUSTED') retryInput.value = text;
             } finally {
@@ -901,17 +1093,24 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
-        function updateLoadingIndicator(stage) {
-            const loadingEl = qs('.crm-books-msg-loading');
-            if (loadingEl) {
-                loadingEl.textContent = stage;
-            }
-        }
 
         // --- Event binding ---
         function bindEvents() {
             if (bound || !panel) return;
             bound = true;
+
+            // Search filter
+            panel.addEventListener('input', (e) => {
+                if (e.target.classList.contains('crm-books-search')) {
+                    searchQuery = clean(e.target.value);
+                    renderSourcesPanel();
+                }
+                // Auto-resize composer textarea
+                if (e.target.classList.contains('crm-books-composer-input')) {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                }
+            });
 
             panel.addEventListener('click', async (e) => {
                 const target = e.target.closest('[data-book-id]');
@@ -929,7 +1128,22 @@ window.CrmBooksWorkspace = (function () {
                     }
                     if (target.classList.contains('crm-books-reupload-btn')) {
                         e.stopPropagation();
-                        openAddBookModal();
+                        const book = books.find((b) => b.bookId === bookId);
+                        if (!book) return;
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'application/pdf';
+                        input.addEventListener('change', async () => {
+                            const file = input.files?.[0];
+                            if (!file) return;
+                            if (file.size > 100 * 1024 * 1024) {
+                                showToast?.('File must be under 100 MB.', 'error');
+                                return;
+                            }
+                            const path = book.source?.storagePath || `crm-books/${bookId}/source.pdf`;
+                            await startUpload(bookId, path, file);
+                        });
+                        input.click();
                         return;
                     }
                     if (target.classList.contains('crm-books-list-item')) {
@@ -941,7 +1155,7 @@ window.CrmBooksWorkspace = (function () {
                 const tab = e.target.closest('[data-books-tab]');
                 if (tab) {
                     activeTab = tab.dataset.booksTab;
-                    renderDetail();
+                    renderExplorerPanel();
                     if (activeTab === 'chat' && threads.length === 0 && selectedBook?.status === 'ready') {
                         loadThreads().catch(console.error);
                     }
@@ -968,17 +1182,79 @@ window.CrmBooksWorkspace = (function () {
                 }
 
                 if (e.target.closest('.crm-books-starter-btn')) {
-                    const text = clean(e.target.textContent);
+                    const text = clean(e.target.closest('.crm-books-starter-btn').textContent);
                     if (text) await sendMessage(text);
                     return;
                 }
 
-                const citRef = e.target.closest('.crm-books-citation-ref');
-                if (citRef) {
-                    const idx = citRef.dataset.citationIdx;
-                    const detail = panel.querySelector(`.crm-books-citation-detail[data-citation-idx="${idx}"]`);
-                    if (detail) {
-                        detail.style.display = detail.style.display === 'none' ? 'inline' : 'none';
+                // Topic chip → prefill chat
+                const topicChip = e.target.closest('.crm-books-topic-chip');
+                if (topicChip) {
+                    const topic = topicChip.dataset.topic;
+                    if (topic) {
+                        activeTab = 'chat';
+                        renderExplorerPanel();
+                        if (threads.length === 0 && selectedBook?.status === 'ready') {
+                            await loadThreads();
+                        }
+                        requestAnimationFrame(() => {
+                            const input = qs('.crm-books-composer-input');
+                            if (input) {
+                                input.value = `What does the book say about ${topic.toLowerCase()}?`;
+                                input.focus();
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                // Save to notes
+                const saveBtn = e.target.closest('.crm-books-msg-save-btn');
+                if (saveBtn && selectedBookId) {
+                    const msgEl = saveBtn.closest('.crm-books-msg');
+                    if (msgEl) {
+                        const text = msgEl.querySelector('.crm-books-msg-text')?.textContent || '';
+                        saveStudioNote(selectedBookId, text, []);
+                        showToast?.('Saved to notes.', 'info');
+                        if (activeTab === 'notes') renderExplorerPanel();
+                    }
+                    return;
+                }
+
+                // Delete note
+                const noteDeleteBtn = e.target.closest('.crm-books-note-delete-btn');
+                if (noteDeleteBtn && selectedBookId) {
+                    const noteId = noteDeleteBtn.dataset.noteId;
+                    if (noteId) {
+                        deleteStudioNote(selectedBookId, noteId);
+                        renderExplorerPanel();
+                    }
+                    return;
+                }
+
+                // Citation ref click toggle
+                const citWrap = e.target.closest('.crm-books-citation-wrap');
+                if (citWrap) {
+                    const idx = citWrap.dataset.citationIdx;
+                    const msgEl = citWrap.closest('.crm-books-msg');
+                    if (msgEl) {
+                        const detail = citWrap.querySelector('.crm-books-citation-detail');
+                        if (detail) {
+                            const isVisible = detail.classList.contains('visible');
+                            msgEl.querySelectorAll('.crm-books-citation-detail.visible').forEach((el) => el.classList.remove('visible'));
+                            if (!isVisible) detail.classList.add('visible');
+                        }
+                    }
+                    return;
+                }
+
+                // Outline toggle
+                const outlineToggle = e.target.closest('.crm-books-outline-toggle');
+                if (outlineToggle) {
+                    const key = outlineToggle.dataset.outlineKey;
+                    if (key) {
+                        collapsedOutline[key] = !collapsedOutline[key];
+                        renderExplorerPanel();
                     }
                     return;
                 }
@@ -988,7 +1264,7 @@ window.CrmBooksWorkspace = (function () {
                 if (e.target.classList.contains('crm-books-thread-select')) {
                     selectedThreadId = clean(e.target.value);
                     await loadMessages();
-                    renderDetail();
+                    renderExplorerPanel();
                 }
             });
 
@@ -999,11 +1275,93 @@ window.CrmBooksWorkspace = (function () {
                     if (text) sendMessage(text);
                 }
             });
+
+            // Citation hover tooltips — target the wrapper to avoid flicker
+            panel.addEventListener('mouseenter', (e) => {
+                const wrap = e.target.closest?.('.crm-books-citation-wrap');
+                if (wrap) {
+                    const detail = wrap.querySelector('.crm-books-citation-detail');
+                    if (detail) detail.classList.add('visible');
+                }
+            }, true);
+
+            panel.addEventListener('mouseleave', (e) => {
+                const wrap = e.target.closest?.('.crm-books-citation-wrap');
+                if (wrap && !wrap.contains(e.relatedTarget)) {
+                    const detail = wrap.querySelector('.crm-books-citation-detail');
+                    if (detail) detail.classList.remove('visible');
+                }
+            }, true);
+
+            // Sources toggle
+            panel.addEventListener('click', (e) => {
+                if (e.target.closest('.crm-books-sources-toggle')) {
+                    const workspace = panel.querySelector('.crm-books-workspace');
+                    if (workspace) workspace.classList.toggle('sources-collapsed');
+                }
+            });
+
+            // Dark mode toggle
+            panel.addEventListener('click', (e) => {
+                if (e.target.closest('.crm-books-dark-toggle')) {
+                    panel.classList.toggle('books-dark');
+                    localStorage.setItem('crm_books_dark_mode', panel.classList.contains('books-dark') ? '1' : '0');
+                    renderExplorerPanel();
+                }
+            });
+
+            // Pages navigation
+            panel.addEventListener('click', (e) => {
+                if (e.target.closest('.crm-books-page-prev') && currentPage > 1) {
+                    currentPage--;
+                    renderExplorerPanel();
+                    return;
+                }
+                if (e.target.closest('.crm-books-page-next') && pagesData && currentPage < pagesData.totalPages) {
+                    currentPage++;
+                    renderExplorerPanel();
+                    return;
+                }
+            });
+            panel.addEventListener('change', (e) => {
+                if (e.target.classList.contains('crm-books-page-input') && pagesData) {
+                    const val = parseInt(e.target.value, 10);
+                    if (val >= 1 && val <= pagesData.totalPages) {
+                        currentPage = val;
+                        renderExplorerPanel();
+                    } else {
+                        e.target.value = currentPage;
+                    }
+                }
+            });
+
+            // Budget approval
+            panel.addEventListener('click', async (e) => {
+                if (e.target.closest('.crm-books-approve-btn')) {
+                    const input = panel.querySelector('.crm-books-approve-input');
+                    if (input && clean(input.value).toLowerCase() === 'approve') {
+                        try {
+                            await apiPost('/api/admin/books/usage/approve', { confirm: 'approve' });
+                            showToast?.('Budget approved. Counter reset.', 'info');
+                            await loadUsage();
+                            renderExplorerPanel();
+                        } catch (err) {
+                            showToast?.('Failed to approve budget.', 'error');
+                        }
+                    } else {
+                        showToast?.('Type "approve" to confirm.', 'error');
+                    }
+                }
+            });
         }
 
         // --- Lifecycle ---
         async function init() {
+            if (localStorage.getItem('crm_books_dark_mode') === '1' && panel) {
+                panel.classList.add('books-dark');
+            }
             bindEvents();
+            loadUsage().catch(() => {});
             await refresh();
         }
 

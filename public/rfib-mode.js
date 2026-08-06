@@ -965,11 +965,12 @@
     resetActionButtons();
   }
 
-  /** Pre-grade action bar: Check only. */
+  /** Pre-grade action bar: Check and Easy Reading only. */
   function resetActionButtons() {
     if (elements.checkBtn) elements.checkBtn.style.display = '';
     if (elements.retryBtn) elements.retryBtn.style.display = 'none';
     if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
+    if (elements.easyReadingBtn) elements.easyReadingBtn.style.display = '';
   }
 
   function applyBlankClasses(results) {
@@ -1142,9 +1143,6 @@
   async function checkAnswers() {
     if (!state.currentQuestion || !state.currentAttempt) return;
 
-    state.supportVisible = true;
-    updateSupportVisibility();
-
     const selects = Array.from(elements.clozeView.querySelectorAll('.rfib-blank-select'));
     const answers = state.currentAttempt.blanks.map((blank, index) => {
       const select = selects.find((item) => Number(item.dataset.blankIndex) === index);
@@ -1244,7 +1242,14 @@
     }
 
     // Match the other Reading tasks: Retry and Next Question appear only once
-    // the attempt has been graded.
+    // the attempt has been graded. Easy Reading is a pre-answer scaffold, so it
+    // leaves the action bar at the same moment Check does, and the support panel
+    // it opens is collapsed with it.
+    if (elements.easyReadingBtn) elements.easyReadingBtn.style.display = 'none';
+    if (state.supportVisible) {
+      state.supportVisible = false;
+      updateSupportVisibility();
+    }
     if (elements.checkBtn) elements.checkBtn.style.display = 'none';
     if (elements.retryBtn) elements.retryBtn.style.display = '';
     if (elements.nextQuestionBtn) {

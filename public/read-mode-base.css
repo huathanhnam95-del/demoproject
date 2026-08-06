@@ -1,10 +1,15 @@
 /* ==========================================================================
-   Reading Mode Base — shared design language for all Reading tasks
+   Reading Mode Base — shared design language for Reading and Writing tasks
    --------------------------------------------------------------------------
    Extracted from the Fill in the Blanks (Dropdown) mode, which is the
    reference implementation for the Reading visual language.
 
-   Applies to: rfib, dd, rmcsa, rmcma, rop
+   Applies to: rfib, dd, rmcsa, rmcma, rop, swt, essay
+
+   The two Writing tasks joined later. They obey all four rules, but they own
+   two primitives Reading has no equivalent for — a countdown timer chip and a
+   live word counter. Those live in swt-mode.css / write-essay-mode.css, styled
+   from the tokens below so they read as part of the same system.
 
    THE FOUR RULES
    1. The panel carries an ambient warm/cool gradient wash. Nothing else does.
@@ -27,7 +32,9 @@
 #mode-dd,
 #mode-rmcsa,
 #mode-rmcma,
-#mode-rop {
+#mode-rop,
+#mode-swt,
+#mode-essay {
   /* Palette.
      --read-accent was #b86d2d, which is 3.84:1 on the paper background and
      4.0:1 behind white — under WCAG AA (4.5:1) for normal text. It is used for
@@ -98,7 +105,9 @@
 #mode-dd,
 #mode-rmcsa,
 #mode-rmcma,
-#mode-rop {
+#mode-rop,
+#mode-swt,
+#mode-essay {
   position: relative;
   overflow: hidden;
   padding: 8px 2px 18px;
@@ -113,7 +122,9 @@
 #mode-dd::before,
 #mode-rmcsa::before,
 #mode-rmcma::before,
-#mode-rop::before {
+#mode-rop::before,
+#mode-swt::before,
+#mode-essay::before {
   display: none;
 }
 
@@ -126,13 +137,17 @@
 #mode-dd,
 #mode-rmcsa,
 #mode-rmcma,
-#mode-rop {
+#mode-rop,
+#mode-swt,
+#mode-essay {
   padding-inline: var(--space-md, 16px);
 }
 
 .rmcsa-container,
 .rmcma-container,
-.rop-container {
+.rop-container,
+.swt-container,
+.essay-container {
   box-sizing: border-box;
   max-width: 1200px;
   width: 100%;
@@ -147,7 +162,9 @@
 .dd-header-card,
 .rmcsa-header-card,
 .rmcma-header-card,
-.rop-header-card {
+.rop-header-card,
+.swt-header-card,
+.essay-header-card {
   border: 1px solid var(--read-border);
   border-radius: var(--read-radius-surface);
   background: var(--read-glass);
@@ -161,7 +178,9 @@
 .dd-kicker,
 .rmcsa-kicker,
 .rmcma-kicker,
-.rop-kicker {
+.rop-kicker,
+.swt-kicker,
+.essay-kicker {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -176,7 +195,9 @@
 .dd-header-copy h2,
 .rmcsa-header-copy h2,
 .rmcma-header-copy h2,
-.rop-header-copy h2 {
+.rop-header-copy h2,
+.swt-header-copy h2,
+.essay-header-copy h2 {
   margin: 6px 0 8px;
   font-family: 'Lora', serif;
   font-size: 1.6rem;
@@ -188,7 +209,9 @@
 .dd-header-copy p,
 .rmcsa-header-copy p,
 .rmcma-header-copy p,
-.rop-header-copy p {
+.rop-header-copy p,
+.swt-header-copy p,
+.essay-header-copy p {
   margin: 0;
   color: var(--read-muted);
   line-height: 1.55;
@@ -229,7 +252,13 @@
 .rmcma-passage-card,
 .rmcma-question-card,
 .rop-source-card,
-.rop-target-card {
+.rop-target-card,
+.swt-source-card,
+.swt-compose-card,
+.swt-feedback-card,
+.essay-prompt-card,
+.essay-compose-card,
+.essay-feedback-panel {
   border: none;
   background: transparent;
   box-shadow: none;
@@ -252,7 +281,9 @@
 .dd-card-header,
 .rmcsa-card-header,
 .rmcma-card-header,
-.rop-card-header {
+.rop-card-header,
+.swt-card-header,
+.essay-card-header {
   margin-bottom: 12px;
   padding-bottom: 0;
   border-bottom: none;
@@ -263,7 +294,8 @@
    per-mode sheets, so a mode sheet redeclaring grid-template-columns would
    beat the base media query no matter which one is "more mobile". */
 .rmcsa-split-layout,
-.rmcma-split-layout {
+.rmcma-split-layout,
+.swt-split-layout {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 20px;
@@ -274,14 +306,17 @@
 /* One hairline spans the whole row rather than one per column, which would
    leave a visible break at the grid gap. */
 .rmcsa-split-layout,
-.rmcma-split-layout {
+.rmcma-split-layout,
+.swt-split-layout {
   border-top: 1px solid var(--read-border-soft);
 }
 
 .rmcsa-split-layout > .rmcsa-passage-card,
 .rmcsa-split-layout > .rmcsa-question-card,
 .rmcma-split-layout > .rmcma-passage-card,
-.rmcma-split-layout > .rmcma-question-card {
+.rmcma-split-layout > .rmcma-question-card,
+.swt-split-layout > .swt-source-card,
+.swt-split-layout > .swt-compose-card {
   border-top: none;
   margin-bottom: 0;
 }
@@ -294,7 +329,9 @@
 .dd-result-summary-box,
 .rmcsa-result-box,
 .rmcma-result-box,
-.rop-result-box {
+.rop-result-box,
+.swt-result-box,
+.essay-result-box {
   border: none;
   background: transparent;
   box-shadow: none;
@@ -313,7 +350,9 @@
 .dd-result-summary-box:empty,
 .rmcsa-result-box:empty,
 .rmcma-result-box:empty,
-.rop-result-box:empty {
+.rop-result-box:empty,
+.swt-result-box:empty,
+.essay-result-box:empty {
   display: none;
 }
 
@@ -323,7 +362,9 @@
 .dd-result-summary-box,
 .rmcsa-result-header,
 .rmcma-result-header,
-.rop-score-display {
+.rop-score-display,
+.swt-result-summary,
+.essay-result-summary {
   font-weight: 800;
   font-size: 1.05rem;
   margin: 0;
@@ -337,7 +378,9 @@
 .rfib-result-summary.is-perfect,
 .dd-result-summary-box.is-perfect,
 .rmcsa-result-header.is-correct,
-.rmcma-result-header.is-correct {
+.rmcma-result-header.is-correct,
+.swt-result-summary.is-perfect,
+.essay-result-summary.is-perfect {
   color: var(--read-success);
 }
 
@@ -345,18 +388,24 @@
 .rfib-result-summary.has-misses,
 .dd-result-summary-box.has-misses,
 .rmcsa-result-header.is-incorrect,
-.rmcma-result-header.is-incorrect {
+.rmcma-result-header.is-incorrect,
+.swt-result-summary.has-misses,
+.essay-result-summary.has-misses {
   color: var(--read-danger);
 }
 
-.rmcma-result-header.is-partial {
+.rmcma-result-header.is-partial,
+.swt-result-summary.is-partial,
+.essay-result-summary.is-partial {
   color: var(--read-accent);
 }
 
 /* Supporting line under the score */
 .read-result-desc,
 .rmcsa-result-desc,
-.rmcma-result-desc {
+.rmcma-result-desc,
+.swt-result-desc,
+.essay-result-desc {
   font-size: 0.92rem;
   color: var(--read-muted);
   text-align: center;
@@ -450,12 +499,14 @@
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   .rmcsa-split-layout,
-  .rmcma-split-layout {
+  .rmcma-split-layout,
+  .swt-split-layout {
     grid-template-columns: 1fr;
   }
 
   .rmcsa-split-layout > .rmcsa-question-card,
-  .rmcma-split-layout > .rmcma-question-card {
+  .rmcma-split-layout > .rmcma-question-card,
+  .swt-split-layout > .swt-compose-card {
     margin-bottom: 14px;
   }
 }
@@ -465,7 +516,9 @@
   #mode-dd,
   #mode-rmcsa,
   #mode-rmcma,
-  #mode-rop {
+  #mode-rop,
+  #mode-swt,
+  #mode-essay {
     padding-inline: 0;
   }
 
@@ -473,7 +526,9 @@
   .dd-header-card,
   .rmcsa-header-card,
   .rmcma-header-card,
-  .rop-header-card {
+  .rop-header-card,
+  .swt-header-card,
+  .essay-header-card {
     border-radius: 20px;
     padding: 16px;
   }
@@ -482,7 +537,9 @@
   .dd-header-copy h2,
   .rmcsa-header-copy h2,
   .rmcma-header-copy h2,
-  .rop-header-copy h2 {
+  .rop-header-copy h2,
+  .swt-header-copy h2,
+  .essay-header-copy h2 {
     font-size: 1.35rem;
   }
 }
@@ -519,6 +576,8 @@
 #mode-rmcma .modern-btn,
 #mode-rmcsa .modern-btn,
 #mode-rop .modern-btn,
+#mode-swt .modern-btn,
+#mode-essay .modern-btn,
 #mode-rfib .modern-btn,
 #mode-rfib .difficulty-filter-btn,
 #mode-dd .difficulty-filter-btn,
@@ -556,7 +615,9 @@
 #mode-dd .modern-btn--play,
 #mode-rmcma .modern-btn--play,
 #mode-rmcsa .modern-btn--play,
-#mode-rop .modern-btn--play {
+#mode-rop .modern-btn--play,
+#mode-swt .modern-btn--play,
+#mode-essay .modern-btn--play {
   background: linear-gradient(135deg, var(--read-btn-play-start), var(--read-btn-play-end));
   color: #fff;
   box-shadow: 0 2px 6px rgb(37 99 235 / 0.3);
@@ -566,7 +627,9 @@
 #mode-dd .modern-btn--check,
 #mode-rmcma .modern-btn--check,
 #mode-rmcsa .modern-btn--check,
-#mode-rop .modern-btn--check {
+#mode-rop .modern-btn--check,
+#mode-swt .modern-btn--check,
+#mode-essay .modern-btn--check {
   background: linear-gradient(135deg, var(--read-btn-primary-start), var(--read-btn-primary-end));
   color: #fff;
   box-shadow: 0 2px 6px rgb(22 163 74 / 0.3);
@@ -576,7 +639,9 @@
 #mode-dd .modern-btn--retry,
 #mode-rmcma .modern-btn--retry,
 #mode-rmcsa .modern-btn--retry,
-#mode-rop .modern-btn--retry {
+#mode-rop .modern-btn--retry,
+#mode-swt .modern-btn--retry,
+#mode-essay .modern-btn--retry {
   background: linear-gradient(135deg, var(--read-btn-retry-start), var(--read-btn-retry-end));
   color: #fff;
   box-shadow: 0 2px 6px rgb(217 119 6 / 0.3);
@@ -602,6 +667,8 @@
 #mode-rmcma .modern-btn--secondary,
 #mode-rmcsa .modern-btn--secondary,
 #mode-rop .modern-btn--secondary,
+#mode-swt .modern-btn--secondary,
+#mode-essay .modern-btn--secondary,
 #mode-rfib .difficulty-filter-btn,
 #mode-dd .difficulty-filter-btn,
 #mode-rmcma .difficulty-filter-btn,
@@ -618,6 +685,8 @@
 #mode-rmcma .modern-btn:hover:not(:disabled),
 #mode-rmcsa .modern-btn:hover:not(:disabled),
 #mode-rop .modern-btn:hover:not(:disabled),
+#mode-swt .modern-btn:hover:not(:disabled),
+#mode-essay .modern-btn:hover:not(:disabled),
 #mode-rfib .nav-btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
@@ -627,6 +696,8 @@
 #mode-rmcma .modern-btn:active:not(:disabled),
 #mode-rmcsa .modern-btn:active:not(:disabled),
 #mode-rop .modern-btn:active:not(:disabled),
+#mode-swt .modern-btn:active:not(:disabled),
+#mode-essay .modern-btn:active:not(:disabled),
 #mode-rfib .nav-btn:active:not(:disabled) {
   transform: translateY(0);
 }
@@ -636,6 +707,8 @@
 #mode-rmcma .modern-btn:disabled,
 #mode-rmcsa .modern-btn:disabled,
 #mode-rop .modern-btn:disabled,
+#mode-swt .modern-btn:disabled,
+#mode-essay .modern-btn:disabled,
 #mode-rfib .nav-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -648,6 +721,8 @@
 #mode-rmcma .modern-btn:focus-visible,
 #mode-rmcsa .modern-btn:focus-visible,
 #mode-rop .modern-btn:focus-visible,
+#mode-swt .modern-btn:focus-visible,
+#mode-essay .modern-btn:focus-visible,
 #mode-rfib .nav-btn:focus-visible,
 #mode-dd .difficulty-filter-btn:focus-visible,
 #mode-rmcma .difficulty-filter-btn:focus-visible,
@@ -655,4 +730,212 @@
 #mode-rop .difficulty-filter-btn:focus-visible {
   outline: 2px solid var(--read-btn-focus);
   outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   15. Writing primitives
+   The two Writing tasks share a compose surface that Reading has no analogue
+   for: a countdown timer chip, a textarea, and a live word counter. They live
+   here rather than in swt-mode.css / write-essay-mode.css because both modes
+   need them identically, and because the unscoped .essay-* rules in style.css
+   are also consumed by #mode-rts (Respond To Situation) — retinting them
+   globally would drag Speaking into the Reading palette. Everything below is
+   scoped to the two Writing panels for exactly that reason.
+   -------------------------------------------------------------------------- */
+
+/* Section label rows carry the timer on their trailing edge. */
+#mode-swt .swt-card-header,
+#mode-essay .essay-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Timer chip — a quiet pill, not a headline number. The warning state is the
+   only place a Writing panel goes red on its own. */
+#mode-swt .essay-timer,
+#mode-essay .essay-timer {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--read-ink);
+  font-variant-numeric: tabular-nums;
+  background: var(--read-glass);
+  border: 1px solid var(--read-border);
+  padding: 6px 14px;
+  border-radius: var(--read-radius-pill);
+  min-width: 84px;
+  text-align: center;
+  box-shadow: var(--read-shadow-control);
+  transition: color var(--read-ease), background-color var(--read-ease),
+    border-color var(--read-ease);
+}
+
+#mode-swt .essay-timer-warning,
+#mode-essay .essay-timer-warning {
+  color: var(--read-danger) !important;
+  background: var(--read-danger-bg) !important;
+  border-color: var(--read-danger-border);
+}
+
+/* Prompt / source text — same reading treatment as a Reading passage, flat. */
+#mode-swt .essay-prompt-display,
+#mode-essay .essay-prompt-display {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 16px;
+  font-family: 'Lora', serif;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: var(--read-ink);
+}
+
+#mode-swt .essay-prompt-label,
+#mode-essay .essay-prompt-label {
+  color: var(--read-accent);
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+#mode-swt .essay-prompt-text,
+#mode-essay .essay-prompt-text {
+  color: var(--read-ink);
+}
+
+/* Compose surface */
+#mode-swt .essay-textarea,
+#mode-essay .essay-textarea {
+  border: 1px solid var(--read-border);
+  border-radius: var(--read-radius-container);
+  background: #ffffff;
+  color: var(--read-ink);
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  box-shadow: var(--read-shadow-control);
+  transition: border-color var(--read-ease), box-shadow var(--read-ease);
+}
+
+#mode-swt .essay-textarea:focus,
+#mode-essay .essay-textarea:focus {
+  outline: 2px solid var(--read-accent);
+  outline-offset: 2px;
+  border-color: var(--read-accent);
+  box-shadow: var(--read-shadow-control-hover);
+  background: #ffffff;
+}
+
+#mode-swt .essay-textarea::placeholder,
+#mode-essay .essay-textarea::placeholder {
+  color: var(--read-muted);
+  opacity: 0.75;
+}
+
+/* Word counter — the three bands map onto the semantic tokens. */
+#mode-swt .essay-wc-good,
+#mode-essay .essay-wc-good {
+  background: var(--read-success-bg);
+  color: var(--read-success);
+}
+
+#mode-swt .essay-wc-warn,
+#mode-essay .essay-wc-warn {
+  background: var(--read-accent-soft);
+  color: var(--read-accent);
+}
+
+#mode-swt .essay-wc-bad,
+#mode-essay .essay-wc-bad {
+  background: var(--read-danger-bg);
+  color: var(--read-danger);
+}
+
+/* Footer: counter left, action right, wrapping to two rows on narrow screens
+   without either control losing its 44px target. */
+#mode-swt .essay-input-footer,
+#mode-essay .essay-input-footer {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Results. The JS renderers own this DOM, so nothing is renamed — the boxes
+   are simply flattened onto the panel per Rule 3, and retinted. */
+#mode-swt .essay-results-summary,
+#mode-essay .essay-results-summary {
+  background: transparent;
+  border-radius: 0;
+  padding: 8px 0 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--read-border-soft);
+}
+
+#mode-swt .essay-results-score-circle,
+#mode-essay .essay-results-score-circle {
+  color: var(--read-ink);
+}
+
+#mode-swt .essay-score-number,
+#mode-essay .essay-score-number {
+  color: var(--read-accent);
+}
+
+#mode-swt .essay-results-percentage,
+#mode-essay .essay-results-percentage,
+#mode-swt .essay-score-detail,
+#mode-essay .essay-score-detail,
+#mode-swt .essay-ai-score-hint,
+#mode-essay .essay-ai-score-hint {
+  color: var(--read-muted);
+}
+
+#mode-swt .essay-score-row,
+#mode-essay .essay-score-row {
+  background: #ffffff;
+  border: 1px solid var(--read-border);
+  border-radius: var(--read-radius-control);
+  box-shadow: var(--read-shadow-control);
+}
+
+#mode-swt .essay-score-label,
+#mode-essay .essay-score-label {
+  color: var(--read-ink);
+}
+
+#mode-swt .essay-score-full,
+#mode-essay .essay-score-full {
+  background: var(--read-success-bg);
+  color: var(--read-success);
+}
+
+#mode-swt .essay-score-partial,
+#mode-essay .essay-score-partial {
+  background: var(--read-accent-soft);
+  color: var(--read-accent);
+}
+
+#mode-swt .essay-score-zero,
+#mode-essay .essay-score-zero {
+  background: var(--read-danger-bg);
+  color: var(--read-danger);
+}
+
+#mode-swt .essay-submitted,
+#mode-essay .essay-submitted,
+#mode-swt .essay-feedback-card,
+#mode-essay .essay-feedback-card,
+#mode-swt .essay-feedback-loading,
+#mode-essay .essay-feedback-loading {
+  background: #ffffff;
+  border: 1px solid var(--read-border);
+  border-radius: var(--read-radius-container);
+  color: var(--read-ink);
+}
+
+/* Footer action rows follow the Reading order: primary first, then Retry,
+   then any AI/secondary action. Centred, like every Reading actions row. */
+#mode-swt .essay-results-controls,
+#mode-essay .essay-results-controls {
+  justify-content: center;
+  gap: 12px;
+  padding-top: 8px;
 }

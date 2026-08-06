@@ -34,6 +34,31 @@
     return text !== undefined && text !== defaultText;
   }
 
+  /**
+   * True when an element exists and is not display:none (walking ancestors is
+   * unnecessary here — the step hosts are toggled directly by their own mode).
+   */
+  function isShown(elementId) {
+    const el = document.getElementById(elementId);
+    return !!el && el.style.display !== 'none' && !el.hidden;
+  }
+
+  /**
+   * Read the active index from a mode-owned progress breadcrumb.
+   *
+   * RTS / SGD / Describe Image keep their own breadcrumb nodes updated by their
+   * state machines, but speaking-practice-controller.css hides them so the
+   * shared preview is the only learner-facing indicator. Deriving the index
+   * from those nodes reuses that live state without duplicating it.
+   */
+  function activeBreadcrumbIndex(containerId, itemSelector) {
+    const container = document.getElementById(containerId);
+    if (!container) return 0;
+    const items = [...container.querySelectorAll(itemSelector)];
+    const index = items.findIndex((item) => item.classList.contains('active'));
+    return index === -1 ? 0 : index;
+  }
+
   function shiftSelectOption(selectId, direction) {
     const select = document.getElementById(selectId);
     if (!select || !select.options.length) return;
@@ -50,6 +75,11 @@
     enabledScopes: ['pte'],
     panelId: 'mode-asq',
     steps: ['Listen', 'Answer', 'Results'],
+    getStepIndex: () => {
+      if (isShown('asq-result-box')) return 2;
+      if (window.ASQMode?.isRecording) return 1;
+      return 0;
+    },
     picker: {
       sourceSelectId: 'asq-question-select',
       previous: () => shiftSelectOption('asq-question-select', -1),
@@ -71,6 +101,7 @@
     enabledScopes: ['pte'],
     panelId: 'mode-rts',
     steps: ['Audio', 'Prep', 'Record', 'Results'],
+    getStepIndex: () => activeBreadcrumbIndex('rts-step-progress', '.rts-step-dot'),
     picker: {
       getItems: () => window.RTSMode?.getItems?.() ?? [],
       getCurrentId: () => window.RTSMode?.getCurrentId?.() ?? null,
@@ -113,7 +144,10 @@
     modeId: 'describe-image',
     enabledScopes: ['pte'],
     panelId: 'mode-describe-image',
-    steps: ['Image', 'Prep (25 s)', 'Record (40 s)', 'Results'],
+    // Three phases, matching #di-step-progress. The previous four-step list
+    // (Image / Prep / Record / Results) did not match the state machine.
+    steps: ['Prepare', 'Record', 'Review'],
+    getStepIndex: () => activeBreadcrumbIndex('di-step-progress', '.di-progress-step'),
     picker: {
       sourceSelectId: 'question-select-di',
       previousButtonId: 'back-btn-di',
@@ -146,7 +180,14 @@
     modeId: 'notes',
     enabledScopes: ['pte'],
     panelId: 'mode-notes',
-    steps: ['Audio', 'Notes', 'Record', 'Results'],
+    // Retell Lecture as implemented never records: the flow is guiding video →
+    // listen and take notes → results. The old 'Record' step did not exist.
+    steps: ['Video', 'Notes', 'Results'],
+    getStepIndex: () => {
+      if (isShown('notes-step-results')) return 2;
+      if (isShown('notes-step-audio')) return 1;
+      return 0;
+    },
     picker: {
       sourceSelectId: 'question-select-notes',
       previousButtonId: 'back-btn-notes',
@@ -184,7 +225,10 @@
     modeId: 'sgd',
     enabledScopes: ['pte'],
     panelId: 'mode-sgd',
-    steps: ['Discussion', 'Prep', 'Record', 'Results'],
+    // Three phases, matching #sgd-step-progress. The previous list declared a
+    // 'Prep' step that the mode never enters.
+    steps: ['Listen', 'Record', 'Results'],
+    getStepIndex: () => activeBreadcrumbIndex('sgd-step-progress', '.sgd-progress-step'),
     picker: {
       sourceSelectId: 'question-select-sgd',
       previousButtonId: 'back-btn-sgd',
@@ -217,6 +261,13 @@
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-speak',
     steps: ['Listen', 'Record', 'Results'],
+    getStepIndex: () => {
+      if (isShown('retry-btn-speak')) return 2;
+      if (isShown('check-btn-speak')) return 1;
+      const recordBtn = document.getElementById('record-btn');
+      if (recordBtn && recordBtn.textContent.trim() === 'Stop Recording') return 1;
+      return 0;
+    },
     picker: {
       sourceSelectId: 'question-select-speak',
       previousButtonId: 'back-btn-speak',
@@ -322,9 +373,25 @@
     modeId: 'read-aloud',
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-read-aloud',
-    steps: ['Read', 'Prep', 'Record', 'Results'],
+    // There is no separate Read phase: startPrepTimer() fires as soon as a prompt
+    // loads, and reading silently *is* the prep activity.
+    steps: ['Prep', 'Record', 'Results'],
+    getStepIndex: () => {
+      switch (window.ReadAloudMode?.state) {
+        case 'RESULTS': return 2;
+        case 'REQUESTING_MIC':
+        case 'RECORDING':
+        case 'STOPPING_RECORDING':
+        case 'RECORDED': return 1;
+        default: return 0;
+      }
+    },
     picker: {
       sourceSelectId: 'ra-question-select',
+      orderModes: {
+        get: () => window.ReadAloudMode?.promptOrderMode || 'random',
+        set: (mode) => { try { window.ReadAloudMode?.setPromptOrderMode?.(mode); } catch (e) { console.error('[SPC Adapters] order mode error:', e); } }
+      },
       previous: () => { try { window.ReadAloudMode?.loadPreviousPrompt?.(); } catch (e) { console.error('[SPC Adapters] previous error:', e); } },
       next: () => { try { window.ReadAloudMode?.loadNextPrompt?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } }
     },

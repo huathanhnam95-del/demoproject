@@ -1,3 +1,21 @@
+## [V1.8.46] - 2026-08-06
+
+### Added
+- **CRM Books Feature (Phases 1-5 + Code Review Fixes)**:
+  - NotebookLM-style PDF library upload with unpdf text extraction.
+  - Overlapping character chunking (1500-char window, 200-char overlap).
+  - Vertex AI `text-embedding-004` vector embedding pipeline with L2 vector normalization.
+  - Map-Reduce book summarization service utilizing `gemini-2.0-flash`.
+  - Grounded Q&A chat with citations (`[1]`, `[2]`), daily quota enforcement (100 msgs/day), and multi-thread conversation support.
+  - Code review fixes: attribute XSS escaping, race condition guards on book selection, input send detached DOM element fix, page-0 null safety, upload debouncing, and CSS flex truncation.
+
+### Fixed & Enhanced
+- **PTE Practice UI Repairs & Design System Parity**:
+  - Read Aloud practice UI repairs: nav order toggle, live stepper across speaking modes, composable guide modes, settings sheet cleanup.
+  - Restored Speech Coach results linking overlay (regressed in V1.8.28 family gate).
+  - Six practice UI repairs: RFIB easy-reading after check, D&D hint popover explanations, D&D random toggle, speaking random toggle, stepper reaching results on failed scoring, composable guide-layer styling.
+  - Applied Reading modes UI/UX design system and v7 navigation parity to Writing modes (SWT + Write Essay).
+
 ## [V1.8.45] - 2026-07-31
 
 ### Changed

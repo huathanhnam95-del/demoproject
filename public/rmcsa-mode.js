@@ -147,6 +147,7 @@
         state.randomMode = !state.randomMode;
         localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
         updateRandomToggleUI();
+        updateNavigationUI();
       });
     }
 
@@ -359,11 +360,17 @@
   }
 
   function updateNavigationUI() {
+    // In random mode the arrows walk the shuffle history, not the index order,
+    // so the position in the list must not disable them.
     if (elements.prevBtn) {
-      elements.prevBtn.disabled = state.currentQuestionIndex <= 0;
+      elements.prevBtn.disabled = state.randomMode
+        ? state.navHistory.length === 0
+        : state.currentQuestionIndex <= 0;
     }
     if (elements.nextBtn) {
-      elements.nextBtn.disabled = state.currentQuestionIndex >= state.questions.length - 1;
+      elements.nextBtn.disabled = state.randomMode
+        ? state.questions.length <= 1
+        : state.currentQuestionIndex >= state.questions.length - 1;
     }
     if (elements.questionPill && state.currentQuestion) {
       elements.questionPill.textContent = `#${state.currentQuestion.id} — ${state.currentQuestion.title}`;

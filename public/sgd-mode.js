@@ -694,6 +694,7 @@
             stepEl.classList.toggle('active', s === currentStep);
             stepEl.classList.toggle('completed', STEPS.indexOf(s) < STEPS.indexOf(currentStep));
         });
+        window.SpeakingPracticeController?.sync?.('sgd');
     }
 
     function setProceedEnabled(isEnabled) {

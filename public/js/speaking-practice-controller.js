@@ -358,6 +358,22 @@
     wireNavButton(prevBtn, picker, 'previousButtonId', 'previous', controllerState, 'srcPrevBtn', 'srcPrevOriginalDisplay');
     wireNavButton(nextBtn, picker, 'nextButtonId', 'next', controllerState, 'srcNextBtn', 'srcNextOriginalDisplay');
 
+    // Optional Random ON/OFF toggle
+    if (picker.orderModes && typeof picker.orderModes.set === 'function') {
+      const orderToggle = controllerState.dom.orderToggle;
+      controllerState.dom.pickerNav.appendChild(orderToggle);
+      orderToggle.addEventListener('click', () => {
+        const nextMode = orderToggle.getAttribute('aria-pressed') === 'true' ? 'sequential' : 'random';
+        try {
+          picker.orderModes.set(nextMode);
+        } catch (error) {
+          console.error('[SPC] order mode set failed:', error);
+        }
+        syncOrderToggle(controllerState);
+      });
+      syncOrderToggle(controllerState);
+    }
+
     if (picker.randomButtonId) {
       const srcRandom = document.getElementById(picker.randomButtonId);
       if (srcRandom) {
@@ -696,6 +712,19 @@
     pickerNav.appendChild(pill);
     pickerNav.appendChild(nextBtn);
 
+    // Optional order toggle. Built here but deliberately NOT appended: buildPicker
+    // attaches it only when the adapter declares picker.orderModes, so modes
+    // without it never carry hidden zero-height buttons in the controller.
+    //
+    // One button, two states — the same 🎲 Random: ON/OFF affordance the Reading
+    // modes use, rather than a two-button segmented control.
+    const orderToggle = document.createElement('button');
+    orderToggle.className = 'spc-order-toggle random-toggle-btn';
+    orderToggle.type = 'button';
+    orderToggle.title = 'Toggle Random Question Mode';
+    orderToggle.setAttribute('aria-pressed', 'false');
+    orderToggle.textContent = '🎲 Random: OFF';
+
     // View toggle
     const toggle = document.createElement('div');
     toggle.className = 'spc-view-toggle';
@@ -771,6 +800,7 @@
     return {
       controller, row1, row2, row3,
       pickerNav, prevBtn, pill, pillId, pillLabel, pillArrow, nextBtn,
+      orderToggle,
       toggle, basicBtn, advancedBtn, settingsBtn,
       slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
       activeChip
@@ -1052,6 +1082,21 @@
       console.warn('[SPC] Step preview could not be created:', error);
       return null;
     }
+  }
+
+  function syncOrderToggle(controllerState) {
+    const orderModes = controllerState.config.picker?.orderModes;
+    const orderToggle = controllerState.dom?.orderToggle;
+    if (!orderModes || typeof orderModes.get !== 'function' || !orderToggle) return;
+    let active = 'random';
+    try {
+      active = orderModes.get() === 'sequential' ? 'sequential' : 'random';
+    } catch (_) { /* fall back to random */ }
+    const isRandom = active === 'random';
+    orderToggle.dataset.order = active;
+    orderToggle.classList.toggle('is-active', isRandom);
+    orderToggle.setAttribute('aria-pressed', isRandom ? 'true' : 'false');
+    orderToggle.textContent = isRandom ? '🎲 Random: ON' : '🎲 Random: OFF';
   }
 
   function syncStepPreview(controllerState) {
@@ -1361,6 +1406,7 @@
     updatePillDisplay(state.config, state);
     updateActiveChip(state);
     syncStepPreview(state);
+    syncOrderToggle(state);
   }
 
   /* ═══════════════════════════ PUBLIC API ═══════════════════════════ */

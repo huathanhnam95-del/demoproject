@@ -73,6 +73,7 @@ function shouldUseGeminiFallback(err) {
 
 module.exports = {
   DEFAULT_VERTEX_LOCATION,
+  getGenAiClient,
   getGeminiModel,
   normalizeScalar,
   shouldUseGeminiFallback

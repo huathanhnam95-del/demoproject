@@ -38,6 +38,15 @@
     let essayTimerId = null;
     let essaySecondsLeft = MAX_ESSAY_TIME_SECONDS;
 
+    // v7 question picker + navigation parity with the Reading tasks. The Random
+    // preference is shared app-wide under this one localStorage key.
+    const RANDOM_MODE_KEY = 'pte_random_nav_mode';
+    const PICKER_PAGE_SIZE = 20;
+    let randomMode = localStorage.getItem(RANDOM_MODE_KEY) === 'true';
+    let navHistory = [];
+    let pickerOpen = false;
+    let pickerPage = 1;
+
     // DOM Elements
     const el = {};
 
@@ -46,7 +55,7 @@
     function init() {
         if (isInitialized) return;
         cacheElements();
-        if (!el.questionSelect) {
+        if (!el.questionPill) {
             console.warn('[WriteEssay] UI elements not found, skipping init');
             return;
         }
@@ -75,9 +84,9 @@
         const toggleBtn = document.getElementById('essay-history-toggle');
         if (toggleBtn) toggleBtn.style.display = '';
 
-        if (el.questionSelect) el.questionSelect.disabled = false;
-        if (el.backBtn) el.backBtn.disabled = false;
-        if (el.nextBtn) el.nextBtn.disabled = false;
+        if (el.questionPill) el.questionPill.disabled = filteredEntries.length === 0;
+        updateNavigationUI();
+        if (el.resultBox) el.resultBox.innerHTML = '';
         if (el.resultsContainer) el.resultsContainer.innerHTML = '';
         if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
         if (el.aiScoreHint) { el.aiScoreHint.style.display = 'none'; el.aiScoreHint.innerHTML = ''; }
@@ -90,12 +99,19 @@
     /* ──────────────────────────── DOM CACHE ──────────────────────── */
 
     function cacheElements() {
-        // Question selector
+        // Question selector — v7 picker, shared with the Reading tasks.
+        // #current-question-id-essay is hidden markup kept because the attempt
+        // archive resolves the active prompt from it.
         el.currentQuestionId = document.getElementById('current-question-id-essay');
-        el.backBtn = document.getElementById('back-btn-essay');
-        el.nextBtn = document.getElementById('next-btn-essay');
-        el.questionSelect = document.getElementById('question-select-essay');
-        el.totalQuestions = document.getElementById('total-questions-essay');
+        el.backBtn = document.getElementById('essay-v7-prev-btn');
+        el.nextBtn = document.getElementById('essay-v7-next-btn');
+        el.questionPill = document.getElementById('essay-v7-question-pill');
+        el.randomToggleBtn = document.getElementById('essay-random-toggle-btn');
+        el.backdrop = document.getElementById('essay-v7-backdrop');
+        el.sheet = document.getElementById('essay-v7-sheet');
+        el.sheetClose = document.getElementById('essay-v7-sheet-close');
+        el.jumpSearch = document.getElementById('essay-v7-jump-search');
+        el.jumpList = document.getElementById('essay-v7-jump-list');
         el.startBtn = document.getElementById('start-essay-btn');
         el.promptPreview = document.getElementById('essay-prompt-preview');
 
@@ -113,6 +129,7 @@
         // Step 2: Results
         el.stepResults = document.getElementById('essay-step-results');
         el.resultsTitle = document.getElementById('essay-results-title');
+        el.resultBox = document.getElementById('essay-result-box');
         el.resultsContainer = document.getElementById('essay-results-container');
         el.retryBtn = document.getElementById('essay-retry-btn');
         el.aiScoreBtn = document.getElementById('essay-ai-score-btn');
@@ -125,7 +142,38 @@
     function setupEventListeners() {
         if (el.backBtn) el.backBtn.addEventListener('click', goToPrevious);
         if (el.nextBtn) el.nextBtn.addEventListener('click', goToNext);
-        if (el.questionSelect) el.questionSelect.addEventListener('change', onQuestionSelectChange);
+        if (el.questionPill) {
+            el.questionPill.addEventListener('click', () => {
+                if (pickerOpen) closePicker(); else openPicker();
+            });
+        }
+        if (el.backdrop) el.backdrop.addEventListener('click', closePicker);
+        if (el.sheetClose) el.sheetClose.addEventListener('click', closePicker);
+        if (el.jumpSearch) el.jumpSearch.addEventListener('input', (e) => renderJumpList(e.target.value));
+        if (el.jumpList) {
+            el.jumpList.addEventListener('click', (e) => {
+                const item = e.target.closest('[data-index]');
+                if (!item) return;
+                const index = Number.parseInt(item.dataset.index, 10);
+                if (Number.isFinite(index)) onPickerItemChosen(index);
+            });
+        }
+        if (el.randomToggleBtn) {
+            updateRandomToggleUI();
+            el.randomToggleBtn.addEventListener('click', () => {
+                randomMode = !randomMode;
+                localStorage.setItem(RANDOM_MODE_KEY, String(randomMode));
+                navHistory = [];
+                updateRandomToggleUI();
+                updateNavigationUI();
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && pickerOpen) {
+                closePicker();
+                if (el.questionPill) el.questionPill.focus();
+            }
+        });
         if (el.startBtn) el.startBtn.addEventListener('click', startPractice);
         if (el.essayInput) el.essayInput.addEventListener('input', updateWordCount);
         if (el.submitBtn) el.submitBtn.addEventListener('click', submitEssay);
@@ -136,12 +184,12 @@
     /* ──────────────────────────── DATA LOADING ───────────────────── */
 
     async function loadEntries() {
-        if (!el.questionSelect) return;
+        if (!el.questionPill) return;
         if (loadEntriesPromise) return loadEntriesPromise;
         if (hasLoadedEntries && entries.length > 0) { applyFilter(); return; }
 
         const pendingLoad = (async () => {
-            el.questionSelect.innerHTML = '<option value="">Loading...</option>';
+            setPickerLabel('Loading prompts…', { disabled: true });
             try {
                 const resp = await fetch(ESSAY_JSON_PATH);
                 if (!resp.ok) throw new Error(`JSON not found (${resp.status})`);
@@ -166,8 +214,7 @@
             } catch (error) {
                 hasLoadedEntries = false;
                 console.error('[WriteEssay] Error loading entries:', error);
-                el.questionSelect.innerHTML = '<option value="">Error loading</option>';
-                if (el.totalQuestions) el.totalQuestions.textContent = '0';
+                setPickerLabel('Could not load prompts', { disabled: true });
             }
         })();
 
@@ -179,12 +226,11 @@
 
     function applyFilter() {
         filteredEntries = [...entries];
-        updateQuestionSelector();
         if (filteredEntries.length === 0) {
             handleEmptyState();
         } else {
             if (el.startBtn) el.startBtn.disabled = false;
-            if (el.questionSelect) el.questionSelect.disabled = false;
+            if (el.questionPill) el.questionPill.disabled = false;
             const routeQuestionId = pendingRouteQuestionId || getCurrentRouteQuestionId();
             const routeIndex = routeQuestionId
                 ? filteredEntries.findIndex((e) => String(e.id) === String(routeQuestionId))
@@ -195,8 +241,7 @@
     }
 
     function handleEmptyState() {
-        if (el.questionSelect) { el.questionSelect.innerHTML = '<option value="">No questions</option>'; el.questionSelect.disabled = true; }
-        if (el.totalQuestions) el.totalQuestions.textContent = '0';
+        setPickerLabel('No prompts available', { disabled: true });
         if (el.currentQuestionId) el.currentQuestionId.textContent = '-';
         if (el.startBtn) el.startBtn.disabled = true;
         currentEntry = null;
@@ -204,58 +249,165 @@
         reset();
     }
 
-    function updateQuestionSelector() {
-        if (!el.questionSelect || filteredEntries.length === 0) return;
-        el.questionSelect.innerHTML = filteredEntries.map((e, i) =>
-            `<option value="${i}">${e.id} – ${e.title || 'Essay Prompt'}</option>`
-        ).join('');
-        if (el.totalQuestions) el.totalQuestions.textContent = filteredEntries.length;
+    /* ──────────────────────────── v7 QUESTION PICKER ─────────────── */
+
+    function setPickerLabel(text, { disabled = false } = {}) {
+        if (!el.questionPill) return;
+        el.questionPill.textContent = text;
+        el.questionPill.disabled = disabled;
+    }
+
+    function updateRandomToggleUI() {
+        if (!el.randomToggleBtn) return;
+        el.randomToggleBtn.classList.toggle('is-active', randomMode);
+        el.randomToggleBtn.setAttribute('aria-pressed', randomMode ? 'true' : 'false');
+        el.randomToggleBtn.textContent = randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+    }
+
+    function updateNavigationUI() {
+        // In random mode the arrows walk the shuffle history, not the index
+        // order, so the position in the list must not disable them.
+        if (el.backBtn) {
+            el.backBtn.disabled = randomMode
+                ? navHistory.length === 0
+                : currentEntryIndex <= 0;
+        }
+        if (el.nextBtn) {
+            el.nextBtn.disabled = randomMode
+                ? filteredEntries.length <= 1
+                : currentEntryIndex >= filteredEntries.length - 1;
+        }
+        if (currentEntry) {
+            setPickerLabel(`#${currentEntry.id} — ${currentEntry.title || 'Essay Prompt'}`);
+        }
+    }
+
+    function openPicker() {
+        if (!el.sheet || !el.backdrop || filteredEntries.length === 0) return;
+        pickerOpen = true;
+        el.backdrop.classList.add('is-visible');
+        el.backdrop.setAttribute('aria-hidden', 'false');
+        el.sheet.classList.add('is-open');
+        el.sheet.setAttribute('aria-hidden', 'false');
+        if (el.questionPill) el.questionPill.setAttribute('aria-expanded', 'true');
+        renderJumpList();
+        if (el.jumpSearch) { el.jumpSearch.value = ''; el.jumpSearch.focus(); }
+    }
+
+    function closePicker() {
+        if (!el.sheet || !el.backdrop) return;
+        pickerOpen = false;
+        el.backdrop.classList.remove('is-visible');
+        el.backdrop.setAttribute('aria-hidden', 'true');
+        el.sheet.classList.remove('is-open');
+        el.sheet.setAttribute('aria-hidden', 'true');
+        if (el.questionPill) el.questionPill.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderJumpList(filter = '', page = null) {
+        if (!el.jumpList) return;
+        const cleanFilter = String(filter || '').toLowerCase().trim();
+
+        const filtered = filteredEntries
+            .map((entry, idx) => ({ entry, idx }))
+            .filter(({ entry }) => !cleanFilter
+                || String(entry.id).toLowerCase().includes(cleanFilter)
+                || String(entry.title || '').toLowerCase().includes(cleanFilter));
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PICKER_PAGE_SIZE));
+
+        if (page === null || page === undefined) {
+            // Open on the page holding the current prompt rather than page 1.
+            const activeFilteredIndex = filtered.findIndex((item) => item.idx === currentEntryIndex);
+            pickerPage = activeFilteredIndex >= 0
+                ? Math.floor(activeFilteredIndex / PICKER_PAGE_SIZE) + 1
+                : 1;
+        } else {
+            pickerPage = Math.max(1, Math.min(page, totalPages));
+        }
+
+        const currentPage = pickerPage;
+        const pagedItems = filtered.slice((currentPage - 1) * PICKER_PAGE_SIZE, currentPage * PICKER_PAGE_SIZE);
+
+        const itemsHtml = pagedItems.map(({ entry, idx }) => {
+            const isActive = idx === currentEntryIndex;
+            return `<button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
+                <span class="ra-v7-item-id">#${escapeHtml(entry.id)}</span>
+                <span class="ra-v7-item-title">${escapeHtml(entry.title || 'Essay Prompt')}</span>
+            </button>`;
+        }).join('');
+
+        const paginationHtml = totalPages > 1 ? `
+            <div class="ra-v7-pagination">
+                <button class="ra-v7-pagination-btn prev-page-btn" type="button" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+                <span class="ra-v7-pagination-info">Page ${currentPage} of ${totalPages} (${filtered.length} items)</span>
+                <button class="ra-v7-pagination-btn next-page-btn" type="button" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+            </div>
+        ` : '';
+
+        el.jumpList.innerHTML = (itemsHtml || '<div class="ra-v7-empty">No matching prompts</div>') + paginationHtml;
+
+        // The innerHTML write above destroys the previous buttons, so rebind.
+        const prevPageBtn = el.jumpList.querySelector('.prev-page-btn');
+        const nextPageBtn = el.jumpList.querySelector('.next-page-btn');
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                renderJumpList(filter, currentPage - 1);
+            });
+        }
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                renderJumpList(filter, currentPage + 1);
+            });
+        }
+    }
+
+    async function onPickerItemChosen(index) {
+        if (index === currentEntryIndex) { closePicker(); return; }
+        if (!(await confirmLeaveDraft())) return;
+        if (randomMode) navHistory.push(currentEntryIndex);
+        selectEntry(index);
     }
 
     function shouldConfirmExit() {
         return Boolean(el.stepWrite && getComputedStyle(el.stepWrite).display !== 'none');
     }
 
-    async function onQuestionSelectChange() {
-        const i = parseInt(el.questionSelect.value, 10);
-        if (isNaN(i)) return;
-
-        if (shouldConfirmExit()) {
-            const confirmLeave = await window.showCustomConfirm(
-                "Navigate to another question?",
-                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
-                true
-            );
-            if (!confirmLeave) {
-                if (el.questionSelect) el.questionSelect.value = currentEntryIndex;
-                return;
-            }
-        }
-        selectEntry(i);
+    /**
+     * Writing-specific gate with no Reading analogue: leaving a question mid-draft
+     * throws the draft away, so every navigation path asks first.
+     */
+    async function confirmLeaveDraft() {
+        if (!shouldConfirmExit()) return true;
+        return Boolean(await window.showCustomConfirm(
+            "Navigate to another question?",
+            "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
+            true
+        ));
     }
 
     async function goToPrevious() {
-        if (currentEntryIndex <= 0) return;
-        if (shouldConfirmExit()) {
-            const confirmLeave = await window.showCustomConfirm(
-                "Navigate to another question?",
-                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
-                true
-            );
-            if (!confirmLeave) return;
-        }
-        selectEntry(currentEntryIndex - 1);
+        const usingHistory = randomMode && navHistory.length > 0;
+        if (!usingHistory && currentEntryIndex <= 0) return;
+        if (!(await confirmLeaveDraft())) return;
+        selectEntry(usingHistory ? navHistory.pop() : currentEntryIndex - 1);
     }
 
     async function goToNext() {
-        if (currentEntryIndex >= filteredEntries.length - 1) return;
-        if (shouldConfirmExit()) {
-            const confirmLeave = await window.showCustomConfirm(
-                "Navigate to another question?",
-                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
-                true
-            );
-            if (!confirmLeave) return;
+        const usingRandom = randomMode && filteredEntries.length > 1;
+        if (!usingRandom && currentEntryIndex >= filteredEntries.length - 1) return;
+        if (!(await confirmLeaveDraft())) return;
+
+        if (usingRandom) {
+            let randomIdx;
+            do {
+                randomIdx = Math.floor(Math.random() * filteredEntries.length);
+            } while (randomIdx === currentEntryIndex && filteredEntries.length > 1);
+            navHistory.push(currentEntryIndex);
+            selectEntry(randomIdx);
+            return;
         }
         selectEntry(currentEntryIndex + 1);
     }
@@ -266,7 +418,8 @@
         currentEntryIndex = index;
         currentEntry = filteredEntries[index];
         if (el.currentQuestionId) el.currentQuestionId.textContent = currentEntry.id;
-        if (el.questionSelect) el.questionSelect.value = index;
+        updateNavigationUI();
+        closePicker();
         reset();
 
         // Update URL with current question ID (replaceState — no history entry per question)
@@ -353,6 +506,25 @@
     function retryPractice() {
         reset();
         startPractice();
+    }
+
+    /**
+     * The flat, centred score line the Reading tasks lead their results with.
+     * Write Essay deliberately does not surface a numeric total (the detailed
+     * feedback below is the deliverable), so the line reports the deterministic
+     * Form check and points at the feedback underneath.
+     */
+    function renderScoreLine(formResult) {
+        if (!el.resultBox) return;
+        if (!formResult) { el.resultBox.innerHTML = ''; return; }
+
+        const score = Number(formResult.score) || 0;
+        const band = score >= 2 ? 'is-perfect' : score === 1 ? 'is-partial' : 'has-misses';
+        el.resultBox.innerHTML = `
+            <div class="essay-result-summary ${band}">
+                ${score >= 2 ? '✓' : '✗'} Form ${score}/2 — ${lastSubmittedEssayWordCount} words
+            </div>
+            <div class="essay-result-desc">${escapeHtml(formResult.detail || 'See the feedback below for language and structure notes.')}</div>`;
     }
 
     function isPracticeActive() {
@@ -489,6 +661,7 @@
         // Display results
         el.stepWrite.style.display = 'none';
         el.stepResults.style.display = 'block';
+        renderScoreLine(formResult);
         displayFeedbackOnly({ feedbackHtml });
         rememberArchiveSave(window.PTEAttemptArchive?.saveTextAttempt?.('essay', currentEntry, text, {
             wordCount: lastSubmittedEssayWordCount,
@@ -1267,9 +1440,22 @@
 
     /* ──────────────────────────── PUBLIC API ─────────────────────── */
 
+    /**
+     * Teardown on mode exit. Previously the mode had none: leaving stopped the
+     * timer only because callers happened to call reset(), and an open picker
+     * sheet survived the switch.
+     */
+    function onExit() {
+        stopTimer();
+        closePicker();
+        navHistory = [];
+        reset();
+    }
+
     window.WriteEssayMode = {
         init: init,
         reset: reset,
+        onExit: onExit,
         loadEntries: loadEntries,
         updateAiScoreButtonState: updateAiScoreButtonState,
         shouldConfirmExit: shouldConfirmExit

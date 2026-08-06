@@ -114,7 +114,12 @@ const path = require('node:path');
       }
     });
 
-    await page.waitForSelector('#question-select-essay option[value="0"]', { state: 'attached', timeout: 15000 });
+    // Navigation is the shared v7 picker; a real prompt label on the pill means
+    // WriteEssayMode.loadEntries() has resolved and a prompt is selected.
+    await page.waitForFunction(() => {
+      const pill = document.getElementById('essay-v7-question-pill');
+      return pill && !pill.disabled && /^#/.test(pill.textContent.trim());
+    }, { timeout: 15000 });
     console.log('Essay practice mode loaded successfully.');
 
     await page.click('#start-essay-btn');

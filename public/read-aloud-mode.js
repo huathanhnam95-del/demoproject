@@ -41,11 +41,16 @@ class ReadAloudMode {
     this.hasLoadedDatabase = false;
     this.supportMessage = 'Microphone recording is not supported in this browser. Please use Chrome or Edge.';
 
-    // Prompt guides state
+    // Prompt guides state.
+    // connectedSpeechModes is the source of truth — several guides can be active
+    // at once. `connectedSpeechLevel` is a compatibility accessor over it (see
+    // the get/set pair below) so existing analytics, cache keys, and session
+    // payloads keep seeing a single dominant level.
     this.chunkingEnabled = false;
+    this.connectedSpeechModes = new Set();
     this.connectedSpeechLevel = 'off';
     this.sessionChunkingEnabled = false;
-    this.sessionConnectedSpeechLevel = 'off';
+    this.sessionConnectedSpeechModes = new Set();
     this.connectedSpeechLayerOverrides = new Set();
     this.sessionConnectedSpeechLayerOverrides = new Set();
     this.promptAnalysisCache = new Map();
@@ -95,6 +100,7 @@ class ReadAloudMode {
     this.featuredPromptIndexVersion = '';
     this.practiceTargetDrawerOpen = false;
     this.settingsSheet = null;
+    this.promptOrderMode = this.loadPromptOrderMode();
 
     // Recording state
     this.mediaRecorder = null;
@@ -103,6 +109,9 @@ class ReadAloudMode {
     this.promptLifecycleToken = 0;
     this.recordingRequestId = 0;
     this.hasAssessmentResult = false;
+    // Status line the results panel was rendered with. Kept so a later
+    // updateUIForState() cannot replace a scoring error with 'Analysis complete.'
+    this.assessmentStatusMessage = '';
     this.isSubmitInFlight = false;
     this.userRecordingUrl = null;
 
@@ -121,6 +130,56 @@ class ReadAloudMode {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Highest-precedence guide in a set, for the many callers that still expect a
+   * single level (analytics payloads, analysis cache keys, recording sessions,
+   * the results panel). Precedence mirrors the old cumulative ordering.
+   */
+  static dominantConnectedSpeechMode(modes) {
+    if (!modes || modes.size === 0) return 'off';
+    if (modes.has('sound_changes')) return 'sound_changes';
+    if (modes.has('reduced_words')) return 'reduced_words';
+    if (modes.has('linking')) return 'linking';
+    return 'off';
+  }
+
+  /** Collapse a set to a single level, in place. */
+  collapseConnectedSpeechModes(setName, level) {
+    const normalized = this.normalizeConnectedSpeechMode(level);
+    if (!this[setName]) this[setName] = new Set();
+    this[setName].clear();
+    if (normalized !== 'off') this[setName].add(normalized);
+  }
+
+  get connectedSpeechLevel() {
+    return ReadAloudMode.dominantConnectedSpeechMode(this.connectedSpeechModes);
+  }
+
+  /** Assigning a single level collapses the active set to just that level. */
+  set connectedSpeechLevel(level) {
+    this.collapseConnectedSpeechModes('connectedSpeechModes', level);
+  }
+
+  /**
+   * Derived from sessionConnectedSpeechModes rather than stored separately, so
+   * the two can never drift apart.
+   */
+  get sessionConnectedSpeechLevel() {
+    return ReadAloudMode.dominantConnectedSpeechMode(this.sessionConnectedSpeechModes);
+  }
+
+  set sessionConnectedSpeechLevel(level) {
+    this.collapseConnectedSpeechModes('sessionConnectedSpeechModes', level);
+  }
+
+  getActiveConnectedSpeechModes() {
+    return [...(this.connectedSpeechModes || [])];
+  }
+
+  isConnectedSpeechModeActive(mode) {
+    return !!this.connectedSpeechModes?.has(this.normalizeConnectedSpeechMode(mode));
   }
 
   normalizeConnectedSpeechMode(level) {
@@ -167,29 +226,31 @@ class ReadAloudMode {
     return 'Off';
   }
 
-  getConnectedSpeechAnnouncement(mode = this.connectedSpeechLevel) {
-    const normalized = this.normalizeConnectedSpeechMode(mode);
-    if (normalized === 'sound_changes') {
-      return 'Connected speech set to linking, reduced words, and sound changes.';
+  getConnectedSpeechAnnouncement() {
+    const active = this.getActiveConnectedSpeechModes();
+    if (active.length === 0) {
+      return 'Connected speech turned off.';
     }
-    if (normalized === 'reduced_words') {
-      return 'Connected speech set to linking plus reduced words.';
+    const order = ['linking', 'reduced_words', 'sound_changes'];
+    const labels = order
+      .filter((mode) => active.includes(mode))
+      .map((mode) => this.getConnectedSpeechDisplayLabel(mode).toLowerCase());
+    if (labels.length === 1) {
+      return `Connected speech showing ${labels[0]}.`;
     }
-    if (normalized === 'linking') {
-      return 'Connected speech set to linking only.';
-    }
-    return 'Connected speech turned off.';
+    const last = labels.pop();
+    return `Connected speech showing ${labels.join(', ')} and ${last}.`;
   }
 
+  /**
+   * Guides can now be combined, so the analysis always runs with the superset
+   * ruleset whenever anything is active. connected-speech-v3 adds assimilation
+   * on top of the linking-v1 rules, and is what makes reduced-word annotations
+   * available, so one pass covers every combination. Which layers actually get
+   * drawn is decided at render time from the active mode set.
+   */
   getConnectedSpeechRuleSet() {
-    const mode = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
-    if (mode === 'off') {
-      return 'none';
-    }
-    if (mode === 'sound_changes') {
-      return 'connected-speech-v3';
-    }
-    return 'linking-v1';
+    return this.connectedSpeechModes?.size ? 'connected-speech-v3' : 'none';
   }
 
   getConnectedSpeechPromptCategoryMap() {
@@ -648,7 +709,7 @@ class ReadAloudMode {
     this.isEntering = true;
     this.isActive = true;
     this.sessionChunkingEnabled = false;
-    this.sessionConnectedSpeechLevel = 'off';
+    this.sessionConnectedSpeechModes = new Set();
     this.chunkingEnabled = false;
     this.connectedSpeechLevel = 'off';
     this.connectedSpeechLayerOverrides = new Set();
@@ -682,7 +743,7 @@ class ReadAloudMode {
     this.chunkingEnabled = false;
     this.connectedSpeechLevel = 'off';
     this.sessionChunkingEnabled = false;
-    this.sessionConnectedSpeechLevel = 'off';
+    this.sessionConnectedSpeechModes = new Set();
     this.connectedSpeechLayerOverrides = new Set();
     this.sessionConnectedSpeechLayerOverrides = new Set();
     this.promptFeatureFilter = 'all';
@@ -701,7 +762,7 @@ class ReadAloudMode {
     if (!promptStage || this.resizeObserver || typeof ResizeObserver === 'undefined') return;
 
     this.resizeObserver = new ResizeObserver(() => {
-      if (!this.isActive || !(this.chunkingEnabled || this.connectedSpeechLevel !== 'off') || !this.currentPromptPlainText) return;
+      if (!this.isActive || !(this.chunkingEnabled || this.isConnectedSpeechEnabled()) || !this.currentPromptPlainText) return;
       this.renderPromptForCurrentView();
     });
 
@@ -851,7 +912,7 @@ class ReadAloudMode {
         if (this.currentPromptRow) {
           this.currentPromptFeatureRecord = this.getPromptFeatureRecord(this.currentPromptRow);
         }
-        if (this.isActive && this.currentPromptPlainText && this.normalizeConnectedSpeechMode(this.connectedSpeechLevel) !== 'off') {
+        if (this.isActive && this.currentPromptPlainText && this.isConnectedSpeechEnabled()) {
           this.renderPromptForCurrentView();
         }
         return map;
@@ -1240,7 +1301,73 @@ class ReadAloudMode {
     this.loadNextPrompt({ rememberPrompt: !recoveringPreviousPrompt });
   }
 
+  loadPromptOrderMode() {
+    try {
+      const stored = localStorage.getItem('ra-prompt-order-mode');
+      return stored === 'sequential' ? 'sequential' : 'random';
+    } catch (_) {
+      return 'random';
+    }
+  }
+
+  setPromptOrderMode(mode) {
+    const normalized = mode === 'sequential' ? 'sequential' : 'random';
+    if (this.promptOrderMode === normalized) return;
+    this.promptOrderMode = normalized;
+    try { localStorage.setItem('ra-prompt-order-mode', normalized); } catch (_) { /* ignore */ }
+    this.announceLinkingStatus(normalized === 'sequential'
+      ? 'Questions now follow database order.'
+      : 'Questions are now picked at random.');
+    window.SpeakingPracticeController?.sync?.('read-aloud');
+  }
+
+  /**
+   * The pool the prev/next buttons walk in sequential mode. Uses the same
+   * filtered/featured pool as random mode so navigation always respects the
+   * active Practice Target and Difficulty filters.
+   */
+  getOrderedPromptPool() {
+    const filtered = this.getFilteredDatabase();
+    if (!filtered.length) return [];
+    return this.getFeaturedPromptPool(filtered);
+  }
+
+  getCurrentPoolIndex(pool, anchorRow = this.currentPromptRow) {
+    if (!anchorRow || !Array.isArray(pool) || !pool.length) return -1;
+    const direct = pool.indexOf(anchorRow);
+    if (direct !== -1) return direct;
+    // The featured pool can hold cloned rows; fall back to matching on ID.
+    const currentId = anchorRow.ID != null ? String(anchorRow.ID) : null;
+    if (!currentId) return -1;
+    return pool.findIndex((row) => String(row?.ID) === currentId);
+  }
+
+  /**
+   * Step one place through the ordered pool. `direction` is +1 or -1.
+   *
+   * `anchorRow` must be captured before beginPromptLoad() runs — that call
+   * clears currentPromptRow, which would otherwise restart from index 0 on
+   * every press.
+   */
+  stepThroughOrderedPool(direction, promptLoadToken = null, anchorRow = this.currentPromptRow) {
+    const pool = this.getOrderedPromptPool();
+    if (!pool.length) {
+      this.finishPromptLoadWithoutPrompt('No questions match the current filters.');
+      return;
+    }
+    const currentIndex = this.getCurrentPoolIndex(pool, anchorRow);
+    const nextIndex = currentIndex === -1
+      ? (direction > 0 ? 0 : pool.length - 1)
+      : (currentIndex + direction + pool.length) % pool.length;
+    this.applyPromptRow(pool[nextIndex], promptLoadToken ?? this.beginPromptLoad());
+  }
+
   loadPreviousPrompt() {
+    if (this.promptOrderMode === 'sequential' && this.hasLoadedDatabase) {
+      const anchorRow = this.currentPromptRow || this.lastPromptRow;
+      this.stepThroughOrderedPool(-1, null, anchorRow);
+      return;
+    }
     if (this.lastPromptRow) {
       this.applyPromptRow(this.lastPromptRow, this.beginPromptLoad(), { rememberPrompt: false });
     } else {
@@ -1250,6 +1377,9 @@ class ReadAloudMode {
 
   async loadNextPrompt(options = {}) {
     const { rememberPrompt = true } = options;
+    // Captured before beginPromptLoad() clears it — sequential mode needs to
+    // know where it currently is.
+    const anchorRow = this.currentPromptRow || this.lastPromptRow;
     const promptLoadToken = this.beginPromptLoad({ selectRandom: true });
 
     if (!this.hasLoadedDatabase) {
@@ -1267,6 +1397,11 @@ class ReadAloudMode {
     const filteredDb = this.getFilteredDatabase();
     if (filteredDb.length === 0) {
       this.finishPromptLoadWithoutPrompt('No questions match the current filters.');
+      return;
+    }
+
+    if (this.promptOrderMode === 'sequential') {
+      this.stepThroughOrderedPool(1, promptLoadToken, anchorRow);
       return;
     }
 
@@ -1327,7 +1462,8 @@ class ReadAloudMode {
     this.activePromptKey = this.getPromptKey(prompt);
     this.activePromptRenderToken += 1;
     this.chunkingEnabled = this.sessionChunkingEnabled;
-    this.connectedSpeechLevel = this.normalizeConnectedSpeechMode(this.sessionConnectedSpeechLevel || 'off');
+    // Carry the whole guide selection across prompts, not just the dominant one.
+    this.connectedSpeechModes = new Set(this.sessionConnectedSpeechModes || []);
 
     const inputWordCount = parseInt(row['Word count'], 10);
     const actualWordCount = Number.isNaN(inputWordCount)
@@ -1457,7 +1593,7 @@ class ReadAloudMode {
     }
     this.pendingLinkingRetry = setTimeout(() => {
       this.pendingLinkingRetry = null;
-      if (!this.shouldApplyPromptRender(promptKey, renderToken) || this.connectedSpeechLevel === 'off') {
+      if (!this.shouldApplyPromptRender(promptKey, renderToken) || !this.isConnectedSpeechEnabled()) {
         return;
       }
       this.hydrateLinkingView(promptKey, renderToken, attempt);
@@ -1527,8 +1663,7 @@ class ReadAloudMode {
     if (guide === 'chunking') {
       this.chunkingEnabled = !this.chunkingEnabled;
     } else {
-      const nextLevel = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel) === 'off' ? 'linking' : 'off';
-      this.setConnectedSpeechLevel(nextLevel, { announce, persist });
+      this.toggleConnectedSpeechLevel('linking', { announce, persist });
       return;
     }
 
@@ -1619,7 +1754,9 @@ class ReadAloudMode {
       const filters = practiceTargetDrawer.querySelectorAll('.read-aloud-filters');
       const statusEl = document.getElementById('ra-filter-feature-status');
       filters.forEach(f => targetPanel.appendChild(f));
-      if (statusEl) targetPanel.appendChild(statusEl);
+      // The status line lives inside its filter group; only relocate it if it
+      // was left behind in the drawer.
+      if (statusEl && !targetPanel.contains(statusEl)) targetPanel.appendChild(statusEl);
       // Hide the now-empty drawer
       practiceTargetDrawer.setAttribute('hidden', '');
     }
@@ -1627,7 +1764,6 @@ class ReadAloudMode {
     // Difficulty / Word Length filter section
     const diffSection = document.createElement('div');
     diffSection.className = 'read-aloud-filters';
-    diffSection.style.marginTop = '12px';
     diffSection.innerHTML = `
       <span class="read-aloud-filter-label">📊 Difficulty Level:</span>
       <div class="read-aloud-filter-buttons" role="group" aria-label="Difficulty filter">
@@ -1756,7 +1892,6 @@ class ReadAloudMode {
     const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
     const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
     const chunkAvailable = !!this.currentPromptChunkedText && this.currentPromptRenderState?.chunkingAvailable !== false;
-    const level = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
 
     // Color map: each guide button has a unique active color
     const colorMap = new Map([
@@ -1768,9 +1903,9 @@ class ReadAloudMode {
 
     [
       [chunkBtn, this.chunkingEnabled, chunkAvailable],
-      [linkingBtn, level === 'linking', true],
-      [reducedWordsBtn, level === 'reduced_words', true],
-      [soundChangesBtn, level === 'sound_changes', true]
+      [linkingBtn, this.isConnectedSpeechModeActive('linking'), true],
+      [reducedWordsBtn, this.isConnectedSpeechModeActive('reduced_words'), true],
+      [soundChangesBtn, this.isConnectedSpeechModeActive('sound_changes'), true]
     ].forEach(([button, active, available]) => {
       if (!button) return;
       const displayActive = available ? active : false;
@@ -1809,9 +1944,9 @@ class ReadAloudMode {
       } else {
         const activeGuides = [];
         if (this.chunkingEnabled && chunkAvailable) activeGuides.push('chunking');
-        if (level === 'linking') activeGuides.push('linking');
-        if (level === 'reduced_words') activeGuides.push('reduced_words');
-        if (level === 'sound_changes') activeGuides.push('sound_changes');
+        if (this.isConnectedSpeechModeActive('linking')) activeGuides.push('linking');
+        if (this.isConnectedSpeechModeActive('reduced_words')) activeGuides.push('reduced_words');
+        if (this.isConnectedSpeechModeActive('sound_changes')) activeGuides.push('sound_changes');
 
         if (activeGuides.length === 0) {
           instructionEl.textContent = 'Select a guide mode below to highlight pause groups, linking, reduced words, or sound changes.';
@@ -1878,7 +2013,7 @@ class ReadAloudMode {
       this.clearConnectedSpeechResults();
     }
 
-    if (viewMode === 'basic' || !window.ReadAloudLinking || this.connectedSpeechLevel === 'off') {
+    if (viewMode === 'basic' || !window.ReadAloudLinking || !this.isConnectedSpeechEnabled()) {
       return;
     }
 
@@ -1888,7 +2023,7 @@ class ReadAloudMode {
     if (document.fonts?.ready && !this.pendingFontHydration) {
       this.pendingFontHydration = document.fonts.ready.then(() => {
         this.pendingFontHydration = null;
-        if (this.isActive && this.connectedSpeechLevel !== 'off') {
+        if (this.isActive && this.isConnectedSpeechEnabled()) {
           this.hydrateLinkingView(this.activePromptKey, this.activePromptRenderToken);
         }
       }).catch(() => {
@@ -1898,12 +2033,14 @@ class ReadAloudMode {
   }
 
   async hydrateLinkingView(promptKey, renderToken, attempt = 0) {
-    if (!window.ReadAloudLinking || !this.currentPromptPlainText || this.connectedSpeechLevel === 'off') return;
+    if (!window.ReadAloudLinking || !this.currentPromptPlainText || !this.isConnectedSpeechEnabled()) return;
     const targetPromptKey = promptKey || this.activePromptKey;
     const targetToken = renderToken || this.activePromptRenderToken;
+    // Analyse the full superset regardless of which guides are on, so one cached
+    // result serves every combination. Layer filtering happens at render time.
     const analysisOptions = {
       accentProfile: 'en-US',
-      connectedSpeechLevel: this.connectedSpeechLevel,
+      connectedSpeechLevel: 'sound_changes',
       enabledRuleSet: this.getConnectedSpeechRuleSet()
     };
     const analysis = await this.getPromptAnalysis(targetPromptKey, this.currentPromptPlainText, analysisOptions);
@@ -1912,14 +2049,14 @@ class ReadAloudMode {
       this.currentPromptRenderState?.blockedBoundarySet
     );
 
-    if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || this.connectedSpeechLevel === 'off') {
+    if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.isConnectedSpeechEnabled()) {
       return;
     }
 
     this.cancelPendingHydration();
     this.pendingLinkingFrame = requestAnimationFrame(() => {
       this.pendingLinkingFrame = null;
-      if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || this.connectedSpeechLevel === 'off') {
+      if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.isConnectedSpeechEnabled()) {
         return;
       }
 
@@ -1933,11 +2070,13 @@ class ReadAloudMode {
       }
 
       const wordMap = this.currentPromptRenderState?.wordMap || new Map();
-      const focusFamily = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
+      // Every layer comes out of one superset analysis, so the render pass is
+      // told exactly which families the learner switched on.
+      const familyOptions = { focusFamilies: this.getActiveConnectedSpeechModes() };
       if (typeof window.ReadAloudLinking.applyTokenAnnotations === 'function') {
-        window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis, { focusFamily });
+        window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis, familyOptions);
       }
-      const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, { focusFamily });
+      const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, familyOptions);
       summary.textContent = summaryText;
       this.renderPromptGuideExplanations(filteredAnalysis);
 
@@ -1957,9 +2096,9 @@ class ReadAloudMode {
         badgeLayer.innerHTML = '';
         overlay.style.display = 'none';
       } else {
-        const overlayResult = window.ReadAloudLinking.renderOverlay(overlay, promptStage, filteredAnalysis, wordMap, { focusFamily });
+        const overlayResult = window.ReadAloudLinking.renderOverlay(overlay, promptStage, filteredAnalysis, wordMap, familyOptions);
         const badgeResult = typeof window.ReadAloudLinking.renderAssimilationBadges === 'function'
-          ? window.ReadAloudLinking.renderAssimilationBadges(badgeLayer, promptStage, filteredAnalysis, wordMap)
+          ? window.ReadAloudLinking.renderAssimilationBadges(badgeLayer, promptStage, filteredAnalysis, wordMap, familyOptions)
           : { renderedCount: 0 };
         renderedCount = overlayResult.renderedCount + (badgeResult.renderedCount || 0);
         if (renderedCount === 0) {
@@ -2017,36 +2156,60 @@ class ReadAloudMode {
     this.toggleConnectedSpeechLevel(level);
   }
 
+  /** Add or remove one guide, leaving the other active guides untouched. */
   toggleConnectedSpeechLevel(level, options = {}) {
     const normalizedLevel = this.normalizeConnectedSpeechMode(level);
-    const targetLevel = (this.connectedSpeechLevel === normalizedLevel) ? 'off' : normalizedLevel;
-    this.setConnectedSpeechLevel(targetLevel, options);
+    if (normalizedLevel === 'off') {
+      this.applyConnectedSpeechModes([], options);
+      return;
+    }
+    const active = new Set(this.connectedSpeechModes);
+    if (active.has(normalizedLevel)) {
+      active.delete(normalizedLevel);
+    } else {
+      active.add(normalizedLevel);
+    }
+    this.applyConnectedSpeechModes([...active], options);
   }
 
   setConnectedSpeechLevel(level, options = {}) {
     const normalizedLevel = this.normalizeConnectedSpeechMode(level);
+    this.applyConnectedSpeechModes(normalizedLevel === 'off' ? [] : [normalizedLevel], options);
+  }
+
+  applyConnectedSpeechModes(modes, options = {}) {
     const { announce = true, persist = true } = options;
-    if (this.connectedSpeechLevel === normalizedLevel) {
+    const next = new Set(
+      (Array.isArray(modes) ? modes : [])
+        .map((mode) => this.normalizeConnectedSpeechMode(mode))
+        .filter((mode) => mode !== 'off')
+    );
+
+    const current = this.connectedSpeechModes || new Set();
+    const unchanged = next.size === current.size && [...next].every((mode) => current.has(mode));
+    if (unchanged) {
       this.updatePromptGuideButtons();
       return;
     }
 
     this.invalidatePromptRenderState();
-    this.connectedSpeechLevel = normalizedLevel;
+    this.connectedSpeechModes = next;
 
     if (persist) {
-      this.sessionConnectedSpeechLevel = normalizedLevel;
+      // sessionConnectedSpeechLevel derives from this set — assigning it here
+      // would collapse the session back to a single mode.
+      this.sessionConnectedSpeechModes = new Set(next);
     }
 
     this.updatePromptGuideButtons();
     if (announce) {
-      this.announceLinkingStatus(this.getConnectedSpeechAnnouncement(normalizedLevel));
+      this.announceLinkingStatus(this.getConnectedSpeechAnnouncement());
     }
     this.renderPromptForCurrentView();
   }
 
   isConnectedSpeechEnabled() {
-    return this.connectedSpeechLevel !== 'off';
+    return !!this.connectedSpeechModes?.size;
   }
 
   shouldApplyPromptRender(promptKey, renderToken) {
@@ -2147,8 +2310,15 @@ class ReadAloudMode {
     if (statusMsg) statusMsg.textContent = message;
   }
 
+  setAssessmentStatusMessage(message) {
+    this.assessmentStatusMessage = String(message || '');
+    const statusMsg = document.getElementById('ra-status-message');
+    if (statusMsg) statusMsg.textContent = this.assessmentStatusMessage;
+  }
+
   resetAssessmentDisplay() {
     this.hasAssessmentResult = false;
+    this.assessmentStatusMessage = '';
     const resultBox = document.getElementById('ra-result-box');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
@@ -2182,6 +2352,13 @@ class ReadAloudMode {
     if (retryBtn) {
       retryBtn.style.display = 'inline-flex';
       retryBtn.disabled = false;
+    }
+    // Showing the results panel *is* reaching the Results phase — including when
+    // the attempt could not be scored. Without this the stepper stayed on Record
+    // while the learner was already looking at a result.
+    if (this.state !== 'RESULTS') {
+      this.state = 'RESULTS';
+      this.updateUIForState();
     }
   }
 
@@ -2349,14 +2526,17 @@ class ReadAloudMode {
 
   applyRecordingCaptureFailure(recordingSession, message) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
-    const statusMsg = document.getElementById('ra-status-message');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     this.showAssessmentDisplay();
-    if (statusMsg) statusMsg.textContent = message;
+    this.setAssessmentStatusMessage(message);
     if (accuracyElement) accuracyElement.textContent = '--';
   }
 
   updateUIForState() {
+    // Single choke point for every state transition — keep the shared step
+    // indicator in step with the state machine from here.
+    window.SpeakingPracticeController?.sync?.('read-aloud');
+
     if (!this.getRecordingSupportState().supported) {
       this.applyUnsupportedState();
       this.refreshQuestionPickerV7NavState();
@@ -2491,7 +2671,8 @@ class ReadAloudMode {
         recordBtn.style.display = '';
       }
       if (statusMsg) {
-        statusMsg.textContent = this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.';
+        statusMsg.textContent = this.assessmentStatusMessage
+          || (this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.');
       }
       if (resultBox) resultBox.style.display = this.hasAssessmentResult ? 'block' : 'none';
       if (stopBtn) stopBtn.style.display = 'none';
@@ -2745,23 +2926,23 @@ class ReadAloudMode {
       const accuracyElement = document.getElementById('ra-accuracy-value');
       const feedbackElement = document.getElementById('ra-transcript-feedback');
       this.showAssessmentDisplay();
-      if (statusMsg) {
-        if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
-          statusMsg.textContent = 'That recording was too long to score. Keep it under 40 seconds and try again.';
-        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech') {
-          statusMsg.textContent = 'No speech was detected. Please check your microphone and try again.';
-        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short') {
-          statusMsg.textContent = 'That recording was too short. Please try again.';
-        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped') {
-          statusMsg.textContent = 'Your audio is too loud or clipped. Please adjust your microphone volume.';
-        } else if (err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable') {
-          statusMsg.textContent = 'We captured the transcript, but pronunciation scoring was unavailable. Keep it under 40 seconds and try again.';
-        } else if (err?.code === 'INVALID_AUDIO') {
-          statusMsg.textContent = 'We couldn’t read that recording. Please try again.';
-        } else {
-          statusMsg.textContent = 'Assessment failed. Please try again.';
-        }
+      let failureStatus;
+      if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
+        failureStatus = 'That recording was too long to score. Keep it under 40 seconds and try again.';
+      } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech') {
+        failureStatus = 'No speech was detected. Please check your microphone and try again.';
+      } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short') {
+        failureStatus = 'That recording was too short. Please try again.';
+      } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped') {
+        failureStatus = 'Your audio is too loud or clipped. Please adjust your microphone volume.';
+      } else if (err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable') {
+        failureStatus = 'We captured the transcript, but pronunciation scoring was unavailable. Keep it under 40 seconds and try again.';
+      } else if (err?.code === 'INVALID_AUDIO') {
+        failureStatus = 'We couldn’t read that recording. Please try again.';
+      } else {
+        failureStatus = 'Assessment failed. Please try again.';
       }
+      this.setAssessmentStatusMessage(failureStatus);
       if (accuracyElement) accuracyElement.textContent = '--';
       if (feedbackElement) {
         const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
@@ -2940,12 +3121,11 @@ class ReadAloudMode {
 
   processAzureResults(payload, recordingSession) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
-    const statusMsg = document.getElementById('ra-status-message');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
 
     this.showAssessmentDisplay();
-    if (statusMsg) statusMsg.textContent = 'Analysis complete.';
+    this.setAssessmentStatusMessage('Analysis complete.');
     if (accuracyElement) accuracyElement.textContent = payload.accuracyScore.toString();
 
     if (feedbackElement) {
@@ -3145,12 +3325,12 @@ class ReadAloudMode {
 
     const promptRecord = this.currentPromptFeatureRecord;
     const allowedCategoryMap = this.getConnectedSpeechPromptCategoryMap();
-    const currentLevel = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
+    const activeModes = this.getActiveConnectedSpeechModes();
     const allowedCategories = promptRecord
       ? new Set(Array.from(allowedCategoryMap.keys()).filter(Boolean))
       : null;
-    if (allowedCategories && currentLevel && currentLevel !== 'off') {
-      allowedCategories.add(currentLevel);
+    if (allowedCategories) {
+      activeModes.forEach((mode) => allowedCategories.add(mode));
     }
     if (promptRecord && allowedCategories.size === 0) {
       this.hideConnectedSpeechPanel();
@@ -3738,7 +3918,17 @@ class ReadAloudMode {
           if (wrapper) {
             wrapper.innerHTML = '';
             wrapper.appendChild(annotatedContainer);
-            window.ReadAloudLinking.renderOverlay(overlaySvg, annotatedContainer, { boundaries: overlayBoundaries }, wordMap);
+            // These are linking arcs, so ask for that family explicitly. Without
+            // it renderOverlay early-returns and the whole overlay silently
+            // disappears — which is exactly what happened between V1.6.1 and
+            // V1.8.28, when the family gate was introduced.
+            window.ReadAloudLinking.renderOverlay(
+              overlaySvg,
+              annotatedContainer,
+              { boundaries: overlayBoundaries },
+              wordMap,
+              { focusFamilies: ['linking'] }
+            );
             usedTokenAnnotation = true;
           }
         }

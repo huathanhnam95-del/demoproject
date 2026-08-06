@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Write Essay — mode sheet
+   --------------------------------------------------------------------------
+   Palette, panel wash, header card, section rhythm, result line, controls and
+   the shared Writing primitives (timer chip, textarea, word counter, results)
+   all come from read-mode-base.css. These aliases keep any --essay-* selector
+   working against the shared tokens.
+
+   The measure (.essay-container) is owned by read-mode-base.css — redeclaring
+   it here would beat the base media queries, because this sheet loads after
+   it. See scripts/audit/read-mode-cascade.js.
+
+   Nothing in this file may be written unscoped: #mode-rts reuses
+   .essay-results-container, .essay-score-*, .essay-results-summary and
+   .essay-ai-score-hint for Respond To Situation, and must keep the Speaking
+   look.
+   ========================================================================== */
+#mode-essay {
+  --essay-paper: var(--read-paper);
+  --essay-ink: var(--read-ink);
+  --essay-muted: var(--read-muted);
+  --essay-accent: var(--read-accent);
+  --essay-accent-soft: var(--read-accent-soft);
+  --essay-border: var(--read-border);
+  --essay-border-soft: var(--read-border-soft);
+  --essay-success: var(--read-success);
+  --essay-danger: var(--read-danger);
+}
+
+/* 200–300 words needs room; this is the one Writing control that stays large. */
+#mode-essay .essay-textarea {
+  min-height: 340px;
+}
+
+/* Language feedback — inline corrections and the rewrite pairs. */
+#mode-essay .essay-feedback-mark {
+  background: var(--read-accent-soft);
+  color: var(--read-ink);
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+#mode-essay .essay-feedback-card-title {
+  color: var(--read-ink);
+}
+
+#mode-essay .essay-feedback-card-subtitle,
+#mode-essay .essay-feedback-note,
+#mode-essay .essay-feedback-empty,
+#mode-essay .essay-feedback-reason,
+#mode-essay .essay-feedback-context {
+  color: var(--read-muted);
+}
+
+#mode-essay .essay-feedback-original,
+#mode-essay .essay-feedback-rewrite-before {
+  color: var(--read-danger);
+}
+
+#mode-essay .essay-feedback-replacement,
+#mode-essay .essay-feedback-rewrite-after {
+  color: var(--read-success);
+}
+
+#mode-essay .essay-feedback-arrow {
+  color: var(--read-muted);
+}
+
+/* Sample essays accordion — a disclosure on the panel, not a nested card. */
+#mode-essay .essay-samples {
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--read-border-soft);
+  border-radius: 0;
+  padding: 14px 0 4px;
+}
+
+#mode-essay .essay-samples-title {
+  color: var(--read-accent);
+  font-weight: 700;
+}
+
+#mode-essay .essay-samples-count,
+#mode-essay .essay-sample-meta-muted {
+  color: var(--read-muted);
+}
+
+#mode-essay .essay-sample-select {
+  border: 1px solid var(--read-border);
+  border-radius: var(--read-radius-control);
+  background: #ffffff;
+  color: var(--read-ink);
+  min-height: var(--read-btn-control-min-height);
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+#mode-essay .essay-sample-select:focus-visible {
+  outline: 2px solid var(--read-accent);
+  outline-offset: 2px;
+}
+
+#mode-essay .essay-sample-meta-pill {
+  background: var(--read-accent-soft);
+  color: var(--read-accent);
+  border-radius: var(--read-radius-pill);
+}
+
+#mode-essay .essay-sample-essay,
+#mode-essay .essay-sample-pre,
+#mode-essay .essay-sample-ideaflow-block,
+#mode-essay .essay-sample-vocab-wrap {
+  background: #ffffff;
+  border: 1px solid var(--read-border);
+  border-radius: var(--read-radius-container);
+  color: var(--read-ink);
+}

@@ -19611,6 +19611,54 @@ body.readingjourney-active #readingjourney-root {
   }
 }
 
+/* ── Prompt guide layers (composable) ──────────────────────────────
+   Reduced words and sound changes can be active at the same time, and a
+   single word can belong to both. Each layer therefore owns a distinct
+   channel: reduced words carry the amber fill, sound changes carry the
+   dashed underline, and a word in both shows the two together. These were
+   inline styles until the layers became combinable — whichever renderer ran
+   last simply overwrote the other. */
+.ra-connected-speech-token--weak {
+  background: rgba(217, 119, 6, 0.12);
+  border-bottom: 2px solid #d97706;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.ra-sound-change-word {
+  background: rgba(180, 83, 9, 0.08);
+  border-bottom: 2px dashed #b45309;
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.ra-connected-speech-token--weak.ra-sound-change-word {
+  /* Fill from the reduced-words layer, dashed rule from the sound-changes
+     layer, so both memberships stay readable on the same word. */
+  background: rgba(217, 119, 6, 0.12);
+  border-bottom: 2px dashed #b45309;
+  border-radius: 4px;
+}
+
+.ra-sound-change-hint {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.12);
+  border: 1px solid rgba(180, 83, 9, 0.22);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin: 0 2px;
+  white-space: nowrap;
+  vertical-align: baseline;
+  line-height: 1.4;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+}
+
 /* ── SVG Linking Overlay ── */
 .sc-linking-overlay {
   position: absolute;
@@ -20189,7 +20237,8 @@ body.readingjourney-active #readingjourney-root {
 
 #mode-swt .ra-v7-nav,
 #mode-swt .ra-v7-question-pill,
-#mode-swt .notes-step,
+#mode-swt .swt-source-card,
+#mode-swt .swt-compose-card,
 #mode-swt .essay-prompt-display {
   max-width: 100%;
   box-sizing: border-box;

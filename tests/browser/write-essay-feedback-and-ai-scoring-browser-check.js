@@ -26,7 +26,12 @@ const path = require('path');
 
   const pageErrors = [];
 
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('pageerror', (error) => {
+    // Surface immediately: a mid-flow throw otherwise only shows up as an
+    // unrelated waitForFunction timeout further down the test.
+    console.log(`[PAGE ERROR] ${error.message}`);
+    pageErrors.push(error.message);
+  });
   page.on('console', (message) => {
     console.log(`[BROWSER CONSOLE] ${message.type()}: ${message.text()}`);
   });
@@ -131,19 +136,27 @@ const path = require('path');
       return panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none';
     }, { timeout: 10000 });
 
-    // 2. Select a prompt and start - wait for entries to load first
+    // 2. Select a prompt and start - wait for entries to load first.
+    // Navigation is the shared v7 picker (same contract as the Reading tasks),
+    // so prompts are chosen from the jump list rather than a <select>.
     await page.waitForFunction(() => {
-      const select = document.getElementById('question-select-essay');
-      return select && select.options.length > 0 && select.options[0].value !== '';
+      const pill = document.getElementById('essay-v7-question-pill');
+      return pill && !pill.disabled && /^#/.test(pill.textContent.trim());
     }, { timeout: 10000 });
 
-    await page.evaluate(() => {
-      const select = document.getElementById('question-select-essay');
-      if (select) {
-          select.value = '0';
-          select.dispatchEvent(new Event('change'));
-      }
-    });
+    const pickPrompt = (index) => page.evaluate((i) => {
+      const pill = document.getElementById('essay-v7-question-pill');
+      if (pill) pill.click();
+      const item = document.querySelector(`#essay-v7-jump-list .ra-v7-list-item[data-index="${i}"]`);
+      if (item) item.click();
+    }, index);
+
+    const activePromptId = () => page.evaluate(
+      () => document.getElementById('current-question-id-essay')?.textContent?.trim() || ''
+    );
+
+    await pickPrompt(0);
+    const promptIdAtIndex0 = await activePromptId();
     await page.evaluate(() => {
         const startBtn = document.getElementById('start-essay-btn');
         if (startBtn) startBtn.click();
@@ -154,59 +167,49 @@ const path = require('path');
       return area && getComputedStyle(area).display !== 'none';
     }, { timeout: 10000 });
 
+    // Navigating away mid-draft is gated by window.showCustomConfirm, which
+    // renders its own modal rather than a native dialog — page.on('dialog')
+    // never fires for it, so the modal has to be driven directly.
+    const respondToConfirm = async (choice) => {
+      const button = `#custom-confirm-modal-${choice}`;
+      await page.waitForSelector(button, { state: 'visible', timeout: 10000 });
+      const message = await page.evaluate(
+        () => document.querySelector('#custom-confirm-modal p')?.textContent || ''
+      );
+      assert.ok(
+        message.toLowerCase().includes('navigate to another question'),
+        `Confirm message should mention navigating away, got: ${message}`
+      );
+      await page.click(button);
+      await page.waitForSelector('#custom-confirm-modal', { state: 'detached', timeout: 10000 });
+      return true;
+    };
+
     // Test Navigation Confirmation: Cancel Case (Next button)
-    let dialogDismissed = false;
-    page.once('dialog', async dialog => {
-      console.log(`[TEST] Intercepted dialog: ${dialog.message()}`);
-      assert.ok(dialog.message().includes('navigate to another question'), 'Dialog message should match');
-      await dialog.dismiss(); // Cancel
-      dialogDismissed = true;
-    });
     await page.evaluate(() => {
-      const nextBtn = document.getElementById('next-btn-essay');
+      const nextBtn = document.getElementById('essay-v7-next-btn');
       if (nextBtn) nextBtn.click();
     });
-    let currentQIdx = await page.evaluate(() => {
-      return document.getElementById('question-select-essay').value;
-    });
-    assert.strictEqual(currentQIdx, '0', 'Question should not have changed after cancel');
+    const dialogDismissed = await respondToConfirm('cancel');
+    let currentQId = await activePromptId();
+    assert.strictEqual(currentQId, promptIdAtIndex0, 'Question should not have changed after cancel');
     assert.strictEqual(dialogDismissed, true, 'Cancel dialog should have been triggered');
 
-    // Test Navigation Confirmation: Dropdown Cancel Case (Dropdown change)
-    let dropdownDismissed = false;
-    page.once('dialog', async dialog => {
-      console.log(`[TEST] Intercepted dropdown dialog: ${dialog.message()}`);
-      await dialog.dismiss(); // Cancel
-      dropdownDismissed = true;
-    });
-    await page.evaluate(() => {
-      const select = document.getElementById('question-select-essay');
-      if (select) {
-        select.value = '1';
-        select.dispatchEvent(new Event('change'));
-      }
-    });
-    currentQIdx = await page.evaluate(() => {
-      return document.getElementById('question-select-essay').value;
-    });
-    assert.strictEqual(currentQIdx, '0', 'Question select should have reverted to index 0 after cancel');
-    assert.strictEqual(dropdownDismissed, true, 'Dropdown cancel dialog should have been triggered');
+    // Test Navigation Confirmation: Picker Cancel Case (jump-list selection)
+    await pickPrompt(1);
+    const pickerDismissed = await respondToConfirm('cancel');
+    currentQId = await activePromptId();
+    assert.strictEqual(currentQId, promptIdAtIndex0, 'Picker selection should have been reverted after cancel');
+    assert.strictEqual(pickerDismissed, true, 'Picker cancel dialog should have been triggered');
 
     // Test Navigation Confirmation: Confirm Case (Next button)
-    let dialogAccepted = false;
-    page.once('dialog', async dialog => {
-      console.log(`[TEST] Intercepted dialog: ${dialog.message()}`);
-      await dialog.accept(); // OK
-      dialogAccepted = true;
-    });
     await page.evaluate(() => {
-      const nextBtn = document.getElementById('next-btn-essay');
+      const nextBtn = document.getElementById('essay-v7-next-btn');
       if (nextBtn) nextBtn.click();
     });
-    let newQIdx = await page.evaluate(() => {
-      return document.getElementById('question-select-essay').value;
-    });
-    assert.strictEqual(newQIdx, '1', 'Question should have changed to index 1 after confirmation');
+    const dialogAccepted = await respondToConfirm('confirm');
+    let newQId = await activePromptId();
+    assert.notStrictEqual(newQId, promptIdAtIndex0, 'Question should have changed after confirmation');
     assert.strictEqual(dialogAccepted, true, 'Confirm dialog should have been accepted');
     let isPracticeHidden = await page.evaluate(() => {
       const area = document.getElementById('essay-practice-area');
@@ -215,13 +218,7 @@ const path = require('path');
     assert.strictEqual(isPracticeHidden, true, 'Practice session should be reset after navigation');
 
     // Reset back to question 0 and start again for the rest of the feedback test
-    await page.evaluate(() => {
-      const select = document.getElementById('question-select-essay');
-      if (select) {
-          select.value = '0';
-          select.dispatchEvent(new Event('change'));
-      }
-    });
+    await pickPrompt(0);
     await page.evaluate(() => {
         const startBtn = document.getElementById('start-essay-btn');
         if (startBtn) startBtn.click();

@@ -208,6 +208,7 @@
             dot.classList.toggle('active', i === activeIdx);
             dot.classList.toggle('completed', i < activeIdx);
         });
+        window.SpeakingPracticeController?.sync?.('rts');
     }
 
     /* ──────────────────────────── DATA LOADING ──────────────────────────── */

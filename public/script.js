@@ -1839,6 +1839,7 @@
         );
         if (!confirmed) return false;
       }
+      window.WriteEssayMode?.onExit?.();
     }
     if (leavingMode === 'swt') {
       if (window.SWTMode?.shouldConfirmExit?.()) {
@@ -1949,6 +1950,7 @@
         if (!isCurrentTransition()) return false;
         if (!confirmed) return false;
       }
+      window.WriteEssayMode?.onExit?.();
     }
     if (leavingMode === 'collo-dictate' && mode !== 'collo-dictate') {
       window.ColloDictateMode?.onExit?.();
@@ -9762,6 +9764,7 @@
 
       // New flow: Show check button when recording stops
       if (checkBtnSpeak) checkBtnSpeak.style.display = "inline-block";
+      window.SpeakingPracticeController?.sync?.('speak');
     } else {
       // Start recording
       // First, make sure any previous recognition is stopped
@@ -9790,6 +9793,7 @@
 
       // New flow: Hide check button while recording
       if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
+      window.SpeakingPracticeController?.sync?.('speak');
 
       try {
         recognition.start();
@@ -9831,6 +9835,7 @@
     if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
     if (playBtnSpeak) playBtnSpeak.style.display = "none";
     if (retryBtnSpeak) retryBtnSpeak.style.display = "inline-block";
+    window.SpeakingPracticeController?.sync?.('speak');
 
     performCheckSpeak(transcription.trim(), scoreSpeak);
   });
@@ -9841,6 +9846,7 @@
       // Show Play button again (was hidden after Check to prevent point farming)
       if (recordBtn) recordBtn.style.display = "inline-block";
       retryBtnSpeak.style.display = "none";
+      window.SpeakingPracticeController?.sync?.('speak');
       resetScaffolding();
 
       // Restore Play button only if replays remain for this question (retry must not bypass the cap).

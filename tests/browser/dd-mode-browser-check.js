@@ -239,27 +239,35 @@ async function setupFirebaseMocks(context) {
     // Result summary box should show perfect score
     await page.waitForSelector('#dd-result-summary', { state: 'visible', timeout: 5000 });
     const summaryText = await page.locator('#dd-result-summary').textContent();
-    const expectedScoreText = `${target.blanks.length} / ${target.blanks.length}`;
+    const expectedScoreText = `${target.blanks.length}/${target.blanks.length} blanks correct`;
     assert(summaryText.includes(expectedScoreText), `Expected score ${expectedScoreText} in result summary, got: ${summaryText}`);
 
-    // Verify explanation header is visible (Requirement 1)
-    const isHeaderVisible = await page.locator('#dd-explanation-header').isVisible();
-    assert(isHeaderVisible, 'Explanation header should be visible after submission');
-    const headerText = await page.locator('#dd-explanation-header').textContent();
-    assert.equal(headerText, 'Show explanation', 'Explanation header text should be "Show explanation"');
+    // Explanations sit behind a ? per blank (same affordance as RFIB), not in
+    // always-open cards.
+    const hintButtons = page.locator('#dd-passage .dd-hint-btn');
+    const hintCount = await hintButtons.count();
+    assert.equal(hintCount, target.blanks.length, `Expected ${target.blanks.length} hint buttons, found: ${hintCount}`);
 
-    // Verify that detailed cards show "Correct" and have explanations
-    const resultCards = page.locator('#dd-results .dd-result-card');
-    const cardCount = await resultCards.count();
-    assert.equal(cardCount, target.blanks.length, `Expected ${target.blanks.length} result cards, found: ${cardCount}`);
+    const popoverBeforeClick = await page.locator('.dd-popover.is-visible').count();
+    assert.equal(popoverBeforeClick, 0, 'No explanation popover should be open before a ? is clicked');
 
-    for (let i = 0; i < cardCount; i++) {
-      const card = resultCards.nth(i);
-      const cardText = await card.textContent();
-      assert(cardText.includes('Correct'), `Card #${i + 1} should be Correct`);
-      assert(cardText.includes('Explanation'), `Card #${i + 1} should show Explanation`);
-      assert(cardText.includes('Coherence Cue') || cardText.includes('Grammar & Vocab Cue'), `Card #${i + 1} should show cues`);
-    }
+    await hintButtons.first().click();
+    await page.waitForSelector('.dd-popover.is-visible', { timeout: 5000 });
+    const popoverText = await page.locator('.dd-popover').textContent();
+    assert(popoverText.includes('Blank 1'), 'Popover should name the blank it explains');
+    assert(popoverText.includes('Correct'), 'Popover should show the Correct verdict for a right answer');
+    assert(popoverText.includes('Explanation'), 'Popover should show the explanation');
+    assert(
+      popoverText.includes('Coherence cue') || popoverText.includes('Grammar & vocab cue'),
+      'Popover should show the cues'
+    );
+
+    // Clicking the same ? closes it again.
+    await hintButtons.first().click();
+    await page.waitForFunction(
+      () => !document.querySelector('.dd-popover.is-visible'),
+      { timeout: 5000 }
+    );
 
     // --- PHASE 2: Retry and Incorrect Attempt ---
     console.log('Testing Retry button...');
@@ -270,13 +278,15 @@ async function setupFirebaseMocks(context) {
     const clearedState = await page.evaluate(() => {
       const filledSlots = document.querySelectorAll('#dd-passage .dd-blank-slot.is-filled').length;
       const resultBoxDisplay = getComputedStyle(document.getElementById('dd-result-summary')).display;
-      const resultsContainerDisplay = getComputedStyle(document.getElementById('dd-results')).display;
+      const hintButtons = document.querySelectorAll('#dd-passage .dd-hint-btn').length;
+      const openPopovers = document.querySelectorAll('.dd-popover.is-visible').length;
       const submitBtnVisible = getComputedStyle(document.getElementById('dd-submit-btn')).display !== 'none';
       const submitBtnDisabled = document.getElementById('dd-submit-btn').disabled;
       return {
         filledSlots,
         resultBoxVisible: resultBoxDisplay !== 'none',
-        resultsContainerVisible: resultsContainerDisplay !== 'none',
+        hintButtons,
+        openPopovers,
         submitBtnVisible,
         submitBtnDisabled
       };
@@ -284,7 +294,8 @@ async function setupFirebaseMocks(context) {
 
     assert.equal(clearedState.filledSlots, 0, 'No blank slots should be filled after retry');
     assert.equal(clearedState.resultBoxVisible, false, 'Result summary should be hidden');
-    assert.equal(clearedState.resultsContainerVisible, false, 'Detailed results container should be hidden');
+    assert.equal(clearedState.hintButtons, 0, 'Hint buttons should be cleared after retry');
+    assert.equal(clearedState.openPopovers, 0, 'No explanation popover should survive a retry');
     assert.equal(clearedState.submitBtnVisible, true, 'Submit button should be visible again');
     assert.equal(clearedState.submitBtnDisabled, true, 'Submit button should be disabled after retry');
 
@@ -330,15 +341,24 @@ async function setupFirebaseMocks(context) {
     // Verify score is incorrect (e.g. 3 / 4)
     await page.waitForSelector('#dd-result-summary', { state: 'visible', timeout: 5000 });
     const summaryTextWrong = await page.locator('#dd-result-summary').textContent();
-    const expectedScoreTextWrong = `${target.blanks.length - 1} / ${target.blanks.length}`;
+    const expectedScoreTextWrong = `${target.blanks.length - 1}/${target.blanks.length} blanks correct`;
     assert(summaryTextWrong.includes(expectedScoreTextWrong), `Expected score ${expectedScoreTextWrong} in summary, got: ${summaryTextWrong}`);
+    assert(summaryTextWrong.includes('Click ? for explanations'), 'A missed attempt should point the learner at the ? buttons');
 
-    // Verify the selected incorrect card has distractor analysis.
-    const incorrectCard = resultCards.nth(incorrectBlankIndex);
-    const incorrectCardText = await incorrectCard.textContent();
-    assert(incorrectCardText.includes('Incorrect'), 'The incorrect blank card should show an Incorrect badge');
-    assert(incorrectCardText.includes('Distractor Analysis'), 'The incorrect blank card should show Distractor Analysis');
-    assert(incorrectCardText.includes(incorrectWord), 'The incorrect blank card should mention the selected word in its analysis');
+    // The popover for the missed blank carries the verdict, both answers and the
+    // distractor analysis.
+    await page.locator('#dd-passage .dd-hint-btn').nth(incorrectBlankIndex).click();
+    await page.waitForSelector('.dd-popover.is-visible', { timeout: 5000 });
+    const incorrectPopoverText = await page.locator('.dd-popover').textContent();
+    assert(incorrectPopoverText.includes('Incorrect'), 'The popover should show an Incorrect verdict');
+    assert(incorrectPopoverText.includes('Your answer'), 'The popover should show the learner answer');
+    assert(incorrectPopoverText.includes('Correct answer'), 'The popover should show the correct answer');
+    assert(incorrectPopoverText.includes(incorrectWord), 'The popover should mention the selected word');
+    assert(
+      incorrectPopoverText.includes(`Why ${incorrectWord} is wrong`),
+      'The popover should show the distractor analysis for the selected word'
+    );
+    await page.keyboard.press('Escape');
 
     // --- PHASE 3: Question Picker and Navigation ---
     console.log('Testing Question Picker...');

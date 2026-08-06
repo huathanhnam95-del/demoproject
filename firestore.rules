@@ -280,5 +280,23 @@ service cloud.firestore {
     match /essay_ai_worker_status/{statusId} {
       allow read, write: if false;
     }
+
+    // ============================================
+    // CRM BOOKS (server-owned; Admin SDK bypasses rules)
+    // ============================================
+    match /crmBooks/{bookId} {
+      allow read: if isAdmin();
+      allow write: if false;
+
+      match /{document=**} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    match /crmBookIngestJobs/{jobId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
   }
 }

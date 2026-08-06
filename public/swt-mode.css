@@ -1,0 +1,49 @@
+/* ==========================================================================
+   Summarize Written Text — mode sheet
+   --------------------------------------------------------------------------
+   Palette, panel wash, header card, section rhythm, result line, controls and
+   the shared Writing primitives (timer chip, textarea, word counter, results)
+   all come from read-mode-base.css. These aliases keep any --swt-* selector
+   working against the shared tokens.
+
+   The measure (.swt-container) and .swt-split-layout are owned by
+   read-mode-base.css — redeclaring either here would beat the base media
+   queries, because this sheet loads after it. See
+   scripts/audit/read-mode-cascade.js, which fails the build on exactly that.
+   ========================================================================== */
+#mode-swt {
+  --swt-paper: var(--read-paper);
+  --swt-ink: var(--read-ink);
+  --swt-muted: var(--read-muted);
+  --swt-accent: var(--read-accent);
+  --swt-accent-soft: var(--read-accent-soft);
+  --swt-border: var(--read-border);
+  --swt-border-soft: var(--read-border-soft);
+  --swt-success: var(--read-success);
+  --swt-danger: var(--read-danger);
+}
+
+/* The source column reads like a Reading passage. It scrolls independently so
+   a long source cannot push the compose box off screen on the split layout. */
+#mode-swt .swt-source-text,
+#mode-swt .swt-source-card .essay-prompt-display {
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* One sentence, not an essay — a tall textarea would invite the wrong answer
+   shape. Reading's own guidance is that the control should suggest the task. */
+#mode-swt .essay-textarea {
+  min-height: 132px;
+}
+
+@media (max-width: 900px) {
+  /* Stacked, so the source no longer competes for height with the compose box. */
+  #mode-swt .swt-source-text,
+  #mode-swt .swt-source-card .essay-prompt-display {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}

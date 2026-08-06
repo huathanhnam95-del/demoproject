@@ -954,3 +954,16 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 558,2026-08-04,Fix Pronunciation V3 audit findings and harden browser/contract tests,Done,2026-08-04
 559,2026-08-04,Review verify and push all changes to production,Done,2026-08-04
 554,2026-08-04,Verify V1.8.45 UI changes and live V3 deployment (tests, browser E2E, drift, provenance),Done,2026-08-04
+560,2026-08-04,Repair Read Aloud practice UI: nav order toggle, live stepper across speaking modes, composable guide modes, settings sheet cleanup,Done,2026-08-04
+561,2026-08-04,Restore Speech Coach results linking overlay (regressed in V1.8.28 family gate),Done,2026-08-04
+562,2026-08-04,"Six practice UI repairs: RFIB easy-reading after Check, D&D hint popover explanations, D&D random toggle, speaking Random ON/OFF toggle, stepper reaching Results on failed scoring, composable guide-layer styling",Done,2026-08-04
+563,2026-08-04,"Apply Reading modes UI/UX design system and v7 navigation parity to Writing modes (SWT + Write Essay)",Done,2026-08-04
+564,2026-08-06,"CRM Books: NotebookLM-style PDF library with AI summary + grounded chat (Phase 1: Shell & CRUD)",Done,2026-08-06
+565,2026-08-06,"CRM Books Phase 2: Extract & chunk — unpdf integration, book-pdf-extractor, book-chunker, book-ingest-service queue worker, crmBookIngestRunner, frontend progress with weighted stages",Done,2026-08-06
+566,2026-08-06,"CRM Books Phase 3: Embeddings & vector index — book-embeddings.js with L2 normalization, embed stage in ingest worker, book-retrieval.js with native+bruteforce strategies, vector index config",Done,2026-08-06
+567,2026-08-06,"CRM Books Phase 4: Summary — book-summary-service.js with map-reduce, summarize stage in ingest worker, complete-job flow setting book to ready",Done,2026-08-06
+568,2026-08-06,"CRM Books Phase 5: Chat & verification — book-chat-service.js with RAG-grounded chat, POST messages route with quota, chat UI with staged indicator and auto-thread creation",Done,2026-08-06
+569,2026-08-06,Code review of CRM book upload and AI summary function,Done,2026-08-06
+570,2026-08-06,"CRM Books: Fix 7 review bugs — XSS escaping, page 0 falsy, race condition guard, detached DOM, upload debounce, CSS flex truncation",Done,2026-08-06
+571,2026-08-06,Review all recent work and prepare deployment plan and release package,Done,2026-08-06
+572,2026-08-06,Deploy V1.8.46 release to production,In Progress,

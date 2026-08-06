@@ -339,6 +339,7 @@
             s.classList.toggle('active', i === activeIndex);
             s.classList.toggle('completed', i < activeIndex);
         });
+        window.SpeakingPracticeController?.sync?.('describe-image');
     }
 
     /* ──────────────────────────── PREPARATION TIMER ──────────────────────────── */

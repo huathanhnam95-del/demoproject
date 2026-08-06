@@ -17,13 +17,16 @@ const { chromium } = require('playwright');
 const SPEAKING_MODE_IDS = [
   'read-aloud', 'rts', 'asq', 'describe-image', 'notes', 'sgd', 'speak'
 ];
+// Step counts must match each mode's real state machine. Several were wrong
+// before: Read Aloud has no separate Read phase (prep starts on load), Describe
+// Image and SGD each run three phases, and Retell Lecture never records.
 const EXPECTED_STEP_COUNTS = {
-  'read-aloud': 4,
+  'read-aloud': 3,
   rts: 4,
   asq: 3,
-  'describe-image': 4,
-  notes: 4,
-  sgd: 4,
+  'describe-image': 3,
+  notes: 3,
+  sgd: 3,
   speak: 3
 };
 

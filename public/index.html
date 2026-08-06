@@ -29,6 +29,8 @@
   <link rel="stylesheet" href="rmcma-mode.css">
   <link rel="stylesheet" href="rmcsa-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
+  <link rel="stylesheet" href="swt-mode.css">
+  <link rel="stylesheet" href="write-essay-mode.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
   <link rel="stylesheet" href="hcs-mode.css">
@@ -205,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.45</div>
+  <div id="version-indicator" class="version-indicator">V1.8.46</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2898,8 +2900,6 @@
         </div>
 
         <div id="dd-result-summary" class="dd-result-summary-box" style="display: none;" aria-live="polite"></div>
-        <h3 id="dd-explanation-header" style="display: none;">Show explanation</h3>
-        <div id="dd-results" class="dd-results-container" style="display: none;"></div>
       </div>
 
       <!-- RMCMA Mode Panel -->
@@ -4475,47 +4475,74 @@
       </div>
 
       <div id="mode-essay" class="mode-panel" style="display: none;">
-        <div id="essay-info-box" class="notification-box important-notice">
-            <span>✍️ Based on PTE Academic's Write Essay task — you have 20 minutes</span>
-            <button class="info-box-close"
-              onclick="this.parentElement.style.display='none'; localStorage.setItem('essayInfoDismissed','1')"
-              title="Don't show again">×</button>
-          </div>
-          <script>
-            if (localStorage.getItem('essayInfoDismissed') === '1') {
-              document.getElementById('essay-info-box').style.display = 'none';
-            }
-          </script>
-          <div class="question-selector">
-            <div class="question-id-display">
-              <label for="question-select-essay">Prompt ID:</label>
-              <span id="current-question-id-essay" class="current-question-id">1</span>
-            </div>
-            <div class="question-nav-row">
-              <button id="back-btn-essay" class="nav-btn nav-btn-back" type="button" title="Previous Prompt">←
-                Back</button>
-              <select id="question-select-essay" class="question-select question-select-narrow">
-                <option value="1">Loading...</option>
-              </select>
-              <button id="next-btn-essay" class="nav-btn nav-btn-next" type="button" title="Next Prompt">Next →</button>
+        <!-- v7 Question Picker — same contract as the Reading tasks. -->
+        <div class="ra-v7-picker-bar" id="essay-v7-picker-bar">
+          <div class="ra-v7-picker-inner">
+            <div class="ra-v7-nav" role="group" aria-label="Write Essay navigation">
+              <button id="essay-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous prompt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <button id="essay-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a prompt">Select a prompt…</button>
+              <button id="essay-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next prompt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+              <button id="essay-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
             </div>
           </div>
-          <div class="question-total">
-            <span>Total prompts: <span id="total-questions-essay">0</span></span>
+        </div>
+
+        <div id="essay-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+        <div id="essay-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+          <span class="ra-v7-grabber" aria-hidden="true"></span>
+          <div class="ra-v7-sheet-header">
+            <div class="ra-v7-sheet-title">Prompt Picker</div>
+            <button id="essay-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
           </div>
-          <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
-            <p>Prompt will appear here...</p>
+          <div class="ra-v7-sheet-body">
+            <div id="essay-v7-panel-jump" role="tabpanel">
+              <label class="ra-v7-sr-only" for="essay-v7-jump-search">Search</label>
+              <input id="essay-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search prompts…">
+              <div class="ra-v7-section-title">Prompts</div>
+              <div id="essay-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Prompts"></div>
+            </div>
           </div>
-          <div class="controls">
-            <button id="start-essay-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
+        </div>
+
+        <div class="essay-container">
+          <div class="essay-header-card">
+            <div class="essay-header-copy">
+              <div class="essay-kicker">Academic writing</div>
+              <h2>Write Essay</h2>
+              <p>Read the prompt, then write an argumentative essay of 200–300 words. You have 20 minutes from the moment you start.</p>
+            </div>
+          </div>
+
+          <!--
+            The attempt archive resolves the current essay question by reading
+            this element (public/js/pte-attempt-archive.js, resolveHistoryQuestionId).
+            The picker pill carries the same id visually; this stays as the
+            machine-readable source so history keeps working.
+          -->
+          <span id="current-question-id-essay" hidden></span>
+
+          <div class="essay-prompt-card">
+            <div class="essay-card-header"><span class="essay-kicker">Essay prompt</span></div>
+            <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
+              <p>Prompt will appear here...</p>
+            </div>
+            <div class="controls">
+              <button id="start-essay-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
+            </div>
           </div>
 
           <!-- Practice Area (hidden until Start clicked) -->
           <div id="essay-practice-area" style="display: none;">
             <!-- Step 1: Write -->
-            <div id="essay-step-write" class="notes-step" style="display: none;">
-              <div class="notes-step-header">
-                <span class="notes-step-badge">Write Essay</span>
+            <div id="essay-step-write" class="essay-compose-card" style="display: none;">
+              <div class="essay-card-header">
+                <span class="essay-kicker">Your essay</span>
                 <div id="essay-timer" class="essay-timer">20:00</div>
               </div>
               <div id="essay-prompt-display" class="essay-prompt-display">
@@ -4532,13 +4559,14 @@
             </div>
 
             <!-- Step 2: Results -->
-            <div id="essay-step-results" class="notes-step" style="display: none;">
-              <div class="notes-step-header">
-                <span class="notes-step-badge">Results</span>
-                <h4 id="essay-results-title">Your Essay Scores</h4>
+            <div id="essay-step-results" class="essay-feedback-panel" style="display: none;">
+              <div class="essay-card-header">
+                <span class="essay-kicker" id="essay-results-title">Your Essay Scores</span>
               </div>
+              <div id="essay-result-box" class="essay-result-box" role="status" aria-live="polite"></div>
               <div id="essay-results-container" class="essay-results-container"></div>
-              <div class="notes-results-controls essay-results-controls">
+              <!-- Reading order: primary action first, then Retry, then the AI action. -->
+              <div class="essay-results-controls">
                 <button id="essay-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
                 <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Queue AI scoring</button>
               </div>
@@ -4547,14 +4575,10 @@
             </div>
           </div>
         </div>
+      </div>
 
       <!-- Summarize Written Text Mode Panel -->
       <div id="mode-swt" class="mode-panel" style="display: none;">
-        <div id="swt-info-box" class="notification-box important-notice">
-          <span>📝 PTE Summarize Written Text — Write ONE sentence summarizing the passage (10 min)</span>
-          <button class="info-box-close" title="Don't show again">&times;</button>
-        </div>
-
         <!-- v7 Question Picker -->
         <div class="ra-v7-picker-bar" id="swt-v7-picker-bar">
           <div class="ra-v7-picker-inner">
@@ -4566,6 +4590,7 @@
               <button id="swt-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
+              <button id="swt-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
             </div>
           </div>
         </div>
@@ -4589,44 +4614,65 @@
           </div>
         </div>
 
-        <!-- Start Button -->
-        <div class="controls">
-          <button id="start-swt-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
-        </div>
-
-        <!-- Practice Area -->
-        <div id="swt-practice-area" style="display: none;">
-          <!-- Step 1: Write -->
-          <div id="swt-step-write" class="notes-step" style="display: none;">
-            <div class="notes-step-header">
-              <span class="notes-step-badge">Summarize Written Text</span>
-              <div id="swt-timer" class="essay-timer">10:00</div>
-            </div>
-            <div id="swt-source-display" class="essay-prompt-display">
-              <p>Source text will appear here…</p>
-            </div>
-            <div class="essay-input-area">
-              <textarea id="swt-input" class="essay-textarea"
-                placeholder="Write your summary in ONE single sentence (5-75 words)." rows="5"></textarea>
-              <div class="essay-input-footer">
-                <span id="swt-word-count" class="essay-word-count essay-wc-bad">0 words</span>
-                <button id="swt-submit-btn" class="modern-btn modern-btn--check" type="button">Submit Summary</button>
-              </div>
+        <div class="swt-container">
+          <div class="swt-header-card">
+            <div class="swt-header-copy">
+              <div class="swt-kicker">Academic writing</div>
+              <h2>Summarize Written Text</h2>
+              <p>Read the source passage, then summarize it in ONE single sentence of 5–75 words. You have 10 minutes from the moment you start.</p>
             </div>
           </div>
 
-          <!-- Step 2: Results -->
-          <div id="swt-step-results" class="notes-step" style="display: none;">
-            <div class="notes-step-header">
-              <span class="notes-step-badge">Results</span>
-              <h4>Your SWT Scores</h4>
+          <!-- Start Button -->
+          <div class="controls">
+            <button id="start-swt-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
+          </div>
+
+          <!-- Practice Area -->
+          <div id="swt-practice-area" style="display: none;">
+            <!-- Step 1: Write -->
+            <!--
+              The split lives on an inner wrapper, not on #swt-step-write: the
+              mode JS shows the step with style.display = 'block', which would
+              defeat the grid.
+            -->
+            <div id="swt-step-write" style="display: none;">
+             <div class="swt-split-layout">
+              <div class="swt-source-card">
+                <div class="swt-card-header"><span class="swt-kicker">Source passage</span></div>
+                <div id="swt-source-display" class="essay-prompt-display">
+                  <p>Source text will appear here…</p>
+                </div>
+              </div>
+              <div class="swt-compose-card">
+                <div class="swt-card-header">
+                  <span class="swt-kicker">Your summary</span>
+                  <div id="swt-timer" class="essay-timer">10:00</div>
+                </div>
+                <div class="essay-input-area">
+                  <textarea id="swt-input" class="essay-textarea"
+                    placeholder="Write your summary in ONE single sentence (5-75 words)." rows="5"></textarea>
+                  <div class="essay-input-footer">
+                    <span id="swt-word-count" class="essay-word-count essay-wc-bad">0 words</span>
+                    <button id="swt-submit-btn" class="modern-btn modern-btn--check" type="button">Submit Summary</button>
+                  </div>
+                </div>
+              </div>
+             </div>
             </div>
-            <div id="swt-results-container" class="essay-results-container"></div>
-            <div class="notes-results-controls essay-results-controls">
-              <button id="swt-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
-              <button id="swt-ai-score-btn" class="modern-btn modern-btn--play" type="button" style="display:none;">Submit to AI scoring</button>
+
+            <!-- Step 2: Results -->
+            <div id="swt-step-results" class="swt-feedback-card" style="display: none;">
+              <div class="swt-card-header"><span class="swt-kicker">Your SWT Scores</span></div>
+              <div id="swt-result-box" class="swt-result-box" role="status" aria-live="polite"></div>
+              <div id="swt-results-container" class="essay-results-container"></div>
+              <!-- Reading order: primary action first, then Retry, then the AI action. -->
+              <div class="essay-results-controls">
+                <button id="swt-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+                <button id="swt-ai-score-btn" class="modern-btn modern-btn--play" type="button" style="display:none;">Submit to AI scoring</button>
+              </div>
+              <div id="swt-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
             </div>
-            <div id="swt-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
           </div>
         </div>
       </div>
@@ -5164,25 +5210,29 @@
           </div>
           <div id="ra-practice-target-drawer" hidden
             style="width:100%; max-width:900px; margin: 0 auto; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
-            <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-all" type="button">All</button>
-              <button class="ra-filter-pill" id="ra-filter-available" type="button">🎵
-                Sample Audio: Available</button>
-              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button">No
-                Audio</button>
+            <div class="read-aloud-filters">
+              <span class="read-aloud-filter-label">🎵 Sample Audio:</span>
+              <div class="read-aloud-filter-buttons" role="group" aria-label="Sample audio filter">
+                <button class="ra-filter-pill active" id="ra-filter-all" type="button">All</button>
+                <button class="ra-filter-pill" id="ra-filter-available" type="button">Available</button>
+                <button class="ra-filter-pill" id="ra-filter-unavailable" type="button">No audio</button>
+              </div>
             </div>
-            <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true">All
-                prompts</button>
-              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false">Any
-                connected speech</button>
-              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false">Linking</button>
-              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false">Reduced
-                words</button>
-              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false">Sound
-                changes</button>
-              <div id="ra-filter-feature-status"
-                style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
+            <div class="read-aloud-filters">
+              <span class="read-aloud-filter-label">🗣️ Prompt Feature:</span>
+              <div class="read-aloud-filter-buttons" role="group" aria-label="Prompt feature filter">
+                <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true">All
+                  prompts</button>
+                <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false">Any
+                  connected speech</button>
+                <button class="ra-filter-pill" id="ra-filter-linking" type="button"
+                  aria-pressed="false">Linking</button>
+                <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false">Reduced
+                  words</button>
+                <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false">Sound
+                  changes</button>
+              </div>
+              <div id="ra-filter-feature-status" class="read-aloud-filter-status"></div>
             </div>
           </div>
         </div>
@@ -5949,7 +5999,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.45"></script>
+  <script src="/read-aloud-mode.js?v=1.8.46"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

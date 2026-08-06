@@ -28,6 +28,14 @@
   let scoreSWTFn = null;
   let authStateRefreshBound = false;
   const MAX_SWT_SECONDS = 600;
+  // Navigation parity with the Reading tasks. The Random preference is shared
+  // app-wide under this one localStorage key, so toggling it here follows the
+  // learner into every other mode.
+  const RANDOM_MODE_KEY = 'pte_random_nav_mode';
+  let randomMode = localStorage.getItem(RANDOM_MODE_KEY) === 'true';
+  let navHistory = [];
+  let pickerPage = 1;
+  const PICKER_PAGE_SIZE = 20;
 
   // ── DOM Cache (populated once in init) ──
   const $ = (id) => document.getElementById(id);
@@ -36,10 +44,10 @@
   function cacheDom() {
     d = {
       panel: $('mode-swt'),
-      infoBox: $('swt-info-box'),
       // v7 picker
       prevBtn: $('swt-v7-prev-btn'),
       nextBtn: $('swt-v7-next-btn'),
+      randomToggleBtn: $('swt-random-toggle-btn'),
       questionPill: $('swt-v7-question-pill'),
       backdrop: $('swt-v7-backdrop'),
       sheet: $('swt-v7-sheet'),
@@ -56,6 +64,7 @@
       textarea: $('swt-input'),
       wordCount: $('swt-word-count'),
       submitBtn: $('swt-submit-btn'),
+      resultBox: $('swt-result-box'),
       resultsContainer: $('swt-results-container'),
       retryBtn: $('swt-retry-btn'),
       aiScoreBtn: $('swt-ai-score-btn'),
@@ -123,20 +132,93 @@
     if (d.startBtn) d.startBtn.disabled = questions.length === 0;
   }
 
-  function renderJumpList(filter = '') {
+  function renderJumpList(filter = '', page = null) {
     if (!d || !d.jumpList) return;
     const lowerFilter = filter.toLowerCase().trim();
-    const items = questions.map((q, i) => {
-      if (lowerFilter && !q.title.toLowerCase().includes(lowerFilter) && !q.id.toString().includes(lowerFilter)) {
-        return '';
-      }
-      const isActive = i === currentIndex;
-      return `<button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${i}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
+
+    const filtered = questions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({ q }) => !lowerFilter
+        || String(q.id).toLowerCase().includes(lowerFilter)
+        || q.title.toLowerCase().includes(lowerFilter));
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PICKER_PAGE_SIZE));
+
+    if (page === null || page === undefined) {
+      // Open on the page holding the current question rather than page 1.
+      const activeFilteredIndex = filtered.findIndex((item) => item.idx === currentIndex);
+      pickerPage = activeFilteredIndex >= 0
+        ? Math.floor(activeFilteredIndex / PICKER_PAGE_SIZE) + 1
+        : 1;
+    } else {
+      pickerPage = Math.max(1, Math.min(page, totalPages));
+    }
+
+    const currentPage = pickerPage;
+    const pagedItems = filtered.slice((currentPage - 1) * PICKER_PAGE_SIZE, currentPage * PICKER_PAGE_SIZE);
+
+    const itemsHtml = pagedItems.map(({ q, idx }) => {
+      const isActive = idx === currentIndex;
+      return `<button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
         <span class="ra-v7-item-id">#${escapeHtml(q.id)}</span>
         <span class="ra-v7-item-title">${escapeHtml(q.title)}</span>
       </button>`;
-    }).filter(Boolean);
-    d.jumpList.innerHTML = items.length > 0 ? items.join('') : '<div class="ra-v7-empty">No matching questions</div>';
+    }).join('');
+
+    const paginationHtml = totalPages > 1 ? `
+      <div class="ra-v7-pagination">
+        <button class="ra-v7-pagination-btn prev-page-btn" type="button" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="ra-v7-pagination-info">Page ${currentPage} of ${totalPages} (${filtered.length} items)</span>
+        <button class="ra-v7-pagination-btn next-page-btn" type="button" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    ` : '';
+
+    d.jumpList.innerHTML = (itemsHtml || '<div class="ra-v7-empty">No matching questions</div>') + paginationHtml;
+
+    // The innerHTML write above destroys the previous buttons, so rebind.
+    const prevPageBtn = d.jumpList.querySelector('.prev-page-btn');
+    const nextPageBtn = d.jumpList.querySelector('.next-page-btn');
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage - 1);
+      });
+    }
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderJumpList(filter, currentPage + 1);
+      });
+    }
+  }
+
+  function updateRandomToggleUI() {
+    if (!d || !d.randomToggleBtn) return;
+    d.randomToggleBtn.classList.toggle('is-active', randomMode);
+    d.randomToggleBtn.setAttribute('aria-pressed', randomMode ? 'true' : 'false');
+    d.randomToggleBtn.textContent = randomMode ? '🎲 Random: ON' : '🎲 Random: OFF';
+  }
+
+  function goToPrevQuestion() {
+    if (randomMode && navHistory.length > 0) {
+      selectQuestion(navHistory.pop(), { recordHistory: false });
+    } else if (currentIndex > 0) {
+      selectQuestion(currentIndex - 1);
+    }
+  }
+
+  function goToNextQuestion() {
+    if (randomMode && questions.length > 1) {
+      const from = currentIndex;
+      let randomIdx;
+      do {
+        randomIdx = Math.floor(Math.random() * questions.length);
+      } while (randomIdx === currentIndex && questions.length > 1);
+      navHistory.push(from);
+      selectQuestion(randomIdx, { recordHistory: false });
+    } else if (currentIndex < questions.length - 1) {
+      selectQuestion(currentIndex + 1);
+    }
   }
 
   function openPicker() {
@@ -161,24 +243,48 @@
     if (d.questionPill) d.questionPill.setAttribute('aria-expanded', 'false');
   }
 
-  function selectQuestion(index) {
+  function selectQuestion(index, { recordHistory = true, updateRoute = true } = {}) {
     if (isWriting || index < 0 || index >= questions.length) return;
+    if (recordHistory && randomMode && index !== currentIndex) navHistory.push(currentIndex);
     currentIndex = index;
     renderPicker();
     renderSource();
     closePicker();
+
+    if (updateRoute && window.PracticeRouter && typeof window.PracticeRouter.replaceRoute === 'function') {
+      window.PracticeRouter.replaceRoute('swt', questions[index]?.id);
+    }
 
     if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
       window.PTEAttemptArchive.updateHistoryUI('swt', questions[index]?.id);
     }
   }
 
+  function selectQuestionById(questionId, options = {}) {
+    if (questionId == null || questionId === '') return false;
+    const idx = questions.findIndex((q) => String(q.id) === String(questionId));
+    if (idx < 0) return false;
+    selectQuestion(idx, options);
+    return true;
+  }
+
   function setNavigationLocked(locked) {
     if (!d) return;
     const hasQuestions = questions.length > 0;
-    if (d.prevBtn) d.prevBtn.disabled = locked || currentIndex <= 0;
-    if (d.nextBtn) d.nextBtn.disabled = locked || currentIndex >= questions.length - 1;
+    // In random mode the arrows walk the shuffle history, not the index order,
+    // so the position in the list must not disable them.
+    if (d.prevBtn) {
+      d.prevBtn.disabled = locked || (randomMode
+        ? navHistory.length === 0
+        : currentIndex <= 0);
+    }
+    if (d.nextBtn) {
+      d.nextBtn.disabled = locked || (randomMode
+        ? questions.length <= 1
+        : currentIndex >= questions.length - 1);
+    }
     if (d.questionPill) d.questionPill.disabled = locked || !hasQuestions;
+    if (d.randomToggleBtn) d.randomToggleBtn.disabled = locked;
   }
 
   // ── Source Text Display ──
@@ -354,6 +460,46 @@
   }
 
   // ── Results Display ──
+  /**
+   * The flat, centred score line the Reading tasks lead their results with.
+   * The detailed breakdown still renders below it in #swt-results-container.
+   */
+  function renderScoreLine({ empty = false, formResult = null } = {}) {
+    if (!d || !d.resultBox) return;
+
+    if (empty) {
+      d.resultBox.innerHTML = `
+        <div class="swt-result-summary has-misses">✗ No summary submitted</div>
+        <div class="swt-result-desc">Start again and write one sentence before the timer runs out.</div>`;
+      return;
+    }
+
+    if (!formResult) {
+      d.resultBox.innerHTML = '';
+      return;
+    }
+
+    const passed = formResult.score === 1;
+    d.resultBox.innerHTML = `
+      <div class="swt-result-summary ${passed ? 'is-perfect' : 'has-misses'}">
+        ${passed ? '✓' : '✗'} Form ${formResult.score}/1${passed ? ' — Ready for AI scoring' : ' — Form requirements not met'}
+      </div>
+      <div class="swt-result-desc">${escapeHtml(formResult.rationale || '')}</div>`;
+  }
+
+  function renderAiScoreLine(overall) {
+    if (!d || !d.resultBox) return;
+    const total = Number(overall?.total) || 0;
+    const maxTotal = Number(overall?.maxTotal) || 9;
+    const percent = Number.isFinite(Number(overall?.percent))
+      ? Math.round(Number(overall.percent))
+      : Math.round((total / maxTotal) * 100);
+    const band = percent >= 80 ? 'is-perfect' : percent >= 50 ? 'is-partial' : 'has-misses';
+    d.resultBox.innerHTML = `
+      <div class="swt-result-summary ${band}">${total}/${maxTotal} points — ${percent}%</div>
+      <div class="swt-result-desc">Scored by AI across Content, Form, Grammar and Vocabulary.</div>`;
+  }
+
   function showResults({ empty, text, formResult, wordCount }) {
     if (!d) return;
     if (d.stepWrite) d.stepWrite.style.display = 'none';
@@ -365,6 +511,7 @@
       lastSubmittedFormResult = null;
       lastSubmittedQuestion = null;
       hasAiScoreResult = false;
+      renderScoreLine({ empty: true });
       if (d.resultsContainer) {
         d.resultsContainer.innerHTML = `
           <div class="essay-submitted">
@@ -383,6 +530,8 @@
     lastArchiveAttemptId = null;
     lastArchiveSavePromise = null;
     hasAiScoreResult = false;
+
+    renderScoreLine({ formResult });
 
     if (d.resultsContainer) {
       d.resultsContainer.innerHTML = `
@@ -598,6 +747,10 @@
     const mainPointsAnalysis = data?.mainPointsAnalysis && typeof data.mainPointsAnalysis === 'object'
       ? data.mainPointsAnalysis
       : null;
+    // Promote the AI total into the score line, replacing the Form-only
+    // headline written at submit time.
+    renderAiScoreLine(overall);
+
     const criteriaOrder = [
       { key: 'content', label: 'Content', max: 4 },
       { key: 'form', label: 'Form', max: 1 },
@@ -753,6 +906,7 @@
       if (clearDraft) d.textarea.value = '';
       d.textarea.disabled = false;
     }
+    if (d.resultBox) d.resultBox.innerHTML = '';
     if (d.resultsContainer) d.resultsContainer.innerHTML = '';
     if (d.aiScoreBtn) {
       d.aiScoreBtn.style.display = 'none';
@@ -794,11 +948,29 @@
     if (!d) return;
 
     // v7 Picker
-    if (d.prevBtn) d.prevBtn.addEventListener('click', () => { if (currentIndex > 0) selectQuestion(currentIndex - 1); });
-    if (d.nextBtn) d.nextBtn.addEventListener('click', () => { if (currentIndex < questions.length - 1) selectQuestion(currentIndex + 1); });
+    if (d.prevBtn) d.prevBtn.addEventListener('click', goToPrevQuestion);
+    if (d.nextBtn) d.nextBtn.addEventListener('click', goToNextQuestion);
     if (d.questionPill) d.questionPill.addEventListener('click', () => { pickerOpen ? closePicker() : openPicker(); });
     if (d.backdrop) d.backdrop.addEventListener('click', closePicker);
     if (d.sheetClose) d.sheetClose.addEventListener('click', closePicker);
+
+    if (d.randomToggleBtn) {
+      updateRandomToggleUI();
+      d.randomToggleBtn.addEventListener('click', () => {
+        randomMode = !randomMode;
+        localStorage.setItem(RANDOM_MODE_KEY, String(randomMode));
+        navHistory = [];
+        updateRandomToggleUI();
+        renderPicker();
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && pickerOpen) {
+        closePicker();
+        if (d.questionPill) d.questionPill.focus();
+      }
+    });
 
     if (d.jumpSearch) {
       d.jumpSearch.addEventListener('input', (e) => renderJumpList(e.target.value));
@@ -829,21 +1001,6 @@
         alert('Copying is not allowed in PTE practice.');
       });
     }
-
-    // Dismiss info box
-    const infoBox = d.infoBox;
-    if (infoBox) {
-      const closeBtn = infoBox.querySelector('.info-box-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-          infoBox.style.display = 'none';
-          localStorage.setItem('swtInfoDismissed', '1');
-        });
-      }
-      if (localStorage.getItem('swtInfoDismissed') === '1') {
-        infoBox.style.display = 'none';
-      }
-    }
   }
 
   // ── Init / Enter / Exit ──
@@ -863,6 +1020,15 @@
   async function onEnter() {
     if (!initialized) await init();
     resetAttempt({ clearDraft: true });
+
+    // Honour /practice/writing/swt/<id> before falling back to the current index.
+    const route = window.PracticeRouter && typeof window.PracticeRouter.initFromURL === 'function'
+      ? window.PracticeRouter.initFromURL()
+      : null;
+    if (route && route.mode === 'swt' && route.questionId) {
+      selectQuestionById(route.questionId, { recordHistory: false, updateRoute: false });
+    }
+
     renderPicker();
     renderSource();
 
@@ -874,6 +1040,7 @@
   function onExit() {
     resetAttempt({ clearDraft: true });
     closePicker();
+    navHistory = [];
   }
 
   function shouldConfirmExit() {
@@ -892,4 +1059,12 @@
       formatTime
     }
   };
+
+  // Deep links and back/forward navigation, same contract as the Reading tasks.
+  window.addEventListener('practice-route-question', async (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'swt' || !questionId) return;
+    if (!initialized) await init();
+    selectQuestionById(questionId, { recordHistory: false, updateRoute: false });
+  });
 })();

@@ -305,6 +305,7 @@ class AsqMode {
     if (redoBtn) {
       redoBtn.style.display = showRedoButton ? '' : 'none';
     }
+    window.SpeakingPracticeController?.sync?.('asq');
   }
 
   // ---------------------------------------------------------------------------
@@ -345,6 +346,8 @@ class AsqMode {
     if (resultBox) resultBox.style.display = 'none';
     this.clearRecordedAudio();
     if (userAudioBox) userAudioBox.style.display = 'none';
+    // The shared step indicator reads the result box, so resync once it is hidden.
+    window.SpeakingPracticeController?.sync?.('asq');
   }
 
   /** Reset UI to re-attempt the current question */
@@ -463,6 +466,7 @@ class AsqMode {
     transcriptFeedback.appendChild(em);
 
     correctAnswers.textContent = answerDisplay ? `Accepted answers: ${answerDisplay}` : '';
+    window.SpeakingPracticeController?.sync?.('asq');
   }
 
   // ---------------------------------------------------------------------------
@@ -533,6 +537,7 @@ class AsqMode {
       stopBtn.style.display = 'inline-flex';
       stopBtn.disabled = false;
     }
+    window.SpeakingPracticeController?.sync?.('asq');
 
     try {
       this.startSpeechRecognition();

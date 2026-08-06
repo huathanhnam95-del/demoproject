@@ -12,13 +12,6 @@
   --dd-danger: var(--read-danger);
 }
 
-.dd-results-container {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
 /* Drop slots sit inline in the passage, so this task needs more leading than
    the 1.95 the other Reading modes use. */
 .dd-passage {
@@ -194,185 +187,229 @@
   margin-bottom: 18px;
 }
 
-#dd-explanation-header {
-  margin: 28px 0 12px;
-  font-family: 'Lora', serif;
-  font-size: 1.35rem;
-  color: var(--dd-ink);
+/* -- Inline ? hint button (mirrors .rfib-hint-btn) ------------------- */
+.dd-hint-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--dd-border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--dd-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 160ms ease;
 }
 
-.dd-results-container {
+.dd-hint-btn:hover {
+  border-color: var(--dd-accent);
+  color: var(--dd-accent);
+  background: var(--dd-accent-soft);
+  transform: scale(1.12);
+}
+
+.dd-hint-btn.is-active {
+  border-color: var(--dd-accent);
+  background: var(--dd-accent);
+  color: #fff;
+}
+
+.dd-hint-btn:focus-visible {
+  outline: 2px solid var(--dd-accent);
+  outline-offset: 2px;
+}
+
+/* -- Explanation popover (appended to body, fixed position) ---------- */
+.dd-popover {
+  position: fixed;
+  z-index: 60000;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(440px, 62vh);
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8ed 100%);
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.22);
+  border-radius: var(--read-radius-container);
+  box-shadow:
+    0 12px 40px rgba(42, 31, 18, 0.14),
+    0 2px 8px rgba(42, 31, 18, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 18px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
+  pointer-events: none;
 }
 
-.dd-result-card {
-  padding: 20px;
-  border-radius: 18px;
-  border: 1px solid rgba(110, 84, 54, 0.12);
-  background-color: #ffffff;
-  box-shadow: 0 8px 24px rgba(42, 31, 18, 0.02);
+.dd-popover.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
-.dd-result-card.is-correct {
-  border-color: var(--dd-success);
-  background-color: rgba(16, 185, 129, 0.04);
+.dd-popover-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fffdf8;
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.22);
+  border-right: 0;
+  border-bottom: 0;
+  transform: rotate(45deg);
+  z-index: -1;
 }
 
-.dd-result-card.is-incorrect {
-  border-color: var(--dd-danger);
-  background-color: rgba(239, 68, 68, 0.04);
+.dd-popover-arrow.arrow-top {
+  top: -7px;
+  left: 24px;
 }
 
-.dd-result-card-header {
+.dd-popover-arrow.arrow-bottom {
+  bottom: -7px;
+  left: 24px;
+  transform: rotate(225deg);
+}
+
+.dd-popover-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(110, 84, 54, 0.06);
+  gap: 8px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid rgba(110, 84, 54, 0.1);
+  flex-shrink: 0;
 }
 
-.dd-result-card-title {
-  font-weight: 700;
-  font-size: 1.08rem;
-  color: var(--dd-ink);
-}
-
-.dd-result-card-badge {
+.dd-popover-blank-label {
   font-family: 'Outfit', sans-serif;
   font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 4px 10px;
-  border-radius: 6px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dd-muted);
 }
 
-.dd-result-card.is-correct .dd-result-card-badge {
-  background-color: rgba(31, 122, 77, 0.1);
+.dd-popover-verdict {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.dd-popover-verdict.is-correct {
+  background: rgba(31, 122, 77, 0.1);
   color: var(--dd-success);
 }
 
-.dd-result-card.is-incorrect .dd-result-card-badge {
-  background-color: rgba(155, 47, 58, 0.1);
+.dd-popover-verdict.is-incorrect {
+  background: rgba(155, 47, 58, 0.1);
   color: var(--dd-danger);
 }
 
-.dd-result-card-body {
+.dd-popover-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--dd-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: color 120ms;
+  flex-shrink: 0;
+}
+
+.dd-popover-close:hover {
+  color: var(--dd-danger);
+}
+
+.dd-popover-body {
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
-.dd-result-card-answers {
+.dd-popover-answers {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
 }
 
-.dd-result-card-answer-item {
-  padding: 10px 14px;
+.dd-popover-answer-item {
+  padding: 8px 12px;
   border-radius: 10px;
-  background-color: rgba(248, 239, 226, 0.45);
+  background: rgba(248, 239, 226, 0.45);
   border: 1px solid rgba(110, 84, 54, 0.08);
 }
 
-.dd-result-card-answer-label {
+.dd-popover-answer-item.is-correct {
+  background: rgba(31, 122, 77, 0.06);
+  border-color: rgba(31, 122, 77, 0.18);
+}
+
+.dd-popover-answer-label {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--dd-muted);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   font-weight: 600;
 }
 
-.dd-result-card-answer-val {
-  font-size: 1.02rem;
+.dd-popover-answer-val {
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--dd-ink);
 }
 
-.dd-result-card-explanation-box {
-  padding-top: 14px;
-  border-top: 1px solid rgba(110, 84, 54, 0.05);
-}
-
-.dd-result-card-explanation-title {
-  font-weight: 700;
-  color: var(--dd-ink);
-  font-size: 0.96rem;
-  margin-bottom: 6px;
-}
-
-.dd-result-card-explanation-text {
-  font-size: 0.94rem;
+.dd-popover-section {
+  font-size: 0.88rem;
   line-height: 1.55;
-  color: var(--dd-muted);
+  color: var(--dd-ink);
 }
 
-.dd-result-card-cues {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
-
-.dd-result-card-cue-item {
-  background-color: #faf9f6;
-  border: 1px solid rgba(110, 84, 54, 0.06);
-  padding: 12px;
-  border-radius: var(--read-radius-control);
-}
-
-.dd-result-card-cue-title {
+.dd-popover-section-label {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  font-weight: 700;
   color: var(--dd-accent);
   margin-bottom: 4px;
 }
 
-.dd-result-card-cue-text {
-  font-size: 0.9rem;
-  line-height: 1.45;
+.dd-popover-section-text {
   color: var(--dd-muted);
+  word-break: break-word;
 }
 
-.dd-result-card-distractor-notes {
-  background-color: rgba(155, 47, 58, 0.03);
-  border: 1px solid rgba(155, 47, 58, 0.08);
-  padding: 12px 16px;
-  border-radius: var(--read-radius-control);
-}
-
-.dd-result-card-distractor-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.84rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.dd-popover-section-distractor .dd-popover-section-label {
   color: var(--dd-danger);
-  margin-bottom: 6px;
 }
 
-.dd-result-card-distractor-list {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 0.9rem;
+.dd-popover-section-explanation {
+  border-top: 1px dashed rgba(110, 84, 54, 0.14);
+  padding-top: 10px;
+}
+
+.dd-popover-empty {
+  font-size: 0.86rem;
   color: var(--dd-muted);
-}
-
-.dd-result-card-distractor-list li {
-  margin-bottom: 6px;
-}
-
-.dd-result-card-distractor-list li:last-child {
-  margin-bottom: 0;
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
 }
 
 @media (max-width: 900px) {
@@ -384,11 +421,5 @@
     min-width: 120px;
     height: 34px;
     margin: 0 4px;
-  }
-}
-
-@media (max-width: 640px) {
-  .dd-result-card-cues {
-    grid-template-columns: 1fr;
   }
 }

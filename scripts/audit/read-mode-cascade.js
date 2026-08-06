@@ -21,7 +21,11 @@ const path = require('path');
 const PUBLIC = path.join(__dirname, '..', '..', 'public');
 const BASE = 'read-mode-base';
 // Must match the <link> order in public/index.html
-const MODES = ['rfib-mode', 'dd-mode', 'rmcma-mode', 'rmcsa-mode', 'rop-mode'];
+const MODES = [
+  'rfib-mode', 'dd-mode', 'rmcma-mode', 'rmcsa-mode', 'rop-mode',
+  // The two Writing tasks share the same base sheet — see its section 15.
+  'swt-mode', 'write-essay-mode',
+];
 
 function declarations(file) {
   const css = fs.readFileSync(path.join(PUBLIC, `${file}.css`), 'utf8')

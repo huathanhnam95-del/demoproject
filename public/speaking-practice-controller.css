@@ -374,6 +374,49 @@
   background: rgba(0, 0, 0, 0.04);
 }
 
+/* Question order toggle (random vs in-order). Mirrors the view toggle's
+   segmented look, at a smaller scale so it reads as secondary to the picker. */
+/* One button with an ON/OFF state, matching the Reading modes' Random toggle. */
+.spc-order-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Matches the shared 44px touch target used across the controller. */
+  min-height: var(--spc-control-height);
+  padding: 0 12px;
+  border: 1px solid var(--spc-color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  background: var(--spc-color-surface);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background var(--spc-transition),
+    border-color var(--spc-transition),
+    box-shadow var(--spc-transition);
+}
+
+.spc-order-toggle.is-active {
+  background: #fff;
+  border-color: var(--spc-color-primary);
+  color: var(--spc-color-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-weight: 600;
+}
+
+.spc-order-toggle:hover:not(.is-active) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.spc-order-toggle:focus-visible {
+  outline: 2px solid var(--spc-color-primary);
+  outline-offset: 2px;
+}
+
 /* --------------------------------------------------------------------------
    6. Active Chip
    -------------------------------------------------------------------------- */
@@ -908,7 +951,6 @@
 #mode-rfib .rfib-cloze-view,
 #mode-rfib .rfib-support-text,
 #mode-dd .dd-passage,
-#mode-dd #dd-explanation-header,
 #mode-rmcsa .rmcsa-passage-text,
 #mode-rmcsa .rmcsa-question-prompt,
 #mode-rmcsa .rmcsa-choice-text,
@@ -1568,6 +1610,34 @@
 
 /* Read Aloud owns these generated difficulty controls, but they use the same
    settings-sheet contract as every other Speaking mode. */
+
+/* Each filter section is a labelled group flowing on the panel background —
+   no extra card wrapper. Previously only Difficulty carried a label, which
+   left two unlabelled pill rows stacked above it. */
+.spc-mode-settings-sheet .read-aloud-filters {
+  display: block;
+  margin: 0 0 16px;
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #475569;
+  font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-status {
+  margin-top: 8px;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.82rem;
+}
+
+.spc-mode-settings-sheet .read-aloud-filter-status:empty {
+  display: none;
+}
+
 .spc-mode-settings-sheet .read-aloud-filter-buttons {
   display: flex;
   flex-wrap: wrap;

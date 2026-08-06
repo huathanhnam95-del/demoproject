@@ -691,6 +691,7 @@
         if (hasVideo) {
             loadGuidingVideo(currentEntry.videoUrl);
             elements.stepVideo.style.display = 'block';
+            window.SpeakingPracticeController?.sync?.('notes');
         } else {
             goToAudioStep();
         }
@@ -744,6 +745,7 @@
         // Hide video step, show audio step
         elements.stepVideo.style.display = 'none';
         elements.stepAudio.style.display = 'block';
+        window.SpeakingPracticeController?.sync?.('notes');
 
         // Load audio
         loadAudio(currentEntry.id);
@@ -820,6 +822,7 @@
         // Hide audio step, show results step
         elements.stepAudio.style.display = 'none';
         elements.stepResults.style.display = 'block';
+        window.SpeakingPracticeController?.sync?.('notes');
 
         // Compare notes with transcript
         const transcript = currentEntry.transcript || '';

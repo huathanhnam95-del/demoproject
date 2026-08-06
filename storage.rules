@@ -98,6 +98,31 @@ service firebase.storage {
       allow read: if false;
     }
 
+    // CRM book PDF uploads (admin-only, existence-gated).
+    function isCrmAdmin() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function bookDocPath(bookId) {
+      return /databases/(default)/documents/crmBooks/$(bookId);
+    }
+
+    match /crm-books/{bookId}/source.pdf {
+      allow write: if isCrmAdmin()
+        && request.resource.size > 0
+        && request.resource.size <= 100 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf'
+        && firestore.exists(bookDocPath(bookId))
+        && firestore.get(bookDocPath(bookId)).data.status == 'awaiting_upload';
+      allow read: if false;
+    }
+
+    match /crm-books/{bookId}/{derived} {
+      allow read, write: if false;
+    }
+
     // Teacher/admin feedback audio uploads.
     match /practice-attempt-feedback/{attemptId}/{feedbackId}/{filename} {
       // API writes feedback audio paths as: practice-attempt-feedback/{attemptId}/{feedbackId}/{uid}.wav

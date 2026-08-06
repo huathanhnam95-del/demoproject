@@ -250,8 +250,13 @@ function startHarnessServer() {
       'Navigation should be locked while writing with a draft'
     );
 
-    await page.evaluate(() => { window.confirm = () => false; });
-    await page.evaluate(async () => window.switchToMode('essay'));
+    // Leaving SWT mid-draft is gated by window.showCustomConfirm, which renders
+    // its own modal and only settles when a button is clicked — stubbing
+    // window.confirm does nothing for it. Kick off the switch without awaiting
+    // it, click Cancel, then await the settled promise.
+    await page.evaluate(() => { window.__swtSwitchPromise = window.switchToMode('essay'); });
+    await page.click('#custom-confirm-modal-cancel');
+    await page.evaluate(() => window.__swtSwitchPromise);
 
     const afterCancelledExit = await page.evaluate(() => ({
       currentMode: window.appState.currentMode,

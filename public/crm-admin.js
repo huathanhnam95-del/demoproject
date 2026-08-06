@@ -37,6 +37,7 @@
     recycle: { label: 'Recycle Bin', subTabs: [] },
     staff: { label: 'Staff Management', subTabs: [] },
     agents: { label: 'Agent Management', subTabs: [] },
+    books: { label: 'Books', subTabs: [] },
     settings: { label: 'Settings', subTabs: [] },
     chatbot: { label: 'Chatbot Management', subTabs: [] },
     devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true },
@@ -135,6 +136,8 @@
   let studentDirectoryController = null;
   let leadWorkspaceController = null;
   let agentSourcesController = null;
+  let booksController = null;
+  let booksInitialized = false;
   let recycleBinController = null;
   let communicationsController = null;
   let devToolsPollTimer = null;
@@ -687,6 +690,8 @@
     elements.selectAgentCourse = document.getElementById('agent-course-select');
     elements.btnAddAgentCourse = document.getElementById('btn-add-agent-course');
     elements.agentCourseRatesContainer = document.getElementById('agent-course-rates-container');
+
+    elements.booksPanel = document.querySelector('[data-panel="books"]');
 
     elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
     elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');
@@ -1396,6 +1401,18 @@
         apiFetchJson,
         escapeHtml,
         formatDateTime
+      })
+      : null;
+    booksController = state.accessMode === 'admin'
+      && window.CrmBooksWorkspace
+      && typeof window.CrmBooksWorkspace.createController === 'function'
+      ? window.CrmBooksWorkspace.createController({
+        elements,
+        showToast,
+        apiFetchJson,
+        escapeHtml,
+        formatDateTime,
+        firebase
       })
       : null;
     recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'
@@ -4808,6 +4825,12 @@
       return;
     }
 
+    if (main === 'books' && sub) {
+      state.main = 'books';
+      state.sub = sub;
+      return;
+    }
+
     if (state.studentLookup) {
       clearStudentProfileState();
     }
@@ -4849,8 +4872,14 @@
     if (lastRenderedPanel === 'dashboard' && activePanel !== 'dashboard') {
       dashboardController?.dispose?.();
     }
+    if (lastRenderedPanel?.startsWith?.('books') && state.main !== 'books') {
+      booksController?.dispose?.();
+    }
     elements.panels.forEach((panel) => {
-      panel.style.display = panel.dataset.panel === activePanel ? 'block' : 'none';
+      const panelId = panel.dataset.panel;
+      const matches = panelId === activePanel
+        || (state.main === 'books' && panelId === 'books');
+      panel.style.display = matches ? 'block' : 'none';
     });
 
     if (activePanel === 'dashboard') {
@@ -4897,6 +4926,15 @@
       refreshRecycleBin().catch((error) => {
         console.error('[CRM Admin] Recycle bin refresh failed:', error);
       });
+    }
+
+    if (state.main === 'books') {
+      if (!booksInitialized && booksController && typeof booksController.init === 'function') {
+        booksInitialized = true;
+        booksController.init();
+      } else {
+        booksController?.activate?.(state.sub || '');
+      }
     }
 
     // Notify BEL assistant of route change

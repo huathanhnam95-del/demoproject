@@ -49,7 +49,12 @@ const path = require('path');
       window.__FIREBASE_INTERNAL__.auth = { currentUser: window.mockUser };
       window.switchToMode?.('essay');
     });
-    await page.waitForFunction(() => document.querySelector('#question-select-essay option[value="0"]'));
+    // Navigation is the shared v7 picker; entries are loaded once the pill
+    // carries a real prompt label instead of the loading placeholder.
+    await page.waitForFunction(() => {
+      const pill = document.getElementById('essay-v7-question-pill');
+      return pill && !pill.disabled && /^#/.test(pill.textContent.trim());
+    });
     await page.click('#start-essay-btn');
     await page.fill('#essay-input', 'This is a sufficiently long essay response about technology and education. It contains several sentences so the archive and asynchronous scoring queue can be exercised safely.');
     await page.click('#essay-submit-btn');

@@ -5,6 +5,7 @@
 
   const state = {
     initialized: false,
+    listenersBound: false,
     loadingPromise: null,
     questions: [],
     questionIndexById: new Map(),
@@ -71,8 +72,6 @@
 
     // Score & Feedback
     elements.resultSummary = document.getElementById('dd-result-summary');
-    elements.explanationHeader = document.getElementById('dd-explanation-header');
-    elements.resultsContainer = document.getElementById('dd-results');
   }
 
   function updateRandomToggleUI() {
@@ -89,6 +88,7 @@
         state.randomMode = !state.randomMode;
         localStorage.setItem('pte_random_nav_mode', String(state.randomMode));
         updateRandomToggleUI();
+        updateNavigationUI();
       });
     }
 
@@ -338,11 +338,17 @@
   }
 
   function updateNavigationUI() {
+    // In random mode the arrows walk the shuffle history, not the index order,
+    // so the position in the list must not disable them.
     if (elements.prevBtn) {
-      elements.prevBtn.disabled = state.currentQuestionIndex <= 0;
+      elements.prevBtn.disabled = state.randomMode
+        ? state.navHistory.length === 0
+        : state.currentQuestionIndex <= 0;
     }
     if (elements.nextBtn) {
-      elements.nextBtn.disabled = state.currentQuestionIndex >= state.questions.length - 1;
+      elements.nextBtn.disabled = state.randomMode
+        ? state.questions.length <= 1
+        : state.currentQuestionIndex >= state.questions.length - 1;
     }
     if (elements.questionPill && state.currentQuestion) {
       elements.questionPill.textContent = `#${state.currentQuestion.id} — ${state.currentQuestion.title}`;
@@ -446,13 +452,7 @@
       elements.resultSummary.style.display = 'none';
       elements.resultSummary.innerHTML = '';
     }
-    if (elements.explanationHeader) {
-      elements.explanationHeader.style.display = 'none';
-    }
-    if (elements.resultsContainer) {
-      elements.resultsContainer.style.display = 'none';
-      elements.resultsContainer.innerHTML = '';
-    }
+    hidePopover();
   }
 
   function renderPassage() {
@@ -662,19 +662,18 @@
     renderWordBank();
 
     // 2. Render Score summary
+    const isPerfect = correctCount === totalBlanks;
     if (elements.resultSummary) {
       elements.resultSummary.style.display = 'block';
-      const isPerfect = correctCount === totalBlanks;
       elements.resultSummary.className = `dd-result-summary-box ${isPerfect ? 'is-perfect' : 'has-misses'}`;
-      elements.resultSummary.innerHTML = `You scored <strong>${correctCount} / ${totalBlanks}</strong> points.`;
+      elements.resultSummary.innerHTML = isPerfect
+        ? `🎉 ${correctCount}/${totalBlanks} blanks correct — Perfect!`
+        : `${correctCount}/${totalBlanks} blanks correct — Click ? for explanations`;
     }
 
-    if (elements.explanationHeader) {
-      elements.explanationHeader.style.display = 'block';
-    }
-
-    // 3. Render detailed result cards
-    renderDetailedResults(results);
+    // 3. Attach a ? next to each blank, the same explanation affordance the
+    //    other Reading fill-in-the-blanks task uses.
+    renderHintButtons(results);
 
     window.PTEAttemptArchive?.saveAttempt?.({
       practiceMode: 'dd',
@@ -706,132 +705,222 @@
     }).catch((error) => console.warn('[PTE Archive] DD save failed:', error));
   }
 
-  function renderDetailedResults(results) {
-    if (!elements.resultsContainer) return;
-    elements.resultsContainer.innerHTML = '';
-    elements.resultsContainer.style.display = 'flex';
+  /* -- Explanations: inline ? button + floating popover -----------------
+     Mirrors the Reading Fill in the Blanks task: the passage stays readable
+     after grading and each blank explains itself on demand, instead of a wall
+     of always-open cards below the score. */
+
+  let popoverEl = null;
+  let activeHintBtn = null;
+
+  function ensurePopoverElement() {
+    if (popoverEl) return popoverEl;
+    popoverEl = document.createElement('div');
+    popoverEl.className = 'dd-popover';
+    popoverEl.innerHTML = `
+      <div class="dd-popover-arrow arrow-top"></div>
+      <div class="dd-popover-header">
+        <span class="dd-popover-blank-label"></span>
+        <span class="dd-popover-verdict"></span>
+        <button type="button" class="dd-popover-close" aria-label="Close explanation">&times;</button>
+      </div>
+      <div class="dd-popover-body"></div>
+    `;
+    document.body.appendChild(popoverEl);
+
+    popoverEl.querySelector('.dd-popover-close').addEventListener('click', hidePopover);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && popoverEl?.classList.contains('is-visible')) {
+        hidePopover();
+      }
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!popoverEl?.classList.contains('is-visible')) return;
+      if (popoverEl.contains(e.target)) return;
+      if (e.target.closest('.dd-hint-btn')) return;
+      hidePopover();
+    });
+
+    return popoverEl;
+  }
+
+  function positionPopover(anchorEl) {
+    if (!popoverEl) return;
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 16;
+    const arrowEl = popoverEl.querySelector('.dd-popover-arrow');
+
+    // Measure off-screen before committing to a side.
+    popoverEl.style.left = '-9999px';
+    popoverEl.style.top = '-9999px';
+    popoverEl.classList.add('is-visible');
+    const popRect = popoverEl.getBoundingClientRect();
+    popoverEl.classList.remove('is-visible');
+
+    let top = anchorRect.bottom + 10;
+    let placeAbove = false;
+    if (top + popRect.height > vh - margin) {
+      top = anchorRect.top - popRect.height - 10;
+      placeAbove = true;
+    }
+    if (top < margin) {
+      top = margin;
+      placeAbove = false;
+    }
+
+    let left = anchorRect.left + anchorRect.width / 2 - popRect.width / 2;
+    if (left + popRect.width > vw - margin) left = vw - popRect.width - margin;
+    if (left < margin) left = margin;
+
+    popoverEl.style.top = `${top}px`;
+    popoverEl.style.left = `${left}px`;
+
+    if (arrowEl) {
+      arrowEl.classList.toggle('arrow-top', !placeAbove);
+      arrowEl.classList.toggle('arrow-bottom', placeAbove);
+      const arrowLeft = Math.max(16, Math.min(anchorRect.left + anchorRect.width / 2 - left - 6, popRect.width - 28));
+      arrowEl.style.left = `${arrowLeft}px`;
+    }
+  }
+
+  function buildPopoverBodyHtml(res) {
+    const blank = res.blank;
+    let html = '';
+
+    if (!res.isCorrect) {
+      html += `
+        <div class="dd-popover-answers">
+          <div class="dd-popover-answer-item">
+            <div class="dd-popover-answer-label">Your answer</div>
+            <div class="dd-popover-answer-val">${escapeHtml(res.placed ? res.placed.text : 'None')}</div>
+          </div>
+          <div class="dd-popover-answer-item is-correct">
+            <div class="dd-popover-answer-label">Correct answer</div>
+            <div class="dd-popover-answer-val">${escapeHtml(blank.answer)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (blank.coherenceCue) {
+      html += `
+        <div class="dd-popover-section">
+          <div class="dd-popover-section-label">Coherence cue</div>
+          <div class="dd-popover-section-text">${parseMarkdownToHtml(blank.coherenceCue)}</div>
+        </div>
+      `;
+    }
+
+    if (blank.vocabGrammarCue) {
+      html += `
+        <div class="dd-popover-section">
+          <div class="dd-popover-section-label">Grammar &amp; vocab cue</div>
+          <div class="dd-popover-section-text">${parseMarkdownToHtml(blank.vocabGrammarCue)}</div>
+        </div>
+      `;
+    }
+
+    if (blank.collocationCohesionClue) {
+      html += `
+        <div class="dd-popover-section">
+          <div class="dd-popover-section-label">Clue</div>
+          <div class="dd-popover-section-text">${escapeHtml(blank.collocationCohesionClue)}</div>
+        </div>
+      `;
+    }
+
+    if (!res.isCorrect && res.placed) {
+      const distNote = Array.isArray(blank.distractorNotes)
+        ? blank.distractorNotes.find((dn) => String(dn.option || '').trim().toLowerCase() === res.placed.text.trim().toLowerCase())
+        : null;
+      if (distNote) {
+        html += `
+          <div class="dd-popover-section dd-popover-section-distractor">
+            <div class="dd-popover-section-label">Why ${escapeHtml(res.placed.text)} is wrong</div>
+            <div class="dd-popover-section-text">${parseMarkdownToHtml(distNote.reason)}</div>
+          </div>
+        `;
+      }
+    }
+
+    if (blank.explanation) {
+      html += `
+        <div class="dd-popover-section dd-popover-section-explanation">
+          <div class="dd-popover-section-label">Explanation</div>
+          <div class="dd-popover-section-text">${parseMarkdownToHtml(blank.explanation)}</div>
+        </div>
+      `;
+    }
+
+    if (!html) {
+      html = '<div class="dd-popover-empty">No explanation available for this blank.</div>';
+    }
+
+    return html;
+  }
+
+  function showPopover(res, blankNumber, anchorEl) {
+    ensurePopoverElement();
+
+    // Clicking the same ? closes it again.
+    if (activeHintBtn === anchorEl && popoverEl.classList.contains('is-visible')) {
+      hidePopover();
+      return;
+    }
+
+    if (activeHintBtn) activeHintBtn.classList.remove('is-active');
+    activeHintBtn = anchorEl;
+    anchorEl.classList.add('is-active');
+
+    popoverEl.querySelector('.dd-popover-blank-label').textContent = `Blank ${blankNumber}`;
+
+    const verdict = popoverEl.querySelector('.dd-popover-verdict');
+    verdict.textContent = res.isCorrect ? 'Correct' : 'Incorrect';
+    verdict.classList.toggle('is-correct', res.isCorrect);
+    verdict.classList.toggle('is-incorrect', !res.isCorrect);
+
+    popoverEl.querySelector('.dd-popover-body').innerHTML = buildPopoverBodyHtml(res);
+
+    positionPopover(anchorEl);
+    popoverEl.classList.add('is-visible');
+  }
+
+  function hidePopover() {
+    if (activeHintBtn) {
+      activeHintBtn.classList.remove('is-active');
+      activeHintBtn = null;
+    }
+    if (popoverEl) popoverEl.classList.remove('is-visible');
+  }
+
+  function removeHintButtons() {
+    hidePopover();
+    if (!elements.passage) return;
+    elements.passage.querySelectorAll('.dd-hint-btn').forEach((el) => el.remove());
+  }
+
+  function renderHintButtons(results) {
+    if (!elements.passage) return;
+    removeHintButtons();
 
     results.forEach((res, idx) => {
-      const card = document.createElement('div');
-      card.className = `dd-result-card ${res.isCorrect ? 'is-correct' : 'is-incorrect'}`;
+      const slot = elements.passage.querySelector(`[data-blank-id="${res.blank.blankId}"]`);
+      if (!slot) return;
 
-      // Header
-      const header = document.createElement('div');
-      header.className = 'dd-result-card-header';
-      
-      const title = document.createElement('span');
-      title.className = 'dd-result-card-title';
-      title.textContent = `Blank #${idx + 1}`;
-      
-      const badge = document.createElement('span');
-      badge.className = 'dd-result-card-badge';
-      badge.textContent = res.isCorrect ? 'Correct' : 'Incorrect';
+      const hintBtn = document.createElement('button');
+      hintBtn.type = 'button';
+      hintBtn.className = 'dd-hint-btn';
+      hintBtn.textContent = '?';
+      hintBtn.title = 'Show explanation';
+      hintBtn.setAttribute('aria-label', `Explanation for blank ${idx + 1}`);
+      hintBtn.addEventListener('click', () => showPopover(res, idx + 1, hintBtn));
 
-      header.appendChild(title);
-      header.appendChild(badge);
-      card.appendChild(header);
-
-      // Body
-      const body = document.createElement('div');
-      body.className = 'dd-result-card-body';
-
-      // Placed and Correct answer info
-      const answersDiv = document.createElement('div');
-      answersDiv.className = 'dd-result-card-answers';
-
-      const userAnsDiv = document.createElement('div');
-      userAnsDiv.className = 'dd-result-card-answer-item';
-      userAnsDiv.innerHTML = `
-        <div class="dd-result-card-answer-label">Your Answer</div>
-        <div class="dd-result-card-answer-val">${escapeHtml(res.placed ? res.placed.text : 'None')}</div>
-      `;
-
-      const correctAnsDiv = document.createElement('div');
-      correctAnsDiv.className = 'dd-result-card-answer-item';
-      correctAnsDiv.innerHTML = `
-        <div class="dd-result-card-answer-label">Correct Answer</div>
-        <div class="dd-result-card-answer-val">${escapeHtml(res.blank.answer)}</div>
-      `;
-
-      answersDiv.appendChild(userAnsDiv);
-      answersDiv.appendChild(correctAnsDiv);
-      body.appendChild(answersDiv);
-
-      // Cues
-      const cuesDiv = document.createElement('div');
-      cuesDiv.className = 'dd-result-card-cues';
-
-      if (res.blank.coherenceCue) {
-        const cue1 = document.createElement('div');
-        cue1.className = 'dd-result-card-cue-item';
-        cue1.innerHTML = `
-          <div class="dd-result-card-cue-title">Coherence Cue</div>
-          <div class="dd-result-card-cue-text">${parseMarkdownToHtml(res.blank.coherenceCue)}</div>
-        `;
-        cuesDiv.appendChild(cue1);
-      }
-
-      if (res.blank.vocabGrammarCue) {
-        const cue2 = document.createElement('div');
-        cue2.className = 'dd-result-card-cue-item';
-        cue2.innerHTML = `
-          <div class="dd-result-card-cue-title">Grammar & Vocab Cue</div>
-          <div class="dd-result-card-cue-text">${parseMarkdownToHtml(res.blank.vocabGrammarCue)}</div>
-        `;
-        cuesDiv.appendChild(cue2);
-      }
-
-      if (cuesDiv.childNodes.length > 0) {
-        body.appendChild(cuesDiv);
-      }
-
-      // Distractor Notes (if user is incorrect and selected a distractor)
-      if (!res.isCorrect && res.placed) {
-        const distNote = res.blank.distractorNotes && res.blank.distractorNotes.find(dn => dn.option.trim().toLowerCase() === res.placed.text.trim().toLowerCase());
-        if (distNote) {
-          const distDiv = document.createElement('div');
-          distDiv.className = 'dd-result-card-distractor-notes';
-          distDiv.innerHTML = `
-            <div class="dd-result-card-distractor-title">Distractor Analysis</div>
-            <ul class="dd-result-card-distractor-list">
-              <li>Why <strong>${escapeHtml(res.placed.text)}</strong> is incorrect: ${parseMarkdownToHtml(distNote.reason)}</li>
-            </ul>
-          `;
-          body.appendChild(distDiv);
-        }
-      }
-
-      // Syntax & Cohesion Badges
-      if (res.blank.syntaxRequirement || res.blank.collocationCohesionClue) {
-        const badgesDiv = document.createElement('div');
-        badgesDiv.style.margin = '10px 0';
-        badgesDiv.style.display = 'flex';
-        badgesDiv.style.flexWrap = 'wrap';
-        badgesDiv.style.gap = '8px';
-        let badgesHtml = '';
-        if (res.blank.syntaxRequirement) {
-          badgesHtml += `<span style="background: rgba(99, 102, 241, 0.12); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">📌 ${escapeHtml(res.blank.syntaxRequirement)}</span>`;
-        }
-        if (res.blank.collocationCohesionClue) {
-          badgesHtml += `<span style="background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 500;">💡 Clue: ${escapeHtml(res.blank.collocationCohesionClue)}</span>`;
-        }
-        badgesDiv.innerHTML = badgesHtml;
-        body.appendChild(badgesDiv);
-      }
-
-      // Explanation
-      if (res.blank.explanation) {
-        const expDiv = document.createElement('div');
-        expDiv.className = 'dd-result-card-explanation-box';
-        expDiv.innerHTML = `
-          <div class="dd-result-card-explanation-title">Explanation</div>
-          <div class="dd-result-card-explanation-text">${parseMarkdownToHtml(res.blank.explanation)}</div>
-        `;
-        body.appendChild(expDiv);
-      }
-
-      card.appendChild(body);
-      elements.resultsContainer.appendChild(card);
+      // A <button> cannot nest, so the ? sits directly after the slot.
+      slot.insertAdjacentElement('afterend', hintBtn);
     });
   }
 
@@ -839,8 +928,13 @@
   window.DDMode = {
     async activate() {
       cacheElements();
-      setupEventListeners();
-      
+      // Bind once. Re-binding on every activation stacked duplicate handlers, and
+      // the Random toggle flipped its state twice per click — reading as dead.
+      if (!state.listenersBound) {
+        setupEventListeners();
+        state.listenersBound = true;
+      }
+
       await loadData();
       
       if (elements.panel) {

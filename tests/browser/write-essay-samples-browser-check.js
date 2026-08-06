@@ -84,21 +84,12 @@ function buildEssayText() {
     });
     assert.strictEqual(modeVisible, true, 'Write Essay mode should be visible after switching to it');
 
-    // Wait for WriteEssayMode.loadEntries() to replace the placeholder "Loading..." option.
+    // Wait for WriteEssayMode.loadEntries() to replace the picker's loading
+    // placeholder with a real prompt label.
     await page.waitForFunction(() => {
-      const select = document.getElementById('question-select-essay');
-      const total = document.getElementById('total-questions-essay');
-      const totalNum = total ? Number(total.textContent || '0') : 0;
-      const firstText = select && select.options && select.options.length
-        ? String(select.options[0].textContent || '')
-        : '';
-      return Boolean(
-        select
-        && select.options
-        && select.options.length > 50
-        && totalNum > 50
-        && !firstText.toLowerCase().includes('loading')
-      );
+      const pill = document.getElementById('essay-v7-question-pill');
+      const label = pill ? String(pill.textContent || '') : '';
+      return Boolean(pill && !pill.disabled && /^#/.test(label.trim()));
     }, { timeout: 20000 });
 
     const routeSelectedPrompt = await page.evaluate(() => document.getElementById('current-question-id-essay')?.textContent?.trim() || '');
@@ -110,19 +101,21 @@ function buildEssayText() {
     );
 
     // Select a pilot prompt that has sample variants + idea flow (mindmap/flowchart).
+    // The picker's jump list is searchable, so filter down to prompt 4 and click it.
     await page.evaluate(() => {
-      const select = document.getElementById('question-select-essay');
-      if (!select) return;
-      let target = null;
-      for (const opt of Array.from(select.options || [])) {
-        const t = String(opt.textContent || '').trim();
-        if (/^4\\s*[–-]\\s*/.test(t)) { target = String(opt.value); break; }
+      const pill = document.getElementById('essay-v7-question-pill');
+      if (pill) pill.click();
+      const search = document.getElementById('essay-v7-jump-search');
+      if (search) {
+        search.value = '4';
+        search.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      // Fallback: when entries are sorted by ID, ID=4 should be index 3.
-      if (target == null && select.options.length > 3) target = '3';
-      if (target == null) return;
-      select.value = target;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
+      const items = Array.from(document.querySelectorAll('#essay-v7-jump-list .ra-v7-list-item'));
+      const target = items.find((item) => {
+        const id = item.querySelector('.ra-v7-item-id');
+        return id && id.textContent.trim() === '#4';
+      });
+      if (target) target.click();
     });
     await page.waitForTimeout(250);
     await page.waitForFunction(() => {

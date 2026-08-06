@@ -225,13 +225,53 @@
     };
   }
 
+  /**
+   * Resolve the connected-speech families a render pass should show.
+   *
+   * Guides are combinable, so callers pass `focusFamilies` (an array). The
+   * scalar `focusFamily` is still accepted for backwards compatibility.
+   *
+   * Returns `null` when the caller specified nothing at all. That is deliberately
+   * distinct from `[]` ("caller specified: nothing is active"), because the
+   * renderers historically disagreed about what "unspecified" meant — the
+   * overlay hid itself while the summary and fallback list showed everything.
+   * Each renderer keeps its own documented default for the null case.
+   */
+  function resolveFocusFamilies(options = {}) {
+    const list = Array.isArray(options.focusFamilies) ? options.focusFamilies : null;
+    if (list) {
+      return list
+        .map((family) => normalizeConnectedSpeechCategory(family))
+        .filter((family) => family && family !== 'off');
+    }
+    const scalar = options.focusFamily;
+    if (!String(scalar || '').trim()) return null;
+    const normalized = normalizeConnectedSpeechCategory(scalar);
+    return (!normalized || normalized === 'off') ? [] : [normalized];
+  }
+
+  /** Explicitly requested. `null` (unspecified) is not a request. */
+  function includesFamily(families, family) {
+    return Array.isArray(families) && families.includes(family);
+  }
+
+  /** Show unless the caller explicitly excluded this family. */
+  function permitsFamily(families, family) {
+    return families === null || families.includes(family);
+  }
+
+  /** The single family driving empty-state copy, or '' when several are active. */
+  function soleFamily(families) {
+    return Array.isArray(families) && families.length === 1 ? families[0] : '';
+  }
+
   function buildAccessibleSummary(analysis, options = {}) {
     if (!analysis || !Array.isArray(analysis.boundaries)) {
       return '';
     }
-    const focusFamily = String(options.focusFamily || '').trim()
-      ? normalizeConnectedSpeechCategory(options.focusFamily)
-      : '';
+    // Unspecified means "summarise everything", as it always has here.
+    const focusFamilies = resolveFocusFamilies(options);
+    const focusFamily = soleFamily(focusFamilies);
 
     const eligible = analysis.boundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -280,19 +320,25 @@
         : 'No linking examples in this sentence.';
     }
 
+    // The analysis always carries every layer, so the spoken summary is limited
+    // to the families the learner actually has switched on.
     const summaryParts = [];
-    if (linkingPhrases.length === 1) {
-      summaryParts.push(`Possible linking between ${linkingPhrases[0]}.`);
-    } else if (linkingPhrases.length > 1) {
-      summaryParts.push(`Possible linking between ${linkingPhrases.slice(0, -1).join(', ')} and ${linkingPhrases[linkingPhrases.length - 1]}.`);
+    if (permitsFamily(focusFamilies, 'linking')) {
+      if (linkingPhrases.length === 1) {
+        summaryParts.push(`Possible linking between ${linkingPhrases[0]}.`);
+      } else if (linkingPhrases.length > 1) {
+        summaryParts.push(`Possible linking between ${linkingPhrases.slice(0, -1).join(', ')} and ${linkingPhrases[linkingPhrases.length - 1]}.`);
+      }
     }
-    if (reducedWords.length > 0) {
+    if (permitsFamily(focusFamilies, 'reduced_words') && reducedWords.length > 0) {
       summaryParts.push(`Reduced words include ${formatWordList(reducedWords)}.`);
     }
-    if (soundChangePhrases.length === 1) {
-      summaryParts.push(`Sound changes may happen in ${soundChangePhrases[0]}.`);
-    } else if (soundChangePhrases.length > 1) {
-      summaryParts.push(`Sound changes may happen in ${soundChangePhrases.slice(0, -1).join(', ')} and ${soundChangePhrases[soundChangePhrases.length - 1]}.`);
+    if (permitsFamily(focusFamilies, 'sound_changes')) {
+      if (soundChangePhrases.length === 1) {
+        summaryParts.push(`Sound changes may happen in ${soundChangePhrases[0]}.`);
+      } else if (soundChangePhrases.length > 1) {
+        summaryParts.push(`Sound changes may happen in ${soundChangePhrases.slice(0, -1).join(', ')} and ${soundChangePhrases[soundChangePhrases.length - 1]}.`);
+      }
     }
     if (summaryParts.length === 0) {
       return 'No strong connected speech positions in this sentence.';
@@ -447,8 +493,10 @@
   function renderOverlay(overlay, stage, analysis, wordMap, options = {}) {
     if (!overlay || !stage) return { renderedCount: 0, skippedCount: 0 };
     overlay.innerHTML = '';
-    const focusFamily = options.focusFamily || analysis?.connectedSpeechLevel || 'off';
-    if (focusFamily === 'reduced_words' || focusFamily === 'off') {
+    // The overlay draws linking arcs only, and has always required linking to be
+    // asked for explicitly — an unspecified caller gets nothing, as before.
+    const focusFamilies = resolveFocusFamilies(options);
+    if (!includesFamily(focusFamilies, 'linking')) {
       overlay.style.display = 'none';
       return { renderedCount: 0, skippedCount: 0 };
     }
@@ -521,6 +569,14 @@
     container.innerHTML = '';
     container.style.display = 'none';
 
+    // Badges are the sound-changes layer. The analysis always carries assimilation
+    // boundaries now, so skip them when the caller lists families without
+    // sound changes. An unspecified caller still gets badges, as before.
+    const focusFamilies = resolveFocusFamilies(options);
+    if (!permitsFamily(focusFamilies, 'sound_changes')) {
+      return { renderedCount: 0, skippedCount: 0 };
+    }
+
     let renderedCount = 0;
     let skippedCount = 0;
 
@@ -540,16 +596,15 @@
         return;
       }
 
-      // Style both words with amber dashed underline
-      const wordStyle = 'border-bottom:2px dashed #b45309; background:rgba(180,83,9,0.08); border-radius:3px; padding:0 2px; cursor:pointer;';
-      leftSpan.style.cssText += wordStyle;
+      // Styling lives in CSS (.ra-sound-change-word). Writing it inline used to
+      // append onto whatever the reduced-words layer had already set, so a word
+      // in both layers silently lost its weak-form styling.
       leftSpan.classList.add('ra-sound-change-word');
       leftSpan.dataset.guideTarget = `boundary-${boundary.id}`;
       leftSpan.tabIndex = 0;
       leftSpan.setAttribute('role', 'button');
       leftSpan.setAttribute('aria-pressed', 'false');
 
-      rightSpan.style.cssText += wordStyle;
       rightSpan.classList.add('ra-sound-change-word');
       rightSpan.dataset.guideTarget = `boundary-${boundary.id}`;
       rightSpan.tabIndex = 0;
@@ -568,22 +623,6 @@
       hintTag.dataset.guideTarget = `boundary-${boundary.id}`;
       hintTag.tabIndex = 0;
       hintTag.setAttribute('role', 'button');
-      hintTag.style.cssText = [
-        'display:inline-block',
-        'font-size:0.7rem',
-        'font-weight:700',
-        'color:#b45309',
-        'background:rgba(180,83,9,0.12)',
-        'border:1px solid rgba(180,83,9,0.22)',
-        'border-radius:4px',
-        'padding:1px 5px',
-        'margin:0 2px',
-        'white-space:nowrap',
-        'vertical-align:baseline',
-        'cursor:pointer',
-        'letter-spacing:0.01em',
-        'line-height:1.4'
-      ].join(';');
 
       // Insert the hint tag after leftSpan (before the space/rightSpan)
       const parent = leftSpan.parentNode;
@@ -605,9 +644,9 @@
   function renderFallbackList(container, analysis, options = {}) {
     if (!container) return 0;
     container.innerHTML = '';
-    const focusFamily = String(options.focusFamily || '').trim()
-      ? normalizeConnectedSpeechCategory(options.focusFamily)
-      : '';
+    // Unspecified means "list everything", as it always has here.
+    const focusFamilies = resolveFocusFamilies(options);
+    const focusFamily = soleFamily(focusFamilies);
     const sourceBoundaries = Array.isArray(options.boundaries) ? options.boundaries : analysis.boundaries;
     const eligible = sourceBoundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -669,13 +708,13 @@
     };
 
     let renderedCount = 0;
-    if (focusFamily !== 'sound_changes') {
+    if (permitsFamily(focusFamilies, 'linking')) {
       renderedCount += appendSection('Linking', linkingBoundaries, {
         background: 'rgba(37, 99, 235, 0.08)',
         color: '#1d4ed8'
       });
     }
-    if (focusFamily !== 'linking') {
+    if (permitsFamily(focusFamilies, 'sound_changes')) {
       renderedCount += appendSection('Sound changes', soundChangeBoundaries, {
         background: 'rgba(180, 83, 9, 0.10)',
         color: '#b45309'
@@ -689,8 +728,13 @@
     if (!wordMap || typeof wordMap.get !== 'function' || !analysis || !Array.isArray(analysis.tokenAnnotations)) {
       return 0;
     }
-    const focusFamily = options.focusFamily || analysis?.connectedSpeechLevel;
-    if (focusFamily !== 'reduced_words' && focusFamily !== 'all') {
+    // Weak-form underlines belong to the reduced-words family, and have always
+    // required an explicit request — 'all' or 'reduced_words'. An unspecified
+    // caller gets nothing, as before.
+    const focusFamilies = resolveFocusFamilies(options);
+    const isExplicitAll = options.focusFamily === 'all'
+      || (Array.isArray(options.focusFamilies) && options.focusFamilies.includes('all'));
+    if (!isExplicitAll && !includesFamily(focusFamilies, 'reduced_words')) {
       return 0;
     }
 
@@ -709,11 +753,8 @@
         span.dataset.connectedSpeechSubtype = annotation.subtype;
       }
       span.title = annotation.legendLabel || 'Reduced word';
-      span.style.borderBottom = '2px solid #d97706';
-      span.style.background = 'rgba(217, 119, 6, 0.12)';
-      span.style.borderRadius = '4px';
-      span.style.padding = '0 1px';
-      span.style.cursor = 'pointer';
+      // Styling lives in CSS (.ra-connected-speech-token--weak) so it composes
+      // with the sound-changes layer instead of one overwriting the other.
       appliedCount += 1;
     });
 

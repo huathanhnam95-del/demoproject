@@ -974,5 +974,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 577,2026-08-06,"CRM Books UI overhaul: text overflow fix, Lora font, pages viewer, dark mode, cost tracking ($10/mo budget with admin approval), citation flicker fix, route ordering fix",Done,2026-08-06
 578,2026-08-06,Deploy V1.8.47 release to production - CRM Books UI Overhaul and Cost Tracking,Done,2026-08-06
 579,2026-08-06,Fix CRM Books Pages tab data unwrapping bug (res.data vs res),Done,2026-08-06
+580,2026-08-06,Save question along with answer when saving CRM Books chat notes,Done,2026-08-06
+
 
 

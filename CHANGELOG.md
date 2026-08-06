@@ -1,3 +1,8 @@
+## [V1.8.49] - 2026-08-06
+
+### Added & Enhanced
+- **CRM Books Note Saving**: Updated chat Save button handler to automatically locate and prepend the corresponding user question (`Q: [question]\n\nA: [answer]`) when saving notes, and enhanced note card styling with `white-space: pre-wrap` for clean Q&A formatting.
+
 ## [V1.8.48] - 2026-08-06
 
 ### Fixed

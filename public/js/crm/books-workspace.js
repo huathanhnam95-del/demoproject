@@ -1275,8 +1275,22 @@ window.CrmBooksWorkspace = (function () {
                 if (saveBtn && selectedBookId) {
                     const msgEl = saveBtn.closest('.crm-books-msg');
                     if (msgEl) {
-                        const text = msgEl.querySelector('.crm-books-msg-text')?.textContent || '';
-                        saveBookNote(selectedBookId, text);
+                        const answerText = msgEl.querySelector('.crm-books-msg-text')?.textContent || '';
+                        let questionText = '';
+                        let prev = msgEl.previousElementSibling;
+                        while (prev) {
+                            if (prev.classList.contains('crm-books-msg-user')) {
+                                questionText = prev.querySelector('.crm-books-msg-text')?.textContent || '';
+                                break;
+                            }
+                            prev = prev.previousElementSibling;
+                        }
+
+                        const fullNoteText = questionText.trim()
+                            ? `Q: ${questionText.trim()}\n\nA: ${answerText.trim()}`
+                            : answerText.trim();
+
+                        saveBookNote(selectedBookId, fullNoteText);
                         showToast?.('Saved to notes.', 'info');
                         if (activeTab === 'notes') renderExplorerPanel();
                     }

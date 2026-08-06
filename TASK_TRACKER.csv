@@ -966,4 +966,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 569,2026-08-06,Code review of CRM book upload and AI summary function,Done,2026-08-06
 570,2026-08-06,"CRM Books: Fix 7 review bugs — XSS escaping, page 0 falsy, race condition guard, detached DOM, upload debounce, CSS flex truncation",Done,2026-08-06
 571,2026-08-06,Review all recent work and prepare deployment plan and release package,Done,2026-08-06
-572,2026-08-06,Deploy V1.8.46 release to production,In Progress,
+572,2026-08-06,Deploy V1.8.46 release to production,Done,2026-08-06

@@ -95,14 +95,13 @@ module.exports = function registerBookRoutes(router, deps) {
             }
 
             if (sha256) {
-                const existing = await db.collection(CRM_BOOKS)
+                const existingSnap = await db.collection(CRM_BOOKS)
                     .where('sha256', '==', sha256)
-                    .where('status', '!=', 'deleted')
-                    .limit(1)
                     .get();
 
-                if (!existing.empty) {
-                    const existingBook = mapBookRecord(existing.docs[0], existing.docs[0].id);
+                const activeDoc = existingSnap.docs.find((d) => (d.data()?.status || '') !== 'deleted');
+                if (activeDoc) {
+                    const existingBook = mapBookRecord(activeDoc, activeDoc.id);
                     return sendError(res, 409, 'DUPLICATE_BOOK',
                         `A book with this file already exists: "${existingBook.title}".`,
                         { existingBookId: existingBook.bookId });

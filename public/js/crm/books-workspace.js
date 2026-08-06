@@ -128,6 +128,77 @@ window.CrmBooksWorkspace = (function () {
         return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
     }
 
+    function extractTitleAndAuthorFromFileName(filename) {
+        if (!filename) return { title: '', author: '' };
+
+        let name = String(filename || '').trim();
+        name = name.replace(/\.[^/.]+$/, '');
+        name = name.replace(/[-_]\d{8,14}$/, '');
+        name = name.replace(/\s*\(\d+\)$/, '');
+
+        let title = '';
+        let author = '';
+
+        if (/\s+by\s+/i.test(name)) {
+            const parts = name.split(/\s+by\s+/i);
+            title = parts[0];
+            author = parts.slice(1).join(' by ');
+        } else if (name.includes(' - ')) {
+            const parts = name.split(' - ');
+            author = parts[0];
+            title = parts.slice(1).join(' - ');
+        } else if (name.includes('_-_')) {
+            const parts = name.split('_-_');
+            author = parts[0];
+            title = parts.slice(1).join(' - ');
+        } else {
+            title = name;
+        }
+
+        const formatSegment = (str) => {
+            if (!str) return '';
+            const s = str.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!s) return '';
+            if (s === s.toLowerCase() || s === s.toUpperCase()) {
+                return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+            }
+            return s;
+        };
+
+        return {
+            title: formatSegment(title),
+            author: formatSegment(author)
+        };
+    }
+
+    function extractPdfMetadata(file) {
+        return new Promise((resolve) => {
+            if (!file || !file.slice) return resolve({ title: '', author: '' });
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = String(reader.result || '');
+                    let title = '';
+                    let author = '';
+
+                    const titleMatch = text.match(/\/Title\s*\(([^)]+)\)/i);
+                    if (titleMatch && titleMatch[1]) {
+                        title = titleMatch[1].replace(/\\([()\\])/g, '$1').trim();
+                    }
+                    const authorMatch = text.match(/\/Author\s*\(([^)]+)\)/i);
+                    if (authorMatch && authorMatch[1]) {
+                        author = authorMatch[1].replace(/\\([()\\])/g, '$1').trim();
+                    }
+                    resolve({ title, author });
+                } catch (_) {
+                    resolve({ title: '', author: '' });
+                }
+            };
+            reader.onerror = () => resolve({ title: '', author: '' });
+            reader.readAsText(file.slice(0, 16384), 'latin1');
+        });
+    }
+
     function createController(deps = {}) {
         const elements = deps.elements || {};
         const showToast = typeof deps.showToast === 'function' ? deps.showToast : null;
@@ -550,6 +621,32 @@ window.CrmBooksWorkspace = (function () {
             modal.querySelector('.crm-books-modal-close').addEventListener('click', closeModal);
             modal.querySelector('.crm-books-modal-cancel').addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            const fileInput = modal.querySelector('#crm-book-file');
+            const titleInput = modal.querySelector('#crm-book-title');
+            const authorInput = modal.querySelector('#crm-book-author');
+
+            fileInput?.addEventListener('change', () => {
+                const file = fileInput?.files?.[0];
+                if (!file) return;
+
+                const extracted = extractTitleAndAuthorFromFileName(file.name);
+                if (extracted.title && !titleInput.value.trim()) {
+                    titleInput.value = extracted.title;
+                }
+                if (extracted.author && !authorInput.value.trim()) {
+                    authorInput.value = extracted.author;
+                }
+
+                extractPdfMetadata(file).then((meta) => {
+                    if (meta.title && (!titleInput.value || titleInput.value === extracted.title)) {
+                        titleInput.value = meta.title;
+                    }
+                    if (meta.author && !authorInput.value) {
+                        authorInput.value = meta.author;
+                    }
+                }).catch(() => {});
+            });
 
             const submitBtn = modal.querySelector('.crm-books-modal-submit');
             const errorEl = modal.querySelector('.crm-books-modal-error');

@@ -88,6 +88,15 @@ function createFakeDb() {
         collection(name) {
             if (name === 'crmBooks') return { doc: () => bookRef };
             if (name === 'users') return { doc: () => userRef };
+            if (name === 'crmBookUsage') return {
+                doc: () => ({
+                    get: async () => ({
+                        exists: false,
+                        data: () => ({})
+                    }),
+                    set: async () => undefined
+                })
+            };
             throw new Error(`Unexpected collection: ${name}`);
         },
         batch() {

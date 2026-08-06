@@ -1,3 +1,8 @@
+## [V1.8.50] - 2026-08-06
+
+### Fixed & Enhanced
+- **CRM Books Service & Contract Unit Tests**: Added `crmBookUsage` mock collection handling to `tests/crm/book-chat-service.test.js` to ensure 100% test contract compliance with cost tracking budget checks.
+
 ## [V1.8.49] - 2026-08-06
 
 ### Added & Enhanced

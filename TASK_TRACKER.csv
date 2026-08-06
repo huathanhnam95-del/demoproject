@@ -975,6 +975,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 578,2026-08-06,Deploy V1.8.47 release to production - CRM Books UI Overhaul and Cost Tracking,Done,2026-08-06
 579,2026-08-06,Fix CRM Books Pages tab data unwrapping bug (res.data vs res),Done,2026-08-06
 580,2026-08-06,Save question along with answer when saving CRM Books chat notes,Done,2026-08-06
-
-
+581,2026-08-06,Check and correct all IPA transcriptions in review_lesson_6_sounds.docx per Oxford rules,Done,2026-08-06
+582,2026-08-06,Deploy V1.8.50 release to production - CRM Books chat Q&A note saving and unit test fixes,Done,2026-08-06
 

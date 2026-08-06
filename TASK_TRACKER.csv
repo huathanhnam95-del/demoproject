@@ -973,4 +973,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 576,2026-08-06,"CRM Books: Review debug and refactor — fix 7 bugs + 4 CSS issues + 4 refactors (error object handling, citation tooltip anchoring, dead code removal, SVG icon extraction, inline style cleanup)",Done,2026-08-06
 577,2026-08-06,"CRM Books UI overhaul: text overflow fix, Lora font, pages viewer, dark mode, cost tracking ($10/mo budget with admin approval), citation flicker fix, route ordering fix",Done,2026-08-06
 578,2026-08-06,Deploy V1.8.47 release to production - CRM Books UI Overhaul and Cost Tracking,Done,2026-08-06
+579,2026-08-06,Fix CRM Books Pages tab data unwrapping bug (res.data vs res),Done,2026-08-06
+
 

@@ -1,3 +1,8 @@
+## [V1.8.48] - 2026-08-06
+
+### Fixed
+- **CRM Books Pages Tab**: Fixed response unwrapping bug in `loadPagesMetadata()` (`pagesData = res?.data || res`), resolving issue where page text and total pages indicator were blank on the Pages tab.
+
 ## [V1.8.47] - 2026-08-06
 
 ### Added & Enhanced

@@ -41,4 +41,9 @@ assert(
     'Books chat messages must widen with the reclaimed panel space while staying responsive.'
 );
 
+assert(
+    js.includes('pagesData = res?.data || res;'),
+    'loadPagesMetadata must unwrap res.data so pages and totalPages fields are accessible.'
+);
+
 console.log('crm books UI layout contract passed');

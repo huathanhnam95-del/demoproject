@@ -494,7 +494,7 @@ window.CrmBooksWorkspace = (function () {
             const saveBtn = !isUser && msg.text
                 ? `<div class="crm-books-msg-actions"><button class="crm-books-msg-save-btn" title="Save to Notes"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM6 6h9v4H6z"/></svg> Save</button></div>` : '';
             return `<div class="crm-books-msg ${cls}${textCls}">` +
-                `<div class="crm-books-msg-text">${escapeHtml(msg.text || '')}</div>` +
+                `<div class="crm-books-msg-text">${isUser ? escapeHtml(msg.text || '') : formatMessageText(msg.text || '', msg.citations, escapeHtml)}</div>` +
                 citationsHtml +
                 saveBtn +
                 `</div>`;
@@ -536,7 +536,7 @@ window.CrmBooksWorkspace = (function () {
             if (!selectedBookId || pagesData) return;
             try {
                 const res = await apiGet(`/api/admin/books/${selectedBookId}/pages`);
-                pagesData = res;
+                pagesData = res?.data || res;
                 currentPage = 1;
                 if (activeTab === 'pages') renderExplorerPanel();
             } catch (err) {
@@ -546,9 +546,71 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
+        function loadBookNotes(bookId) {
+            if (!bookId) return [];
+            try {
+                const raw = localStorage.getItem(`crm_books_notes_${bookId}`);
+                return raw ? JSON.parse(raw) : [];
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function saveBookNote(bookId, text) {
+            if (!bookId || !text) return;
+            const notes = loadBookNotes(bookId);
+            const newNote = {
+                id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                text,
+                savedAt: Date.now()
+            };
+            notes.unshift(newNote);
+            try {
+                localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(notes));
+            } catch (e) {
+                console.error('Failed to save book note:', e);
+            }
+        }
+
+        function deleteBookNote(bookId, noteId) {
+            if (!bookId || !noteId) return;
+            let notes = loadBookNotes(bookId);
+            notes = notes.filter(n => n.id !== noteId);
+            try {
+                localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(notes));
+            } catch (e) {
+                console.error('Failed to delete book note:', e);
+            }
+        }
+
+        function formatMessageText(text, citations, escHtml) {
+            if (!text) return '';
+            let html = escHtml(text);
+
+            html = html.replace(/\[C?(\d+)(?:\s*,\s*C?(\d+))*\]/gi, (match) => {
+                const nums = match.match(/\d+/g);
+                if (!nums || nums.length === 0) return match;
+
+                const pills = nums.map((nStr) => {
+                    const idx = parseInt(nStr, 10);
+                    if (citations && idx >= 1 && idx <= citations.length) {
+                        const c = citations[idx - 1];
+                        const pages = c.pageStart === c.pageEnd ? `p. ${c.pageStart}` : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
+                        return `<span class="crm-books-citation-ref" title="${escHtml(pages)}" data-citation-idx="${idx}">${idx}</span>`;
+                    }
+                    return null;
+                }).filter(Boolean);
+
+                if (pills.length === 0) return '';
+                return pills.join(' ');
+            });
+
+            return html;
+        }
+
         function renderNotesTab() {
             if (!selectedBookId) return '<div class="crm-books-notes-empty">Select a book first.</div>';
-            const notes = loadStudioNotes(selectedBookId);
+            const notes = loadBookNotes(selectedBookId);
             if (notes.length === 0) {
                 return `<div class="crm-books-notes-empty">` +
                     `<p>No saved notes yet.</p>` +
@@ -1214,7 +1276,7 @@ window.CrmBooksWorkspace = (function () {
                     const msgEl = saveBtn.closest('.crm-books-msg');
                     if (msgEl) {
                         const text = msgEl.querySelector('.crm-books-msg-text')?.textContent || '';
-                        saveStudioNote(selectedBookId, text, []);
+                        saveBookNote(selectedBookId, text);
                         showToast?.('Saved to notes.', 'info');
                         if (activeTab === 'notes') renderExplorerPanel();
                     }
@@ -1222,11 +1284,11 @@ window.CrmBooksWorkspace = (function () {
                 }
 
                 // Delete note
-                const noteDeleteBtn = e.target.closest('.crm-books-note-delete-btn');
+                const noteDeleteBtn = e.target.closest('.crm-books-note-delete');
                 if (noteDeleteBtn && selectedBookId) {
                     const noteId = noteDeleteBtn.dataset.noteId;
                     if (noteId) {
-                        deleteStudioNote(selectedBookId, noteId);
+                        deleteBookNote(selectedBookId, noteId);
                         renderExplorerPanel();
                     }
                     return;

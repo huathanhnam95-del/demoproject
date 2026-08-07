@@ -3109,6 +3109,20 @@ body {
 .crm-books-citation-ref:hover {
   filter: brightness(0.85);
 }
+.crm-books-citation-source {
+  width: auto;
+  min-width: 18px;
+  height: auto;
+  min-height: 22px;
+  padding: 3px 8px;
+  gap: 5px;
+  vertical-align: middle;
+}
+.crm-books-citation-button-page {
+  font-size: 0.72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
 
 .crm-books-citation-wrap {
   position: relative;
@@ -3834,6 +3848,7 @@ body {
   font-size: 1.08rem;
   line-height: 1.85;
   color: var(--books-text);
+  white-space: pre-wrap;
   overflow-wrap: break-word;
 }
 .crm-books-reading-label {

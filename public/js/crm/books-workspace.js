@@ -216,12 +216,14 @@ window.CrmBooksWorkspace = (function () {
         return `<div class="crm-books-msg-citations">${citations.map((c, i) => {
             const marker = citationMarker(c, i);
             const num = citationNumber(c, i);
-            const pages = c.pageStart === c.pageEnd
-                ? `p. ${c.pageStart}`
-                : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
+            const pageStart = Number(c.pageStart) || 1;
+            const pageEnd = Number(c.pageEnd) || pageStart;
+            const pages = pageStart === pageEnd
+                ? `p. ${pageStart}`
+                : `pp. ${pageStart}\u2013${pageEnd}`;
             const snippet = escHtml(clean(c.snippet || c.highlightText).slice(0, 240));
             return `<span class="crm-books-citation-wrap" data-citation-marker="${escHtml(marker)}">` +
-                `<button type="button" class="crm-books-citation-ref" data-citation-marker="${escHtml(marker)}" title="Open ${escHtml(pages)}" aria-label="Open citation ${num}, ${escHtml(pages)}">${num}</button>` +
+                `<button type="button" class="crm-books-citation-ref crm-books-citation-source" data-citation-marker="${escHtml(marker)}" title="Open ${escHtml(pages)}" aria-label="Open citation ${num}, ${escHtml(pages)}"><span class="crm-books-citation-number">${num}</span><span class="crm-books-citation-button-page">${escHtml(pages)}</span></button>` +
                 `<span class="crm-books-citation-preview" role="tooltip">` +
                 `<span class="crm-books-citation-pages">${escHtml(pages)}</span>` +
                 `<span class="crm-books-citation-snippet">${snippet}</span>` +
@@ -801,8 +803,10 @@ window.CrmBooksWorkspace = (function () {
             if (top + previewRect.height > window.innerHeight - viewportMargin) {
                 top = rect.top - previewRect.height - 8;
             }
-            preview.style.left = `${Math.max(viewportMargin, left)}px`;
-            preview.style.top = `${Math.max(viewportMargin, top)}px`;
+            const maxLeft = Math.max(viewportMargin, window.innerWidth - previewRect.width - viewportMargin);
+            const maxTop = Math.max(viewportMargin, window.innerHeight - previewRect.height - viewportMargin);
+            preview.style.left = `${Math.min(maxLeft, Math.max(viewportMargin, left))}px`;
+            preview.style.top = `${Math.min(maxTop, Math.max(viewportMargin, top))}px`;
         }
 
         function hideCitationPreview(wrap) {
@@ -862,13 +866,13 @@ window.CrmBooksWorkspace = (function () {
                 const pills = nums.map((nStr) => {
                     const idx = parseInt(nStr, 10);
                     const marker = `C${idx}`;
-                    const c = citationMap.get(marker) || (citations && citations[idx - 1]);
+                    const c = citationMap.get(marker);
                     if (c) {
                         const pages = c.pageStart === c.pageEnd ? `p. ${c.pageStart}` : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
                         const actualMarker = citationMarker(c, idx - 1);
                         return `<button type="button" class="crm-books-citation-ref crm-books-inline-citation" title="Open ${escHtml(pages)}" aria-label="Open citation ${idx}, ${escHtml(pages)}" data-citation-marker="${escHtml(actualMarker)}">${idx}</button>`;
                     }
-                    return escHtml(nStr);
+                    return escHtml(match);
                 });
 
                 return pills.join(' ');

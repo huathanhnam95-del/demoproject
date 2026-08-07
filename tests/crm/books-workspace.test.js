@@ -46,11 +46,18 @@ assert.strictEqual(
 const match = workspace.findCitationMatch('First sentence on the page.\n\nSecond cited sentence here.', 'Second   cited sentence here.');
 assert.strictEqual(match.start, 29, 'Citation matching should return the source start offset.');
 assert.strictEqual(match.end, 56, 'Citation matching should return the source end offset.');
+assert.strictEqual(
+    workspace.findCitationMatch('First sentence on the page.', 'A passage that is not present.'),
+    null,
+    'Citation matching should return null for a stale or malformed quote.'
+);
 
 const citationHtml = workspace.renderCitations([
     { marker: 'C3', pageStart: 52, pageEnd: 53, snippet: 'A cited passage.' }
 ], (value) => String(value));
 assert.match(citationHtml, /<button[^>]+data-citation-marker="C3"/i, 'Citations must render as accessible buttons keyed by marker.');
+assert.match(citationHtml, /crm-books-citation-source/, 'Source citations must use a distinct button treatment.');
+assert.match(citationHtml, /crm-books-citation-button-page/, 'Source citation buttons must show their page range directly.');
 assert.match(citationHtml, /pp\. 52–53/, 'Citation buttons must show their page range directly.');
 
 console.log('books workspace helper contracts passed');

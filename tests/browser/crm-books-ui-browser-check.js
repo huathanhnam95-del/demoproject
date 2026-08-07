@@ -160,7 +160,7 @@ async function main() {
 
         const blankComposer = await page.locator('.crm-books-composer-input').inputValue();
         assert.strictEqual(blankComposer, '', 'New-chat composer should start empty.');
-        assert.strictEqual(await page.locator('.crm-books-draft-title').count(), 1, 'Blank Chat should show a draft title.');
+        assert.strictEqual(await page.locator('.crm-books-chat-draft-title').count(), 1, 'Blank Chat should show a draft title.');
 
         await page.locator('.crm-books-composer-input').fill('What should I check before making a decision?');
         await page.click('.crm-books-send-btn');
@@ -244,6 +244,34 @@ async function main() {
         });
         assert.notStrictEqual(outlineLayout.padding, '0px', 'Outline list must reserve marker space inside its surface.');
         assert.ok(outlineLayout.outlineLeft >= outlineLayout.cardLeft, 'Outline markers must remain inside the summary card.');
+
+        // Repeat the key interaction at a narrow Chrome viewport and assert that
+        // the composer, history rows, and citation preview stay within bounds.
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.click('.crm-books-tab[data-books-tab="chat"]');
+        await page.waitForSelector('.crm-books-composer');
+        const narrowLayout = await page.evaluate(() => ({
+            viewport: window.innerWidth,
+            composerWidth: document.querySelector('.crm-books-composer')?.getBoundingClientRect().width || 0,
+            documentWidth: document.documentElement.scrollWidth
+        }));
+        assert.ok(narrowLayout.composerWidth <= narrowLayout.viewport, 'Narrow composer must stay within the viewport.');
+        assert.ok(narrowLayout.documentWidth <= narrowLayout.viewport + 1, 'Narrow Books view must not introduce horizontal overflow.');
+
+        const citationButton = page.locator('.crm-books-citation-wrap .crm-books-citation-ref[data-citation-marker="C1"]').first();
+        await citationButton.focus();
+        await page.waitForTimeout(400);
+        const previewLayout = await page.locator('.crm-books-citation-preview').first().evaluate((preview) => {
+            const rect = preview.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, visible: preview.classList.contains('visible') };
+        });
+        assert.strictEqual(previewLayout.visible, true, 'Citation preview should appear on hover.');
+        assert.ok(previewLayout.left >= 0 && previewLayout.right <= narrowLayout.viewport, 'Citation preview must be clamped horizontally.');
+        assert.ok(previewLayout.top >= 0 && previewLayout.bottom <= 844, 'Citation preview must be clamped vertically.');
+
+        await page.setViewportSize({ width: 1600, height: 1000 });
+        await page.click('.crm-books-tab[data-books-tab="summary"]');
+        await page.waitForSelector('.crm-books-outline');
 
         await page.screenshot({ path: SCREENSHOT_PATH, fullPage: true });
         assert.deepStrictEqual(pageErrors, [], `Unexpected page errors:\n${pageErrors.join('\n')}`);

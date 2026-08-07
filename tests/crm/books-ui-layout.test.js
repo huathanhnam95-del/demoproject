@@ -49,8 +49,10 @@ assert(
 assert(js.includes('data-books-tab="history"'), 'Books must expose a dedicated Chat History tab.');
 assert(!js.includes('style="padding-left:${depth > 0 ? 20 : 0}px;"'), 'Outline rendering must not force the top-level list outside its surface.');
 assert(js.includes('data-citation-marker'), 'Citation controls must preserve their source marker.');
+assert(!js.includes('citationMap.get(marker) || (citations && citations[idx - 1])'), 'Inline citations must not fall back to array position when explicit markers are out of order.');
 assert(!js.includes('crm-books-citation-detail'), 'The old compressed citation detail tooltip must be removed.');
 assert(css.includes('.crm-books-citation-preview'), 'Citation previews must use the viewport-safe preview surface.');
 assert(css.includes('.crm-books-page-paper'), 'Pages must render a readable page surface.');
+assert(/\.crm-books-page-content\s*\{[\s\S]*white-space:\s*pre-wrap\s*;/.test(css), 'Reading view must preserve paragraph breaks from reflowed extracted text.');
 
 console.log('crm books UI layout contract passed');

@@ -154,6 +154,9 @@ async function run() {
 
     const legacy = validateCitations([{ marker: 'C1' }], citationChunks);
     assert.strictEqual(legacy[0].highlightText, null, 'Legacy citations without a quote must remain renderable without claiming an exact highlight.');
+
+    const invalidQuote = validateCitations([{ marker: 'C2', quote: 'This wording is not in the supporting chunk.' }], citationChunks);
+    assert.strictEqual(invalidQuote[0].highlightText, null, 'Invalid supporting quotes must fall back without claiming an exact highlight.');
     const responsePromise = handleChatMessage(createFakeDb(), {
         bookId: 'book-1',
         threadId: 'thread-1',

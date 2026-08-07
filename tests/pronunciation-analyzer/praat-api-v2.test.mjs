@@ -306,4 +306,45 @@ describe('PraatAPI v3 integration', () => {
         assert.equal(mode3, 'shadow');
         assert.equal(healthCallCount, 1, 'health endpoint should only be called once');
     });
+
+    it('ensureVerification() correctly adapts rateable V2 response with verification envelope', () => {
+        const v2Response = {
+            analysisVersion: 'pronunciation-analysis-v2',
+            quality: { rateable: true, confidence: 0.95, reasons: [] },
+            observed: { syllableCount: 3, primaryStress: 0 }
+        };
+
+        const adapted = PraatAPI.ensureVerification(v2Response, 'V2_FALLBACK_UNRATEABLE', 3);
+        assert.equal(adapted.verification.status, 'verified');
+        assert.equal(adapted.verification.count.observed, 3);
+        assert.equal(adapted.verification.count.expected, 3);
+        assert.equal(adapted.verification.count.status, 'verified');
+    });
+
+    it('ensureVerification() marks count mismatch as incorrect in V2 response', () => {
+        const v2Response = {
+            analysisVersion: 'pronunciation-analysis-v2',
+            quality: { rateable: true, confidence: 0.95, reasons: [] },
+            observed: { syllableCount: 4, primaryStress: 1 }
+        };
+
+        const adapted = PraatAPI.ensureVerification(v2Response, 'V2_FALLBACK_UNRATEABLE', 3);
+        assert.equal(adapted.verification.status, 'incorrect');
+        assert.equal(adapted.verification.count.observed, 4);
+        assert.equal(adapted.verification.count.expected, 3);
+        assert.equal(adapted.verification.count.status, 'incorrect');
+    });
+
+    it('ensureVerification() respects unrateable V2 quality', () => {
+        const v2Response = {
+            analysisVersion: 'pronunciation-analysis-v2',
+            quality: { rateable: false, confidence: 0.2, reasons: ['LOW_ENERGY'] },
+            observed: { syllableCount: 0, primaryStress: null }
+        };
+
+        const adapted = PraatAPI.ensureVerification(v2Response, 'V2_FALLBACK_UNRATEABLE', 4);
+        assert.equal(adapted.verification.status, 'unrateable');
+        assert.equal(adapted.verification.count.observed, 0);
+        assert.equal(adapted.verification.count.status, 'unrateable');
+    });
 });

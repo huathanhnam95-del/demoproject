@@ -3024,8 +3024,12 @@ body {
 
 .crm-books-outline {
   margin-top: 12px;
-  padding-left: 20px;
+  padding-inline-start: 1.75rem;
+  list-style-position: outside;
   line-height: 1.6;
+}
+.crm-books-outline-nested {
+  padding-inline-start: 1.5rem;
 }
 .crm-books-outline li {
   margin-bottom: 6px;
@@ -3091,6 +3095,8 @@ body {
   justify-content: center;
   background: var(--books-accent);
   color: #fff;
+  border: 0;
+  font-family: inherit;
   border-radius: var(--books-radius-pill);
   font-size: 0.7rem;
   width: 18px;
@@ -3106,22 +3112,24 @@ body {
 
 .crm-books-citation-wrap {
   position: relative;
-  display: inline;
+  display: inline-flex;
+  align-items: center;
 }
-.crm-books-citation-detail {
+.crm-books-citation-preview {
   display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(220px, calc(100vh - 24px));
+  overflow: auto;
   background: var(--books-surface);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border-radius: 12px;
-  max-width: 320px;
   pointer-events: auto;
   padding: 12px;
-  z-index: 100;
+  z-index: 1000;
   font-size: 0.85rem;
   border: 1px solid var(--books-border);
+  box-sizing: border-box;
 }
 
 .crm-books-citation-pages {
@@ -3135,6 +3143,18 @@ body {
   color: var(--books-text-muted);
   font-style: italic;
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.crm-books-citation-preview.visible {
+  display: block;
+}
+.crm-books-citation-ref:focus-visible,
+.crm-books-thread-rename-btn:focus-visible,
+.crm-books-history-open:focus-visible,
+.crm-books-new-chat-btn:focus-visible,
+.crm-books-send-btn:focus-visible {
+  outline: 2px solid var(--books-accent-blue);
+  outline-offset: 2px;
 }
 
 .crm-books-chat-starters {
@@ -3319,6 +3339,73 @@ body {
   flex: 1;
   min-width: 0;
 }
+.crm-books-thread-title-view,
+.crm-books-chat-draft-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.crm-books-thread-title-text,
+.crm-books-chat-draft-label {
+  font-family: var(--books-font-display);
+  font-weight: 600;
+  color: var(--books-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crm-books-chat-draft-hint {
+  color: var(--books-text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.crm-books-thread-rename-btn {
+  border: 0;
+  background: none;
+  color: var(--books-text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+.crm-books-thread-rename-btn:hover {
+  color: var(--books-accent);
+}
+.crm-books-thread-title-editor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.crm-books-thread-title-input {
+  min-width: 0;
+  width: min(420px, 100%);
+  border: 1px solid var(--books-accent);
+  border-radius: var(--books-radius-sm);
+  padding: 7px 9px;
+  color: var(--books-text);
+  background: var(--books-surface);
+  font: inherit;
+}
+.crm-books-thread-title-save,
+.crm-books-thread-title-cancel {
+  border: 1px solid var(--books-border);
+  border-radius: var(--books-radius-sm);
+  padding: 6px 9px;
+  background: var(--books-surface);
+  color: var(--books-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.crm-books-thread-title-save {
+  background: var(--books-accent);
+  border-color: var(--books-accent);
+  color: #fff;
+}
+.crm-books-thread-title-save:hover,
+.crm-books-thread-title-cancel:hover {
+  border-color: var(--books-accent);
+}
 .crm-books-thread-select {
   border: 1px solid var(--books-border);
   border-radius: var(--books-radius-sm);
@@ -3349,6 +3436,105 @@ body {
 .crm-books-new-thread-btn:hover {
   border-color: var(--books-accent);
   color: var(--books-accent);
+}
+
+/* Chat history */
+.crm-books-history {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.crm-books-history-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--books-border);
+}
+.crm-books-history-header h4 {
+  margin: 0;
+  font-family: var(--books-font-display);
+  font-size: 1.15rem;
+}
+.crm-books-history-header p {
+  margin: 5px 0 0;
+  color: var(--books-text-muted);
+  font-size: 0.85rem;
+}
+.crm-books-history-new-chat {
+  flex-shrink: 0;
+}
+.crm-books-history-list {
+  display: flex;
+  flex-direction: column;
+}
+.crm-books-history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--books-border);
+  padding: 4px 0;
+}
+.crm-books-history-row.selected {
+  background: var(--books-accent-light);
+}
+.crm-books-history-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  border: 0;
+  background: none;
+  color: var(--books-text);
+  cursor: pointer;
+  padding: 12px 10px;
+  text-align: left;
+}
+.crm-books-history-row-title {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.crm-books-history-meta {
+  color: var(--books-text-muted);
+  font-size: 0.78rem;
+}
+.crm-books-history-rename-btn {
+  margin-right: 8px;
+}
+.crm-books-history-row.editing {
+  display: block;
+  padding: 12px 10px;
+}
+.crm-books-history-row-editor .crm-books-thread-title-editor {
+  width: 100%;
+}
+.crm-books-history-row-editor .crm-books-thread-title-input {
+  flex: 1;
+  width: auto;
+}
+.crm-books-history-empty {
+  padding: 56px 20px;
+  text-align: center;
+  color: var(--books-text-muted);
+}
+.crm-books-history-empty p {
+  margin: 4px 0;
+}
+.crm-books-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Send button */
@@ -3481,8 +3667,8 @@ body {
   gap: 6px;
 }
 
-/* Citation tooltip visibility */
-.crm-books-citation-detail.visible {
+/* Citation preview visibility */
+.crm-books-citation-preview.visible {
   display: block;
 }
 
@@ -3646,10 +3832,49 @@ body {
 .crm-books-page-content {
   font-family: var(--books-font-body);
   font-size: 1.08rem;
-  line-height: 1.95;
+  line-height: 1.85;
   color: var(--books-text);
-  white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+.crm-books-reading-label {
+  max-width: 760px;
+  margin: 0 auto 10px;
+  color: var(--books-text-muted);
+  font-family: var(--books-font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.crm-books-page-paper {
+  max-width: 760px;
+  min-height: 520px;
+  margin: 0 auto;
+  padding: 42px 56px 56px;
+  background: var(--books-bg);
+  border: 1px solid var(--books-border);
+  border-radius: var(--books-radius-sm);
+  box-shadow: 0 8px 24px rgba(43, 37, 28, 0.08);
+  box-sizing: border-box;
+  outline: none;
+}
+.crm-books-page-paper:focus-visible {
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.25), 0 8px 24px rgba(43, 37, 28, 0.08);
+}
+.crm-books-page-notice {
+  max-width: 760px;
+  margin: 0 auto 10px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--books-accent);
+  background: var(--books-accent-light);
+  color: var(--books-text-muted);
+  font-size: 0.82rem;
+}
+.crm-books-citation-highlight {
+  background: #FFE08A;
+  color: inherit;
+  border-radius: 3px;
+  padding: 1px 2px;
+  box-shadow: 0 0 0 1px rgba(184, 134, 11, 0.18);
 }
 
 /* Usage indicator */
@@ -3761,5 +3986,15 @@ body {
   .crm-books-msg {
     font-size: 0.95rem;
     line-height: 1.75;
+  }
+  .crm-books-page-paper {
+    min-height: 420px;
+    padding: 28px 24px 36px;
+  }
+  .crm-books-chat-draft-hint {
+    display: none;
+  }
+  .crm-books-thread-title-editor {
+    flex-wrap: wrap;
   }
 }

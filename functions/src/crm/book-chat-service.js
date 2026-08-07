@@ -70,10 +70,15 @@ Return a JSON object:
 {
   "answer": "Your answer text. Reference excerpts using markers like [C1], [C2] inline.",
   "citations": [
-    { "marker": "C1", "chunkId": "the chunk ID if known, or empty string" }
+    {
+      "marker": "C1",
+      "quote": "A short verbatim sentence or clause from the cited excerpt. Use the exact wording from the excerpt."
+    }
   ],
   "answered": true
 }
+
+For every citation, quote the shortest exact sentence or clause that supports the answer. Never paraphrase the quote. Use only markers that appear in the excerpts.
 
 If the excerpts don't answer the question, set answered to false and explain what you found instead.`;
 }
@@ -106,6 +111,17 @@ async function generateWithFallback(models, prompt) {
     }
 }
 
+function normalizeCitationText(value) {
+    return String(value ?? '')
+        .normalize('NFKC')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2013\u2014]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
 function validateCitations(rawCitations, sentChunks) {
     if (!Array.isArray(rawCitations)) return [];
 
@@ -115,17 +131,28 @@ function validateCitations(rawCitations, sentChunks) {
     });
 
     const validated = [];
+    const seenMarkers = new Set();
     for (const cit of rawCitations) {
         const marker = String(cit.marker || '').trim();
         const chunk = chunkMap.get(marker);
         if (!chunk) continue;
+        if (seenMarkers.has(marker)) continue;
+        seenMarkers.add(marker);
+
+        const rawQuote = String(cit.quote || cit.highlightText || '').trim();
+        const normalizedQuote = normalizeCitationText(rawQuote);
+        const normalizedChunk = normalizeCitationText(chunk.text);
+        const highlightText = normalizedQuote && normalizedChunk.includes(normalizedQuote)
+            ? rawQuote
+            : null;
 
         validated.push({
             marker,
             chunkId: chunk.chunkId,
             pageStart: chunk.pageStart,
             pageEnd: chunk.pageEnd,
-            snippet: chunk.text.slice(0, SNIPPET_LENGTH)
+            snippet: chunk.text.slice(0, SNIPPET_LENGTH),
+            highlightText
         });
     }
 
@@ -286,6 +313,7 @@ module.exports = {
     checkQuota,
     incrementQuota,
     validateCitations,
+    normalizeCitationText,
     buildChatPrompt,
     MAX_DAILY_CHATS,
     MAX_HISTORY_MESSAGES,

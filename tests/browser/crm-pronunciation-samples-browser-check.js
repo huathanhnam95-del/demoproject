@@ -364,6 +364,14 @@ async function main() {
     await page.click('#btn-corpus-prev-version');
     await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
 
+    // Verify filter-locked version preservation on word click
+    await page.locator('#corpus-sample-filter').selectOption('missing_omission');
+    await photographButton.dispatchEvent('click');
+    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /omit exactly one syllable/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+    await page.locator('#corpus-sample-filter').selectOption('all');
+
     // 5. Start Recording
     await page.click('#btn-corpus-record');
     

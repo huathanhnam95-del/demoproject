@@ -7269,12 +7269,14 @@
           currentIpa = btn.dataset.ipa;
           currentSyllableCount = parseInt(btn.dataset.count, 10);
           currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
-          currentVersionIndex = 0;
+          const catVersionIdx = getCategoryVersionIndex(sampleFilter?.value);
+          currentVersionIndex = catVersionIdx >= 0 ? catVersionIdx : 0;
           currentVersionSaved = false;
           if (customWordInput) customWordInput.value = '';
           redoRecording();
           applyCurrentVersion();
-          setStepGuidance(`Version 1 of 5: Review the Clean instruction, then click Record.`);
+          const targetVer = CORPUS_VERSIONS[currentVersionIndex] || CORPUS_VERSIONS[0];
+          setStepGuidance(`Version ${currentVersionIndex + 1} of 5: Review the ${targetVer.label} instruction, then click Record.`);
         });
       });
     }
@@ -8209,14 +8211,15 @@
             analysisMatched = verificationStatus === 'unrateable';
             isAudioUnrateable = !analysisMatched;
             if (!analysisMatched) rerecordReason = 'EXPECTED_UNRATEABLE_RECORDING';
-          } else if (snapCategory === 'clean') {
-            analysisMatched = verificationStatus === 'verified';
-            isAudioUnrateable = verificationStatus === 'unrateable';
-            if (!analysisMatched) rerecordReason = isAudioUnrateable ? 'unrateable_audio' : 'verification_failed';
           } else {
-            analysisMatched = verificationStatus === 'incorrect';
             isAudioUnrateable = verificationStatus === 'unrateable';
-            if (!analysisMatched) rerecordReason = isAudioUnrateable ? 'unrateable_audio' : 'EXPECTED_INCORRECT_RECORDING';
+            if (isAudioUnrateable) {
+              analysisMatched = false;
+              rerecordReason = 'unrateable_audio';
+            } else {
+              analysisMatched = observedSyllables === expectedSyllables;
+              if (!analysisMatched) rerecordReason = snapCategory === 'clean' ? 'verification_failed' : 'syllable_mismatch';
+            }
           }
           analysisSummaryText = ` (${isAudioUnrateable ? 'Unrateable audio · ' : ''}Observed: ${observedSyllables}, Expected: ${expectedSyllables})`;
         }

@@ -136,7 +136,24 @@ async function run() {
     });
 
     delete require.cache[chatPath];
-    const { handleChatMessage } = require(chatPath);
+    const { handleChatMessage, validateCitations } = require(chatPath);
+
+    const citationChunks = [
+        { chunkId: 'chunk-1', pageStart: 3, pageEnd: 3, text: 'First supporting sentence.', distance: 0.1 },
+        { chunkId: 'chunk-2', pageStart: 8, pageEnd: 9, text: 'Second supporting sentence.', distance: 0.2 }
+    ];
+    const validated = validateCitations([
+        { marker: 'C2', quote: 'Second   supporting sentence.' },
+        { marker: 'C1', quote: 'First supporting sentence.' },
+        { marker: 'C1', quote: 'duplicate should be ignored' },
+        { marker: 'C9', quote: 'unknown marker' }
+    ], citationChunks);
+    assert.deepStrictEqual(validated.map((citation) => citation.marker), ['C2', 'C1'], 'Citation markers must be preserved and deduplicated without positional re-numbering.');
+    assert.strictEqual(validated[0].highlightText, 'Second   supporting sentence.', 'Validated citations must retain an exact supporting quote.');
+    assert.strictEqual(validated[1].highlightText, 'First supporting sentence.', 'Validated citations must retain an exact supporting quote.');
+
+    const legacy = validateCitations([{ marker: 'C1' }], citationChunks);
+    assert.strictEqual(legacy[0].highlightText, null, 'Legacy citations without a quote must remain renderable without claiming an exact highlight.');
     const responsePromise = handleChatMessage(createFakeDb(), {
         bookId: 'book-1',
         threadId: 'thread-1',

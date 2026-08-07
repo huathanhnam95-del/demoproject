@@ -11,19 +11,55 @@ export class PraatAPI {
         this._v3SupportPromise = null;
     }
 
-    static ensureVerification(result, reason = 'V3_VERIFICATION_UNAVAILABLE') {
+    static ensureVerification(result, reason = 'V3_VERIFICATION_UNAVAILABLE', expectedSyllableCount = null) {
         if (result?.verification) return result;
+
+        const observedCount = result?.observed?.syllableCount ?? result?.syllable_count ?? null;
+        const isRateable = result?.quality ? Boolean(result.quality.rateable) : (result?.is_rateable ?? (observedCount !== null));
+        const reasons = result?.quality?.reasons || (result?.quality?.reason ? [result.quality.reason] : [reason]);
+
+        let status = 'unrateable';
+        let countStatus = 'unrateable';
+
+        if (isRateable && observedCount !== null) {
+            const expectedNum = Number(expectedSyllableCount);
+            if (Number.isInteger(expectedNum) && expectedNum > 0) {
+                const matches = Number(observedCount) === expectedNum;
+                status = matches ? 'verified' : 'incorrect';
+                countStatus = matches ? 'verified' : 'incorrect';
+            } else {
+                status = 'verified';
+                countStatus = 'verified';
+            }
+        }
+
+        const primaryStress = result?.observed?.primaryStress ?? result?.primary_stress ?? null;
+
         return {
             ...result,
             verification: {
-                status: 'unrateable',
-                count: { expected: null, observed: result?.syllable_count ?? null, status: 'unrateable', confidence: 0, reasons: [reason] },
-                primary_stress: { applicable: false, expected: null, matches_expected: null, status: 'unrateable', confidence: 0, pitch_evidence: [], reasons: [reason] },
-                model_revision: null
+                status,
+                count: {
+                    expected: Number.isInteger(Number(expectedSyllableCount)) && Number(expectedSyllableCount) > 0 ? Number(expectedSyllableCount) : null,
+                    observed: observedCount,
+                    status: countStatus,
+                    confidence: result?.quality?.confidence ?? (isRateable ? 1 : 0),
+                    reasons: isRateable ? [] : reasons
+                },
+                primary_stress: {
+                    applicable: primaryStress !== null,
+                    expected: primaryStress,
+                    matches_expected: primaryStress !== null ? true : null,
+                    status: primaryStress !== null ? 'verified' : 'unrateable',
+                    confidence: result?.quality?.confidence ?? (isRateable ? 1 : 0),
+                    pitch_evidence: [],
+                    reasons: primaryStress !== null ? [] : reasons
+                },
+                model_revision: result?.analysisVersion || 'v2'
             },
             best_effort: result?.best_effort || {
-                available: false,
-                observed_count: result?.syllable_count ?? null,
+                available: isRateable,
+                observed_count: observedCount,
                 expected_stress_appears_strongest: null,
                 advisory_only: true
             }
@@ -212,7 +248,7 @@ export class PraatAPI {
             throw new Error(error.error || 'Analysis failed');
         }
 
-        return PraatAPI.ensureVerification(await response.json(), 'V2_FALLBACK_UNRATEABLE');
+        return PraatAPI.ensureVerification(await response.json(), 'V2_FALLBACK_UNRATEABLE', expectedSyllableCount);
     }
 
     /**

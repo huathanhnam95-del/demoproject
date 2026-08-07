@@ -1,3 +1,9 @@
+## [V1.8.51] - 2026-08-07
+
+### Fixed & Enhanced
+- **CRM Pronunciation Verification V2 Adapter**: Fixed `PraatAPI.ensureVerification()` to properly map V2 response fields (`observed.syllableCount`, `quality.rateable`) into the `verification` contract object, resolving false "Unrateable Audio" status banners.
+- **Corpus Filter Version Locking**: Fixed `bindWordButtons()` in `crm-admin.js` to preserve the active filter category when selecting a word in the sidebar list instead of resetting to Version 1 (Clean).
+
 ## [V1.8.50] - 2026-08-06
 
 ### Fixed & Enhanced

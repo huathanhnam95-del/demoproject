@@ -21,6 +21,120 @@ window.CrmBooksWorkspace = (function () {
         return String(value ?? '').trim();
     }
 
+    const AUTO_THREAD_TITLE_LENGTH = 72;
+    const MAX_THREAD_TITLE_LENGTH = 120;
+
+    function normalizeCitationText(value) {
+        return String(value ?? '')
+            .normalize('NFKC')
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2013\u2014]/g, '-')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    function deriveThreadTitle(question) {
+        const normalized = String(question ?? '').replace(/\s+/g, ' ').trim();
+        if (normalized.length <= AUTO_THREAD_TITLE_LENGTH) return normalized;
+        return `${normalized.slice(0, AUTO_THREAD_TITLE_LENGTH - 1).trimEnd()}…`;
+    }
+
+    function reflowPageText(text) {
+        const source = String(text ?? '').replace(/\r\n?/g, '\n').trim();
+        if (!source) return '';
+        return source
+            .split(/\n\s*\n/)
+            .map((block) => {
+                const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+                let output = '';
+                lines.forEach((line) => {
+                    if (!output) {
+                        output = line;
+                        return;
+                    }
+                    const previous = output.slice(-1);
+                    if (previous === '-' && /^[\p{L}\p{N}]/u.test(line)) {
+                        output = output.slice(0, -1) + line;
+                    } else {
+                        output += ` ${line}`;
+                    }
+                });
+                return output;
+            })
+            .filter(Boolean)
+            .join('\n\n');
+    }
+
+    function normalizeWithSourceMap(value) {
+        const source = String(value ?? '');
+        let normalized = '';
+        const sourceIndexes = [];
+        let pendingSpace = false;
+
+        for (let i = 0; i < source.length; i += 1) {
+            const char = source[i];
+            if (/\s/.test(char)) {
+                if (normalized && !pendingSpace) {
+                    pendingSpace = true;
+                }
+                continue;
+            }
+
+            if (pendingSpace) {
+                normalized += ' ';
+                sourceIndexes.push(i - 1);
+                pendingSpace = false;
+            }
+
+            const canonical = char
+                .normalize('NFKC')
+                .replace(/[\u2018\u2019]/g, "'")
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2013\u2014]/g, '-')
+                .toLowerCase();
+            normalized += canonical;
+            for (let offset = 0; offset < canonical.length; offset += 1) sourceIndexes.push(i);
+        }
+
+        return { normalized, sourceIndexes };
+    }
+
+    function findCitationMatch(pageText, quote) {
+        const target = normalizeCitationText(quote);
+        if (!target) return null;
+        const mapped = normalizeWithSourceMap(pageText);
+        const normalizedTarget = normalizeCitationText(target);
+        const start = mapped.normalized.indexOf(normalizedTarget);
+        if (start < 0) return null;
+        const endIndex = start + normalizedTarget.length - 1;
+        const startOffset = mapped.sourceIndexes[start];
+        const endOffset = mapped.sourceIndexes[endIndex];
+        if (startOffset == null || endOffset == null) return null;
+        return { start: startOffset, end: endOffset + 1 };
+    }
+
+    function highlightPageText(pageText, quote, escHtml = fallbackEscapeHtml) {
+        const text = String(pageText ?? '');
+        const match = findCitationMatch(text, quote);
+        if (!match) return { html: escHtml(text), matched: false };
+        return {
+            html: `${escHtml(text.slice(0, match.start))}<mark class="crm-books-citation-highlight">${escHtml(text.slice(match.start, match.end))}</mark>${escHtml(text.slice(match.end))}`,
+            matched: true
+        };
+    }
+
+    function citationMarker(citation, fallbackIndex = 0) {
+        const raw = clean(citation?.marker).toUpperCase();
+        return /^C\d+$/.test(raw) ? raw : `C${fallbackIndex + 1}`;
+    }
+
+    function citationNumber(citation, fallbackIndex = 0) {
+        const marker = citationMarker(citation, fallbackIndex);
+        return Number(marker.slice(1)) || fallbackIndex + 1;
+    }
+
     function normalizeBooks(source) {
         return (Array.isArray(source) ? source : [])
             .map((item) => ({
@@ -100,17 +214,18 @@ window.CrmBooksWorkspace = (function () {
     function renderCitations(citations, escHtml) {
         if (!Array.isArray(citations) || citations.length === 0) return '';
         return `<div class="crm-books-msg-citations">${citations.map((c, i) => {
-            const num = i + 1;
+            const marker = citationMarker(c, i);
+            const num = citationNumber(c, i);
             const pages = c.pageStart === c.pageEnd
                 ? `p. ${c.pageStart}`
                 : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
-            const snippet = escHtml(clean(c.snippet).slice(0, 200));
-            return `<span class="crm-books-citation-wrap" data-citation-idx="${num}">` +
-                `<span class="crm-books-citation-ref" title="${escHtml(pages)}">${num}</span>` +
-                `<span class="crm-books-citation-detail">` +
+            const snippet = escHtml(clean(c.snippet || c.highlightText).slice(0, 240));
+            return `<span class="crm-books-citation-wrap" data-citation-marker="${escHtml(marker)}">` +
+                `<button type="button" class="crm-books-citation-ref" data-citation-marker="${escHtml(marker)}" title="Open ${escHtml(pages)}" aria-label="Open citation ${num}, ${escHtml(pages)}">${num}</button>` +
+                `<span class="crm-books-citation-preview" role="tooltip">` +
                 `<span class="crm-books-citation-pages">${escHtml(pages)}</span>` +
                 `<span class="crm-books-citation-snippet">${snippet}</span>` +
-                `</span>`;
+                `</span></span>`;
         }).join('')}</div>`;
     }
 
@@ -239,6 +354,10 @@ window.CrmBooksWorkspace = (function () {
         let collapsedOutline = {};
         let currentPage = 1;
         let pagesData = null;
+        let activeCitation = null;
+        let pageNotice = '';
+        let editingThreadId = '';
+        let editingThreadTitle = '';
         let usageData = null;
 
         const panel = elements.booksPanel || document.querySelector('[data-panel="books"]');
@@ -254,6 +373,11 @@ window.CrmBooksWorkspace = (function () {
         async function apiPost(path, body) {
             if (!apiFetchJson) throw new Error('No API client');
             return apiFetchJson(path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+        }
+
+        async function apiPatch(path, body) {
+            if (!apiFetchJson) throw new Error('No API client');
+            return apiFetchJson(path, { method: 'PATCH', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
         }
 
         async function apiDelete(path) {
@@ -319,6 +443,7 @@ window.CrmBooksWorkspace = (function () {
                 tabsHtml = `<div class="crm-books-tabs">` +
                     `<button class="crm-books-tab${activeTab === 'summary' ? ' active' : ''}" data-books-tab="summary">Summary</button>` +
                     `<button class="crm-books-tab${activeTab === 'chat' ? ' active' : ''}" data-books-tab="chat">Chat</button>` +
+                    `<button class="crm-books-tab${activeTab === 'history' ? ' active' : ''}" data-books-tab="history">Chat History</button>` +
                     `<button class="crm-books-tab${activeTab === 'pages' ? ' active' : ''}" data-books-tab="pages">Pages</button>` +
                     `<button class="crm-books-tab${activeTab === 'notes' ? ' active' : ''}" data-books-tab="notes">Notes</button>` +
                     `</div>`;
@@ -371,6 +496,7 @@ window.CrmBooksWorkspace = (function () {
         function renderTabContent() {
             if (activeTab === 'summary') return renderSummaryTab();
             if (activeTab === 'chat') return renderChatTab();
+            if (activeTab === 'history') return renderHistoryTab();
             if (activeTab === 'pages') return renderPagesTab();
             if (activeTab === 'notes') return renderNotesTab();
             return '';
@@ -427,7 +553,7 @@ window.CrmBooksWorkspace = (function () {
 
         function renderOutline(items, depth = 0) {
             if (!Array.isArray(items) || items.length === 0) return '';
-            return `<ol class="crm-books-outline" style="padding-left:${depth > 0 ? 20 : 0}px;">` +
+            return `<ol class="crm-books-outline${depth > 0 ? ' crm-books-outline-nested' : ''}">` +
                 items.map((item, idx) => {
                     const key = `${depth}-${idx}`;
                     const isCollapsed = collapsedOutline[key];
@@ -445,15 +571,6 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function renderChatTab() {
-            const threadOptions = threads.length > 0
-                ? threads.map((t) =>
-                    `<option value="${escapeHtml(t.threadId)}"${t.threadId === selectedThreadId ? ' selected' : ''}>${escapeHtml(t.title)}</option>`
-                ).join('')
-                : '';
-
-            const threadSelector = threads.length > 0
-                ? `<select class="crm-books-thread-select">${threadOptions}</select>` : '';
-
             let messagesHtml = '';
             if (messages.length === 0) {
                 const starters = buildStarterQuestions();
@@ -465,15 +582,68 @@ window.CrmBooksWorkspace = (function () {
                 messagesHtml = `<div class="crm-books-chat-messages">${messages.map(renderMessage).join('')}</div>`;
             }
 
+            const activeThread = threads.find((thread) => thread.threadId === selectedThreadId) || null;
+            const titleHtml = activeThread
+                ? renderThreadTitle(activeThread)
+                : `<div class="crm-books-chat-draft-title"><span class="crm-books-chat-draft-label">New chat</span><span class="crm-books-chat-draft-hint">Your first question will start a thread.</span></div>`;
+
             return `<div class="crm-books-chat-header">` +
-                `<div class="crm-books-chat-header-left">${threadSelector}</div>` +
-                `<button class="crm-books-new-thread-btn" title="New thread">${ICON_PLUS} New</button>` +
+                `<div class="crm-books-chat-header-left">${titleHtml}</div>` +
+                `<button class="crm-books-new-chat-btn crm-books-new-thread-btn" title="Start a new chat">${ICON_PLUS} New chat</button>` +
                 `</div>` +
                 messagesHtml +
                 `<div class="crm-books-composer">` +
                 `<textarea class="crm-books-composer-input" placeholder="Ask about the book\u2026" rows="1"></textarea>` +
                 `<button class="crm-books-send-btn" title="Send">${ICON_SEND}</button>` +
                 `</div>`;
+        }
+
+        function renderThreadTitle(thread) {
+            if (!thread) return '';
+            if (editingThreadId === thread.threadId) {
+                return `<form class="crm-books-thread-title-editor" data-thread-id="${escapeHtml(thread.threadId)}">` +
+                    `<label class="crm-books-sr-only" for="crm-books-thread-title-input">Thread name</label>` +
+                    `<input id="crm-books-thread-title-input" class="crm-books-thread-title-input" type="text" maxlength="${MAX_THREAD_TITLE_LENGTH}" value="${escapeHtml(editingThreadTitle)}" autocomplete="off">` +
+                    `<button type="submit" class="crm-books-thread-title-save">Save</button>` +
+                    `<button type="button" class="crm-books-thread-title-cancel">Cancel</button>` +
+                    `</form>`;
+            }
+            return `<div class="crm-books-thread-title-view">` +
+                `<span class="crm-books-thread-title-text">${escapeHtml(thread.title || 'Untitled chat')}</span>` +
+                `<button type="button" class="crm-books-thread-rename-btn" data-thread-id="${escapeHtml(thread.threadId)}" aria-label="Edit thread name" title="Edit thread name">✎</button>` +
+                `</div>`;
+        }
+
+        function renderHistoryTab() {
+            const newChatButton = `<button class="crm-books-new-chat-btn crm-books-history-new-chat" title="Start a new chat">${ICON_PLUS} New chat</button>`;
+            if (threads.length === 0) {
+                return `<section class="crm-books-history" aria-labelledby="crm-books-history-title">` +
+                    `<div class="crm-books-history-header"><div><h4 id="crm-books-history-title">Chat History</h4><p>Saved conversations about this book.</p></div>${newChatButton}</div>` +
+                    `<div class="crm-books-history-empty"><p>No saved chats yet.</p><p>Ask your first question from the Chat tab to create one.</p></div>` +
+                    `</section>`;
+            }
+
+            const rows = threads.map((thread) => {
+                const updated = thread.updatedAt ? new Date(thread.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'No activity yet';
+                if (editingThreadId === thread.threadId) {
+                    return `<div class="crm-books-history-row editing" data-thread-id="${escapeHtml(thread.threadId)}">` +
+                        `<div class="crm-books-history-row-editor">${renderThreadTitle(thread)}</div>` +
+                        `<div class="crm-books-history-meta">${thread.messageCount || 0} messages · ${escapeHtml(updated)}</div>` +
+                        `</div>`;
+                }
+                return `<div class="crm-books-history-row${thread.threadId === selectedThreadId ? ' selected' : ''}" data-thread-id="${escapeHtml(thread.threadId)}">` +
+                    `<button type="button" class="crm-books-history-open" data-history-thread-id="${escapeHtml(thread.threadId)}">` +
+                    `<span class="crm-books-history-row-title">${escapeHtml(thread.title || 'Untitled chat')}</span>` +
+                    `<span class="crm-books-history-meta">${thread.messageCount || 0} messages · ${escapeHtml(updated)}</span>` +
+                    `</button>` +
+                    `<button type="button" class="crm-books-thread-rename-btn crm-books-history-rename-btn" data-thread-id="${escapeHtml(thread.threadId)}" aria-label="Edit thread name" title="Edit thread name">✎</button>` +
+                    `</div>`;
+            }).join('');
+
+            return `<section class="crm-books-history" aria-labelledby="crm-books-history-title">` +
+                `<div class="crm-books-history-header"><div><h4 id="crm-books-history-title">Chat History</h4><p>${threads.length} saved conversation${threads.length === 1 ? '' : 's'} about this book.</p></div>${newChatButton}</div>` +
+                `<div class="crm-books-history-list">${rows}</div>` +
+                `</section>`;
         }
 
         function renderMessage(msg) {
@@ -524,12 +694,20 @@ window.CrmBooksWorkspace = (function () {
             const pageText = pagesData.pages?.[currentPage - 1] ?? '';
             const prevDisabled = currentPage <= 1 ? ' disabled' : '';
             const nextDisabled = currentPage >= pagesData.totalPages ? ' disabled' : '';
+            const readingText = reflowPageText(pageText);
+            const highlight = activeCitation?.page === currentPage
+                ? highlightPageText(readingText, activeCitation.quote, escapeHtml)
+                : { html: escapeHtml(readingText), matched: false };
             return `<div class="crm-books-pages-nav">` +
                 `<button class="crm-books-page-prev"${prevDisabled}>← Prev</button>` +
                 `<span class="crm-books-pages-indicator">Page <input type="number" class="crm-books-page-input" value="${currentPage}" min="1" max="${pagesData.totalPages}"> of ${pagesData.totalPages}</span>` +
                 `<button class="crm-books-page-next"${nextDisabled}>Next →</button>` +
                 `</div>` +
-                `<div class="crm-books-page-content">${escapeHtml(pageText)}</div>`;
+                `<div class="crm-books-reading-label">Reading view · extracted text</div>` +
+                (pageNotice ? `<div class="crm-books-page-notice" role="status">${escapeHtml(pageNotice)}</div>` : '') +
+                `<article class="crm-books-page-paper" tabindex="-1" aria-label="Reading view page ${currentPage} of ${pagesData.totalPages}">` +
+                `<div class="crm-books-page-content">${highlight.html}</div>` +
+                `</article>`;
         }
 
         async function loadPagesMetadata() {
@@ -544,6 +722,92 @@ window.CrmBooksWorkspace = (function () {
                 pagesData = { totalPages: 0, pages: [] };
                 if (activeTab === 'pages') renderExplorerPanel();
             }
+        }
+
+        function findMessageCitation(marker) {
+            const target = clean(marker).toUpperCase();
+            for (const message of messages) {
+                if (message.role === 'user' || !Array.isArray(message.citations)) continue;
+                for (let i = 0; i < message.citations.length; i += 1) {
+                    const citation = message.citations[i];
+                    if (citationMarker(citation, i) === target) return citation;
+                }
+            }
+            return null;
+        }
+
+        function resetPageCitation() {
+            activeCitation = null;
+            pageNotice = '';
+        }
+
+        async function openCitation(marker) {
+            const citation = findMessageCitation(marker);
+            if (!citation || !selectedBookId) return;
+
+            activeTab = 'pages';
+            pageNotice = '';
+            if (!pagesData) await loadPagesMetadata();
+            if (!pagesData || pagesData.totalPages === 0) {
+                pageNotice = 'The cited page text is unavailable.';
+                renderExplorerPanel();
+                return;
+            }
+
+            const startPage = Math.max(1, Math.min(Number(citation.pageStart) || 1, pagesData.totalPages));
+            const endPage = Math.max(startPage, Math.min(Number(citation.pageEnd) || startPage, pagesData.totalPages));
+            const quote = clean(citation.highlightText || citation.snippet);
+            let matchedPage = null;
+            for (let page = startPage; page <= endPage; page += 1) {
+                const readingText = reflowPageText(pagesData.pages?.[page - 1] || '');
+                if (quote && findCitationMatch(readingText, quote)) {
+                    matchedPage = page;
+                    break;
+                }
+            }
+
+            currentPage = matchedPage || startPage;
+            activeCitation = {
+                marker: citationMarker(citation),
+                page: currentPage,
+                quote
+            };
+            pageNotice = matchedPage
+                ? `Citation ${citationMarker(citation)} opened on page ${currentPage}.`
+                : `Citation ${citationMarker(citation)} opened on page ${currentPage}; the exact passage is unavailable in this saved citation.`;
+            renderExplorerPanel();
+
+            requestAnimationFrame(() => {
+                const page = qs('.crm-books-page-paper');
+                const mark = page?.querySelector('mark.crm-books-citation-highlight');
+                page?.focus({ preventScroll: true });
+                mark?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            });
+        }
+
+        function showCitationPreview(wrap) {
+            const preview = wrap?.querySelector('.crm-books-citation-preview');
+            const trigger = wrap?.querySelector('.crm-books-citation-ref');
+            if (!preview || !trigger) return;
+            preview.classList.add('visible');
+            const rect = trigger.getBoundingClientRect();
+            const viewportMargin = 12;
+            const previewRect = preview.getBoundingClientRect();
+            let left = rect.left;
+            let top = rect.bottom + 8;
+            if (left + previewRect.width > window.innerWidth - viewportMargin) {
+                left = window.innerWidth - previewRect.width - viewportMargin;
+            }
+            if (top + previewRect.height > window.innerHeight - viewportMargin) {
+                top = rect.top - previewRect.height - 8;
+            }
+            preview.style.left = `${Math.max(viewportMargin, left)}px`;
+            preview.style.top = `${Math.max(viewportMargin, top)}px`;
+        }
+
+        function hideCitationPreview(wrap) {
+            const preview = wrap?.querySelector('.crm-books-citation-preview');
+            if (preview) preview.classList.remove('visible');
         }
 
         function loadBookNotes(bookId) {
@@ -587,21 +851,26 @@ window.CrmBooksWorkspace = (function () {
             if (!text) return '';
             let html = escHtml(text);
 
+            const citationMap = new Map((Array.isArray(citations) ? citations : []).map((citation, index) => [
+                citationMarker(citation, index), citation
+            ]));
+
             html = html.replace(/\[C?(\d+)(?:\s*,\s*C?(\d+))*\]/gi, (match) => {
                 const nums = match.match(/\d+/g);
                 if (!nums || nums.length === 0) return match;
 
                 const pills = nums.map((nStr) => {
                     const idx = parseInt(nStr, 10);
-                    if (citations && idx >= 1 && idx <= citations.length) {
-                        const c = citations[idx - 1];
+                    const marker = `C${idx}`;
+                    const c = citationMap.get(marker) || (citations && citations[idx - 1]);
+                    if (c) {
                         const pages = c.pageStart === c.pageEnd ? `p. ${c.pageStart}` : `pp. ${c.pageStart}\u2013${c.pageEnd}`;
-                        return `<span class="crm-books-citation-ref" title="${escHtml(pages)}" data-citation-idx="${idx}">${idx}</span>`;
+                        const actualMarker = citationMarker(c, idx - 1);
+                        return `<button type="button" class="crm-books-citation-ref crm-books-inline-citation" title="Open ${escHtml(pages)}" aria-label="Open citation ${idx}, ${escHtml(pages)}" data-citation-marker="${escHtml(actualMarker)}">${idx}</button>`;
                     }
-                    return null;
-                }).filter(Boolean);
+                    return escHtml(nStr);
+                });
 
-                if (pills.length === 0) return '';
                 return pills.join(' ');
             });
 
@@ -728,6 +997,9 @@ window.CrmBooksWorkspace = (function () {
             collapsedOutline = {};
             pagesData = null;
             currentPage = 1;
+            resetPageCitation();
+            editingThreadId = '';
+            editingThreadTitle = '';
 
             detachSnapshot();
             renderSourcesPanel();
@@ -769,10 +1041,6 @@ window.CrmBooksWorkspace = (function () {
             try {
                 const res = await apiGet(`/api/admin/books/${selectedBookId}/threads`);
                 threads = Array.isArray(res.threads) ? res.threads : [];
-                if (threads.length > 0 && !selectedThreadId) {
-                    selectedThreadId = threads[0].threadId;
-                    await loadMessages();
-                }
                 renderExplorerPanel();
             } catch (err) {
                 console.error('[CRM Books] Failed to load threads:', err);
@@ -1068,18 +1336,79 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
-        async function createThread() {
-            if (!selectedBookId) return;
+        async function createThread(title = 'New thread') {
+            if (!selectedBookId) return null;
             try {
-                const res = await apiPost(`/api/admin/books/${selectedBookId}/threads`, {});
+                const threadTitle = clean(title) || 'New thread';
+                const res = await apiPost(`/api/admin/books/${selectedBookId}/threads`, { title: threadTitle });
                 if (res.threadId) {
                     selectedThreadId = res.threadId;
                     messages = [];
-                    await loadThreads();
+                    threads = [
+                        { threadId: res.threadId, title: res.title || threadTitle, messageCount: 0, createdAt: new Date(), updatedAt: new Date() },
+                        ...threads.filter((thread) => thread.threadId !== res.threadId)
+                    ];
+                    renderExplorerPanel();
                 }
+                return res;
             } catch (err) {
                 console.error('[CRM Books] Create thread error:', err);
                 showToast?.('Failed to create thread.', 'error');
+                return null;
+            }
+        }
+
+        function startNewChat() {
+            selectedThreadId = '';
+            messages = [];
+            editingThreadId = '';
+            editingThreadTitle = '';
+            activeTab = 'chat';
+            resetPageCitation();
+            renderExplorerPanel();
+            requestAnimationFrame(() => qs('.crm-books-composer-input')?.focus());
+        }
+
+        function beginThreadRename(threadId) {
+            const thread = threads.find((item) => item.threadId === threadId);
+            if (!thread) return;
+            editingThreadId = threadId;
+            editingThreadTitle = thread.title || '';
+            renderExplorerPanel();
+            requestAnimationFrame(() => {
+                const input = qs('.crm-books-thread-title-input');
+                input?.focus();
+                input?.select();
+            });
+        }
+
+        function cancelThreadRename() {
+            editingThreadId = '';
+            editingThreadTitle = '';
+            renderExplorerPanel();
+        }
+
+        async function saveThreadTitle() {
+            const threadId = editingThreadId;
+            if (!threadId) return;
+            const input = qs('.crm-books-thread-title-input');
+            const title = clean(input?.value ?? editingThreadTitle);
+            if (!title || title.length > MAX_THREAD_TITLE_LENGTH) {
+                showToast?.(`Thread name must be between 1 and ${MAX_THREAD_TITLE_LENGTH} characters.`, 'error');
+                input?.focus();
+                return;
+            }
+            try {
+                const res = await apiPatch(`/api/admin/books/${selectedBookId}/threads/${threadId}`, { title });
+                const savedTitle = res.thread?.title || title;
+                threads = threads.map((thread) => thread.threadId === threadId ? { ...thread, title: savedTitle } : thread);
+                editingThreadId = '';
+                editingThreadTitle = '';
+                renderExplorerPanel();
+                showToast?.('Thread renamed.', 'info');
+            } catch (err) {
+                console.error('[CRM Books] Rename thread error:', err);
+                showToast?.(err?.message || 'Failed to rename thread.', 'error');
             }
         }
 
@@ -1093,11 +1422,8 @@ window.CrmBooksWorkspace = (function () {
 
             if (!selectedThreadId) {
                 try {
-                    const res = await apiPost(`/api/admin/books/${selectedBookId}/threads`, {});
-                    if (res.threadId) {
-                        selectedThreadId = res.threadId;
-                        threads.unshift({ threadId: res.threadId, title: 'New thread', messageCount: 0 });
-                    }
+                    const res = await createThread(deriveThreadTitle(text));
+                    if (!res?.threadId) throw new Error('Thread creation failed.');
                 } catch (err) {
                     chatInFlight = false;
                     console.error('[CRM Books] Auto-create thread failed:', err);
@@ -1126,6 +1452,10 @@ window.CrmBooksWorkspace = (function () {
 
                 if (res.userMessage) messages.push(res.userMessage);
                 if (res.assistantMessage) messages.push(res.assistantMessage);
+
+                threads = threads.map((thread) => thread.threadId === selectedThreadId
+                    ? { ...thread, messageCount: (thread.messageCount || 0) + 2, updatedAt: new Date() }
+                    : thread);
 
                 if (res.quota && res.quota.remaining <= 10) {
                     showToast?.(`${res.quota.remaining} chat messages remaining today.`, 'info');
@@ -1218,7 +1548,7 @@ window.CrmBooksWorkspace = (function () {
                 if (tab) {
                     activeTab = tab.dataset.booksTab;
                     renderExplorerPanel();
-                    if (activeTab === 'chat' && threads.length === 0 && selectedBook?.status === 'ready') {
+                    if ((activeTab === 'chat' || activeTab === 'history') && threads.length === 0 && selectedBook?.status === 'ready') {
                         loadThreads().catch(console.error);
                     }
                     return;
@@ -1229,8 +1559,28 @@ window.CrmBooksWorkspace = (function () {
                     return;
                 }
 
-                if (e.target.closest('.crm-books-new-thread-btn')) {
-                    await createThread();
+                if (e.target.closest('.crm-books-new-chat-btn')) {
+                    startNewChat();
+                    return;
+                }
+
+                const historyOpen = e.target.closest('.crm-books-history-open');
+                if (historyOpen) {
+                    selectedThreadId = clean(historyOpen.dataset.historyThreadId);
+                    activeTab = 'chat';
+                    await loadMessages();
+                    renderExplorerPanel();
+                    return;
+                }
+
+                const renameButton = e.target.closest('.crm-books-thread-rename-btn');
+                if (renameButton) {
+                    beginThreadRename(clean(renameButton.dataset.threadId));
+                    return;
+                }
+
+                if (e.target.closest('.crm-books-thread-title-cancel')) {
+                    cancelThreadRename();
                     return;
                 }
 
@@ -1308,19 +1658,9 @@ window.CrmBooksWorkspace = (function () {
                     return;
                 }
 
-                // Citation ref click toggle
-                const citWrap = e.target.closest('.crm-books-citation-wrap');
-                if (citWrap) {
-                    const idx = citWrap.dataset.citationIdx;
-                    const msgEl = citWrap.closest('.crm-books-msg');
-                    if (msgEl) {
-                        const detail = citWrap.querySelector('.crm-books-citation-detail');
-                        if (detail) {
-                            const isVisible = detail.classList.contains('visible');
-                            msgEl.querySelectorAll('.crm-books-citation-detail.visible').forEach((el) => el.classList.remove('visible'));
-                            if (!isVisible) detail.classList.add('visible');
-                        }
-                    }
+                const citationButton = e.target.closest('.crm-books-citation-ref[data-citation-marker]');
+                if (citationButton) {
+                    await openCitation(citationButton.dataset.citationMarker);
                     return;
                 }
 
@@ -1336,11 +1676,10 @@ window.CrmBooksWorkspace = (function () {
                 }
             });
 
-            panel.addEventListener('change', async (e) => {
-                if (e.target.classList.contains('crm-books-thread-select')) {
-                    selectedThreadId = clean(e.target.value);
-                    await loadMessages();
-                    renderExplorerPanel();
+            panel.addEventListener('submit', async (e) => {
+                if (e.target.classList.contains('crm-books-thread-title-editor')) {
+                    e.preventDefault();
+                    await saveThreadTitle();
                 }
             });
 
@@ -1350,24 +1689,35 @@ window.CrmBooksWorkspace = (function () {
                     const text = clean(e.target.value);
                     if (text) sendMessage(text);
                 }
+                if (e.target.classList.contains('crm-books-thread-title-input') && e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelThreadRename();
+                }
             });
 
             // Citation hover tooltips — target the wrapper to avoid flicker
             panel.addEventListener('mouseenter', (e) => {
                 const wrap = e.target.closest?.('.crm-books-citation-wrap');
                 if (wrap) {
-                    const detail = wrap.querySelector('.crm-books-citation-detail');
-                    if (detail) detail.classList.add('visible');
+                    showCitationPreview(wrap);
                 }
             }, true);
 
             panel.addEventListener('mouseleave', (e) => {
                 const wrap = e.target.closest?.('.crm-books-citation-wrap');
                 if (wrap && !wrap.contains(e.relatedTarget)) {
-                    const detail = wrap.querySelector('.crm-books-citation-detail');
-                    if (detail) detail.classList.remove('visible');
+                    hideCitationPreview(wrap);
                 }
             }, true);
+
+            panel.addEventListener('focusin', (e) => {
+                const wrap = e.target.closest?.('.crm-books-citation-wrap');
+                if (wrap) showCitationPreview(wrap);
+            });
+            panel.addEventListener('focusout', (e) => {
+                const wrap = e.target.closest?.('.crm-books-citation-wrap');
+                if (wrap && !wrap.contains(e.relatedTarget)) hideCitationPreview(wrap);
+            });
 
             // Sources toggle
             panel.addEventListener('click', (e) => {
@@ -1390,11 +1740,13 @@ window.CrmBooksWorkspace = (function () {
             panel.addEventListener('click', (e) => {
                 if (e.target.closest('.crm-books-page-prev') && currentPage > 1) {
                     currentPage--;
+                    resetPageCitation();
                     renderExplorerPanel();
                     return;
                 }
                 if (e.target.closest('.crm-books-page-next') && pagesData && currentPage < pagesData.totalPages) {
                     currentPage++;
+                    resetPageCitation();
                     renderExplorerPanel();
                     return;
                 }
@@ -1404,6 +1756,7 @@ window.CrmBooksWorkspace = (function () {
                     const val = parseInt(e.target.value, 10);
                     if (val >= 1 && val <= pagesData.totalPages) {
                         currentPage = val;
+                        resetPageCitation();
                         renderExplorerPanel();
                     } else {
                         e.target.value = currentPage;
@@ -1475,6 +1828,11 @@ window.CrmBooksWorkspace = (function () {
         buildIngestLabel,
         formatEta,
         renderCitations,
-        ingestWeightedPercent
+        ingestWeightedPercent,
+        deriveThreadTitle,
+        reflowPageText,
+        findCitationMatch,
+        highlightPageText,
+        normalizeCitationText
     };
 })();

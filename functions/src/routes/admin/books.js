@@ -7,6 +7,8 @@ const {
 const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
 
+const MAX_THREAD_TITLE_LENGTH = 120;
+
 function cleanStr(value, fallback = '') {
     return String(value ?? '').trim() || fallback;
 }
@@ -404,6 +406,33 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { threadId: ref.id, ...payload }, 'Thread created.');
         } catch (error) {
             return sendError(res, 500, 'CREATE_THREAD_ERROR', 'Failed to create thread.', error?.message || error);
+        }
+    });
+
+    router.patch('/books/:bookId/threads/:threadId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const threadId = cleanStr(req.params.threadId);
+            const title = cleanStr(req.body?.title);
+
+            if (!bookId || !threadId) {
+                return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or thread ID.');
+            }
+            if (!title || title.length > MAX_THREAD_TITLE_LENGTH) {
+                return sendError(res, 400, 'INVALID_THREAD_TITLE', `Thread title must be between 1 and ${MAX_THREAD_TITLE_LENGTH} characters.`);
+            }
+
+            const threadRef = db.collection(CRM_BOOKS).doc(bookId).collection('threads').doc(threadId);
+            const threadSnap = await threadRef.get();
+            if (!threadSnap.exists) {
+                return sendError(res, 404, 'THREAD_NOT_FOUND', 'Thread not found.');
+            }
+
+            // Keep updatedAt reserved for conversation activity so renaming does not reorder history.
+            await threadRef.update({ title, titleUpdatedAt: serverTimestamp() });
+            return sendSuccess(res, { thread: { threadId, title } }, 'Thread renamed.');
+        } catch (error) {
+            return sendError(res, 500, 'RENAME_THREAD_ERROR', 'Failed to rename thread.', error?.message || error);
         }
     });
 

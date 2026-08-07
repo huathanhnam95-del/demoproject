@@ -7340,6 +7340,16 @@
       if (btnPageNext) btnPageNext.disabled = currentPage >= pageCount;
     }
 
+    function syncActiveWordWithFilter() {
+      const filtered = getFilteredWordButtons();
+      if (!filtered.length) return;
+      const currWordLower = String(currentWord || '').trim().toLowerCase();
+      const isCurrentInFiltered = filtered.some((button) => String(button.dataset.word || '').trim().toLowerCase() === currWordLower);
+      if (!isCurrentInFiltered) {
+        filtered[0].click();
+      }
+    }
+
 
     function parseOxfordCsv(text) {
       const lines = String(text || '').split(/\r?\n/).filter(Boolean);
@@ -7800,6 +7810,7 @@
         renderSavedSamples(samples);
         updateWordBadges();
         applyWordFilter();
+        syncActiveWordWithFilter();
       } catch (error) {
         const message = document.createElement('div');
         message.className = 'crm-muted';
@@ -7878,6 +7889,7 @@
       if (catVersionIdx >= 0) {
         moveToVersion(catVersionIdx);
       }
+      syncActiveWordWithFilter();
     });
     if (btnPagePrev) btnPagePrev.addEventListener('click', () => {
       currentPage = Math.max(1, currentPage - 1);
@@ -8436,6 +8448,7 @@
     if (wordSearchInput) wordSearchInput.addEventListener('input', () => {
       currentPage = 1;
       applyWordFilter();
+      syncActiveWordWithFilter();
     });
 
     // Speaker cohort dropdown handler

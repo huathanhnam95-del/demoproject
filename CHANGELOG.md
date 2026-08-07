@@ -1,3 +1,8 @@
+## [V1.8.52] - 2026-08-07
+
+### Fixed & Enhanced
+- **Corpus Filter Auto-Selection Sync**: Added `syncActiveWordWithFilter()` to automatically align the target word, category, and instruction banner with the first word in the filtered list whenever the **Show tests:** dropdown or search input changes.
+
 ## [V1.8.51] - 2026-08-07
 
 ### Fixed & Enhanced

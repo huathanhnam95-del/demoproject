@@ -364,13 +364,22 @@ async function main() {
     await page.click('#btn-corpus-prev-version');
     await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
 
-    // Verify filter-locked version preservation on word click
+    // Verify filter-locked version preservation and instruction matching on filter change & word click
     await page.locator('#corpus-sample-filter').selectOption('missing_omission');
-    await photographButton.dispatchEvent('click');
+    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'photograph', null, { timeout: 5000 });
     await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /omit exactly one syllable/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*photograph.*omit exactly one syllable/i);
     assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+
+    const bananaButton = page.locator('.corpus-word-btn[data-word="banana"]');
+    await bananaButton.dispatchEvent('click');
+    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'banana', null, { timeout: 5000 });
+    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*banana.*omit exactly one syllable/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+
     await page.locator('#corpus-sample-filter').selectOption('all');
+    await photographButton.dispatchEvent('click');
 
     // 5. Start Recording
     await page.click('#btn-corpus-record');

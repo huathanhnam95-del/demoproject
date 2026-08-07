@@ -979,7 +979,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 582,2026-08-06,Deploy V1.8.50 release to production - CRM Books chat Q&A note saving and unit test fixes,Done,2026-08-06
 583,2026-08-07,Investigate and fix issue where pronunciation sample recording is marked as unrateable audio,Done,2026-08-07
 584,2026-08-07,Fix pronunciation sample filter mismatch when selecting a word in the list to preserve filter-locked version,Done,2026-08-07
-585,2026-08-07,Deploy V1.8.51 release to production - CRM Pronunciation samples V2 adapter and filter locking fixes,In Progress,
+585,2026-08-07,Deploy V1.8.51 release to production - CRM Pronunciation samples V2 adapter and filter locking fixes,Done,2026-08-07
 
 
 

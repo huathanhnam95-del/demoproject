@@ -33,8 +33,8 @@ const separatedContour = cleanPitchContour([
 ]);
 assert.deepEqual(
     separatedContour.map((point) => point.y),
-    [0, 0.5, null, 11.8, 12],
-    'smoothing must not blend separate voiced runs across an unvoiced gap'
+    [0, 0.5, null, -0.2, 0],
+    'each voiced run must correct its octave independently without blending across an unvoiced gap'
 );
 
 const native = {
@@ -63,12 +63,12 @@ assert.deepEqual(nativeOnly.intensity.map((point) => point.y), [60, 70, null]);
 
 const nativeWithSustainedOctaveJump = buildNativeOnlyChartData({
     pitch: {
-        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05],
-        values: [185, 190, 188, 450, 475, null]
+        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07],
+        values: [185, 190, 188, null, 450, 475, 470, null]
     },
     intensity: {
-        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05],
-        values: [60, 61, 62, 63, 64, 0]
+        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07],
+        values: [60, 61, 62, 0, 63, 64, 65, 0]
     }
 });
 assert.ok(
@@ -76,11 +76,12 @@ assert.ok(
     'native-only charts must correct sustained octave tracking jumps before rendering'
 );
 assert.equal(
-    nativeWithSustainedOctaveJump.pitch[4].rawHz,
+    nativeWithSustainedOctaveJump.pitch[5].rawHz,
     475,
     'native-only octave correction must retain the measured Hz for diagnostics'
 );
-assert.equal(nativeWithSustainedOctaveJump.pitch[5].y, null, 'unvoiced native frames must remain gaps');
+assert.equal(nativeWithSustainedOctaveJump.pitch[3].y, null, 'internal unvoiced native frames must remain gaps');
+assert.equal(nativeWithSustainedOctaveJump.pitch[7].y, null, 'trailing unvoiced native frames must remain gaps');
 
 const equalLanes = buildDurationLanes(
     [

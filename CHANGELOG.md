@@ -1,3 +1,8 @@
+## [V1.8.55] - 2026-08-08
+
+### Fixed
+- **Pronunciation Cross-Gap Octave Tracking**: Normalized the speaker pitch baseline across octave-equivalent clusters so a tracker that resumes one octave high after an unvoiced gap is corrected without drawing through the silence.
+
 ## [V1.8.54] - 2026-08-08
 
 ### Fixed

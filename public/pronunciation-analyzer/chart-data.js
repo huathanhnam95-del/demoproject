@@ -33,10 +33,21 @@ export function cleanPitchContour(points) {
         while (segmentEnd + 1 < points.length && points[segmentEnd + 1].y !== null) segmentEnd += 1;
 
         // Pitch trackers commonly lock onto a harmonic and report an exact
-        // octave jump. Work in semitones and unwrap each voiced run to the
-        // nearest octave-equivalent value before applying ordinary smoothing.
-        // Never carry that reference across an unvoiced gap: the speaker may
-        // legitimately restart at a different pitch after silence.
+        // octave jump. Work in semitones and anchor every voiced run to the
+        // speaker median independently. This corrects a tracker that resumes
+        // one octave high after silence without blending samples across the
+        // gap. Then unwrap any remaining within-run octave discontinuities.
+        const segmentCenter = median(
+            cleaned.slice(segmentStart, segmentEnd + 1).map((point) => point.y)
+        );
+        const octaveOffset = Number.isFinite(segmentCenter)
+            ? Math.round(segmentCenter / 12) * 12
+            : 0;
+        if (octaveOffset !== 0) {
+            for (let index = segmentStart; index <= segmentEnd; index += 1) {
+                cleaned[index].y = Number((cleaned[index].y - octaveOffset).toFixed(4));
+            }
+        }
         for (let index = segmentStart + 1; index <= segmentEnd; index += 1) {
             const previous = cleaned[index - 1].y;
             let current = cleaned[index].y;
@@ -79,10 +90,24 @@ export function cleanPitchContour(points) {
     return cleaned;
 }
 
+function octaveNormalizedPitchMedian(values) {
+    const voiced = values.filter(finitePositive).map(Number);
+    if (!voiced.length) return null;
+    const anchor = voiced[0];
+    const octaveBoundary = Math.sqrt(2);
+    const folded = voiced.map((rawValue) => {
+        let value = rawValue;
+        while (value / anchor > octaveBoundary) value /= 2;
+        while (anchor / value > octaveBoundary) value *= 2;
+        return value;
+    });
+    return median(folded);
+}
+
 function relativePitchSeries(analysis) {
     const times = Array.isArray(analysis?.pitch?.times) ? analysis.pitch.times : [];
     const values = Array.isArray(analysis?.pitch?.values) ? analysis.pitch.values : [];
-    const speakerMedianF0 = median(values.filter(finitePositive));
+    const speakerMedianF0 = octaveNormalizedPitchMedian(values);
     const rawPoints = times.map((time, index) => {
         const rawHz = finitePositive(values[index]) ? Number(values[index]) : null;
         return {
@@ -210,7 +235,7 @@ export function buildNativeOnlyChartData(nativeAnalysis) {
     const pitchValues = Array.isArray(nativeAnalysis?.pitch?.values) ? nativeAnalysis.pitch.values : [];
     const intensityTimes = Array.isArray(nativeAnalysis?.intensity?.times) ? nativeAnalysis.intensity.times : [];
     const intensityValues = Array.isArray(nativeAnalysis?.intensity?.values) ? nativeAnalysis.intensity.values : [];
-    const speakerMedianF0 = median(pitchValues.filter(finitePositive));
+    const speakerMedianF0 = octaveNormalizedPitchMedian(pitchValues);
     const rawPitch = pitchTimes.map((time, index) => {
         const rawHz = finitePositive(pitchValues[index]) ? Number(pitchValues[index]) : null;
         return {

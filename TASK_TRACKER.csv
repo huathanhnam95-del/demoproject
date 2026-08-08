@@ -990,3 +990,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 592,2026-08-08,Add pitch contour smoothing to remove octave jumps and noise from prosody chart,Done,2026-08-08
 594,2026-08-08,Check and correct all IPA transcriptions in student_handout_ae_a_sounds.docx per Oxford rules,Done,2026-08-08
 595,2026-08-08,Release V1.8.56 - deploy CRM lead modal workflow and pronunciation fixes to production,Done,2026-08-08
+596,2026-08-08,Run browser test to verify live production V1.8.56 release deployment,Done,2026-08-08

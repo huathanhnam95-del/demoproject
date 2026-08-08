@@ -32,8 +32,22 @@ export function cleanPitchContour(points) {
         let segmentEnd = segmentStart;
         while (segmentEnd + 1 < points.length && points[segmentEnd + 1].y !== null) segmentEnd += 1;
 
+        // Pitch trackers commonly lock onto a harmonic and report an exact
+        // octave jump. Work in semitones and unwrap each voiced run to the
+        // nearest octave-equivalent value before applying ordinary smoothing.
+        // Never carry that reference across an unvoiced gap: the speaker may
+        // legitimately restart at a different pitch after silence.
+        for (let index = segmentStart + 1; index <= segmentEnd; index += 1) {
+            const previous = cleaned[index - 1].y;
+            let current = cleaned[index].y;
+            while (current - previous > 6) current -= 12;
+            while (previous - current > 6) current += 12;
+            cleaned[index].y = Number(current.toFixed(4));
+        }
+
         // Short voiced runs do not contain enough context to distinguish a
-        // real contour movement from an octave error. Preserve them verbatim.
+        // real contour movement from ordinary noise. Preserve the unwrapped
+        // values without applying the median/weighted noise filter.
         if (segmentEnd - segmentStart + 1 >= 5) {
             const medianFiltered = cleaned.map((point) => ({ ...point }));
             for (let index = segmentStart; index <= segmentEnd; index += 1) {
@@ -41,7 +55,7 @@ export function cleanPitchContour(points) {
                 const windowEnd = Math.min(segmentEnd, index + 2);
                 const window = [];
                 for (let cursor = windowStart; cursor <= windowEnd; cursor += 1) {
-                    window.push(points[cursor].y);
+                    window.push(cleaned[cursor].y);
                 }
                 medianFiltered[index].y = Number(median(window).toFixed(4));
             }
@@ -196,12 +210,27 @@ export function buildNativeOnlyChartData(nativeAnalysis) {
     const pitchValues = Array.isArray(nativeAnalysis?.pitch?.values) ? nativeAnalysis.pitch.values : [];
     const intensityTimes = Array.isArray(nativeAnalysis?.intensity?.times) ? nativeAnalysis.intensity.times : [];
     const intensityValues = Array.isArray(nativeAnalysis?.intensity?.values) ? nativeAnalysis.intensity.values : [];
+    const speakerMedianF0 = median(pitchValues.filter(finitePositive));
+    const rawPitch = pitchTimes.map((time, index) => {
+        const rawHz = finitePositive(pitchValues[index]) ? Number(pitchValues[index]) : null;
+        return {
+            x: Number(time),
+            y: hzToRelativeSemitones(rawHz, speakerMedianF0),
+            rawHz
+        };
+    });
+    const cleanedPitch = cleanPitchContour(rawPitch);
     return {
         pitchAxisLabel: 'Pitch (Hz)',
         intensityAxisLabel: 'Intensity (dB)',
-        pitch: pitchTimes.map((time, index) => ({
-            x: Number(time),
-            y: finitePositive(pitchValues[index]) ? Number(pitchValues[index]) : null
+        pitch: cleanedPitch.map((point, index) => ({
+            x: point.x,
+            y: point.y === null
+                ? null
+                : Math.abs(point.y - rawPitch[index].y) < 0.0001
+                    ? point.rawHz
+                    : Number((speakerMedianF0 * (2 ** (point.y / 12))).toFixed(4)),
+            rawHz: point.rawHz
         })),
         intensity: intensityTimes.map((time, index) => ({
             x: Number(time),

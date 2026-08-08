@@ -38,11 +38,11 @@ assert.deepEqual(
 );
 
 const native = {
-    pitch: { times: [0, 0.1, 0.2], values: [100, 200, null] },
+    pitch: { times: [0, 0.1, 0.2], values: [100, 110, null] },
     intensity: { times: [0, 0.1, 0.2], values: [60, 70, 0] }
 };
 const learner = {
-    pitch: { times: [0, 0.1, 0.2], values: [200, 400, null] },
+    pitch: { times: [0, 0.1, 0.2], values: [200, 220, null] },
     intensity: { times: [0, 0.1, 0.2], values: [50, 60, 0] }
 };
 
@@ -58,8 +58,29 @@ assert.equal(comparison.learner.intensity[0].y, -5);
 const nativeOnly = buildNativeOnlyChartData(native);
 assert.equal(nativeOnly.pitchAxisLabel, 'Pitch (Hz)');
 assert.equal(nativeOnly.intensityAxisLabel, 'Intensity (dB)');
-assert.deepEqual(nativeOnly.pitch.map((point) => point.y), [100, 200, null]);
+assert.deepEqual(nativeOnly.pitch.map((point) => point.y), [100, 110, null]);
 assert.deepEqual(nativeOnly.intensity.map((point) => point.y), [60, 70, null]);
+
+const nativeWithSustainedOctaveJump = buildNativeOnlyChartData({
+    pitch: {
+        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05],
+        values: [185, 190, 188, 450, 475, null]
+    },
+    intensity: {
+        times: [0, 0.01, 0.02, 0.03, 0.04, 0.05],
+        values: [60, 61, 62, 63, 64, 0]
+    }
+});
+assert.ok(
+    Math.max(...nativeWithSustainedOctaveJump.pitch.map((point) => point.y).filter(Number.isFinite)) < 300,
+    'native-only charts must correct sustained octave tracking jumps before rendering'
+);
+assert.equal(
+    nativeWithSustainedOctaveJump.pitch[4].rawHz,
+    475,
+    'native-only octave correction must retain the measured Hz for diagnostics'
+);
+assert.equal(nativeWithSustainedOctaveJump.pitch[5].y, null, 'unvoiced native frames must remain gaps');
 
 const equalLanes = buildDurationLanes(
     [

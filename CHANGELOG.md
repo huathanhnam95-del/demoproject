@@ -1,3 +1,8 @@
+## [V1.8.54] - 2026-08-08
+
+### Fixed
+- **Pronunciation Prosody Smoothing**: Applied octave-aware contour cleanup to the native-only lookup chart as well as learner comparisons, preserved raw-Hz diagnostics, and stopped pitch/intensity lines from bridging unvoiced gaps.
+
 ## [V1.8.53] - 2026-08-08
 
 ### Added & Enhanced

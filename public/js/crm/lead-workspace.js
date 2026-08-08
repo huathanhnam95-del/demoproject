@@ -8,6 +8,8 @@ window.CrmLeadWorkspace = (function () {
             apiFetchJson,
             refreshDashboard,
             refreshStudentLists,
+            openLeadModal,
+            saveLeadFromModal,
             openStudentProfile,
             fetchTasks,
             fetchActivities,
@@ -453,6 +455,11 @@ window.CrmLeadWorkspace = (function () {
         }
 
         async function refreshLeadWorkspace() {
+            if (modalState.isLeadMode) {
+                if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+                await refreshLeadEntranceTests();
+                return;
+            }
             if (!modalState.leadId) {
                 if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
                 renderLeadContextSummary(null);
@@ -543,6 +550,11 @@ window.CrmLeadWorkspace = (function () {
                                 console.error('[CRM Admin] Open converted lead student profile failed:', error);
                                 showToast(error?.message || 'Failed to open student profile.', 'error');
                             }
+                            return;
+                        }
+
+                        if (typeof openLeadModal === 'function') {
+                            openLeadModal(lead);
                             return;
                         }
 
@@ -709,7 +721,10 @@ window.CrmLeadWorkspace = (function () {
 
             if (elements.btnSaveLead) {
                 elements.btnSaveLead.addEventListener('click', () => {
-                    saveLead().catch((error) => {
+                    const saveOperation = modalState.isLeadMode && typeof saveLeadFromModal === 'function'
+                        ? saveLeadFromModal
+                        : saveLead;
+                    saveOperation().catch((error) => {
                         console.error('[CRM Admin] Save lead failed:', error);
                         showToast(error?.message || 'Failed to save lead.', 'error');
                     });
@@ -795,7 +810,8 @@ window.CrmLeadWorkspace = (function () {
             renderLeadContextSummary,
             renderLeadStageBoard,
             renderLeadTable,
-            refreshLeadPipeline
+            refreshLeadPipeline,
+            refreshLeadEntranceTests
         };
     }
 

@@ -157,6 +157,7 @@
     classroomRecord: null,
     regenerationPreview: null,
     leadId: null,
+    isLeadMode: false,
     selectedInvoiceId: null,
     financeEnrollments: [],
     liveSessions: [],
@@ -387,6 +388,7 @@
     // New Student Elements
     elements.btnNewStudentTriggers = Array.from(document.querySelectorAll('.btn-new-student-trigger'));
     elements.studentModal = document.getElementById('crm-student-modal');
+    elements.studentModalTitle = document.getElementById('crm-student-modal-title');
     elements.btnCloseStudentModal = document.getElementById('btn-close-student-modal');
     elements.btnCancelStudent = document.getElementById('btn-cancel-student');
     elements.btnSaveStudent = document.getElementById('btn-save-student');
@@ -1379,6 +1381,8 @@
         apiFetchJson,
         refreshDashboard,
         refreshStudentLists,
+        openLeadModal,
+        saveLeadFromModal,
         fetchTasks,
         fetchActivities,
         applyReminderBadge,
@@ -2854,14 +2858,32 @@
     if (window.CrmLeads && typeof window.CrmLeads.applyToForm === 'function') {
       window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: 'Facebook - Personal', facebookPersonalOwner: 'Nam' });
     }
+    if (elements.leadComposer) elements.leadComposer.style.display = '';
 
     if (elements.studentModal) {
       elements.studentModal.style.display = 'flex';
       elements.studentModal.classList.add('active');
+      elements.studentModal.setAttribute('aria-hidden', 'false');
+      const modalContent = elements.studentModal.querySelector('.crm-modal-content');
+      if (modalContent) modalContent.scrollTop = 0;
+    }
+    if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+    if (elements.leadEntranceTestSection) elements.leadEntranceTestSection.style.display = 'block';
+    if (elements.btnAddLeadEntranceTest) {
+      elements.btnAddLeadEntranceTest.disabled = !modalState.leadId;
+      elements.btnAddLeadEntranceTest.textContent = 'Add new test';
+    }
+    if (elements.leadEntranceTestLinkNote && !modalState.leadId) {
+      elements.leadEntranceTestLinkNote.textContent = 'Save the lead first to create a single-use learner link.';
     }
     switchStudentTab('info');
     if (typeof updateLeadSourceVisibility === 'function') updateLeadSourceVisibility();
     if (typeof updateStudentSourceVisibility === 'function') updateStudentSourceVisibility();
+    if (lead && leadWorkspaceController && typeof leadWorkspaceController.refreshLeadEntranceTests === 'function') {
+      leadWorkspaceController.refreshLeadEntranceTests().catch((error) => {
+        console.error('[CRM Admin] Failed to load lead entrance tests:', error);
+      });
+    }
   }
 
   async function saveLeadFromModal() {
@@ -2886,10 +2908,29 @@
         body: JSON.stringify(payload)
       });
 
-      showToast(modalState.leadId ? 'Lead updated successfully.' : 'Lead created successfully.', 'success');
-      hideStudentModalSurface();
-      closeStudentProfile();
+      const wasCreated = method === 'POST';
+      const createdLeadId = String(json.leadId || json.lead?.leadId || '').trim();
+      if (wasCreated && !createdLeadId) {
+        throw new Error('Lead ID missing from server response.');
+      }
+      if (wasCreated) {
+        modalState.leadId = createdLeadId;
+        modalState.isLeadMode = true;
+        if (elements.studentModalTitle) elements.studentModalTitle.textContent = 'Edit Lead Profile';
+        if (elements.btnAddLeadEntranceTest) elements.btnAddLeadEntranceTest.disabled = false;
+        if (elements.leadEntranceTestLinkNote) {
+          elements.leadEntranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
+        }
+      }
+      showToast(wasCreated ? 'Lead created successfully.' : 'Lead updated successfully.', 'success');
       await refreshLeadPipeline();
+      if (wasCreated && leadWorkspaceController && typeof leadWorkspaceController.refreshLeadEntranceTests === 'function') {
+        await leadWorkspaceController.refreshLeadEntranceTests();
+      }
+      if (!wasCreated) {
+        hideStudentModalSurface();
+        closeStudentProfile();
+      }
       return json;
     } catch (error) {
       console.error('[CRM Admin] Save lead from modal failed:', error);

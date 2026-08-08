@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260808-v1.8.55">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260808-v1.8.56">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260808-v1.8.55" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260808-v1.8.55&books-reader=r3" />
+  <link rel="stylesheet" href="style.css?v=20260808-v1.8.56" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260808-v1.8.56&books-reader=r3" />
 </head>
 
 <body>
@@ -814,39 +814,6 @@
               <div class="crm-muted">Select a lead to view activity.</div>
             </div>
           </section>
-          <section id="lead-entrance-test-section" class="crm-workspace-card">
-            <div class="crm-section-header">
-              <div>
-                <h3>Entrance Tests</h3>
-                <p class="crm-muted">Generate single-use learner links.</p>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <select id="lead-entrance-test-type" class="crm-input" style="min-width: 200px;">
-                <option value="entrance_test_36plus_v1">Entrance Test 36+</option>
-                <option value="segmental_screening_v1">Segmental Screening</option>
-              </select>
-              <button id="btn-add-lead-entrance-test" class="crm-btn-primary" type="button" disabled>Add new
-                test</button>
-            </div>
-
-            <div class="crm-entrance-test-link-row" style="margin-top: 10px;">
-              <input id="lead-entrance-test-link" class="crm-input" type="text" readonly
-                placeholder="Generated link will appear here">
-              <button id="btn-copy-lead-entrance-test-link" class="crm-btn-secondary" type="button"
-                disabled>Copy</button>
-              <button id="btn-open-lead-entrance-test-link" class="crm-btn-secondary" type="button"
-                disabled>Open</button>
-            </div>
-
-            <small id="lead-entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner
-              link you can send.</small>
-
-            <div id="lead-entrance-tests-list" class="crm-entrance-tests-list">
-              <div class="crm-muted">No tests yet.</div>
-            </div>
-          </section>
         </div>
         <div id="lead-templates-automations" class="crm-workspace-grid">
           <section class="crm-workspace-card">
@@ -1288,6 +1255,39 @@
                 <input type="number" id="lead-probability" name="probability" class="crm-input" min="0" max="100" placeholder="e.g. 50">
               </div>
             </div>
+            <section id="lead-entrance-test-section" class="crm-entrance-test-panel" style="margin-top: 24px;">
+              <div class="crm-entrance-test-header">
+                <div>
+                  <h4>Entrance Tests</h4>
+                  <p class="crm-muted">Generate single-use learner links for this lead.</p>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="lead-entrance-test-type" class="crm-input" style="min-width: 200px;">
+                  <option value="entrance_test_36plus_v1">Entrance Test 36+</option>
+                  <option value="segmental_screening_v1">Segmental Screening</option>
+                </select>
+                <button id="btn-add-lead-entrance-test" class="crm-btn-primary" type="button" disabled>Add new
+                  test</button>
+              </div>
+
+              <div class="crm-entrance-test-link-row" style="margin-top: 10px;">
+                <input id="lead-entrance-test-link" class="crm-input" type="text" readonly
+                  placeholder="Generated link will appear here">
+                <button id="btn-copy-lead-entrance-test-link" class="crm-btn-secondary" type="button"
+                  disabled>Copy</button>
+                <button id="btn-open-lead-entrance-test-link" class="crm-btn-secondary" type="button"
+                  disabled>Open</button>
+              </div>
+
+              <small id="lead-entrance-test-link-note" class="text-muted">Save the lead first to create a single-use
+                learner link.</small>
+
+              <div id="lead-entrance-tests-list" class="crm-entrance-tests-list">
+                <div class="crm-muted">No tests yet.</div>
+              </div>
+            </section>
             <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
               <section class="crm-workspace-card">
                 <div class="crm-section-header">
@@ -2500,48 +2500,48 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260808-v1.8.55"></script>
-  <script src="js/classroom-api.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/utils.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/state.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/dom.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/courses.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/students.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/student-360.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/classrooms.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/leads.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/activities.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/enrollments.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/attendance.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/finance-workflow.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/finance.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/communications.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/staff-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/student-finance.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/live-delivery.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/classroom-modal.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/student-modal.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/course-modal.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/lead-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/communications-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/books-workspace.js?v=20260808-v1.8.55&books-reader=r3"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/dashboard.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/governance.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/index.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260808-v1.8.55"></script>
-  <script src="js/crm/devtools-access.js?v=20260808-v1.8.55&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260808-v1.8.55"></script>
-  <script src="arpabet-ipa-map.js?v=20260808-v1.8.55"></script>
-  <script src="phonetics.js?v=20260808-v1.8.55"></script>
-  <script src="crm-admin.js?v=20260808-v1.8.55"></script>
+  <script src="js/auth-session-guard.js?v=20260808-v1.8.56"></script>
+  <script src="js/classroom-api.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/utils.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/state.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/dom.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/courses.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/students.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/student-360.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/classrooms.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/leads.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/activities.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/enrollments.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/attendance.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/finance-workflow.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/finance.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/communications.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/staff-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/student-finance.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/live-delivery.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/classroom-modal.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/student-modal.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/course-modal.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/lead-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/communications-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/books-workspace.js?v=20260808-v1.8.56&books-reader=r3"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/dashboard.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/governance.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/index.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260808-v1.8.56"></script>
+  <script src="js/crm/devtools-access.js?v=20260808-v1.8.56&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260808-v1.8.56"></script>
+  <script src="arpabet-ipa-map.js?v=20260808-v1.8.56"></script>
+  <script src="phonetics.js?v=20260808-v1.8.56"></script>
+  <script src="crm-admin.js?v=20260808-v1.8.56"></script>
 </body>
 
 </html>

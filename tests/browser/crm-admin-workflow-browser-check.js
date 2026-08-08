@@ -573,6 +573,7 @@ async function main() {
   const pageErrors = [];
   fs.mkdirSync(path.join(process.cwd(), 'tmp'), { recursive: true });
   const agentSourceScreenshotPath = path.join('tmp', 'crm-agent-source-browser-check.png');
+  const secondLeadScreenshotPath = path.join('tmp', 'crm-second-new-lead-browser-check.png');
   const browser = await chromium.launch({ headless: true });
 
   try {
@@ -651,7 +652,20 @@ async function main() {
     await page.waitForSelector('#lead-list-container');
     await page.waitForFunction(() => !!document.querySelector('#lead-agent-source option[value="agent-source-1"]'));
 
+    assert.strictEqual(
+      await page.locator('#student-info #lead-entrance-test-section').count(),
+      1,
+      'Lead entrance-test controls must live inside the shared student Info tab.'
+    );
+    assert.strictEqual(
+      await page.locator('#lead-workspace #lead-entrance-test-section').count(),
+      0,
+      'Lead entrance-test controls must not remain in the page-level workspace.'
+    );
+
     await page.click('#btn-new-lead');
+    await page.waitForSelector('#crm-student-modal', { state: 'visible' });
+    assert.strictEqual(await page.isDisabled('#btn-add-lead-entrance-test'), true);
     await page.fill('#lead-name', 'Lead One');
     await page.fill('#lead-email', 'lead.one@example.com');
     await page.fill('#lead-phone', '0900000001');
@@ -661,6 +675,9 @@ async function main() {
     await page.fill('#lead-probability', '55');
     await page.click('#btn-save-lead');
     await page.waitForSelector('.crm-lead-link[data-lead-id="lead-1"]');
+    await page.waitForFunction(() => document.getElementById('crm-student-modal')?.getAttribute('aria-hidden') === 'false');
+    assert.strictEqual(await page.textContent('#crm-student-modal-title'), 'Edit Lead Profile');
+    assert.strictEqual(await page.isDisabled('#btn-add-lead-entrance-test'), false);
 
     const leadCreateRequest = await waitForRequest(
       requestLog,
@@ -671,13 +688,11 @@ async function main() {
     assert.strictEqual(leadCreateRequest.body.stage, 'contacted');
     assert.strictEqual(leadCreateRequest.body.source, 'Agent');
 
-    await page.click('.crm-lead-link[data-lead-id="lead-1"]');
-    await page.waitForSelector('#lead-workspace', { state: 'visible' });
-
     await page.selectOption('#lead-entrance-test-type', 'segmental_screening_v1');
     await page.click('#btn-add-lead-entrance-test');
     await page.waitForFunction(() => /token-test-1/.test(document.getElementById('lead-entrance-test-link')?.value || ''));
     await page.waitForFunction(() => /created/i.test(document.getElementById('lead-entrance-tests-list')?.textContent || ''));
+    assert.strictEqual(await page.locator('#lead-workspace').isVisible(), false);
 
     const testCreateRequest = await waitForRequest(
       requestLog,
@@ -685,6 +700,40 @@ async function main() {
       'Expected lead entrance-test create request.'
     );
     assert.strictEqual(testCreateRequest.body.testType, 'segmental_screening_v1');
+
+    await page.click('#btn-close-student-modal');
+    await page.waitForSelector('#crm-student-modal', { state: 'hidden' });
+    await page.click('.crm-lead-link[data-lead-id="lead-1"]');
+    await page.waitForSelector('#crm-student-modal', { state: 'visible' });
+    assert.strictEqual(await page.textContent('#crm-student-modal-title'), 'Edit Lead Profile');
+    assert.strictEqual(await page.inputValue('#lead-name'), 'Lead One');
+    await page.fill('#lead-name', 'Lead One Updated');
+    await page.click('#btn-save-lead');
+    await page.waitForSelector('#crm-student-modal', { state: 'hidden' });
+    await page.waitForFunction(() => document.querySelector('.crm-lead-link[data-lead-id="lead-1"]')?.textContent === 'Lead One Updated');
+
+    await page.evaluate(() => {
+      document.getElementById('lead-composer').style.display = 'none';
+      document.getElementById('crm-student-modal-title').textContent = 'New Student Profile';
+      document.querySelector('#crm-student-modal .crm-modal-content').scrollTop = 600;
+    });
+    await page.click('#btn-new-lead');
+    await page.waitForSelector('#crm-student-modal', { state: 'visible' });
+    assert.strictEqual(await page.textContent('#crm-student-modal-title'), 'New Lead Profile');
+    assert.strictEqual(await page.locator('#lead-composer').isVisible(), true, 'Opening another new lead must restore the full lead Info form.');
+    assert.strictEqual(await page.locator('#lead-name').isVisible(), true);
+    assert.strictEqual(await page.inputValue('#lead-name'), '');
+    assert.strictEqual(
+      await page.locator('#crm-student-modal .crm-modal-content').evaluate((element) => element.scrollTop),
+      0,
+      'Opening another new lead must reset the Info modal to the top.'
+    );
+    assert.strictEqual(await page.locator('#btn-save-lead').isVisible(), true);
+    assert.strictEqual(await page.locator('#btn-save-student').isVisible(), false);
+    await page.locator('#crm-student-modal').screenshot({ path: secondLeadScreenshotPath });
+    console.log(`Screenshot saved to ${secondLeadScreenshotPath}`);
+    await page.click('#btn-close-student-modal');
+    await page.waitForSelector('#crm-student-modal', { state: 'hidden' });
 
     const submitHarnessResult = await page.evaluate(() => fetch('/api/test-harness/submit-lead-test', {
       method: 'POST',
@@ -701,7 +750,7 @@ async function main() {
 
     await page.click('.btn-convert-lead[data-lead-id="lead-1"]');
     await page.waitForSelector('#crm-student-modal', { state: 'visible' });
-    await page.waitForFunction(() => (document.getElementById('lead-name') || document.getElementById('student-name'))?.value === 'Lead One');
+    await page.waitForFunction(() => (document.getElementById('lead-name') || document.getElementById('student-name'))?.value === 'Lead One Updated');
     await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
     await page.waitForFunction(() => /submitted/i.test(document.getElementById('entrance-tests-list')?.textContent || ''));
 

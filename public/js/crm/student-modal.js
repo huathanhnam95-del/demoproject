@@ -48,7 +48,10 @@ window.CrmStudentModal = (function () {
             modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
             modalState.studentId = null;
             modalState.studentProfile = null;
+            modalState.isLeadMode = false;
+            modalState.leadId = null;
             modalState.createdTestLinks = new Map();
+            modalState.leadCreatedTestLinks = new Map();
             modalState.classroomMatches = [];
 
             switchStudentTab('info');
@@ -96,6 +99,21 @@ window.CrmStudentModal = (function () {
             if (elements.studentIdBadge) {
                 elements.studentIdBadge.style.display = 'none';
                 elements.studentIdBadge.textContent = 'ID: —';
+            }
+
+            if (elements.leadEntranceTestSection) elements.leadEntranceTestSection.style.display = 'none';
+            if (elements.btnAddLeadEntranceTest) {
+                elements.btnAddLeadEntranceTest.disabled = true;
+                elements.btnAddLeadEntranceTest.textContent = 'Add new test';
+            }
+            if (elements.leadEntranceTestLinkInput) elements.leadEntranceTestLinkInput.value = '';
+            if (elements.btnCopyLeadEntranceTestLink) elements.btnCopyLeadEntranceTestLink.disabled = true;
+            if (elements.btnOpenLeadEntranceTestLink) elements.btnOpenLeadEntranceTestLink.disabled = true;
+            if (elements.leadEntranceTestLinkNote) {
+                elements.leadEntranceTestLinkNote.textContent = 'Save the lead first to create a single-use learner link.';
+            }
+            if (elements.leadEntranceTestsList) {
+                elements.leadEntranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
             }
 
             if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;

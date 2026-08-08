@@ -5,6 +5,7 @@ import {
     buildLexicalFallbackFeedback,
     buildNativeOnlyChartData,
     canShowDetailedFeedback,
+    cleanPitchContour,
     hzToRelativeSemitones,
     normalizeChartSpans
 } from '../../public/pronunciation-analyzer/chart-data.js';
@@ -12,6 +13,29 @@ import {
 assert.equal(hzToRelativeSemitones(200, 100), 12);
 assert.equal(hzToRelativeSemitones(100, 100), 0);
 assert.equal(hzToRelativeSemitones(null, 100), null);
+
+const smoothedContour = cleanPitchContour([
+    { x: 0, y: 0, rawHz: 100 },
+    { x: 0.01, y: 0.4, rawHz: 102 },
+    { x: 0.02, y: 12, rawHz: 200 },
+    { x: 0.03, y: 0.2, rawHz: 101 },
+    { x: 0.04, y: -0.2, rawHz: 99 }
+]);
+assert.ok(smoothedContour[2].y < 1, 'single-frame octave jumps must be removed from the displayed contour');
+assert.equal(smoothedContour[2].rawHz, 200, 'smoothing must retain raw Hz for truthful tooltips');
+
+const separatedContour = cleanPitchContour([
+    { x: 0, y: 0, rawHz: 100 },
+    { x: 0.01, y: 0.5, rawHz: 103 },
+    { x: 0.02, y: null, rawHz: null },
+    { x: 0.03, y: 11.8, rawHz: 198 },
+    { x: 0.04, y: 12, rawHz: 200 }
+]);
+assert.deepEqual(
+    separatedContour.map((point) => point.y),
+    [0, 0.5, null, 11.8, 12],
+    'smoothing must not blend separate voiced runs across an unvoiced gap'
+);
 
 const native = {
     pitch: { times: [0, 0.1, 0.2], values: [100, 200, null] },

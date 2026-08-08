@@ -6,6 +6,7 @@
 
 import { config } from './config.js';
 import { DatabaseService } from './database-service.js';
+import { matchLearnerIPA } from './learner-ipa.js';
 import { STRESS_WEIGHTS, calculateStressScore, findStressedSyllable } from './stress-utils.js';
 import {
     ALGORITHM_VERSION,
@@ -30,20 +31,26 @@ export class WordReferenceService {
 
     async decorateLearnerIPA(reference) {
         const phonetics = typeof window !== 'undefined' ? window.Phonetics : null;
-        if (!reference?.variants || !phonetics || typeof phonetics.getIPA !== 'function') {
+        if (!reference?.variants || !phonetics || typeof phonetics.getIPAWithSource !== 'function') {
             return reference;
         }
 
-        let learnerDisplayIpa = '';
+        let result;
         try {
-            learnerDisplayIpa = await phonetics.getIPA(reference.word);
+            result = await phonetics.getIPAWithSource(reference.word);
         } catch (error) {
             console.warn('[WordReferenceService] Shared learner IPA lookup failed:', error);
+            return reference;
         }
 
-        const variants = learnerDisplayIpa
-            ? reference.variants.map((variant) => ({ ...variant, learnerDisplayIpa }))
-            : reference.variants;
+        if (!result?.ipa) return reference;
+
+        const allLearnerIPAs = [result.ipa, ...(result.alternatives || [])].filter(Boolean);
+
+        const variants = reference.variants.map((variant) => {
+            const learnerDisplayIpa = matchLearnerIPA(variant, allLearnerIPAs);
+            return { ...variant, learnerDisplayIpa };
+        });
 
         return { ...reference, variants };
     }

@@ -20,7 +20,10 @@ const child = spawnSync(
       `process.stdout.write(${JSON.stringify(marker)}); ` +
       `})().catch(() => process.exit(5));`,
   ],
-  { encoding: 'utf8', timeout: 5000 },
+  // Loading Playwright can exceed five seconds on a cold Windows cache even
+  // though the harness starts and closes correctly. Keep the contract bounded
+  // without turning dependency startup time into a false product failure.
+  { encoding: 'utf8', timeout: 15000 },
 );
 
 assert.strictEqual(child.error, undefined, child.error?.message || 'module import timed out');

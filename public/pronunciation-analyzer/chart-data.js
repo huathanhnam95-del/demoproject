@@ -21,20 +21,65 @@ export function hzToRelativeSemitones(value, speakerMedianF0) {
     return Number((12 * Math.log2(Number(value) / Number(speakerMedianF0))).toFixed(4));
 }
 
+export function cleanPitchContour(points) {
+    const cleaned = points.map((point) => ({ ...point }));
+    let segmentStart = 0;
+
+    while (segmentStart < points.length) {
+        while (segmentStart < points.length && points[segmentStart].y === null) segmentStart += 1;
+        if (segmentStart >= points.length) break;
+
+        let segmentEnd = segmentStart;
+        while (segmentEnd + 1 < points.length && points[segmentEnd + 1].y !== null) segmentEnd += 1;
+
+        // Short voiced runs do not contain enough context to distinguish a
+        // real contour movement from an octave error. Preserve them verbatim.
+        if (segmentEnd - segmentStart + 1 >= 5) {
+            const medianFiltered = cleaned.map((point) => ({ ...point }));
+            for (let index = segmentStart; index <= segmentEnd; index += 1) {
+                const windowStart = Math.max(segmentStart, index - 2);
+                const windowEnd = Math.min(segmentEnd, index + 2);
+                const window = [];
+                for (let cursor = windowStart; cursor <= windowEnd; cursor += 1) {
+                    window.push(points[cursor].y);
+                }
+                medianFiltered[index].y = Number(median(window).toFixed(4));
+            }
+
+            for (let index = segmentStart; index <= segmentEnd; index += 1) {
+                if (index === segmentStart || index === segmentEnd) {
+                    cleaned[index].y = medianFiltered[index].y;
+                    continue;
+                }
+                cleaned[index].y = Number((
+                    medianFiltered[index - 1].y * 0.25
+                    + medianFiltered[index].y * 0.5
+                    + medianFiltered[index + 1].y * 0.25
+                ).toFixed(4));
+            }
+        }
+
+        segmentStart = segmentEnd + 1;
+    }
+
+    return cleaned;
+}
+
 function relativePitchSeries(analysis) {
     const times = Array.isArray(analysis?.pitch?.times) ? analysis.pitch.times : [];
     const values = Array.isArray(analysis?.pitch?.values) ? analysis.pitch.values : [];
     const speakerMedianF0 = median(values.filter(finitePositive));
+    const rawPoints = times.map((time, index) => {
+        const rawHz = finitePositive(values[index]) ? Number(values[index]) : null;
+        return {
+            x: Number(time),
+            y: hzToRelativeSemitones(rawHz, speakerMedianF0),
+            rawHz
+        };
+    });
     return {
         medianHz: speakerMedianF0,
-        points: times.map((time, index) => {
-            const rawHz = finitePositive(values[index]) ? Number(values[index]) : null;
-            return {
-                x: Number(time),
-                y: hzToRelativeSemitones(rawHz, speakerMedianF0),
-                rawHz
-            };
-        })
+        points: cleanPitchContour(rawPoints)
     };
 }
 

@@ -2737,13 +2737,25 @@ body {
 }
 
 .crm-books-workspace.sources-collapsed {
-  grid-template-columns: 0px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr);
 }
 .crm-books-workspace.sources-collapsed .crm-books-sources-panel {
   overflow: hidden;
-  width: 0;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
-  border-right: none;
+  border-right: 1px solid var(--books-border);
+}
+.crm-books-workspace.sources-collapsed .crm-books-sources-header {
+  justify-content: center;
+  padding: 12px 6px;
+}
+.crm-books-workspace.sources-collapsed .crm-books-sources-header h3,
+.crm-books-workspace.sources-collapsed .crm-books-sources-count,
+.crm-books-workspace.sources-collapsed .crm-books-add-btn,
+.crm-books-workspace.sources-collapsed .crm-books-search-wrap,
+.crm-books-workspace.sources-collapsed .crm-books-list {
+  display: none;
 }
 
 @media (max-width: 768px) {
@@ -2768,8 +2780,12 @@ body {
 .crm-books-sources-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   padding: 16px;
+}
+.crm-books-sources-header h3 {
+  flex: 1;
+  min-width: 0;
 }
 
 .crm-books-sources-count {
@@ -2952,6 +2968,7 @@ body {
   overflow-y: auto;
   padding: 20px 24px;
   min-height: 0;
+  font-size: var(--crm-books-reader-font-scale, 100%);
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -2966,25 +2983,29 @@ body {
 .crm-books-tab-body.chat-active .crm-books-chat-header {
   margin: 0;
   padding: 16px 24px 12px;
+  order: 0;
   flex-shrink: 0;
   border-bottom: 1px solid var(--books-border);
 }
 .crm-books-tab-body.chat-active .crm-books-chat-messages {
+  order: 2;
   flex: 1;
   overflow-y: auto;
   padding: 16px 24px;
 }
 .crm-books-tab-body.chat-active .crm-books-chat-starters {
+  order: 2;
   flex: 1;
   overflow-y: auto;
   padding: 16px 24px;
 }
 .crm-books-tab-body.chat-active .crm-books-composer {
+  order: 1;
   flex-shrink: 0;
   position: static;
   border-radius: 0;
   border: none;
-  border-top: 1px solid var(--books-border);
+  border-bottom: 1px solid var(--books-border);
   margin: 0;
   padding: 12px 24px;
 }
@@ -2992,7 +3013,7 @@ body {
 /* Summary Tab */
 .crm-books-overview {
   line-height: 1.95;
-  font-size: 1.08rem;
+  font-size: 1.08em;
   color: var(--books-text);
   margin-bottom: 16px;
   overflow-wrap: break-word;
@@ -3060,7 +3081,7 @@ body {
   box-sizing: border-box;
   margin-bottom: 16px;
   line-height: 1.85;
-  font-size: 1.05rem;
+  font-size: 1.05em;
   animation: booksSlideIn 0.3s ease-out;
 }
 
@@ -3098,7 +3119,7 @@ body {
   border: 0;
   font-family: inherit;
   border-radius: var(--books-radius-pill);
-  font-size: 0.7rem;
+  font-size: 0.7em;
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -3119,7 +3140,7 @@ body {
   vertical-align: middle;
 }
 .crm-books-citation-button-page {
-  font-size: 0.72rem;
+  font-size: 0.72em;
   line-height: 1;
   white-space: nowrap;
 }
@@ -3141,7 +3162,7 @@ body {
   pointer-events: auto;
   padding: 12px;
   z-index: 1000;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   border: 1px solid var(--books-border);
   box-sizing: border-box;
 }
@@ -3156,13 +3177,15 @@ body {
 .crm-books-citation-snippet {
   color: var(--books-text-muted);
   font-style: italic;
-  font-size: 0.8rem;
+  font-size: 0.8em;
   overflow-wrap: anywhere;
 }
 .crm-books-citation-preview.visible {
   display: block;
 }
 .crm-books-citation-ref:focus-visible,
+.crm-books-sources-header-toggle:focus-visible,
+.crm-books-download-btn:focus-visible,
 .crm-books-thread-rename-btn:focus-visible,
 .crm-books-history-open:focus-visible,
 .crm-books-new-chat-btn:focus-visible,
@@ -3218,7 +3241,7 @@ body {
   border-radius: 12px;
   padding: 10px 14px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.9em;
   outline: none;
 }
 .crm-books-composer-input:focus {
@@ -3269,9 +3292,9 @@ body {
   color: var(--books-danger, #C53030);
 }
 
-/* Add source button (bottom of sources panel) */
+/* Add source button (top of sources panel) */
 .crm-books-add-btn {
-  margin: 12px 16px 16px;
+  margin: 0 16px 12px;
   padding: 10px 16px;
   background: var(--books-accent);
   color: #fff;
@@ -3371,7 +3394,7 @@ body {
 }
 .crm-books-chat-draft-hint {
   color: var(--books-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.78em;
   white-space: nowrap;
 }
 .crm-books-thread-rename-btn {
@@ -3424,7 +3447,7 @@ body {
   border: 1px solid var(--books-border);
   border-radius: var(--books-radius-sm);
   padding: 6px 10px;
-  font-size: 0.8rem;
+  font-size: 0.8em;
   background: var(--books-surface);
   color: var(--books-text);
   max-width: 220px;
@@ -3438,7 +3461,7 @@ body {
   border: 1px solid var(--books-border);
   border-radius: var(--books-radius-sm);
   padding: 6px 10px;
-  font-size: 0.8rem;
+  font-size: 0.8em;
   cursor: pointer;
   color: var(--books-text-muted);
   display: flex;
@@ -3465,15 +3488,34 @@ body {
   padding-bottom: 16px;
   border-bottom: 1px solid var(--books-border);
 }
+.crm-books-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 1px solid var(--books-border);
+  border-radius: var(--books-radius-sm);
+  padding: 6px 10px;
+  background: var(--books-surface);
+  color: var(--books-text-muted);
+  cursor: pointer;
+  font-size: 0.8em;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.crm-books-download-btn:hover {
+  color: var(--books-accent);
+  border-color: var(--books-accent);
+}
 .crm-books-history-header h4 {
   margin: 0;
   font-family: var(--books-font-display);
-  font-size: 1.15rem;
+  font-size: 1.15em;
 }
 .crm-books-history-header p {
   margin: 5px 0 0;
   color: var(--books-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 .crm-books-history-new-chat {
   flex-shrink: 0;
@@ -3504,6 +3546,7 @@ body {
   color: var(--books-text);
   cursor: pointer;
   padding: 12px 10px;
+  font-size: inherit;
   text-align: left;
 }
 .crm-books-history-row-title {
@@ -3515,7 +3558,7 @@ body {
 }
 .crm-books-history-meta {
   color: var(--books-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.78em;
 }
 .crm-books-history-rename-btn {
   margin-right: 8px;
@@ -3613,7 +3656,7 @@ body {
 /* Section card title */
 .crm-books-section-title {
   font-family: var(--books-font-display);
-  font-size: 0.9rem;
+  font-size: 0.9em;
   font-weight: 600;
   margin: 0 0 8px;
   color: var(--books-text);
@@ -3621,7 +3664,7 @@ body {
 
 /* One liner */
 .crm-books-one-liner {
-  font-size: 1.1rem;
+  font-size: 1.1em;
   font-weight: 600;
   line-height: 1.5;
   margin: 0;
@@ -3632,28 +3675,40 @@ body {
 .crm-books-audience-text {
   margin: 0;
   line-height: 1.8;
-  font-size: 1.08rem;
+  font-size: 1.08em;
   color: var(--books-text-muted);
   overflow-wrap: break-word;
 }
 
 /* Topic pages */
 .crm-books-topic-pages {
-  font-size: 0.7rem;
+  font-size: 0.7em;
   color: var(--books-text-muted);
   margin-left: 4px;
 }
 
 /* Outline elements */
-.crm-books-outline-pages {
-  font-size: 0.8rem;
-  color: var(--books-text-muted);
+.crm-books-outline-page-link {
+  display: inline;
+  font-size: 0.8em;
+  color: var(--books-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
   margin-left: 4px;
+  padding: 0;
+  font-family: inherit;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.crm-books-outline-page-link:hover {
+  text-decoration: underline;
+  color: var(--books-accent-hover, var(--books-accent));
 }
 .crm-books-outline-summary {
   margin: 2px 0 6px;
   color: var(--books-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 .crm-books-outline-toggle {
   cursor: pointer;
@@ -3669,11 +3724,124 @@ body {
   width: 12px;
 }
 
+/* Summary mode picker */
+.crm-books-summary-mode-picker {
+  text-align: center;
+  padding: 24px 16px;
+}
+.crm-books-summary-mode-picker .crm-books-section-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1em;
+}
+.crm-books-mode-options {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+.crm-books-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 24px;
+  border: 1px solid var(--books-border, rgba(128,128,128,0.2));
+  border-radius: var(--books-radius);
+  background: var(--books-surface-dim);
+  color: var(--books-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 280px;
+  text-align: center;
+}
+.crm-books-mode-card:hover {
+  border-color: var(--books-accent);
+  background: var(--books-accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.crm-books-mode-icon {
+  color: var(--books-accent);
+}
+.crm-books-mode-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.crm-books-mode-label {
+  font-family: var(--books-font-display);
+  font-size: 1.05em;
+  font-weight: 600;
+}
+.crm-books-mode-desc {
+  font-size: 0.82em;
+  color: var(--books-text-muted);
+  line-height: 1.5;
+}
+
+/* Summary mode bar (back button) */
+.crm-books-summary-mode-bar {
+  margin-bottom: 12px;
+}
+.crm-books-mode-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--books-accent);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 4px 0;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.crm-books-mode-back:hover {
+  text-decoration: underline;
+}
+
+/* Chapter summary cards */
+.crm-books-chapter-card .crm-books-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.crm-books-chapter-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--books-accent);
+  color: #fff;
+  font-size: 0.72em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.crm-books-chapter-gist {
+  margin: 4px 0 8px;
+  color: var(--books-text);
+  line-height: 1.7;
+  font-size: 0.95em;
+}
+.crm-books-chapter-points {
+  margin: 6px 0 0;
+  padding-inline-start: 1.25rem;
+  color: var(--books-text-muted);
+  font-size: 0.88em;
+  line-height: 1.7;
+}
+.crm-books-chapter-points li {
+  margin-bottom: 3px;
+}
+
 /* Starters */
 .crm-books-starters-label {
   color: var(--books-text-muted);
   margin-bottom: 12px;
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 .crm-books-starters-grid {
   display: flex;
@@ -3711,7 +3879,7 @@ body {
 }
 
 /* Sources toggle button */
-.crm-books-sources-toggle {
+.crm-books-sources-header-toggle {
   background: none;
   border: 1px solid var(--books-border);
   border-radius: var(--books-radius-sm);
@@ -3723,7 +3891,7 @@ body {
   transition: color 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
-.crm-books-sources-toggle:hover {
+.crm-books-sources-header-toggle:hover {
   color: var(--books-accent);
   border-color: var(--books-accent);
 }
@@ -3759,21 +3927,17 @@ body {
   padding: 14px;
 }
 .crm-books-note-card-text {
-  font-size: 0.92rem;
+  font-size: 0.92em;
   line-height: 1.6;
   color: var(--books-text);
   white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .crm-books-note-card-meta {
   margin-top: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: 0.75em;
   color: var(--books-text-muted);
 }
 .crm-books-note-delete-btn {
@@ -3781,7 +3945,7 @@ body {
   border: none;
   cursor: pointer;
   color: var(--books-text-muted);
-  font-size: 1rem;
+  font-size: 1em;
   padding: 0 4px;
 }
 .crm-books-note-delete-btn:hover {
@@ -3791,18 +3955,59 @@ body {
   text-align: center;
   padding: 40px 16px;
   color: var(--books-text-muted);
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 /* Pages viewer */
 .crm-books-pages-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 12px 0 16px;
   border-bottom: 1px solid var(--books-border);
   margin-bottom: 16px;
+}
+.crm-books-page-navigation-group,
+.crm-books-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.crm-books-page-navigation-group {
+  margin-inline: auto;
+}
+.crm-books-font-controls {
+  color: var(--books-text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.crm-books-font-scale-label {
+  font-weight: 600;
+  color: var(--books-text);
+}
+.crm-books-font-scale-small {
+  font-size: 0.78rem;
+}
+.crm-books-font-scale-large {
+  font-size: 1.08rem;
+}
+.crm-books-font-scale {
+  width: 112px;
+  margin: 0;
+  accent-color: var(--books-accent);
+  cursor: pointer;
+}
+.crm-books-font-scale:focus-visible {
+  outline: 2px solid var(--books-accent);
+  outline-offset: 3px;
+}
+.crm-books-font-scale-output {
+  min-width: 3.1em;
+  color: var(--books-text);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
 }
 .crm-books-pages-nav button {
   background: none;
@@ -3845,24 +4050,164 @@ body {
 }
 .crm-books-page-content {
   font-family: var(--books-font-body);
-  font-size: 1.08rem;
+  font-size: 1.08em;
   line-height: 1.85;
   color: var(--books-text);
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+.crm-books-page-content h2,
+.crm-books-page-content h3 {
+  margin: 0 0 14px;
+  color: var(--books-text);
+  line-height: 1.35;
+}
+.crm-books-page-content h2 {
+  font-size: 1.25em;
+}
+.crm-books-page-content h3 {
+  font-size: 1.02em;
+}
+.crm-books-page-content p {
+  margin: 0 0 18px;
+}
+.crm-books-page-content ul {
+  margin: 0 0 18px;
+  padding-inline-start: 1.5rem;
+}
+.crm-books-page-content li {
+  margin-bottom: 8px;
+  padding-inline-start: 4px;
+}
+.crm-books-page-list-marker {
+  display: inline-block;
+  min-width: 2.5em;
+  margin-inline-end: 0.25em;
+  color: var(--books-accent);
+  font-weight: 600;
+}
+.crm-books-page-empty {
+  margin: 0;
+  color: var(--books-text-muted);
+  font-style: italic;
+  text-align: center;
 }
 .crm-books-reading-label {
   max-width: 760px;
   margin: 0 auto 10px;
   color: var(--books-text-muted);
   font-family: var(--books-font-display);
-  font-size: 0.75rem;
+  font-size: 0.75em;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+.crm-books-page-stage {
+  position: relative;
+  max-width: 760px;
+  min-height: 0;
+  margin: 0 auto;
+  font-size: 1em;
+  perspective: 1600px;
+  transform-style: preserve-3d;
+}
+.crm-books-page-stage .crm-books-page-sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.crm-books-page-stage.turning-next,
+.crm-books-page-stage.turning-prev {
+  overflow: hidden;
+}
+.crm-books-page-stage.turning-next > .crm-books-page-sheet,
+.crm-books-page-stage.turning-prev > .crm-books-page-sheet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  backface-visibility: hidden;
+}
+.crm-books-page-stage.turning-next > .crm-books-page-sheet.is-outgoing {
+  z-index: 2;
+  transform-origin: left center;
+  animation: crmBooksPageTurnNext 820ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.crm-books-page-stage.turning-next > .crm-books-page-sheet.is-incoming {
+  z-index: 1;
+}
+.crm-books-page-stage.turning-prev > .crm-books-page-sheet.is-outgoing {
+  z-index: 1;
+}
+.crm-books-page-stage.turning-prev > .crm-books-page-sheet.is-incoming {
+  z-index: 2;
+  transform-origin: right center;
+  animation: crmBooksPageTurnPrev 820ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.crm-books-page-stage.turning-next > .crm-books-page-sheet.is-outgoing::before,
+.crm-books-page-stage.turning-prev > .crm-books-page-sheet.is-incoming::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 16px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  border-radius: 6px;
+}
+.crm-books-page-stage.turning-next > .crm-books-page-sheet.is-outgoing::before {
+  left: -2px;
+  background: linear-gradient(90deg, rgba(62, 48, 29, 0.28), rgba(62, 48, 29, 0));
+  animation: crmBooksPageCurlNext 820ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.crm-books-page-stage.turning-prev > .crm-books-page-sheet.is-incoming::before {
+  right: -2px;
+  background: linear-gradient(270deg, rgba(62, 48, 29, 0.28), rgba(62, 48, 29, 0));
+  animation: crmBooksPageCurlPrev 820ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes crmBooksPageTurnNext {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: 0 8px 24px rgba(43, 37, 28, 0.08);
+  }
+  44% {
+    transform: rotateY(-92deg);
+    box-shadow: 18px 8px 30px rgba(43, 37, 28, 0.2);
+  }
+  100% {
+    transform: rotateY(-180deg);
+    box-shadow: 0 8px 24px rgba(43, 37, 28, 0.04);
+  }
+}
+@keyframes crmBooksPageTurnPrev {
+  0% {
+    transform: rotateY(180deg);
+    box-shadow: 0 8px 24px rgba(43, 37, 28, 0.04);
+  }
+  56% {
+    transform: rotateY(88deg);
+    box-shadow: -18px 8px 30px rgba(43, 37, 28, 0.2);
+  }
+  100% {
+    transform: rotateY(0deg);
+    box-shadow: 0 8px 24px rgba(43, 37, 28, 0.08);
+  }
+}
+@keyframes crmBooksPageCurlNext {
+  0%, 100% { opacity: 0; transform: translateX(0); }
+  44% { opacity: 0.9; transform: translateX(7px); }
+}
+@keyframes crmBooksPageCurlPrev {
+  0% { opacity: 0; transform: translateX(0); }
+  56% { opacity: 0.9; transform: translateX(-7px); }
+  100% { opacity: 0; transform: translateX(0); }
+}
 .crm-books-page-paper {
   max-width: 760px;
-  min-height: 520px;
+  min-height: 0;
   margin: 0 auto;
   padding: 42px 56px 56px;
   background: var(--books-bg);
@@ -3882,7 +4227,7 @@ body {
   border-left: 3px solid var(--books-accent);
   background: var(--books-accent-light);
   color: var(--books-text-muted);
-  font-size: 0.82rem;
+  font-size: 0.82em;
 }
 .crm-books-citation-highlight {
   background: #FFE08A;
@@ -3890,6 +4235,20 @@ body {
   border-radius: 3px;
   padding: 1px 2px;
   box-shadow: 0 0 0 1px rgba(184, 134, 11, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-books-page-stage,
+  .crm-books-page-stage * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .crm-books-page-stage.turning-next > .crm-books-page-sheet,
+  .crm-books-page-stage.turning-prev > .crm-books-page-sheet {
+    animation: none !important;
+  }
 }
 
 /* Usage indicator */
@@ -3995,11 +4354,11 @@ body {
   .crm-books-overview,
   .crm-books-audience-text,
   .crm-books-page-content {
-    font-size: 1rem;
+    font-size: 1em;
     line-height: 1.8;
   }
   .crm-books-msg {
-    font-size: 0.95rem;
+    font-size: 0.95em;
     line-height: 1.75;
   }
   .crm-books-page-paper {
@@ -4011,5 +4370,12 @@ body {
   }
   .crm-books-thread-title-editor {
     flex-wrap: wrap;
+  }
+  .crm-books-mode-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  .crm-books-mode-card {
+    max-width: 100%;
   }
 }

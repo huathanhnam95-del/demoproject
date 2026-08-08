@@ -8,11 +8,10 @@ const style = fs.readFileSync(new URL('../../public/pronunciation-analyzer/style
 
 for (const id of [
     'pa-review-layout',
-    'pa-version-review-rail',
+    'pa-version-review-bar',
     'pa-version-comparison',
     'pa-version-v2',
     'pa-version-v3',
-    'pa-version-boundary-source',
     'pa-version-judgment',
     'pa-version-save',
     'pa-version-save-status'
@@ -21,8 +20,8 @@ for (const id of [
 }
 assert.match(
     html,
-    /<div id="pa-review-layout"[\s\S]*<aside id="pa-version-review-rail"[\s\S]*<div class="pa-review-main">/,
-    'comparison rail and main content must live inside the review layout'
+    /<div id="pa-review-layout"[\s\S]*<div class="pa-review-main">[\s\S]*<div id="pa-version-review-bar"/,
+    'review bar and main content must live inside the review layout'
 );
 assert.match(html, /name="pa-version-judgment"[^>]*value="v2"/);
 assert.match(html, /name="pa-version-judgment"[^>]*value="v3"/);

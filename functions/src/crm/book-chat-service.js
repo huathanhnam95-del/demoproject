@@ -84,7 +84,8 @@ If the excerpts don't answer the question, set answered to false and explain wha
 }
 
 function extractUsage(result) {
-    const u = result?.usageMetadata;
+    const resp = result?.response;
+    const u = resp?.usageMetadata || result?.usageMetadata;
     return {
         inputTokens: u?.promptTokenCount || 0,
         outputTokens: u?.candidatesTokenCount || 0
@@ -315,6 +316,7 @@ module.exports = {
     validateCitations,
     normalizeCitationText,
     buildChatPrompt,
+    extractUsage,
     MAX_DAILY_CHATS,
     MAX_HISTORY_MESSAGES,
     ROLLING_SUMMARY_INTERVAL

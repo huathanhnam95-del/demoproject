@@ -6,6 +6,7 @@ window.CrmBooksWorkspace = (function () {
     const ICON_TRASH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
     const ICON_PLUS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>';
     const ICON_SEND = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
+    const ICON_DOWNLOAD = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>';
     const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
     const ICON_ERROR = '<svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
     const ICON_UPLOAD = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>';
@@ -23,6 +24,19 @@ window.CrmBooksWorkspace = (function () {
 
     const AUTO_THREAD_TITLE_LENGTH = 72;
     const MAX_THREAD_TITLE_LENGTH = 120;
+    const READER_FONT_SCALE_MIN = 80;
+    const READER_FONT_SCALE_MAX = 180;
+    const READER_FONT_SCALE_STEP = 10;
+    const READER_FONT_SCALE_DEFAULT = 100;
+    const READER_FONT_SCALE_STORAGE_KEY = 'crm_books_reader_font_scale';
+
+    function clampReaderFontScale(value) {
+        if (value == null || String(value).trim() === '') return READER_FONT_SCALE_DEFAULT;
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return READER_FONT_SCALE_DEFAULT;
+        const stepped = Math.round(numeric / READER_FONT_SCALE_STEP) * READER_FONT_SCALE_STEP;
+        return Math.min(READER_FONT_SCALE_MAX, Math.max(READER_FONT_SCALE_MIN, stepped));
+    }
 
     function normalizeCitationText(value) {
         return String(value ?? '')
@@ -65,6 +79,156 @@ window.CrmBooksWorkspace = (function () {
             })
             .filter(Boolean)
             .join('\n\n');
+    }
+
+    function pageHeadingLevel(line) {
+        if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(line)) return 2;
+        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion)$/i.test(line)) return 3;
+        return 0;
+    }
+
+    function pageListItemStart(line) {
+        const numbered = line.match(/^((?:\d+\.)+\d+[.)]?|\d+[.)])\s+(.+)$/);
+        if (numbered) return { text: numbered[2], explicit: true, marker: numbered[1] };
+        const bullet = line.match(/^(?:[•●▪◦‣]|[-*])\s+(.+)$/);
+        if (bullet) return { text: bullet[1], explicit: true };
+        if (/^To\s+/i.test(line)) return { text: line, explicit: false };
+        return null;
+    }
+
+    function splitInlineNumberedListLine(line) {
+        const matches = [];
+        const pattern = /(?:^|\s)((?:\d+\.)+\d+[.)]?|\d+[.)])(?=\s)/g;
+        let match;
+        while ((match = pattern.exec(line))) {
+            const markerStart = match.index + match[0].lastIndexOf(match[1]);
+            matches.push({ marker: match[1], start: markerStart, contentStart: markerStart + match[1].length });
+        }
+        if (matches.length < 2 || matches[0].start !== 0) return null;
+
+        const markerParts = matches.map(({ marker }) => marker
+            .replace(/[.)]$/, '')
+            .split('.')
+            .map(Number));
+        const markerDepth = markerParts[0].length;
+        const markerPrefix = markerParts[0].slice(0, -1).join('.');
+        const isConsecutiveSequence = markerParts.every((parts, index) => {
+            const previousParts = markerParts[index - 1];
+            return parts.length === markerDepth
+                && parts.every(Number.isFinite)
+                && parts.slice(0, -1).join('.') === markerPrefix
+                && (index === 0 || parts[markerDepth - 1] === previousParts[markerDepth - 1] + 1);
+        });
+        if (!isConsecutiveSequence) return null;
+
+        return matches.map((item, index) => ({
+            text: line.slice(item.contentStart, matches[index + 1]?.start ?? line.length).trim(),
+            marker: item.marker
+        })).filter((item) => item.text);
+    }
+
+    function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
+        const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
+        const lines = String(text ?? '')
+            .replace(/\r\n?/g, '\n')
+            .split('\n')
+            .map((line) => line.trim());
+        const html = [];
+        let paragraphLines = [];
+
+        const renderInline = (value) => highlightQuote
+            ? highlightPageText(value, highlightQuote, escape).html
+            : escape(value);
+        const renderList = (items) => '<ul>' +
+            items.map((item) => {
+                const marker = item.marker ? `<span class="crm-books-page-list-marker">${renderInline(item.marker)}</span> ` : '';
+                return `<li>${marker}${renderInline(item.text)}</li>`;
+            }).join('') +
+            `</ul>`;
+        const flushParagraph = () => {
+            if (!paragraphLines.length) return;
+            const value = reflowPageText(paragraphLines.join('\n'));
+            if (value) html.push(`<p>${renderInline(value)}</p>`);
+            paragraphLines = [];
+        };
+
+        let index = 0;
+        while (index < lines.length) {
+            const line = lines[index];
+            if (!line) {
+                flushParagraph();
+                index += 1;
+                continue;
+            }
+
+            const headingLevel = pageHeadingLevel(line);
+            if (headingLevel) {
+                flushParagraph();
+                html.push(`<h${headingLevel}>${renderInline(line)}</h${headingLevel}>`);
+                index += 1;
+                continue;
+            }
+
+            const inlineNumberedItems = splitInlineNumberedListLine(line);
+            if (inlineNumberedItems) {
+                flushParagraph();
+                html.push(renderList(inlineNumberedItems));
+                index += 1;
+                continue;
+            }
+
+            const firstItem = pageListItemStart(line);
+            if (firstItem) {
+                const items = [];
+                let cursor = index;
+                while (cursor < lines.length && lines[cursor]) {
+                    const itemStart = pageListItemStart(lines[cursor]);
+                    if (!itemStart) break;
+                    const itemLines = [itemStart.text];
+                    cursor += 1;
+                    while (cursor < lines.length && lines[cursor]
+                        && !pageHeadingLevel(lines[cursor])
+                        && !pageListItemStart(lines[cursor])) {
+                        itemLines.push(lines[cursor]);
+                        cursor += 1;
+                    }
+                    items.push({
+                        text: reflowPageText(itemLines.join('\n')),
+                        explicit: itemStart.explicit,
+                        marker: itemStart.marker
+                    });
+                }
+
+                if (items.length > 1 || items[0]?.explicit) {
+                    flushParagraph();
+                    html.push(renderList(items));
+                    index = cursor;
+                    continue;
+                }
+            }
+
+            paragraphLines.push(line);
+            index += 1;
+        }
+        flushParagraph();
+        return html.join('');
+    }
+
+    function getReadablePageNumbers(pages) {
+        return (Array.isArray(pages) ? pages : [])
+            .map((text, index) => clean(text) ? index + 1 : null)
+            .filter((page) => page != null);
+    }
+
+    function findAdjacentReadablePage(pages, currentPage, direction) {
+        const source = Array.isArray(pages) ? pages : [];
+        const step = Number(direction) < 0 ? -1 : 1;
+        let page = Number(currentPage) + step;
+        while (page >= 1 && page <= source.length) {
+            if (clean(source[page - 1])) return page;
+            page += step;
+        }
+        return Number(currentPage);
     }
 
     function normalizeWithSourceMap(value) {
@@ -123,6 +287,61 @@ window.CrmBooksWorkspace = (function () {
             html: `${escHtml(text.slice(0, match.start))}<mark class="crm-books-citation-highlight">${escHtml(text.slice(match.start, match.end))}</mark>${escHtml(text.slice(match.end))}`,
             matched: true
         };
+    }
+
+    function buildCitationQuoteCandidates(citation) {
+        const candidates = [];
+        const seen = new Set();
+        const add = (value) => {
+            const quote = reflowPageText(value);
+            const normalized = normalizeCitationText(quote);
+            if (normalized.length < 12 || seen.has(normalized)) return;
+            seen.add(normalized);
+            candidates.push(quote);
+        };
+
+        add(citation?.highlightText);
+
+        const snippet = String(citation?.snippet || '').replace(/\r\n?/g, '\n').trim();
+        const blocks = snippet.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
+        blocks.forEach((block) => {
+            add(block);
+            const sentences = reflowPageText(block).match(/[^.!?]+[.!?]+(?:["']|$)?/g) || [];
+            sentences.forEach(add);
+
+            const words = reflowPageText(block).split(/\s+/).filter(Boolean);
+            [18, 12, 8].forEach((windowSize) => {
+                if (words.length <= windowSize) return;
+                const step = Math.max(1, Math.floor(windowSize / 2));
+                for (let start = 0; start + windowSize <= words.length; start += step) {
+                    add(words.slice(start, start + windowSize).join(' '));
+                }
+                add(words.slice(words.length - windowSize).join(' '));
+            });
+        });
+
+        return candidates;
+    }
+
+    function resolveCitationLocation(pages, citation) {
+        const sourcePages = Array.isArray(pages) ? pages : [];
+        const totalPages = sourcePages.length;
+        if (!totalPages) return { page: 1, quote: '', matched: false };
+
+        const startPage = Math.max(1, Math.min(Number(citation?.pageStart) || 1, totalPages));
+        const endPage = Math.max(startPage, Math.min(Number(citation?.pageEnd) || startPage, totalPages));
+        const candidates = buildCitationQuoteCandidates(citation);
+
+        for (let page = startPage; page <= endPage; page += 1) {
+            const readingText = reflowPageText(sourcePages[page - 1] || '');
+            for (const quote of candidates) {
+                if (findCitationMatch(readingText, quote)) {
+                    return { page, quote, matched: true };
+                }
+            }
+        }
+
+        return { page: startPage, quote: '', matched: false };
     }
 
     function citationMarker(citation, fallbackIndex = 0) {
@@ -358,11 +577,25 @@ window.CrmBooksWorkspace = (function () {
         let pagesData = null;
         let activeCitation = null;
         let pageNotice = '';
+        let readerFontScale = READER_FONT_SCALE_DEFAULT;
+        let pageTurnInFlight = false;
+        let pageTurnTimer = null;
+        let pageTurnAnimationCleanup = null;
+        let pageTurnToken = 0;
         let editingThreadId = '';
         let editingThreadTitle = '';
         let usageData = null;
+        let summaryMode = '';
+        let sectionDigests = null;
+        let sectionsLoading = false;
 
         const panel = elements.booksPanel || document.querySelector('[data-panel="books"]');
+
+        try {
+            readerFontScale = clampReaderFontScale(localStorage.getItem(READER_FONT_SCALE_STORAGE_KEY));
+        } catch (_ignored) {
+            readerFontScale = READER_FONT_SCALE_DEFAULT;
+        }
 
         function qs(sel) { return panel ? panel.querySelector(sel) : document.querySelector(sel); }
 
@@ -423,6 +656,7 @@ window.CrmBooksWorkspace = (function () {
 
         // --- Render: Explorer Panel (center) ---
         function renderExplorerPanel() {
+            if (pageTurnInFlight) cancelPageTurn();
             const detail = qs('.crm-books-detail');
             if (!detail) return;
 
@@ -464,19 +698,19 @@ window.CrmBooksWorkspace = (function () {
                 : '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
             const usageHtml = renderUsageIndicator();
             const headerHtml = `<div class="crm-books-explorer-header">` +
-                `<button class="crm-books-sources-toggle" title="Toggle sources panel"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>` +
                 `<div class="crm-books-explorer-title-group">` +
                 `<h3 class="crm-books-explorer-title">${escapeHtml(b.title)}</h3>` +
                 `<p class="crm-books-explorer-meta">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' \u00b7 ')}</p>` +
                 `</div>` +
                 usageHtml +
+                `<button class="crm-books-download-btn" data-book-id="${escapeHtml(b.bookId)}" title="Download source" aria-label="Download source">${ICON_DOWNLOAD}<span>Download source</span></button>` +
                 `<button class="crm-books-dark-toggle" title="Toggle dark mode">${darkIcon}</button>` +
                 `<button class="crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book">${ICON_TRASH}</button>` +
                 `</div>`;
 
             const budgetHtml = renderBudgetBanner();
             detail.innerHTML = headerHtml + tabsHtml + budgetHtml +
-                `<div class="crm-books-tab-body${activeTab === 'chat' ? ' chat-active' : ''}">${contentHtml}</div>`;
+                `<div class="crm-books-tab-body${activeTab === 'chat' ? ' chat-active' : ''}" style="--crm-books-reader-font-scale:${readerFontScale}%">${contentHtml}</div>`;
 
             // Auto-scroll chat to bottom
             if (activeTab === 'chat') {
@@ -507,16 +741,52 @@ window.CrmBooksWorkspace = (function () {
         function renderSummaryTab() {
             if (!selectedSummary) return '<div class="crm-books-summary-empty"><p class="crm-muted">No summary available yet.</p></div>';
             const s = selectedSummary;
-            let html = '';
 
-            // One-liner
+            if (!summaryMode) {
+                return renderSummaryModeSelector(s);
+            }
+            if (summaryMode === 'chapters') {
+                return renderChapterSummary(s);
+            }
+            return renderWholeSummary(s);
+        }
+
+        function renderSummaryModeSelector(s) {
+            let html = '';
+            if (s.oneLiner) {
+                html += `<div class="crm-books-section-card">` +
+                    `<p class="crm-books-one-liner">${escapeHtml(s.oneLiner)}</p>` +
+                    `</div>`;
+            }
+            html += `<div class="crm-books-summary-mode-picker">` +
+                `<h4 class="crm-books-section-title">How would you like to explore the summary?</h4>` +
+                `<div class="crm-books-mode-options">` +
+                `<button class="crm-books-mode-card" data-summary-mode="whole">` +
+                `<span class="crm-books-mode-icon">${ICON_BOOK}</span>` +
+                `<span class="crm-books-mode-label">Summarize whole book</span>` +
+                `<span class="crm-books-mode-desc">A detailed overview of the entire book with key topics and structure.</span>` +
+                `</button>` +
+                `<button class="crm-books-mode-card" data-summary-mode="chapters">` +
+                `<span class="crm-books-mode-icon">${ICON_DOC}</span>` +
+                `<span class="crm-books-mode-label">Summarize each chapter</span>` +
+                `<span class="crm-books-mode-desc">Chapter-by-chapter breakdown with a short book overview.</span>` +
+                `</button>` +
+                `</div>` +
+                `</div>`;
+            return html;
+        }
+
+        function renderWholeSummary(s) {
+            let html = `<div class="crm-books-summary-mode-bar">` +
+                `<button class="crm-books-mode-back" data-summary-mode="">&larr; Summary options</button>` +
+                `</div>`;
+
             if (s.oneLiner) {
                 html += `<div class="crm-books-section-card">` +
                     `<p class="crm-books-one-liner">${escapeHtml(s.oneLiner)}</p>` +
                     `</div>`;
             }
 
-            // Overview
             if (s.overview) {
                 html += `<div class="crm-books-section-card">` +
                     `<h4 class="crm-books-section-title">Overview</h4>` +
@@ -524,7 +794,6 @@ window.CrmBooksWorkspace = (function () {
                     `</div>`;
             }
 
-            // Audience
             if (s.audience) {
                 html += `<div class="crm-books-section-card" data-section="audience">` +
                     `<h4 class="crm-books-section-title">Target Audience</h4>` +
@@ -532,7 +801,6 @@ window.CrmBooksWorkspace = (function () {
                     `</div>`;
             }
 
-            // Key Topics
             if (Array.isArray(s.keyTopics) && s.keyTopics.length > 0) {
                 html += `<div class="crm-books-section-card" data-section="topics">` +
                     `<h4 class="crm-books-section-title">Key Topics</h4>` +
@@ -542,7 +810,6 @@ window.CrmBooksWorkspace = (function () {
                     `</div>`;
             }
 
-            // Outline
             if (Array.isArray(s.outline) && s.outline.length > 0) {
                 html += `<div class="crm-books-section-card" data-section="outline">` +
                     `<h4 class="crm-books-section-title">Outline</h4>` +
@@ -553,6 +820,49 @@ window.CrmBooksWorkspace = (function () {
             return html || '<div class="crm-books-summary-empty"><p class="crm-muted">Summary is empty.</p></div>';
         }
 
+        function renderChapterSummary(s) {
+            let html = `<div class="crm-books-summary-mode-bar">` +
+                `<button class="crm-books-mode-back" data-summary-mode="">&larr; Summary options</button>` +
+                `</div>`;
+
+            if (s.oneLiner) {
+                html += `<div class="crm-books-section-card">` +
+                    `<p class="crm-books-one-liner">${escapeHtml(s.oneLiner)}</p>` +
+                    `</div>`;
+            }
+
+            if (s.overview) {
+                html += `<div class="crm-books-section-card">` +
+                    `<h4 class="crm-books-section-title">Book Overview</h4>` +
+                    `<div class="crm-books-overview"><p>${escapeHtml(s.overview).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p></div>` +
+                    `</div>`;
+            }
+
+            if (sectionsLoading) {
+                html += `<div class="crm-books-section-card"><p class="crm-muted">Loading chapter summaries…</p></div>`;
+                return html;
+            }
+
+            if (!Array.isArray(sectionDigests) || sectionDigests.length === 0) {
+                html += `<div class="crm-books-section-card"><p class="crm-muted">No chapter-level summaries available.</p></div>`;
+                return html;
+            }
+
+            html += sectionDigests.map((sec, idx) => {
+                const pages = sec.pageStart != null && sec.pageEnd != null
+                    ? `<button class="crm-books-outline-page-link" data-goto-page="${sec.pageStart}" title="Jump to page ${sec.pageStart}">pp. ${escapeHtml(String(sec.pageStart))}–${escapeHtml(String(sec.pageEnd))}</button>` : '';
+                const keyPointsHtml = Array.isArray(sec.keyPoints) && sec.keyPoints.length > 0
+                    ? `<ul class="crm-books-chapter-points">${sec.keyPoints.map((kp) => `<li>${escapeHtml(kp)}</li>`).join('')}</ul>` : '';
+                return `<div class="crm-books-section-card crm-books-chapter-card">` +
+                    `<h4 class="crm-books-section-title"><span class="crm-books-chapter-number">${idx + 1}</span>${escapeHtml(sec.title)}${pages ? ` ${pages}` : ''}</h4>` +
+                    (sec.gist ? `<p class="crm-books-chapter-gist">${escapeHtml(sec.gist)}</p>` : '') +
+                    keyPointsHtml +
+                    `</div>`;
+            }).join('');
+
+            return html;
+        }
+
         function renderOutline(items, depth = 0) {
             if (!Array.isArray(items) || items.length === 0) return '';
             return `<ol class="crm-books-outline${depth > 0 ? ' crm-books-outline-nested' : ''}">` +
@@ -561,7 +871,7 @@ window.CrmBooksWorkspace = (function () {
                     const isCollapsed = collapsedOutline[key];
                     const hasChildren = Array.isArray(item.children) && item.children.length > 0;
                     const pages = item.pageStart != null && item.pageEnd != null
-                        ? ` <span class="crm-books-outline-pages">pp. ${escapeHtml(String(item.pageStart))}\u2013${escapeHtml(String(item.pageEnd))}</span>` : '';
+                        ? ` <button class="crm-books-outline-page-link" data-goto-page="${item.pageStart}" title="Jump to page ${item.pageStart}">pp. ${escapeHtml(String(item.pageStart))}\u2013${escapeHtml(String(item.pageEnd))}</button>` : '';
                     const summary = item.summary ? `<p class="crm-books-outline-summary">${escapeHtml(item.summary)}</p>` : '';
                     const toggleBtn = hasChildren
                         ? `<button class="crm-books-outline-toggle" data-outline-key="${key}">${isCollapsed ? '\u25b6' : '\u25bc'}</button>`
@@ -593,11 +903,11 @@ window.CrmBooksWorkspace = (function () {
                 `<div class="crm-books-chat-header-left">${titleHtml}</div>` +
                 `<button class="crm-books-new-chat-btn crm-books-new-thread-btn" title="Start a new chat">${ICON_PLUS} New chat</button>` +
                 `</div>` +
-                messagesHtml +
                 `<div class="crm-books-composer">` +
                 `<textarea class="crm-books-composer-input" placeholder="Ask about the book\u2026" rows="1"></textarea>` +
                 `<button class="crm-books-send-btn" title="Send">${ICON_SEND}</button>` +
-                `</div>`;
+                `</div>` +
+                messagesHtml;
         }
 
         function renderThreadTitle(thread) {
@@ -681,6 +991,157 @@ window.CrmBooksWorkspace = (function () {
             );
         }
 
+        const PAGE_TURN_DURATION_MS = 820;
+        const PAGE_TURN_FALLBACK_MS = PAGE_TURN_DURATION_MS + 240;
+
+        function renderPagePaperHtml(pageNumber, sheetClass = '', citationOverride) {
+            const physicalPage = Number(pageNumber) || 1;
+            const pageText = pagesData?.pages?.[physicalPage - 1] ?? '';
+            const citation = citationOverride === undefined ? activeCitation : citationOverride;
+            const formattedText = clean(pageText)
+                ? formatPageText(pageText, escapeHtml, citation?.page === physicalPage ? citation.quote : '')
+                : '<p class="crm-books-page-empty">No extractable text was found on this physical page.</p>';
+            const classes = ['crm-books-page-paper', 'crm-books-page-sheet', sheetClass].filter(Boolean).join(' ');
+            return `<article class="${classes}" data-page-number="${physicalPage}" tabindex="-1" aria-label="Reading view page ${physicalPage} of ${pagesData?.totalPages || 0}">` +
+                `<div class="crm-books-page-content">${formattedText}</div>` +
+                `</article>`;
+        }
+
+        function isReducedMotionPreferred() {
+            return typeof window !== 'undefined'
+                && typeof window.matchMedia === 'function'
+                && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+
+        function setNavigationButtonDisabled(button, disabled) {
+            if (!button) return;
+            button.disabled = disabled;
+            button.setAttribute('aria-disabled', String(disabled));
+        }
+
+        function getPageNavigationState() {
+            const pages = pagesData?.pages || [];
+            const previousPage = findAdjacentReadablePage(pages, currentPage, -1);
+            const nextPage = findAdjacentReadablePage(pages, currentPage, 1);
+            return {
+                previousPage,
+                nextPage,
+                prevDisabled: previousPage === currentPage || pageTurnInFlight,
+                nextDisabled: nextPage === currentPage || pageTurnInFlight
+            };
+        }
+
+        function setPageTurnControlsDisabled(disabled) {
+            setNavigationButtonDisabled(qs('.crm-books-page-prev'), disabled);
+            setNavigationButtonDisabled(qs('.crm-books-page-next'), disabled);
+        }
+
+        function syncPageNavigationControls() {
+            const navigation = getPageNavigationState();
+            setNavigationButtonDisabled(qs('.crm-books-page-prev'), navigation.prevDisabled);
+            setNavigationButtonDisabled(qs('.crm-books-page-next'), navigation.nextDisabled);
+        }
+
+        function clearPageTurnCompletionWait() {
+            if (pageTurnTimer) {
+                clearTimeout(pageTurnTimer);
+                pageTurnTimer = null;
+            }
+            if (pageTurnAnimationCleanup) {
+                pageTurnAnimationCleanup();
+                pageTurnAnimationCleanup = null;
+            }
+        }
+
+        function cancelPageTurn() {
+            pageTurnToken += 1;
+            pageTurnInFlight = false;
+            clearPageTurnCompletionWait();
+            const stage = qs('.crm-books-page-stage');
+            if (stage) {
+                stage.classList.remove('turning-next', 'turning-prev');
+                stage.style.removeProperty('height');
+                stage.querySelectorAll('.crm-books-page-sheet.is-incoming').forEach((sheet) => sheet.remove());
+                stage.querySelector('.crm-books-page-sheet.is-outgoing')?.classList.remove('is-outgoing');
+            }
+            syncPageNavigationControls();
+        }
+
+        function focusAndAnnouncePage(pageNumber, focusSelector = '') {
+            requestAnimationFrame(() => {
+                const preferred = focusSelector ? qs(focusSelector) : null;
+                const fallback = preferred && !preferred.disabled
+                    ? preferred
+                    : qs('.crm-books-page-prev:not(:disabled)') || qs('.crm-books-page-next:not(:disabled)');
+                fallback?.focus({ preventScroll: true });
+                const status = qs('.crm-books-page-turn-status');
+                if (status && pagesData) status.textContent = `Page ${pageNumber} of ${pagesData.totalPages}`;
+            });
+        }
+
+        function commitPageNavigation(targetPage, focusSelector) {
+            currentPage = targetPage;
+            resetPageCitation();
+            renderExplorerPanel();
+            focusAndAnnouncePage(targetPage, focusSelector);
+        }
+
+        function finishPageTurn(targetPage, focusSelector, token) {
+            if (token !== pageTurnToken) return;
+            clearPageTurnCompletionWait();
+            pageTurnInFlight = false;
+            commitPageNavigation(targetPage, focusSelector);
+        }
+
+        function startPageTurn(direction) {
+            if (pageTurnInFlight || !pagesData || activeTab !== 'pages') return;
+            const navigation = getPageNavigationState();
+            const targetPage = direction === 'prev' ? navigation.previousPage : navigation.nextPage;
+            if (targetPage === currentPage) return;
+
+            const focusSelector = direction === 'prev' ? '.crm-books-page-prev' : '.crm-books-page-next';
+            if (isReducedMotionPreferred()) {
+                commitPageNavigation(targetPage, focusSelector);
+                return;
+            }
+
+            const stage = qs('.crm-books-page-stage');
+            const outgoing = stage?.querySelector('.crm-books-page-sheet');
+            if (!stage || !outgoing) {
+                commitPageNavigation(targetPage, focusSelector);
+                return;
+            }
+
+            pageTurnInFlight = true;
+            pageTurnToken += 1;
+            const token = pageTurnToken;
+            setPageTurnControlsDisabled(true);
+
+            stage.insertAdjacentHTML('beforeend', renderPagePaperHtml(targetPage, 'is-incoming', null));
+            const incoming = stage.querySelector('.crm-books-page-sheet.is-incoming');
+            if (!incoming) {
+                finishPageTurn(targetPage, focusSelector, token);
+                return;
+            }
+
+            outgoing.classList.add('is-outgoing');
+            const outgoingHeight = outgoing.getBoundingClientRect().height;
+            const incomingHeight = incoming.getBoundingClientRect().height;
+            stage.style.height = `${Math.max(outgoingHeight, incomingHeight)}px`;
+
+            const animatedSheet = direction === 'next' ? outgoing : incoming;
+            const complete = () => finishPageTurn(targetPage, focusSelector, token);
+            const expectedAnimationName = direction === 'next' ? 'crmBooksPageTurnNext' : 'crmBooksPageTurnPrev';
+            const onAnimationEnd = (event) => {
+                if (event.target !== animatedSheet || event.animationName !== expectedAnimationName) return;
+                complete();
+            };
+            animatedSheet.addEventListener('animationend', onAnimationEnd);
+            pageTurnAnimationCleanup = () => animatedSheet.removeEventListener('animationend', onAnimationEnd);
+            pageTurnTimer = setTimeout(complete, PAGE_TURN_FALLBACK_MS);
+            stage.classList.add(`turning-${direction}`);
+        }
+
         function renderPagesTab() {
             if (!pagesData) {
                 loadPagesMetadata();
@@ -693,23 +1154,27 @@ window.CrmBooksWorkspace = (function () {
                     `<div class="crm-books-empty-icon" style="margin-bottom:12px;">${ICON_DOC}</div>` +
                     `<h4>No Pages</h4><p class="crm-muted">Page data is not available for this book.</p></div>`;
             }
-            const pageText = pagesData.pages?.[currentPage - 1] ?? '';
-            const prevDisabled = currentPage <= 1 ? ' disabled' : '';
-            const nextDisabled = currentPage >= pagesData.totalPages ? ' disabled' : '';
-            const readingText = reflowPageText(pageText);
-            const highlight = activeCitation?.page === currentPage
-                ? highlightPageText(readingText, activeCitation.quote, escapeHtml)
-                : { html: escapeHtml(readingText), matched: false };
+            const navigation = getPageNavigationState();
+            const prevDisabled = navigation.prevDisabled ? ' disabled aria-disabled="true"' : '';
+            const nextDisabled = navigation.nextDisabled ? ' disabled aria-disabled="true"' : '';
             return `<div class="crm-books-pages-nav">` +
+                `<div class="crm-books-page-navigation-group">` +
                 `<button class="crm-books-page-prev"${prevDisabled}>← Prev</button>` +
                 `<span class="crm-books-pages-indicator">Page <input type="number" class="crm-books-page-input" value="${currentPage}" min="1" max="${pagesData.totalPages}"> of ${pagesData.totalPages}</span>` +
                 `<button class="crm-books-page-next"${nextDisabled}>Next →</button>` +
                 `</div>` +
+                `<label class="crm-books-font-controls" for="crm-books-font-scale">` +
+                `<span class="crm-books-font-scale-label">Text size</span>` +
+                `<span class="crm-books-font-scale-small" aria-hidden="true">A</span>` +
+                `<input id="crm-books-font-scale" class="crm-books-font-scale" type="range" min="${READER_FONT_SCALE_MIN}" max="${READER_FONT_SCALE_MAX}" step="${READER_FONT_SCALE_STEP}" value="${readerFontScale}" aria-label="Reader text size" aria-valuetext="${readerFontScale} percent">` +
+                `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
+                `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
+                `</label>` +
+                `<span class="crm-books-page-turn-status crm-books-sr-only" role="status" aria-live="polite" aria-atomic="true">Page ${currentPage} of ${pagesData.totalPages}</span>` +
+                `</div>` +
                 `<div class="crm-books-reading-label">Reading view · extracted text</div>` +
                 (pageNotice ? `<div class="crm-books-page-notice" role="status">${escapeHtml(pageNotice)}</div>` : '') +
-                `<article class="crm-books-page-paper" tabindex="-1" aria-label="Reading view page ${currentPage} of ${pagesData.totalPages}">` +
-                `<div class="crm-books-page-content">${highlight.html}</div>` +
-                `</article>`;
+                `<div class="crm-books-page-stage" data-page-stage>${renderPagePaperHtml(currentPage)}</div>`;
         }
 
         async function loadPagesMetadata() {
@@ -717,13 +1182,47 @@ window.CrmBooksWorkspace = (function () {
             try {
                 const res = await apiGet(`/api/admin/books/${selectedBookId}/pages`);
                 pagesData = res?.data || res;
-                currentPage = 1;
+                currentPage = getReadablePageNumbers(pagesData.pages)[0] || 1;
                 if (activeTab === 'pages') renderExplorerPanel();
             } catch (err) {
                 console.error('[CRM Books] Failed to load pages:', err);
                 pagesData = { totalPages: 0, pages: [] };
                 if (activeTab === 'pages') renderExplorerPanel();
             }
+        }
+
+        async function loadSectionDigests() {
+            if (!selectedBookId || sectionDigests) return;
+            sectionsLoading = true;
+            renderExplorerPanel();
+            try {
+                const res = await apiGet(`/api/admin/books/${selectedBookId}/sections`);
+                sectionDigests = Array.isArray(res?.sections) ? res.sections
+                    : Array.isArray(res?.data?.sections) ? res.data.sections : [];
+            } catch (err) {
+                console.error('[CRM Books] Failed to load sections:', err);
+                sectionDigests = [];
+            }
+            sectionsLoading = false;
+            renderExplorerPanel();
+        }
+
+        async function jumpToPage(pageNumber) {
+            if (!selectedBookId) return;
+            cancelPageTurn();
+            activeTab = 'pages';
+            pageNotice = '';
+            if (!pagesData) await loadPagesMetadata();
+            if (!pagesData || pagesData.totalPages === 0) return;
+            const page = Math.max(1, Math.min(Number(pageNumber) || 1, pagesData.totalPages));
+            currentPage = page;
+            resetPageCitation();
+            pageNotice = `Jumped to page ${page}.`;
+            renderExplorerPanel();
+            requestAnimationFrame(() => {
+                const paper = qs('.crm-books-page-paper');
+                paper?.focus({ preventScroll: true });
+            });
         }
 
         function findMessageCitation(marker) {
@@ -747,6 +1246,7 @@ window.CrmBooksWorkspace = (function () {
             const citation = findMessageCitation(marker);
             if (!citation || !selectedBookId) return;
 
+            cancelPageTurn();
             activeTab = 'pages';
             pageNotice = '';
             if (!pagesData) await loadPagesMetadata();
@@ -756,27 +1256,16 @@ window.CrmBooksWorkspace = (function () {
                 return;
             }
 
-            const startPage = Math.max(1, Math.min(Number(citation.pageStart) || 1, pagesData.totalPages));
-            const endPage = Math.max(startPage, Math.min(Number(citation.pageEnd) || startPage, pagesData.totalPages));
-            const quote = clean(citation.highlightText || citation.snippet);
-            let matchedPage = null;
-            for (let page = startPage; page <= endPage; page += 1) {
-                const readingText = reflowPageText(pagesData.pages?.[page - 1] || '');
-                if (quote && findCitationMatch(readingText, quote)) {
-                    matchedPage = page;
-                    break;
-                }
-            }
-
-            currentPage = matchedPage || startPage;
+            const location = resolveCitationLocation(pagesData.pages, citation);
+            currentPage = location.page;
             activeCitation = {
                 marker: citationMarker(citation),
                 page: currentPage,
-                quote
+                quote: location.quote
             };
-            pageNotice = matchedPage
+            pageNotice = location.matched
                 ? `Citation ${citationMarker(citation)} opened on page ${currentPage}.`
-                : `Citation ${citationMarker(citation)} opened on page ${currentPage}; the exact passage is unavailable in this saved citation.`;
+                : `Citation ${citationMarker(citation)} opened at cited page ${currentPage}.`;
             renderExplorerPanel();
 
             requestAnimationFrame(() => {
@@ -887,7 +1376,7 @@ window.CrmBooksWorkspace = (function () {
             if (notes.length === 0) {
                 return `<div class="crm-books-notes-empty">` +
                     `<p>No saved notes yet.</p>` +
-                    `<p style="font-size:0.8rem; margin-top:8px; color:var(--books-text-muted);">Save interesting chat responses using the Save button on messages.</p>` +
+                    `<p style="font-size:0.8em; margin-top:8px; color:var(--books-text-muted);">Save interesting chat responses using the Save button on messages.</p>` +
                     `</div>`;
             }
             return `<div class="crm-books-notes-list">${notes.map((n) => {
@@ -990,6 +1479,7 @@ window.CrmBooksWorkspace = (function () {
         }
 
         async function selectBook(bookId) {
+            cancelPageTurn();
             selectedBookId = clean(bookId);
             const thisSelection = ++selectionCounter;
             selectedBook = books.find((b) => b.bookId === selectedBookId) || null;
@@ -998,6 +1488,9 @@ window.CrmBooksWorkspace = (function () {
             messages = [];
             selectedThreadId = '';
             activeTab = 'summary';
+            summaryMode = '';
+            sectionDigests = null;
+            sectionsLoading = false;
             collapsedOutline = {};
             pagesData = null;
             currentPage = 1;
@@ -1307,6 +1800,23 @@ window.CrmBooksWorkspace = (function () {
         }
 
         // --- Actions ---
+        async function downloadSource(bookId) {
+            try {
+                const res = await apiGet(`/api/admin/books/${encodeURIComponent(bookId)}/source`);
+                const downloadUrl = res?.downloadUrl || res?.data?.downloadUrl;
+                if (!downloadUrl) throw new Error('Download link missing from server response.');
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = res?.filename || res?.data?.filename || 'source.pdf';
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.click();
+            } catch (err) {
+                console.error('[CRM Books] Source download error:', err);
+                showToast?.(err?.message || 'Failed to download source.', 'error');
+            }
+        }
+
         async function deleteBook(bookId) {
             if (!confirm('Delete this book? It will be moved to the recycle bin.')) return;
             try {
@@ -1517,6 +2027,11 @@ window.CrmBooksWorkspace = (function () {
                         await deleteBook(bookId);
                         return;
                     }
+                    if (target.classList.contains('crm-books-download-btn')) {
+                        e.stopPropagation();
+                        await downloadSource(bookId);
+                        return;
+                    }
                     if (target.classList.contains('crm-books-retry-btn')) {
                         e.stopPropagation();
                         await retryIngest(bookId);
@@ -1668,6 +2183,28 @@ window.CrmBooksWorkspace = (function () {
                     return;
                 }
 
+                // Summary mode selector
+                const modeBtn = e.target.closest('[data-summary-mode]');
+                if (modeBtn) {
+                    const mode = modeBtn.dataset.summaryMode;
+                    summaryMode = mode;
+                    if (mode === 'chapters' && !sectionDigests && !sectionsLoading) {
+                        loadSectionDigests().catch(console.error);
+                    }
+                    renderExplorerPanel();
+                    return;
+                }
+
+                // Outline / chapter page jump
+                const pageLink = e.target.closest('[data-goto-page]');
+                if (pageLink) {
+                    const page = Number(pageLink.dataset.gotoPage);
+                    if (page > 0) {
+                        await jumpToPage(page);
+                    }
+                    return;
+                }
+
                 // Outline toggle
                 const outlineToggle = e.target.closest('.crm-books-outline-toggle');
                 if (outlineToggle) {
@@ -1725,9 +2262,14 @@ window.CrmBooksWorkspace = (function () {
 
             // Sources toggle
             panel.addEventListener('click', (e) => {
-                if (e.target.closest('.crm-books-sources-toggle')) {
+                const toggle = e.target.closest('.crm-books-sources-header-toggle');
+                if (toggle) {
                     const workspace = panel.querySelector('.crm-books-workspace');
-                    if (workspace) workspace.classList.toggle('sources-collapsed');
+                    if (workspace) {
+                        const collapsed = workspace.classList.toggle('sources-collapsed');
+                        toggle.setAttribute('aria-expanded', String(!collapsed));
+                        toggle.setAttribute('aria-label', collapsed ? 'Expand sources panel' : 'Collapse sources panel');
+                    }
                 }
             });
 
@@ -1742,21 +2284,18 @@ window.CrmBooksWorkspace = (function () {
 
             // Pages navigation
             panel.addEventListener('click', (e) => {
-                if (e.target.closest('.crm-books-page-prev') && currentPage > 1) {
-                    currentPage--;
-                    resetPageCitation();
-                    renderExplorerPanel();
+                if (e.target.closest('.crm-books-page-prev')) {
+                    startPageTurn('prev');
                     return;
                 }
-                if (e.target.closest('.crm-books-page-next') && pagesData && currentPage < pagesData.totalPages) {
-                    currentPage++;
-                    resetPageCitation();
-                    renderExplorerPanel();
+                if (e.target.closest('.crm-books-page-next')) {
+                    startPageTurn('next');
                     return;
                 }
             });
             panel.addEventListener('change', (e) => {
                 if (e.target.classList.contains('crm-books-page-input') && pagesData) {
+                    cancelPageTurn();
                     const val = parseInt(e.target.value, 10);
                     if (val >= 1 && val <= pagesData.totalPages) {
                         currentPage = val;
@@ -1765,6 +2304,21 @@ window.CrmBooksWorkspace = (function () {
                     } else {
                         e.target.value = currentPage;
                     }
+                }
+            });
+            panel.addEventListener('input', (e) => {
+                if (!e.target.classList.contains('crm-books-font-scale')) return;
+                readerFontScale = clampReaderFontScale(e.target.value);
+                e.target.value = String(readerFontScale);
+                e.target.setAttribute('aria-valuetext', `${readerFontScale} percent`);
+                const output = qs('.crm-books-font-scale-output');
+                if (output) output.textContent = `${readerFontScale}%`;
+                const tabBody = qs('.crm-books-tab-body');
+                tabBody?.style.setProperty('--crm-books-reader-font-scale', `${readerFontScale}%`);
+                try {
+                    localStorage.setItem(READER_FONT_SCALE_STORAGE_KEY, String(readerFontScale));
+                } catch (_ignored) {
+                    // Reader scaling remains available for this session when storage is blocked.
                 }
             });
 
@@ -1800,6 +2354,7 @@ window.CrmBooksWorkspace = (function () {
 
         function dispose() {
             detachSnapshot();
+            cancelPageTurn();
             if (uploadTask) {
                 try { uploadTask.cancel(); } catch (_ignored) {
                     // Ignore cancel error if upload task is already completed or cancelled
@@ -1835,8 +2390,13 @@ window.CrmBooksWorkspace = (function () {
         ingestWeightedPercent,
         deriveThreadTitle,
         reflowPageText,
+        formatPageText,
+        getReadablePageNumbers,
+        findAdjacentReadablePage,
         findCitationMatch,
         highlightPageText,
-        normalizeCitationText
+        normalizeCitationText,
+        resolveCitationLocation,
+        clampReaderFontScale
     };
 })();

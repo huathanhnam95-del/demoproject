@@ -67,35 +67,6 @@ function harnessHtml() {
       <div id="pa-loading-placeholder"></div>
       <div id="pa-results-summary"></div>
       <div id="pa-review-layout" class="pa-review-layout">
-        <aside id="pa-version-review-rail" class="pa-version-rail" hidden aria-label="Comparison controls">
-          <div class="pa-version-boundary-controls">
-            <div>
-              <strong>Waveform boundaries</strong>
-              <span class="pa-version-help">The shared waveform starts with the selected automatic set. Manual marks stay in place when you switch.</span>
-            </div>
-            <div id="pa-version-boundary-source" class="pa-version-source-toggle" role="group" aria-label="Automatic boundary source">
-              <button type="button" class="pa-version-source-btn" data-version="v2" aria-pressed="true">Show V2 boundaries</button>
-              <button type="button" class="pa-version-source-btn" data-version="v3" aria-pressed="false">Show V3 boundaries</button>
-            </div>
-          </div>
-          <fieldset id="pa-version-judgment" class="pa-version-judgment">
-            <legend>Which version is more accurate?</legend>
-            <div class="pa-version-judgment-options">
-              <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
-              <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
-              <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
-              <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
-            </div>
-          </fieldset>
-          <div class="pa-version-save-row">
-            <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
-            <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
-          </div>
-          <details id="pa-version-technical-details" class="pa-version-technical-details">
-            <summary>Technical details</summary>
-            <pre id="pa-version-technical-content"></pre>
-          </details>
-        </aside>
         <div class="pa-review-main">
           <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
             <div class="pa-version-comparison-header">
@@ -129,6 +100,25 @@ function harnessHtml() {
           </div>
           <div id="pa-timeline-container"></div>
           <div id="syllable-verifier-container"></div>
+        </div>
+        <div id="pa-version-review-bar" class="pa-version-review-bar" hidden aria-label="Comparison controls">
+          <fieldset id="pa-version-judgment" class="pa-version-judgment">
+            <legend>Which version is more accurate?</legend>
+            <div class="pa-version-judgment-options">
+              <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+              <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+              <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+              <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+            </div>
+          </fieldset>
+          <div class="pa-version-save-row">
+            <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
+            <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
+          </div>
+          <details id="pa-version-technical-details" class="pa-version-technical-details">
+            <summary>Technical details</summary>
+            <pre id="pa-version-technical-content"></pre>
+          </details>
         </div>
       </div>
       <div id="pa-feedback-section"><div id="pa-syllable-tabs"></div><div id="pa-feedback-content"></div></div>

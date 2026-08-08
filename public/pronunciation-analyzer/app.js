@@ -130,8 +130,8 @@ export class PronunciationApp {
         this.versionComparisonSaveButton = document.getElementById('pa-version-save');
         this.versionComparisonSaveStatus = document.getElementById('pa-version-save-status');
         this.versionComparisonTechnicalContent = document.getElementById('pa-version-technical-content');
-        this.versionComparisonRail = document.getElementById('pa-version-review-rail');
-        this.reviewLayout = document.getElementById('pa-review-layout');
+        this.versionComparisonBar = document.getElementById('pa-version-review-bar');
+        this.versionComparisonColumns = document.getElementById('pa-version-columns');
 
         // Native audio element
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
@@ -306,11 +306,11 @@ export class PronunciationApp {
     }
 
     initVersionComparisonControls() {
-        const sourceToggle = document.getElementById('pa-version-boundary-source');
-        sourceToggle?.querySelectorAll('[data-version]').forEach((button) => {
-            button.addEventListener('click', () => {
-                this.setVersionComparisonBoundarySource(button.dataset.version);
-            });
+        this.versionComparisonColumns?.addEventListener('click', (e) => {
+            const column = e.target.closest('.pa-version-column');
+            if (!column) return;
+            const version = column === this.versionComparisonV2 ? 'v2' : 'v3';
+            this.setVersionComparisonBoundarySource(version);
         });
         this.versionComparisonJudgmentFieldset?.querySelectorAll('input[name="pa-version-judgment"]').forEach((input) => {
             input.addEventListener('change', () => {
@@ -351,17 +351,12 @@ export class PronunciationApp {
         if (this.versionComparisonTechnicalContent) this.versionComparisonTechnicalContent.textContent = '';
         if (hide) {
             if (this.versionComparisonSection) this.versionComparisonSection.hidden = true;
-            this.setVersionComparisonRailVisible(false);
+            this.setVersionComparisonBarVisible(false);
         }
     }
 
-    /**
-     * Show or hide the sticky review rail. The layout only becomes two-column
-     * while the rail is present, so learners keep the full-width single column.
-     */
-    setVersionComparisonRailVisible(visible) {
-        if (this.versionComparisonRail) this.versionComparisonRail.hidden = !visible;
-        this.reviewLayout?.classList.toggle('pa-review-layout--with-rail', Boolean(visible));
+    setVersionComparisonBarVisible(visible) {
+        if (this.versionComparisonBar) this.versionComparisonBar.hidden = !visible;
     }
 
     renderVersionComparisonColumn(column) {
@@ -409,7 +404,7 @@ export class PronunciationApp {
             : 'v3';
         this.versionComparisonJudgment = null;
         if (this.versionComparisonSection) this.versionComparisonSection.hidden = false;
-        this.setVersionComparisonRailVisible(true);
+        this.setVersionComparisonBarVisible(true);
         if (this.resultsSummary) {
             this.resultsSummary.textContent = this.versionComparisonView.status === 'complete'
                 ? 'Both pronunciation analyses are ready for your review.'
@@ -431,7 +426,7 @@ export class PronunciationApp {
                 revisions: comparison?.revisions || null
             }, null, 2);
         }
-        this.updateVersionComparisonBoundaryButtons();
+        this.updateSelectedVersionComparisonColumn();
         this.updateVersionComparisonSaveState();
         this.renderVersionComparisonCharts();
 
@@ -464,14 +459,11 @@ export class PronunciationApp {
         );
     }
 
-    updateVersionComparisonBoundaryButtons() {
-        document.querySelectorAll('#pa-version-boundary-source [data-version]').forEach((button) => {
-            const version = button.dataset.version;
-            const column = this.versionComparisonView?.columns?.find((item) => item.version === version);
-            const enabled = column?.status === 'available';
-            button.disabled = !enabled;
-            button.setAttribute('aria-pressed', String(enabled && version === this.versionComparisonBoundarySource));
-            button.classList.toggle('is-selected', enabled && version === this.versionComparisonBoundarySource);
+    updateSelectedVersionComparisonColumn() {
+        [this.versionComparisonV2, this.versionComparisonV3].forEach((el) => {
+            if (!el) return;
+            const version = el === this.versionComparisonV2 ? 'v2' : 'v3';
+            el.classList.toggle('is-selected', version === this.versionComparisonBoundarySource);
         });
     }
 
@@ -480,7 +472,7 @@ export class PronunciationApp {
         const column = this.versionComparisonView.columns.find((item) => item.version === version);
         if (!column || column.status !== 'available') return;
         this.versionComparisonBoundarySource = version;
-        this.updateVersionComparisonBoundaryButtons();
+        this.updateSelectedVersionComparisonColumn();
         this.renderVersionComparisonCharts();
         if (this.syllableVerifier) {
             this.syllableVerifier.setAutomaticSyllables(

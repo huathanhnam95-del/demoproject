@@ -43,6 +43,50 @@ assert.strictEqual(
     'Page text should reflow wrapped lines while preserving paragraph boundaries.'
 );
 
+const formattedPage = workspace.formatPageText(
+    'Chapter 1\nBasics of Teaching Pronunciation\n\nLearning Objectives\nTo describe what pronunciation features should be\ntaught\nTo explain why pronunciation should be taught.',
+    (value) => String(value)
+);
+assert.match(formattedPage, /<h2>Chapter 1<\/h2>/, 'Page headings should render as semantic headings.');
+assert.match(formattedPage, /<h3>Learning Objectives<\/h3>/, 'Section headings should remain visually distinct.');
+assert.match(formattedPage, /<ul>[\s\S]*<li>To describe what pronunciation features should be taught<\/li>[\s\S]*<li>To explain why pronunciation should be taught\.<\/li>[\s\S]*<\/ul>/, 'Objective runs should retain bullet formatting.');
+
+const formattedOutlinePage = workspace.formatPageText(
+    'Outline\n1.1 Introduction 1.2 Elements of Pronunciation: The What of Pronunciation Teaching 1.3 Pronunciation Teaching Goals: The Why of Pronunciation Teaching 1.4 Successful Pronunciation Teaching: The How of Pronunciation Teaching 1.5 Representing sounds in English\n\n1.1 Introduction\nPronunciation has long been part of teaching in ESL/EFL contexts.',
+    (value) => String(value)
+);
+assert.match(formattedOutlinePage, /<ul>[\s\S]*<li>[\s\S]*1\.1[\s\S]*<\/li>[\s\S]*<li>[\s\S]*1\.5[\s\S]*<\/li>[\s\S]*<\/ul>/, 'Inline hierarchical outline entries should render as separate list items with their numbering preserved.');
+
+const formattedCitationProse = workspace.formatPageText(
+    'Functional load is a measure used to distinguish words in a language 3. It helps teachers prioritize communication trouble 2, 3. Research indicates that high functional-load pairs have greater impact 4. For example, some contrasts distinguish many common words.',
+    (value) => String(value)
+);
+assert.doesNotMatch(formattedCitationProse, /<ul>/, 'Citation-style numbers inside prose must not be mistaken for an inline numbered list.');
+assert.match(formattedCitationProse, /<p>Functional load is a measure/, 'Inline citation detection must not discard prose before the first number.');
+
+const formattedSectionProse = workspace.formatPageText(
+    '1.1 Introduction Pronunciation teaching has long been part of language education 3. Research identifies several priorities 4. For example, teachers may focus on high-impact contrasts.',
+    (value) => String(value)
+);
+assert.strictEqual((formattedSectionProse.match(/<li>/g) || []).length, 1, 'Citation numbers after a section marker must not become extra outline items.');
+assert.match(formattedSectionProse, /education 3\. Research identifies several priorities 4\. For example/, 'Section prose must retain its inline citation numbers.');
+
+assert.deepStrictEqual(
+    workspace.getReadablePageNumbers(['', '  ', 'Title', 'Body']),
+    [3, 4],
+    'Readable page navigation should keep physical page numbers while excluding empty pages.'
+);
+assert.strictEqual(
+    workspace.findAdjacentReadablePage(['', '', 'Title', 'Body'], 2, 1),
+    3,
+    'Next should skip empty physical pages.'
+);
+assert.strictEqual(
+    workspace.findAdjacentReadablePage(['', '', 'Title', 'Body'], 3, -1),
+    3,
+    'Previous should not land on an empty page.'
+);
+
 const match = workspace.findCitationMatch('First sentence on the page.\n\nSecond cited sentence here.', 'Second   cited sentence here.');
 assert.strictEqual(match.start, 29, 'Citation matching should return the source start offset.');
 assert.strictEqual(match.end, 56, 'Citation matching should return the source end offset.');
@@ -51,6 +95,24 @@ assert.strictEqual(
     null,
     'Citation matching should return null for a stale or malformed quote.'
 );
+
+const legacyCitationLocation = workspace.resolveCitationLocation([
+    '',
+    'Teachers need to understand\nthe content they are teaching.',
+    'A second paragraph that is stored on the following page.'
+], {
+    marker: 'C8',
+    pageStart: 2,
+    pageEnd: 3,
+    snippet: 'ers need to understand\nthe content they are teaching.\n\nA second paragraph that is stored on the following page.'
+});
+assert.strictEqual(legacyCitationLocation.page, 2, 'Legacy multi-page citations should resolve to the page containing an exact snippet fragment.');
+assert.strictEqual(legacyCitationLocation.quote, 'ers need to understand the content they are teaching.', 'Legacy citations should return the exact fragment that can be highlighted.');
+assert.strictEqual(legacyCitationLocation.matched, true, 'Legacy citation fragment resolution should report a visible match.');
+
+assert.strictEqual(workspace.clampReaderFontScale(50), 80, 'Reader text scale should enforce the accessible minimum.');
+assert.strictEqual(workspace.clampReaderFontScale(143), 140, 'Reader text scale should snap to ten-percent steps.');
+assert.strictEqual(workspace.clampReaderFontScale(250), 180, 'Reader text scale should enforce the readable maximum.');
 
 const citationHtml = workspace.renderCitations([
     { marker: 'C3', pageStart: 52, pageEnd: 53, snippet: 'A cited passage.' }

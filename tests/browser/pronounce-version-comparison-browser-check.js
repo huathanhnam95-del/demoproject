@@ -143,10 +143,7 @@ async function run() {
           label: set.label,
           values: (set.data || []).filter((value) => typeof value === 'number')
         })),
-        railVisible: !document.getElementById('pa-version-review-rail').hidden,
-        layoutHasRail: document
-          .getElementById('pa-review-layout')
-          .classList.contains('pa-review-layout--with-rail')
+        barVisible: !document.getElementById('pa-version-review-bar').hidden
       };
       const confidenceLabel = (selector) => Array.from(
         document.querySelectorAll(`${selector} .pa-version-metric-row dt`)
@@ -241,32 +238,31 @@ async function run() {
     assert.match(result.confidenceLabels.v2, /Acoustic segmentation/i);
     assert.match(result.confidenceLabels.v3, /Mean forced-alignment/i);
 
-    // Sticky review rail scroll & positioning automation assertion
+    // Sticky review bar scroll & positioning automation assertion
     const stickyCheck = await page.evaluate(() => {
       window.scrollTo(0, 500);
-      const rail = document.querySelector('#pa-version-review-rail');
-      const rect = rail?.getBoundingClientRect();
-      const style = window.getComputedStyle(rail);
+      const bar = document.querySelector('#pa-version-review-bar');
+      const rect = bar?.getBoundingClientRect();
+      const style = window.getComputedStyle(bar);
       return {
         scrolledY: window.scrollY,
-        railTop: Math.round(rect?.top || 0),
-        toggleVisible: (() => {
-          const bounds = document.querySelector('#pa-version-boundary-source')?.getBoundingClientRect();
-          return Boolean(bounds && bounds.top >= 0 && bounds.bottom <= window.innerHeight);
-        })(),
+        barBottom: Math.round(rect?.bottom || 0),
+        viewportHeight: window.innerHeight,
         judgmentVisible: (() => {
           const bounds = document.querySelector('#pa-version-judgment')?.getBoundingClientRect();
           return Boolean(bounds && bounds.top >= 0 && bounds.bottom <= window.innerHeight);
         })(),
         position: style.position,
-        railVisible: !rail.hidden
+        barVisible: !bar.hidden
       };
     });
     assert.equal(stickyCheck.scrolledY, 500, 'page must scroll down 500px');
-    assert.equal(stickyCheck.position, 'sticky', 'review rail must use CSS sticky positioning');
-    assert.equal(stickyCheck.railVisible, true, 'review rail must remain visible after scrolling');
-    assert.ok(stickyCheck.railTop >= 0 && stickyCheck.railTop <= 25, `sticky rail top must stay pinned near viewport top (12px), got ${stickyCheck.railTop}`);
-    assert.equal(stickyCheck.toggleVisible, true, 'boundary toggle must remain in the viewport after scrolling');
+    assert.equal(stickyCheck.position, 'sticky', 'review bar must use CSS sticky positioning');
+    assert.equal(stickyCheck.barVisible, true, 'review bar must remain visible after scrolling');
+    assert.ok(
+      stickyCheck.barBottom >= stickyCheck.viewportHeight - 5 && stickyCheck.barBottom <= stickyCheck.viewportHeight + 5,
+      `sticky bar bottom must stay pinned near viewport bottom, got ${stickyCheck.barBottom} vs viewport ${stickyCheck.viewportHeight}`
+    );
     assert.equal(stickyCheck.judgmentVisible, true, 'judgment controls must remain in the viewport after scrolling');
     const observedLane = result.chartState.durationLanes.find((lane) => /observed/i.test(lane.label));
     assert.ok(observedLane, `duration chart must carry an observed lane, got ${JSON.stringify(result.chartState.durationLanes.map((lane) => lane.label))}`);
@@ -280,9 +276,8 @@ async function run() {
       [0.18, 0.22],
       'V2 duration bars must retain analyzer vowel durations instead of full boundary spans'
     );
-    // Sticky review rail is present only while the comparison is live.
-    assert.equal(result.chartState.railVisible, true);
-    assert.equal(result.chartState.layoutHasRail, true);
+    // Sticky review bar is present only while the comparison is live.
+    assert.equal(result.chartState.barVisible, true);
 
     assert.equal(result.compareRequests, 1);
     assert.equal(result.v2Count, '2');

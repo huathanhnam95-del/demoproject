@@ -1,3 +1,15 @@
+## [V1.8.53] - 2026-08-08
+
+### Added & Enhanced
+- **Pronunciation Prosody Review**: Smoothed relative-pitch contours within contiguous voiced runs to suppress octave spikes and frame noise while preserving raw-Hz tooltips, short contours, and unvoiced gaps.
+- **Pronunciation Comparison UI**: Replaced the admin review rail with selectable V2/V3 columns and a sticky bottom judgment bar.
+- **Heteronym Learner IPA**: Selects the learner-facing IPA alternative whose primary-stress position matches the active reference variant.
+- **CRM Books Reader**: Added whole-book and chapter summary views, page shortcuts, source download links, structured extracted-text formatting, readable-page navigation, animated page turns with reduced-motion handling, persistent text sizing, complete saved notes, and legacy citation-fragment recovery.
+
+### Fixed
+- **CRM Books Usage Tracking**: Reads Gemini token usage from both the Vertex response envelope and the legacy direct metadata shape.
+- **Release Verification**: Added API, unit, browser, accessibility, and cold Playwright-load regression coverage for the V1.8.53 bundle.
+
 ## [V1.8.52] - 2026-08-07
 
 ### Fixed & Enhanced

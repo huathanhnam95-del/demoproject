@@ -773,9 +773,8 @@
     margin-bottom: 12px;
 }
 
-/* Review layout. One column for learners; a sticky left rail is added only
-   when the admin comparison is live, so the boundary toggle and the judgment
-   stay reachable while the charts and the waveform scroll past. */
+/* Review layout. Single column; when the admin comparison is active a sticky
+   bottom bar keeps the judgment controls in view while scrolling. */
 .pa-review-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -783,49 +782,50 @@
     align-items: start;
 }
 
-.pa-review-layout--with-rail {
-    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
-    gap: 28px;
-}
-
 .pa-review-main {
     min-width: 0;
 }
 
-.pa-version-rail[hidden] {
+/* Sticky judgment bar — pinned to the bottom of the viewport while the
+   review layout is in view, then scrolls away naturally. */
+.pa-version-review-bar[hidden] {
     display: none;
 }
 
-.pa-version-rail {
+.pa-version-review-bar {
     position: sticky;
-    top: 12px;
-    align-self: start;
-    max-height: calc(100vh - 24px);
-    padding-right: 4px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    border-top: 1px solid #cbd5e1;
+    background: var(--bg-primary, #fff);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* The rail is narrow, so its controls stack instead of sitting on one row. */
-.pa-version-rail .pa-version-boundary-controls,
-.pa-version-rail .pa-version-save-row {
-    flex-direction: column;
-    align-items: stretch;
+.pa-version-review-bar .pa-version-judgment {
+    margin: 0;
+    flex: 1 1 auto;
+}
+
+.pa-version-review-bar .pa-version-judgment-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+}
+
+.pa-version-review-bar .pa-version-save-row {
+    flex-direction: row;
+    align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 
-.pa-version-rail .pa-version-boundary-controls {
-    padding: 0 0 14px;
-    border-top: 0;
-}
-
-.pa-version-rail .pa-version-source-toggle {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-}
-
-.pa-version-rail .pa-version-judgment-options {
-    grid-template-columns: minmax(0, 1fr);
+.pa-version-review-bar .pa-version-technical-details {
+    flex-basis: 100%;
 }
 
 /* Admin V2/V3 comparison. This is a single review surface on the parent
@@ -841,7 +841,6 @@
 }
 
 .pa-version-comparison-header,
-.pa-version-boundary-controls,
 .pa-version-save-row {
     display: flex;
     align-items: flex-start;
@@ -913,6 +912,26 @@
 .pa-version-column + .pa-version-column {
     border-left: 1px solid #e2e8f0;
     padding-left: 28px;
+}
+
+.pa-version-column {
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+}
+
+.pa-version-column:hover {
+    background: #f8fafc;
+}
+
+.pa-version-column.is-selected {
+    border-left: 3px solid #2563eb;
+    background: #eff6ff;
+    padding-left: 25px;
+}
+
+.pa-version-column + .pa-version-column.is-selected {
+    padding-left: 25px;
 }
 
 .pa-version-column-heading {
@@ -988,25 +1007,6 @@
     font-size: 0.78rem;
 }
 
-.pa-version-boundary-controls {
-    align-items: center;
-    padding: 14px 0;
-    border-top: 1px solid #e2e8f0;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.pa-version-help {
-    display: block;
-    margin-top: 3px;
-}
-
-.pa-version-source-toggle {
-    display: inline-flex;
-    flex-shrink: 0;
-    gap: 6px;
-}
-
-.pa-version-source-btn,
 .pa-version-save {
     min-height: 40px;
     padding: 8px 12px;
@@ -1017,19 +1017,6 @@
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 700;
-}
-
-.pa-version-source-btn:hover:not(:disabled),
-.pa-version-source-btn:focus-visible,
-.pa-version-source-btn.is-selected {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-
-.pa-version-source-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
 }
 
 .pa-version-judgment {
@@ -1114,23 +1101,6 @@
 }
 
 /* Mobile Responsive */
-/* Below the two-column threshold the rail becomes a frozen header strip so the
-   toggle and the judgment are still one glance away from the waveform. */
-@media (max-width: 1024px) {
-    .pa-review-layout--with-rail {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0;
-    }
-
-    .pa-version-rail {
-        top: 0;
-        z-index: 5;
-        max-height: 60vh;
-        padding: 12px 0;
-        border-bottom: 1px solid #cbd5e1;
-        background: var(--bg-primary, #fff);
-    }
-}
 
 @media (max-width: 640px) {
     .pa-container {
@@ -1273,7 +1243,6 @@
     }
 
     .pa-version-comparison-header,
-    .pa-version-boundary-controls,
     .pa-version-save-row {
         flex-direction: column;
         align-items: stretch;
@@ -1291,17 +1260,28 @@
         padding-top: 18px;
     }
 
-    .pa-version-source-toggle {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+    .pa-version-column.is-selected {
+        border-left: 3px solid #2563eb;
+        padding-left: 15px;
     }
 
-    .pa-version-source-btn {
+    .pa-version-column + .pa-version-column.is-selected {
+        padding-left: 15px;
+    }
+
+    .pa-version-review-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .pa-version-review-bar .pa-version-judgment-options {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .pa-version-review-bar .pa-version-judgment-options label {
         min-height: 44px;
-    }
-
-    .pa-version-judgment-options {
-        grid-template-columns: 1fr;
     }
 }
 

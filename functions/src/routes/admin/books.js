@@ -8,9 +8,21 @@ const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
+const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
 
 function cleanStr(value, fallback = '') {
     return String(value ?? '').trim() || fallback;
+}
+
+function sourceDownloadFilename(bookData) {
+    const original = cleanStr(bookData?.source?.originalFilename);
+    const fallbackTitle = cleanStr(bookData?.title, 'source');
+    const raw = original || `${fallbackTitle}.pdf`;
+    const safe = raw
+        .replace(/[\\/:?%*|"<>\r\n]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return /\.pdf$/i.test(safe) ? safe : `${safe || 'source'}.pdf`;
 }
 
 function mapBookRecord(doc, docId) {
@@ -107,6 +119,36 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { book, summary });
         } catch (error) {
             return sendError(res, 500, 'GET_BOOK_ERROR', 'Failed to retrieve book.', error?.message || error);
+        }
+    });
+
+    router.get('/books/:bookId/sections', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) {
+                return sendError(res, 400, 'INVALID_BOOK_ID', 'Missing book ID.');
+            }
+
+            const sectionsSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('sections')
+                .orderBy('pageStart')
+                .get();
+
+            const sections = sectionsSnap.docs.map((d) => {
+                const data = d.data();
+                return {
+                    title: data.title || '',
+                    gist: data.gist || '',
+                    keyPoints: Array.isArray(data.keyPoints) ? data.keyPoints : [],
+                    topics: Array.isArray(data.topics) ? data.topics : [],
+                    pageStart: data.pageStart ?? null,
+                    pageEnd: data.pageEnd ?? null
+                };
+            });
+
+            return sendSuccess(res, { sections });
+        } catch (error) {
+            return sendError(res, 500, 'GET_SECTIONS_ERROR', 'Failed to retrieve sections.', error?.message || error);
         }
     });
 
@@ -406,6 +448,59 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { threadId: ref.id, ...payload }, 'Thread created.');
         } catch (error) {
             return sendError(res, 500, 'CREATE_THREAD_ERROR', 'Failed to create thread.', error?.message || error);
+        }
+    });
+
+    router.get('/books/:bookId/source', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) {
+                return sendError(res, 400, 'INVALID_BOOK_ID', 'Missing book ID.');
+            }
+            if (!getStorageBucket) {
+                return sendError(res, 500, 'NO_STORAGE', 'Storage not configured.');
+            }
+
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            if (!bookSnap.exists) {
+                return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            }
+
+            const bookData = bookSnap.data() || {};
+            const storagePath = cleanStr(bookData.source?.storagePath);
+            if (!storagePath) {
+                return sendError(res, 404, 'SOURCE_NOT_FOUND', 'The source file is not available.');
+            }
+
+            const bucket = await getStorageBucket();
+            const file = bucket.file(storagePath);
+            const [exists] = await file.exists();
+            if (!exists) {
+                return sendError(res, 404, 'SOURCE_NOT_FOUND', 'The source file is not available.');
+            }
+
+            const filename = sourceDownloadFilename(bookData);
+            const [downloadUrl] = await file.getSignedUrl({
+                action: 'read',
+                expires: Date.now() + SOURCE_DOWNLOAD_TTL_MS,
+                responseDisposition: `attachment; filename="${filename.replace(/"/g, '')}"`,
+                responseType: 'application/pdf'
+            });
+
+            if (!downloadUrl) {
+                return sendError(res, 500, 'SOURCE_DOWNLOAD_ERROR', 'Could not create a source download link.');
+            }
+
+            await writeAuditLog?.({
+                action: 'book.source_download',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { title: bookData.title || '', filename }
+            }, { user: req.user });
+
+            return sendSuccess(res, { downloadUrl, filename });
+        } catch (error) {
+            return sendError(res, 500, 'SOURCE_DOWNLOAD_ERROR', 'Failed to prepare the source download.', error?.message || error);
         }
     });
 

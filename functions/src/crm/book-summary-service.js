@@ -118,7 +118,8 @@ Guidelines:
 }
 
 function extractUsage(result) {
-    const u = result?.usageMetadata;
+    const resp = result?.response;
+    const u = resp?.usageMetadata || result?.usageMetadata;
     return { inputTokens: u?.promptTokenCount || 0, outputTokens: u?.candidatesTokenCount || 0 };
 }
 
@@ -216,6 +217,7 @@ module.exports = {
     reduceSummary,
     buildMapPrompt,
     buildReducePrompt,
+    extractUsage,
     generateWithFallback,
     SECTION_TARGET_CHARS,
     DEFAULT_MODEL,

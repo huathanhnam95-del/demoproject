@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {
+    matchLearnerIPA,
+    primaryStressPosition
+} from '../../public/pronunciation-analyzer/learner-ipa.js';
 
 const appSource = fs.readFileSync(
     new URL('../../public/pronunciation-analyzer/app.js', import.meta.url),
@@ -33,6 +37,16 @@ assert.match(appSource, /getSelectableReferenceVariants/);
 assert.match(appSource, /buildPronunciationSummary/);
 assert.match(referenceServiceSource, /decorateLearnerIPA/);
 assert.match(referenceServiceSource, /learnerDisplayIpa/);
+assert.equal(primaryStressPosition('/ˈpɝːfɪkt/'), 0);
+assert.equal(primaryStressPosition('/pɚˈfɛkt/'), 1);
+assert.equal(
+    matchLearnerIPA(
+        { primaryStress: 1 },
+        ['/ˈpɝːfɪkt/', '/pɚˈfɛkt/']
+    ),
+    '/pɚˈfɛkt/',
+    'heteronym learner IPA must follow the selected reference variant stress'
+);
 assert.match(appSource, /Pronunciation reference under review\./);
 assert.match(appSource, /CMU pronunciation fallback/);
 assert.match(appSource, /capabilities\.scoreCountStress/);

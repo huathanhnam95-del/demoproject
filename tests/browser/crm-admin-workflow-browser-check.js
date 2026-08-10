@@ -180,7 +180,6 @@ function buildDefaultApiResponse() {
 }
 
 function mapEntranceTestForAdmin(test) {
-  const active = /^(created|started)$/i.test(String(test.status || ''));
   return {
     testId: test.testId,
     leadId: test.leadId || null,
@@ -191,7 +190,7 @@ function mapEntranceTestForAdmin(test) {
     createdAt: test.createdAt || '2026-05-30T09:00:00.000Z',
     startedAt: test.startedAt || null,
     submittedAt: test.submittedAt || null,
-    testLink: active ? test.testLink : null,
+    testLink: test.testLink || null,
     resultLink: `${BASE_ORIGIN}/crm-entrance-test-result.html?testId=${encodeURIComponent(test.testId)}`
   };
 }
@@ -770,6 +769,16 @@ async function main() {
       const select = document.querySelector('.lead-stage-select[data-lead-id="lead-1"]');
       return !!select && select.value === 'test_completed';
     });
+    await page.click('.crm-lead-link[data-lead-id="lead-1"]');
+    await page.waitForSelector('#crm-student-modal', { state: 'visible' });
+    await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
+    await page.waitForFunction(() => /token-test-1/.test(document.getElementById('lead-entrance-test-link')?.value || ''));
+    assert(
+      /already been used/i.test(await page.textContent('#lead-entrance-test-link-note')),
+      'Submitted test links should remain visible while clearly marked as used.'
+    );
+    await page.click('#btn-close-student-modal');
+    await page.waitForSelector('#crm-student-modal', { state: 'hidden' });
 
     await page.click('.btn-convert-lead[data-lead-id="lead-1"]');
     await page.waitForSelector('#crm-student-modal', { state: 'visible' });

@@ -50,8 +50,6 @@ window.CrmEntranceTests = (function () {
   }
 
   function resolveTestLink(test, createdTestLinks = new Map()) {
-    if (!isActiveStatus(test?.status)) return '';
-
     const apiLink = normalizeLearnerLink(test?.testLink);
     if (apiLink) return apiLink;
 
@@ -83,12 +81,14 @@ window.CrmEntranceTests = (function () {
       })
       : [];
 
-    const latestActiveTest = normalized.find((test) => isActiveStatus(test.status) && toText(test.testLink)) || null;
+    const latestActiveTest = normalized.find((test) => isActiveStatus(test.status) && toText(test.testLink))
+      || normalized.find((test) => toText(test.testLink))
+      || null;
     return { tests: normalized, latestActiveTest };
   }
 
   function resolveNote(latestActiveTest, hasAnyTests) {
-    if (latestActiveTest && toText(latestActiveTest.testLink)) return READY_NOTE;
+    if (latestActiveTest && isActiveStatus(latestActiveTest.status) && toText(latestActiveTest.testLink)) return READY_NOTE;
     if (hasAnyTests) return USED_NOTE;
     return DEFAULT_NOTE;
   }

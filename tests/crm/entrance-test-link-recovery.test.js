@@ -67,7 +67,7 @@ assert.deepStrictEqual(buildRecoveryRecord('known-token', {
     ]);
 
     assert.strictEqual(tokenMap.get('test-started'), 'recovered-token');
-    assert.strictEqual(tokenMap.has('test-submitted'), false, 'Submitted tests must not load recovery tokens.');
+    assert.strictEqual(tokenMap.get('test-submitted'), 'submitted-token', 'Submitted tests should retain their generated links for admin history.');
     assert.strictEqual(tokenMap.has('test-empty'), false, 'Blank recovery tokens must be ignored.');
 
     const req = {
@@ -116,7 +116,11 @@ assert.deepStrictEqual(buildRecoveryRecord('known-token', {
         tests[1].testLink,
         'https://betterenglishlearning.com/entrance-test.html?token=inline-token'
     );
-    assert.strictEqual(tests[2].testLink, null, 'Submitted tests must not expose learner links.');
+    assert.strictEqual(
+        tests[2].testLink,
+        'https://betterenglishlearning.com/entrance-test.html?token=submitted-token',
+        'Submitted tests should expose their generated link to admins.'
+    );
     assert.strictEqual(Object.prototype.hasOwnProperty.call(tests[0], 'deliveryToken'), false, 'Admin list items must not expose raw tokens.');
     assert.strictEqual(
         tests[2].resultLink,

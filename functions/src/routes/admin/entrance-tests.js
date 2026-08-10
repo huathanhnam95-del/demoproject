@@ -130,7 +130,7 @@ function getTestListRow(doc) {
         createdAt: data.createdAt || null,
         startedAt: data.startedAt || null,
         submittedAt: data.submittedAt || null,
-        deliveryToken: (status === 'created' || status === 'started') && deliveryToken ? deliveryToken : null
+        deliveryToken: deliveryToken || null
     };
 }
 

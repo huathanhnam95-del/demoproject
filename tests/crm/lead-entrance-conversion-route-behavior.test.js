@@ -118,6 +118,7 @@ async function testLeadEntranceTestConversionKeepsLinkedRecords() {
     assert.strictEqual(studentTestsRes._json.tests[0].testId, testId);
     assert.strictEqual(studentTestsRes._json.tests[0].studentId, studentId);
     assert.strictEqual(studentTestsRes._json.tests[0].leadId, 'lead-1');
+    assert.strictEqual(studentTestsRes._json.tests[0].testLink, testLink);
     assert(studentTestsRes._json.tests[0].resultLink.includes(`testId=${testId}`));
 }
 

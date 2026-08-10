@@ -45,7 +45,7 @@ const viewModel = helper.buildViewModel([
 ]));
 
 assert.strictEqual(viewModel.tests[0].testLink, activeLink, 'API link should win over cached link.');
-assert.strictEqual(viewModel.tests[1].testLink, '', 'Submitted tests must not expose a learner link.');
+assert.strictEqual(viewModel.tests[1].testLink, fallbackLink, 'Submitted tests should retain their generated learner link.');
 assert.strictEqual(viewModel.latestActiveTest?.testId, 'test-active', 'Active test should be selected as latest.');
 
 const fallbackViewModel = helper.buildViewModel([
@@ -67,7 +67,7 @@ const rowsHtml = helper.buildRowsHtml(viewModel.tests, {
 });
 
 assert(rowsHtml.includes('>Open<'), 'Active tests must render an Open link.');
-assert(rowsHtml.includes('Unavailable'), 'Submitted tests must not render a learner link.');
+assert.strictEqual((rowsHtml.match(/>Open</g) || []).length, 2, 'Active and submitted tests should both render their generated links.');
 assert(rowsHtml.includes('>View<'), 'Result links should still render for test history.');
 
 const activeElements = {
@@ -94,11 +94,20 @@ const usedElements = {
     entranceTestLinkNote: { textContent: '' }
 };
 
-helper.applyControls(usedElements, null, { hasAnyTests: true });
+const submittedOnlyViewModel = helper.buildViewModel([
+    {
+        testId: 'test-submitted-only',
+        status: 'submitted',
+        testLink: fallbackLink,
+        resultLink: 'https://localhost:8443/crm-entrance-test-result.html?testId=test-submitted-only'
+    }
+]);
 
-assert.strictEqual(usedElements.entranceTestLinkInput.value, '', 'No active test should clear the input.');
-assert.strictEqual(usedElements.btnCopyEntranceTestLink.disabled, true, 'Copy must be disabled when no active test exists.');
-assert.strictEqual(usedElements.btnOpenEntranceTestLink.disabled, true, 'Open must be disabled when no active test exists.');
+helper.applyControls(usedElements, submittedOnlyViewModel.latestActiveTest, { hasAnyTests: true });
+
+assert.strictEqual(usedElements.entranceTestLinkInput.value, fallbackLink, 'The latest submitted test should keep its generated link visible.');
+assert.strictEqual(usedElements.btnCopyEntranceTestLink.disabled, false, 'Copy must remain available for generated test history.');
+assert.strictEqual(usedElements.btnOpenEntranceTestLink.disabled, false, 'Open must remain available for generated test history.');
 assert(
     usedElements.entranceTestLinkNote.textContent.includes('already been used'),
     'Used note should be shown when tests exist but none are active.'

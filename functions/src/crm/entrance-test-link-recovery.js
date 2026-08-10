@@ -37,7 +37,6 @@ function collectMissingRecoveryIds(tests) {
     const seen = new Set();
 
     for (const test of Array.isArray(tests) ? tests : []) {
-        if (!isActiveStatus(test?.status)) continue;
         if (toText(test?.deliveryToken)) continue;
 
         const testId = toText(test?.testId);
@@ -83,9 +82,7 @@ async function buildEntranceTestAdminList(req, db, tests, env = process.env) {
     return items.map((test) => {
         const testId = toText(test?.testId);
         const status = toText(test?.status);
-        const deliveryToken = isActiveStatus(status)
-            ? (toText(test?.deliveryToken) || toText(recoveryTokens.get(testId)))
-            : '';
+        const deliveryToken = toText(test?.deliveryToken) || toText(recoveryTokens.get(testId));
         const links = buildEntranceTestLinks(req, {
             deliveryToken,
             testId

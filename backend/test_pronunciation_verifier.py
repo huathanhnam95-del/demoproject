@@ -250,6 +250,33 @@ class PronunciationVerifierTest(unittest.TestCase):
         self.assertAlmostEqual(features[0]["f0_median"], 110.0)
         self.assertAlmostEqual(features[1]["intensity_db"], 71.0)
 
+    def test_aligned_acoustic_features_prefer_measurement_times(self):
+        from backend.local_server.pronunciation_verifier import aligned_acoustic_features
+
+        praat = {
+            "pitch": {"times": [0.1, 0.2, 0.3, 0.4], "values": [100, 120, 180, 200]},
+            "intensity": {"times": [0.1, 0.2, 0.3, 0.4], "values": [60, 62, 70, 72]},
+        }
+        recognizer = {
+            "canonical_alignment": {
+                "syllables": [
+                    {
+                        "nucleus_start_time": 0.05,
+                        "nucleus_end_time": 0.15,
+                        "measurement_start_time": 0.15,
+                        "measurement_end_time": 0.35,
+                        "nucleus_confidence": 0.9,
+                    }
+                ]
+            }
+        }
+
+        features = aligned_acoustic_features(praat, recognizer)
+
+        self.assertEqual(features[0]["start_time"], 0.15)
+        self.assertEqual(features[0]["end_time"], 0.35)
+        self.assertAlmostEqual(features[0]["duration_sec"], 0.2)
+
     def test_stress_vector_compares_expected_to_strongest_alternative(self):
         from backend.local_server.pronunciation_verifier import stress_feature_vector
         rows = [

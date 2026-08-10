@@ -402,6 +402,107 @@ class TestConfidenceExtraction(unittest.TestCase):
         self.assertTrue(result["aligned"])
         self.assertEqual([item["index"] for item in result["syllables"]], [0, 1])
         self.assertLess(result["syllables"][0]["end_frame"], result["syllables"][1]["start_frame"])
+        self.assertEqual(
+            result["syllables"][0]["measurement_end_frame"],
+            result["syllables"][0]["nucleus_end_frame"],
+        )
+        self.assertEqual(
+            result["syllables"][1]["measurement_start_frame"],
+            result["syllables"][1]["nucleus_start_frame"],
+        )
+
+    def test_measurement_spans_split_blank_gaps_without_mutating_raw_coverage(self):
+        from backend.phoneme_service.stress_alignment import _derive_measurement_spans
+
+        raw = [
+            {
+                "index": 0,
+                "start_frame": 2,
+                "end_frame": 5,
+                "nucleus_start_frame": 3,
+                "nucleus_end_frame": 5,
+                "confidence": 0.9,
+                "nucleus_confidence": 0.8,
+            },
+            {
+                "index": 1,
+                "start_frame": 8,
+                "end_frame": 11,
+                "nucleus_start_frame": 8,
+                "nucleus_end_frame": 9,
+                "confidence": 0.7,
+                "nucleus_confidence": 0.6,
+            },
+            {
+                "index": 2,
+                "start_frame": 13,
+                "end_frame": 16,
+                "nucleus_start_frame": 14,
+                "nucleus_end_frame": 15,
+                "confidence": 0.5,
+                "nucleus_confidence": 0.4,
+            },
+        ]
+
+        measured = _derive_measurement_spans(raw)
+
+        self.assertEqual(measured[0]["end_frame"], 5)
+        self.assertEqual(measured[1]["start_frame"], 8)
+        self.assertEqual(measured[0]["measurement_start_frame"], 3)
+        self.assertEqual(measured[0]["measurement_end_frame"], 7)
+        self.assertEqual(measured[1]["measurement_start_frame"], 7)
+        self.assertEqual(measured[1]["measurement_end_frame"], 9)
+        self.assertEqual(measured[2]["measurement_start_frame"], 14)
+        self.assertEqual(measured[2]["measurement_end_frame"], 15)
+        self.assertEqual(
+            [{key: span[key] for key in raw[0]} for span in measured],
+            raw,
+        )
+
+    def test_measurement_spans_leave_non_edge_nuclei_unchanged(self):
+        from backend.phoneme_service.stress_alignment import _derive_measurement_spans
+
+        spans = _derive_measurement_spans([
+            {"start_frame": 1, "end_frame": 4, "nucleus_start_frame": 2, "nucleus_end_frame": 3},
+            {"start_frame": 7, "end_frame": 10, "nucleus_start_frame": 8, "nucleus_end_frame": 9},
+        ])
+
+        self.assertEqual(spans[0]["measurement_start_frame"], 2)
+        self.assertEqual(spans[0]["measurement_end_frame"], 3)
+        self.assertEqual(spans[1]["measurement_start_frame"], 8)
+        self.assertEqual(spans[1]["measurement_end_frame"], 9)
+
+    def test_measurement_spans_handle_zero_and_single_frame_gaps(self):
+        from backend.phoneme_service.stress_alignment import _derive_measurement_spans
+
+        spans = _derive_measurement_spans([
+            {"start_frame": 0, "end_frame": 2, "nucleus_start_frame": 1, "nucleus_end_frame": 2},
+            {"start_frame": 2, "end_frame": 4, "nucleus_start_frame": 2, "nucleus_end_frame": 4},
+            {"start_frame": 5, "end_frame": 7, "nucleus_start_frame": 5, "nucleus_end_frame": 6},
+        ])
+
+        self.assertEqual(spans[0]["measurement_end_frame"], 2)
+        self.assertEqual(spans[1]["measurement_start_frame"], 2)
+        self.assertEqual(spans[1]["measurement_end_frame"], 5)
+        self.assertEqual(spans[2]["measurement_start_frame"], 5)
+
+    def test_photograph_regression_keeps_raw_ctc_spans_and_extends_edge_nuclei(self):
+        from backend.phoneme_service.stress_alignment import _derive_measurement_spans
+
+        spans = _derive_measurement_spans([
+            {"start_frame": 32, "end_frame": 37, "nucleus_start_frame": 36, "nucleus_end_frame": 37},
+            {"start_frame": 47, "end_frame": 50, "nucleus_start_frame": 49, "nucleus_end_frame": 50},
+            {"start_frame": 56, "end_frame": 73, "nucleus_start_frame": 60, "nucleus_end_frame": 61},
+        ])
+
+        self.assertEqual(
+            [(span["start_frame"], span["end_frame"]) for span in spans],
+            [(32, 37), (47, 50), (56, 73)],
+        )
+        self.assertEqual(
+            [(span["measurement_start_frame"], span["measurement_end_frame"]) for span in spans],
+            [(36, 42), (49, 53), (60, 61)],
+        )
 
 
 # ===================================================================

@@ -272,16 +272,16 @@ export function buildNativeOnlyChartData(nativeAnalysis) {
  */
 export function normalizeChartSpans(syllables) {
     return (Array.isArray(syllables) ? syllables : [])
-        .filter((syllable) => (
-            Number.isFinite(syllable?.startTime) &&
-            Number.isFinite(syllable?.endTime) &&
-            syllable.endTime > syllable.startTime
-        ))
-        .map((syllable) => (
-            Number.isFinite(syllable.duration)
-                ? syllable
-                : { ...syllable, duration: syllable.endTime - syllable.startTime }
-        ));
+        .map((syllable) => {
+            const start = syllable?.measurementStartTime ?? syllable?.startTime;
+            const end = syllable?.measurementEndTime ?? syllable?.endTime;
+            if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+            const out = { ...syllable, startTime: start, endTime: end };
+            const widened = start !== syllable?.startTime || end !== syllable?.endTime;
+            if (widened || !Number.isFinite(out.duration)) out.duration = end - start;
+            return out;
+        })
+        .filter(Boolean);
 }
 
 export function buildDurationLanes(targetSyllables = [], observedSyllables = []) {

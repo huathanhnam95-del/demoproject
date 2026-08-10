@@ -46,6 +46,24 @@ const created = buildLeadCreateData({
     lastContactAt: '2026-03-10'
 }, context);
 
+const scoreOnlyLead = buildLeadCreateData({
+    learningProfile: {
+        overall: '79',
+        listening: '78',
+        reading: '77',
+        speaking: '76',
+        writing: '75'
+    },
+    targets: {
+        exam: 'PTE',
+        score: '79'
+    }
+}, context);
+
+assert.strictEqual(scoreOnlyLead.name, null);
+assert.strictEqual(scoreOnlyLead.learningProfile.overall, 79);
+assert.strictEqual(scoreOnlyLead.targets.score, 79);
+
 assert.strictEqual(created.stage, 'new');
 assert.strictEqual(created.source, 'facebook');
 assert.strictEqual(created.ownerUid, 'admin-1');
@@ -120,6 +138,8 @@ assert.strictEqual(mapped.messengerThreadUrl, 'https://m.me/t/lead-nguyen');
 assert.strictEqual(mapped.messengerLastContactAt, '2026-03-11T09:15:00Z');
 assert.strictEqual(mapped.messengerStatus, 'follow_up_sent');
 assert.strictEqual(mapped.agentSourceId, 'agent-src-1');
+assert.deepStrictEqual(mapped.learningProfile, patched.learningProfile);
+assert.deepStrictEqual(mapped.targets, patched.targets);
 
 const legacyFacebookMapped = mapLeadRecord({
     id: 'legacy-lead-1',
@@ -146,10 +166,9 @@ assert.strictEqual(urlOnlyConversion.student.name, 'https://facebook.com/url.onl
 assert.strictEqual(urlOnlyConversion.student.facebook, null);
 assert.strictEqual(urlOnlyConversion.student.facebookProfileUrl, 'https://facebook.com/url.only');
 
-assert.throws(
-    () => buildLeadCreateData({}, context),
-    /Please fill at least 1 lead contact field/
-);
+const blankLead = buildLeadCreateData({}, context);
+assert.strictEqual(blankLead.name, null);
+assert.strictEqual(blankLead.stage, 'new');
 
 assert.throws(
     () => buildLeadPatchData(created, { stage: 'invalid' }, context),

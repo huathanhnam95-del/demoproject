@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../../public/pronunciation-analyzer/app.js', import.meta.url), 'utf8');
+const comparison = fs.readFileSync(new URL('../../public/pronunciation-analyzer/version-comparison.js', import.meta.url), 'utf8');
 const config = fs.readFileSync(new URL('../../public/pronunciation-analyzer/config.js', import.meta.url), 'utf8');
 const style = fs.readFileSync(new URL('../../public/pronunciation-analyzer/style.css', import.meta.url), 'utf8');
 
@@ -32,6 +33,8 @@ assert.match(app, /analyzeComparison/);
 assert.match(app, /buildComparisonViewModel/);
 assert.match(app, /saveVersionComparison/);
 assert.match(app, /setAutomaticSyllables/);
+assert.match(comparison, /ctc-token-coverage/);
+assert.match(comparison, /CTC token coverage/);
 assert.match(style, /\.pa-version-comparison/);
 assert.match(style, /\.pa-version-columns/);
 assert.match(style, /\.pa-version-judgment/);

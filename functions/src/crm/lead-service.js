@@ -153,27 +153,12 @@ function normalizeLeadCore(input, fallback = {}) {
     };
 }
 
-function hasAnyLeadContact(lead) {
-    return [
-        lead.name,
-        lead.phone,
-        lead.email,
-        lead.zalo,
-        lead.facebook,
-        lead.facebookDisplayName,
-        lead.facebookProfileUrl
-    ].some(Boolean);
-}
-
 function buildLeadCreateData(input, context = {}) {
     const lead = normalizeLeadCore(input, {
         stage: 'new',
         ownerUid: context.user?.uid || null,
         crmId: context.crmId || null
     });
-    if (!hasAnyLeadContact(lead)) {
-        throw new Error('Please fill at least 1 lead contact field before saving.');
-    }
     return {
         ...lead,
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
@@ -334,6 +319,8 @@ function mapLeadRecord(doc, leadId) {
         lossReason: data.lossReason || null,
         notes: data.notes || null,
         studentId: data.studentId || null,
+        learningProfile: normalizeLearningProfile(data.learningProfile),
+        targets: normalizeTargets(data.targets),
         createdAt: data.createdAt || null,
         createdBy: data.createdBy || null,
         createdByEmail: data.createdByEmail || null,

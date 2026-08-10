@@ -72,7 +72,7 @@ async function run() {
           context: { targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌɡræf/', expectedSyllables: 3, variantId: '8888888888888888' },
           revisions: { comparisonSchema: 'pronunciation-comparison-v1', v2: 'pronunciation-analysis-v2', v3: 'pronunciation-analysis-v3', v3Model: 'browser-model' },
           v2: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v2', quality: { confidence: 0.81 }, duration: 0.8, pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, observed: { syllableCount: 2, syllables: [{ startTime: 0.05, endTime: 0.35, duration: 0.3, vowelDuration: 0.18, label: 'pho' }, { startTime: 0.35, endTime: 0.8, duration: 0.45, vowelDuration: 0.22, label: 'graph' }] } } },
-          v3: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v3', confidence: 0.94, total_duration: 0.78, pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, syllable_count: 3, observed_syllables: [{ startTime: 0.05, endTime: 0.25, duration: 0.2, label: 'pho' }, { startTime: 0.25, endTime: 0.48, duration: 0.23, label: 'to' }, { startTime: 0.48, endTime: 0.78, duration: 0.3, label: 'graph' }] } }
+          v3: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v3', confidence: 0.94, total_duration: 0.78, segmentation_convention: 'ctc-token-coverage', measurement_convention: 'ctc-blank-midpoint-v1', pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, syllable_count: 3, observed_syllables: [{ startTime: 0.05, endTime: 0.25, measurementStartTime: 0.07, measurementEndTime: 0.27, duration: 0.2, label: 'pho' }, { startTime: 0.25, endTime: 0.48, measurementStartTime: 0.27, measurementEndTime: 0.45, duration: 0.23, label: 'to' }, { startTime: 0.48, endTime: 0.78, measurementStartTime: 0.48, measurementEndTime: 0.7, duration: 0.3, label: 'graph' }] } }
         });
       }
       if (url.includes('/api/admin/dev/save-analysis-comparison')) {
@@ -183,6 +183,7 @@ async function run() {
       const saveEnabledAfterVote = document.querySelector('#pa-version-save').disabled;
       await app.saveVersionComparison();
       const completeSavedCount = window.__savedComparisons.length;
+      const v3BoundaryLabel = document.querySelector('#pa-version-v3 .pa-version-boundary-label')?.textContent || '';
       const partial = {
         ...comparison,
         status: 'partial_failure',
@@ -197,6 +198,7 @@ async function run() {
         compareRequests: window.__comparisonRequests.length,
         v2Count,
         v3Count,
+        v3BoundaryLabel,
         radioCount: document.querySelectorAll('input[name="pa-version-judgment"]').length,
         visible: !document.querySelector('#pa-version-comparison').hidden,
         sourceAfterToggle,
@@ -282,6 +284,7 @@ async function run() {
     assert.equal(result.compareRequests, 1);
     assert.equal(result.v2Count, '2');
     assert.equal(result.v3Count, '3');
+    assert.match(result.v3BoundaryLabel, /CTC token coverage/i);
     assert.equal(result.radioCount, 4);
     assert.equal(result.visible, true);
     assert.equal(result.sourceAfterToggle, 'v3');

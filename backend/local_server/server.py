@@ -2509,7 +2509,8 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
     empty decode, so the shared ``_recognizer_*`` readers are used instead.
     """
     phonemes = phoneme_result.get('phonemes', []) or []
-    syllables_from_recognizer = phoneme_result.get('syllables', []) or (phoneme_result.get('canonical_alignment') or {}).get('syllables', [])
+    canonical_alignment = phoneme_result.get('canonical_alignment') or {}
+    syllables_from_recognizer = phoneme_result.get('syllables', []) or canonical_alignment.get('syllables', [])
     confidence = _recognizer_confidence(phoneme_result)
     if confidence is None:
         confidence = 0.0
@@ -2527,6 +2528,55 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         reference_ipa, observed_phoneme_labels, syllable_count, expected_syllables,
     )
 
+    def _ensure_measurement_boundaries(spans):
+        """Fill in measurement boundaries when the recognizer omits them.
+
+        Splits inter-syllable gaps at the midpoint and extends each
+        neighbouring syllable's measurement boundary into its half,
+        mirroring the logic in stress_alignment._derive_measurement_spans.
+        """
+        if not spans or not isinstance(spans, list):
+            return spans
+        time_key = 'start_time' if 'start_time' in (spans[0] or {}) else 'startTime'
+        end_key = 'end_time' if 'end_time' in (spans[0] or {}) else 'endTime'
+        meas_start_key = 'measurement_start_time'
+        meas_end_key = 'measurement_end_time'
+        if any(s.get(meas_start_key) is not None or s.get(meas_end_key) is not None for s in spans):
+            return spans
+        for s in spans:
+            s.setdefault(meas_start_key, s.get(time_key))
+            s.setdefault(meas_end_key, s.get(end_key))
+        for i in range(len(spans) - 1):
+            gap_start = spans[i].get(end_key, 0)
+            gap_end = spans[i + 1].get(time_key, 0)
+            if gap_end > gap_start:
+                mid = (gap_start + gap_end) / 2
+                spans[i][meas_end_key] = mid
+                spans[i + 1][meas_start_key] = mid
+        return spans
+
+    _ensure_measurement_boundaries(syllables_from_recognizer)
+
+    def public_syllable_span(span):
+        start_time = span.get('start_time', span.get('startTime', span.get('start', 0)))
+        end_time = span.get('end_time', span.get('endTime', span.get('end', 0)))
+        output = {
+            'startTime': start_time,
+            'endTime': end_time,
+            'duration': span.get('duration', end_time - start_time),
+            'confidence': span.get('confidence'),
+            'nucleus': span.get('nucleus'),
+        }
+        for source, target in (
+            ('nucleus_start_time', 'nucleusStartTime'),
+            ('nucleus_end_time', 'nucleusEndTime'),
+            ('measurement_start_time', 'measurementStartTime'),
+            ('measurement_end_time', 'measurementEndTime'),
+        ):
+            if source in span and span[source] is not None:
+                output[target] = span[source]
+        return output
+
     return {
         'analysisVersion': 'pronunciation-analysis-v3',
         'mode': 'active',
@@ -2536,17 +2586,12 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         'quality_reason': quality_reason,
         'degraded': False,
         'observed_phonemes': phonemes,
-        'observed_syllables': [{
-            'startTime': s.get('start_time', s.get('startTime', s.get('start', 0))),
-            'endTime': s.get('end_time', s.get('endTime', s.get('end', 0))),
-            'duration': s.get(
-                'duration',
-                s.get('end_time', s.get('end', 0)) - s.get('start_time', s.get('start', 0)),
-            ),
-            'confidence': s.get('confidence'),
-            'nucleus': s.get('nucleus'),
-        } for s in syllables_from_recognizer],
+        'observed_syllables': [public_syllable_span(s) for s in syllables_from_recognizer],
         'segmentation_source': 'ctc',
+        'span_contract_version': canonical_alignment.get('span_contract_version'),
+        'segmentation_convention': canonical_alignment.get('syllable_span_type'),
+        'nucleus_convention': canonical_alignment.get('nucleus_span_type'),
+        'measurement_convention': canonical_alignment.get('measurement_span_type'),
         'syllable_count': syllable_count,
         'comparison': comparison,
         'reference_stress': (praat_result.get('observed', {}).get('stressEvidence', {}).get('referenceStress')

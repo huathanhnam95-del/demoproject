@@ -222,8 +222,14 @@ def aligned_acoustic_features(praat_result: dict[str, Any], recognizer_result: d
     intensity = praat_result.get("intensity") or {}
     result: list[dict[str, Any]] = []
     for span in spans:
-        raw_start = span.get("nucleus_start_time", span.get("start_time"))
-        raw_end = span.get("nucleus_end_time", span.get("end_time"))
+        raw_start = span.get(
+            "measurement_start_time",
+            span.get("nucleus_start_time", span.get("start_time")),
+        )
+        raw_end = span.get(
+            "measurement_end_time",
+            span.get("nucleus_end_time", span.get("end_time")),
+        )
         if not isinstance(raw_start, (int, float)) or not isinstance(raw_end, (int, float)):
             continue
         start = float(raw_start)

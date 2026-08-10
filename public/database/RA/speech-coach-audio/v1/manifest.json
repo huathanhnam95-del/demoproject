@@ -1,0 +1,1492 @@
+{
+  "version": "sc-kokoro-v1",
+  "voice": "af_heart",
+  "speed": 1,
+  "format": "mp3",
+  "sampleRate": 24000,
+  "channels": 1,
+  "sourceWorkbookSha256": "7701b5cef9e04bfbec64809cfbb58c96f5c1a3074f6bd2da16b07d27623c0651",
+  "rulesVersion": "cs-v1",
+  "generatorRevision": "c2e120c79e593fc6b8a7d4f4504c5484b1dbe500fbfb94ed4dcf8ba33724c8b5",
+  "generatorRunId": "2026-08-09T05-37-25-451Z",
+  "kokoro": {
+    "checkout": "C:\\Cursor AI\\Kokoro-FastAPI",
+    "revision": "c84adf35567a58d61843768869421adcd5370437",
+    "voiceEndpoint": "http://127.0.0.1:8880/v1/audio/voices",
+    "phonemeEndpoint": "http://127.0.0.1:8880/dev/phonemize",
+    "generationEndpoint": "http://127.0.0.1:8880/dev/generate_from_phonemes"
+  },
+  "questionManifestPattern": "questions/{questionId}.json",
+  "assets": {
+    "6e72b5315230cd74cb41b7a3cd65c88c784f34953a5890610133b0a9650b01a1": {
+      "assetId": "6e72b5315230cd74cb41b7a3cd65c88c784f34953a5890610133b0a9650b01a1",
+      "status": "ready",
+      "file": "clips/6e/6e72b5315230cd74cb41b7a3cd65c88c784f34953a5890610133b0a9650b01a1.mp3",
+      "family": "catenation",
+      "spokenText": "structures are",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "stɹˈʌkʧəɹz",
+        "ɑɹ"
+      ],
+      "transformedPhonemeWords": [
+        "stɹˈʌkʧəɹz",
+        "ɑɹ"
+      ],
+      "phonemes": "stɹˈʌkʧəɹzɑɹ",
+      "uiIpa": null,
+      "durationMs": 1577,
+      "wavSha256": "07f6be1ad94d6745d70b7a1078f20c3421de45f8e58286179c5fd05d0e1e22e0",
+      "mp3Sha256": "513f39a9df24ce394ec9d37c28253ac2218c708776a0a406e8c3b13c32c4c448",
+      "generatedAt": "2026-08-09T05:30:12.713Z"
+    },
+    "c0e242c0747a642b6baf8129462f7144db5c8b82593d49ed2fd2f4cef092f999": {
+      "assetId": "c0e242c0747a642b6baf8129462f7144db5c8b82593d49ed2fd2f4cef092f999",
+      "status": "ready",
+      "file": "clips/c0/c0e242c0747a642b6baf8129462f7144db5c8b82593d49ed2fd2f4cef092f999.mp3",
+      "family": "catenation",
+      "spokenText": "south of",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "sˈWθ",
+        "ʌv"
+      ],
+      "transformedPhonemeWords": [
+        "sˈWθ",
+        "ʌv"
+      ],
+      "phonemes": "sˈWθʌv",
+      "uiIpa": null,
+      "durationMs": 1452,
+      "wavSha256": "c9c2eeb93674376068b7781163e6bcdf6b9c0236edf41aa174dbfbbe877d2ec5",
+      "mp3Sha256": "385cca7eb99bc110b73d7f763fd1a945a4a9a5c6a1f87b1d23e2dd171587b5aa",
+      "generatedAt": "2026-08-09T05:30:14.221Z"
+    },
+    "4cfb8a5e11f1b59bdad766385bc3951c01004be95a4912192cd6e06681e21088": {
+      "assetId": "4cfb8a5e11f1b59bdad766385bc3951c01004be95a4912192cd6e06681e21088",
+      "status": "ready",
+      "file": "clips/4c/4cfb8a5e11f1b59bdad766385bc3951c01004be95a4912192cd6e06681e21088.mp3",
+      "family": "catenation",
+      "spokenText": "sheets of",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ʃˈits",
+        "ʌv"
+      ],
+      "transformedPhonemeWords": [
+        "ʃˈits",
+        "ʌv"
+      ],
+      "phonemes": "ʃˈitsʌv",
+      "uiIpa": null,
+      "durationMs": 1452,
+      "wavSha256": "75ca4c3e557d468ae2409c9f299a8ea352519e2b2aa0527fb13722718fd9874f",
+      "mp3Sha256": "effeed2267337af534d40561ba54854f5cd6dfe4e39827839093195e0a528c93",
+      "generatedAt": "2026-08-09T05:30:15.704Z"
+    },
+    "3e605a5d9fd023f8e2473a01f3cf38bab876d0c773a4fbbfcc94db3edd08a716": {
+      "assetId": "3e605a5d9fd023f8e2473a01f3cf38bab876d0c773a4fbbfcc94db3edd08a716",
+      "status": "ready",
+      "file": "clips/3e/3e605a5d9fd023f8e2473a01f3cf38bab876d0c773a4fbbfcc94db3edd08a716.mp3",
+      "family": "catenation",
+      "spokenText": "of ice",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ʌv",
+        "ˈIs"
+      ],
+      "transformedPhonemeWords": [
+        "ʌv",
+        "ˈIs"
+      ],
+      "phonemes": "ʌvˈIs",
+      "uiIpa": null,
+      "durationMs": 1427,
+      "wavSha256": "dcce590c6bee24c3ac98b5ae448502c8f2300df42171188f0aaff171fcfb7a53",
+      "mp3Sha256": "5460cd0c87af9dcdffe7015afcf085c839afbe8b1ef3fc57f8b70163489a750a",
+      "generatedAt": "2026-08-09T05:30:17.009Z"
+    },
+    "13bc15c477a768a514ce2c23e036778702154cfdb68a2b2c2a073ae3ab33b0e0": {
+      "assetId": "13bc15c477a768a514ce2c23e036778702154cfdb68a2b2c2a073ae3ab33b0e0",
+      "status": "ready",
+      "file": "clips/13/13bc15c477a768a514ce2c23e036778702154cfdb68a2b2c2a073ae3ab33b0e0.mp3",
+      "family": "catenation",
+      "spokenText": "built up",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "bˈɪlt",
+        "ˌʌp"
+      ],
+      "transformedPhonemeWords": [
+        "bˈɪlt",
+        "ˌʌp"
+      ],
+      "phonemes": "bˈɪltˌʌp",
+      "uiIpa": null,
+      "durationMs": 1427,
+      "wavSha256": "ae1c5f84709bd088097542cbd09953a072a08e45294397e29f582d15303ff854",
+      "mp3Sha256": "a7146e8de7a81c0a1d2ec993b82e87e0703796c9734d5a93c4b7504b77c94cc4",
+      "generatedAt": "2026-08-09T05:30:18.404Z"
+    },
+    "4e6878c57bfa13ccc4ad57a11cd05682ee24c9658d0f318993264cc127789b19": {
+      "assetId": "4e6878c57bfa13ccc4ad57a11cd05682ee24c9658d0f318993264cc127789b19",
+      "status": "ready",
+      "file": "clips/4e/4e6878c57bfa13ccc4ad57a11cd05682ee24c9658d0f318993264cc127789b19.mp3",
+      "family": "catenation",
+      "spokenText": "up on",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ˌʌp",
+        "ˌɔn"
+      ],
+      "transformedPhonemeWords": [
+        "ˌʌp",
+        "ˌɔn"
+      ],
+      "phonemes": "ˌʌpˌɔn",
+      "uiIpa": null,
+      "durationMs": 1427,
+      "wavSha256": "631af7a5efd901d6afb8280ec61e8add244ddf7d668c4be52655f9ef28029e70",
+      "mp3Sha256": "b8df659f183a0600a6a08e3776eee6cc60fbc220baf0a72258167576723004b9",
+      "generatedAt": "2026-08-09T05:30:19.996Z"
+    },
+    "720760ccc3575f692d9279ca4211e7e977721de02576b7ab2cc277fb0c23ae41": {
+      "assetId": "720760ccc3575f692d9279ca4211e7e977721de02576b7ab2cc277fb0c23ae41",
+      "status": "ready",
+      "file": "clips/72/720760ccc3575f692d9279ca4211e7e977721de02576b7ab2cc277fb0c23ae41.mp3",
+      "family": "catenation",
+      "spokenText": "level over",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "lˈɛvᵊl",
+        "ˈOvəɹ"
+      ],
+      "transformedPhonemeWords": [
+        "lˈɛvᵊl",
+        "ˈOvəɹ"
+      ],
+      "phonemes": "lˈɛvᵊlˈOvəɹ",
+      "uiIpa": null,
+      "durationMs": 1602,
+      "wavSha256": "13024b53fd457d864e9fb0a2cea3c0d965d33cb5a9170d2293b0c06c01f27384",
+      "mp3Sha256": "ebcbe71b4b4202023ef97a355b53c002cec37833b8a22be675f0fbf7383814d3",
+      "generatedAt": "2026-08-09T05:30:21.472Z"
+    },
+    "6ca094aea34d1363c1624c288654105e218ac473e495dea9a351e05ae569ce90": {
+      "assetId": "6ca094aea34d1363c1624c288654105e218ac473e495dea9a351e05ae569ce90",
+      "status": "ready",
+      "file": "clips/6c/6ca094aea34d1363c1624c288654105e218ac473e495dea9a351e05ae569ce90.mp3",
+      "family": "catenation",
+      "spokenText": "round ice",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ɹˈWnd",
+        "ˈIs"
+      ],
+      "transformedPhonemeWords": [
+        "ɹˈWnd",
+        "ˈIs"
+      ],
+      "phonemes": "ɹˈWndˈIs",
+      "uiIpa": null,
+      "durationMs": 1527,
+      "wavSha256": "231e718ebda2627e108708b690f2a877674d93b49c16ad3aacfa802ba4500d6e",
+      "mp3Sha256": "d7e5c83bf957379b5e80641511e75d17e6f92b373a3f6e002c0d9ad33383697e",
+      "generatedAt": "2026-08-09T05:30:22.889Z"
+    },
+    "834f7aa337f0f2d4127517ee84b9451497df0a71d3b4bbc1e6897eed0a5e2cb5": {
+      "assetId": "834f7aa337f0f2d4127517ee84b9451497df0a71d3b4bbc1e6897eed0a5e2cb5",
+      "status": "ready",
+      "file": "clips/83/834f7aa337f0f2d4127517ee84b9451497df0a71d3b4bbc1e6897eed0a5e2cb5.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "The cold storage",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ðə",
+        "kˈOld",
+        "stˈɔɹɪʤ"
+      ],
+      "transformedPhonemeWords": [
+        "ðə",
+        "kˈOld",
+        "stˈɔɹɪʤ"
+      ],
+      "phonemes": "ðə kˈOld stˈɔɹɪʤ",
+      "uiIpa": "/ðə/",
+      "durationMs": 1827,
+      "wavSha256": "82720216f59d808cedfb7199204cdb85fa44587f71c6003084052418090de4ba",
+      "mp3Sha256": "f03f3cffa00b216e312716fa18e69d35f693dc10354b04e1d2ccbd137148416e",
+      "generatedAt": "2026-08-09T05:30:24.341Z"
+    },
+    "86c395c0c73a958f38a155ba12a207257cf1d1c4a687fbe48925f1df34bbab62": {
+      "assetId": "86c395c0c73a958f38a155ba12a207257cf1d1c4a687fbe48925f1df34bbab62",
+      "status": "ready",
+      "file": "clips/86/86c395c0c73a958f38a155ba12a207257cf1d1c4a687fbe48925f1df34bbab62.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "south of the",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "sˈWθ",
+        "ʌv",
+        "ðə"
+      ],
+      "transformedPhonemeWords": [
+        "sˈWθ",
+        "əv",
+        "ðə"
+      ],
+      "phonemes": "sˈWθ əv ðə",
+      "uiIpa": "/əv/",
+      "durationMs": 1652,
+      "wavSha256": "ded101fc92d0737c5b6e804f2eafb3065009f60ae9382f13bee377aea2e91e47",
+      "mp3Sha256": "27ac97465ec76bec6acfd422e17389c27bbc770a50585e0721f12b32041c26b0",
+      "generatedAt": "2026-08-09T05:30:25.762Z"
+    },
+    "045b2c253efc2d1d442699765d9b6bc8e53ac1807849f99ebcba904d1aa51251": {
+      "assetId": "045b2c253efc2d1d442699765d9b6bc8e53ac1807849f99ebcba904d1aa51251",
+      "status": "ready",
+      "file": "clips/04/045b2c253efc2d1d442699765d9b6bc8e53ac1807849f99ebcba904d1aa51251.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "of the main",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ʌv",
+        "ðə",
+        "mˈAn"
+      ],
+      "transformedPhonemeWords": [
+        "ʌv",
+        "ðə",
+        "mˈAn"
+      ],
+      "phonemes": "ʌv ðə mˈAn",
+      "uiIpa": "/ðə/",
+      "durationMs": 1602,
+      "wavSha256": "e337a58b2dd4a3bdd36fbd741af3523916b4980d33f24fd0d9659e7680548645",
+      "mp3Sha256": "304810745b23c523e66e1c156cd37a6be0649aaa95e30aef6e64ed68e967c227",
+      "generatedAt": "2026-08-09T05:30:27.146Z"
+    },
+    "b583a05ef8ef591e5ff859a50fb033a811ca9c435e114ef13aa373374fa3438a": {
+      "assetId": "b583a05ef8ef591e5ff859a50fb033a811ca9c435e114ef13aa373374fa3438a",
+      "status": "ready",
+      "file": "clips/b5/b583a05ef8ef591e5ff859a50fb033a811ca9c435e114ef13aa373374fa3438a.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "would have had",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "wʊd",
+        "hæv",
+        "hˌæd"
+      ],
+      "transformedPhonemeWords": [
+        "wʊd",
+        "həv",
+        "hˌæd"
+      ],
+      "phonemes": "wʊd həv hˌæd",
+      "uiIpa": "/həv/",
+      "durationMs": 1502,
+      "wavSha256": "81f9b39b880dcdb59e5403d93b4f095c01d41af0647e703ee2895fed35a4da0c",
+      "mp3Sha256": "542e08af85c74447f007d392989b9b59bc32dac9c3f70c8151706da7c3ccab8f",
+      "generatedAt": "2026-08-09T05:30:28.608Z"
+    },
+    "611d75f727f3994b346ffe710430fb552a57ee52fec30a39d46f81308ec49696": {
+      "assetId": "611d75f727f3994b346ffe710430fb552a57ee52fec30a39d46f81308ec49696",
+      "status": "ready",
+      "file": "clips/61/611d75f727f3994b346ffe710430fb552a57ee52fec30a39d46f81308ec49696.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "sheets of ice",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ʃˈits",
+        "ʌv",
+        "ˈIs"
+      ],
+      "transformedPhonemeWords": [
+        "ʃˈits",
+        "əv",
+        "ˈIs"
+      ],
+      "phonemes": "ʃˈits əv ˈIs",
+      "uiIpa": "/əv/",
+      "durationMs": 1627,
+      "wavSha256": "33aab36af216eb0476523000960cd3636b076c7340e1f5767e576803cc207ddd",
+      "mp3Sha256": "9be86adf7882b2632a112a0abd897f5dca7ec5e0b6a7c37ef8fa7d43a4fce0d1",
+      "generatedAt": "2026-08-09T05:30:30.285Z"
+    },
+    "0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae": {
+      "assetId": "0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae",
+      "status": "ready",
+      "file": "clips/03/0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "on the ground",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ˌɔn",
+        "ðə",
+        "ɡɹˈWnd"
+      ],
+      "transformedPhonemeWords": [
+        "ˌɔn",
+        "ðə",
+        "ɡɹˈWnd"
+      ],
+      "phonemes": "ˌɔn ðə ɡɹˈWnd",
+      "uiIpa": "/ðə/",
+      "durationMs": 1577,
+      "wavSha256": "902a82a75f50b74a4d4c62b1b1595ded0ef67327296d071926d1744112ea9df1",
+      "mp3Sha256": "231f10f6a3e745230a1edb3c8b505ed1f3388f85aa44ac4587dcd6162124b470",
+      "generatedAt": "2026-08-09T05:30:31.990Z"
+    },
+    "2cc4092844740094e02b664a74a009d0ab7f6c2321ce51a5096252d9fc0e10ba": {
+      "assetId": "2cc4092844740094e02b664a74a009d0ab7f6c2321ce51a5096252d9fc0e10ba",
+      "status": "ready",
+      "file": "clips/2c/2cc4092844740094e02b664a74a009d0ab7f6c2321ce51a5096252d9fc0e10ba.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "over the course",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ˈOvəɹ",
+        "ðə",
+        "kˈɔɹs"
+      ],
+      "transformedPhonemeWords": [
+        "ˈOvəɹ",
+        "ðə",
+        "kˈɔɹs"
+      ],
+      "phonemes": "ˈOvəɹ ðə kˈɔɹs",
+      "uiIpa": "/ðə/",
+      "durationMs": 1552,
+      "wavSha256": "83c5bb996eae7c7be9a9413edba9fda84390a62e1032e0b0eb377e083a122ff8",
+      "mp3Sha256": "fcf4c188bf80f31b6cb3c992bc59799b99a32994d51950b47fe9bf40ffbea5cb",
+      "generatedAt": "2026-08-09T05:30:33.375Z"
+    },
+    "45cd7f8a2200994d8a4188a0bad672295a82779c9df92612bda7e8ec7276fd81": {
+      "assetId": "45cd7f8a2200994d8a4188a0bad672295a82779c9df92612bda7e8ec7276fd81",
+      "status": "ready",
+      "file": "clips/45/45cd7f8a2200994d8a4188a0bad672295a82779c9df92612bda7e8ec7276fd81.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "course of the",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "kˈɔɹs",
+        "ʌv",
+        "ðə"
+      ],
+      "transformedPhonemeWords": [
+        "kˈɔɹs",
+        "əv",
+        "ðə"
+      ],
+      "phonemes": "kˈɔɹs əv ðə",
+      "uiIpa": "/əv/",
+      "durationMs": 1652,
+      "wavSha256": "567164330c3f986fdccf32b492fd7367fa60f0aa741ddc5affe4592e94a5b5d4",
+      "mp3Sha256": "085665f10b7daa9f070c4b4d0f1d5cdb8627bbf4b48d1cb993bbc78420ceaf7c",
+      "generatedAt": "2026-08-09T05:30:34.813Z"
+    },
+    "6e12b8e64cb8b6018b0fee072d3ef479ec2014034116f76cca3e5c9a1d893752": {
+      "assetId": "6e12b8e64cb8b6018b0fee072d3ef479ec2014034116f76cca3e5c9a1d893752",
+      "status": "ready",
+      "file": "clips/6e/6e12b8e64cb8b6018b0fee072d3ef479ec2014034116f76cca3e5c9a1d893752.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "of the winter",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ʌv",
+        "ðə",
+        "wˈɪntəɹ"
+      ],
+      "transformedPhonemeWords": [
+        "ʌv",
+        "ðə",
+        "wˈɪntəɹ"
+      ],
+      "phonemes": "ʌv ðə wˈɪntəɹ",
+      "uiIpa": "/ðə/",
+      "durationMs": 1527,
+      "wavSha256": "ccea167bebd5a626c285e62c5284e334e8af80b848143a39cabcf8ce0d6080f3",
+      "mp3Sha256": "e834c594ba45d125652953be08e01f321b272462486138aa7f5cb4e14e7b9d30",
+      "generatedAt": "2026-08-09T05:30:36.090Z"
+    },
+    "38572034164b6e8c02291360ae612c1e1c59a6993f32390f8e9fcd69033b8bab": {
+      "assetId": "38572034164b6e8c02291360ae612c1e1c59a6993f32390f8e9fcd69033b8bab",
+      "status": "ready",
+      "file": "clips/38/38572034164b6e8c02291360ae612c1e1c59a6993f32390f8e9fcd69033b8bab.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "winter to provide",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "wˈɪntəɹ",
+        "tə",
+        "pɹəvˈId"
+      ],
+      "transformedPhonemeWords": [
+        "wˈɪntəɹ",
+        "tə",
+        "pɹəvˈId"
+      ],
+      "phonemes": "wˈɪntəɹ tə pɹəvˈId",
+      "uiIpa": "/tə/",
+      "durationMs": 1802,
+      "wavSha256": "3e5185e75248ac28974373ec6aec6b9d4e7ebba0512d3c1f55389901f153a623",
+      "mp3Sha256": "a1ce26355b707bd060cb1d504e9ead10da6f7f1a8f4df72107ae255f50c92e58",
+      "generatedAt": "2026-08-09T05:30:37.460Z"
+    },
+    "fe6a3307fec76377f0748c8e7e16cbf060b43a924a515c9e80cb7047bf101441": {
+      "assetId": "fe6a3307fec76377f0748c8e7e16cbf060b43a924a515c9e80cb7047bf101441",
+      "status": "ready",
+      "file": "clips/fe/fe6a3307fec76377f0748c8e7e16cbf060b43a924a515c9e80cb7047bf101441.mp3",
+      "family": "catenation",
+      "spokenText": "situation is",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "sˌɪʧəwˈAʃən",
+        "ɪz"
+      ],
+      "transformedPhonemeWords": [
+        "sˌɪʧəwˈAʃən",
+        "ɪz"
+      ],
+      "phonemes": "sˌɪʧəwˈAʃənɪz",
+      "uiIpa": null,
+      "durationMs": 1777,
+      "wavSha256": "10b173099afc0b7edf7c4b37dd7dbdf7319d32e7271a0261554a08d6c6a9509e",
+      "mp3Sha256": "d5883d77b63de1ad96ca86b7bef6fa1f6a0f9405555663e94de4e791dd13bcdf",
+      "generatedAt": "2026-08-09T05:32:22.240Z"
+    },
+    "fc5ba0488c6cc2c33defbb3a324100b21717fe3ce266a7a57a5cfa677210fc65": {
+      "assetId": "fc5ba0488c6cc2c33defbb3a324100b21717fe3ce266a7a57a5cfa677210fc65",
+      "status": "ready",
+      "file": "clips/fc/fc5ba0488c6cc2c33defbb3a324100b21717fe3ce266a7a57a5cfa677210fc65.mp3",
+      "family": "catenation",
+      "spokenText": "babies in",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "bˈAbiz",
+        "ˈɪn"
+      ],
+      "transformedPhonemeWords": [
+        "bˈAbiz",
+        "ˈɪn"
+      ],
+      "phonemes": "bˈAbizˈɪn",
+      "uiIpa": null,
+      "durationMs": 1527,
+      "wavSha256": "817a8fe4c70ad951d711b387fb53829cc18536ce04f32ac61e83d3fb8e1ce9da",
+      "mp3Sha256": "6fbe308a576c439e5ec26556d146e6a79052cbd97c3be6a9e1457fa8207c703a",
+      "generatedAt": "2026-08-09T05:32:24.361Z"
+    },
+    "21ab6a27bee8871e2f4cd49c5b16e55626ddeba67e2ca5ba9c904f4a050f47ac": {
+      "assetId": "21ab6a27bee8871e2f4cd49c5b16e55626ddeba67e2ca5ba9c904f4a050f47ac",
+      "status": "ready",
+      "file": "clips/21/21ab6a27bee8871e2f4cd49c5b16e55626ddeba67e2ca5ba9c904f4a050f47ac.mp3",
+      "family": "catenation",
+      "spokenText": "says Avi",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "sˈɛz",
+        "ˈævi"
+      ],
+      "transformedPhonemeWords": [
+        "sˈɛz",
+        "ˈævi"
+      ],
+      "phonemes": "sˈɛzˈævi",
+      "uiIpa": null,
+      "durationMs": 1527,
+      "wavSha256": "d19c6adbb409e552e033812b185e4539fa6c6c0b21da389dea137980f57e9211",
+      "mp3Sha256": "23ac1662fffd35a800a08d4b75dd99de4a1a54cd453a6e2798a65f3d5bdea102",
+      "generatedAt": "2026-08-09T05:32:25.693Z"
+    },
+    "4e3be15f364c3e1b42a609c44b4f9ac37f29e91c896ac9dcda52e27cbd56ff12": {
+      "assetId": "4e3be15f364c3e1b42a609c44b4f9ac37f29e91c896ac9dcda52e27cbd56ff12",
+      "status": "ready",
+      "file": "clips/4e/4e3be15f364c3e1b42a609c44b4f9ac37f29e91c896ac9dcda52e27cbd56ff12.mp3",
+      "family": "catenation",
+      "spokenText": "for Astrophysics",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "fɔɹ",
+        "ˌæstɹOfˈɪzɪks"
+      ],
+      "transformedPhonemeWords": [
+        "fɔɹ",
+        "ˌæstɹOfˈɪzɪks"
+      ],
+      "phonemes": "fɔɹˌæstɹOfˈɪzɪks",
+      "uiIpa": null,
+      "durationMs": 1827,
+      "wavSha256": "eb9be383ea219890e15d00eddb6c1bc0e403c8395197df6c31710ec0a95d5abe",
+      "mp3Sha256": "79bdce014bf3dba72e628bd9e76f922af4f0c320212c1fbf1ff8e10a3e74dfae",
+      "generatedAt": "2026-08-09T05:32:27.143Z"
+    },
+    "0692ec30229d8072499622b605ee67ce5f983bf4a9f3990f18c98d64062ab4d1": {
+      "assetId": "0692ec30229d8072499622b605ee67ce5f983bf4a9f3990f18c98d64062ab4d1",
+      "status": "ready",
+      "file": "clips/06/0692ec30229d8072499622b605ee67ce5f983bf4a9f3990f18c98d64062ab4d1.mp3",
+      "family": "catenation",
+      "spokenText": "in a",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ˈɪn",
+        "ɐ"
+      ],
+      "transformedPhonemeWords": [
+        "ˈɪn",
+        "ɐ"
+      ],
+      "phonemes": "ˈɪnɐ",
+      "uiIpa": null,
+      "durationMs": 1327,
+      "wavSha256": "c94be1adfd197384c3fac9dd553f55dfd33ad94d51489f784b72a15f22a80d84",
+      "mp3Sha256": "ac6abc835f402aaf2a88954051f0ab022461ae3cd306c9b2a483dd5302e6eeaf",
+      "generatedAt": "2026-08-09T05:32:28.599Z"
+    },
+    "ba15f8f2e269c933a0ca1a25eaf259b5d26331a31109b4f95a4477d3eea6d9f5": {
+      "assetId": "ba15f8f2e269c933a0ca1a25eaf259b5d26331a31109b4f95a4477d3eea6d9f5",
+      "status": "ready",
+      "file": "clips/ba/ba15f8f2e269c933a0ca1a25eaf259b5d26331a31109b4f95a4477d3eea6d9f5.mp3",
+      "family": "catenation",
+      "spokenText": "been accepted",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "bɪn",
+        "əksˈɛptᵻd"
+      ],
+      "transformedPhonemeWords": [
+        "bɪn",
+        "əksˈɛptᵻd"
+      ],
+      "phonemes": "bɪnəksˈɛptᵻd",
+      "uiIpa": null,
+      "durationMs": 1627,
+      "wavSha256": "90b825a554348b79809e7ca02cbd743478933d4257cb2e6da0626d8726574c42",
+      "mp3Sha256": "fe90af9c1f8f092550475218db8ffa1e54917993a5184e021075315125ca3a2a",
+      "generatedAt": "2026-08-09T05:32:30.074Z"
+    },
+    "9f230941431686e01216e9d7203aab352cff001f632982608bc493b0d2caf776": {
+      "assetId": "9f230941431686e01216e9d7203aab352cff001f632982608bc493b0d2caf776",
+      "status": "ready",
+      "file": "clips/9f/9f230941431686e01216e9d7203aab352cff001f632982608bc493b0d2caf776.mp3",
+      "family": "catenation",
+      "spokenText": "publication in",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "pˌʌbləkˈAʃən",
+        "ˈɪn"
+      ],
+      "transformedPhonemeWords": [
+        "pˌʌbləkˈAʃən",
+        "ˈɪn"
+      ],
+      "phonemes": "pˌʌbləkˈAʃənˈɪn",
+      "uiIpa": null,
+      "durationMs": 1752,
+      "wavSha256": "24416884a0d84518a92b97a880177a6dad2b83b80e00cebea052c15e502f7f84",
+      "mp3Sha256": "c9887d03c4ce42ca5142dbf4dacaa3f7fe25483d1e112cc170c55bc9372a046d",
+      "generatedAt": "2026-08-09T05:32:31.488Z"
+    },
+    "a7f0dd18145e1b70a010b9545969de0fc6658faec40c06bf2555feda1e668d63": {
+      "assetId": "a7f0dd18145e1b70a010b9545969de0fc6658faec40c06bf2555feda1e668d63",
+      "status": "ready",
+      "file": "clips/a7/a7f0dd18145e1b70a010b9545969de0fc6658faec40c06bf2555feda1e668d63.mp3",
+      "family": "same_consonant_merge",
+      "spokenText": "Journal Letters",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ʤˈɜɹnᵊl",
+        "lˈɛTəɹz"
+      ],
+      "transformedPhonemeWords": [
+        "ʤˈɜɹnᵊl",
+        "ˈɛTəɹz"
+      ],
+      "phonemes": "ʤˈɜɹnᵊlˈɛTəɹz",
+      "uiIpa": null,
+      "durationMs": 1552,
+      "wavSha256": "efaecec8d39bfdbd6d249325739f251f692a70b8cf0b8490beded5d97b8db5d5",
+      "mp3Sha256": "aaef38a5e90eb88f8abd15e3f8959ff9394cb990652903e531d00e1eb3e94fd3",
+      "generatedAt": "2026-08-09T05:32:32.861Z"
+    },
+    "de33927a95ea723231b35bcf56f569e94df381dc72c705c2b76330cf73c71aa3": {
+      "assetId": "de33927a95ea723231b35bcf56f569e94df381dc72c705c2b76330cf73c71aa3",
+      "status": "ready",
+      "file": "clips/de/de33927a95ea723231b35bcf56f569e94df381dc72c705c2b76330cf73c71aa3.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "The situation is",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ðə",
+        "sˌɪʧəwˈAʃən",
+        "ɪz"
+      ],
+      "transformedPhonemeWords": [
+        "ðə",
+        "sˌɪʧəwˈAʃən",
+        "ɪz"
+      ],
+      "phonemes": "ðə sˌɪʧəwˈAʃən ɪz",
+      "uiIpa": "/ðə/",
+      "durationMs": 1827,
+      "wavSha256": "c4b6d4e34a35470ebb7fb309a58e733d5458150e78f030928d1fbf93c752fc00",
+      "mp3Sha256": "4293d5a0868370a92798d02beda3b583cf39247c6425f1003718c8f81f1d27f8",
+      "generatedAt": "2026-08-09T05:32:34.279Z"
+    },
+    "ee815b0e79784fcd8646e8e8bd29d5300d3383e8ecadaa04398f8c1d3e943fc6": {
+      "assetId": "ee815b0e79784fcd8646e8e8bd29d5300d3383e8ecadaa04398f8c1d3e943fc6",
+      "status": "ready",
+      "file": "clips/ee/ee815b0e79784fcd8646e8e8bd29d5300d3383e8ecadaa04398f8c1d3e943fc6.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "similar to a",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "sˈɪmᵊləɹ",
+        "tu",
+        "ɐ"
+      ],
+      "transformedPhonemeWords": [
+        "sˈɪmᵊləɹ",
+        "tə",
+        "ɐ"
+      ],
+      "phonemes": "sˈɪmᵊləɹ tə ɐ",
+      "uiIpa": "/tə/",
+      "durationMs": 1827,
+      "wavSha256": "2e1334cc3787f9fabc1503fcf160520ca0e10ae276dd109a47e77e7abfa5de5c",
+      "mp3Sha256": "5c68d8ea43adbd994c70c0efcb278f678a5ae9f8e63e1fea89af65b1248ef2f4",
+      "generatedAt": "2026-08-09T05:32:35.690Z"
+    },
+    "61f60f102e94153f012788830a54510559c8cffe0d3e66a559979755a7b35766": {
+      "assetId": "61f60f102e94153f012788830a54510559c8cffe0d3e66a559979755a7b35766",
+      "status": "ready",
+      "file": "clips/61/61f60f102e94153f012788830a54510559c8cffe0d3e66a559979755a7b35766.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "to a pregnant",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "tə",
+        "ɐ",
+        "pɹˈɛɡnənt"
+      ],
+      "transformedPhonemeWords": [
+        "tə",
+        "ə",
+        "pɹˈɛɡnənt"
+      ],
+      "phonemes": "tə ə pɹˈɛɡnənt",
+      "uiIpa": "/ə/",
+      "durationMs": 1602,
+      "wavSha256": "87f18c27a0da51035d15ddc78532eb0434f51a0f83bc26697e6dccf794a4416f",
+      "mp3Sha256": "d8fc0c5744eabf8a704fdbc5a36aeaf6ada2915f08723f80630a800e8752bbcc",
+      "generatedAt": "2026-08-09T05:32:37.092Z"
+    },
+    "4d206ed831bbad21c900c59f97ec52bdc1df324b33661363bcac819f93121e1d": {
+      "assetId": "4d206ed831bbad21c900c59f97ec52bdc1df324b33661363bcac819f93121e1d",
+      "status": "ready",
+      "file": "clips/4d/4d206ed831bbad21c900c59f97ec52bdc1df324b33661363bcac819f93121e1d.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "who has twin",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "hˌu",
+        "hæz",
+        "twˈɪn"
+      ],
+      "transformedPhonemeWords": [
+        "hˌu",
+        "həz",
+        "twˈɪn"
+      ],
+      "phonemes": "hˌu həz twˈɪn",
+      "uiIpa": "/həz/",
+      "durationMs": 1652,
+      "wavSha256": "e6c1b4dba23730620f74c3e2c8e66a2c8c8ab029ac749d6f8b72cf07cf529b80",
+      "mp3Sha256": "7c331985e5989105a5a297aad234109d9acf76fba2bfc6c52c615fae30662434",
+      "generatedAt": "2026-08-09T05:32:38.671Z"
+    },
+    "4e3c31421f3db419eafaeb52af04e8fe1f700a189104df7cc0e070efec4a1872": {
+      "assetId": "4e3c31421f3db419eafaeb52af04e8fe1f700a189104df7cc0e070efec4a1872",
+      "status": "ready",
+      "file": "clips/4e/4e3c31421f3db419eafaeb52af04e8fe1f700a189104df7cc0e070efec4a1872.mp3",
+      "family": "n_bilabial_assimilation",
+      "spokenText": "twin babies",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "twˈɪn",
+        "bˈAbiz"
+      ],
+      "transformedPhonemeWords": [
+        "twˈɪm",
+        "bˈAbiz"
+      ],
+      "phonemes": "twˈɪmbˈAbiz",
+      "uiIpa": null,
+      "durationMs": 1552,
+      "wavSha256": "3f0653e5940ae946bdf9b2dc6ddf70713678af77c3f5ca9e064999b1076608f7",
+      "mp3Sha256": "91b3bb7b9efe6c6a16995bfd9cc0b89832b725bfcd3dff69fd880cc393b05656",
+      "generatedAt": "2026-08-09T05:32:40.208Z"
+    },
+    "e5914e1fd33648da48c274edb49a3355002236a816383d684e6d847369430e33": {
+      "assetId": "e5914e1fd33648da48c274edb49a3355002236a816383d684e6d847369430e33",
+      "status": "ready",
+      "file": "clips/e5/e5914e1fd33648da48c274edb49a3355002236a816383d684e6d847369430e33.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "Avi of the",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ˈævi",
+        "ʌv",
+        "ðə"
+      ],
+      "transformedPhonemeWords": [
+        "ˈævi",
+        "əv",
+        "ðə"
+      ],
+      "phonemes": "ˈævi əv ðə",
+      "uiIpa": "/əv/",
+      "durationMs": 1627,
+      "wavSha256": "17118daf638c6c25c348368a0421f8a56e1764c1f98e73f8fbf9415418096b82",
+      "mp3Sha256": "63b41dbc983aba54aa0ac7112fe7af6d014c6e0ad7131151903cdbad9df5e80c",
+      "generatedAt": "2026-08-09T05:32:41.564Z"
+    },
+    "04097ea03028e0f3f0f85e9fda9e70f2a90f6955ba71b6f762fc279216355541": {
+      "assetId": "04097ea03028e0f3f0f85e9fda9e70f2a90f6955ba71b6f762fc279216355541",
+      "status": "ready",
+      "file": "clips/04/04097ea03028e0f3f0f85e9fda9e70f2a90f6955ba71b6f762fc279216355541.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "of the Smithsonian",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ʌv",
+        "ðə",
+        "smɪθsˈOniən"
+      ],
+      "transformedPhonemeWords": [
+        "ʌv",
+        "ðə",
+        "smɪθsˈOniən"
+      ],
+      "phonemes": "ʌv ðə smɪθsˈOniən",
+      "uiIpa": "/ðə/",
+      "durationMs": 1752,
+      "wavSha256": "b199b9945180c41fdfc2c7ff375ac88030fbc54d68334e1a86f0cd05edb72c18",
+      "mp3Sha256": "ce5543f4172c3575ef86249c0f578b0c0aeda3b38ee82b9df228847170cc14f1",
+      "generatedAt": "2026-08-09T05:32:42.990Z"
+    },
+    "d2bf15d0be5a05fa9b4d22e33f8fee5f6c699885b318e281db35501806fedf86": {
+      "assetId": "d2bf15d0be5a05fa9b4d22e33f8fee5f6c699885b318e281db35501806fedf86",
+      "status": "ready",
+      "file": "clips/d2/d2bf15d0be5a05fa9b4d22e33f8fee5f6c699885b318e281db35501806fedf86.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "Center for Astrophysics",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "sˈɛntəɹ",
+        "fɔɹ",
+        "ˌæstɹOfˈɪzɪks"
+      ],
+      "transformedPhonemeWords": [
+        "sˈɛntəɹ",
+        "fər",
+        "ˌæstɹOfˈɪzɪks"
+      ],
+      "phonemes": "sˈɛntəɹ fər ˌæstɹOfˈɪzɪks",
+      "uiIpa": "/fər/",
+      "durationMs": 2152,
+      "wavSha256": "579a41558fcf618f4869ad7766a459430ba887dc12d0407e36d2f3d0defda5c3",
+      "mp3Sha256": "7d75f94e35a606337165fd6064ecf81ce6613f3301b348e44c47dcf9fa3d30f3",
+      "generatedAt": "2026-08-09T05:32:44.522Z"
+    },
+    "ec9f14f645de60ce4e3e57c69f1de4a26775d357ba6cc9e8f1249f58c1809d27": {
+      "assetId": "ec9f14f645de60ce4e3e57c69f1de4a26775d357ba6cc9e8f1249f58c1809d27",
+      "status": "ready",
+      "file": "clips/ec/ec9f14f645de60ce4e3e57c69f1de4a26775d357ba6cc9e8f1249f58c1809d27.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "proposing the idea",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "pɹəpˈOzɪŋ",
+        "ði",
+        "Idˈiə"
+      ],
+      "transformedPhonemeWords": [
+        "pɹəpˈOzɪŋ",
+        "ðə",
+        "Idˈiə"
+      ],
+      "phonemes": "pɹəpˈOzɪŋ ðə Idˈiə",
+      "uiIpa": "/ðə/",
+      "durationMs": 1902,
+      "wavSha256": "6aa3fdde6461b6dca88fd3cfc840e91c66150be3063cf6a9938975da675deba4",
+      "mp3Sha256": "e8f39ec96e9e8368e1241c03b0c06b7e95aad4b4cc45e20497de944bc9b10ad0",
+      "generatedAt": "2026-08-09T05:32:46.031Z"
+    },
+    "717702fa31e0c81e0dc24b795589ba1dd57ac62c6f8562b5c80175bb91cc89d2": {
+      "assetId": "717702fa31e0c81e0dc24b795589ba1dd57ac62c6f8562b5c80175bb91cc89d2",
+      "status": "ready",
+      "file": "clips/71/717702fa31e0c81e0dc24b795589ba1dd57ac62c6f8562b5c80175bb91cc89d2.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "in a paper",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ɪn",
+        "ɐ",
+        "pˈApəɹ"
+      ],
+      "transformedPhonemeWords": [
+        "ɪn",
+        "ə",
+        "pˈApəɹ"
+      ],
+      "phonemes": "ɪn ə pˈApəɹ",
+      "uiIpa": "/ə/",
+      "durationMs": 1602,
+      "wavSha256": "cd4b005a5565eeefe8d813d84e9ca7e3e3fbfc952a080dc18f0053a4682b0b45",
+      "mp3Sha256": "2f6f119b2849a3e8f41f0683111b688e2611c04664947af4d06814e73bab5f13",
+      "generatedAt": "2026-08-09T05:32:47.415Z"
+    },
+    "77d11654649a7ca0672677d93a52c8164a08a8aa3172b504aade299f95bf99cf": {
+      "assetId": "77d11654649a7ca0672677d93a52c8164a08a8aa3172b504aade299f95bf99cf",
+      "status": "ready",
+      "file": "clips/77/77d11654649a7ca0672677d93a52c8164a08a8aa3172b504aade299f95bf99cf.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "accepted for publication",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "əksˈɛptᵻd",
+        "fɔɹ",
+        "pˌʌbləkˈAʃən"
+      ],
+      "transformedPhonemeWords": [
+        "əksˈɛptᵻd",
+        "fər",
+        "pˌʌbləkˈAʃən"
+      ],
+      "phonemes": "əksˈɛptᵻd fər pˌʌbləkˈAʃən",
+      "uiIpa": "/fər/",
+      "durationMs": 2102,
+      "wavSha256": "3705f1819c90ade4784fbfe12f650f87c44fa82584ee294bd13a83dd5d806ca7",
+      "mp3Sha256": "4f9b7fe26e3b33d90f66a0501964a97ef4c5da29003f7bd748a3a746d2b9774e",
+      "generatedAt": "2026-08-09T05:32:48.900Z"
+    },
+    "e21195b3484340b1552612cc40e4f233aed56eb190731d2a48fbe326eb2865f4": {
+      "assetId": "e21195b3484340b1552612cc40e4f233aed56eb190731d2a48fbe326eb2865f4",
+      "status": "ready",
+      "file": "clips/e2/e21195b3484340b1552612cc40e4f233aed56eb190731d2a48fbe326eb2865f4.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "in the Astrophysical",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ɪn",
+        "ði",
+        "ˌæstɹOfˈɪzəkᵊl"
+      ],
+      "transformedPhonemeWords": [
+        "ɪn",
+        "ði",
+        "ˌæstɹOfˈɪzəkᵊl"
+      ],
+      "phonemes": "ɪn ði ˌæstɹOfˈɪzəkᵊl",
+      "uiIpa": "/ði/",
+      "durationMs": 1902,
+      "wavSha256": "c2ccd32d0b689305ce42df8b78eeb3c6e806e69d00e3a2972475f2bec12420c8",
+      "mp3Sha256": "b551f270ff2b089970c28fad773c85249675226e82a037df69508874aa804247",
+      "generatedAt": "2026-08-09T05:32:50.360Z"
+    },
+    "57010bfb98ba3828f374d03edf38c68381299d30c65ae79aadac72f42f66c1b0": {
+      "assetId": "57010bfb98ba3828f374d03edf38c68381299d30c65ae79aadac72f42f66c1b0",
+      "status": "ready",
+      "file": "clips/57/57010bfb98ba3828f374d03edf38c68381299d30c65ae79aadac72f42f66c1b0.mp3",
+      "family": "catenation",
+      "spokenText": "world is",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "wˈɜɹld",
+        "ɪz"
+      ],
+      "transformedPhonemeWords": [
+        "wˈɜɹld",
+        "ɪz"
+      ],
+      "phonemes": "wˈɜɹldɪz",
+      "uiIpa": null,
+      "durationMs": 1552,
+      "wavSha256": "14f80e9eb5c5d42f9fefbd0916349310b819809672e8e8384db8bd8c6e96a5ea",
+      "mp3Sha256": "901660530bb24782a87b675eeeed109c09302d40ef0a54e148ec2e44c89762ca",
+      "generatedAt": "2026-08-09T05:38:40.150Z"
+    },
+    "4f5ef9550587bfccee192e4830aa554a7b76eaf1c9ce772f1807227d9f0dfe4a": {
+      "assetId": "4f5ef9550587bfccee192e4830aa554a7b76eaf1c9ce772f1807227d9f0dfe4a",
+      "status": "ready",
+      "file": "clips/4f/4f5ef9550587bfccee192e4830aa554a7b76eaf1c9ce772f1807227d9f0dfe4a.mp3",
+      "family": "catenation",
+      "spokenText": "full of",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "fˈʊl",
+        "ʌv"
+      ],
+      "transformedPhonemeWords": [
+        "fˈʊl",
+        "ʌv"
+      ],
+      "phonemes": "fˈʊlʌv",
+      "uiIpa": null,
+      "durationMs": 1352,
+      "wavSha256": "975747fe91bfd87dc232097d1555d2149e91d2be3518b6760c47f836c463805d",
+      "mp3Sha256": "3b5f3291eccd06dd2753cc1d3820622d5d7131cc5deb560fc06a6a34cc210167",
+      "generatedAt": "2026-08-09T05:38:41.692Z"
+    },
+    "97fa441844a85a96e35b6f4b08dc9ec9ea767c3d815c9f036d1af5c7c6ae147f": {
+      "assetId": "97fa441844a85a96e35b6f4b08dc9ec9ea767c3d815c9f036d1af5c7c6ae147f",
+      "status": "ready",
+      "file": "clips/97/97fa441844a85a96e35b6f4b08dc9ec9ea767c3d815c9f036d1af5c7c6ae147f.mp3",
+      "family": "catenation",
+      "spokenText": "wonder and",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "wˈʌndəɹ",
+        "ænd"
+      ],
+      "transformedPhonemeWords": [
+        "wˈʌndəɹ",
+        "ænd"
+      ],
+      "phonemes": "wˈʌndəɹænd",
+      "uiIpa": null,
+      "durationMs": 1577,
+      "wavSha256": "0e8964f75b8df11d94000625f8b8f46e9f7276689ec7d78275c8ca0e1a8f5063",
+      "mp3Sha256": "99ea212a54c7a14a5cd5021dad38fae60a97d66304473784251a7c1d9ef1bd76",
+      "generatedAt": "2026-08-09T05:38:43.141Z"
+    },
+    "7e23314fd57f08b441e5f92b2093c81147cc66979235d9c547d4f094486be26e": {
+      "assetId": "7e23314fd57f08b441e5f92b2093c81147cc66979235d9c547d4f094486be26e",
+      "status": "ready",
+      "file": "clips/7e/7e23314fd57f08b441e5f92b2093c81147cc66979235d9c547d4f094486be26e.mp3",
+      "family": "catenation",
+      "spokenText": "vast oceans",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "vˈæst",
+        "ˈOʃənz"
+      ],
+      "transformedPhonemeWords": [
+        "vˈæst",
+        "ˈOʃənz"
+      ],
+      "phonemes": "vˈæstˈOʃənz",
+      "uiIpa": null,
+      "durationMs": 1727,
+      "wavSha256": "9b7c355b6effe77a3e01c953391cedeaf3cbc30acab2abcb521d9b6431274e20",
+      "mp3Sha256": "88f494b2f6c78c7e02a461ce3725d2113c5d294c373f5766d52afdd5fd3e7e35",
+      "generatedAt": "2026-08-09T05:38:44.696Z"
+    },
+    "513e3cba49c9624ba3cc0bed36ed143aa9448ea6ee1d4ed04aaf2ebe09858dfa": {
+      "assetId": "513e3cba49c9624ba3cc0bed36ed143aa9448ea6ee1d4ed04aaf2ebe09858dfa",
+      "status": "ready",
+      "file": "clips/51/513e3cba49c9624ba3cc0bed36ed143aa9448ea6ee1d4ed04aaf2ebe09858dfa.mp3",
+      "family": "catenation",
+      "spokenText": "oceans and",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ˈOʃənz",
+        "ænd"
+      ],
+      "transformedPhonemeWords": [
+        "ˈOʃənz",
+        "ænd"
+      ],
+      "phonemes": "ˈOʃənzænd",
+      "uiIpa": null,
+      "durationMs": 1652,
+      "wavSha256": "9d7043bcd183255e879f8f593ad2b664f1f7ba415b458bae7059af7ab0120bd0",
+      "mp3Sha256": "6efbcd4b851b079348434435948c58c1447f07614559901a1d6c827b18108c32",
+      "generatedAt": "2026-08-09T05:38:46.297Z"
+    },
+    "eea9391a528eec3d216e19edcddc9ea6b8b680e91f892ae5085544b088e4f88c": {
+      "assetId": "eea9391a528eec3d216e19edcddc9ea6b8b680e91f892ae5085544b088e4f88c",
+      "status": "ready",
+      "file": "clips/ee/eea9391a528eec3d216e19edcddc9ea6b8b680e91f892ae5085544b088e4f88c.mp3",
+      "family": "catenation",
+      "spokenText": "and everything",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ænd",
+        "ˈɛvəɹiθˌɪŋ"
+      ],
+      "transformedPhonemeWords": [
+        "ænd",
+        "ˈɛvəɹiθˌɪŋ"
+      ],
+      "phonemes": "ændˈɛvəɹiθˌɪŋ",
+      "uiIpa": null,
+      "durationMs": 1652,
+      "wavSha256": "a6c9424b697f53d0a91ca4bbc3920c5b89a12e9ca445daac7f551b226311bcbc",
+      "mp3Sha256": "91a6f3d1cf30d4ab9b24e260e9c21f64055925ddc60f90c44d442633cbade5e5",
+      "generatedAt": "2026-08-09T05:38:48.014Z"
+    },
+    "f1b35256335a338722be619664995298036f366a3c2acbe063dd17bdcea8ac74": {
+      "assetId": "f1b35256335a338722be619664995298036f366a3c2acbe063dd17bdcea8ac74",
+      "status": "ready",
+      "file": "clips/f1/f1b35256335a338722be619664995298036f366a3c2acbe063dd17bdcea8ac74.mp3",
+      "family": "catenation",
+      "spokenText": "everything in",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ˈɛvəɹiθˌɪŋ",
+        "ˈɪn"
+      ],
+      "transformedPhonemeWords": [
+        "ˈɛvəɹiθˌɪŋ",
+        "ˈɪn"
+      ],
+      "phonemes": "ˈɛvəɹiθˌɪŋˈɪn",
+      "uiIpa": null,
+      "durationMs": 1702,
+      "wavSha256": "23f702815a2cfe043643be5889e7364e58b5247d9a32b325c0b623cd334eeda6",
+      "mp3Sha256": "654b839955966aee884dd477441b36c7041bbcd5cbabc01b1b46044a923bdd03",
+      "generatedAt": "2026-08-09T05:38:49.491Z"
+    },
+    "74c31a5ed8720f9fde9bd7b6dd5dfd8b2c06875856abb632e404cc757ca547c8": {
+      "assetId": "74c31a5ed8720f9fde9bd7b6dd5dfd8b2c06875856abb632e404cc757ca547c8",
+      "status": "ready",
+      "file": "clips/74/74c31a5ed8720f9fde9bd7b6dd5dfd8b2c06875856abb632e404cc757ca547c8.mp3",
+      "family": "catenation",
+      "spokenText": "provides us",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "pɹəvˈIdz",
+        "ˌʌs"
+      ],
+      "transformedPhonemeWords": [
+        "pɹəvˈIdz",
+        "ˌʌs"
+      ],
+      "phonemes": "pɹəvˈIdzˌʌs",
+      "uiIpa": null,
+      "durationMs": 1552,
+      "wavSha256": "28a0b8b76b3825db36fbc29838f159c9085dbfb6dd14f9e260c488d07bb82972",
+      "mp3Sha256": "cc795c055d6719bef6d2b1f7103f30d73170eff4a396b7d48d8d977c53834806",
+      "generatedAt": "2026-08-09T05:38:50.900Z"
+    },
+    "1ba332648249967e1579839ad58f20e18340fca596f00dbe5f3433b5388a7619": {
+      "assetId": "1ba332648249967e1579839ad58f20e18340fca596f00dbe5f3433b5388a7619",
+      "status": "ready",
+      "file": "clips/1b/1ba332648249967e1579839ad58f20e18340fca596f00dbe5f3433b5388a7619.mp3",
+      "family": "catenation",
+      "spokenText": "with essential",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "wɪð",
+        "əsˈɛnʧᵊl"
+      ],
+      "transformedPhonemeWords": [
+        "wɪð",
+        "əsˈɛnʧᵊl"
+      ],
+      "phonemes": "wɪðəsˈɛnʧᵊl",
+      "uiIpa": null,
+      "durationMs": 1652,
+      "wavSha256": "3ef829da06d7fc5255fa14ff0b383e7d3ec2c99085b2a5d2399ab63a83010970",
+      "mp3Sha256": "89bcd9f3c21d7b4b8d3e000104f11463960badfeea686d6dcbf29078acbaa3eb",
+      "generatedAt": "2026-08-09T05:38:52.366Z"
+    },
+    "e55cb19bdf0b6be456b0d5a1daa490d52680152fdabf32307c2c1d09b6d28bcd": {
+      "assetId": "e55cb19bdf0b6be456b0d5a1daa490d52680152fdabf32307c2c1d09b6d28bcd",
+      "status": "ready",
+      "file": "clips/e5/e55cb19bdf0b6be456b0d5a1daa490d52680152fdabf32307c2c1d09b6d28bcd.mp3",
+      "family": "catenation",
+      "spokenText": "such as",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "sˈʌʧ",
+        "æz"
+      ],
+      "transformedPhonemeWords": [
+        "sˈʌʧ",
+        "æz"
+      ],
+      "phonemes": "sˈʌʧæz",
+      "uiIpa": null,
+      "durationMs": 1477,
+      "wavSha256": "96c8b95987d15d5b420bebb991bcb5b0834f15170460c580c4c1cad8f4740ba8",
+      "mp3Sha256": "01a5c76287601d47fa60d924147a8be0a8877993e83c487394dc7223bc600ccc",
+      "generatedAt": "2026-08-09T05:38:54.605Z"
+    },
+    "3b08b6112b33d77fcda8e49e9fb79c45f7d3d02a5db8b31a4593f2d76f5b6ddc": {
+      "assetId": "3b08b6112b33d77fcda8e49e9fb79c45f7d3d02a5db8b31a4593f2d76f5b6ddc",
+      "status": "ready",
+      "file": "clips/3b/3b08b6112b33d77fcda8e49e9fb79c45f7d3d02a5db8b31a4593f2d76f5b6ddc.mp3",
+      "family": "catenation",
+      "spokenText": "clean air",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "klˈin",
+        "ˈɛɹ"
+      ],
+      "transformedPhonemeWords": [
+        "klˈin",
+        "ˈɛɹ"
+      ],
+      "phonemes": "klˈinˈɛɹ",
+      "uiIpa": null,
+      "durationMs": 1402,
+      "wavSha256": "c45c658cc95e182bb01e0f17d979bbd9c845df1fbf39902fb928519b866a6575",
+      "mp3Sha256": "a31b3fbc899834feceda8cea9769b3f600ed0d76e0f779603689a064eba27bbf",
+      "generatedAt": "2026-08-09T05:38:56.077Z"
+    },
+    "d14d34213f3f37dd68552b363b892ef2a59e3f3e0be26f0de3451c930636e0f2": {
+      "assetId": "d14d34213f3f37dd68552b363b892ef2a59e3f3e0be26f0de3451c930636e0f2",
+      "status": "ready",
+      "file": "clips/d1/d14d34213f3f37dd68552b363b892ef2a59e3f3e0be26f0de3451c930636e0f2.mp3",
+      "family": "catenation",
+      "spokenText": "air and",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ˈɛɹ",
+        "ænd"
+      ],
+      "transformedPhonemeWords": [
+        "ˈɛɹ",
+        "ænd"
+      ],
+      "phonemes": "ˈɛɹænd",
+      "uiIpa": null,
+      "durationMs": 1427,
+      "wavSha256": "0033df33d2e3f109a7c41bcea3f384a5e2d39b52b6c70d37ec507077a60816a5",
+      "mp3Sha256": "6265b247bc7392c1523b94cb4c8363de0f5b95e1f301b374a79702cd93e93166",
+      "generatedAt": "2026-08-09T05:38:57.610Z"
+    },
+    "4f6e4c04ab76d5a10853cf6ce97a235d3aa10c8c5d11046a5476b92b06d8de09": {
+      "assetId": "4f6e4c04ab76d5a10853cf6ce97a235d3aa10c8c5d11046a5476b92b06d8de09",
+      "status": "ready",
+      "file": "clips/4f/4f6e4c04ab76d5a10853cf6ce97a235d3aa10c8c5d11046a5476b92b06d8de09.mp3",
+      "family": "catenation",
+      "spokenText": "well as",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "wˈɛl",
+        "æz"
+      ],
+      "transformedPhonemeWords": [
+        "wˈɛl",
+        "æz"
+      ],
+      "phonemes": "wˈɛlæz",
+      "uiIpa": null,
+      "durationMs": 1452,
+      "wavSha256": "6240fa458a682191a7b5b9cd1e753defb1618320fb3589be361f3f529aa109c0",
+      "mp3Sha256": "be1f0f2b6f7ff905169db43cd030e8f97ad10c75e167ae5f527268b3404f2e89",
+      "generatedAt": "2026-08-09T05:38:59.278Z"
+    },
+    "a51d8bdf922d446c0a1b18b13c5f02a53040e039a6a6bb49cf4db41af625180d": {
+      "assetId": "a51d8bdf922d446c0a1b18b13c5f02a53040e039a6a6bb49cf4db41af625180d",
+      "status": "ready",
+      "file": "clips/a5/a51d8bdf922d446c0a1b18b13c5f02a53040e039a6a6bb49cf4db41af625180d.mp3",
+      "family": "catenation",
+      "spokenText": "recreational opportunities",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ɹˌɛkɹiˈAʃᵊnəl",
+        "ˌɑpəɹtˈunəTiz"
+      ],
+      "transformedPhonemeWords": [
+        "ɹˌɛkɹiˈAʃᵊnəl",
+        "ˌɑpəɹtˈunəTiz"
+      ],
+      "phonemes": "ɹˌɛkɹiˈAʃᵊnəlˌɑpəɹtˈunəTiz",
+      "uiIpa": null,
+      "durationMs": 2352,
+      "wavSha256": "120c8837a54e908c2c0ad2aeb7cfadbe73d968372b347fd0dcee579e45072ac5",
+      "mp3Sha256": "38aac536dd73978e8840777b77de1edfb78d904b593da397a84f4a3f01cb4017",
+      "generatedAt": "2026-08-09T05:39:00.946Z"
+    },
+    "05db4dd4b0e1cb9e49b4943b4d1d25e04c5c13fdad2ee5bbd5cdef9552cbfe15": {
+      "assetId": "05db4dd4b0e1cb9e49b4943b4d1d25e04c5c13fdad2ee5bbd5cdef9552cbfe15",
+      "status": "ready",
+      "file": "clips/05/05db4dd4b0e1cb9e49b4943b4d1d25e04c5c13fdad2ee5bbd5cdef9552cbfe15.mp3",
+      "family": "catenation",
+      "spokenText": "physical and",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "fˈɪzəkᵊl",
+        "ænd"
+      ],
+      "transformedPhonemeWords": [
+        "fˈɪzəkᵊl",
+        "ænd"
+      ],
+      "phonemes": "fˈɪzəkᵊlænd",
+      "uiIpa": null,
+      "durationMs": 1552,
+      "wavSha256": "6186d0bfd730cb3dd9de2f04a1bb8bc6160dccdad2ccd6d50c708b2845c8b8c2",
+      "mp3Sha256": "8e02941a4dfc4fd0312dfc07b48fa423ccb6b64f12d158cad1da928098499b69",
+      "generatedAt": "2026-08-09T05:39:02.348Z"
+    },
+    "28e25b98edf63f0d3c6ebe23c2e70542b330380283cbb24b1943221da6dc1bd7": {
+      "assetId": "28e25b98edf63f0d3c6ebe23c2e70542b330380283cbb24b1943221da6dc1bd7",
+      "status": "ready",
+      "file": "clips/28/28e25b98edf63f0d3c6ebe23c2e70542b330380283cbb24b1943221da6dc1bd7.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "The natural world",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ðə",
+        "nˈæʧəɹᵊl",
+        "wˈɜɹld"
+      ],
+      "transformedPhonemeWords": [
+        "ðə",
+        "nˈæʧəɹᵊl",
+        "wˈɜɹld"
+      ],
+      "phonemes": "ðə nˈæʧəɹᵊl wˈɜɹld",
+      "uiIpa": "/ðə/",
+      "durationMs": 1752,
+      "wavSha256": "5fdf7f96c43625909ccf9e3163d7740c3b7a451a058c74f36c9e316bedcbfbdd",
+      "mp3Sha256": "4cf6365fea1ae5931df532e8c6644c9ba17fc47d2bef965179b15c2616c640eb",
+      "generatedAt": "2026-08-09T05:39:03.868Z"
+    },
+    "853f58ee548244673ad88dde5142fac2c15757489be57f700a536f29c1ab7396": {
+      "assetId": "853f58ee548244673ad88dde5142fac2c15757489be57f700a536f29c1ab7396",
+      "status": "ready",
+      "file": "clips/85/853f58ee548244673ad88dde5142fac2c15757489be57f700a536f29c1ab7396.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "full of wonder",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "fˈʊl",
+        "ʌv",
+        "wˈʌndəɹ"
+      ],
+      "transformedPhonemeWords": [
+        "fˈʊl",
+        "əv",
+        "wˈʌndəɹ"
+      ],
+      "phonemes": "fˈʊl əv wˈʌndəɹ",
+      "uiIpa": "/əv/",
+      "durationMs": 1627,
+      "wavSha256": "88cb1d32630f9460b40e8dde12b00376079fec5064ed13a79d15d614eb9802ef",
+      "mp3Sha256": "5aabd5d4df4647a98311bafe7780a6d21c63b8f6b23e0f285688eaf98dc6484d",
+      "generatedAt": "2026-08-09T05:39:05.394Z"
+    },
+    "35c4034960d5c219e07b9c17419f503ba42ed93885cdbd02310257ba3c0de5cc": {
+      "assetId": "35c4034960d5c219e07b9c17419f503ba42ed93885cdbd02310257ba3c0de5cc",
+      "status": "ready",
+      "file": "clips/35/35c4034960d5c219e07b9c17419f503ba42ed93885cdbd02310257ba3c0de5cc.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "wonder and beauty",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "wˈʌndəɹ",
+        "ænd",
+        "bjˈuTi"
+      ],
+      "transformedPhonemeWords": [
+        "wˈʌndəɹ",
+        "ən",
+        "bjˈuTi"
+      ],
+      "phonemes": "wˈʌndəɹ ən bjˈuTi",
+      "uiIpa": "/ən/",
+      "durationMs": 1777,
+      "wavSha256": "90895e2f0a8aeddcf7176914ae2e01c0e130b192b571655fb2623ebf2834b1ce",
+      "mp3Sha256": "1992793f75f55d85404c2b9164635d8755e852233a61ecb139d1282f6e769843",
+      "generatedAt": "2026-08-09T05:39:07.109Z"
+    },
+    "f736b1bc62468a94a25cee3862cf4d1abcf043b9cd8b71924f13e0cfc6126dce": {
+      "assetId": "f736b1bc62468a94a25cee3862cf4d1abcf043b9cd8b71924f13e0cfc6126dce",
+      "status": "ready",
+      "file": "clips/f7/f736b1bc62468a94a25cee3862cf4d1abcf043b9cd8b71924f13e0cfc6126dce.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "from the towering",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "fɹʌm",
+        "ðə",
+        "tˈWəɹɪŋ"
+      ],
+      "transformedPhonemeWords": [
+        "frəm",
+        "ðə",
+        "tˈWəɹɪŋ"
+      ],
+      "phonemes": "frəm ðə tˈWəɹɪŋ",
+      "uiIpa": "/frəm/",
+      "durationMs": 1577,
+      "wavSha256": "4df7e3b660de30d0593d5f73344f3d04b55c4a376f7140a24f7b348d0515d6c8",
+      "mp3Sha256": "baa3a741eb43e88a26d0e69188bb94a49f3d1845ef893d2bcb592dfc5e096092",
+      "generatedAt": "2026-08-09T05:39:08.544Z"
+    },
+    "0612443ee2c20c10e4e9947f867d4e86877fbda23036d4fedb541812281339e1": {
+      "assetId": "0612443ee2c20c10e4e9947f867d4e86877fbda23036d4fedb541812281339e1",
+      "status": "ready",
+      "file": "clips/06/0612443ee2c20c10e4e9947f867d4e86877fbda23036d4fedb541812281339e1.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "from the towering",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "fɹʌm",
+        "ðə",
+        "tˈWəɹɪŋ"
+      ],
+      "transformedPhonemeWords": [
+        "fɹʌm",
+        "ðə",
+        "tˈWəɹɪŋ"
+      ],
+      "phonemes": "fɹʌm ðə tˈWəɹɪŋ",
+      "uiIpa": "/ðə/",
+      "durationMs": 1577,
+      "wavSha256": "386976ee6dbc4fc96bc31ff0769bc99e0843986a4caa297433c6cf77e44ed461",
+      "mp3Sha256": "ac8233eb2438dedc7d6fa994dfc8f5e97841af70560b01d132073aa287ff89d9",
+      "generatedAt": "2026-08-09T05:39:09.975Z"
+    },
+    "a692f97927a3e2b3306894912e0eacca01442763534a4b2925812c694683b4b7": {
+      "assetId": "a692f97927a3e2b3306894912e0eacca01442763534a4b2925812c694683b4b7",
+      "status": "ready",
+      "file": "clips/a6/a692f97927a3e2b3306894912e0eacca01442763534a4b2925812c694683b4b7.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "mountains to the",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "mˈWntᵊnz",
+        "tə",
+        "ðə"
+      ],
+      "transformedPhonemeWords": [
+        "mˈWntᵊnz",
+        "tə",
+        "ðə"
+      ],
+      "phonemes": "mˈWntᵊnz tə ðə",
+      "uiIpa": "/tə/",
+      "durationMs": 1827,
+      "wavSha256": "ff5e76dae6eef83ddf62f737fe23f1a6b39061b075e54a8bab8630c55f032bc5",
+      "mp3Sha256": "bff96a344877fd630f6ae5decac7dd4c3f4ce5a5622d2ab04fb5cb83e89e912e",
+      "generatedAt": "2026-08-09T05:39:11.542Z"
+    },
+    "8f5acb41a19e5fd578f43e10fa3523d8fd54d882696b2d9e01574a54895e4c57": {
+      "assetId": "8f5acb41a19e5fd578f43e10fa3523d8fd54d882696b2d9e01574a54895e4c57",
+      "status": "ready",
+      "file": "clips/8f/8f5acb41a19e5fd578f43e10fa3523d8fd54d882696b2d9e01574a54895e4c57.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "to the vast",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "tə",
+        "ðə",
+        "vˈæst"
+      ],
+      "transformedPhonemeWords": [
+        "tə",
+        "ðə",
+        "vˈæst"
+      ],
+      "phonemes": "tə ðə vˈæst",
+      "uiIpa": "/ðə/",
+      "durationMs": 1502,
+      "wavSha256": "b84195b1f772cf191249b2de8789462ca71ea836f411b49fda903b1f69824b62",
+      "mp3Sha256": "dbda12dd798022939163b77a6c82ff6713cdcd2ce26818381c34276ee39a1034",
+      "generatedAt": "2026-08-09T05:39:13.167Z"
+    },
+    "c5ad69a607110714974488ca630aa4c2ca4e0a4593f97ad9597d1beb533c7e0a": {
+      "assetId": "c5ad69a607110714974488ca630aa4c2ca4e0a4593f97ad9597d1beb533c7e0a",
+      "status": "ready",
+      "file": "clips/c5/c5ad69a607110714974488ca630aa4c2ca4e0a4593f97ad9597d1beb533c7e0a.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "oceans and everything",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ˈOʃənz",
+        "ænd",
+        "ˈɛvəɹiθˌɪŋ"
+      ],
+      "transformedPhonemeWords": [
+        "ˈOʃənz",
+        "ən",
+        "ˈɛvəɹiθˌɪŋ"
+      ],
+      "phonemes": "ˈOʃənz ən ˈɛvəɹiθˌɪŋ",
+      "uiIpa": "/ən/",
+      "durationMs": 1952,
+      "wavSha256": "1348fe250077cf31de98f7e5846c4c079472ab26a9e477935fa0795c223fe362",
+      "mp3Sha256": "6a12d24842ab40eae115b947c592e72a92a2170e3c7f867162a9d4ed56d38431",
+      "generatedAt": "2026-08-09T05:39:14.709Z"
+    },
+    "cb4162a90dadec88f560557be2e2900e4d2769f483cbbc58d4c42e3426921430": {
+      "assetId": "cb4162a90dadec88f560557be2e2900e4d2769f483cbbc58d4c42e3426921430",
+      "status": "ready",
+      "file": "clips/cb/cb4162a90dadec88f560557be2e2900e4d2769f483cbbc58d4c42e3426921430.mp3",
+      "family": "n_bilabial_assimilation",
+      "spokenText": "in between",
+      "targetOffset": 0,
+      "baselinePhonemeWords": [
+        "ɪn",
+        "bətwˈin"
+      ],
+      "transformedPhonemeWords": [
+        "ɪm",
+        "bətwˈin"
+      ],
+      "phonemes": "ɪmbətwˈin",
+      "uiIpa": null,
+      "durationMs": 1652,
+      "wavSha256": "1267429156259e17ee58605c68e7f9293b9b797bb2917ac3f8af59ab4295fc9a",
+      "mp3Sha256": "17ee0ea15c3a5c101d5af89c9a3ce26554df032595610fe8b2cb7409144c61e9",
+      "generatedAt": "2026-08-09T05:39:16.181Z"
+    },
+    "e7da8f5058ec6b0afbf7373435011dbdfaf64a05c513aee1b88a57be719f4b22": {
+      "assetId": "e7da8f5058ec6b0afbf7373435011dbdfaf64a05c513aee1b88a57be719f4b22",
+      "status": "ready",
+      "file": "clips/e7/e7da8f5058ec6b0afbf7373435011dbdfaf64a05c513aee1b88a57be719f4b22.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "air and water",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "ˈɛɹ",
+        "ænd",
+        "wˈɔTəɹ"
+      ],
+      "transformedPhonemeWords": [
+        "ˈɛɹ",
+        "ən",
+        "wˈɔTəɹ"
+      ],
+      "phonemes": "ˈɛɹ ən wˈɔTəɹ",
+      "uiIpa": "/ən/",
+      "durationMs": 1602,
+      "wavSha256": "8c897221ec0b085df034fcf5fe266754f6b1687b5eb874c3c6d50718cb69a747",
+      "mp3Sha256": "9bc3348788a6b47d73833b164c65edc8f5bbb3392ea9ce1994a64c42adcd3fbf",
+      "generatedAt": "2026-08-09T05:39:17.667Z"
+    },
+    "f19e51bec84b3f0cdbc24d68e47e7a35e8575e52c5447fa6f024916cd835acea": {
+      "assetId": "f19e51bec84b3f0cdbc24d68e47e7a35e8575e52c5447fa6f024916cd835acea",
+      "status": "ready",
+      "file": "clips/f1/f19e51bec84b3f0cdbc24d68e47e7a35e8575e52c5447fa6f024916cd835acea.mp3",
+      "family": "weak_form_reduction",
+      "spokenText": "physical and mental",
+      "targetOffset": 1,
+      "baselinePhonemeWords": [
+        "fˈɪzəkᵊl",
+        "ænd",
+        "mˈɛntᵊl"
+      ],
+      "transformedPhonemeWords": [
+        "fˈɪzəkᵊl",
+        "ən",
+        "mˈɛntᵊl"
+      ],
+      "phonemes": "fˈɪzəkᵊl ən mˈɛntᵊl",
+      "uiIpa": "/ən/",
+      "durationMs": 1302,
+      "wavSha256": "149633aeffab1f868eeb652efcdb1f67b405d2ee0cce5bad2cc81c92f4cff70c",
+      "mp3Sha256": "eced6eb4fb566608679fac9f25559c42a123d6b29a90a34130bd9fa4080b480c",
+      "generatedAt": "2026-08-09T05:39:19.128Z"
+    }
+  }
+}

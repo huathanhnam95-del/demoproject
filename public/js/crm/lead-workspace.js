@@ -385,9 +385,6 @@ window.CrmLeadWorkspace = (function () {
             }
 
             const payload = window.CrmLeads.buildPayload(elements);
-            if (!window.CrmLeads.hasAnyContact(payload)) {
-                throw new Error('Please fill at least 1 lead contact field before saving.');
-            }
 
             if (elements.btnSaveLead) {
                 elements.btnSaveLead.disabled = true;

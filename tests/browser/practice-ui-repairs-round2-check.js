@@ -11,7 +11,7 @@
  *      (covered by tests/browser/read-aloud-practice-ui-repairs-check.js)
  *   5. Read Aloud — the stepper reaches Results even when scoring fails
  *   6. Guide layers — reduced words and sound changes compose instead of one
- *      overwriting the other
+ *      overwriting the other; sound-change explanations use a floating tooltip
  */
 const express = require('express');
 const fs = require('fs');
@@ -321,17 +321,93 @@ async function checkGuideComposition(page) {
       modes: [...(window.ReadAloudMode.connectedSpeechModes || [])].sort().join(','),
       styledWords: words.length,
       inlineStyled: words.filter((word) => /border-bottom|background/.test(word.getAttribute('style') || '')).length,
-      hintLineHeights: [...new Set([...stage.querySelectorAll('.ra-sound-change-hint')]
-        .map((tag) => getComputedStyle(tag).display))]
+      legacyHintCount: stage.querySelectorAll('.ra-sound-change-hint').length
     };
   });
 
   check('Both guides stay active together', live.modes === 'reduced_words,sound_changes');
   check('Guide layers no longer write competing inline styles', live.inlineStyled === 0);
   check('At least one guide layer rendered', live.styledWords > 0);
-  check('Sound-change badges render inline-block',
-    live.hintLineHeights.length === 0 || live.hintLineHeights.every((value) => value === 'inline-block'));
+  check('Legacy in-text sound-change hints stay removed', live.legacyHintCount === 0);
   await page.screenshot({ path: path.join(screenshotDir, 'read-aloud-guides-combined.png') });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => {
+    document.querySelector('[data-tooltip-browser-probe]')?.remove();
+    const stage = document.getElementById('ra-prompt-stage');
+    const wrapper = document.createElement('span');
+    wrapper.dataset.tooltipBrowserProbe = 'true';
+    wrapper.style.position = 'relative';
+    wrapper.style.zIndex = '1';
+    wrapper.style.display = 'block';
+    wrapper.style.marginTop = '12px';
+    wrapper.innerHTML = ' Did <span id="ra-tooltip-probe-left" class="ra-sound-change-word" data-guide-target="boundary-tooltip-browser-probe" data-sound-change-subtype="coalescent_dj" role="button" tabindex="0">did</span> <span class="ra-sound-change-word" data-guide-target="boundary-tooltip-browser-probe" data-sound-change-subtype="coalescent_dj" role="button" tabindex="0">you</span>?';
+    stage.appendChild(wrapper);
+  });
+
+  const tooltipWord = page.locator('#ra-tooltip-probe-left');
+  await tooltipWord.hover();
+  await page.waitForFunction(() => (
+    document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
+  ));
+  await page.waitForTimeout(200);
+  const hoverState = await page.evaluate(() => {
+    const tooltip = document.getElementById('ra-sound-change-tooltip');
+    const stage = document.getElementById('ra-prompt-stage');
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    return {
+      label: tooltip.querySelector('.ra-sound-change-tooltip__label')?.textContent || '',
+      explanation: tooltip.querySelector('.ra-sound-change-tooltip__explanation')?.textContent || '',
+      describedWords: stage.querySelectorAll('[data-guide-target="boundary-tooltip-browser-probe"][aria-describedby~="ra-sound-change-tooltip"]').length,
+      insideStage: tooltipRect.left >= stageRect.left - 1
+        && tooltipRect.right <= stageRect.right + 1
+        && tooltipRect.top >= stageRect.top - 1
+        && tooltipRect.bottom <= stageRect.bottom + 1
+    };
+  });
+  check('Hovering a sound-change word opens the floating explanation',
+    hoverState.label.includes('→') && /sound|blend/i.test(hoverState.explanation));
+  check('The tooltip describes both words in the sound-change boundary', hoverState.describedWords === 2);
+  check('The sound-change tooltip stays inside a narrow prompt stage', hoverState.insideStage);
+  await page.screenshot({ path: path.join(screenshotDir, 'read-aloud-sound-change-tooltip.png') });
+
+  await tooltipWord.click();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  const afterEscape = await page.evaluate(() => ({
+    hidden: document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden'),
+    pinned: Boolean(window.ReadAloudMode.soundChangeTooltipPinned),
+    describedWords: document.querySelectorAll('[data-guide-target="boundary-tooltip-browser-probe"][aria-describedby~="ra-sound-change-tooltip"]').length
+  }));
+  check('Escape dismisses a pinned sound-change tooltip',
+    afterEscape.hidden === 'true' && !afterEscape.pinned && afterEscape.describedWords === 0);
+
+  await page.evaluate(() => window.ReadAloudMode.hideSoundChangeTooltip());
+  await page.locator('#ra-toggle-sound-changes-btn').focus();
+  await tooltipWord.focus();
+  await page.waitForFunction(() => (
+    document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
+  ));
+  check('Keyboard focus opens the sound-change tooltip', await page.evaluate(() => (
+    document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
+  )));
+  await page.locator('#ra-toggle-sound-changes-btn').focus();
+  await page.waitForTimeout(150);
+  check('Moving keyboard focus away closes an unpinned tooltip', await page.evaluate(() => (
+    document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'true'
+  )));
+
+  await tooltipWord.click();
+  await page.mouse.click(2, 2);
+  await page.waitForTimeout(150);
+  check('Clicking outside closes a pinned sound-change tooltip', await page.evaluate(() => (
+    document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'true'
+  )));
+
+  await page.evaluate(() => document.querySelector('[data-tooltip-browser-probe]')?.remove());
+  await page.setViewportSize({ width: 1440, height: 1100 });
 }
 
 async function main() {

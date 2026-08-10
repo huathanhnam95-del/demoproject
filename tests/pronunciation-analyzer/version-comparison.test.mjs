@@ -68,6 +68,31 @@ describe('V2/V3 comparison model', () => {
         assert.equal(view.rows[0].label, 'Syllable count');
     });
 
+    it('labels V3 raw boundary spans as CTC token coverage', () => {
+        const view = buildComparisonViewModel({
+            ...completeComparison,
+            v3: {
+                ...completeComparison.v3,
+                analysis: {
+                    ...completeComparison.v3.analysis,
+                    segmentation_convention: 'ctc-token-coverage',
+                    measurement_convention: 'ctc-blank-midpoint-v1'
+                }
+            }
+        });
+        const v3 = view.columns.find((column) => column.version === 'v3');
+        assert.equal(v3.boundarySource, 'ctc-token-coverage');
+        assert.match(v3.boundaryLabel, /CTC token coverage/i);
+        assert.equal(v3.measurementConvention, 'ctc-blank-midpoint-v1');
+    });
+
+    it('marks available legacy recognizer spans when convention metadata is absent', () => {
+        const view = buildComparisonViewModel(completeComparison);
+        const v3 = view.columns.find((column) => column.version === 'v3');
+        assert.equal(v3.boundarySource, 'recognizer-legacy');
+        assert.match(v3.boundaryLabel, /legacy.*convention unknown/i);
+    });
+
     it('preserves analyzer duration metadata for comparison charts', () => {
         const view = buildComparisonViewModel({
             ...completeComparison,

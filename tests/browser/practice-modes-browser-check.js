@@ -27,6 +27,7 @@ async function setupFirebaseMocks(context) {
         export const setPersistence = () => Promise.resolve();
         export const browserLocalPersistence = 'local';
         export const signInWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const signInWithCustomToken = () => Promise.resolve({ user: {} });
         export const signOut = () => Promise.resolve();
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
         export const sendPasswordResetEmail = () => Promise.resolve();

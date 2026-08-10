@@ -21,6 +21,11 @@ from backend.phoneme_service.backends import ctc_forward_log_likelihood, ctc_for
 
 
 SPECIAL_TOKENS = {"", "<pad>", "<s>", "</s>", "<unk>"}
+SPAN_CONTRACT_VERSION = "ctc-alignment-v2"
+FRAME_INTERVAL = "half-open"
+SYLLABLE_SPAN_TYPE = "ctc-token-coverage"
+NUCLEUS_SPAN_TYPE = "ctc-vowel-token-coverage"
+MEASUREMENT_SPAN_TYPE = "ctc-blank-midpoint-v1"
 VOWEL_MARKERS = set("aeiouɐɑɒɔəɚɛɜɝɞɟɪʊʌæœɨɵɶː")
 MODEL_IGNORABLE_DIACRITICS = {"̬"}
 
@@ -46,6 +51,55 @@ def tokenize_ipa(ipa: str, symbol_table: Sequence[str]) -> list[int]:
         ids.append(match[1])
         cursor += len(match[0])
     return ids
+
+
+def _derive_measurement_spans(syllable_spans: list[dict]) -> list[dict]:
+    """Derive acoustic measurement spans from raw CTC coverage.
+
+    CTC Viterbi alignment assigns each frame to either a target-token state or
+    the blank state.  Token spans only cover the target-state frames, so blank
+    frames between the last token of one syllable and the first token of the
+    next are unassigned — truncating vowels that acoustically extend into those
+    blanks.  This is most noticeable on stressed syllables whose longer vowels
+    produce more unassigned blank frames.
+
+    For each inter-syllable gap the blank frames are split at the midpoint.
+    Only a vowel nucleus that touches the relevant raw syllable edge receives
+    its half of the gap. The returned dictionaries retain every raw field and
+    add ``measurement_start_frame``/``measurement_end_frame``.
+    """
+    measured = []
+    for span in syllable_spans:
+        nucleus_start = span.get("nucleus_start_frame", span["start_frame"])
+        nucleus_end = span.get("nucleus_end_frame", span["end_frame"])
+        measured.append({
+            **span,
+            "measurement_start_frame": nucleus_start,
+            "measurement_end_frame": nucleus_end,
+        })
+
+    if len(syllable_spans) < 2:
+        return measured
+
+    for i in range(len(syllable_spans) - 1):
+        cur = syllable_spans[i]
+        nxt = syllable_spans[i + 1]
+        gap_start = cur["end_frame"]
+        gap_end = nxt["start_frame"]
+        if gap_end <= gap_start:
+            continue
+        mid = (gap_start + gap_end + 1) // 2
+        nucleus_at_trailing_edge = (
+            cur.get("nucleus_end_frame", cur["end_frame"]) == gap_start
+        )
+        nucleus_at_leading_edge = (
+            nxt.get("nucleus_start_frame", nxt["start_frame"]) == gap_end
+        )
+        if nucleus_at_trailing_edge:
+            measured[i]["measurement_end_frame"] = mid
+        if nucleus_at_leading_edge:
+            measured[i + 1]["measurement_start_frame"] = mid
+    return measured
 
 
 def align_reference_syllables(
@@ -92,16 +146,26 @@ def align_reference_syllables(
                 "nucleus_confidence": float(np.mean([item["confidence"] for item in nucleus])),
             }
         )
-        if sample_count and sample_rate:
-            frame_count = max(1, int(np.asarray(log_probs).shape[0]))
-            for span in (syllable_spans[-1],):
-                span["start_time"] = round(span["start_frame"] / frame_count * sample_count / sample_rate, 6)
-                span["end_time"] = round(span["end_frame"] / frame_count * sample_count / sample_rate, 6)
-                span["nucleus_start_time"] = round(span["nucleus_start_frame"] / frame_count * sample_count / sample_rate, 6)
-                span["nucleus_end_time"] = round(span["nucleus_end_frame"] / frame_count * sample_count / sample_rate, 6)
+
+    syllable_spans = _derive_measurement_spans(syllable_spans)
+
+    if sample_count and sample_rate:
+        frame_count = max(1, int(np.asarray(log_probs).shape[0]))
+        for span in syllable_spans:
+            span["start_time"] = round(span["start_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["end_time"] = round(span["end_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["nucleus_start_time"] = round(span["nucleus_start_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["nucleus_end_time"] = round(span["nucleus_end_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["measurement_start_time"] = round(span["measurement_start_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["measurement_end_time"] = round(span["measurement_end_frame"] / frame_count * sample_count / sample_rate, 6)
     return {
         "aligned": True,
         "syllables": syllable_spans,
+        "span_contract_version": SPAN_CONTRACT_VERSION,
+        "frame_interval": FRAME_INTERVAL,
+        "syllable_span_type": SYLLABLE_SPAN_TYPE,
+        "nucleus_span_type": NUCLEUS_SPAN_TYPE,
+        "measurement_span_type": MEASUREMENT_SPAN_TYPE,
         "alignment": alignment,
     }
 
@@ -169,8 +233,14 @@ def extract_acoustic_features(
 
     frame_count = frame_count or max((int(span.get("end_frame", 0)) for span in syllable_spans), default=1)
     for span in syllable_spans:
-        start_frame = span.get("nucleus_start_frame", span["start_frame"])
-        end_frame = span.get("nucleus_end_frame", span["end_frame"])
+        start_frame = span.get(
+            "measurement_start_frame",
+            span.get("nucleus_start_frame", span["start_frame"]),
+        )
+        end_frame = span.get(
+            "measurement_end_frame",
+            span.get("nucleus_end_frame", span["end_frame"]),
+        )
         start = max(0, int(round(start_frame / frame_count * len(values))))
         end = min(len(values), int(round(end_frame / frame_count * len(values))))
         segment = values[start:end]

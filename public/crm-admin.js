@@ -2810,9 +2810,6 @@
     }
 
     const payload = window.CrmLeads.buildPayload(elements);
-    if (!payload.name && !payload.email && !payload.phone) {
-      throw new Error('Please fill at least 1 lead contact field before saving.');
-    }
 
     if (elements.btnSaveLead) {
       elements.btnSaveLead.disabled = true;
@@ -2888,8 +2885,8 @@
 
   async function saveLeadFromModal() {
     const payload = window.CrmLeads ? window.CrmLeads.buildPayload(elements) : {};
-    if (!window.CrmLeads || !window.CrmLeads.hasAnyContact(payload)) {
-      throw new Error('Please fill at least 1 lead contact field before saving.');
+    if (!window.CrmLeads) {
+      throw new Error('Lead helpers are not available.');
     }
 
     const saveBtn = elements.btnSaveLead || elements.btnSaveStudent;

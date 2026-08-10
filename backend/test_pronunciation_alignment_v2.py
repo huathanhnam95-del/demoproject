@@ -1016,6 +1016,47 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
         self.assertEqual(response["syllable_count"], 3)
         self.assertEqual(len(response["observed_syllables"]), 3)
 
+    def test_v2_response_exposes_raw_and_measurement_span_provenance(self):
+        payload = self._recognize_v2_result()
+        payload["canonical_alignment"]["span_contract_version"] = "ctc-alignment-v2"
+        payload["canonical_alignment"]["frame_interval"] = "half-open"
+        payload["canonical_alignment"]["syllable_span_type"] = "ctc-token-coverage"
+        payload["canonical_alignment"]["nucleus_span_type"] = "ctc-vowel-token-coverage"
+        payload["canonical_alignment"]["measurement_span_type"] = "ctc-blank-midpoint-v1"
+        payload["canonical_alignment"]["syllables"] = [
+            {
+                "start_time": 0.1,
+                "end_time": 0.2,
+                "nucleus_start_time": 0.12,
+                "nucleus_end_time": 0.16,
+                "measurement_start_time": 0.12,
+                "measurement_end_time": 0.18,
+                "confidence": 0.9,
+            },
+            {
+                "start_time": 0.3,
+                "end_time": 0.4,
+                "nucleus_start_time": 0.31,
+                "nucleus_end_time": 0.35,
+                "measurement_start_time": 0.29,
+                "measurement_end_time": 0.35,
+                "confidence": 0.8,
+            },
+            {"start_time": 0.5, "end_time": 0.6, "confidence": 0.7},
+        ]
+
+        response = self._build(payload)
+
+        self.assertEqual(response["segmentation_convention"], "ctc-token-coverage")
+        self.assertEqual(response["measurement_convention"], "ctc-blank-midpoint-v1")
+        first = response["observed_syllables"][0]
+        self.assertEqual(first["startTime"], 0.1)
+        self.assertEqual(first["endTime"], 0.2)
+        self.assertEqual(first["nucleusStartTime"], 0.12)
+        self.assertEqual(first["nucleusEndTime"], 0.16)
+        self.assertEqual(first["measurementStartTime"], 0.12)
+        self.assertEqual(first["measurementEndTime"], 0.18)
+
     def test_v2_unrateable_decode_surfaces_a_quality_reason(self):
         payload = self._recognize_v2_result()
         payload["decoded_is_rateable"] = False

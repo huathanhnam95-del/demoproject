@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.56</div>
+  <div id="version-indicator" class="version-indicator">V1.8.57</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -5066,6 +5066,16 @@
                   style="display: none; pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;"></svg>
                 <div id="ra-connected-speech-badges" aria-hidden="true"
                   style="display: none; pointer-events: none; position: absolute; inset: 0; overflow: visible;"></div>
+                <div id="ra-sound-change-tooltip" class="ra-sound-change-tooltip" role="tooltip" aria-hidden="true" style="display: none;">
+                  <div class="ra-sound-change-tooltip__arrow"></div>
+                  <div class="ra-sound-change-tooltip__header">
+                    <span class="ra-sound-change-tooltip__badge">Sound Change</span>
+                    <button class="ra-sound-change-tooltip__close" type="button" aria-label="Close">&times;</button>
+                  </div>
+                  <div class="ra-sound-change-tooltip__words"></div>
+                  <div class="ra-sound-change-tooltip__transform"></div>
+                  <div class="ra-sound-change-tooltip__explanation"></div>
+                </div>
               </div>
               <div id="ra-linking-fallback-list" style="display: none !important; flex-wrap: wrap; gap: 8px; align-items: center;">
               </div>
@@ -5138,6 +5148,7 @@
               style="font-size: 1.1rem; line-height: 1.5; position: relative;">
               <!-- Overlay SVG will be injected here during Results rendering if enabled -->
             </div>
+            <div id="ra-feedback-mode-hint" class="ra-feedback-mode-hint" hidden></div>
             <div id="ra-show-advanced-container" style="display: none; margin-top: 16px; text-align: center;">
               <button id="ra-show-advanced-btn" type="button" class="modern-btn"
                 style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: #ffffff; color: var(--brand-primary, #2563eb); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
@@ -5166,18 +5177,11 @@
                 style="font-size: 0.98rem; color: #374151; margin-top: 4px; font-weight: 600;">Feedback Details</div>
             </div>
             <div id="ra-connected-speech-paragraph" style="margin-bottom: 16px; position: relative;"></div>
-            <div id="ra-connected-speech-layers"
-              style="display: flex; gap: 8px; background: rgba(37, 99, 235, 0.08); padding: 4px; border-radius: 20px;">
-              <button id="ra-layer-level1" class="ra-layer-btn" data-level="1" type="button"
-                style="padding: 6px 14px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking</button>
-              <button id="ra-layer-level2" class="ra-layer-btn" data-level="2" type="button"
-                style="padding: 6px 14px; border: none; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #1d4ed8; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking
-                + Reduced Words</button>
-            </div>
             <div id="ra-connected-speech-list"
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-              <!-- JS will inject 2 columns here -->
+              aria-live="polite">
+              <!-- JS injects populated feedback columns here. -->
             </div>
+            <div id="ra-connected-speech-mode-hint" class="ra-feedback-mode-hint" hidden></div>
           </div>
         </div>
 
@@ -5986,7 +5990,8 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.56"></script>
+  <script src="/js/read-aloud-speech-coach.js"></script>
+  <script src="/read-aloud-mode.js?v=1.8.57"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

@@ -74,10 +74,17 @@ class ReadAloudMode {
     this.currentGuideHasVisibleAssimilation = false;
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
+    this.activeSoundChangeTooltipId = null;
+    this.soundChangeTooltipPinned = false;
 
     // Kokoro TTS voice state
     this.audioManifest = null;
     this.currentQuestionId = null;
+    this.speechCoachAudioManifestCache = new Map();
+    this.speechCoachAudioManifestPromises = new Map();
+    this.speechCoachModelAudio = null;
+    this.speechCoachModelButton = null;
+    this.speechCoachYoursButton = null;
     this.selectedGender = null;
     this.selectedVoiceId = null;
     this.selectedVoiceName = null;
@@ -114,6 +121,12 @@ class ReadAloudMode {
     this.assessmentStatusMessage = '';
     this.isSubmitInFlight = false;
     this.userRecordingUrl = null;
+    this.assessmentAudioBuffer = null;
+    this.wordPlaybackContext = null;
+    this.wordPlaybackSource = null;
+    this.wordPlaybackButton = null;
+    this.recordedSegmentPlayback = { revision: 0, sourceKind: null, sourceNode: null, mediaElement: null, timer: null, button: null, metadataCleanup: null };
+    this.speechCoachResultRevision = 0;
 
     // Question Picker v7 (Read Aloud only)
     this.v7JumpQuery = '';
@@ -180,6 +193,107 @@ class ReadAloudMode {
 
   isConnectedSpeechModeActive(mode) {
     return !!this.connectedSpeechModes?.has(this.normalizeConnectedSpeechMode(mode));
+  }
+
+  getAssessmentConnectedSpeechModes(options = {}, session = this.lastAssessmentSession) {
+    const helper = window.ReadAloudSpeechCoach;
+    if (!helper?.resolveSelectedModes) return new Set(['linking', 'reduced_words', 'sound_changes']);
+    const source = {};
+    if (options.sessionConnectedSpeechModes instanceof Set || Array.isArray(options.sessionConnectedSpeechModes)) {
+      source.sessionConnectedSpeechModes = options.sessionConnectedSpeechModes;
+    } else if (session?.sessionConnectedSpeechModes instanceof Set || Array.isArray(session?.sessionConnectedSpeechModes)) {
+      source.sessionConnectedSpeechModes = session.sessionConnectedSpeechModes;
+    } else if (Object.prototype.hasOwnProperty.call(options, 'sessionConnectedSpeechLevel')) {
+      source.sessionConnectedSpeechLevel = options.sessionConnectedSpeechLevel;
+    } else if (session && Object.prototype.hasOwnProperty.call(session, 'sessionConnectedSpeechLevel')) {
+      source.sessionConnectedSpeechLevel = session.sessionConnectedSpeechLevel;
+    }
+    return new Set(helper.resolveSelectedModes(source));
+  }
+
+  filterSpeechCoachEvents(events, modes) {
+    const selectedModes = modes instanceof Set ? [...modes] : [...(modes || [])];
+    return window.ReadAloudSpeechCoach?.buildResultModel?.({
+      events,
+      sessionConnectedSpeechModes: selectedModes
+    }).events || [];
+  }
+
+  setSpeechCoachModeHint(hostId, guidance = null) {
+    const host = document.getElementById(hostId);
+    if (!host) return;
+    this.closeSpeechCoachModeTooltips();
+    host.replaceChildren();
+    if (!guidance?.message || !guidance?.triggerLabel) {
+      host.hidden = true;
+      return;
+    }
+
+    const tooltipId = `${hostId}-tooltip`;
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'ra-feedback-mode-hint__trigger';
+    trigger.textContent = guidance.triggerLabel;
+    trigger.setAttribute('aria-describedby', tooltipId);
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const tooltip = document.createElement('span');
+    tooltip.id = tooltipId;
+    tooltip.className = 'ra-feedback-mode-hint__tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.textContent = guidance.message;
+    tooltip.hidden = true;
+
+    const open = () => this.openSpeechCoachModeTooltip(host);
+    const closeIfUnpinned = (event) => {
+      if (host.dataset.tooltipPinned === 'true' || host.contains(event.relatedTarget)) return;
+      this.closeSpeechCoachModeTooltips();
+    };
+    trigger.addEventListener('pointerenter', open);
+    trigger.addEventListener('pointerleave', closeIfUnpinned);
+    trigger.addEventListener('focus', open);
+    trigger.addEventListener('blur', closeIfUnpinned);
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const shouldPin = host.dataset.tooltipPinned !== 'true' || tooltip.hidden;
+      this.closeSpeechCoachModeTooltips();
+      if (shouldPin) {
+        host.dataset.tooltipPinned = 'true';
+        this.openSpeechCoachModeTooltip(host);
+      }
+    });
+    host.append(trigger, tooltip);
+    host.hidden = false;
+  }
+
+  updateSpeechCoachModeHints(selectedModes) {
+    const modes = selectedModes instanceof Set ? [...selectedModes] : [...(selectedModes || [])];
+    const guidance = window.ReadAloudSpeechCoach?.getGuidance?.(modes) || null;
+    if (modes.length === 0) {
+      this.setSpeechCoachModeHint('ra-feedback-mode-hint', guidance);
+      this.setSpeechCoachModeHint('ra-connected-speech-mode-hint');
+      return;
+    }
+    this.setSpeechCoachModeHint('ra-feedback-mode-hint');
+    this.setSpeechCoachModeHint('ra-connected-speech-mode-hint', guidance);
+  }
+
+  openSpeechCoachModeTooltip(host) {
+    const tooltip = host?.querySelector('[role="tooltip"]');
+    const trigger = host?.querySelector('.ra-feedback-mode-hint__trigger');
+    if (!tooltip || !trigger) return;
+    tooltip.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  closeSpeechCoachModeTooltips() {
+    document.querySelectorAll('.ra-feedback-mode-hint').forEach((host) => {
+      host.dataset.tooltipPinned = 'false';
+      const tooltip = host.querySelector('[role="tooltip"]');
+      const trigger = host.querySelector('.ra-feedback-mode-hint__trigger');
+      if (tooltip) tooltip.hidden = true;
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
   }
 
   normalizeConnectedSpeechMode(level) {
@@ -272,7 +386,7 @@ class ReadAloudMode {
     document.getElementById('ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
     document.getElementById('ra-check-btn')?.addEventListener('click', () => this.handleCheckResult());
     document.getElementById('ra-retry-btn')?.addEventListener('click', () => this.retryCurrentPrompt());
-    document.getElementById('ra-show-advanced-btn')?.addEventListener('click', () => this.toggleAdvancedAnalysisView());
+    document.getElementById('ra-show-advanced-btn')?.addEventListener('click', () => { void this.toggleAdvancedAnalysisView(); });
 
     document.getElementById('ra-voice-male')?.addEventListener('click', () => this.setGender('male'));
     document.getElementById('ra-voice-female')?.addEventListener('click', () => this.setGender('female'));
@@ -280,6 +394,12 @@ class ReadAloudMode {
     document.getElementById('ra-voice-dropdown-toggle')?.addEventListener('click', (e) => { e.stopPropagation(); this.toggleVoiceDropdown(); });
     document.getElementById('ra-voice-dropdown-list')?.addEventListener('click', (e) => this.handleVoiceDropdownClick(e));
     document.addEventListener('click', () => this.closeVoiceDropdown());
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.ra-feedback-mode-hint')) this.closeSpeechCoachModeTooltips();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') this.closeSpeechCoachModeTooltips();
+    });
     document.getElementById('ra-speed-100')?.addEventListener('click', () => this.setSpeed('100'));
     document.getElementById('ra-speed-80')?.addEventListener('click', () => this.setSpeed('80'));
     document.getElementById('ra-play-audio-btn')?.addEventListener('click', () => this.playAudio());
@@ -292,7 +412,7 @@ class ReadAloudMode {
       }
     });
 
-    const handleViewChange = () => {
+    const handleViewChange = async () => {
       const isRaVisible = document.getElementById('mode-read-aloud')?.style.display !== 'none';
       if (this.isActive || isRaVisible) {
         if (typeof this.renderPromptForCurrentView === 'function') {
@@ -303,14 +423,17 @@ class ReadAloudMode {
           const showAdvContainer = document.getElementById('ra-show-advanced-container');
           const showAdvBtn = document.getElementById('ra-show-advanced-btn');
           if (viewMode === 'basic') {
-            if (showAdvContainer) showAdvContainer.style.display = 'block';
+            const resultModes = this.getAssessmentConnectedSpeechModes({}, this.lastAssessmentSession);
+            if (showAdvContainer) showAdvContainer.style.display = resultModes.size > 0 ? 'block' : 'none';
             if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
             this.hideConnectedSpeechPanel();
+            if (resultModes.size === 0) this.updateSpeechCoachModeHints(resultModes);
           } else if (this.lastAssessmentPayload?.connectedSpeech) {
             if (showAdvContainer) showAdvContainer.style.display = 'none';
-            this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
+            await this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
               transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
               sessionViewMode: viewMode,
+              sessionConnectedSpeechModes: this.lastAssessmentSession?.sessionConnectedSpeechModes,
               sessionConnectedSpeechLevel: this.lastAssessmentSession?.sessionConnectedSpeechLevel || this.connectedSpeechLevel
             });
           }
@@ -358,17 +481,27 @@ class ReadAloudMode {
     document.getElementById('ra-toggle-linking-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'linking'));
     document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'reduced_words'));
     document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'sound_changes'));
-    document.getElementById('ra-prompt-stage')?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
-    document.getElementById('ra-prompt-stage')?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
+    const promptStage = document.getElementById('ra-prompt-stage');
+    promptStage?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
+    promptStage?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
+    promptStage?.addEventListener('pointerover', (event) => this.handleSoundChangeTooltipEnter(event));
+    promptStage?.addEventListener('pointerout', (event) => this.handleSoundChangeTooltipLeave(event));
+    promptStage?.addEventListener('focusin', (event) => this.handleSoundChangeTooltipEnter(event));
+    promptStage?.addEventListener('focusout', (event) => this.handleSoundChangeTooltipLeave(event));
     document.getElementById('ra-connected-speech-badges')?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
     document.getElementById('ra-connected-speech-badges')?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
     document.getElementById('ra-connected-speech-list')?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
     document.getElementById('ra-connected-speech-list')?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
     document.getElementById('ra-linking-fallback-list')?.addEventListener('click', (event) => this.handleGuideTargetInteraction(event));
     document.getElementById('ra-linking-fallback-list')?.addEventListener('keydown', (event) => this.handleGuideTargetKeydown(event));
+    document.addEventListener('click', (event) => {
+      if (this.activeSoundChangeTooltipId
+          && !event.target.closest('#ra-prompt-stage')
+          && !event.target.closest('#ra-sound-change-tooltip')) {
+        this.hideSoundChangeTooltip();
+      }
+    });
     document.getElementById('ra-speech-coach-toggle')?.addEventListener('click', () => this.toggleSpeechCoachVisibility());
-    document.getElementById('ra-layer-level1')?.addEventListener('click', () => this.setSpeechCoachLayerFilter('linking'));
-    document.getElementById('ra-layer-level2')?.addEventListener('click', () => this.setSpeechCoachLayerFilter('all'));
     document.getElementById('ra-connected-speech-box')?.addEventListener('click', (e) => {
       const infoBtn = e.target.closest('.sc-info-tip');
       if (infoBtn) {
@@ -1539,6 +1672,7 @@ class ReadAloudMode {
     const fallbackList = document.getElementById('ra-linking-fallback-list');
     const summary = document.getElementById('ra-linking-a11y-summary');
     this.selectedGuideItemId = null;
+    this.hideSoundChangeTooltip();
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
 
@@ -2009,9 +2143,8 @@ class ReadAloudMode {
     this.restorePlainTextVisibility();
     this.setPromptText(this.currentPromptPlainText, this.currentPromptChunkedText);
     this.updatePromptGuideButtons();
-    if (this.state !== 'RESULTS') {
-      this.clearConnectedSpeechResults();
-    }
+    if (this.state === 'RESULTS') return;
+    this.clearConnectedSpeechResults();
 
     if (viewMode === 'basic' || !window.ReadAloudLinking || !this.isConnectedSpeechEnabled()) {
       return;
@@ -2023,7 +2156,8 @@ class ReadAloudMode {
     if (document.fonts?.ready && !this.pendingFontHydration) {
       this.pendingFontHydration = document.fonts.ready.then(() => {
         this.pendingFontHydration = null;
-        if (this.isActive && this.isConnectedSpeechEnabled()) {
+        if (this.shouldApplyPromptRender(this.activePromptKey, this.activePromptRenderToken)
+            && this.isConnectedSpeechEnabled()) {
           this.hydrateLinkingView(this.activePromptKey, this.activePromptRenderToken);
         }
       }).catch(() => {
@@ -2033,7 +2167,10 @@ class ReadAloudMode {
   }
 
   async hydrateLinkingView(promptKey, renderToken, attempt = 0) {
-    if (!window.ReadAloudLinking || !this.currentPromptPlainText || !this.isConnectedSpeechEnabled()) return;
+    if (this.state === 'RESULTS'
+        || !window.ReadAloudLinking
+        || !this.currentPromptPlainText
+        || !this.isConnectedSpeechEnabled()) return;
     const targetPromptKey = promptKey || this.activePromptKey;
     const targetToken = renderToken || this.activePromptRenderToken;
     // Analyse the full superset regardless of which guides are on, so one cached
@@ -2056,6 +2193,7 @@ class ReadAloudMode {
     this.cancelPendingHydration();
     this.pendingLinkingFrame = requestAnimationFrame(() => {
       this.pendingLinkingFrame = null;
+      this.hideSoundChangeTooltip();
       if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.isConnectedSpeechEnabled()) {
         return;
       }
@@ -2213,7 +2351,10 @@ class ReadAloudMode {
   }
 
   shouldApplyPromptRender(promptKey, renderToken) {
-    return this.isActive && this.activePromptKey === promptKey && this.activePromptRenderToken === renderToken;
+    return this.state !== 'RESULTS'
+      && this.isActive
+      && this.activePromptKey === promptKey
+      && this.activePromptRenderToken === renderToken;
   }
 
   shouldApplyPromptLoad(promptLoadToken) {
@@ -2239,10 +2380,12 @@ class ReadAloudMode {
   }
 
   cleanup() {
+    this.invalidateSpeechCoachResultRender();
     this.cancelPendingHydration();
     this.stopTimer();
     this.invalidateRecordingSession();
     this.clearRecordedAudio();
+    this.stopSpeechCoachModelAudio();
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.stop();
     }
@@ -2401,6 +2544,7 @@ class ReadAloudMode {
   }
 
   retryCurrentPrompt() {
+    this.invalidateSpeechCoachResultRender();
     this.stopTimer();
     this.state = 'PREP';
     this.resetAssessmentDisplay();
@@ -2456,7 +2600,10 @@ class ReadAloudMode {
     this.refreshQuestionPickerV7AudioShortcuts();
   }
 
-  clearRecordedAudio() {
+  clearRecordedAudio({ preserveAssessmentBuffer = false } = {}) {
+    this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
+    this.stopSpeechCoachModelAudio();
+    this.stopReferenceAudioPlayback();
     const audioEl = document.getElementById('ra-user-recording-audio');
     if (audioEl) {
       audioEl.pause();
@@ -2471,11 +2618,12 @@ class ReadAloudMode {
       window.URL.revokeObjectURL(this.userRecordingUrl);
     }
     this.userRecordingUrl = null;
+    if (!preserveAssessmentBuffer) this.assessmentAudioBuffer = null;
     this.updateRecordedAudioControl();
   }
 
-  setRecordedAudio(rawBlob) {
-    this.clearRecordedAudio();
+  setRecordedAudio(rawBlob, { preserveAssessmentBuffer = false } = {}) {
+    this.clearRecordedAudio({ preserveAssessmentBuffer });
     if (!rawBlob || !window.URL || typeof window.URL.createObjectURL !== 'function') {
       return;
     }
@@ -2503,12 +2651,388 @@ class ReadAloudMode {
     if (playBtn) playBtn.textContent = 'Play';
   }
 
+  async loadSpeechCoachAudioManifest(questionId = this.currentQuestionId) {
+    const id = String(questionId || '').trim();
+    if (!id) return null;
+    if (this.speechCoachAudioManifestCache.has(id)) return this.speechCoachAudioManifestCache.get(id);
+    if (this.speechCoachAudioManifestPromises.has(id)) return this.speechCoachAudioManifestPromises.get(id);
+    const promise = fetch(`/database/RA/speech-coach-audio/v1/questions/${encodeURIComponent(id)}.json`, { cache: 'force-cache' })
+      .then((response) => response.ok ? response.json() : null)
+      .catch(() => null)
+      .then((manifest) => {
+        this.speechCoachAudioManifestCache.set(id, manifest);
+        this.speechCoachAudioManifestPromises.delete(id);
+        return manifest;
+      });
+    this.speechCoachAudioManifestPromises.set(id, promise);
+    return promise;
+  }
+
+  getSpeechCoachAudioEntry(event) {
+    const eventId = String(event?.eventId || '').trim();
+    const questionId = String(this.currentQuestionId || '').trim();
+    const manifest = this.speechCoachAudioManifestCache.get(questionId);
+    if (!eventId
+      || manifest?.version !== 'sc-kokoro-v1'
+      || String(manifest?.questionId || '').trim() !== questionId
+      || !manifest?.events) return null;
+    const entry = manifest.events[eventId];
+    if (!entry
+      || entry.status !== 'ready'
+      || String(entry.eventId || '') !== eventId
+      || !String(entry.assetId || '').trim()
+      || !Number.isFinite(Number(entry.durationMs))
+      || Number(entry.durationMs) <= 0
+      || !/^[a-f0-9]{64}$/i.test(String(entry.mp3Sha256 || ''))
+      || !/^\/database\/RA\/speech-coach-audio\/v1\/clips\/[a-f0-9]{2}\/[a-f0-9]{64}\.mp3$/i.test(String(entry.file || ''))) return null;
+    return entry;
+  }
+
+  getSpeechCoachGuideEvent(item) {
+    if (!item || !Number.isInteger(Number(item.startWordIndex)) || !Number.isInteger(Number(item.endWordIndex))) return null;
+    const family = item.category === 'sound_changes'
+      ? (String(item.subtype || '').startsWith('coalescent_') ? 'yod_coalescence' : 'n_bilabial_assimilation')
+      : null;
+    const questionId = String(this.currentQuestionId || '').trim();
+    if (!family || !questionId) return null;
+    return { eventId: `q-${questionId}-${family}-${Number(item.startWordIndex)}-${Number(item.endWordIndex)}`, family, phrase: item.label || '', startWordIndex: Number(item.startWordIndex), endWordIndex: Number(item.endWordIndex) };
+  }
+
+  hasPlayableRecordingSource() {
+    const audioEl = document.getElementById('ra-user-recording-audio');
+    return !!this.assessmentAudioBuffer
+      || !!String(this.userRecordingUrl || '').trim()
+      || !!String(audioEl?.getAttribute('src') || '').trim();
+  }
+
+  _buildSpeechCoachPlaybackControls(event, evIndex, hasTimestamps, title = 'Play this segment') {
+    const yoursHtml = !hasTimestamps
+      ? ''
+      : (this.hasPlayableRecordingSource()
+        ? `<button class="sc-play-word-btn sc-audio-btn sc-audio-btn--yours" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="${title}" aria-label="Play your recording segment"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Yours</span></button>`
+        : `<button class="sc-play-word-btn sc-audio-btn sc-audio-btn--yours sc-audio-btn--unavailable" type="button" disabled aria-disabled="true" title="Your recording segment is unavailable" aria-label="Your recording segment is unavailable"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Yours</span></button>`);
+    const model = this.getSpeechCoachAudioEntry(event);
+    if (model?.status === 'ready' && model.file) {
+      return `<div class="sc-audio-controls">${yoursHtml}<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-event-index="${evIndex}" data-model-src="${ReadAloudMode.escapeHtml(String(model.file))}" title="Play the model connected-speech example" aria-label="Play model pronunciation"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Model</span></button></div>`;
+    }
+    return `<div class="sc-audio-controls">${yoursHtml}<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model sc-audio-btn--unavailable" type="button" disabled aria-disabled="true" title="Model audio unavailable" aria-label="Model audio unavailable"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Model unavailable</span></button></div>`;
+  }
+
+  stopSpeechCoachModelAudio() {
+    if (this.speechCoachModelAudio) {
+      this.speechCoachModelAudio.pause();
+      this.speechCoachModelAudio.currentTime = 0;
+      this.speechCoachModelAudio.removeAttribute('src');
+      if (typeof this.speechCoachModelAudio.load === 'function') this.speechCoachModelAudio.load();
+    }
+    if (this.speechCoachModelButton) {
+      this.speechCoachModelButton.classList.remove('is-playing');
+      this.speechCoachModelButton.setAttribute('aria-label', 'Play model pronunciation');
+      this.speechCoachModelButton.querySelector('span')?.replaceChildren(document.createTextNode('Model'));
+    }
+    this.speechCoachModelButton = null;
+    document.querySelectorAll('.sc-model-play-btn.is-playing').forEach((button) => {
+      button.classList.remove('is-playing');
+      button.setAttribute('aria-label', 'Play model pronunciation');
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'Model';
+    });
+  }
+
+  resetRecordedWordButton(button) {
+    if (!button) return;
+    button.classList.remove('is-playing');
+    if (button.classList.contains('ra-word-token')) {
+      const playable = button.dataset.playable === 'true';
+      button.setAttribute('aria-label', playable ? `${button.textContent.trim()}, click to play your recording.` : `${button.textContent.trim()}, no recording segment available.`);
+      return;
+    }
+    button.setAttribute('aria-label', 'Play your recording segment');
+    const label = button.querySelector('span');
+    if (label) label.textContent = 'Yours';
+  }
+
+  stopRecordedWordPlayback() {
+    this.cancelRecordedSegmentPlayback();
+  }
+
+  cancelRecordedSegmentPlayback({ pause = false, resetTime = false } = {}) {
+    const previous = this.recordedSegmentPlayback || {};
+    const revision = Number(previous.revision || 0) + 1;
+    previous.metadataCleanup?.('stale');
+    if (previous.timer) clearInterval(previous.timer);
+    if (previous.sourceNode) {
+      previous.sourceNode.onended = null;
+      try { previous.sourceNode.stop(); } catch (_) { /* already stopped */ }
+    }
+    if (pause && previous.mediaElement && !previous.mediaElement.paused) previous.mediaElement.pause();
+    if (resetTime && previous.mediaElement) {
+      try { previous.mediaElement.currentTime = 0; } catch (_) { /* metadata may be unavailable */ }
+    }
+    this.resetRecordedWordButton(previous.button || this.wordPlaybackButton);
+    this.recordedSegmentPlayback = {
+      revision,
+      sourceKind: null,
+      sourceNode: null,
+      mediaElement: null,
+      timer: null,
+      button: null,
+      metadataCleanup: null
+    };
+    this.wordPlaybackSource = null;
+    this.wordPlaybackButton = null;
+    this.speechCoachYoursButton = null;
+    this._segmentInterval = null;
+    return revision;
+  }
+
+  waitForRecordedAudioMetadata(audioEl, revision, timeoutMs = 2000) {
+    if (Number(audioEl?.readyState) >= 1) return Promise.resolve({ ready: true, reason: 'ready' });
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ready, reason) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        audioEl.removeEventListener('loadedmetadata', onReady);
+        audioEl.removeEventListener('error', onError);
+        if (this.recordedSegmentPlayback.revision === revision) {
+          this.recordedSegmentPlayback.metadataCleanup = null;
+        }
+        resolve({ ready, reason });
+      };
+      const onReady = () => finish(true, 'ready');
+      const onError = () => finish(false, 'metadata_error');
+      const timeout = setTimeout(() => finish(false, 'metadata_timeout'), timeoutMs);
+      audioEl.addEventListener('loadedmetadata', onReady, { once: true });
+      audioEl.addEventListener('error', onError, { once: true });
+      this.recordedSegmentPlayback.metadataCleanup = (reason = 'stale') => finish(false, reason);
+    });
+  }
+
+  async playRecordedWordSegment(startMs, endMs, button = null) {
+    const start = Number(startMs);
+    const end = Number(endMs);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+      return { started: false, source: null, reason: 'invalid_range' };
+    }
+    if (!this.hasPlayableRecordingSource()) {
+      return { started: false, source: null, reason: 'no_source' };
+    }
+
+    const activePlayback = this.recordedSegmentPlayback || {};
+    if (button && activePlayback.button === button
+        && (activePlayback.sourceNode || activePlayback.timer || activePlayback.metadataCleanup)) {
+      const source = activePlayback.sourceKind;
+      this.stopSpeechCoachYoursAudio({ pause: true });
+      return { started: false, source, reason: 'stopped' };
+    }
+
+    this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
+    this.stopSpeechCoachModelAudio();
+    this.stopReferenceAudioPlayback();
+    const audioEl = document.getElementById('ra-user-recording-audio');
+    if (audioEl) {
+      if (!audioEl.paused) audioEl.pause();
+      audioEl.currentTime = 0;
+    }
+
+    const revision = this.recordedSegmentPlayback.revision;
+    this.recordedSegmentPlayback.button = button;
+    this.wordPlaybackButton = button;
+    this.speechCoachYoursButton = button;
+    if (button) {
+      button.classList.add('is-playing');
+      if (button.classList.contains('ra-word-token')) {
+        button.setAttribute('aria-label', 'Stop your recorded word segment');
+      } else {
+        button.setAttribute('aria-label', 'Loading your recording segment');
+        const label = button.querySelector('span');
+        if (label) label.textContent = 'Loading yours...';
+      }
+    }
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (this.assessmentAudioBuffer && typeof AudioContextCtor === 'function') {
+      if (!this.wordPlaybackContext || this.wordPlaybackContext.state === 'closed') {
+        this.wordPlaybackContext = new AudioContextCtor();
+      }
+
+      const context = this.wordPlaybackContext;
+      const offsetSec = Math.max(0, start / 1000);
+      const durationSec = Math.min(
+        Math.max(0, end / 1000 - offsetSec),
+        Math.max(0, Number(this.assessmentAudioBuffer.duration) - offsetSec)
+      );
+      if (!(durationSec > 0)) {
+        this.stopRecordedWordPlayback();
+        return { started: false, source: 'decoded-buffer', reason: 'invalid_range' };
+      }
+
+      if (context.state === 'suspended' && typeof context.resume === 'function') {
+        try {
+          await context.resume();
+        } catch (_) {
+          if (this.recordedSegmentPlayback.revision === revision) this.stopRecordedWordPlayback();
+          return { started: false, source: 'decoded-buffer', reason: 'resume_failed' };
+        }
+      }
+      if (this.recordedSegmentPlayback.revision !== revision) {
+        return { started: false, source: 'decoded-buffer', reason: 'stale' };
+      }
+      try {
+        const source = context.createBufferSource();
+        source.buffer = this.assessmentAudioBuffer;
+        source.connect(context.destination);
+        source.onended = () => {
+          if (this.recordedSegmentPlayback.revision === revision
+              && this.recordedSegmentPlayback.sourceNode === source) this.stopRecordedWordPlayback();
+        };
+        this.recordedSegmentPlayback.sourceKind = 'decoded-buffer';
+        this.recordedSegmentPlayback.sourceNode = source;
+        this.wordPlaybackSource = source;
+        source.start(0, offsetSec, durationSec);
+        if (button && !button.classList.contains('ra-word-token')) {
+          button.setAttribute('aria-label', 'Stop your recording segment');
+          const label = button.querySelector('span');
+          if (label) label.textContent = 'Stop yours';
+        }
+        return { started: true, source: 'decoded-buffer', reason: 'started' };
+      } catch (error) {
+        console.warn('[ReadAloud] Word segment playback failed:', error);
+        if (this.recordedSegmentPlayback.revision === revision) this.stopRecordedWordPlayback();
+        return { started: false, source: 'decoded-buffer', reason: 'start_failed' };
+      }
+    }
+
+    if (!audioEl) {
+      this.stopRecordedWordPlayback();
+      return { started: false, source: 'native-audio', reason: 'missing_element' };
+    }
+    if (!audioEl.getAttribute('src') && this.userRecordingUrl) {
+      audioEl.src = this.userRecordingUrl;
+      if (typeof audioEl.load === 'function') audioEl.load();
+    }
+    if (!audioEl.getAttribute('src')) {
+      this.stopRecordedWordPlayback();
+      return { started: false, source: 'native-audio', reason: 'no_source' };
+    }
+
+    this.recordedSegmentPlayback.sourceKind = 'native-audio';
+    this.recordedSegmentPlayback.mediaElement = audioEl;
+    const readiness = await this.waitForRecordedAudioMetadata(audioEl, revision);
+    if (this.recordedSegmentPlayback.revision !== revision) {
+      return { started: false, source: 'native-audio', reason: 'stale' };
+    }
+    if (!readiness.ready) {
+      this.stopRecordedWordPlayback();
+      return { started: false, source: 'native-audio', reason: readiness.reason };
+    }
+
+    const endSec = end / 1000;
+    try {
+      const duration = Number(audioEl.duration);
+      const maxStart = Number.isFinite(duration) && duration > 0 ? Math.max(0, duration - 0.001) : Number.POSITIVE_INFINITY;
+      audioEl.currentTime = Math.min(Math.max(0, start / 1000), maxStart);
+    } catch (_) {
+      this.stopRecordedWordPlayback();
+      return { started: false, source: 'native-audio', reason: 'seek_failed' };
+    }
+    const timer = setInterval(() => {
+      if (this.recordedSegmentPlayback.revision !== revision) return;
+      if (audioEl.currentTime >= endSec || audioEl.ended) {
+        this.stopSpeechCoachYoursAudio({ pause: true });
+      }
+    }, 25);
+    this.recordedSegmentPlayback.timer = timer;
+    this._segmentInterval = timer;
+    try {
+      await audioEl.play();
+      if (this.recordedSegmentPlayback.revision !== revision) {
+        return { started: false, source: 'native-audio', reason: 'stale' };
+      }
+      if (button && !button.classList.contains('ra-word-token')) {
+        button.setAttribute('aria-label', 'Stop your recording segment');
+        const label = button.querySelector('span');
+        if (label) label.textContent = 'Stop yours';
+      }
+      return { started: true, source: 'native-audio', reason: 'started' };
+    } catch (error) {
+      console.warn('[ReadAloud] Recorded segment playback failed:', error);
+      if (this.recordedSegmentPlayback.revision === revision) this.stopSpeechCoachYoursAudio({ pause: true });
+      return { started: false, source: 'native-audio', reason: 'play_rejected' };
+    }
+  }
+
+  stopSpeechCoachYoursAudio({ pause = false, resetTime = false } = {}) {
+    this.cancelRecordedSegmentPlayback({ pause, resetTime });
+  }
+
+  playSpeechCoachModelAudio(button) {
+    const src = String(button?.dataset?.modelSrc || '').trim();
+    if (!src) return;
+    if (!this.speechCoachModelAudio) {
+      this.speechCoachModelAudio = new Audio();
+      this.speechCoachModelAudio.preload = 'auto';
+      this.speechCoachModelAudio.addEventListener('ended', () => this.stopSpeechCoachModelAudio());
+      this.speechCoachModelAudio.addEventListener('error', () => {
+        const failedButton = this.speechCoachModelButton;
+        this.stopSpeechCoachModelAudio();
+        if (failedButton) {
+          failedButton.disabled = true;
+          failedButton.setAttribute('aria-disabled', 'true');
+          failedButton.classList.add('sc-audio-btn--unavailable');
+          failedButton.setAttribute('aria-label', 'Model audio unavailable');
+          const label = failedButton.querySelector('span');
+          if (label) label.textContent = 'Model unavailable';
+        }
+      });
+    }
+    if (this.speechCoachModelButton === button && !this.speechCoachModelAudio.paused) {
+      this.stopSpeechCoachModelAudio();
+      return;
+    }
+    this.stopSpeechCoachModelAudio();
+    this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
+    const userAudio = document.getElementById('ra-user-recording-audio');
+    if (userAudio && !userAudio.paused) userAudio.pause();
+    if (userAudio) userAudio.currentTime = 0;
+    const recordedPlayBtn = document.getElementById('ra-play-recording-btn');
+    if (recordedPlayBtn) recordedPlayBtn.textContent = 'Play your recording';
+    this.stopReferenceAudioPlayback();
+    this.speechCoachModelButton = button;
+    this.speechCoachModelAudio.src = src;
+    this.speechCoachModelAudio.load();
+    const label = button.querySelector('span');
+    if (label) label.textContent = 'Loading model...';
+    button.setAttribute('aria-label', 'Loading model audio');
+    button.classList.add('is-playing');
+    Promise.resolve(this.speechCoachModelAudio.play()).then(() => {
+      if (this.speechCoachModelButton === button) {
+        if (label) label.textContent = 'Stop model';
+        button.setAttribute('aria-label', 'Stop model audio');
+      }
+    }).catch(() => {
+      this.stopSpeechCoachModelAudio();
+      button.disabled = true;
+      button.setAttribute('aria-disabled', 'true');
+      button.classList.add('sc-audio-btn--unavailable');
+      button.setAttribute('aria-label', 'Model audio unavailable');
+      if (label) label.textContent = 'Model unavailable';
+    });
+  }
+
   playRecordedAudio() {
     const audioEl = document.getElementById('ra-user-recording-audio');
     const playBtn = document.getElementById('ra-play-recording-btn');
     if (!audioEl || !this.userRecordingUrl || !playBtn) return;
 
+    if (this.speechCoachYoursButton) {
+      this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
+    }
+
     if (audioEl.paused) {
+      this.stopSpeechCoachModelAudio();
       this.stopReferenceAudioPlayback();
       const playPromise = audioEl.play();
       playBtn.textContent = 'Pause your recording';
@@ -2726,6 +3250,7 @@ class ReadAloudMode {
       phase: 'requesting-mic',
       sessionViewMode: this.getEffectiveViewMode(),
       sessionChunkingEnabled: !!this.chunkingEnabled,
+      sessionConnectedSpeechModes: Object.freeze(this.getActiveConnectedSpeechModes()),
       sessionConnectedSpeechLevel: this.connectedSpeechLevel || 'off'
     };
     this.recordingRequestId = recordingSession.id;
@@ -2881,6 +3406,10 @@ class ReadAloudMode {
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
       const wavBlob = await this.prepareWavBlob(rawBlob);
       recordingSession.wavBlob = wavBlob;
+      recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
+      if (this.assessmentAudioBuffer) {
+        this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
+      }
       if (!this.shouldApplyAssessment(recordingSession)) return false;
 
       if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
@@ -2918,7 +3447,7 @@ class ReadAloudMode {
         throw error;
       }
 
-      this.processAzureResults(payload, recordingSession);
+      await this.processAzureResults(payload, recordingSession);
       return true;
     } catch (err) {
       console.error('Azure assessment error:', err);
@@ -2966,6 +3495,9 @@ class ReadAloudMode {
   }
 
   async prepareWavBlob(blob) {
+    // A new assessment must never reuse a buffer from a prior recording if
+    // decoding or quality validation fails.
+    this.assessmentAudioBuffer = null;
     const arrayBuffer = await blob.arrayBuffer();
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
@@ -2985,6 +3517,7 @@ class ReadAloudMode {
       throw error;
     }
 
+    this.assessmentAudioBuffer = rendered;
     return this.audioBufferToWav(rendered);
   }
 
@@ -3119,64 +3652,28 @@ class ReadAloudMode {
     return hasTranscriptEvidence && finiteScores.every((score) => score === 0);
   }
 
-  processAzureResults(payload, recordingSession) {
+  async processAzureResults(payload, recordingSession) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
+    const assessmentModes = this.getAssessmentConnectedSpeechModes({}, recordingSession);
+    const assessmentEvents = this.filterSpeechCoachEvents(payload.connectedSpeech?.events || [], assessmentModes);
 
     this.showAssessmentDisplay();
     this.setAssessmentStatusMessage('Analysis complete.');
     if (accuracyElement) accuracyElement.textContent = payload.accuracyScore.toString();
 
     if (feedbackElement) {
-      const recognizedText = String(payload.recognizedText || '').trim();
-      let html = '';
-      if (recognizedText) {
-        html += `<div style="margin-bottom: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; color: #1e293b; text-align: left;">`;
-        html += `<strong style="color: #475569; margin-right: 6px;">Recognized Speech:</strong>`;
-        html += `<span style="font-style: italic; font-weight: 500;">"${recognizedText}"</span>`;
-        html += `</div>`;
-      }
-
-      if (!payload.words || payload.words.length === 0) {
-        if (!recognizedText) {
-          html += `<p style="line-height: 1.6; font-size: 1.05rem; padding: 10px; color: #6b7280; text-align: center;">No speech detected.</p>`;
+      this.renderRecognizedTranscript(
+        payload.words || [],
+        payload.recognizedText || '',
+        assessmentEvents,
+        {
+          fluencyScore: payload.fluencyScore,
+          completenessScore: payload.completenessScore,
+          pronScore: payload.pronScore
         }
-      } else {
-        const hasFiniteMetricValue = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
-        const supplementalMetrics = [
-          { label: 'Fluency', value: payload.fluencyScore },
-          { label: 'Completeness', value: payload.completenessScore },
-          { label: 'Overall', value: payload.pronScore }
-        ].filter((metric) => hasFiniteMetricValue(metric.value));
-
-        html += '<div style="text-align: left; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 6px; font-weight: 600;">Word Accuracy Breakdown</div>';
-        html += '<p style="line-height: 1.6; font-size: 1.05rem; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #ffffff; text-align: left;">';
-        payload.words.forEach(w => {
-          let color = 'inherit';
-          if (w.errorType === 'Omission') {
-            color = '#9ca3af'; // gray out omitted
-            html += `<span style="color: ${color}; text-decoration: line-through; margin-right: 4px;" title="Omitted">${w.word}</span> `;
-          } else if (w.errorType === 'Insertion') {
-            color = '#f59e0b'; // orange for extra words
-            html += `<span style="color: ${color}; font-style: italic; margin-right: 4px;" title="Inserted (Extra) word">[${w.word}]</span> `;
-          } else if (w.accuracyScore < 60) {
-            color = '#ef4444'; // red
-            html += `<span style="color: ${color}; font-weight: 500; margin-right: 4px;" title="Accuracy: ${w.accuracyScore}">${w.word}</span> `;
-          } else if (w.accuracyScore < 80) {
-            color = '#f59e0b'; // orange
-            html += `<span style="color: ${color}; margin-right: 4px;" title="Accuracy: ${w.accuracyScore}">${w.word}</span> `;
-          } else {
-            color = '#10b981'; // green
-            html += `<span style="color: ${color}; margin-right: 4px;" title="Accuracy: ${w.accuracyScore}">${w.word}</span> `;
-          }
-        });
-        html += '</p>';
-        if (supplementalMetrics.length > 0) {
-          html += `<p style="margin-top: 10px; font-size: 0.95em; color: #4b5563; text-align: center;">${supplementalMetrics.map((metric) => `<strong>${metric.label}:</strong> ${metric.value}%`).join(' &nbsp;|&nbsp; ')}</p>`;
-        }
-      }
-      feedbackElement.innerHTML = html;
+      );
     }
 
     this.lastAssessmentPayload = payload;
@@ -3188,14 +3685,22 @@ class ReadAloudMode {
     const showAdvBtn = document.getElementById('ra-show-advanced-btn');
 
     if (sessionView === 'basic') {
-      if (showAdvContainer) showAdvContainer.style.display = 'block';
+      if (showAdvContainer) showAdvContainer.style.display = assessmentModes.size > 0 ? 'block' : 'none';
       if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
       this.hideConnectedSpeechPanel();
+      if (assessmentModes.size === 0) this.updateSpeechCoachModeHints(assessmentModes);
     } else {
       if (showAdvContainer) showAdvContainer.style.display = 'none';
-      this.renderConnectedSpeechResults(payload.connectedSpeech, {
+      await this.renderConnectedSpeechResults(payload.connectedSpeech, {
         transcriptText: payload.recognizedText || this.currentPromptPlainText,
+        words: payload.words || [],
+        metrics: {
+          fluencyScore: payload.fluencyScore,
+          completenessScore: payload.completenessScore,
+          pronScore: payload.pronScore
+        },
         sessionViewMode: sessionView,
+        sessionConnectedSpeechModes: [...assessmentModes],
         sessionConnectedSpeechLevel: sessionLevel
       });
     }
@@ -3241,26 +3746,49 @@ class ReadAloudMode {
   }
 
   clearConnectedSpeechResults() {
-    if (this._segmentInterval) {
-      clearInterval(this._segmentInterval);
-      this._segmentInterval = null;
-    }
     this.hideConnectedSpeechPanel();
   }
 
-  hideConnectedSpeechPanel() {
+  beginSpeechCoachResultRender() {
+    this.speechCoachResultRevision += 1;
+    this.cancelPendingHydration();
+    this.activePromptRenderToken += 1;
+    this.stopSpeechCoachYoursAudio({ pause: true });
+    this.stopSpeechCoachModelAudio();
+    this.closeSpeechCoachModeTooltips();
+    this.clearSpeechCoachHoverState();
+    return this.speechCoachResultRevision;
+  }
+
+  isSpeechCoachResultRevisionCurrent(revision) {
+    return revision === this.speechCoachResultRevision;
+  }
+
+  invalidateSpeechCoachResultRender() {
+    this.speechCoachResultRevision += 1;
+    this.closeSpeechCoachModeTooltips();
+    this.clearSpeechCoachHoverState();
+    this.stopSpeechCoachYoursAudio({ pause: true });
+    return this.speechCoachResultRevision;
+  }
+
+  hideConnectedSpeechPanel({ invalidate = true } = {}) {
     const box = document.getElementById('ra-connected-speech-box');
     const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
     const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
     const paragraph = document.getElementById('ra-connected-speech-paragraph');
+    if (invalidate) this.invalidateSpeechCoachResultRender();
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
+    this.clearSpeechCoachHoverState();
+    this.setSpeechCoachModeHint('ra-feedback-mode-hint');
+    this.setSpeechCoachModeHint('ra-connected-speech-mode-hint');
     if (box) box.style.display = 'none';
     if (paragraph) paragraph.innerHTML = '';
     if (label) label.textContent = 'Speech Coach';
@@ -3269,26 +3797,37 @@ class ReadAloudMode {
     if (summary) summary.textContent = '';
   }
 
-  toggleAdvancedAnalysisView() {
+  async toggleAdvancedAnalysisView() {
     const box = document.getElementById('ra-connected-speech-box');
     const btn = document.getElementById('ra-show-advanced-btn');
-    if (!box || !btn) return;
+    if (!box || !btn) return { visible: false, reason: 'missing_dom', revision: this.speechCoachResultRevision };
 
     const isHidden = box.style.display === 'none' || !box.style.display;
     if (isHidden) {
-      if (this.lastAssessmentPayload?.connectedSpeech) {
-        this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
-          transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
-          sessionViewMode: 'advanced',
-          sessionConnectedSpeechLevel: 'sound_changes'
-        });
+      const selectedModes = this.getAssessmentConnectedSpeechModes({}, this.lastAssessmentSession);
+      if (selectedModes.size === 0) {
+        this.hideConnectedSpeechPanel();
+        this.updateSpeechCoachModeHints(selectedModes);
+        btn.textContent = '✨ Show Advanced Analysis';
+        return { visible: false, reason: 'no_modes', revision: this.speechCoachResultRevision };
       }
-      box.style.display = 'block';
-      btn.textContent = 'Hide Advanced Analysis';
-      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      if (!this.lastAssessmentPayload?.connectedSpeech) {
+        return { visible: false, reason: 'missing_results', revision: this.speechCoachResultRevision };
+      }
+      const outcome = await this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
+        transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
+        sessionViewMode: 'advanced',
+        sessionConnectedSpeechModes: this.lastAssessmentSession?.sessionConnectedSpeechModes,
+        sessionConnectedSpeechLevel: this.lastAssessmentSession?.sessionConnectedSpeechLevel || 'off'
+      });
+      btn.textContent = outcome.visible ? 'Hide Advanced Analysis' : btn.textContent;
+      if (outcome.visible) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return outcome;
     } else {
       this.hideConnectedSpeechPanel();
       btn.textContent = '✨ Show Advanced Analysis';
+      return { visible: false, reason: 'hidden', revision: this.speechCoachResultRevision };
     }
   }
 
@@ -3390,6 +3929,17 @@ class ReadAloudMode {
       this.hideConnectedSpeechPanel();
       return;
     }
+    const manifestQuestionId = String(this.currentQuestionId || '').trim();
+    if (manifestQuestionId
+      && !this.speechCoachAudioManifestCache.has(manifestQuestionId)
+      && !this.speechCoachAudioManifestPromises.has(manifestQuestionId)) {
+      void this.loadSpeechCoachAudioManifest(manifestQuestionId).then(() => {
+        if (this.connectedSpeechPanelMode === 'guide'
+          && String(this.currentQuestionId || '').trim() === manifestQuestionId) {
+          this.renderConnectedSpeechGuidePanel();
+        }
+      });
+    }
     const compactView = this.isCompactConnectedSpeechGuideLayout();
     if (!this.guideExplanationsToggled) {
       this.guideExplanationsExpanded = !compactView;
@@ -3441,20 +3991,27 @@ class ReadAloudMode {
         : `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`);
     const renderGuideCard = (item, selected) => {
       const palette = paletteForLayer(item.layer);
+      const guideEvent = item.category === 'sound_changes' ? this.getSpeechCoachGuideEvent(item) : null;
+      const modelAudio = guideEvent
+        ? this._buildSpeechCoachPlaybackControls(guideEvent, -1, false, 'Play the model sound-change example')
+        : '';
       const spokenAs = item.spokenAs
         ? `<span style="font-size:0.86rem; color:#92400e; margin-left:6px;"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
         : '';
       return `
-        <button type="button" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:8px 12px; border-radius:8px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'}; cursor:pointer;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="display:flex; align-items:baseline;">
-              <strong style="font-size:0.95rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
-              ${spokenAs}
-            </div>
-            <span style="padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
-          </div>
-          <div style="font-size:0.86rem; color:#4b5563; line-height:1.35;">${escapeHtml(item.explanation || '')}</div>
-        </button>
+        <div class="sc-guide-item" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-selected="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:8px 12px; border-radius:8px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'};">
+          <button type="button" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:0; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer;">
+            <span style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+              <span style="display:flex; align-items:baseline;">
+                <strong style="font-size:0.95rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
+                ${spokenAs}
+              </span>
+              <span style="padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
+            </span>
+            <span style="font-size:0.86rem; color:#4b5563; line-height:1.35;">${escapeHtml(item.explanation || '')}</span>
+          </button>
+          ${modelAudio ? `<div style="display:flex; justify-content:flex-start; margin-top:2px;">${modelAudio}</div>` : ''}
+        </div>
       `;
     };
     const renderItemList = (itemList) => itemList.map((item) => renderGuideCard(item, item.id === this.selectedGuideItemId)).join('');
@@ -3494,18 +4051,265 @@ class ReadAloudMode {
     this.syncGuideSelectionState();
   }
 
+  renderRecognizedTranscript(words = [], recognizedText = '', events = [], metrics = {}) {
+    const feedbackElement = document.getElementById('ra-transcript-feedback');
+    if (!feedbackElement) return null;
+
+    const normalizedWords = Array.isArray(words) ? words : [];
+    const normalizedEvents = Array.isArray(events) ? events : [];
+    const cleanWord = (value) => String(value || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '').trim();
+    const eventIndexesByWord = normalizedWords.map(() => new Set());
+    const assignEventRange = (eventIndex, startIndex, endIndex) => {
+      const first = Math.max(0, Math.min(normalizedWords.length - 1, Number(startIndex)));
+      const last = Math.max(first, Math.min(normalizedWords.length - 1, Number(endIndex)));
+      if (!Number.isFinite(first) || !Number.isFinite(last) || normalizedWords.length === 0) return false;
+      for (let index = first; index <= last; index += 1) eventIndexesByWord[index].add(eventIndex);
+      return true;
+    };
+
+    normalizedEvents.forEach((event, eventIndex) => {
+      let assigned = false;
+      const startWordIndex = Number(event?.startWordIndex ?? event?.wordIndex);
+      const endWordIndex = Number(event?.endWordIndex ?? event?.wordIndex);
+      if (Number.isInteger(startWordIndex)
+        && Number.isInteger(endWordIndex)
+        && startWordIndex >= 0
+        && endWordIndex >= startWordIndex
+        && startWordIndex < normalizedWords.length
+        && endWordIndex >= 0) {
+        assigned = assignEventRange(eventIndex, startWordIndex, endWordIndex);
+      }
+
+      if (!assigned) {
+        const eventStart = Number(event?.startMs);
+        const eventEnd = Number(event?.endMs);
+        if (Number.isFinite(eventStart) && Number.isFinite(eventEnd) && eventEnd > eventStart) {
+          normalizedWords.forEach((word, wordIndex) => {
+            const wordStart = Number(word?.startMs);
+            const wordEnd = Number(word?.endMs);
+            if (Number.isFinite(wordStart) && Number.isFinite(wordEnd)
+              && wordEnd > eventStart && wordStart < eventEnd) {
+              eventIndexesByWord[wordIndex].add(eventIndex);
+              assigned = true;
+            }
+          });
+        }
+      }
+
+      if (!assigned) {
+        const phraseParts = String(event?.phrase || '').split(/\s+/).map(cleanWord).filter(Boolean);
+        if (phraseParts.length > 0) {
+          for (let start = 0; start <= normalizedWords.length - phraseParts.length; start += 1) {
+            const matches = phraseParts.every((part, offset) => cleanWord(normalizedWords[start + offset]?.word) === part);
+            if (matches) {
+              assignEventRange(eventIndex, start, start + phraseParts.length - 1);
+              break;
+            }
+          }
+        }
+      }
+    });
+
+    feedbackElement.replaceChildren();
+    document.getElementById('ra-connected-speech-paragraph')?.replaceChildren();
+
+    const shell = document.createElement('div');
+    shell.className = 'ra-merged-transcript-shell';
+    const heading = document.createElement('div');
+    heading.className = 'ra-merged-transcript-heading';
+    heading.textContent = 'Recognized';
+    shell.appendChild(heading);
+
+    const transcript = document.createElement('div');
+    transcript.id = 'ra-merged-recognized-transcript';
+    transcript.className = 'ra-merged-recognized-transcript';
+    transcript.setAttribute('role', 'group');
+    transcript.setAttribute('aria-label', 'Recognized speech with word accuracy');
+
+    if (normalizedWords.length === 0) {
+      transcript.textContent = String(recognizedText || '').trim() || 'No speech detected.';
+      transcript.classList.add('ra-merged-recognized-transcript--empty');
+    } else {
+      normalizedWords.forEach((word, wordIndex) => {
+        const errorType = String(word?.errorType || 'None');
+        const normalizedErrorType = errorType.toLowerCase();
+        const startMs = Number(word?.startMs);
+        const endMs = Number(word?.endMs);
+        const playable = normalizedErrorType !== 'omission'
+          && Number.isFinite(startMs)
+          && Number.isFinite(endMs)
+          && endMs > startMs
+          && this.hasPlayableRecordingSource();
+        const token = document.createElement('button');
+        token.type = 'button';
+        token.className = 'ra-word-token';
+        token.dataset.wordIndex = String(wordIndex);
+        token.dataset.errorType = errorType;
+        token.dataset.playable = playable ? 'true' : 'false';
+        if (Number.isFinite(startMs)) token.dataset.startMs = String(startMs);
+        if (Number.isFinite(endMs)) token.dataset.endMs = String(endMs);
+        const eventIndexes = Array.from(eventIndexesByWord[wordIndex] || []);
+        if (eventIndexes.length > 0) {
+          token.dataset.eventIndex = eventIndexes.join(' ');
+          const linkedStatuses = eventIndexes.map((index) => String(normalizedEvents[index]?.status || 'uncertain'));
+          if (linkedStatuses.includes('not_detected')) token.classList.add('ra-word-token--coach-error');
+          else if (linkedStatuses.includes('uncertain')) token.classList.add('ra-word-token--coach-uncertain');
+          else token.classList.add('ra-word-token--coach-success');
+        }
+
+        if (normalizedErrorType === 'omission') {
+          token.classList.add('ra-word-token--omission');
+        } else if (normalizedErrorType === 'insertion') {
+          token.classList.add('ra-word-token--insertion');
+        } else if (Number(word?.accuracyScore) < 60) {
+          token.classList.add('ra-word-token--error');
+        } else if (Number(word?.accuracyScore) < 80) {
+          token.classList.add('ra-word-token--uncertain');
+        } else {
+          token.classList.add('ra-word-token--success');
+        }
+        if (!playable) token.classList.add('ra-word-token--unavailable');
+
+        const displayWord = String(word?.word || '').trim();
+        token.textContent = normalizedErrorType === 'insertion' ? `[${displayWord}]` : displayWord;
+        const statusText = normalizedErrorType === 'omission'
+          ? 'omitted'
+          : normalizedErrorType === 'insertion'
+            ? 'inserted'
+            : `accuracy ${Number.isFinite(Number(word?.accuracyScore)) ? Number(word.accuracyScore) : 0}`;
+        token.title = playable ? `Click to hear this recorded word (${statusText})` : `${displayWord} (${statusText}; no recording segment available)`;
+        token.setAttribute('aria-disabled', playable ? 'false' : 'true');
+        token.setAttribute('aria-label', playable ? `${displayWord}, ${statusText}. Click to play.` : `${displayWord}, ${statusText}. No recording segment available.`);
+        transcript.appendChild(token);
+        transcript.appendChild(document.createTextNode(' '));
+      });
+    }
+    shell.appendChild(transcript);
+
+    const instruction = document.createElement('p');
+    instruction.id = 'ra-transcript-instruction';
+    instruction.className = 'ra-transcript-instruction';
+    instruction.textContent = 'Click a word to hear your recording. Ctrl+click a highlighted word to jump to feedback.';
+    shell.appendChild(instruction);
+
+    if (normalizedWords.length > 0) {
+      const legend = document.createElement('div');
+      legend.className = 'ra-transcript-legend';
+      legend.innerHTML = '<span><i class="ra-transcript-legend__swatch ra-transcript-legend__swatch--success"></i>Good</span><span><i class="ra-transcript-legend__swatch ra-transcript-legend__swatch--uncertain"></i>Unclear</span><span><i class="ra-transcript-legend__swatch ra-transcript-legend__swatch--error"></i>Needs practice</span>'
+        + (normalizedEvents.length > 0 ? '<span><i class="ra-transcript-legend__swatch ra-transcript-legend__swatch--coach"></i>Speech Coach highlight</span>' : '');
+      shell.appendChild(legend);
+    }
+
+    const hasFiniteMetricValue = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+    const supplementalMetrics = [
+      { label: 'Fluency', value: metrics.fluencyScore },
+      { label: 'Completeness', value: metrics.completenessScore },
+      { label: 'Overall', value: metrics.pronScore }
+    ].filter((metric) => hasFiniteMetricValue(metric.value));
+    if (supplementalMetrics.length > 0) {
+      const metricsEl = document.createElement('p');
+      metricsEl.className = 'ra-transcript-metrics';
+      metricsEl.innerHTML = supplementalMetrics.map((metric) => `<strong>${ReadAloudMode.escapeHtml(metric.label)}:</strong> ${ReadAloudMode.escapeHtml(metric.value)}%`).join(' &nbsp;|&nbsp; ');
+      shell.appendChild(metricsEl);
+    }
+
+    feedbackElement.appendChild(shell);
+    this.bindMergedTranscriptInteractions(transcript);
+    return transcript;
+  }
+
+  bindMergedTranscriptInteractions(transcript) {
+    if (!transcript || transcript.dataset.interactionsBound === 'true') return;
+    transcript.dataset.interactionsBound = 'true';
+    transcript.addEventListener('click', (event) => {
+      const token = event.target.closest('.ra-word-token');
+      if (!token || !transcript.contains(token)) return;
+      if (event.ctrlKey) {
+        event.preventDefault();
+        this.navigateToSpeechCoachFeedback(token);
+        return;
+      }
+      if (token.dataset.playable !== 'true') return;
+      this.playRecordedWordSegment(Number(token.dataset.startMs), Number(token.dataset.endMs), token);
+    });
+    transcript.addEventListener('keydown', (event) => {
+      const token = event.target.closest('.ra-word-token');
+      if (!token || !transcript.contains(token) || !['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      if (event.ctrlKey) {
+        this.navigateToSpeechCoachFeedback(token);
+      } else if (token.dataset.playable === 'true') {
+        this.playRecordedWordSegment(Number(token.dataset.startMs), Number(token.dataset.endMs), token);
+      }
+    });
+  }
+
+  navigateToSpeechCoachFeedback(token) {
+    const eventIndexes = String(token?.dataset?.eventIndex || '').split(/\s+/).filter(Boolean);
+    if (eventIndexes.length === 0) return;
+    document.querySelectorAll('#ra-connected-speech-list .sc-card--selected').forEach((card) => card.classList.remove('sc-card--selected'));
+    const matches = [];
+    document.querySelectorAll('#ra-connected-speech-list [data-event-index]').forEach((node) => {
+      const indexes = String(node.dataset.eventIndex || '').split(/\s+/);
+      if (!eventIndexes.some((index) => indexes.includes(index))) return;
+      const card = node.closest('.sc-accordion-card, .sc-single-card') || node;
+      if (!matches.includes(card)) matches.push(card);
+    });
+    matches.forEach((card) => {
+      const content = card.querySelector('.sc-accordion-content');
+      const toggle = card.querySelector('[data-sc-accordion-toggle]');
+      if (content?.hidden && toggle) {
+        toggle.click();
+      }
+      card.classList.add('sc-card--selected');
+      card.setAttribute('tabindex', '-1');
+    });
+    const first = matches[0];
+    if (first) {
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first.focus({ preventScroll: true });
+    }
+  }
+
   async renderConnectedSpeechResults(connectedSpeech, options = {}) {
+    const revision = this.beginSpeechCoachResultRender();
     const box = document.getElementById('ra-connected-speech-box');
     const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
     const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
-    if (!box || !label || !list || !meta || !summary) return;
+    if (!box || !label || !list || !meta || !summary) {
+      return { visible: false, reason: 'missing_dom', revision };
+    }
+    document.getElementById('ra-connected-speech-paragraph')?.replaceChildren();
 
     const viewMode = options.sessionViewMode || this.lastAssessmentSession?.sessionViewMode || this.getEffectiveViewMode();
+    const selectedModes = this.getAssessmentConnectedSpeechModes(options);
+    const rawEvents = Array.isArray(connectedSpeech?.events) ? connectedSpeech.events : [];
+    const resultModel = window.ReadAloudSpeechCoach.buildResultModel({
+      events: rawEvents,
+      sessionConnectedSpeechModes: [...selectedModes]
+    });
+    const events = resultModel.events;
+    const transcriptText = String(options.transcriptText || this.currentPromptPlainText || '').trim();
+
+    this.renderRecognizedTranscript(
+      options.words || this.lastAssessmentPayload?.words || [],
+      transcriptText,
+      events,
+      options.metrics || {}
+    );
+
+    if (selectedModes.size === 0) {
+      this.hideConnectedSpeechPanel({ invalidate: false });
+      this.updateSpeechCoachModeHints(selectedModes);
+      return { visible: false, reason: 'no_modes', revision };
+    }
+
+    this.setSpeechCoachModeHint('ra-feedback-mode-hint');
     if (viewMode === 'basic' || !connectedSpeech || connectedSpeech.status === 'not_applicable') {
-      this.hideConnectedSpeechPanel();
-      return;
+      this.hideConnectedSpeechPanel({ invalidate: false });
+      return { visible: false, reason: viewMode === 'basic' ? 'basic' : 'not_applicable', revision };
     }
 
     this.connectedSpeechPanelMode = 'results';
@@ -3517,53 +4321,30 @@ class ReadAloudMode {
     meta.textContent = 'Feedback';
     list.innerHTML = '';
 
-    const wrapper = document.getElementById('ra-connected-speech-paragraph') || document.getElementById('ra-connected-speech-list');
-
-    const detectedCount = Number(connectedSpeech?.summary?.detectedCount || 0);
-    const notDetectedCount = Number(connectedSpeech?.summary?.notDetectedCount || 0);
-    const uncertainCount = Number(connectedSpeech?.summary?.uncertainCount || 0);
-
     if (connectedSpeech.status === 'unavailable') {
       summary.textContent = 'Connected-speech feedback is temporarily unavailable for this attempt.';
-      return;
+      this.updateSpeechCoachModeHints(selectedModes);
+      return { visible: true, reason: 'unavailable', revision };
     }
 
-    // Learner-friendly summary
-    const totalEvents = detectedCount + notDetectedCount + uncertainCount;
+    const totalEvents = events.length;
     if (totalEvents === 0) {
-      summary.textContent = 'No connected speech patterns analysed in this attempt.';
-    } else if (notDetectedCount === 0 && uncertainCount === 0) {
-      summary.textContent = `Great job! You nailed all ${detectedCount} speech pattern${detectedCount === 1 ? '' : 's'}.`;
-    } else if (detectedCount === 0) {
-      summary.textContent = `${notDetectedCount} pattern${notDetectedCount === 1 ? ' needs' : 's need'} practice. Keep going!`;
+      summary.textContent = 'No selected Speech Coach patterns were found in this attempt.';
     } else {
-      summary.textContent = `You nailed ${detectedCount} pattern${detectedCount === 1 ? '' : 's'}! ${notDetectedCount} still need${notDetectedCount === 1 ? 's' : ''} practice.`;
+      summary.textContent = resultModel.headline;
     }
 
-    const transcriptText = String(options.transcriptText || this.currentPromptPlainText || '').trim();
-
-    // Aggregate events into reduced-word groups vs linking issues/successes
-    const events = Array.isArray(connectedSpeech.events) ? connectedSpeech.events : [];
-    await this.primeSharedPronunciations(events);
-    const { groupedReduced, linkingIssues, linkingSuccesses } = this._aggregateSpeechEvents(events);
-
-    // Build annotated paragraph with token highlights + SVG overlay
-    const usedTokenAnnotation = await this._buildAnnotatedParagraph(events, wrapper, transcriptText);
-
-    // Append legend if annotation succeeded
-    if (usedTokenAnnotation && wrapper) {
-      const legendEl = document.createElement('div');
-      legendEl.className = 'sc-legend';
-      legendEl.style.marginTop = '12px';
-      legendEl.innerHTML = [
-        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--success"></span> Good</span>',
-        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--error"></span> Needs practice</span>',
-        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--uncertain"></span> Unclear</span>'
-      ].join('');
-      wrapper.appendChild(legendEl);
+    await Promise.all([
+      this.loadSpeechCoachAudioManifest(this.currentQuestionId),
+      this.primeSharedPronunciations(events)
+    ]);
+    if (!this.isSpeechCoachResultRevisionCurrent(revision)) {
+      return { visible: false, reason: 'stale', revision };
     }
+    const { groupedReduced, linkingIssues, linkingSuccesses, soundChanges } = this._prepareSpeechCoachSections(resultModel);
 
-    // Build two-column result cards
+    // Build populated result columns. Empty columns are omitted so a single
+    // feedback family never leaves an unexplained blank half of the grid.
     const fragment = document.createDocumentFragment();
     const leftCol = document.createElement('div');
     leftCol.className = 'sc-grid-left';
@@ -3579,17 +4360,18 @@ class ReadAloudMode {
     if (linkingSuccesses.length > 0) {
       rightCol.appendChild(this._buildSuccessPillsSection(linkingSuccesses, events));
     }
+    if (soundChanges.length > 0) {
+      rightCol.appendChild(this._buildSoundChangesSection(soundChanges, events));
+    }
 
-    fragment.appendChild(leftCol);
-    fragment.appendChild(rightCol);
+    if (leftCol.childElementCount > 0) fragment.appendChild(leftCol);
+    if (rightCol.childElementCount > 0) fragment.appendChild(rightCol);
     list.appendChild(fragment);
 
     this.bindSpeechCoachAccordions(list);
     this.bindSpeechCoachInteractions(list);
-
-    const activeSpeechLevel = options.sessionConnectedSpeechLevel || this.lastAssessmentSession?.sessionConnectedSpeechLevel || this.connectedSpeechLevel;
-    const initialFilter = (activeSpeechLevel === 'linking') ? 'linking' : (activeSpeechLevel === 'reduced_words') ? 'reduced' : (this.speechCoachLayerFilter || 'all');
-    this.setSpeechCoachLayerFilter(initialFilter);
+    this.updateSpeechCoachModeHints(selectedModes);
+    return { visible: true, reason: 'visible', revision };
   }
 
 
@@ -3600,7 +4382,7 @@ class ReadAloudMode {
     container.dataset.scAccordionBound = 'true';
 
     container.addEventListener('click', (event) => {
-      if (event.target.closest('.sc-play-word-btn')) return;
+      if (event.target.closest('.sc-play-word-btn, .sc-model-play-btn')) return;
 
       const toggle = event.target.closest('[data-sc-accordion-toggle]');
       if (!toggle) return;
@@ -3620,8 +4402,19 @@ class ReadAloudMode {
     });
   }
 
+  clearSpeechCoachHoverState() {
+    document.querySelectorAll('#ra-merged-recognized-transcript .sc-token--hovered').forEach((token) => {
+      token.classList.remove('sc-token--hovered');
+    });
+    document.querySelectorAll('#ra-connected-speech-list .sc-card--hovered').forEach((card) => {
+      card.classList.remove('sc-card--hovered');
+    });
+  }
+
   bindSpeechCoachInteractions(container) {
     if (!container) return;
+    if (container.dataset.scInteractionsBound === 'true') return;
+    container.dataset.scInteractionsBound = 'true';
 
     // Hover Highlight Delegation
     container.addEventListener('mouseover', (e) => {
@@ -3630,7 +4423,7 @@ class ReadAloudMode {
       if (target) {
         const evIdx = target.dataset.eventIndex;
         // Highlight corresponding spans
-        document.querySelectorAll(`#ra-connected-speech-box [data-event-index]`).forEach(span => {
+        document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token[data-event-index]').forEach(span => {
           const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
           if (indexes.includes(evIdx)) {
             span.classList.add('sc-token--hovered');
@@ -3646,7 +4439,7 @@ class ReadAloudMode {
         const childInstances = groupHeader.querySelectorAll('[data-event-index]');
         childInstances.forEach(inst => {
           const evIdx = inst.dataset.eventIndex;
-          document.querySelectorAll(`#ra-connected-speech-box [data-event-index]`).forEach(span => {
+          document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token[data-event-index]').forEach(span => {
             const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
             if (indexes.includes(evIdx)) {
               span.classList.add('sc-token--hovered');
@@ -3657,10 +4450,9 @@ class ReadAloudMode {
     });
 
     container.addEventListener('mouseout', (e) => {
-      // Remove all hovered highlights
-      document.querySelectorAll('#ra-connected-speech-box .sc-token--hovered').forEach(span => {
-        span.classList.remove('sc-token--hovered');
-      });
+      const hoverTarget = e.target.closest('[data-event-index], .sc-accordion-card');
+      if (hoverTarget && e.relatedTarget && hoverTarget.contains(e.relatedTarget)) return;
+      this.clearSpeechCoachHoverState();
     });
 
     // Play Word segment Delegation
@@ -3672,14 +4464,17 @@ class ReadAloudMode {
       
       const startMs = Number(playBtn.dataset.start);
       const endMs = Number(playBtn.dataset.end);
-      const audioEl = document.getElementById('ra-user-recording-audio');
       
-      if (!audioEl || isNaN(startMs) || isNaN(endMs)) return;
+      if (isNaN(startMs) || isNaN(endMs)) return;
+      if (this.speechCoachYoursButton === playBtn && this.wordPlaybackSource) {
+        this.stopSpeechCoachYoursAudio({ pause: true });
+        return;
+      }
       
       const startSec = startMs / 1000;
       const endSec = endMs / 1000;
-      
-      this.playAudioSegment(audioEl, startSec, endSec);
+      this.stopSpeechCoachModelAudio();
+      this.playAudioSegment(null, startSec, endSec, playBtn);
     });
 
     // Bidirectional Hover (hovering over word spans highlights cards)
@@ -3696,117 +4491,95 @@ class ReadAloudMode {
             // Find card elements with this eventIndex and highlight them
             container.querySelectorAll(`[data-event-index="${evIdx}"]`).forEach(card => {
               card.classList.add('sc-card--hovered');
-              // Proactively scroll the parent accordion/content into view if collapsed
-              const parent = card.closest('.sc-accordion-content');
-              if (parent && parent.hidden) {
-                const toggle = parent.parentNode.querySelector('[data-sc-accordion-toggle]');
-                if (toggle && toggle.getAttribute('aria-expanded') === 'false') {
-                  toggle.setAttribute('aria-expanded', 'true');
-                  parent.hidden = false;
-                  const chevron = toggle.querySelector('.sc-chevron');
-                  if (chevron) chevron.classList.add('sc-chevron--open');
-                }
-              }
-              card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
           });
         }
       });
       
       feedbackWrapper.addEventListener('mouseout', (e) => {
-        container.querySelectorAll('.sc-card--hovered').forEach(card => {
-          card.classList.remove('sc-card--hovered');
+        if (e.relatedTarget && feedbackWrapper.contains(e.relatedTarget)) return;
+        this.clearSpeechCoachHoverState();
+      });
+    }
+
+    const transcriptWrapper = document.getElementById('ra-transcript-feedback');
+    if (transcriptWrapper && !transcriptWrapper.dataset.scTranscriptBidirectionalBound) {
+      transcriptWrapper.dataset.scTranscriptBidirectionalBound = 'true';
+      transcriptWrapper.addEventListener('mouseover', (event) => {
+        const token = event.target.closest('#ra-merged-recognized-transcript .ra-word-token[data-event-index]');
+        if (!token) return;
+        const indexes = String(token.dataset.eventIndex || '').split(/\s+/).filter(Boolean);
+        container.querySelectorAll('[data-event-index]').forEach((node) => {
+          const nodeIndexes = String(node.dataset.eventIndex || '').split(/\s+/);
+          if (indexes.some((index) => nodeIndexes.includes(index))) {
+            const card = node.closest('.sc-accordion-card, .sc-single-card') || node;
+            card.classList.add('sc-card--hovered');
+          }
         });
       });
-    }
-  }
-
-  playAudioSegment(audioEl, startSec, endSec) {
-    if (this._segmentInterval) {
-      clearInterval(this._segmentInterval);
-      this._segmentInterval = null;
-    }
-    
-    // Stop reference audio
-    this.stopReferenceAudioPlayback();
-    
-    // Safety check - make sure the user recording is loaded
-    if (!audioEl.src && this.userRecordingUrl) {
-      audioEl.src = this.userRecordingUrl;
-      audioEl.load();
-    }
-    
-    if (!audioEl.src) return;
-    
-    // Hijack main play button text if active
-    const recPlayBtn = document.getElementById('ra-play-recording-btn');
-    if (recPlayBtn) {
-      recPlayBtn.textContent = 'Play your recording';
-    }
-    
-    // Seek and play
-    audioEl.currentTime = startSec;
-    const playPromise = audioEl.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch((err) => {
-        console.warn('Word segment audio playback failed:', err);
+      transcriptWrapper.addEventListener('mouseout', (event) => {
+        if (event.relatedTarget && transcriptWrapper.contains(event.relatedTarget)) return;
+        this.clearSpeechCoachHoverState();
       });
     }
-    
-    // High-resolution interval check (every 10ms)
-    this._segmentInterval = setInterval(() => {
-      if (audioEl.currentTime >= endSec) {
-        audioEl.pause();
-        clearInterval(this._segmentInterval);
-        this._segmentInterval = null;
-      }
-    }, 10);
-    
-    const cleanup = () => {
-      if (this._segmentInterval) {
-        clearInterval(this._segmentInterval);
-        this._segmentInterval = null;
-      }
-      audioEl.removeEventListener('pause', cleanup);
-      audioEl.removeEventListener('ended', cleanup);
-    };
-    audioEl.addEventListener('pause', cleanup);
-    audioEl.addEventListener('ended', cleanup);
   }
 
-  /** Aggregate connected speech events into reduced-word groups, linking issues, and linking successes */
-  _aggregateSpeechEvents(events) {
+  playAudioSegment(audioEl, startSec, endSec, button = null) {
+    return this.playRecordedWordSegment(Number(startSec) * 1000, Number(endSec) * 1000, button);
+  }
+
+  /** Prepare display-ready sections from the pure Speech Coach result model. */
+  _prepareSpeechCoachSections(resultModel) {
     const groupedReduced = new Map();
-    const linkingIssues = [];
-    const linkingSuccesses = [];
-
-    events.forEach((event) => {
-      const eventCategory = this.normalizeConnectedSpeechMode(
-        window.ReadAloudLinking?.getLearnerConnectedSpeechCategory?.(event.family || event.subtype || event.category || '')
-        || event.category
-        || event.subtype
-        || 'linking'
-      );
+    const sections = resultModel?.sections || {};
+    (sections.reducedWords || []).forEach((event) => {
       const categoryLabel = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel
-        ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(eventCategory)
-        : this.getConnectedSpeechDisplayLabel(eventCategory);
+        ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel('reduced_words')
+        : this.getConnectedSpeechDisplayLabel('reduced_words');
       const phrase = event.phrase || event.eventId || 'Word';
-      const isReduced = eventCategory === 'weak_forms' || eventCategory === 'reduced_words' || String(categoryLabel).toLowerCase().includes('reduced');
-
-      if (isReduced) {
-        const key = phrase.toLowerCase();
-        if (!groupedReduced.has(key)) {
-          groupedReduced.set(key, { phrase, label: categoryLabel, items: [] });
-        }
-        groupedReduced.get(key).items.push(event);
-      } else if (event.status === 'detected') {
-        linkingSuccesses.push(event);
-      } else {
-        linkingIssues.push(event);
+      const key = phrase.toLowerCase();
+      if (!groupedReduced.has(key)) {
+        groupedReduced.set(key, { phrase, label: categoryLabel, items: [] });
       }
+      groupedReduced.get(key).items.push(event);
     });
 
-    return { groupedReduced, linkingIssues, linkingSuccesses };
+    return {
+      groupedReduced,
+      linkingIssues: sections.linkingIssues || [],
+      linkingSuccesses: sections.linkingSuccesses || [],
+      soundChanges: sections.soundChanges || []
+    };
+  }
+
+  _buildSoundChangesSection(soundChanges, events) {
+    const escapeHtml = ReadAloudMode.escapeHtml;
+    const section = document.createElement('div');
+    section.className = 'sc-section';
+    const header = document.createElement('h4');
+    header.className = 'sc-section-header';
+    header.textContent = 'Sound Changes';
+    section.appendChild(header);
+    const stack = document.createElement('div');
+    stack.className = 'sc-accordion-stack';
+    soundChanges.forEach((event) => {
+      const evIndex = events ? events.indexOf(event) : -1;
+      const card = document.createElement('div');
+      const statusClass = event.status === 'detected'
+        ? { border: 'sc-border--success', badge: 'sc-badge--success' }
+        : event.status === 'not_detected'
+          ? { border: 'sc-border--error', badge: 'sc-badge--error' }
+          : { border: 'sc-border--mixed', badge: 'sc-badge--uncertain' };
+      card.className = `sc-single-card ${statusClass.border}`;
+      if (evIndex !== -1) card.dataset.eventIndex = String(evIndex);
+      const familyLabel = event.family === 'yod_coalescence' ? 'Yod coalescence' : 'Bilabial assimilation';
+      const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
+      const controls = this._buildSpeechCoachPlaybackControls(event, evIndex, hasTimestamps, 'Play your recording segment');
+      card.innerHTML = `<div class="sc-sound-change-row"><div><strong class="sc-word-title">${escapeHtml(event.phrase || 'Sound change')}</strong><span class="sc-sound-change-family">${escapeHtml(familyLabel)}</span></div><div class="sc-sound-change-actions">${controls}<span class="sc-status-badge ${statusClass.badge}">${escapeHtml(event.status || 'uncertain')}</span></div></div>`;
+      stack.appendChild(card);
+    });
+    section.appendChild(stack);
+    return section;
   }
 
   /** Build annotated paragraph with token highlights and SVG linking overlay */
@@ -4076,16 +4849,7 @@ class ReadAloudMode {
           const hasTimestamps = typeof i.startMs === 'number' && typeof i.endMs === 'number';
           const timeText = hasTimestamps ? ` [${(i.startMs / 1000).toFixed(2)}s]` : '';
           
-          let playButtonHtml = '';
-          if (hasTimestamps) {
-            playButtonHtml = `
-              <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${i.startMs}" data-end="${i.endMs}" title="Play this word only">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </button>
-            `;
-          }
+          const playButtonHtml = this._buildSpeechCoachPlaybackControls(i, evIndex, hasTimestamps, 'Play your recording segment');
 
           const defaultFeedback = ipaInfo
             ? `Weak form reduction: pronounce "${group.phrase}" as ${ipaInfo.reduced} in connected speech. The strong form is ${ipaInfo.strong} for citation or emphasis.`
@@ -4128,27 +4892,18 @@ class ReadAloudMode {
         const hasTimestamps = typeof item.startMs === 'number' && typeof item.endMs === 'number';
         const timeText = hasTimestamps ? ` [${(item.startMs / 1000).toFixed(2)}s]` : '';
         
-        let playButtonHtml = '';
-        if (hasTimestamps) {
-          playButtonHtml = `
-            <button class="sc-play-word-btn sc-play-word-btn--single" type="button" data-event-index="${evIndex}" data-start="${item.startMs}" data-end="${item.endMs}" title="Play this word only">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </button>
-          `;
-        }
+        const playButtonHtml = this._buildSpeechCoachPlaybackControls(item, evIndex, hasTimestamps, 'Play your recording segment');
 
         card.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; padding: 2px 0;">
-            <div style="display: flex; flex-direction: column; min-width: 0; flex-shrink: 1;">
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <strong class="sc-word-title" style="white-space: nowrap; font-size: 0.98rem; font-weight: 600;">${escapeHtml(group.phrase)}</strong>
+          <div class="sc-single-card-row">
+            <div class="sc-single-card-copy">
+              <div class="sc-single-card-title-row">
+                <strong class="sc-word-title" style="font-size: 0.98rem; font-weight: 600;">${escapeHtml(group.phrase)}</strong>
                 <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
               </div>
               ${ipaHtml}
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <div class="sc-single-card-actions">
               ${playButtonHtml}
               <span class="sc-status-dot ${dotCls}"></span>
             </div>
@@ -4262,33 +5017,23 @@ class ReadAloudMode {
 
       const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
       const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
-      let playButtonHtml = '';
-      if (hasTimestamps) {
-        playButtonHtml = `
-          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </button>
-        `;
-      }
+      const playButtonHtml = this._buildSpeechCoachPlaybackControls(event, evIndex, hasTimestamps, 'Play your recording segment');
       
       const badgeCls = event.status === 'not_detected' ? 'sc-badge--error' : 'sc-badge--uncertain';
 
       const cardHeader = document.createElement('div');
-      cardHeader.className = 'sc-accordion-header';
-      cardHeader.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff5f5; border-bottom: 1px solid #fee2e2; border-radius: 8px 8px 0 0; user-select: none;';
+      cardHeader.className = 'sc-accordion-header sc-accordion-header--error';
 
       cardHeader.innerHTML = `
-        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;">
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; cursor: pointer; flex-wrap: wrap;">
           <strong class="sc-word-title" style="font-size: 0.98rem; color: #111827;">${escapeHtml(phrase)}</strong>
           <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
-          <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="sc-accordion-controls">
           ${playButtonHtml}
           <span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span>
-          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details" style="background: transparent; border: none; padding: 2px 4px; cursor: pointer; display: flex; align-items: center; color: #9ca3af;">
+          <span class="sc-timestamp">${timeText}</span>
+          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details">
             <span class="sc-chevron"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
           </button>
         </div>
@@ -4360,33 +5105,23 @@ class ReadAloudMode {
 
       const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
       const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
-      let playButtonHtml = '';
-      if (hasTimestamps) {
-        playButtonHtml = `
-          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </button>
-        `;
-      }
+      const playButtonHtml = this._buildSpeechCoachPlaybackControls(event, evIndex, hasTimestamps, 'Play your recording segment');
 
       const cardHeader = document.createElement('div');
-      cardHeader.className = 'sc-accordion-header';
-      cardHeader.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ecfdf5; border-bottom: 1px solid #d1fae5; border-radius: 8px 8px 0 0; user-select: none;';
+      cardHeader.className = 'sc-accordion-header sc-accordion-header--success';
 
       cardHeader.innerHTML = `
-        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;">
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; cursor: pointer; flex-wrap: wrap;">
           <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink: 0;">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
           <strong class="sc-word-title" style="font-size: 0.98rem; color: #065f46;">${escapeHtml(phrase)}</strong>
           <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
-          <span style="font-size: 0.72rem; color: #6b7280; white-space: nowrap;">${timeText}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="sc-accordion-controls">
           ${playButtonHtml}
-          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details" style="background: transparent; border: none; padding: 2px 4px; cursor: pointer; display: flex; align-items: center; color: #065f46;">
+          <span class="sc-timestamp">${timeText}</span>
+          <button type="button" class="sc-chevron-btn" data-sc-accordion-toggle="${accordionId}" title="Toggle details">
             <span class="sc-chevron"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></span>
           </button>
         </div>
@@ -4598,56 +5333,62 @@ class ReadAloudMode {
     });
   }
 
-  setSpeechCoachLayerFilter(filterMode) {
-    this.speechCoachLayerFilter = filterMode; // 'linking' or 'all'
-    const btn1 = document.getElementById('ra-layer-level1');
-    const btn2 = document.getElementById('ra-layer-level2');
-    
-    if (filterMode === 'linking') {
-      if (btn1) {
-        btn1.style.background = '#ffffff';
-        btn1.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-        btn1.style.color = '#1d4ed8';
-        btn1.classList.add('active');
-      }
-      if (btn2) {
-        btn2.style.background = 'transparent';
-        btn2.style.boxShadow = 'none';
-        btn2.style.color = '#1f2937';
-        btn2.classList.remove('active');
-      }
-    } else {
-      if (btn2) {
-        btn2.style.background = '#ffffff';
-        btn2.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-        btn2.style.color = '#1d4ed8';
-        btn2.classList.add('active');
-      }
-      if (btn1) {
-        btn1.style.background = 'transparent';
-        btn1.style.boxShadow = 'none';
-        btn1.style.color = '#1f2937';
-        btn1.classList.remove('active');
-      }
-    }
-
-    const leftCol = document.querySelector('#ra-connected-speech-list .sc-grid-left');
-    const listGrid = document.getElementById('ra-connected-speech-list');
-
-    if (leftCol) {
-      leftCol.style.display = filterMode === 'linking' ? 'none' : 'flex';
-    }
-    if (listGrid) {
-      listGrid.style.gridTemplateColumns = filterMode === 'linking' ? '1fr' : '1fr 1fr';
-    }
-  }
-
   handleGuideTargetKeydown(event) {
+    if (event.key === 'Escape' && this.activeSoundChangeTooltipId) {
+      event.preventDefault();
+      this.hideSoundChangeTooltip();
+      return;
+    }
     if (event.key !== 'Enter' && event.key !== ' ') return;
     this.handleGuideTargetInteraction(event);
   }
 
+  getSoundChangeTooltipTarget(node) {
+    if (!(node instanceof Element)) return null;
+    return node.closest('[data-guide-target][data-sound-change-subtype]');
+  }
+
+  getSoundChangeTooltipTargets(guideId, stage = document.getElementById('ra-prompt-stage')) {
+    if (!guideId || !stage) return [];
+    return Array.from(stage.querySelectorAll('[data-guide-target][data-sound-change-subtype]'))
+      .filter((node) => String(node.getAttribute('data-guide-target') || '') === guideId);
+  }
+
+  handleSoundChangeTooltipEnter(event) {
+    if (this.soundChangeTooltipPinned) return;
+    const target = this.getSoundChangeTooltipTarget(event?.target);
+    const guideId = String(target?.getAttribute('data-guide-target') || '').trim();
+    if (!target || !guideId) return;
+    this.showSoundChangeTooltip(guideId, target, { pinned: false });
+  }
+
+  handleSoundChangeTooltipLeave(event) {
+    if (this.soundChangeTooltipPinned) return;
+
+    const sourceTarget = this.getSoundChangeTooltipTarget(event?.target);
+    const leftTooltip = event?.target instanceof Element
+      && !!event.target.closest('#ra-sound-change-tooltip');
+    if (!sourceTarget && !leftTooltip) return;
+
+    const relatedTarget = event?.relatedTarget instanceof Element ? event.relatedTarget : null;
+    if (relatedTarget?.closest('#ra-sound-change-tooltip')) return;
+
+    const relatedSoundChangeTarget = this.getSoundChangeTooltipTarget(relatedTarget);
+    const relatedGuideId = String(relatedSoundChangeTarget?.getAttribute('data-guide-target') || '').trim();
+    if (relatedGuideId && relatedGuideId === this.activeSoundChangeTooltipId) return;
+
+    this.hideSoundChangeTooltip();
+  }
+
   handleGuideTargetInteraction(event) {
+    const modelButton = event?.type === 'click' && event?.target instanceof Element
+      ? event.target.closest('.sc-model-play-btn')
+      : null;
+    if (modelButton) {
+      event.stopPropagation();
+      if (!modelButton.disabled) this.playSpeechCoachModelAudio(modelButton);
+      return;
+    }
     const target = event?.target instanceof Element
       ? event.target.closest('[data-guide-target]')
       : null;
@@ -4661,13 +5402,29 @@ class ReadAloudMode {
       this.toggleConnectedSpeechGuideDetails();
       return;
     }
-    if (!target) return;
+    if (!target) {
+      this.hideSoundChangeTooltip();
+      return;
+    }
     if (event.type === 'keydown') {
       event.preventDefault();
     }
     const guideTarget = String(target.getAttribute('data-guide-target') || '').trim();
     if (!guideTarget) return;
     this.setSelectedGuideItem(guideTarget);
+
+    if (guideTarget.startsWith('boundary-')) {
+      const subtype = target.dataset.soundChangeSubtype;
+      if (subtype) {
+        if (this.activeSoundChangeTooltipId === guideTarget && this.soundChangeTooltipPinned) {
+          this.hideSoundChangeTooltip();
+        } else {
+          this.showSoundChangeTooltip(guideTarget, target, { pinned: true });
+        }
+        return;
+      }
+    }
+    this.hideSoundChangeTooltip();
   }
 
   setSelectedGuideItem(guideId) {
@@ -4698,7 +5455,7 @@ class ReadAloudMode {
       const target = String(node.getAttribute('data-guide-target') || '');
       const selected = !!selectedGuideId && target === selectedGuideId && this.connectedSpeechPanelMode === 'guide';
       node.setAttribute('data-selected', selected ? 'true' : 'false');
-      if (node.getAttribute('role') === 'button') {
+      if (node.matches('button, [role="button"]')) {
         node.setAttribute('aria-pressed', selected ? 'true' : 'false');
       }
       if (node.closest('#ra-linking-fallback-list')) {
@@ -4720,6 +5477,127 @@ class ReadAloudMode {
           : '0 1px 2px rgba(180, 83, 9, 0.12)';
       }
     });
+  }
+
+  clearSoundChangeTooltipAssociations(stage = document.getElementById('ra-prompt-stage')) {
+    stage?.querySelectorAll('[aria-describedby~="ra-sound-change-tooltip"]').forEach((node) => {
+      const remainingIds = String(node.getAttribute('aria-describedby') || '')
+        .split(/\s+/)
+        .filter((id) => id && id !== 'ra-sound-change-tooltip');
+      if (remainingIds.length) {
+        node.setAttribute('aria-describedby', remainingIds.join(' '));
+      } else {
+        node.removeAttribute('aria-describedby');
+      }
+    });
+  }
+
+  associateSoundChangeTooltipTargets(spans, stage) {
+    this.clearSoundChangeTooltipAssociations(stage);
+    spans.forEach((span) => {
+      const describedByIds = new Set(String(span.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+      describedByIds.add('ra-sound-change-tooltip');
+      span.setAttribute('aria-describedby', Array.from(describedByIds).join(' '));
+    });
+  }
+
+  positionSoundChangeTooltip(tooltip, stage, spans) {
+    const stageRect = stage.getBoundingClientRect();
+    const rects = spans.map((span) => span.getBoundingClientRect());
+    const leftMost = Math.min(...rects.map((rect) => rect.left));
+    const rightMost = Math.max(...rects.map((rect) => rect.right));
+    const topMost = Math.min(...rects.map((rect) => rect.top));
+    const bottomMost = Math.max(...rects.map((rect) => rect.bottom));
+    const centerX = ((leftMost + rightMost) / 2) - stageRect.left;
+    const targetTop = topMost - stageRect.top;
+    const belowTop = bottomMost - stageRect.top + 8;
+    const arrowEl = tooltip.querySelector('.ra-sound-change-tooltip__arrow');
+
+    tooltip.style.display = 'block';
+    tooltip.style.left = `${centerX}px`;
+    tooltip.style.top = `${belowTop}px`;
+    tooltip.style.transform = 'translateX(-50%)';
+    tooltip.classList.remove('ra-sound-change-tooltip--above');
+    if (arrowEl) arrowEl.style.left = '50%';
+
+    const tooltipRect = tooltip.getBoundingClientRect();
+    if (tooltipRect.bottom > stageRect.bottom - 4) {
+      const aboveTop = targetTop - tooltipRect.height - 8;
+      const resolvedTop = aboveTop >= 4
+        ? aboveTop
+        : Math.max(4, stageRect.height - tooltipRect.height - 4);
+      tooltip.style.top = `${resolvedTop}px`;
+      tooltip.classList.toggle(
+        'ra-sound-change-tooltip--above',
+        resolvedTop + tooltipRect.height <= targetTop
+      );
+    }
+
+    if (tooltipRect.left < stageRect.left) {
+      const shift = stageRect.left - tooltipRect.left + 4;
+      tooltip.style.transform = `translateX(calc(-50% + ${shift}px))`;
+      if (arrowEl) arrowEl.style.left = `calc(50% - ${shift}px)`;
+    } else if (tooltipRect.right > stageRect.right) {
+      const shift = tooltipRect.right - stageRect.right + 4;
+      tooltip.style.transform = `translateX(calc(-50% - ${shift}px))`;
+      if (arrowEl) arrowEl.style.left = `calc(50% + ${shift}px)`;
+    }
+
+    tooltip.setAttribute('aria-hidden', 'false');
+  }
+
+  showSoundChangeTooltip(guideId, clickedSpan, { pinned = false } = {}) {
+    const tooltip = document.getElementById('ra-sound-change-tooltip');
+    const stage = document.getElementById('ra-prompt-stage');
+    if (!tooltip || !stage) return;
+
+    const subtype = clickedSpan?.dataset?.soundChangeSubtype;
+    const copy = subtype && window.ReadAloudLinking
+      ? window.ReadAloudLinking.getSoundChangeCopy(subtype)
+      : null;
+    if (!copy) {
+      this.hideSoundChangeTooltip();
+      return;
+    }
+
+    const spans = this.getSoundChangeTooltipTargets(guideId, stage);
+    if (!spans.length) {
+      this.hideSoundChangeTooltip();
+      return;
+    }
+
+    const wordTexts = spans.map(s => s.textContent.trim());
+    const wordPair = wordTexts.join(' ');
+
+    const wordsEl = tooltip.querySelector('.ra-sound-change-tooltip__words');
+    const transformEl = tooltip.querySelector('.ra-sound-change-tooltip__transform');
+    const explanationEl = tooltip.querySelector('.ra-sound-change-tooltip__explanation');
+    if (wordsEl) wordsEl.textContent = wordPair;
+    if (transformEl) transformEl.textContent = copy.arrow || 'Sound change';
+    if (explanationEl) explanationEl.textContent = copy.explanation || '';
+
+    const closeBtn = tooltip.querySelector('.ra-sound-change-tooltip__close');
+    if (closeBtn) {
+      closeBtn.onclick = (e) => { e.stopPropagation(); this.hideSoundChangeTooltip(); };
+    }
+
+    this.associateSoundChangeTooltipTargets(spans, stage);
+    this.positionSoundChangeTooltip(tooltip, stage, spans);
+
+    this.activeSoundChangeTooltipId = guideId;
+    this.soundChangeTooltipPinned = !!pinned;
+  }
+
+  hideSoundChangeTooltip() {
+    const tooltip = document.getElementById('ra-sound-change-tooltip');
+    if (tooltip) {
+      tooltip.style.display = 'none';
+      tooltip.setAttribute('aria-hidden', 'true');
+      tooltip.classList.remove('ra-sound-change-tooltip--above');
+    }
+    this.clearSoundChangeTooltipAssociations();
+    this.activeSoundChangeTooltipId = null;
+    this.soundChangeTooltipPinned = false;
   }
 
   async loadManifest() {
@@ -4939,6 +5817,8 @@ class ReadAloudMode {
     if (!audioEl) return;
 
     if (audioEl.paused) {
+      this.stopSpeechCoachModelAudio();
+      this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
       const recordedAudioEl = document.getElementById('ra-user-recording-audio');
       const recordedPlayBtn = document.getElementById('ra-play-recording-btn');
       if (recordedAudioEl && !recordedAudioEl.paused) {

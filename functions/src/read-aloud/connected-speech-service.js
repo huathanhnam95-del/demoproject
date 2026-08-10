@@ -1071,6 +1071,7 @@ function hasConnectedSpeechEvents(referenceText, questionId) {
 
 module.exports = {
   VERSION,
+  getPromptTokens,
   buildConnectedSpeechAnalysis,
   buildConnectedSpeechEventSpecs,
   buildGenericEvents,

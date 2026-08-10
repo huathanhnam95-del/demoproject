@@ -878,7 +878,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 494,2026-07-28,Find top 20 words for short /ɪ/ and unstressed happy-vowel /i/ from Read Aloud bank and update markdown doc,Done,2026-07-28
 495,2026-07-28,Deploy release V1.8.42 to Firebase Hosting and Cloud Functions,Done,2026-07-28
 496,2026-07-29,Speaking modes difficulty categorization audit and fix (RA 7-factor analyzer integrated RS/ASQ/SGD/RTS done DI running),In Progress,
-497,2026-07-29,Upgrade DD explanation generator to Option B question-level 2-pass batching with cross-blank audit,In Progress,
+497,2026-07-29,Upgrade DD explanation generator to Option B question-level 2-pass batching with cross-blank audit (851/1036 questions completed - 82.1%),In Progress,
 498,2026-07-29,Plan for an RA audit using 3 local LLMs,In Progress,
 499,2026-07-30,Upgrade RFIB explanation UI from wall-of-text to inline per-blank popovers,Done,2026-07-30
 500,2026-07-30,Add Tiktok - Personal acquisition source option and rename FB Personal Account label,Done,2026-07-30
@@ -991,3 +991,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 594,2026-08-08,Check and correct all IPA transcriptions in student_handout_ae_a_sounds.docx per Oxford rules,Done,2026-08-08
 595,2026-08-08,Release V1.8.56 - deploy CRM lead modal workflow and pronunciation fixes to production,Done,2026-08-08
 596,2026-08-08,Run browser test to verify live production V1.8.56 release deployment,Done,2026-08-08
+597,2026-08-09,Fix V3 CTC syllable boundary vowel truncation by distributing blank frames,Done,2026-08-09
+598,2026-08-09,Sound changes click-to-reveal tooltip + linking arc misalignment fix,Done,2026-08-09
+599,2026-08-10,Fix disconnected pitch line (spanGaps) and vowel duration truncation (backend gap-splitting + frontend measurement boundaries),Done,2026-08-10
+600,2026-08-09,Fix Speech Coach layout collisions - stacked card headers and overflow handling,Done,2026-08-09
+601,2026-08-10,Review and deploy V1.8.57 release to production,In Progress,

@@ -32,13 +32,19 @@ function nonNegativeNumber(value) {
 }
 
 function normalizeSpan(span, index) {
-    const startTime = finiteNumber(span?.startTime ?? span?.start_time);
-    const endTime = finiteNumber(span?.endTime ?? span?.end_time);
+    const measuredStart = finiteNumber(span?.measurementStartTime ?? span?.measurement_start_time);
+    const measuredEnd = finiteNumber(span?.measurementEndTime ?? span?.measurement_end_time);
+    const rawStart = finiteNumber(span?.startTime ?? span?.start_time);
+    const rawEnd = finiteNumber(span?.endTime ?? span?.end_time);
+    const startTime = measuredStart ?? rawStart;
+    const endTime = measuredEnd ?? rawEnd;
     if (startTime === null || endTime === null || endTime <= startTime) return null;
     const label = String(span?.label || span?.ipa || span?.symbol || '').trim();
-    // Keep analyzer-owned durations when available. The chart prefers
+    // When measurement boundaries widened the span, recompute duration to
+    // match.  Otherwise keep the analyzer-owned duration — the chart prefers
     // vowelDuration over the full boundary interval for V2 timing evidence.
-    const duration = nonNegativeNumber(span?.duration);
+    const widened = measuredStart !== null || measuredEnd !== null;
+    const duration = widened ? (endTime - startTime) : nonNegativeNumber(span?.duration);
     const vowelDuration = nonNegativeNumber(span?.vowelDuration ?? span?.vowel_duration);
     return {
         startTime,
@@ -125,6 +131,10 @@ export function buildComparisonViewModel(comparison) {
         const syllables = analysisSyllables(analysis);
         const available = envelope.status === 'available';
         const isPraatFallback = !available && analysis?.segmentation_source === 'praat-fallback';
+        const segmentationConvention = String(analysis?.segmentation_convention || '').trim();
+        const measurementConvention = String(analysis?.measurement_convention || '').trim();
+        const isCtcTokenCoverage = available && segmentationConvention === 'ctc-token-coverage';
+        const isLegacyBoundaryConvention = available && !segmentationConvention;
         return {
             version,
             label: version.toUpperCase(),
@@ -138,10 +148,11 @@ export function buildComparisonViewModel(comparison) {
             confidence: available ? analysisConfidence(analysis) : null,
             duration: analysisDuration(analysis),
             boundaryStatus: available ? 'automatic' : 'display-only',
-            boundarySource: isPraatFallback ? 'praat-acoustic' : (available ? 'recognizer' : 'none'),
+            boundarySource: isPraatFallback ? 'praat-acoustic' : (isCtcTokenCoverage ? 'ctc-token-coverage' : (isLegacyBoundaryConvention ? 'recognizer-legacy' : (available ? 'recognizer' : 'none'))),
             boundaryLabel: isPraatFallback
                 ? 'Display-only acoustic boundaries (Praat fallback)'
-                : (available ? 'Automatic boundaries' : 'No automatic boundaries available'),
+                : (isCtcTokenCoverage ? 'CTC token coverage boundaries' : (isLegacyBoundaryConvention ? 'Legacy recognizer boundaries (convention unknown)' : (available ? 'Automatic boundaries' : 'No automatic boundaries available'))),
+            measurementConvention: measurementConvention || null,
             boundarySpans: syllables.map((span, index) => normalizeSpan(span, index)).filter(Boolean)
         };
     });

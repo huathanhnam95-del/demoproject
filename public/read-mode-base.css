@@ -215,7 +215,8 @@
   margin: 0;
   color: var(--read-muted);
   line-height: 1.55;
-  max-width: 58ch;
+  /* Use the full card measure; the former 58ch cap caused premature wrapping. */
+  max-width: none;
 }
 
 /* Secondary line under the task description — keyboard shortcuts etc. */

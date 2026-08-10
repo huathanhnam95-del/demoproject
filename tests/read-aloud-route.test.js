@@ -343,10 +343,10 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.strictEqual(result.payload.pronScore, 91);
     assert.strictEqual(result.payload.recognizedText, 'Pick it up now');
     assert.deepStrictEqual(result.payload.words, [
-      { word: 'Pick', accuracyScore: 95, errorType: 'None' },
-      { word: 'it', accuracyScore: 90, errorType: 'None' },
-      { word: 'up', accuracyScore: 88, errorType: 'None' },
-      { word: 'now', accuracyScore: 96, errorType: 'None' }
+      { word: 'Pick', accuracyScore: 95, errorType: 'None', startMs: null, endMs: null },
+      { word: 'it', accuracyScore: 90, errorType: 'None', startMs: null, endMs: null },
+      { word: 'up', accuracyScore: 88, errorType: 'None', startMs: null, endMs: null },
+      { word: 'now', accuracyScore: 96, errorType: 'None', startMs: null, endMs: null }
     ]);
     assert.strictEqual(azureFetchCalls, 0, 'mocked Azure success should not hit the network');
     assert.strictEqual(result.payload.connectedSpeech.status, 'not_applicable', 'connected speech should be skipped without questionId');
@@ -389,10 +389,10 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.strictEqual(result.payload.completenessScore, null);
     assert.strictEqual(result.payload.pronScore, null);
     assert.deepStrictEqual(result.payload.words, [
-      { word: 'Pick', accuracyScore: 94, errorType: 'None' },
-      { word: 'it', accuracyScore: 90, errorType: 'None' },
-      { word: 'up', accuracyScore: 88, errorType: 'None' },
-      { word: 'now', accuracyScore: 92, errorType: 'None' }
+      { word: 'Pick', accuracyScore: 94, errorType: 'None', startMs: null, endMs: null },
+      { word: 'it', accuracyScore: 90, errorType: 'None', startMs: null, endMs: null },
+      { word: 'up', accuracyScore: 88, errorType: 'None', startMs: null, endMs: null },
+      { word: 'now', accuracyScore: 92, errorType: 'None', startMs: null, endMs: null }
     ]);
 
     azureFetchCalls = 0;
@@ -483,6 +483,12 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.strictEqual(result.payload.connectedSpeech.status, 'complete', 'connected speech should run when questionId is present');
     assert.ok(Array.isArray(result.payload.connectedSpeech.events), 'connected speech should include events');
     assert.ok(result.payload.connectedSpeech.events.length >= 1, 'connected speech should return at least one event for a linked prompt');
+    assert.deepStrictEqual(result.payload.words, [
+      { word: 'Pick', accuracyScore: 93, errorType: 'None', startMs: 0, endMs: 300 },
+      { word: 'it', accuracyScore: 91, errorType: 'None', startMs: 312, endMs: 502 },
+      { word: 'up', accuracyScore: 90, errorType: 'None', startMs: 510, endMs: 720 },
+      { word: 'now', accuracyScore: 94, errorType: 'None', startMs: 730, endMs: 980 }
+    ], 'word timestamps should be exposed in milliseconds for exact playback');
     const linkedRecord = persistedAttempts[persistedAttempts.length - 1];
     assert.strictEqual(linkedRecord.audioStatus, 'complete', 'linked attempt should persist the audio status');
     assert.ok(String(linkedRecord.workerStatus || '').length > 0, 'linked attempt should persist worker status');
@@ -651,6 +657,32 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     const timeoutWorkerRecord = persistedAttempts[persistedAttempts.length - 1];
     assert.strictEqual(timeoutWorkerRecord.workerStatus, 'fallback', 'worker timeout should persist fallback worker status');
     delete process.env.CONNECTED_SPEECH_API_URL;
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+      Display: 'zero missing invalid extra fractional',
+        PronunciationAssessment: { AccuracyScore: 80, FluencyScore: 80, CompletenessScore: 80, PronScore: 80 },
+        Words: [
+          { Word: 'zero', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 80, ErrorType: 'None' } },
+          { Word: 'missing', PronunciationAssessment: { AccuracyScore: 70, ErrorType: 'Omission' } },
+          { Word: 'invalid', Offset: 1000000, Duration: -500000, PronunciationAssessment: { AccuracyScore: 60, ErrorType: 'Mispronunciation' } },
+          { Word: 'extra', Offset: 2500000, Duration: 500000, PronunciationAssessment: { AccuracyScore: 50, ErrorType: 'Insertion' } },
+          { Word: 'fractional', Offset: 1234567, Duration: 765432, PronunciationAssessment: { AccuracyScore: 55, ErrorType: 'None' } }
+        ]
+      }]
+    });
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 260 }),
+      referenceText: 'zero missing invalid extra fractional'
+    });
+    assert.deepStrictEqual(result.payload.words, [
+      { word: 'zero', accuracyScore: 80, errorType: 'None', startMs: 0, endMs: 0 },
+      { word: 'missing', accuracyScore: 70, errorType: 'Omission', startMs: null, endMs: null },
+      { word: 'invalid', accuracyScore: 60, errorType: 'Mispronunciation', startMs: 100, endMs: 50 },
+      { word: 'extra', accuracyScore: 50, errorType: 'Insertion', startMs: 250, endMs: 300 },
+      { word: 'fractional', accuracyScore: 55, errorType: 'None', startMs: 123.4567, endMs: 199.9999 }
+    ], 'missing and non-positive word durations should remain explicit for the UI playability guard');
   } finally {
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = originalMock;
     process.env.CONNECTED_SPEECH_API_URL = originalWorkerUrl;

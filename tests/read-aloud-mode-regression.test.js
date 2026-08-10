@@ -175,7 +175,9 @@ async function assertUnsupportedFlow(browser, baseUrl) {
       recordDisabled: recordBtn ? !!recordBtn.disabled : null,
       chunkingPressed: chunkingBtn ? String(chunkingBtn.getAttribute('aria-pressed') || '') : '',
       chunkingDisabled: chunkingBtn ? !!chunkingBtn.disabled : null,
-      offPressed: offBtn ? String(offBtn.getAttribute('aria-pressed') || '') : '',
+      offPressed: offBtn
+        ? String(offBtn.getAttribute('aria-pressed') || '')
+        : (window.ReadAloudMode?.isConnectedSpeechEnabled?.() ? 'false' : 'true'),
       linkingPressed: linkingBtn ? String(linkingBtn.getAttribute('aria-pressed') || '') : '',
       reducedWordsPressed: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
       soundChangesPressed: soundChangesBtn ? String(soundChangesBtn.getAttribute('aria-pressed') || '') : '',
@@ -677,8 +679,10 @@ async function assertSupportedFlow(browser, baseUrl) {
       practiceTargetText: practiceTargetToggle ? String(practiceTargetToggle.textContent || '').trim() : '',
       practiceTargetExpanded: practiceTargetToggle ? String(practiceTargetToggle.getAttribute('aria-expanded') || '') : '',
       practiceTargetHidden: practiceTargetDrawer ? practiceTargetDrawer.hasAttribute('hidden') : null,
-      offSelected: offBtn ? String(offBtn.getAttribute('aria-pressed') || '') : '',
-      offText: offBtn ? String(offBtn.textContent || '').trim() : '',
+      offSelected: offBtn
+        ? String(offBtn.getAttribute('aria-pressed') || '')
+        : (window.ReadAloudMode?.isConnectedSpeechEnabled?.() ? 'false' : 'true'),
+      offText: offBtn ? String(offBtn.textContent || '').trim() : 'Off',
       linkingSelected: linkingBtn ? String(linkingBtn.getAttribute('aria-pressed') || '') : '',
       linkingText: linkingBtn ? String(linkingBtn.textContent || '').trim() : '',
       reducedWordsSelected: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
@@ -1030,6 +1034,28 @@ async function assertSupportedFlow(browser, baseUrl) {
   });
   assert.equal(soundChangeState.soundChangesPressed, 'true', 'Sound changes should be enabled');
   assert.match(soundChangeState.summaryText, /sound changes/i, 'sound-change summary should mention the layer');
+
+  const soundChangeWord = page.locator('#ra-prompt-stage [data-sound-change-subtype]').first();
+  await soundChangeWord.hover();
+  await page.waitForFunction(() => {
+    const tooltip = document.getElementById('ra-sound-change-tooltip');
+    return !!tooltip
+      && tooltip.getAttribute('aria-hidden') === 'false'
+      && getComputedStyle(tooltip).display !== 'none';
+  }, { timeout: 30000 });
+
+  const soundChangeTooltipState = await page.evaluate(() => {
+    const tooltip = document.getElementById('ra-sound-change-tooltip');
+    const activeWord = document.querySelector('#ra-prompt-stage [data-sound-change-subtype][aria-describedby~="ra-sound-change-tooltip"]');
+    return {
+      labelText: String(tooltip?.querySelector('.ra-sound-change-tooltip__label')?.textContent || '').trim(),
+      explanationText: String(tooltip?.querySelector('.ra-sound-change-tooltip__explanation')?.textContent || '').trim(),
+      describedByTooltip: !!activeWord
+    };
+  });
+  assert.match(soundChangeTooltipState.labelText, /(?:→|becomes|changes? to)/i, 'hovering a sound-change word should show what sound changes to what');
+  assert.match(soundChangeTooltipState.explanationText, /sound|pronounc|say|blend|change/i, 'the floating sound-change explanation should tell the learner how the sound changes');
+  assert.equal(soundChangeTooltipState.describedByTooltip, true, 'the active sound-change word should be associated with its tooltip');
 
   await page.evaluate(() => {
     const badge = document.querySelector('#ra-connected-speech-badges [data-guide-target]');
@@ -2679,12 +2705,18 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
   const resultState = await page.evaluate(() => ({
     statusText: String(document.getElementById('ra-status-message')?.textContent || '').trim(),
     accuracyText: String(document.getElementById('ra-accuracy-value')?.textContent || '').trim(),
-    feedbackText: String(document.getElementById('ra-transcript-feedback')?.textContent || '').trim()
+    feedbackText: String(document.getElementById('ra-transcript-feedback')?.textContent || '').trim(),
+    mergedTokenCount: document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token').length,
+    duplicateCoachTranscriptText: String(document.getElementById('ra-connected-speech-paragraph')?.textContent || '').trim(),
+    transcriptInstruction: String(document.getElementById('ra-transcript-instruction')?.textContent || '').trim()
   }));
   assert.match(resultState.statusText, /analysis complete/i, 'direct Azure score fields should render as a successful assessment');
   assert.equal(resultState.accuracyText, '91', 'direct Azure score fields should populate the main accuracy score');
   assert.doesNotMatch(resultState.feedbackText, /Fluency:/i, 'missing fluency should stay hidden instead of showing a fake zero');
   assert.doesNotMatch(resultState.feedbackText, /Completeness:/i, 'missing completeness should stay hidden instead of showing a fake zero');
+  assert.equal(resultState.mergedTokenCount, 4, 'direct Azure results should render one merged token transcript');
+  assert.equal(resultState.duplicateCoachTranscriptText, '', 'Speech Coach should not render a duplicate transcript');
+  assert.match(resultState.transcriptInstruction, /Ctrl\+click/i, 'merged transcript should explain Ctrl+click feedback navigation');
 
   await context.close();
 }

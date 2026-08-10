@@ -79,6 +79,15 @@ const COMPACT_CONTROLS = {
   essay: ['essay-v7-prev-btn', 'essay-v7-next-btn', 'essay-random-toggle-btn']
 };
 const PILLS = { swt: 'swt-v7-question-pill', essay: 'essay-v7-question-pill' };
+const HEADER_COPY_CONTRACTS = [
+  { mode: 'rfib', header: '.rfib-header-card', paragraph: '.rfib-header-copy > p' },
+  { mode: 'dd', header: '.dd-header-card', paragraph: '.dd-header-copy > p' },
+  { mode: 'rmcma', header: '.rmcma-header-card', paragraph: '.rmcma-header-copy > p' },
+  { mode: 'rmcsa', header: '.rmcsa-header-card', paragraph: '.rmcsa-header-copy > p' },
+  { mode: 'rop', header: '.rop-header-card', paragraph: '.rop-header-copy > p:not(.rop-keyboard-hint)' },
+  { mode: 'swt', header: '.swt-header-card', paragraph: '.swt-header-copy > p' },
+  { mode: 'essay', header: '.essay-header-card', paragraph: '.essay-header-copy > p' }
+];
 
 const failures = [];
 
@@ -313,6 +322,32 @@ async function checkLiveMode(page, mode, contract) {
 
 /* ── 3. Responsive ─────────────────────────────────────────────────────── */
 
+async function checkHeaderCopyMeasure(page) {
+  for (const contract of HEADER_COPY_CONTRACTS) {
+    await activateMode(page, contract.mode);
+    const measure = await page.evaluate(({ mode, headerSelector, paragraphSelector }) => {
+      const header = document.querySelector(`#mode-${mode} ${headerSelector}`);
+      const paragraph = document.querySelector(`#mode-${mode} ${paragraphSelector}`);
+      if (!header || !paragraph) return { found: false };
+      const expectedWidth = paragraph.parentElement.clientWidth;
+      return {
+        found: true,
+        paragraphWidth: paragraph.getBoundingClientRect().width,
+        expectedWidth
+      };
+    }, {
+      mode: contract.mode,
+      headerSelector: contract.header,
+      paragraphSelector: contract.paragraph
+    });
+
+    check(measure.found, `${contract.mode}: header description elements are missing`);
+    if (!measure.found) continue;
+    check(measure.paragraphWidth >= measure.expectedWidth - 1,
+      `${contract.mode}: header description is ${measure.paragraphWidth.toFixed(1)}px wide, expected at least ${measure.expectedWidth.toFixed(1)}px`);
+  }
+}
+
 async function checkResponsive(page) {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
@@ -396,6 +431,7 @@ async function main() {
       for (const [mode, contract] of Object.entries(WRITING_CONTRACTS)) {
         await checkLiveMode(page, mode, contract);
       }
+      await checkHeaderCopyMeasure(page);
       await checkResponsive(page);
     } finally {
       await context.close();

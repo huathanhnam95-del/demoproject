@@ -8,6 +8,7 @@ database/Take Notes/RL/audio/*.csv
 .claude/
 public/database/RA/Voice/audio/
 !public/database/RA/Voice/audio/manifest.json
+public/database/RA/speech-coach-audio/v1/clips/
 public/database/Highlight Incorrect Words/audio/*/
 public/database/SST/audio/*/
 

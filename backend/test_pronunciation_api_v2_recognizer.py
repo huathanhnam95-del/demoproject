@@ -47,6 +47,13 @@ class V2RecognizerApiTest(unittest.TestCase):
         self.assertEqual(payload["contract_version"], "recognize-v2")
         self.assertIn("canonical_alignment", payload)
         self.assertIn("hypotheses", payload)
+        alignment = payload["canonical_alignment"]
+        self.assertEqual(alignment["span_contract_version"], "ctc-alignment-v2")
+        self.assertEqual(alignment["frame_interval"], "half-open")
+        self.assertEqual(alignment["syllable_span_type"], "ctc-token-coverage")
+        self.assertEqual(alignment["measurement_span_type"], "ctc-blank-midpoint-v1")
+        self.assertIn("measurement_start_time", alignment["syllables"][0])
+        self.assertIn("measurement_end_time", alignment["syllables"][0])
         self.assertEqual(payload["request_reference_id"], "variant-test")
         self.assertGreater(payload["audio_duration_sec"], 0)
         self.assertNotIn("log_probs", payload)

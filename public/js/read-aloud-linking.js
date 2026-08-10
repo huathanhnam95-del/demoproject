@@ -375,6 +375,9 @@
           id: `boundary-${boundary.id}`,
           category: 'sound_changes',
           layer: 'assimilation',
+          subtype: boundary.subtype || boundary.category || 'n_bilabial_assimilation',
+          startWordIndex: boundary.leftWordIndex,
+          endWordIndex: boundary.rightWordIndex,
           label: phrase,
           badge: 'Sound change',
           spokenAs: copy.spokenAs,
@@ -392,6 +395,8 @@
         id: `token-${annotation.id || annotation.wordIndex}`,
         category: 'reduced_words',
         layer: 'weak_forms',
+        startWordIndex: annotation.wordIndex,
+        endWordIndex: annotation.wordIndex,
         label: annotation.display || annotation.word || normalized,
         badge: 'Reduced word',
         strongAs: copy.strongAs,
@@ -410,6 +415,9 @@
           id: `link-${boundary.id}`,
           category: 'linking',
           layer: 'linking',
+          subtype: boundary.subtype || boundary.category || 'catenation',
+          startWordIndex: boundary.leftWordIndex,
+          endWordIndex: boundary.rightWordIndex,
           label: phrase,
           badge: 'Linking',
           spokenAs: null,
@@ -601,39 +609,17 @@
       // in both layers silently lost its weak-form styling.
       leftSpan.classList.add('ra-sound-change-word');
       leftSpan.dataset.guideTarget = `boundary-${boundary.id}`;
+      leftSpan.dataset.soundChangeSubtype = boundary.subtype || '';
       leftSpan.tabIndex = 0;
       leftSpan.setAttribute('role', 'button');
       leftSpan.setAttribute('aria-pressed', 'false');
 
       rightSpan.classList.add('ra-sound-change-word');
       rightSpan.dataset.guideTarget = `boundary-${boundary.id}`;
+      rightSpan.dataset.soundChangeSubtype = boundary.subtype || '';
       rightSpan.tabIndex = 0;
       rightSpan.setAttribute('role', 'button');
       rightSpan.setAttribute('aria-pressed', 'false');
-
-      // Insert phonetic hint tag between the two words
-      const arrowText = boundary.arrowText || boundary.markerText || 'sound change';
-      const copy = SOUND_CHANGE_GUIDE_COPY[boundary.subtype];
-      const hintLabel = copy?.arrow || arrowText;
-
-      const hintTag = document.createElement('span');
-      hintTag.className = 'ra-sound-change-hint';
-      hintTag.textContent = hintLabel;
-      hintTag.title = copy?.explanation || boundary.legendLabel || 'Sound change';
-      hintTag.dataset.guideTarget = `boundary-${boundary.id}`;
-      hintTag.tabIndex = 0;
-      hintTag.setAttribute('role', 'button');
-
-      // Insert the hint tag after leftSpan (before the space/rightSpan)
-      const parent = leftSpan.parentNode;
-      if (parent) {
-        const nextSibling = leftSpan.nextSibling;
-        if (nextSibling) {
-          parent.insertBefore(hintTag, nextSibling);
-        } else {
-          parent.appendChild(hintTag);
-        }
-      }
 
       renderedCount += 1;
     });
@@ -1063,6 +1049,10 @@
     return !!lastChar && !VOWEL_LETTERS.test(lastChar);
   }
 
+  function getSoundChangeCopy(subtype) {
+    return SOUND_CHANGE_GUIDE_COPY[subtype] || null;
+  }
+
   const api = {
     ENABLE_LINK_LABELS,
     DESKTOP_MIN_WIDTH,
@@ -1080,7 +1070,8 @@
     renderOverlay,
     renderAssimilationBadges,
     renderFallbackList,
-    clearLinkingRender
+    clearLinkingRender,
+    getSoundChangeCopy
   };
 
   if (typeof module !== 'undefined' && module.exports) {

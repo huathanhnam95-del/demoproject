@@ -347,6 +347,8 @@ async function routeApi(route, url, state, requestLog) {
       agentSourceId: String(body?.agentSourceId || '').trim() || null,
       stage: String(body?.stage || 'new').trim(),
       probability: body?.probability ?? null,
+      learningProfile: body?.learningProfile || null,
+      targets: body?.targets || null,
       learningNeeds: String(body?.learningNeeds || '').trim(),
       preferredLearningDays: Array.isArray(body?.preferredLearningDays) ? body.preferredLearningDays : [],
       preferredLearningHours: Array.isArray(body?.preferredLearningHours) ? body.preferredLearningHours : [],
@@ -730,6 +732,27 @@ async function main() {
     );
     assert.strictEqual(await page.locator('#btn-save-lead').isVisible(), true);
     assert.strictEqual(await page.locator('#btn-save-student').isVisible(), false);
+    await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
+    await page.fill('#score-overall', '79');
+    await page.fill('#score-listening', '78');
+    await page.fill('#score-reading', '77');
+    await page.fill('#score-speaking', '76');
+    await page.fill('#score-writing', '75');
+    await page.click('#btn-save-lead');
+    await page.waitForFunction(() => document.getElementById('btn-add-lead-entrance-test')?.disabled === false);
+    await page.click('#crm-student-modal .crm-sidebar-item[data-tab="info"]');
+    await page.click('#btn-add-lead-entrance-test');
+    await page.waitForFunction(() => /token-test-2/.test(document.getElementById('lead-entrance-test-link')?.value || ''));
+    await page.click('#btn-close-student-modal');
+    await page.waitForSelector('#crm-student-modal', { state: 'hidden' });
+    await page.click('.crm-lead-link[data-lead-id="lead-2"]');
+    await page.waitForSelector('#crm-student-modal', { state: 'visible' });
+    await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
+    assert.strictEqual(await page.inputValue('#score-overall'), '79');
+    assert.strictEqual(await page.inputValue('#score-listening'), '78');
+    assert.strictEqual(await page.inputValue('#score-reading'), '77');
+    assert.strictEqual(await page.inputValue('#score-speaking'), '76');
+    assert.strictEqual(await page.inputValue('#score-writing'), '75');
     await page.locator('#crm-student-modal').screenshot({ path: secondLeadScreenshotPath });
     console.log(`Screenshot saved to ${secondLeadScreenshotPath}`);
     await page.click('#btn-close-student-modal');

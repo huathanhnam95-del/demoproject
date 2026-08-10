@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.56",
+  "version": "1.8.57",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -56,6 +56,10 @@
     "test:read-aloud:route": "node tests/read-aloud-route.test.js",
     "test:read-aloud:browser": "node tests/read-aloud-mode-regression.test.js",
     "test:read-aloud:connected-speech:service": "node tests/read-aloud-connected-speech-service.test.js",
+    "test:read-aloud:speech-coach-audio": "node tests/speech-coach-kokoro-audio.test.js",
+    "test:read-aloud:speech-coach-audio:browser": "node tests/browser/speech-coach-model-audio-browser-check.js",
+    "generate:read-aloud:speech-coach-audio": "node scripts/kokoro/generate_speech_coach_audio.js",
+    "verify:read-aloud:speech-coach-audio": "node scripts/kokoro/verify_speech_coach_audio.js",
     "test:difficulty": "node tests/difficulty-logic.test.mjs && node tests/performance-tracker.test.js && node tests/difficulty-manager-state.test.mjs && node tests/difficulty-manager-profiles.test.mjs && node tests/difficulty-filter-migration.test.mjs",
     "test:difficulty:browser": "node tests/browser/adaptive-difficulty-browser-check.js",
     "verify:rfib": "node tests/rfib-content-core.test.js && node tests/browser/rfib-mode-browser-check.js && node tests/browser/practice-modes-browser-check.js",

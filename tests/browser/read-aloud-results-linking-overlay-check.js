@@ -125,56 +125,36 @@ async function main() {
           uncertainCount: data.summary.uncertainCount
         },
         events: data.events
-      }, { transcriptText: data.text, sessionViewMode: 'advanced', sessionConnectedSpeechLevel: 'linking' });
+      }, {
+        transcriptText: data.text,
+        words: data.text.split(/\s+/).filter(Boolean).map((word, index) => ({
+          word,
+          accuracyScore: 90,
+          errorType: 'None',
+          startMs: index * 100,
+          endMs: index * 100 + 80
+        })),
+        sessionViewMode: 'advanced',
+        sessionConnectedSpeechLevel: 'linking'
+      });
     }, { ...fixture, summary: { detectedCount, notDetectedCount, uncertainCount } });
     await page.waitForTimeout(900);
 
-    const overlay = await page.evaluate(() => {
-      const svg = document.querySelector('#ra-connected-speech-box .sc-linking-overlay');
-      if (!svg) return { present: false };
-      const paths = [...svg.querySelectorAll('path')];
-      const container = svg.parentElement;
-      const containerRect = container.getBoundingClientRect();
-      const svgRect = svg.getBoundingClientRect();
-      const cs = getComputedStyle(svg);
-      return {
-        present: true,
-        display: cs.display,
-        pointerEvents: cs.pointerEvents,
-        position: cs.position,
-        pathCount: paths.length,
-        strokes: paths.map((p) => p.getAttribute('stroke')),
-        widths: paths.map((p) => p.getAttribute('stroke-width')),
-        // Arcs must sit inside the paragraph box, not spill outside it.
-        withinContainer: svgRect.width <= containerRect.width + 1
-          && svgRect.height <= containerRect.height + 1,
-        annotatedTokens: document.querySelectorAll('#ra-connected-speech-box [data-event-index]').length,
-        firstChildIsOverlay: container.firstElementChild === svg
-      };
-    });
+    const mergedTranscript = await page.evaluate(() => ({
+      duplicateOverlayPresent: !!document.querySelector('#ra-connected-speech-box .sc-linking-overlay'),
+      tokenCount: document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token').length,
+      linkedTokenCount: document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token[data-event-index]').length,
+      coachHighlightCount: document.querySelectorAll('#ra-merged-recognized-transcript .ra-word-token[class*="coach-"]').length
+    }));
 
-    check('Results panel renders the SVG linking overlay', overlay.present && overlay.display !== 'none');
-    check(`Overlay draws one arc per linking event (${overlay.pathCount} of ${fixture.events.length})`,
-      overlay.pathCount === fixture.events.length);
-    check('Overlay stays click-through so word tooltips still work',
-      overlay.pointerEvents === 'none');
-    check('Overlay is absolutely positioned behind the text',
-      overlay.position === 'absolute' && overlay.firstChildIsOverlay);
-    check('Overlay does not spill outside the paragraph box', overlay.withinContainer);
-    check('Token annotations still render alongside the arcs', overlay.annotatedTokens > 0);
-
-    const expected = fixture.events.map((e) => STATUS_COLORS[e.status]);
-    check(`Arc colours follow detection status (${overlay.strokes.join(', ')})`,
-      expected.every((color) => overlay.strokes.includes(color)));
-    check('Arcs use the shared 2px stroke', overlay.widths.every((w) => w === '2'));
+    check('Merged transcript removes the duplicate SVG overlay', !mergedTranscript.duplicateOverlayPresent);
+    check('Merged transcript renders word tokens', mergedTranscript.tokenCount > 0);
+    check('Speech Coach events attach to merged transcript tokens', mergedTranscript.linkedTokenCount >= fixture.events.length);
+    check('Merged tokens retain Speech Coach highlight styling', mergedTranscript.coachHighlightCount > 0);
 
     await page.screenshot({
       path: path.join(screenshotDir, 'results-linking-overlay.png'),
-      clip: await page.evaluate(() => {
-        const box = document.getElementById('ra-connected-speech-box');
-        const r = box.getBoundingClientRect();
-        return { x: Math.max(0, r.x), y: Math.max(0, r.y), width: Math.min(r.width, 1400), height: Math.min(r.height, 900) };
-      })
+      fullPage: true
     });
 
     check('No page errors while rendering the results overlay',

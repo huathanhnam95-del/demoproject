@@ -231,7 +231,7 @@ class StressVisualizer {
                 data: slicedTimes.map((t, i) => ({ x: t, y: slicedPitches[i] })),
                 borderColor: 'rgb(54, 162, 235)',
                 yAxisID: 'y',
-                spanGaps: false,
+                spanGaps: true,
                 tension: 0.4,
                 pointRadius: 0,
                 showLine: true
@@ -609,7 +609,7 @@ class StressVisualizer {
                 borderColor: 'rgb(34, 197, 94)',
                 pointRadius: 0,
                 showLine: true,
-                spanGaps: false,
+                spanGaps: true,
                 yAxisID: 'y'
             });
         }
@@ -620,7 +620,7 @@ class StressVisualizer {
                 borderColor: 'rgba(244, 114, 182, 0.8)',
                 pointRadius: 0,
                 showLine: true,
-                spanGaps: false,
+                spanGaps: true,
                 yAxisID: 'y1'
             });
         }
@@ -841,7 +841,7 @@ class StressVisualizer {
             borderDash: dashed ? [6, 4] : [],
             pointRadius: 0,
             showLine: true,
-            spanGaps: false,
+            spanGaps: true,
             yAxisID: axis
         });
 

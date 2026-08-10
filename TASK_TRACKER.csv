@@ -995,4 +995,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 598,2026-08-09,Sound changes click-to-reveal tooltip + linking arc misalignment fix,Done,2026-08-09
 599,2026-08-10,Fix disconnected pitch line (spanGaps) and vowel duration truncation (backend gap-splitting + frontend measurement boundaries),Done,2026-08-10
 600,2026-08-09,Fix Speech Coach layout collisions - stacked card headers and overflow handling,Done,2026-08-09
-601,2026-08-10,Review and deploy V1.8.57 release to production,In Progress,
+601,2026-08-10,Review and deploy V1.8.57 release to production,Done,2026-08-10

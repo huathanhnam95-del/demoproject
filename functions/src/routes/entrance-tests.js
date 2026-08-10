@@ -394,7 +394,6 @@ router.post('/submit', async (req, res) => {
 
             tx.set(ref, {
                 status: 'submitted',
-                deliveryToken: null,
                 startedAt: data.startedAt || FieldValue.serverTimestamp(),
                 submittedAt: FieldValue.serverTimestamp(),
                 responses: responses || null,

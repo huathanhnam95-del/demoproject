@@ -691,6 +691,67 @@ function extractAzureWords(azurePayload, referenceWords = []) {
   return words.map((wordNode, index) => simplifyWordNode(wordNode, index, referenceWords)).filter(Boolean);
 }
 
+function buildRefToAzureAlignment(referenceWords, azureWords) {
+  const alignment = new Map();
+  if (!referenceWords.length || !azureWords.length) return alignment;
+  const strip = (w) => normalizeWord(w).replace(/[-\s]/g, '');
+  let ai = 0;
+  let ri = 0;
+  while (ri < referenceWords.length && ai < azureWords.length) {
+    const refStrip = strip(referenceWords[ri]);
+    const azStrip = strip(azureWords[ai].word || azureWords[ai].display || '');
+    if (refStrip === azStrip) {
+      alignment.set(ri, ai);
+      ri++;
+      ai++;
+      continue;
+    }
+    let concat = refStrip;
+    let lookAhead = ri + 1;
+    let matched = false;
+    while (lookAhead < referenceWords.length && concat.length <= azStrip.length) {
+      concat += strip(referenceWords[lookAhead]);
+      if (concat === azStrip) {
+        for (let i = ri; i <= lookAhead; i++) alignment.set(i, ai);
+        ri = lookAhead + 1;
+        ai++;
+        matched = true;
+        break;
+      }
+      lookAhead++;
+    }
+    if (matched) continue;
+    concat = azStrip;
+    lookAhead = ai + 1;
+    matched = false;
+    while (lookAhead < azureWords.length && concat.length <= refStrip.length) {
+      concat += strip(azureWords[lookAhead].word || azureWords[lookAhead].display || '');
+      if (concat === refStrip) {
+        alignment.set(ri, ai);
+        ri++;
+        ai = lookAhead + 1;
+        matched = true;
+        break;
+      }
+      lookAhead++;
+    }
+    if (matched) continue;
+    const azErrorType = String(azureWords[ai].errorType || 'None').toLowerCase();
+    if (azErrorType === 'insertion') {
+      ai++;
+      continue;
+    }
+    alignment.set(ri, ai);
+    ri++;
+    ai++;
+  }
+  while (ri < referenceWords.length) {
+    alignment.set(ri, Math.min(ai, azureWords.length - 1));
+    ri++;
+  }
+  return alignment;
+}
+
 function normalizePhonemeCandidates(phonemes) {
   return Array.isArray(phonemes)
     ? ipaCleanedPhonemes(phonemes)
@@ -751,7 +812,7 @@ function getGapMs(leftWord, rightWord) {
   return gap < 0 ? null : gap;
 }
 
-function classifyEvent(event, referenceWords, azureWords, referenceText, audioQuality) {
+function classifyEvent(event, referenceWords, azureWords, referenceText, audioQuality, alignment) {
   if (audioQuality && audioQuality.passed === false) {
     return {
       eventId: event.eventId,
@@ -792,8 +853,10 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
     };
   }
 
-  const leftAzure = azureWords[Number(event.startWordIndex)] || null;
-  const rightAzure = azureWords[Number(event.endWordIndex)] || null;
+  const leftAzureIdx = alignment ? (alignment.get(Number(event.startWordIndex)) ?? Number(event.startWordIndex)) : Number(event.startWordIndex);
+  const rightAzureIdx = alignment ? (alignment.get(Number(event.endWordIndex)) ?? Number(event.endWordIndex)) : Number(event.endWordIndex);
+  const leftAzure = azureWords[leftAzureIdx] || null;
+  const rightAzure = azureWords[rightAzureIdx] || null;
   const gapMs = getGapMs(leftAzure, rightAzure);
   const baseStatus = classifyGapStatus(gapMs, event.detectorConfig || {});
 
@@ -1054,7 +1117,15 @@ function buildConnectedSpeechAnalysis({ questionId, referenceText, azurePayload,
     .filter((token) => token.type === 'word')
     .map((token) => token.normalized);
   const azureWords = extractAzureWords(azurePayload, referenceWords);
-  const scoredEvents = events.map((event) => classifyEvent(event, referenceWords, azureWords, referenceText, audioQuality));
+  const alignment = buildRefToAzureAlignment(referenceWords, azureWords);
+  const scoredEvents = events.map((event) => {
+    const scored = classifyEvent(event, referenceWords, azureWords, referenceText, audioQuality, alignment);
+    const alignedStart = alignment.get(Number(event.startWordIndex));
+    const alignedEnd = alignment.get(Number(event.endWordIndex));
+    if (alignedStart != null) scored.startWordIndex = alignedStart;
+    if (alignedEnd != null) scored.endWordIndex = alignedEnd;
+    return scored;
+  });
 
   return {
     status: 'complete',
@@ -1078,6 +1149,7 @@ module.exports = {
   hasConnectedSpeechEvents,
   normalizeWord,
   extractAzureWords,
+  buildRefToAzureAlignment,
   summarizeEvents,
   buildEventFamilyCounts,
   normalizePhonemeCandidates,

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260810-v1.8.58">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260810-v1.8.59">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260810-v1.8.58" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260810-v1.8.58&books-reader=r3" />
+  <link rel="stylesheet" href="style.css?v=20260810-v1.8.59" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260810-v1.8.59&books-reader=r3" />
 </head>
 
 <body>
@@ -815,75 +815,6 @@
             </div>
           </section>
         </div>
-        <div id="lead-templates-automations" class="crm-workspace-grid">
-          <section class="crm-workspace-card">
-            <div class="crm-section-header">
-              <div>
-                <h3>Templates</h3>
-                <p class="crm-muted">Provider-agnostic reminder templates.</p>
-              </div>
-            </div>
-            <div class="crm-form-grid crm-compact-grid">
-              <div class="crm-form-group">
-                <label for="template-name">Name</label>
-                <input type="text" id="template-name" class="crm-input" placeholder="Payment Reminder">
-              </div>
-              <div class="crm-form-group">
-                <label for="template-channel">Channel</label>
-                <select id="template-channel" class="crm-input">
-                  <option value="email">Email</option>
-                  <option value="manual">Manual</option>
-                </select>
-              </div>
-              <div class="crm-form-group">
-                <label for="template-subject">Subject</label>
-                <input type="text" id="template-subject" class="crm-input" placeholder="Subject">
-              </div>
-            </div>
-            <div class="crm-form-group">
-              <label for="template-body">Body</label>
-              <textarea id="template-body" class="crm-input" rows="3" placeholder="Message body"></textarea>
-            </div>
-            <div class="crm-inline-fields" style="justify-content: flex-end;">
-              <button id="btn-create-template" class="crm-btn-primary" type="button">Create Template</button>
-            </div>
-          </section>
-          <section class="crm-workspace-card">
-            <div class="crm-section-header">
-              <div>
-                <h3>Automations</h3>
-                <p class="crm-muted">Run rules into the communication queue.</p>
-              </div>
-            </div>
-            <div class="crm-form-grid crm-compact-grid">
-              <div class="crm-form-group">
-                <label for="rule-name">Rule Name</label>
-                <input type="text" id="rule-name" class="crm-input" placeholder="Unpaid invoice follow-up">
-              </div>
-              <div class="crm-form-group">
-                <label for="rule-trigger-type">Trigger</label>
-                <select id="rule-trigger-type" class="crm-input">
-                  <option value="overdue_next_action">Overdue next action</option>
-                  <option value="upcoming_test_result_due">Upcoming test result due</option>
-                  <option value="unpaid_invoice">Unpaid invoice</option>
-                  <option value="attendance_intervention">Attendance intervention</option>
-                </select>
-              </div>
-              <div class="crm-form-group">
-                <label for="rule-template-id">Template</label>
-                <select id="rule-template-id" class="crm-input">
-                  <option value="">Select a template...</option>
-                </select>
-              </div>
-            </div>
-            <div class="crm-inline-fields" style="justify-content: flex-end;">
-              <button id="btn-create-rule" class="crm-btn-secondary" type="button">Create Rule</button>
-            </div>
-            <div id="automation-list" class="crm-stack-list" style="margin-top: 16px;">
-              <div class="crm-muted">No automations yet.</div>
-            </div>
-          </section>
-        </div>
       </section>
 
       <!-- Staff -->
@@ -1176,16 +1107,6 @@
             </div>
             <div id="lead-composer" class="crm-form-grid">
               <div class="crm-form-group">
-                <label for="lead-source">Source</label>
-                <select id="lead-source" name="acquisition_source" class="crm-input" onchange="if(window.updateStudentSourceVisibility)window.updateStudentSourceVisibility();if(window.updateLeadSourceVisibility)window.updateLeadSourceVisibility();">
-                  <option value="Facebook - Personal">Facebook - Personal</option>
-                  <option value="Facebook - Page">Facebook - Page</option>
-                  <option value="Zalo - Page">Zalo - Page</option>
-                  <option value="Tiktok - Personal">Tiktok - Personal</option>
-                  <option value="Agent">Agent</option>
-                </select>
-              </div>
-              <div class="crm-form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                   <label for="lead-name" style="margin-bottom: 0;">Full Name</label>
                   <div class="crm-salutation-group" style="display: flex; gap: 12px; align-items: center; font-size: 13px;">
@@ -1214,6 +1135,18 @@
               <div class="crm-form-group">
                 <label for="lead-zalo">Zalo Number</label>
                 <input type="text" id="lead-zalo" name="zalo" class="crm-input" placeholder="Enter Zalo number">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-source">Source <span style="color:#dc2626;">*</span></label>
+                <select id="lead-source" name="acquisition_source" class="crm-input" required onchange="if(window.updateStudentSourceVisibility)window.updateStudentSourceVisibility();if(window.updateLeadSourceVisibility)window.updateLeadSourceVisibility();">
+                  <option value="" disabled selected>Select a source...</option>
+                  <option value="Facebook - Personal">Facebook - Personal</option>
+                  <option value="Facebook - Page">Facebook - Page</option>
+                  <option value="Zalo - Page">Zalo - Page</option>
+                  <option value="Zalo + Personal">Zalo + Personal</option>
+                  <option value="Tiktok - Personal">Tiktok - Personal</option>
+                  <option value="Agent">Agent</option>
+                </select>
               </div>
               <div class="crm-form-group">
                 <label for="lead-facebook">Facebook Name</label>
@@ -2500,48 +2433,48 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260810-v1.8.58"></script>
-  <script src="js/classroom-api.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/utils.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/state.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/dom.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/courses.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/students.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/student-360.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/classrooms.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/leads.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/activities.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/enrollments.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/attendance.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/finance-workflow.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/finance.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/communications.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/staff-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/student-finance.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/live-delivery.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/classroom-modal.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/student-modal.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/course-modal.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/lead-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/communications-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/books-workspace.js?v=20260810-v1.8.58&books-reader=r3"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/dashboard.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/governance.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/index.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260810-v1.8.58"></script>
-  <script src="js/crm/devtools-access.js?v=20260810-v1.8.58&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260810-v1.8.58"></script>
-  <script src="arpabet-ipa-map.js?v=20260810-v1.8.58"></script>
-  <script src="phonetics.js?v=20260810-v1.8.58"></script>
-  <script src="crm-admin.js?v=20260810-v1.8.58"></script>
+  <script src="js/auth-session-guard.js?v=20260810-v1.8.59"></script>
+  <script src="js/classroom-api.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/utils.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/state.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/dom.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/courses.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/students.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/student-360.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/classrooms.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/leads.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/activities.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/enrollments.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/attendance.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/finance-workflow.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/finance.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/communications.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/staff-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/student-finance.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/live-delivery.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/classroom-modal.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/student-modal.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/course-modal.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/lead-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/communications-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/books-workspace.js?v=20260810-v1.8.59&books-reader=r3"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/dashboard.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/governance.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/index.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260810-v1.8.59"></script>
+  <script src="js/crm/devtools-access.js?v=20260810-v1.8.59&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260810-v1.8.59"></script>
+  <script src="arpabet-ipa-map.js?v=20260810-v1.8.59"></script>
+  <script src="phonetics.js?v=20260810-v1.8.59"></script>
+  <script src="crm-admin.js?v=20260810-v1.8.59"></script>
 </body>
 
 </html>

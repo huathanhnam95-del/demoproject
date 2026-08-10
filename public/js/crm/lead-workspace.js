@@ -63,7 +63,7 @@ window.CrmLeadWorkspace = (function () {
 
             const val = String(inputLeadSource?.value || '').trim();
             const isFacebook = val.startsWith('Facebook');
-            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal';
+            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
             const isAgent = val === 'Agent';
 
             if (groupUrl) {
@@ -110,7 +110,7 @@ window.CrmLeadWorkspace = (function () {
                 if (input) input.value = '';
             });
             if (elements.inputLeadSource) {
-                elements.inputLeadSource.value = 'Facebook - Personal';
+                elements.inputLeadSource.value = '';
             }
             if (elements.inputLeadFacebookPersonalOwner) {
                 elements.inputLeadFacebookPersonalOwner.value = 'Nam';
@@ -382,6 +382,13 @@ window.CrmLeadWorkspace = (function () {
         async function saveLead() {
             if (!window.CrmLeads || typeof window.CrmLeads.buildPayload !== 'function') {
                 throw new Error('Lead helpers are not available.');
+            }
+
+            const sourceVal = String(elements.inputLeadSource?.value || '').trim();
+            if (!sourceVal) {
+                showToast('Source is required.', 'error');
+                elements.inputLeadSource?.focus();
+                return;
             }
 
             const payload = window.CrmLeads.buildPayload(elements);

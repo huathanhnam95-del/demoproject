@@ -74,8 +74,9 @@ async function main() {
         return Array.from(inputs).map(el => el.id);
     });
     
-    const expectedOrder = ['lead-source', 'lead-salutation-mr', 'lead-salutation-ms', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
+    const expectedOrder = ['lead-salutation-mr', 'lead-salutation-ms', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-source', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
     assert('Form fields are in correct order', JSON.stringify(fieldOrder) === JSON.stringify(expectedOrder));
+    assert('Templates and automations sections are removed', await page.$('#lead-templates-automations') === null);
 
     // ===== Test 2: Workspace section IDs =====
     console.log('\n[Test 2] Workspace section IDs');
@@ -84,7 +85,6 @@ async function main() {
         { id: 'lead-task-section', label: 'Task section' },
         { id: 'lead-activity-section', label: 'Activity section' },
         { id: 'lead-entrance-test-section', label: 'Entrance test section' },
-        { id: 'lead-templates-automations', label: 'Templates & automations grid' }
     ];
     
     for (const section of sectionIds) {
@@ -100,11 +100,8 @@ async function main() {
     
     assert('lead-workspace.js hides leadTaskSection', leadWorkspaceJs.includes("elements.leadTaskSection") && leadWorkspaceJs.includes("display = 'none'"));
     assert('lead-workspace.js hides leadActivitySection', leadWorkspaceJs.includes("elements.leadActivitySection") && leadWorkspaceJs.includes("display = 'none'"));
-    assert('lead-workspace.js hides leadTemplatesAutomations', leadWorkspaceJs.includes("elements.leadTemplatesAutomations") && leadWorkspaceJs.includes("display = 'none'"));
-    
     assert('crm-admin.js binds leadTaskSection', crmAdminJs.includes("elements.leadTaskSection = document.getElementById('lead-task-section')"));
     assert('crm-admin.js binds leadActivitySection', crmAdminJs.includes("elements.leadActivitySection = document.getElementById('lead-activity-section')"));
-    assert('crm-admin.js binds leadTemplatesAutomations', crmAdminJs.includes("elements.leadTemplatesAutomations = document.getElementById('lead-templates-automations')"));
     assert('crm-admin.js binds inputLeadLabel', crmAdminJs.includes("elements.inputLeadLabel = document.getElementById('lead-label')"));
     assert('crm-admin.js binds inputLeadZalo', crmAdminJs.includes("elements.inputLeadZalo = document.getElementById('lead-zalo')"));
     assert('crm-admin.js binds inputLeadFacebook', crmAdminJs.includes("elements.inputLeadFacebook = document.getElementById('lead-facebook')"));

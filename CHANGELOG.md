@@ -1,3 +1,18 @@
+## [V1.8.59] - 2026-08-10
+
+### Added & Enhanced
+- **Speech Coach Recorded-Word Playback**: Returned precise Azure word timestamps from Firebase and aligned connected-speech events with Azure insertions and merged tokens so recognized words and recorded segments stay synchronized.
+- **Local Read Aloud Stack**: The Windows emulator launcher now starts the local Praat backend alongside Firebase and the HTTPS app server.
+
+### Changed
+- **CRM Enquiry Intake**: Removed the unused Templates and Automations panels, moved Source below Zalo, made it an explicit required choice, and added `Zalo + Personal` handling across the active controller and browser contracts.
+- **Read Aloud Navigation Bar**: Uses an opaque white sticky background so practice content does not show through the header.
+
+### Fixed
+- **Speech Coach Result Filters**: Re-renders saved result feedback immediately when connected-speech modes are toggled after scoring.
+- **Entrance Test History Links**: Retains the delivery token after public submission so authenticated CRM history can reconstruct the original single-use link while submitted links remain blocked from reuse.
+- **Production Timing Parity**: Preserves fractional Azure milliseconds and explicit null timing values in the deployed Firebase route instead of rounding or omitting them.
+
 ## [V1.8.55] - 2026-08-08
 
 ### Fixed

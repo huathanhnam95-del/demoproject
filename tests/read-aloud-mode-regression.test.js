@@ -672,7 +672,7 @@ async function assertSupportedFlow(browser, baseUrl) {
     const summary = document.getElementById('ra-linking-a11y-summary');
     const connectedSpeechGroup = document.getElementById('ra-connected-speech-group');
     const recordBtn = document.getElementById('ra-record-btn');
-    const nextBtn = document.getElementById('ra-next-btn');
+    const nextBtn = document.querySelector('#mode-read-aloud .spc-picker-next');
     return {
       chunkingSelected: chunkingBtn ? String(chunkingBtn.getAttribute('aria-pressed') || '') : '',
       chunkingDisabled: chunkingBtn ? !!chunkingBtn.disabled : null,
@@ -700,7 +700,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       summaryDescribedBy: summary ? String(summary.getAttribute('aria-describedby') || '') : '',
       connectedSpeechRole: connectedSpeechGroup ? String(connectedSpeechGroup.getAttribute('role') || '') : '',
       recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
-      nextText: nextBtn ? String(nextBtn.textContent || '').trim() : ''
+      nextText: nextBtn ? String(nextBtn.getAttribute('aria-label') || nextBtn.textContent || '').trim() : ''
     };
   });
 
@@ -727,11 +727,11 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(initialViewState.reducedWordsFilterDisabled, false, 'reduced-words filter should be available once the static index loads');
   assert.equal(initialViewState.soundChangesFilterDisabled, false, 'sound-changes filter should be available once the static index loads');
   assert.equal(initialViewState.recordText, 'Start recording now', 'prep-state primary CTA should match the current prep-state CTA copy');
-  assert.equal(initialViewState.nextText, 'Next prompt', 'prep-state secondary CTA should use learner copy');
+  assert.equal(initialViewState.nextText, 'Next question', 'prep-state secondary CTA should use the controller navigation copy');
   assert.equal(initialViewState.filterStatusText, '', 'prompt-index status should stay empty when the index loads successfully');
   assert.equal(initialViewState.summaryText, '', 'connected speech accessibility summary should start empty when connected speech is off');
   assert.equal(initialViewState.summaryLive, 'polite', 'connected speech summary should be announced politely');
-  assert.equal(initialViewState.connectedSpeechRole, 'radiogroup', 'connected speech controls should use radiogroup semantics');
+  assert.equal(initialViewState.connectedSpeechRole, 'group', 'composable connected speech controls should use group semantics');
 
   const readyFilterState = await page.evaluate(() => {
     const featureAllBtn = document.getElementById('ra-filter-feature-all');

@@ -46,31 +46,45 @@ async function runTest() {
       if (studentInfo) studentInfo.style.display = 'block';
       const composer = document.getElementById('lead-composer');
       if (composer) composer.style.display = 'grid';
-      const sourceInput = document.getElementById('lead-source');
-      if (sourceInput) {
-        sourceInput.value = 'Facebook - Personal';
-        sourceInput.dispatchEvent(new Event('change'));
-      }
       if (window.updateLeadSourceVisibility) window.updateLeadSourceVisibility();
       if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
     });
 
-    // Check default source selection
+    const sourceOptions = await page.$$eval('#lead-source option', (options) => options.map((option) => option.value));
+    assert.deepStrictEqual(
+      sourceOptions,
+      ['', 'Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Zalo + Personal', 'Tiktok - Personal', 'Agent'],
+      'Source options should begin blank and include Zalo + Personal'
+    );
+
+    // Check required blank default selection
     const defaultSource = await page.$eval('#lead-source', (el) => el.value);
-    assert.strictEqual(defaultSource, 'Facebook - Personal', 'Default source should be Facebook - Personal');
+    assert.strictEqual(defaultSource, '', 'Default source should be blank');
+    assert.strictEqual(await page.$eval('#lead-source', (el) => el.required), true, 'Source should be required');
 
-    // Check Facebook Profile Url field is visible initially
+    // Source-specific fields should be hidden until a source is selected.
     const isVisibleInitial = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isVisibleInitial, true, "Student's FB link field should be visible for Facebook - Personal");
+    assert.strictEqual(isVisibleInitial, false, "Student's FB link field should be hidden for a blank source");
 
-    // Check Personal Owner dropdown field is visible initially for Facebook - Personal
     const isOwnerVisibleInitial = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleInitial, true, "FB Personal Account dropdown should be visible for Facebook - Personal");
+    assert.strictEqual(isOwnerVisibleInitial, false, 'Personal Social Media Account dropdown should be hidden for a blank source');
 
     const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
     assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
 
     // Select Quỳnh
+    await page.selectOption('#lead-source', 'Facebook - Personal');
+    assert.strictEqual(
+      await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none'),
+      true,
+      "Student's FB link field should be visible for Facebook - Personal"
+    );
+    assert.strictEqual(
+      await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none'),
+      true,
+      'Personal Social Media Account dropdown should be visible for Facebook - Personal'
+    );
+
     await page.selectOption('#lead-facebook-personal-owner', 'Quỳnh');
 
     // Enter a link
@@ -94,6 +108,11 @@ async function runTest() {
     await page.selectOption('#lead-source', 'Tiktok - Personal');
     const isOwnerVisibleTiktok = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
     assert.strictEqual(isOwnerVisibleTiktok, true, 'Personal Social Media Account dropdown should be visible when Tiktok - Personal selected');
+
+    // Switch to Zalo + Personal
+    await page.selectOption('#lead-source', 'Zalo + Personal');
+    const isOwnerVisibleZaloPersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
+    assert.strictEqual(isOwnerVisibleZaloPersonal, true, 'Personal Social Media Account dropdown should be visible when Zalo + Personal is selected');
 
     // Switch to Zalo - Page
     await page.selectOption('#lead-source', 'Zalo - Page');

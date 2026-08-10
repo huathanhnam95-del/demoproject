@@ -409,6 +409,31 @@ const path = require('path');
     checks.partialModesShowGuidance = /For fuller feedback next time/i.test(document.getElementById('ra-connected-speech-mode-hint')?.textContent || '');
     checks.partialModesUseTooltipTrigger = !!document.querySelector('#ra-connected-speech-mode-hint .ra-feedback-mode-hint__trigger');
 
+    raMode.state = 'RESULTS';
+    const modePanel = document.getElementById('mode-read-aloud');
+    const controller = modePanel?.querySelector('.spc-controller');
+    if (modePanel) modePanel.dataset.spcView = 'advanced';
+    if (controller) controller.dataset.spcView = 'advanced';
+    raMode.connectedSpeechModes = new Set(['linking']);
+    raMode.sessionConnectedSpeechModes = new Set(['linking']);
+    raMode.lastAssessmentPayload = {
+      recognizedText: 'link words the',
+      words: [],
+      connectedSpeech: { status: 'available', summary: {}, events: modeEvents }
+    };
+    raMode.lastAssessmentSession = { sessionViewMode: 'advanced', sessionConnectedSpeechModes: ['linking'] };
+    raMode.applyConnectedSpeechModes(['reduced_words'], { announce: false });
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const headings = Array.from(document.querySelectorAll('.sc-section-header')).map((node) => node.textContent.trim());
+      if (headings.some((text) => text.startsWith('Reduced Words'))
+        && !headings.some((text) => text.startsWith('Successful Links'))) break;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    const toggledResultHeadings = Array.from(document.querySelectorAll('.sc-section-header')).map((node) => node.textContent.trim());
+    checks.resultsModeToggleRerenders = toggledResultHeadings.some((text) => text.startsWith('Reduced Words'))
+      && !toggledResultHeadings.some((text) => text.startsWith('Successful Links'))
+      && raMode.lastAssessmentSession.sessionConnectedSpeechModes.join(',') === 'reduced_words';
+
     raMode.lastAssessmentSession = { sessionViewMode: 'advanced', sessionConnectedSpeechModes: ['linking'] };
     raMode.connectedSpeechModes = new Set(['reduced_words']);
     await raMode.renderConnectedSpeechResults({ status: 'available', summary: {}, events: modeEvents }, { transcriptText: 'link words the' });

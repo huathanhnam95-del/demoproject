@@ -79,6 +79,10 @@ if not defined EMULATOR_ADMIN_EMAIL set "EMULATOR_ADMIN_EMAIL=%ADMIN_EMAIL%"
 node scripts\seed-emulator-admin.js
 echo.
 
+echo Starting Praat backend (port 8081)...
+start "Praat Backend" cmd /c ".venv\Scripts\python.exe backend\local_server\server.py"
+echo.
+
 echo Starting HTTPS server...
 echo.
 

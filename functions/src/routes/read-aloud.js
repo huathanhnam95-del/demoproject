@@ -59,7 +59,6 @@ function appendMultipartField(body, fieldName, value) {
 }
 
 function parseRawMultipartRequest(req) {
-  console.log('[ReadAloud] parseRawMultipartRequest - rawBody length:', req.rawBody ? req.rawBody.length : 'undefined', 'content-type:', req.headers?.['content-type']);
   return new Promise((resolve, reject) => {
     const body = {};
     let audioFile = null;
@@ -615,6 +614,12 @@ function getAzureWordErrorType(wordNode) {
   return String(rawErrorType || 'None');
 }
 
+function getAzureWordTimingMs(wordNode, fieldName) {
+  if (!wordNode || typeof wordNode !== 'object' || !fieldName) return null;
+  const numeric = Number(wordNode[fieldName]);
+  return Number.isFinite(numeric) ? numeric / 10000 : null;
+}
+
 function collectAzurePronunciationScores(nbest) {
   const scores = [];
   ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'PronScore'].forEach((fieldName) => {
@@ -724,11 +729,17 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
     const pronScore = normalizeRoundedAzureScore(nbest, 'PronScore');
 
     // Process words to return to frontend
-    const words = (nbest.Words || []).map(word => ({
-      word: word.Word,
-      accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore') || 0,
-      errorType: getAzureWordErrorType(word)
-    }));
+    const words = (nbest.Words || []).map(word => {
+      const startMs = getAzureWordTimingMs(word, 'Offset');
+      const durationMs = getAzureWordTimingMs(word, 'Duration');
+      return {
+        word: word.Word,
+        accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore') || 0,
+        errorType: getAzureWordErrorType(word),
+        startMs,
+        endMs: startMs != null && durationMs != null ? startMs + durationMs : null
+      };
+    });
 
     const connectedSpeechPromise = questionId
       ? callConnectedSpeechAnalysis({

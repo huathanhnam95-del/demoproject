@@ -996,3 +996,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 599,2026-08-10,Fix disconnected pitch line (spanGaps) and vowel duration truncation (backend gap-splitting + frontend measurement boundaries),Done,2026-08-10
 600,2026-08-09,Fix Speech Coach layout collisions - stacked card headers and overflow handling,Done,2026-08-09
 601,2026-08-10,Review and deploy V1.8.57 release to production,Done,2026-08-10
+602,2026-08-10,CRM Enquiry: remove Templates/Automations sections and refactor Source field (move below Zalo; blank default + required; add Zalo+Personal option),Done,2026-08-10
+603,2026-08-10,Fix Speech Coach: re-render analysis when mode toggled in RESULTS state,Done,2026-08-10
+604,2026-08-10,Fix Speech Coach: word-click audio playback and word-to-audio alignment for hyphenated reference text,Done,2026-08-10
+605,2026-08-10,Review harden and release all V1.8.59 uncommitted changes to production,Done,2026-08-10
+606,2026-08-10,Fix picker bar gradient bleed — make ra-v7-picker-bar background fully opaque across all modes,Done,2026-08-10

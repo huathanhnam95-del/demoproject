@@ -339,7 +339,6 @@
     elements.leadTaskSection = document.getElementById('lead-task-section');
     elements.leadActivitySection = document.getElementById('lead-activity-section');
     elements.leadEntranceTestSection = document.getElementById('lead-entrance-test-section');
-    elements.leadTemplatesAutomations = document.getElementById('lead-templates-automations');
     elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
     elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
     elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
@@ -360,16 +359,6 @@
     elements.btnOpenLeadEntranceTestLink = document.getElementById('btn-open-lead-entrance-test-link');
     elements.leadEntranceTestLinkNote = document.getElementById('lead-entrance-test-link-note');
     elements.leadEntranceTestsList = document.getElementById('lead-entrance-tests-list');
-    elements.inputTemplateName = document.getElementById('template-name');
-    elements.inputTemplateChannel = document.getElementById('template-channel');
-    elements.inputTemplateSubject = document.getElementById('template-subject');
-    elements.inputTemplateBody = document.getElementById('template-body');
-    elements.btnCreateTemplate = document.getElementById('btn-create-template');
-    elements.inputRuleName = document.getElementById('rule-name');
-    elements.inputRuleTriggerType = document.getElementById('rule-trigger-type');
-    elements.inputRuleTemplateId = document.getElementById('rule-template-id');
-    elements.btnCreateRule = document.getElementById('btn-create-rule');
-    elements.automationList = document.getElementById('automation-list');
     elements.dashboardSummaryCards = document.getElementById('dashboard-summary-cards');
     elements.dashboardFunnel = document.getElementById('dashboard-funnel');
     elements.dashboardRevenue = document.getElementById('dashboard-revenue');
@@ -2196,7 +2185,7 @@
 
     const val = String(inputLeadSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
-    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal';
+    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
     const isAgent = val === 'Agent';
 
     if (groupUrl) {
@@ -2233,7 +2222,7 @@
 
     const val = String(inputStudentSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
-    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal';
+    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
     const isAgent = val === 'Agent';
 
     if (groupUrl) {
@@ -2282,7 +2271,7 @@
     if (elements.inputSalutationMr) elements.inputSalutationMr.checked = false;
     if (elements.inputSalutationMs) elements.inputSalutationMs.checked = false;
     if (elements.inputLeadSource) {
-      elements.inputLeadSource.value = 'Facebook - Personal';
+      elements.inputLeadSource.value = '';
     }
     if (elements.inputLeadFacebookPersonalOwner) {
       elements.inputLeadFacebookPersonalOwner.value = 'Nam';
@@ -2672,23 +2661,6 @@
       });
     }
 
-    if (elements.btnCreateTemplate) {
-      elements.btnCreateTemplate.addEventListener('click', () => {
-        createCommunicationTemplate().catch((error) => {
-          console.error('[CRM Admin] Create template failed:', error);
-          showToast(error?.message || 'Failed to create template.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateRule) {
-      elements.btnCreateRule.addEventListener('click', () => {
-        createAutomationRule().catch((error) => {
-          console.error('[CRM Admin] Create automation rule failed:', error);
-          showToast(error?.message || 'Failed to create automation rule.', 'error');
-        });
-      });
-    }
 
     if (elements.btnCreateMergeJob) {
       elements.btnCreateMergeJob.addEventListener('click', () => {
@@ -2809,6 +2781,13 @@
       throw new Error('Lead helpers are not available.');
     }
 
+    const sourceVal = elements.inputLeadSource ? elements.inputLeadSource.value : '';
+    if (!sourceVal) {
+      showToast('Source is required.', 'error');
+      if (elements.inputLeadSource) elements.inputLeadSource.focus();
+      return;
+    }
+
     const payload = window.CrmLeads.buildPayload(elements);
 
     if (elements.btnSaveLead) {
@@ -2853,7 +2832,7 @@
     }
 
     if (window.CrmLeads && typeof window.CrmLeads.applyToForm === 'function') {
-      window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: 'Facebook - Personal', facebookPersonalOwner: 'Nam' });
+      window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: '', facebookPersonalOwner: 'Nam' });
     }
     if (elements.leadComposer) elements.leadComposer.style.display = '';
 
@@ -2884,6 +2863,13 @@
   }
 
   async function saveLeadFromModal() {
+    const sourceVal = String(elements.inputLeadSource?.value || '').trim();
+    if (!sourceVal) {
+      showToast('Source is required.', 'error');
+      elements.inputLeadSource?.focus();
+      return;
+    }
+
     const payload = window.CrmLeads ? window.CrmLeads.buildPayload(elements) : {};
     if (!window.CrmLeads) {
       throw new Error('Lead helpers are not available.');
@@ -3401,7 +3387,6 @@
     // Hide non-test sections — only show Entrance Tests
     if (elements.leadTaskSection) elements.leadTaskSection.style.display = 'none';
     if (elements.leadActivitySection) elements.leadActivitySection.style.display = 'none';
-    if (elements.leadTemplatesAutomations) elements.leadTemplatesAutomations.style.display = 'none';
     if (elements.leadWorkspaceTitle) {
       elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
     }
@@ -3739,19 +3724,6 @@
     }
   }
 
-  async function createCommunicationTemplate() {
-    if (communicationsController && typeof communicationsController.createCommunicationTemplate === 'function') {
-      return communicationsController.createCommunicationTemplate();
-    }
-    throw new Error('Communications workspace controller is unavailable.');
-  }
-
-  async function createAutomationRule() {
-    if (communicationsController && typeof communicationsController.createAutomationRule === 'function') {
-      return communicationsController.createAutomationRule();
-    }
-    throw new Error('Communications workspace controller is unavailable.');
-  }
 
   async function refreshDashboard() {
     if (dashboardController && typeof dashboardController.refreshDashboard === 'function') {

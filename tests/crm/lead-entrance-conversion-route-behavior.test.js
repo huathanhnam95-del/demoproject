@@ -27,6 +27,27 @@ function createCrmRouter(db) {
     return router;
 }
 
+async function testLeadCreationRequiresSource() {
+    const db = createFakeDb();
+    const router = createCrmRouter(db);
+
+    const response = await callRoute(router, '/leads', 'post', {
+        body: {
+            name: 'Lead Without Source',
+            source: '   '
+        }
+    });
+
+    assert.strictEqual(response._status, 400);
+    assert.strictEqual(response._json.error, 'VALIDATION_ERROR');
+    assert.strictEqual(response._json.message, 'Lead source is required.');
+    assert.strictEqual(
+        Array.from(db.docs.keys()).some((key) => key.startsWith(`${CRM_LEADS}/`)),
+        false,
+        'Blank-source lead creation must not write a lead document.'
+    );
+}
+
 async function testLeadEntranceTestConversionKeepsLinkedRecords() {
     const db = createFakeDb({
         [`${CRM_LEADS}/lead-1`]: {
@@ -123,6 +144,7 @@ async function testLeadEntranceTestConversionKeepsLinkedRecords() {
 }
 
 (async () => {
+    await testLeadCreationRequiresSource();
     await testLeadEntranceTestConversionKeepsLinkedRecords();
     process.stdout.write('lead entrance conversion route behavior passed\n');
 })().catch((error) => {

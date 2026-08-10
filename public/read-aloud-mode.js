@@ -2344,6 +2344,23 @@ class ReadAloudMode {
       this.announceLinkingStatus(this.getConnectedSpeechAnnouncement());
     }
     this.renderPromptForCurrentView();
+
+    if (this.state === 'RESULTS' && this.lastAssessmentPayload?.connectedSpeech) {
+      if (this.lastAssessmentSession) {
+        this.lastAssessmentSession.sessionConnectedSpeechModes = [...next];
+      }
+      this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
+        transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
+        words: this.lastAssessmentPayload.words || [],
+        metrics: {
+          fluencyScore: this.lastAssessmentPayload.fluencyScore,
+          completenessScore: this.lastAssessmentPayload.completenessScore,
+          pronScore: this.lastAssessmentPayload.pronScore
+        },
+        sessionViewMode: this.getEffectiveViewMode(),
+        sessionConnectedSpeechModes: [...next]
+      });
+    }
   }
 
   isConnectedSpeechEnabled() {

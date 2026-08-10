@@ -58,6 +58,7 @@ function main() {
         ['node', ['tests/crm/crm-shell-static.test.js']],
         ['node', ['tests/crm/admin-scheduling-route-behavior.test.js']],
         ['node', ['tests/crm/lead-entrance-conversion-route-behavior.test.js']],
+        ['node', ['tests/crm/public-entrance-test-link-retention.test.js']],
         ['node', ['tests/crm/local-admin-entrance-tests.test.js']],
         ['node', ['tests/crm/homework-service.test.js']],
         ['node', ['tests/crm/live-session-service.test.js']],

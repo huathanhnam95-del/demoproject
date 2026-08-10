@@ -44,6 +44,9 @@ module.exports = function registerLeadRoutes(router, deps) {
 
     router.post('/leads', ...requireAdminHandlers, async (req, res) => {
         try {
+            if (!String(req.body?.source || '').trim()) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Lead source is required.');
+            }
             const allocation = await allocateNextCrmId(db, { serverTimestamp });
             const lead = buildLeadCreateData(req.body || {}, {
                 user: req.user,

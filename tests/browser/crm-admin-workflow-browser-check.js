@@ -724,6 +724,7 @@ async function main() {
     assert.strictEqual(await page.locator('#lead-composer').isVisible(), true, 'Opening another new lead must restore the full lead Info form.');
     assert.strictEqual(await page.locator('#lead-name').isVisible(), true);
     assert.strictEqual(await page.inputValue('#lead-name'), '');
+    assert.strictEqual(await page.inputValue('#lead-source'), '', 'Opening a new lead must require an explicit source choice.');
     assert.strictEqual(
       await page.locator('#crm-student-modal .crm-modal-content').evaluate((element) => element.scrollTop),
       0,
@@ -731,6 +732,16 @@ async function main() {
     );
     assert.strictEqual(await page.locator('#btn-save-lead').isVisible(), true);
     assert.strictEqual(await page.locator('#btn-save-student').isVisible(), false);
+    const leadCreateCountBeforeBlankSave = requestLog.filter((entry) => entry.path === '/api/admin/leads' && entry.method === 'POST').length;
+    await page.click('#btn-save-lead');
+    await page.waitForFunction(() => /source is required/i.test(document.querySelector('.crm-toast')?.textContent || ''));
+    assert.strictEqual(
+      requestLog.filter((entry) => entry.path === '/api/admin/leads' && entry.method === 'POST').length,
+      leadCreateCountBeforeBlankSave,
+      'Blank source must not create a lead.'
+    );
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.id || ''), 'lead-source', 'Blank source rejection must focus the source field.');
+    await page.selectOption('#lead-source', 'Zalo + Personal');
     await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
     await page.fill('#score-overall', '79');
     await page.fill('#score-listening', '78');

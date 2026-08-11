@@ -1011,4 +1011,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 614,2026-08-11,CRM Books Study Module - fix 5 audit findings (chunk fallback / list rendering / button state / regeneration / Firestore notes),Done,2026-08-11
 615,2026-08-11,MCMA/MCSA explanation panels - redesign as DD/RFIB-style cards with resize handles and font size controls,Done,2026-08-11
 616,2026-08-11,SWT layout change from side-by-side split to stacked (source text on top - compose below),Done,2026-08-11
-617,2026-08-11,Review and push all current changes to production,In Progress,
+617,2026-08-11,Review and push all current changes to production,Done,2026-08-11

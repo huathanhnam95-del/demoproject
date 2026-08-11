@@ -3918,27 +3918,84 @@ body {
 .crm-books-notes-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 .crm-books-note-card {
   background: var(--books-surface-dim);
   border: 1px solid var(--books-border);
   border-radius: var(--books-radius-sm);
-  padding: 14px;
+  overflow: hidden;
+  transition: border-color 0.15s;
 }
-.crm-books-note-card-text {
-  font-size: 0.92em;
-  line-height: 1.6;
-  color: var(--books-text);
-  white-space: pre-wrap;
+.crm-books-note-card.open {
+  border-color: var(--books-accent, #6366f1);
 }
-.crm-books-note-card-meta {
-  margin-top: 10px;
+.crm-books-note-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.75em;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.crm-books-note-header:hover {
+  background: var(--books-surface-hover, rgba(0,0,0,0.03));
+}
+.crm-books-note-chevron {
+  flex-shrink: 0;
+  font-size: 0.8em;
   color: var(--books-text-muted);
+  width: 14px;
+  text-align: center;
+}
+.crm-books-note-header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.crm-books-note-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--books-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+.crm-books-note-time {
+  font-size: 0.72em;
+  color: var(--books-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.crm-books-note-preview {
+  padding: 0 12px 10px 34px;
+  font-size: 0.8em;
+  line-height: 1.5;
+  color: var(--books-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crm-books-note-body {
+  padding: 4px 14px 14px 34px;
+  font-size: 0.88em;
+  line-height: 1.7;
+  color: var(--books-text);
+  border-top: 1px solid var(--books-border);
+}
+.crm-books-note-body h2,
+.crm-books-note-body h3,
+.crm-books-note-body h4 {
+  margin-top: 12px;
+}
+.crm-books-note-body h2:first-child,
+.crm-books-note-body h3:first-child,
+.crm-books-note-body h4:first-child {
+  margin-top: 8px;
 }
 .crm-books-note-delete-btn {
   background: none;
@@ -3946,10 +4003,13 @@ body {
   cursor: pointer;
   color: var(--books-text-muted);
   font-size: 1em;
-  padding: 0 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  border-radius: 4px;
 }
 .crm-books-note-delete-btn:hover {
   color: var(--books-danger);
+  background: rgba(239,68,68,0.08);
 }
 .crm-books-notes-empty {
   text-align: center;
@@ -4379,3 +4439,244 @@ body {
     max-width: 100%;
   }
 }
+
+/* ==========================================================================
+   CRM Books Fullscreen Mind Map Modal & Interactive Node Styling
+   ========================================================================== */
+.crm-books-mindmap-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  color: #f8fafc;
+  font-family: inherit;
+}
+
+.crm-mindmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: rgba(30, 41, 59, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 10;
+}
+
+.crm-mindmap-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crm-mindmap-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.crm-mindmap-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.crm-mindmap-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-mindmap-body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+
+.crm-mindmap-viewport {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+}
+
+.crm-mindmap-viewport.is-panning {
+  cursor: grabbing;
+}
+
+.crm-mindmap-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.crm-mindmap-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3000px;
+  height: 2000px;
+  transform-origin: 0 0;
+  z-index: 2;
+  transition: transform 0.04s ease-out;
+}
+
+/* Node Elements */
+.crm-mindmap-node {
+  position: absolute;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #1e293b;
+  border: 2px solid var(--node-color, #4f46e5);
+  color: #f8fafc;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-sizing: border-box;
+}
+
+.crm-mindmap-node:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+  z-index: 20;
+}
+
+.crm-mindmap-node.central {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #93c5fd;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.15rem;
+  text-align: center;
+  padding: 18px 28px;
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+.crm-mindmap-node.category {
+  background: rgba(30, 41, 59, 0.95);
+  font-weight: 700;
+  font-size: 0.98rem;
+  border-width: 2px;
+}
+
+.crm-mindmap-node.subtopic {
+  background: rgba(15, 23, 42, 0.92);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  border-width: 1px;
+}
+
+.crm-mindmap-node-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.crm-mindmap-node-summary {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+/* Slide-over Inspector Drawer */
+.crm-mindmap-inspector {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  height: 100%;
+  background: #0f172a;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f1f5f9;
+  padding: 24px;
+  box-shadow: -12px 0 36px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  animation: mindmapDrawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mindmapDrawerSlide {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.crm-mindmap-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crm-mindmap-inspector-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--node-color, #4f46e5);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.crm-mindmap-inspector-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  color: #ffffff;
+}
+
+.crm-mindmap-inspector-summary {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.crm-mindmap-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
+.crm-mindmap-inspector-section h4 {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+}
+
+.crm-mindmap-inspector-fulltext {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 420px;
+  overflow-y: auto;
+}
+

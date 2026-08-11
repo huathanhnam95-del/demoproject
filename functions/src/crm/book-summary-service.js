@@ -317,18 +317,111 @@ async function generateChapterStudyNotes(db, bookId, sectionIndex) {
     return studyNotes;
 }
 
+function buildMindMapPrompt(notes, bookTitle) {
+    const notesText = notes.map((n, idx) => `[Note #${idx + 1} | ID: ${n.id} | Saved: ${n.savedAt ? new Date(n.savedAt).toISOString() : 'N/A'}]\n${n.text}`).join('\n\n---\n\n');
+
+    return `You are an expert educational synthesizer creating an interactive Mind Map for user notes from the book "${bookTitle || 'Book'}".
+
+Analyze and group the following user notes into coherent, logical themes and subtopics.
+
+USER NOTES:
+${notesText}
+
+INSTRUCTIONS:
+1. Synthesize all notes into a high-level central concept.
+2. Group the notes into 3 to 6 major categories / themes. Choose distinct color hex codes for each category (e.g. #4f46e5, #059669, #d97706, #dc2626, #7c3aed, #0891b2).
+3. Inside each category, break down into logical subtopics / note blocks. Each subtopic should reference the relevant noteId(s) from the provided notes, provide a clear concise title, a 1-2 sentence summary, and the full representative note text.
+4. Ensure every note is organized into at least one relevant theme.
+
+Return a JSON object with this exact structure:
+{
+  "centralTopic": "Overall Mind Map Title (e.g. Core Concepts of ${bookTitle || 'Book'})",
+  "summary": "Brief 1-2 sentence summary synthesizing the collected notes",
+  "categories": [
+    {
+      "id": "cat_1",
+      "title": "Category Name",
+      "color": "#4f46e5",
+      "subtopics": [
+        {
+          "id": "sub_1_1",
+          "title": "Subtopic/Concept Title",
+          "summary": "Brief summary of key insight",
+          "noteIds": ["note_123"],
+          "fullText": "Full note text or combined note content"
+        }
+      ]
+    }
+  ]
+}`;
+}
+
+async function generateBookMindMap(db, bookId, force = false) {
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    if (!bookSnap.exists) {
+        throw new Error(`Book ${bookId} not found`);
+    }
+    const bookData = bookSnap.data() || {};
+
+    if (!force) {
+        const existing = await db.collection(CRM_BOOKS).doc(bookId)
+            .collection('artifacts').doc('mind_map').get();
+        if (existing.exists) {
+            return existing.data();
+        }
+    }
+
+    const notesSnap = await db.collection(CRM_BOOKS).doc(bookId)
+        .collection('user_notes')
+        .orderBy('savedAt', 'desc')
+        .limit(200)
+        .get();
+
+    const notes = notesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (notes.length === 0) {
+        throw new Error('No saved notes found for this book. Save some notes first to generate a Mind Map.');
+    }
+
+    const models = getModels();
+    const prompt = buildMindMapPrompt(notes, bookData.title || '');
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'mind_map', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed for mind map:', err?.message));
+
+    const mindMap = {
+        bookId,
+        bookTitle: bookData.title || '',
+        centralTopic: json.centralTopic || `Mind Map: ${bookData.title || 'Book Notes'}`,
+        summary: json.summary || '',
+        categories: Array.isArray(json.categories) ? json.categories : [],
+        noteCount: notes.length,
+        model,
+        generatedAt: new Date()
+    };
+
+    await db.collection(CRM_BOOKS).doc(bookId)
+        .collection('artifacts').doc('mind_map')
+        .set(mindMap);
+
+    return mindMap;
+}
+
 module.exports = {
     groupChunksIntoSections,
     summarizeSection,
     reduceSummary,
     generateChapterStudyNotes,
+    generateBookMindMap,
     buildMapPrompt,
     buildReducePrompt,
     buildStudyNotesPrompt,
+    buildMindMapPrompt,
     extractUsage,
     generateWithFallback,
     SECTION_TARGET_CHARS,
     DEFAULT_MODEL,
     FALLBACK_MODEL
 };
+
 

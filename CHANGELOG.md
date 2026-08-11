@@ -1,4 +1,10 @@
+## [V1.8.61] - 2026-08-11
+
+### Added & Enhanced
+- **CRM Books Mind Map**: Added an interactive "Create Mind Map" feature to the CRM Books Notes section. Synthesizes saved user notes into a coherent concept hierarchy using AI (Gemini), rendered inside a glassmorphic fullscreen SVG modal with zoom, pan, expand/collapse, and full note inspector drawer.
+
 ## [V1.8.60] - 2026-08-11
+
 
 ### Added & Enhanced
 - **RFIB Practice Mode**: Added explicit missing answer indicators when blanks are unchosen, enhanced answer visibility styling and feedback card rendering, and locked RFIB audio behind the Check button with a blurred overlay until submitted.

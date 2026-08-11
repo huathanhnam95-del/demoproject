@@ -6,10 +6,11 @@ const {
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
-const { generateChapterStudyNotes } = require('../../crm/book-summary-service');
+const { generateChapterStudyNotes, generateBookMindMap } = require('../../crm/book-summary-service');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
 const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
+
 
 
 function cleanStr(value, fallback = '') {
@@ -213,6 +214,35 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendError(res, 500, 'GENERATE_STUDY_NOTES_ERROR', 'Failed to generate study notes.', error?.message || error);
         }
     });
+
+    router.post('/books/:bookId/mind-map', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const force = req.body?.force === true;
+            if (!bookId) {
+                return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
+            }
+
+            const usage = await getUsageSummary(db);
+            if (usage && usage.isOverBudget && !usage.overageApproved) {
+                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
+            }
+
+            const mindMap = await generateBookMindMap(db, bookId, force);
+
+            await writeAuditLog?.({
+                action: 'book.mind_map_generated',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { centralTopic: mindMap.centralTopic, noteCount: mindMap.noteCount }
+            }, { user: req.user });
+
+            return sendSuccess(res, { mindMap }, 'Mind map generated successfully.');
+        } catch (error) {
+            return sendError(res, 500, 'GENERATE_MIND_MAP_ERROR', 'Failed to generate mind map.', error?.message || error);
+        }
+    });
+
 
 
     // --- Book Notes CRUD (Firestore-backed) ---

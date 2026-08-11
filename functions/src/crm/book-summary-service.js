@@ -211,15 +211,124 @@ async function reduceSummary(db, bookId) {
     return summary;
 }
 
+function buildStudyNotesPrompt(chapterChunks, sectionTitle, pageStart, pageEnd, bookTitle) {
+    const text = chapterChunks.map((c) => {
+        const pageLabel = c.pageStart === c.pageEnd ? `[page ${c.pageStart}]` : `[pages ${c.pageStart}-${c.pageEnd}]`;
+        return `${pageLabel}\n${c.text}`;
+    }).join('\n\n');
+
+    return `You are generating an exhaustive, clear, and organized set of study notes based on this chapter/section from the book "${bookTitle || 'Book'}".
+
+SECTION TITLE: "${sectionTitle}" (Pages ${pageStart}-${pageEnd})
+
+RESOURCE TEXT:
+${text}
+
+INSTRUCTIONS:
+Create a comprehensive, clear, and organized set of study notes based on the provided resource.
+Ensure that ALL key terms, concepts, nuances, and practical examples are included.
+The notes should cover definitions, detailed explanations, principles, and related examples.
+Structure the notes logically with headings and subheadings to enhance readability.
+Include detailed explanations of key terms, principles, and examples to illustrate complex ideas.
+Aim for maximum clarity, precision, and depth to help students thoroughly master the material.
+
+Return a JSON object with this exact structure:
+{
+  "title": "Comprehensive Study Notes: ${sectionTitle}",
+  "sectionIndex": ${pageStart},
+  "pageStart": ${pageStart},
+  "pageEnd": ${pageEnd},
+  "overview": "A 2-3 sentence overview of this study module",
+  "content": "Full detailed study notes formatted in GitHub-flavored Markdown. Use # for main heading, ## for sections, ### for sub-sections, bold text for key terms, blockquotes for key takeaways, and bulleted lists for examples and definitions.",
+  "keyTerms": [
+    {
+      "term": "Term or concept name",
+      "definition": "Clear, precise definition",
+      "example": "Practical example if available"
+    }
+  ]
+}`;
+}
+
+async function generateChapterStudyNotes(db, bookId, sectionIndex) {
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    if (!bookSnap.exists) {
+        throw new Error(`Book ${bookId} not found`);
+    }
+    const bookData = bookSnap.data() || {};
+
+    const sectionRef = db.collection(CRM_BOOKS).doc(bookId)
+        .collection('sections').doc(String(sectionIndex));
+    const sectionSnap = await sectionRef.get();
+    if (!sectionSnap.exists) {
+        throw new Error(`Section ${sectionIndex} not found for book ${bookId}`);
+    }
+    const sectionData = sectionSnap.data() || {};
+    const pageStart = sectionData.pageStart || 1;
+    const pageEnd = sectionData.pageEnd || 1;
+
+    const chunksSnap = await db.collection(CRM_BOOKS).doc(bookId)
+        .collection('chunks')
+        .orderBy('index')
+        .get();
+
+    const allChunks = chunksSnap.docs.map((doc) => doc.data());
+    const chapterChunks = allChunks.filter(
+        (c) => c.pageStart <= pageEnd && c.pageEnd >= pageStart
+    );
+
+    if (chapterChunks.length === 0) {
+        throw new Error(`No text chunks found for section "${sectionData.title || sectionIndex}" (pages ${pageStart}-${pageEnd}). The book may need re-ingestion.`);
+    }
+
+    const chunksToUse = chapterChunks;
+
+    const models = getModels();
+    const prompt = buildStudyNotesPrompt(
+        chunksToUse,
+        sectionData.title || `Section ${Number(sectionIndex) + 1}`,
+        pageStart,
+        pageEnd,
+        bookData.title || ''
+    );
+
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'study_module', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed for study notes:', err?.message));
+
+    const studyNotes = {
+        title: json.title || `Study Notes: ${sectionData.title || `Section ${Number(sectionIndex) + 1}`}`,
+        sectionIndex: Number(sectionIndex),
+        pageStart,
+        pageEnd,
+        overview: json.overview || '',
+        content: json.content || '',
+        keyTerms: Array.isArray(json.keyTerms) ? json.keyTerms : [],
+        model,
+        generatedAt: new Date()
+    };
+
+    await db.collection(CRM_BOOKS).doc(bookId)
+        .collection('sections').doc(String(sectionIndex))
+        .collection('artifacts').doc('study_notes')
+        .set(studyNotes);
+
+    return studyNotes;
+}
+
 module.exports = {
     groupChunksIntoSections,
     summarizeSection,
     reduceSummary,
+    generateChapterStudyNotes,
     buildMapPrompt,
     buildReducePrompt,
+    buildStudyNotesPrompt,
     extractUsage,
     generateWithFallback,
     SECTION_TARGET_CHARS,
     DEFAULT_MODEL,
     FALLBACK_MODEL
 };
+

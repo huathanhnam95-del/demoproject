@@ -857,8 +857,12 @@ window.CrmBooksWorkspace = (function () {
                     `<h4 class="crm-books-section-title"><span class="crm-books-chapter-number">${idx + 1}</span>${escapeHtml(sec.title)}${pages ? ` ${pages}` : ''}</h4>` +
                     (sec.gist ? `<p class="crm-books-chapter-gist">${escapeHtml(sec.gist)}</p>` : '') +
                     keyPointsHtml +
+                    `<div class="crm-books-section-actions" style="margin-top:12px; display:flex; gap:8px;">` +
+                    `<button type="button" class="crm-btn crm-btn-secondary crm-btn-sm crm-books-generate-notes-btn" data-section-index="${idx}">⚡ Generate Study Module</button>` +
+                    `</div>` +
                     `</div>`;
             }).join('');
+
 
             return html;
         }
@@ -1327,17 +1331,52 @@ window.CrmBooksWorkspace = (function () {
             } catch (e) {
                 console.error('Failed to save book note:', e);
             }
+            apiPost(`/api/admin/books/${bookId}/notes`, { text }).then((res) => {
+                const saved = res?.note || res?.data?.note;
+                if (saved?.id) {
+                    newNote.firestoreId = saved.id;
+                    try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(loadBookNotes(bookId).map(n => n.id === newNote.id ? newNote : n))); } catch (_) {}
+                }
+            }).catch((err) => console.error('[CRM Books] Firestore note save failed:', err));
         }
 
         function deleteBookNote(bookId, noteId) {
             if (!bookId || !noteId) return;
             let notes = loadBookNotes(bookId);
+            const target = notes.find(n => n.id === noteId);
             notes = notes.filter(n => n.id !== noteId);
             try {
                 localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(notes));
             } catch (e) {
                 console.error('Failed to delete book note:', e);
             }
+            const fsId = target?.firestoreId;
+            if (fsId) {
+                apiDelete(`/api/admin/books/${bookId}/notes/${fsId}`).catch((err) => console.error('[CRM Books] Firestore note delete failed:', err));
+            }
+        }
+
+        async function syncNotesFromFirestore(bookId) {
+            if (!bookId) return;
+            try {
+                const res = await apiGet(`/api/admin/books/${bookId}/notes`);
+                const remote = res?.notes || res?.data?.notes;
+                if (!Array.isArray(remote) || remote.length === 0) return;
+                const local = loadBookNotes(bookId);
+                const localIds = new Set(local.map(n => n.firestoreId).filter(Boolean));
+                let merged = [...local];
+                for (const rn of remote) {
+                    if (!localIds.has(rn.id)) {
+                        merged.push({ id: 'fs_' + rn.id, firestoreId: rn.id, text: rn.text, savedAt: rn.savedAt || Date.now() });
+                    }
+                }
+                merged.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(merged)); } catch (_) {}
+                if (activeTab === 'notes') {
+                    const container = qs('.crm-books-content');
+                    if (container) container.innerHTML = renderNotesTab();
+                }
+            } catch (_) {}
         }
 
         function formatMessageText(text, citations, escHtml) {
@@ -2070,6 +2109,9 @@ window.CrmBooksWorkspace = (function () {
                     if ((activeTab === 'chat' || activeTab === 'history') && threads.length === 0 && selectedBook?.status === 'ready') {
                         loadThreads().catch(console.error);
                     }
+                    if (activeTab === 'notes' && selectedBookId) {
+                        syncNotesFromFirestore(selectedBookId).catch(() => {});
+                    }
                     return;
                 }
 
@@ -2340,7 +2382,158 @@ window.CrmBooksWorkspace = (function () {
                     }
                 }
             });
+
+            // Chapter Study Notes click handler
+            panel.addEventListener('click', async (e) => {
+                const notesBtn = e.target.closest('.crm-books-generate-notes-btn');
+                if (notesBtn) {
+                    const sectionIdx = notesBtn.dataset.sectionIndex;
+                    if (sectionIdx != null && selectedBookId) {
+                        await handleGenerateOrViewStudyNotes(sectionIdx, notesBtn);
+                    }
+                }
+            });
         }
+
+        async function handleGenerateOrViewStudyNotes(sectionIndex, buttonEl, forceRegenerate = false) {
+            if (!selectedBookId) return;
+
+            const originalLabel = buttonEl.innerHTML;
+            buttonEl.disabled = true;
+            buttonEl.innerHTML = `⚡ Processing Study Notes...`;
+
+            try {
+                let studyNotes = null;
+
+                if (!forceRegenerate) {
+                    const notesRes = await apiGet(`/api/admin/books/${selectedBookId}/sections/${sectionIndex}/study-notes`);
+                    studyNotes = notesRes?.studyNotes || notesRes?.data?.studyNotes;
+                }
+
+                if (!studyNotes) {
+                    buttonEl.innerHTML = `⚡ Synthesizing Study Notes...`;
+                    const genRes = await apiPost(`/api/admin/books/${selectedBookId}/sections/${sectionIndex}/study-notes`, { force: forceRegenerate });
+                    studyNotes = genRes?.studyNotes || genRes?.data?.studyNotes;
+                }
+
+                if (studyNotes) {
+                    showStudyNotesModal(studyNotes, sectionIndex);
+                    buttonEl.innerHTML = `📖 View Study Module`;
+                } else {
+                    showToast?.('Failed to load or generate study notes.', 'error');
+                    buttonEl.innerHTML = originalLabel;
+                }
+            } catch (err) {
+                console.error('[CRM Books] Error in study notes handler:', err);
+                const msg = err?.message || 'Error generating study notes.';
+                showToast?.(msg, 'error');
+                buttonEl.innerHTML = originalLabel;
+            } finally {
+                buttonEl.disabled = false;
+            }
+        }
+
+        function showStudyNotesModal(studyNotes, sectionIndex) {
+            const existing = document.getElementById('crm-books-study-notes-modal');
+            if (existing) existing.remove();
+
+            const title = studyNotes.title || 'Comprehensive Study Notes';
+            const overview = studyNotes.overview ? `<p class="crm-books-notes-overview" style="margin-bottom:16px; padding:12px; background:var(--books-bg-card,#f8fafc); border-radius:8px;"><strong>Overview:</strong> ${escapeHtml(studyNotes.overview)}</p>` : '';
+            const content = studyNotes.content || '';
+
+            let keyTermsHtml = '';
+            if (Array.isArray(studyNotes.keyTerms) && studyNotes.keyTerms.length > 0) {
+                keyTermsHtml = `<div class="crm-books-study-keyterms" style="margin-bottom:20px;">` +
+                    `<h4 style="margin-bottom:10px; font-size:1.05em; color:var(--books-text-heading);">Key Terms & Concepts</h4>` +
+                    `<div class="crm-books-keyterms-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">` +
+                    studyNotes.keyTerms.map((kt) =>
+                        `<div class="crm-books-keyterm-card" style="padding:10px 12px; background:var(--books-bg-card,#f1f5f9); border-radius:6px; border-left:3px solid var(--books-brand,#3b82f6);">` +
+                        `<strong style="color:var(--books-brand,#2563eb);">${escapeHtml(kt.term || '')}:</strong> ${escapeHtml(kt.definition || '')}` +
+                        (kt.example ? `<br><small class="crm-muted" style="font-size:0.85em;">Example: ${escapeHtml(kt.example)}</small>` : '') +
+                        `</div>`
+                    ).join('') +
+                    `</div></div>`;
+            }
+
+            const contentHtml = formatStudyNotesMarkdown(content);
+
+            const modalHtml = `
+            <div id="crm-books-study-notes-modal" class="crm-books-modal-overlay" style="position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:20px;">
+              <div class="crm-books-modal-content crm-books-study-notes-dialog" style="background:var(--books-bg-surface,#ffffff); border-radius:12px; max-width:860px; width:100%; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+                <div class="crm-books-modal-header" style="padding:16px 20px; border-bottom:1px solid var(--books-border,#e2e8f0); display:flex; align-items:center; justify-content:space-between;">
+                  <h3 style="margin:0; font-size:1.2em; display:flex; align-items:center; gap:8px;">⚡ ${escapeHtml(title)}</h3>
+                  <button type="button" class="crm-books-modal-close" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:var(--books-text-muted);" aria-label="Close">&times;</button>
+                </div>
+                <div class="crm-books-modal-body crm-books-study-notes-body" style="padding:20px; overflow-y:auto; flex:1; font-size:0.95em; line-height:1.6;">
+                  ${overview}
+                  ${keyTermsHtml}
+                  <div class="crm-books-study-notes-markdown" style="line-height:1.7;">${contentHtml}</div>
+                </div>
+                <div class="crm-books-modal-footer" style="padding:14px 20px; border-top:1px solid var(--books-border,#e2e8f0); display:flex; align-items:center; justify-content:flex-end; gap:10px;">
+                  <button type="button" class="crm-btn crm-btn-secondary crm-books-regenerate-notes-btn" data-section-index="${sectionIndex != null ? sectionIndex : ''}" title="Re-generate study notes from scratch">🔄 Regenerate</button>
+                  <button type="button" class="crm-btn crm-btn-secondary crm-books-copy-notes-btn">📋 Copy Notes</button>
+                  <button type="button" class="crm-btn crm-btn-primary crm-books-save-notes-btn">💾 Save to Notes</button>
+                  <button type="button" class="crm-btn crm-btn-secondary crm-books-modal-cancel">Close</button>
+                </div>
+              </div>
+            </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = document.getElementById('crm-books-study-notes-modal');
+
+            const closeModal = () => modal.remove();
+            modal.querySelector('.crm-books-modal-close').addEventListener('click', closeModal);
+            modal.querySelector('.crm-books-modal-cancel').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            modal.querySelector('.crm-books-copy-notes-btn').addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(`${title}\n\n${content}`);
+                    showToast?.('Study notes copied to clipboard!', 'info');
+                } catch (_) {
+                    showToast?.('Failed to copy to clipboard.', 'error');
+                }
+            });
+
+            modal.querySelector('.crm-books-save-notes-btn').addEventListener('click', async () => {
+                if (selectedBookId) {
+                    const noteText = `### ${title}\n\n${content}`;
+                    saveBookNote(selectedBookId, noteText);
+                    apiPost(`/api/admin/books/${selectedBookId}/notes`, { text: noteText }).catch((err) => {
+                        console.error('[CRM Books] Firestore note save failed:', err);
+                    });
+                    showToast?.('Saved study module to Notes!', 'info');
+                }
+            });
+
+            modal.querySelector('.crm-books-regenerate-notes-btn').addEventListener('click', async () => {
+                if (sectionIndex == null || !selectedBookId) return;
+                closeModal();
+                const btn = panel?.querySelector(`.crm-books-generate-notes-btn[data-section-index="${sectionIndex}"]`);
+                if (btn) {
+                    await handleGenerateOrViewStudyNotes(sectionIndex, btn, true);
+                }
+            });
+        }
+
+        function formatStudyNotesMarkdown(md) {
+            if (!md) return '';
+            let html = escapeHtml(md);
+            html = html
+                .replace(/^### (.*$)/gim, '<h4 style="margin-top:16px; margin-bottom:8px; font-size:1.1em; color:var(--books-text-heading);">$1</h4>')
+                .replace(/^## (.*$)/gim, '<h3 style="margin-top:20px; margin-bottom:10px; font-size:1.25em; border-bottom:1px solid var(--books-border,#e2e8f0); padding-bottom:4px; color:var(--books-text-heading);">$1</h3>')
+                .replace(/^# (.*$)/gim, '<h2 style="margin-top:24px; margin-bottom:12px; font-size:1.4em; color:var(--books-text-heading);">$1</h2>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^&gt; (.*$)/gim, '<blockquote style="margin:12px 0; padding:8px 14px; background:var(--books-bg-card,#f8fafc); border-left:4px solid var(--books-brand,#3b82f6); font-style:italic;">$1</blockquote>')
+                .replace(/^- (.*$)/gim, '<li style="margin-bottom:4px;">$1</li>')
+                .replace(/\n\n/g, '<br><br>');
+            html = html.replace(/(<li style="margin-bottom:4px;">.*?<\/li>(?:\s*<li style="margin-bottom:4px;">.*?<\/li>)*)/gim, (block) => {
+                return '<ul style="padding-left:20px; margin:8px 0;">' + block + '</ul>';
+            });
+            return html;
+        }
+
 
         // --- Lifecycle ---
         async function init() {

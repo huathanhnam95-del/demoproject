@@ -832,7 +832,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 449,2026-07-26,Analyze Reading Drag and Drop DD questions and design gemma explanation structure,Done,2026-07-26
 450,2026-07-26,Generate missing Kokoro audio for speak and ASQ modes and check Reading audio,Done,2026-07-26
 451,2026-07-26,Add code comments for Read Aloud settings sheet dual branching & push V1.8.30 to production,Done,2026-07-26
-452,2026-07-26,Batch generate explanations for Reading Drag and Drop DD questions using local Gemma AI,In Progress,
+452,2026-07-26,Batch generate explanations for Reading Drag and Drop DD questions using local Gemma AI,Done,2026-08-11
 453,2026-07-26,Review generated audio files and verify playback across modes,Done,2026-07-26
 454,2026-07-26,Fix Next Word button disabled bug and search filter matching in CRM admin pronunciation corpus,Done,2026-07-26
 455,2026-07-26,Fix duplicate corpus badge accumulation and spilling layout bug in CRM admin,Done,2026-07-26
@@ -878,7 +878,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 494,2026-07-28,Find top 20 words for short /ɪ/ and unstressed happy-vowel /i/ from Read Aloud bank and update markdown doc,Done,2026-07-28
 495,2026-07-28,Deploy release V1.8.42 to Firebase Hosting and Cloud Functions,Done,2026-07-28
 496,2026-07-29,Speaking modes difficulty categorization audit and fix (RA 7-factor analyzer integrated RS/ASQ/SGD/RTS done DI running),In Progress,
-497,2026-07-29,Upgrade DD explanation generator to Option B question-level 2-pass batching with cross-blank audit (851/1036 questions completed - 82.1%),In Progress,
+497,2026-07-29,Upgrade DD explanation generator to Option B question-level 2-pass batching with cross-blank audit (1036/1036 completed),Done,2026-08-11
 498,2026-07-29,Plan for an RA audit using 3 local LLMs,In Progress,
 499,2026-07-30,Upgrade RFIB explanation UI from wall-of-text to inline per-blank popovers,Done,2026-07-30
 500,2026-07-30,Add Tiktok - Personal acquisition source option and rename FB Personal Account label,Done,2026-07-30
@@ -1001,3 +1001,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 604,2026-08-10,Fix Speech Coach: word-click audio playback and word-to-audio alignment for hyphenated reference text,Done,2026-08-10
 605,2026-08-10,Review harden and release all V1.8.59 uncommitted changes to production,Done,2026-08-10
 606,2026-08-10,Fix picker bar gradient bleed — make ra-v7-picker-bar background fully opaque across all modes,Done,2026-08-10
+607,2026-08-10,Add cloud debug save button for pronunciation analyzer on production,Done,2026-08-10
+608,2026-08-10,Research and propose vowel cutoff fix for V3 forced-alignment boundaries,In Progress,
+609,2026-08-11,Fix RFIB missing answer when unchosen and enhance answer visibility,Done,2026-08-11
+610,2026-08-11,Lock RFIB audio behind Check button with blurred overlay,Done,2026-08-11
+611,2026-08-11,Fix question number in URL across all practice modes,Done,2026-08-11
+612,2026-08-11,Fix Repeat Sentence 3-step indicator status reset on Next question,Done,2026-08-11
+613,2026-08-11,CRM Books workflow enhancement exploration - chapter splitting and comprehensive note generation prompt,Done,2026-08-11
+614,2026-08-11,CRM Books Study Module - fix 5 audit findings (chunk fallback / list rendering / button state / regeneration / Firestore notes),Done,2026-08-11

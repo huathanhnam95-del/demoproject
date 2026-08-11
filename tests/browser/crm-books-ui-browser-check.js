@@ -164,6 +164,15 @@ async function main() {
                 if (requestPath === `/api/admin/books/${book.bookId}/pages`) {
                     return { totalPages: pages.length, pages };
                 }
+                if (requestPath === `/api/admin/books/${book.bookId}/notes` && method === 'POST') {
+                    return { note: { id: 'note-1', text: body.text, savedAt: Date.now() } };
+                }
+                if (requestPath === `/api/admin/books/${book.bookId}/notes` && method === 'GET') {
+                    return { notes: [] };
+                }
+                if (requestPath.startsWith(`/api/admin/books/${book.bookId}/notes/`) && method === 'DELETE') {
+                    return {};
+                }
                 throw new Error(`Unexpected Books request: ${method} ${requestPath}`);
             };
 

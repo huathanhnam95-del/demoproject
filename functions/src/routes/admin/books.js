@@ -6,9 +6,11 @@ const {
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
+const { generateChapterStudyNotes } = require('../../crm/book-summary-service');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
 const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
+
 
 function cleanStr(value, fallback = '') {
     return String(value ?? '').trim() || fallback;
@@ -149,6 +151,121 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { sections });
         } catch (error) {
             return sendError(res, 500, 'GET_SECTIONS_ERROR', 'Failed to retrieve sections.', error?.message || error);
+        }
+    });
+
+    router.get('/books/:bookId/sections/:sectionIndex/study-notes', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const sectionIndex = cleanStr(req.params.sectionIndex);
+            if (!bookId || sectionIndex === '') {
+                return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or section index.');
+            }
+
+            const docSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('sections').doc(sectionIndex)
+                .collection('artifacts').doc('study_notes').get();
+
+            if (!docSnap.exists) {
+                return sendSuccess(res, { studyNotes: null });
+            }
+
+            return sendSuccess(res, { studyNotes: docSnap.data() });
+        } catch (error) {
+            return sendError(res, 500, 'GET_STUDY_NOTES_ERROR', 'Failed to retrieve study notes.', error?.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/sections/:sectionIndex/study-notes', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const sectionIndex = cleanStr(req.params.sectionIndex);
+            const force = req.body?.force === true;
+            if (!bookId || sectionIndex === '') {
+                return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or section index.');
+            }
+
+            if (!force) {
+                const existing = await db.collection(CRM_BOOKS).doc(bookId)
+                    .collection('sections').doc(sectionIndex)
+                    .collection('artifacts').doc('study_notes').get();
+                if (existing.exists) {
+                    return sendSuccess(res, { studyNotes: existing.data() }, 'Study notes already exist. Use force:true to regenerate.');
+                }
+            }
+
+            const usage = await getUsageSummary(db);
+            if (usage && usage.isOverBudget && !usage.overageApproved) {
+                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
+            }
+
+            const studyNotes = await generateChapterStudyNotes(db, bookId, sectionIndex);
+
+            await writeAuditLog?.({
+                action: 'book.section_study_notes_generated',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { sectionIndex, title: studyNotes.title }
+            }, { user: req.user });
+
+            return sendSuccess(res, { studyNotes }, 'Study notes generated successfully.');
+        } catch (error) {
+            return sendError(res, 500, 'GENERATE_STUDY_NOTES_ERROR', 'Failed to generate study notes.', error?.message || error);
+        }
+    });
+
+
+    // --- Book Notes CRUD (Firestore-backed) ---
+    router.get('/books/:bookId/notes', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
+
+            const snap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('user_notes')
+                .orderBy('savedAt', 'desc')
+                .limit(200)
+                .get();
+
+            const notes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return sendSuccess(res, { notes });
+        } catch (error) {
+            return sendError(res, 500, 'GET_NOTES_ERROR', 'Failed to retrieve notes.', error?.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/notes', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const text = cleanStr(req.body?.text);
+            if (!bookId || !text) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID or note text.');
+
+            const noteData = {
+                text,
+                savedAt: Date.now(),
+                createdAt: new Date()
+            };
+            const docRef = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('user_notes').add(noteData);
+
+            return sendSuccess(res, { note: { id: docRef.id, ...noteData } }, 'Note saved.');
+        } catch (error) {
+            return sendError(res, 500, 'SAVE_NOTE_ERROR', 'Failed to save note.', error?.message || error);
+        }
+    });
+
+    router.delete('/books/:bookId/notes/:noteId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const noteId = cleanStr(req.params.noteId);
+            if (!bookId || !noteId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or note ID.');
+
+            await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('user_notes').doc(noteId).delete();
+
+            return sendSuccess(res, {}, 'Note deleted.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_NOTE_ERROR', 'Failed to delete note.', error?.message || error);
         }
     });
 

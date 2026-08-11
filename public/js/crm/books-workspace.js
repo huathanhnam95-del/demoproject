@@ -1335,9 +1335,9 @@ window.CrmBooksWorkspace = (function () {
                 const saved = res?.note || res?.data?.note;
                 if (saved?.id) {
                     newNote.firestoreId = saved.id;
-                    try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(loadBookNotes(bookId).map(n => n.id === newNote.id ? newNote : n))); } catch (_) {}
+                    try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(loadBookNotes(bookId).map(n => n.id === newNote.id ? newNote : n))); } catch (err) { void err; }
                 }
-            }).catch((err) => console.error('[CRM Books] Firestore note save failed:', err));
+            }).catch(() => {});
         }
 
         function deleteBookNote(bookId, noteId) {
@@ -1348,11 +1348,11 @@ window.CrmBooksWorkspace = (function () {
             try {
                 localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(notes));
             } catch (e) {
-                console.error('Failed to delete book note:', e);
+                void e;
             }
             const fsId = target?.firestoreId;
             if (fsId) {
-                apiDelete(`/api/admin/books/${bookId}/notes/${fsId}`).catch((err) => console.error('[CRM Books] Firestore note delete failed:', err));
+                apiDelete(`/api/admin/books/${bookId}/notes/${fsId}`).catch(() => {});
             }
         }
 
@@ -1371,12 +1371,12 @@ window.CrmBooksWorkspace = (function () {
                     }
                 }
                 merged.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
-                try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(merged)); } catch (_) {}
+                try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(merged)); } catch (err) { void err; }
                 if (activeTab === 'notes') {
                     const container = qs('.crm-books-content');
                     if (container) container.innerHTML = renderNotesTab();
                 }
-            } catch (_) {}
+            } catch (err) { void err; }
         }
 
         function formatMessageText(text, citations, escHtml) {

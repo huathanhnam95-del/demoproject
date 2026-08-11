@@ -539,41 +539,115 @@
   color: var(--lmcsa-muted);
 }
 
-/* Explanation Panel accordion styling */
+/* Explanation Panel — warm card inspired by DD/RFIB popovers */
 .lmcsa-explanation-panel {
-  margin-top: 6px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .lmcsa-explanation-card {
-  padding: 24px;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-  border: 1px solid rgba(37, 99, 235, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.02);
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8ed 100%);
+  border: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.22);
+  border-radius: var(--read-radius-container, 14px);
+  box-shadow:
+    0 12px 40px rgba(42, 31, 18, 0.10),
+    0 2px 8px rgba(42, 31, 18, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  resize: both;
+  min-width: 280px;
+  min-height: 160px;
 }
 
 .lmcsa-explanation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid rgba(110, 84, 54, 0.1);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.lmcsa-explanation-title {
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   color: var(--lmcsa-accent);
-  font-size: 0.96rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 12px;
-  border-bottom: 1px dashed rgba(37, 99, 235, 0.2);
-  padding-bottom: 6px;
+}
+
+.lmcsa-explanation-font-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lmcsa-explanation-font-btn {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(237, 242, 254, 0.5);
+  color: var(--lmcsa-accent);
+  font-weight: 700;
+  font-size: 0.78rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms, border-color 120ms;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.lmcsa-explanation-font-btn:hover {
+  background: rgba(237, 242, 254, 0.9);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.lmcsa-explanation-font-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lmcsa-explanation-font-label {
+  font-size: 0.68rem;
+  color: var(--lmcsa-muted);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  min-width: 28px;
+  text-align: center;
+}
+
+.lmcsa-explanation-body {
+  padding: 14px 16px 16px;
+  overflow-y: auto;
+  flex: 1 1 auto;
 }
 
 .lmcsa-explanation-content {
   font-size: 0.96rem;
-  color: var(--lmcsa-ink);
+  color: var(--lmcsa-ink, var(--rmcsa-ink));
   line-height: 1.65;
 }
 
 .lmcsa-explanation-content p {
   margin: 0 0 12px 0;
+}
+
+.lmcsa-explanation-content ul {
+  padding-left: 1.2em;
+  margin: 0 0 10px 0;
+}
+
+.lmcsa-explanation-content li {
+  margin-bottom: 12px;
 }
 
 .lmcsa-explanation-content strong {

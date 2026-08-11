@@ -123,6 +123,7 @@
     elements.backBtn = document.getElementById('rfib-back-btn');
     elements.nextBtn = document.getElementById('rfib-next-btn');
     elements.clozeView = document.getElementById('rfib-cloze-view');
+    elements.audioCard = document.getElementById('rfib-audio-card') || elements.panel?.querySelector('.rfib-audio-card');
     elements.fullAudioPlayer = document.getElementById('rfib-full-audio-player');
     elements.fullAudioPlay = document.getElementById('rfib-full-audio-play');
     elements.fullAudioNote = document.getElementById('rfib-full-audio-note');
@@ -211,6 +212,7 @@
 
     if (elements.retryBtn) {
       elements.retryBtn.addEventListener('click', () => {
+        lockAudio();
         if (!state.currentQuestion) return;
         loadQuestionById(state.currentQuestion.id, { freshAttempt: true });
       });
@@ -957,12 +959,30 @@
     elements.clozeView.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
   }
 
+  function lockAudio() {
+    if (elements.fullAudioPlayer) {
+      elements.fullAudioPlayer.pause();
+    }
+    const card = elements.audioCard || document.getElementById('rfib-audio-card');
+    if (card) {
+      card.classList.add('is-locked');
+    }
+  }
+
+  function unlockAudio() {
+    const card = elements.audioCard || document.getElementById('rfib-audio-card');
+    if (card) {
+      card.classList.remove('is-locked');
+    }
+  }
+
   function clearResultBox() {
     if (!elements.resultBox) return;
     elements.resultBox.innerHTML = '';
     elements.resultBox.classList.remove('is-visible');
     removeHintButtons();
     resetActionButtons();
+    lockAudio();
   }
 
   /** Pre-grade action bar: Check and Easy Reading only. */
@@ -1131,6 +1151,7 @@
   }
 
   async function playAudio(variant) {
+    if (variant === 'full' && elements.audioCard?.classList.contains('is-locked')) return;
     const audio = variant === 'full' ? elements.fullAudioPlayer : elements.supportAudioPlayer;
     if (!audio || !audio.src) return;
     try {
@@ -1168,6 +1189,7 @@
     const isPerfect = total > 0 && correct === total;
 
     applyBlankClasses(results);
+    unlockAudio();
 
     // Load enrichment metadata for explanations
     const metadata = getReviewMetadata(state.currentQuestion.id) || await loadReviewMetadata().then(() => getReviewMetadata(state.currentQuestion.id));
@@ -1197,8 +1219,8 @@
       // Remove any leftover hint elements from a previous Check
       wrapper.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
 
-      // Show correct answer label for incorrect blanks (only if user actually picked something)
-      if (!result.isCorrect && result.userAnswer) {
+      // Show correct answer label for incorrect or unchosen blanks
+      if (!result.isCorrect) {
         const correctLabel = document.createElement('span');
         correctLabel.className = 'rfib-correct-label is-visible';
         correctLabel.textContent = `→ ${result.displayAnswer || result.correctAnswer}`;
@@ -1335,6 +1357,11 @@
 
     renderCurrentQuestion({ freshAttempt: false });
     updateQuestionButtons();
+
+    // Update URL with current question ID (replaceState — no history entry per question)
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('rfib', state.currentQuestion.id);
+    }
   }
 
   function reset() {

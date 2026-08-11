@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.59</div>
+  <div id="version-indicator" class="version-indicator">V1.8.60</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2771,7 +2771,11 @@
             <h2>Fill in the Blanks (Dropdown)</h2>
             <p>Fill each blank with the best option, then review Beginner or Intermediate support if you need it.</p>
           </div>
-          <div class="rfib-audio-card">
+          <div class="rfib-audio-card is-locked" id="rfib-audio-card">
+            <div class="rfib-audio-lock-overlay" id="rfib-audio-lock-overlay">
+              <span class="rfib-audio-lock-icon">🔒</span>
+              <span class="rfib-audio-lock-text">Check answer to unlock audio</span>
+            </div>
             <div class="rfib-audio-head">
               <span class="rfib-audio-title">Original audio</span>
               <span id="rfib-full-audio-note" class="rfib-audio-note">Full passage audio</span>
@@ -2977,12 +2981,21 @@
         <!-- Correction summary will be shown here -->
       </div>
 
-      <!-- Accordion Explanation Panel -->
+      <!-- Explanation Panel — DD/RFIB-style warm card -->
       <div id="rmcma-explanation-panel" class="rmcma-explanation-panel" style="display: none;">
         <div class="rmcma-explanation-card">
-          <div class="rmcma-explanation-header">Detailed Explanation</div>
-          <div id="rmcma-explanation-content" class="rmcma-explanation-content">
-            <!-- HTML Explanation will be populated here -->
+          <div class="rmcma-explanation-header">
+            <span class="rmcma-explanation-title">Detailed Explanation</span>
+            <div class="rmcma-explanation-font-controls">
+              <button type="button" class="rmcma-explanation-font-btn" id="rmcma-font-decrease" aria-label="Decrease font size">A-</button>
+              <span class="rmcma-explanation-font-label" id="rmcma-font-label">100%</span>
+              <button type="button" class="rmcma-explanation-font-btn" id="rmcma-font-increase" aria-label="Increase font size">A+</button>
+            </div>
+          </div>
+          <div class="rmcma-explanation-body">
+            <div id="rmcma-explanation-content" class="rmcma-explanation-content">
+              <!-- HTML Explanation will be populated here -->
+            </div>
           </div>
         </div>
       </div>
@@ -3078,12 +3091,21 @@
         <!-- Correction summary will be shown here -->
       </div>
 
-      <!-- Accordion Explanation Panel -->
+      <!-- Explanation Panel — DD/RFIB-style warm card -->
       <div id="rmcsa-explanation-panel" class="rmcsa-explanation-panel" style="display: none;">
         <div class="rmcsa-explanation-card">
-          <div class="rmcsa-explanation-header">Detailed Explanation</div>
-          <div id="rmcsa-explanation-content" class="rmcsa-explanation-content">
-            <!-- HTML Explanation will be populated here -->
+          <div class="rmcsa-explanation-header">
+            <span class="rmcsa-explanation-title">Detailed Explanation</span>
+            <div class="rmcsa-explanation-font-controls">
+              <button type="button" class="rmcsa-explanation-font-btn" id="rmcsa-font-decrease" aria-label="Decrease font size">A-</button>
+              <span class="rmcsa-explanation-font-label" id="rmcsa-font-label">100%</span>
+              <button type="button" class="rmcsa-explanation-font-btn" id="rmcsa-font-increase" aria-label="Increase font size">A+</button>
+            </div>
+          </div>
+          <div class="rmcsa-explanation-body">
+            <div id="rmcsa-explanation-content" class="rmcsa-explanation-content">
+              <!-- HTML Explanation will be populated here -->
+            </div>
           </div>
         </div>
       </div>
@@ -3408,16 +3430,25 @@
       <!-- Score Banner -->
       <div id="lmcma-result-box" class="lmcma-result-box" role="status" aria-live="polite" style="display: none;"></div>
 
-      <!-- Accordion Explanation Panel -->
+      <!-- Explanation Panel — DD/RFIB-style warm card -->
       <div id="lmcma-explanation-panel" class="lmcma-explanation-panel" style="display: none;">
         <div class="lmcma-transcript-section" style="margin-bottom: 20px;">
           <div class="lmcma-transcript-header">Audio Transcript</div>
           <div id="lmcma-passage-text" class="lmcma-transcript-text"></div>
         </div>
         <div class="lmcma-explanation-card">
-          <div class="lmcma-explanation-header">Detailed Explanation</div>
-          <div id="lmcma-explanation-content" class="lmcma-explanation-content">
-            <!-- HTML Explanation will be populated here -->
+          <div class="lmcma-explanation-header">
+            <span class="lmcma-explanation-title">Detailed Explanation</span>
+            <div class="lmcma-explanation-font-controls">
+              <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-decrease" aria-label="Decrease font size">A-</button>
+              <span class="lmcma-explanation-font-label" id="lmcma-font-label">100%</span>
+              <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-increase" aria-label="Increase font size">A+</button>
+            </div>
+          </div>
+          <div class="lmcma-explanation-body">
+            <div id="lmcma-explanation-content" class="lmcma-explanation-content">
+              <!-- HTML Explanation will be populated here -->
+            </div>
           </div>
         </div>
       </div>
@@ -3609,16 +3640,25 @@
       <!-- Score Banner -->
       <div id="lmcsa-result-box" class="lmcsa-result-box" role="status" aria-live="polite" style="display: none;"></div>
 
-      <!-- Accordion Explanation Panel -->
+      <!-- Explanation Panel — DD/RFIB-style warm card -->
       <div id="lmcsa-explanation-panel" class="lmcsa-explanation-panel" style="display: none;">
         <div class="lmcsa-transcript-section" style="margin-bottom: 20px;">
           <div class="lmcsa-transcript-header">Audio Transcript</div>
           <div id="lmcsa-passage-text" class="lmcsa-transcript-text"></div>
         </div>
         <div class="lmcsa-explanation-card">
-          <div class="lmcsa-explanation-header">Detailed Explanation</div>
-          <div id="lmcsa-explanation-content" class="lmcsa-explanation-content">
-            <!-- HTML Explanation will be populated here -->
+          <div class="lmcsa-explanation-header">
+            <span class="lmcsa-explanation-title">Detailed Explanation</span>
+            <div class="lmcsa-explanation-font-controls">
+              <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-decrease" aria-label="Decrease font size">A-</button>
+              <span class="lmcsa-explanation-font-label" id="lmcsa-font-label">100%</span>
+              <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-increase" aria-label="Increase font size">A+</button>
+            </div>
+          </div>
+          <div class="lmcsa-explanation-body">
+            <div id="lmcsa-explanation-content" class="lmcsa-explanation-content">
+              <!-- HTML Explanation will be populated here -->
+            </div>
           </div>
         </div>
       </div>
@@ -5991,7 +6031,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.59"></script>
+  <script src="/read-aloud-mode.js?v=1.8.60"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

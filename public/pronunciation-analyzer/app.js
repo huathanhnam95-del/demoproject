@@ -12,7 +12,12 @@ import {
     hasUsableNativeContours,
     selectReferenceVariant
 } from './reference-contract.js';
-import { buildLexicalFallbackFeedback, canShowDetailedFeedback, normalizeChartSpans } from './chart-data.js';
+import {
+    buildLexicalFallbackFeedback,
+    canShowDetailedFeedback,
+    normalizeChartSpans,
+    normalizePlaybackSpans
+} from './chart-data.js';
 import { buildPronunciationSummary } from './pronunciation-summary.js';
 import {
     buildComparisonSaveMetadata,
@@ -92,6 +97,9 @@ export class PronunciationApp {
         this.localSampleTools = null;
         this.localSampleSaveButton = null;
         this.localSampleStatus = null;
+        this.cloudDebugSaveButton = null;
+        this.cloudDebugSaveStatus = null;
+        this.cloudDebugSnapshot = null;
         this._verificationAttemptState = resetAttemptState();
         this.versionComparison = null;
         this.versionComparisonView = null;
@@ -139,6 +147,7 @@ export class PronunciationApp {
         this.nativeAudioPlayer = new NativeAudioPlayer(this.audioCapture.audioContext, this.nativeAudio);
 
         this.initLocalSampleTools();
+        this.initCloudDebugSaveTools();
         this.initVersionComparisonControls();
 
         this.expectedData = {
@@ -305,6 +314,139 @@ export class PronunciationApp {
         this.clearLocalSampleSnapshot();
     }
 
+    initCloudDebugSaveTools() {
+        if (this.localSampleEnabled || !this.resultsSummary) return;
+
+        const tools = document.createElement('div');
+        tools.id = 'pa-cloud-debug-tools';
+        tools.className = 'pa-local-debug-tools';
+        tools.style.display = 'none';
+        tools.setAttribute('aria-label', 'Cloud pronunciation debugging tools');
+
+        const button = document.createElement('button');
+        button.id = 'pa-save-cloud-debug-btn';
+        button.type = 'button';
+        button.className = 'pa-btn pa-btn-local';
+        button.textContent = '☁️ Save debug sample';
+        button.title = 'Save this recording and its analysis to cloud for debugging';
+        button.disabled = true;
+
+        const status = document.createElement('span');
+        status.id = 'pa-cloud-debug-status';
+        status.className = 'pa-local-sample-status';
+        status.setAttribute('role', 'status');
+
+        tools.append(button, status);
+        this.resultsSummary.insertAdjacentElement('afterend', tools);
+
+        this.cloudDebugSaveButton = button;
+        this.cloudDebugSaveStatus = status;
+        this._cloudDebugTools = tools;
+        button.addEventListener('click', () => this.saveCloudDebugSample());
+
+        this.canUseManualReview().then((isAdmin) => {
+            if (isAdmin) tools.style.display = '';
+        });
+    }
+
+    setCloudDebugSnapshot(audioBlob, result, error = null) {
+        if (this.localSampleEnabled || !audioBlob) return;
+        this.cloudDebugSnapshot = {
+            audioBlob,
+            metadata: this.buildLocalSampleMetadata(audioBlob, result, error)
+        };
+        if (this.cloudDebugSaveButton) {
+            this.cloudDebugSaveButton.disabled = false;
+        }
+        if (this.cloudDebugSaveStatus) {
+            this.cloudDebugSaveStatus.textContent = 'Ready to save this recording for debugging.';
+            this.cloudDebugSaveStatus.dataset.state = 'ready';
+        }
+    }
+
+    clearCloudDebugSnapshot() {
+        this.cloudDebugSnapshot = null;
+        if (this.cloudDebugSaveButton) {
+            this.cloudDebugSaveButton.disabled = true;
+        }
+        if (this.cloudDebugSaveStatus) {
+            this.cloudDebugSaveStatus.textContent = '';
+            this.cloudDebugSaveStatus.dataset.state = 'idle';
+        }
+    }
+
+    buildCloudDebugMetadata(localMetadata) {
+        const word = String(localMetadata?.word || 'unknown').trim();
+        const ref = localMetadata?.reference || {};
+        const syllables = Array.isArray(localMetadata?.analysis?.observedSyllables)
+            ? localMetadata.analysis.observedSyllables : [];
+        return {
+            sampleId: localMetadata.sampleId,
+            targetWord: word,
+            referenceIpa: ref.displayIpa || ref.rawIpa || '',
+            expectedObservedCount: syllables.length,
+            targetSyllableCount: ref.syllableCount || syllables.length || 1,
+            category: 'clean',
+            speakerCohort: 'l1-vn-debug',
+            needsManualReview: true,
+            reviewReason: 'cloud-debug-save',
+            automaticSegments: syllables
+                .filter((s) => Number.isFinite(s?.startTime) && Number.isFinite(s?.endTime))
+                .map((s) => ({ startTime: s.startTime, endTime: s.endTime }))
+        };
+    }
+
+    async saveCloudDebugSample() {
+        if (!this.cloudDebugSnapshot) return;
+
+        const { audioBlob, metadata } = this.cloudDebugSnapshot;
+        const user = window.firebaseAuthFunctions?.getCurrentUser?.() || window.auth?.currentUser;
+        if (!user?.getIdToken) {
+            if (this.cloudDebugSaveStatus) {
+                this.cloudDebugSaveStatus.textContent = 'Cloud save requires an authenticated admin account.';
+                this.cloudDebugSaveStatus.dataset.state = 'error';
+            }
+            return;
+        }
+
+        if (this.cloudDebugSaveButton) this.cloudDebugSaveButton.disabled = true;
+        if (this.cloudDebugSaveStatus) {
+            this.cloudDebugSaveStatus.textContent = 'Saving to cloud…';
+            this.cloudDebugSaveStatus.dataset.state = 'saving';
+        }
+
+        try {
+            const wavBlob = await this.praatAPI.ensureWav(audioBlob);
+            const corpusMetadata = this.buildCloudDebugMetadata(metadata);
+            const formData = new FormData();
+            formData.append('audio', wavBlob, `${corpusMetadata.sampleId}.wav`);
+            formData.append('metadata', JSON.stringify(corpusMetadata));
+
+            const idToken = await user.getIdToken();
+            const response = await fetch('/api/admin/dev/save-corpus-sample', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${idToken}` },
+                body: formData
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || payload.error || `Cloud save failed (${response.status})`);
+            }
+
+            if (this.cloudDebugSaveStatus) {
+                this.cloudDebugSaveStatus.textContent = `Saved to cloud: ${payload?.data?.sampleId || corpusMetadata.sampleId}`;
+                this.cloudDebugSaveStatus.dataset.state = 'saved';
+            }
+        } catch (error) {
+            if (this.cloudDebugSaveButton) this.cloudDebugSaveButton.disabled = false;
+            if (this.cloudDebugSaveStatus) {
+                this.cloudDebugSaveStatus.textContent = `Cloud save failed: ${error.message || error}`;
+                this.cloudDebugSaveStatus.dataset.state = 'error';
+            }
+            Logger.error('Failed to save cloud debug sample:', error);
+        }
+    }
+
     initVersionComparisonControls() {
         this.versionComparisonColumns?.addEventListener('click', (e) => {
             const column = e.target.closest('.pa-version-column');
@@ -423,7 +565,15 @@ export class PronunciationApp {
             this.versionComparisonTechnicalContent.textContent = JSON.stringify({
                 comparisonId: comparison?.comparisonId || null,
                 context: comparison?.context || null,
-                revisions: comparison?.revisions || null
+                revisions: comparison?.revisions || null,
+                intervals: this.versionComparisonView.columns.map((column) => ({
+                    version: column.version,
+                    displayedConvention: column.partitionConvention || column.boundarySource,
+                    displayedSpans: column.boundarySpans,
+                    rawCtcSpans: column.rawCtcSpans,
+                    measurementConvention: column.measurementConvention,
+                    measurementSpans: column.measurementSpans
+                }))
             }, null, 2);
         }
         this.updateSelectedVersionComparisonColumn();
@@ -453,9 +603,13 @@ export class PronunciationApp {
      */
     renderVersionComparisonCharts() {
         const column = this.getSelectedVersionComparisonColumn();
+        const measurementSpans = column?.measurementSpans?.length
+            ? column.measurementSpans
+            : column?.boundarySpans;
         this.drawLearnerCharts(
             column?.analysis,
-            normalizeChartSpans(column?.boundarySpans)
+            normalizeChartSpans(measurementSpans),
+            column?.boundarySpans || []
         );
     }
 
@@ -763,6 +917,7 @@ export class PronunciationApp {
         this.nativeAudioUrl = null;
         this.userAudioBlob = null;
         this.clearLocalSampleSnapshot();
+        this.clearCloudDebugSnapshot();
         this.resetVersionComparisonState();
         this._verificationAttemptState = resetAttemptState();
         this.visualizer?.clear();
@@ -799,6 +954,7 @@ export class PronunciationApp {
         this._verificationAttemptState = resetAttemptState();
         this.userAudioBlob = null;
         this.clearLocalSampleSnapshot();
+        this.clearCloudDebugSnapshot();
         this.resetVersionComparisonState();
         if (this.syllableVerifier) {
             this.syllableVerifier.destroy();
@@ -845,6 +1001,7 @@ export class PronunciationApp {
             this.resultsSummary.innerHTML = "";
             this.resetVersionComparisonState();
             this.clearLocalSampleSnapshot('Local only · recording in progress…');
+            this.clearCloudDebugSnapshot();
 
             // Clear charts
             this.visualizer.clear();
@@ -882,12 +1039,14 @@ export class PronunciationApp {
                     try {
                         const comparison = await this.praatAPI.analyzeComparison(audioBlob, {
                             referenceIpa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
+                            referenceSyllables: this.getSyllableIpaSegments(),
                             expectedSyllables: expectedCount,
                             targetWord: this.currentReference?.word,
                             variantId: this.currentWordRef?.id
                         });
                         result = { engine: 'comparison', quality: { rateable: true }, analysis: comparison };
                         this.setLocalSampleSnapshot(audioBlob, result);
+                        this.setCloudDebugSnapshot(audioBlob, result);
                         localSamplePrepared = true;
                         this.renderVersionComparison(comparison, audioBlob);
                         this._finishAnalysis('Comparison ready');
@@ -895,6 +1054,7 @@ export class PronunciationApp {
                     } catch (comparisonError) {
                         result = { engine: 'comparison', quality: { rateable: false }, analysis: null };
                         this.setLocalSampleSnapshot(audioBlob, result, comparisonError);
+                        this.setCloudDebugSnapshot(audioBlob, result, comparisonError);
                         localSamplePrepared = true;
                         throw comparisonError;
                     }
@@ -906,6 +1066,7 @@ export class PronunciationApp {
                     preferPraat: this.usePraatBackend,
                     praatAnalyze: (blob) => this.praatAPI.analyze(blob, expectedCount, {
                         referenceIpa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
+                        referenceSyllables: this.getSyllableIpaSegments(),
                         targetWord: this.currentReference?.word,
                         variantId: this.currentWordRef?.id
                     }),
@@ -919,6 +1080,7 @@ export class PronunciationApp {
                     }
                 });
                 this.setLocalSampleSnapshot(audioBlob, result);
+                this.setCloudDebugSnapshot(audioBlob, result);
                 localSamplePrepared = true;
 
                 if (config.features?.usePronunciationV3LearnerAnalysis === true) {
@@ -1002,6 +1164,7 @@ export class PronunciationApp {
                 Logger.error(err);
                 if (audioBlob && !localSamplePrepared) {
                     this.setLocalSampleSnapshot(audioBlob, result, err);
+                    this.setCloudDebugSnapshot(audioBlob, result, err);
                 }
                 this.resultsSummary.innerHTML = `
                     <div style="color: #dc2626; font-size: 0.95rem; padding: 12px;">
@@ -1092,7 +1255,7 @@ export class PronunciationApp {
      * the charts always describe the recording, never the native reference
      * left over from word load. Returns whether anything was drawn.
      */
-    drawLearnerCharts(analysis, spans = []) {
+    drawLearnerCharts(analysis, measurementSpans = [], durationSpans = measurementSpans) {
         if (!this.visualizer || !analysis) {
             this.visualizer?.clear();
             this.chartsContainer?.classList.add('hidden');
@@ -1107,12 +1270,12 @@ export class PronunciationApp {
             analysis,
             this.currentWordRef?.nativeAnalysis,
             this.currentWordRef?.syllables || [],
-            { learnerSyllables: spans, drawDuration: false }
+            { learnerSyllables: measurementSpans, drawDuration: false }
         );
 
         // Duration lanes: observed spans against the native pattern when we
         // have one, otherwise the learner's own spans alone.
-        this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), spans);
+        this.visualizer.drawDurationChart(this.getTargetDurationSyllables(), durationSpans);
         return true;
     }
 
@@ -1122,10 +1285,11 @@ export class PronunciationApp {
      * confirmed still gets working charts and playback.
      */
     renderV3Segmentation(analysis, syllables = [], audioBlob = null) {
-        const spans = normalizeChartSpans(syllables);
-        const drawn = this.drawLearnerCharts(analysis, spans);
+        const chartSpans = normalizeChartSpans(syllables);
+        const playbackSpans = normalizePlaybackSpans(syllables);
+        const drawn = this.drawLearnerCharts(analysis, chartSpans, playbackSpans);
         if (audioBlob) {
-            this.showSyllableVerifier(audioBlob, drawn ? spans : []);
+            this.showSyllableVerifier(audioBlob, drawn ? playbackSpans : []);
         }
     }
 
@@ -1262,8 +1426,18 @@ export class PronunciationApp {
             ? 'clean'
             : (observedCount < targetCount ? 'omission' : 'insertion');
         const toSpan = (segment, index) => {
-            const startTime = Number(segment?.startTime ?? segment?.start);
-            const endTime = Number(segment?.endTime ?? segment?.end);
+            const startTime = Number(
+                segment?.partitionStartTime
+                ?? segment?.partition_start_time
+                ?? segment?.startTime
+                ?? segment?.start
+            );
+            const endTime = Number(
+                segment?.partitionEndTime
+                ?? segment?.partition_end_time
+                ?? segment?.endTime
+                ?? segment?.end
+            );
             return {
                 index,
                 startTime,
@@ -1274,6 +1448,17 @@ export class PronunciationApp {
         const automaticSegments = Array.isArray(this.syllableVerifier?.syllables)
             ? this.syllableVerifier.syllables.map(toSpan)
             : [];
+        const selectedComparisonColumn = this.getSelectedVersionComparisonColumn();
+        const automaticUsesPartition = this.syllableVerifier?.syllables?.some((segment) => (
+            Number.isFinite(Number(segment?.partitionStartTime ?? segment?.partition_start_time))
+            && Number.isFinite(Number(segment?.partitionEndTime ?? segment?.partition_end_time))
+        ));
+        const automaticSegmentationConvention = selectedComparisonColumn?.partitionConvention
+            || (automaticUsesPartition ? 'ctc-interspan-midpoint-contiguous-v1' : selectedComparisonColumn?.boundarySource)
+            || 'automatic-boundary-unknown';
+        const analysisRevision = selectedComparisonColumn?.analysis?.analysisVersion
+            || this.versionComparison?.revisions?.[this.versionComparisonBoundarySource]
+            || null;
 
         return {
             sampleId: `${wordSlug}-manual-review-${timestamp}-${randomSuffix}`,
@@ -1287,14 +1472,17 @@ export class PronunciationApp {
             speakerCohort: 'pronounce-manual-review',
             needsRerecording: false,
             rerecordReason: null,
-            needsManualReview: true,
-            reviewReason: 'manual_syllable_segmentation',
+            needsManualReview: false,
+            reviewReason: null,
             // Which syllabification the manual boundaries follow. Samples saved
             // before this field exists were annotated against the orthographic
             // chunking and place cluster consonants differently, so they must
             // not be pooled with these without re-labelling.
-            segmentationConvention: 'ipa-phonological',
+            segmentationConvention: 'ipa-phonological-contiguous-v1',
             referenceSyllableIpa: this.getSyllableIpaSegments(),
+            automaticSegmentationConvention,
+            analysisRevision,
+            sourceComparisonId: this.versionComparison?.comparisonId || null,
             manualSegments: manualSegments.map(toSpan),
             automaticSegments
         };
@@ -1341,8 +1529,18 @@ export class PronunciationApp {
         if (!this.userAudioBlob) {
             throw new Error('The recording is no longer available. Please record it again.');
         }
-        if (!Array.isArray(manualSegments) || manualSegments.length === 0) {
-            throw new Error('Mark at least one syllable before saving.');
+        const expectedCount = Math.max(
+            1,
+            Number(this.expectedData?.syllables || this.currentWordRef?.syllableCount || 1)
+        );
+        if (!Array.isArray(manualSegments) || manualSegments.length !== expectedCount) {
+            throw new Error(`Mark exactly ${expectedCount} syllables before saving.`);
+        }
+        if (manualSegments.some((segment, index) => (
+            index > 0
+            && Math.abs(Number(segment.startTime) - Number(manualSegments[index - 1].endTime)) > 0.000001
+        ))) {
+            throw new Error('Manual syllable spans must be contiguous before saving.');
         }
 
         const metadata = this.buildManualReviewMetadata(manualSegments);

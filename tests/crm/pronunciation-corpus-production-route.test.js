@@ -135,15 +135,20 @@ const manualMetadata = validateCorpusMetadata({
   sampleId: 'photograph-manual-review-1',
   targetWord: 'photograph',
   referenceIpa: '/ˈfoʊ.tə.ɡræf/',
-  expectedObservedCount: 4,
-  targetSyllableCount: 4,
+  expectedObservedCount: 2,
+  targetSyllableCount: 2,
   category: 'clean',
   speakerCohort: 'pronounce-manual-review',
   needsManualReview: true,
   reviewReason: 'manual_syllable_segmentation',
+  segmentationConvention: 'ipa-phonological-contiguous-v1',
+  referenceSyllableIpa: ['foʊ', 'tə'],
+  automaticSegmentationConvention: 'ctc-interspan-midpoint-contiguous-v1',
+  analysisRevision: 'pronunciation-analysis-v3',
+  sourceComparisonId: '0123456789abcdef0123456789abcdef',
   manualSegments: [
     { startTime: 0.1, endTime: 0.2 },
-    { startTime: 0.22, endTime: 0.35 }
+    { startTime: 0.2, endTime: 0.35 }
   ],
   automaticSegments: [{ startTime: 0.08, endTime: 0.21 }]
 });
@@ -155,8 +160,46 @@ assert.deepStrictEqual(manualMetadata.manualSegments[0], {
 });
 assert.deepStrictEqual(manualMetadata.verifiedSpans, [
   { start: 0.1, end: 0.2 },
-  { start: 0.22, end: 0.35 }
+  { start: 0.2, end: 0.35 }
 ]);
+assert.strictEqual(manualMetadata.needsManualReview, false);
+assert.strictEqual(manualMetadata.reviewReason, null);
+assert.strictEqual(manualMetadata.reviewStatus, 'complete');
+assert.strictEqual(manualMetadata.segmentationConvention, 'ipa-phonological-contiguous-v1');
+assert.deepStrictEqual(manualMetadata.referenceSyllableIpa, ['foʊ', 'tə']);
+assert.strictEqual(manualMetadata.automaticSegmentationConvention, 'ctc-interspan-midpoint-contiguous-v1');
+assert.strictEqual(manualMetadata.analysisRevision, 'pronunciation-analysis-v3');
+assert.strictEqual(manualMetadata.sourceComparisonId, '0123456789abcdef0123456789abcdef');
+assert.throws(
+  () => validateCorpusMetadata({
+    sampleId: 'photograph-manual-review-incomplete',
+    targetWord: 'photograph',
+    referenceIpa: '/ˈfoʊ.tə.ɡræf/',
+    expectedObservedCount: 3,
+    targetSyllableCount: 3,
+    category: 'clean',
+    speakerCohort: 'pronounce-manual-review',
+    segmentationConvention: 'ipa-phonological-contiguous-v1',
+    referenceSyllableIpa: ['foʊ', 'tə', 'ɡræf'],
+    manualSegments: [{ startTime: 0.1, endTime: 0.3 }, { startTime: 0.3, endTime: 0.5 }]
+  }),
+  /expectedObservedCount/
+);
+assert.throws(
+  () => validateCorpusMetadata({
+    sampleId: 'photograph-manual-review-gap',
+    targetWord: 'photograph',
+    referenceIpa: '/ˈfoʊ.tə.ɡræf/',
+    expectedObservedCount: 2,
+    targetSyllableCount: 2,
+    category: 'clean',
+    speakerCohort: 'pronounce-manual-review',
+    segmentationConvention: 'ipa-phonological-contiguous-v1',
+    referenceSyllableIpa: ['foʊ', 'tə'],
+    manualSegments: [{ startTime: 0.1, endTime: 0.3 }, { startTime: 0.31, endTime: 0.5 }]
+  }),
+  /contiguous/
+);
 assert.throws(
   () => validateCorpusMetadata({
     sampleId: 'photograph-manual-review-overlap',
@@ -242,9 +285,14 @@ console.log('production pronunciation corpus route contract passed');
       speakerCohort: 'l1-vn-01',
       needsManualReview: true,
       reviewReason: 'manual_syllable_segmentation',
+      segmentationConvention: 'ipa-phonological-contiguous-v1',
+      referenceSyllableIpa: ['bɪ', 'zi'],
+      automaticSegmentationConvention: 'ctc-interspan-midpoint-contiguous-v1',
+      analysisRevision: 'pronunciation-analysis-v3',
+      sourceComparisonId: 'fedcba9876543210fedcba9876543210',
       manualSegments: [
         { startTime: 0.1, endTime: 0.4 },
-        { startTime: 0.45, endTime: 0.8 }
+        { startTime: 0.4, endTime: 0.8 }
       ],
       automaticSegments: [{ startTime: 0.08, endTime: 0.42 }]
     }) },
@@ -254,6 +302,12 @@ console.log('production pronunciation corpus route contract passed');
   assert.strictEqual(records.get('busy-clean-l1-vn-01').storagePath, 'pronunciation-segmentation-corpus/busy-clean-l1-vn-01.wav');
   assert.equal(records.get('busy-clean-l1-vn-01').manualSegments.length, 2);
   assert.equal(records.get('busy-clean-l1-vn-01').automaticSegments.length, 1);
+  assert.equal(records.get('busy-clean-l1-vn-01').needsManualReview, false);
+  assert.equal(records.get('busy-clean-l1-vn-01').segmentationConvention, 'ipa-phonological-contiguous-v1');
+  assert.deepStrictEqual(records.get('busy-clean-l1-vn-01').referenceSyllableIpa, ['bɪ', 'zi']);
+  assert.equal(records.get('busy-clean-l1-vn-01').automaticSegmentationConvention, 'ctc-interspan-midpoint-contiguous-v1');
+  assert.equal(records.get('busy-clean-l1-vn-01').analysisRevision, 'pronunciation-analysis-v3');
+  assert.equal(records.get('busy-clean-l1-vn-01').sourceComparisonId, 'fedcba9876543210fedcba9876543210');
   assert.strictEqual(savedFiles.size, 1);
   console.log('production pronunciation corpus upload behavior passed');
 

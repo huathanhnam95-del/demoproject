@@ -215,6 +215,9 @@
     async function onEnter() {
         init();
         await loadEntries();
+        if (window.PracticeRouter && currentEntry?.id) {
+            window.PracticeRouter.replaceRoute('sgd', currentEntry.id);
+        }
     }
 
     function onExit() {

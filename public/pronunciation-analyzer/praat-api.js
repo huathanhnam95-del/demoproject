@@ -94,15 +94,22 @@ export class PraatAPI {
     /**
      * Call the v3 analysis endpoint.
      * @param {Blob} audioBlob
-     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string, variantId?: string }} options
+     * @param {{ referenceIpa?: string, referenceSyllables?: string[], expectedSyllables?: number, targetWord?: string, variantId?: string }} options
      * @returns {Promise<object>} v3 analysis response
      */
-    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables, targetWord, variantId } = {}) {
+    async analyzeV3(audioBlob, { referenceIpa, referenceSyllables, expectedSyllables, targetWord, variantId } = {}) {
         const wavBlob = await this.ensureWav(audioBlob);
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
         if (referenceIpa) {
             formData.append('reference_ipa', String(referenceIpa));
+        }
+        if (
+            Array.isArray(referenceSyllables)
+            && referenceSyllables.length > 0
+            && referenceSyllables.every((syllable) => typeof syllable === 'string' && syllable.length > 0)
+        ) {
+            formData.append('reference_syllables', JSON.stringify(referenceSyllables));
         }
         if (Number.isInteger(expectedSyllables) && expectedSyllables > 0) {
             formData.append('expected_syllables', String(expectedSyllables));
@@ -132,7 +139,7 @@ export class PraatAPI {
      * `analyze()` and the learner V3 feature flag: the comparison response is
      * an explicit V2/V3 bake-off for the same recording.
      * @param {Blob} audioBlob
-     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string, variantId?: string }} options
+     * @param {{ referenceIpa?: string, referenceSyllables?: string[], expectedSyllables?: number, targetWord?: string, variantId?: string }} options
      * @returns {Promise<object>} comparison response containing v2 and v3 envelopes
      */
     /**
@@ -151,12 +158,19 @@ export class PraatAPI {
             .catch(() => undefined);
     }
 
-    async analyzeComparison(audioBlob, { referenceIpa, expectedSyllables, targetWord, variantId } = {}) {
+    async analyzeComparison(audioBlob, { referenceIpa, referenceSyllables, expectedSyllables, targetWord, variantId } = {}) {
         const wavBlob = await this.ensureWav(audioBlob);
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
         if (referenceIpa) {
             formData.append('reference_ipa', String(referenceIpa));
+        }
+        if (
+            Array.isArray(referenceSyllables)
+            && referenceSyllables.length > 0
+            && referenceSyllables.every((syllable) => typeof syllable === 'string' && syllable.length > 0)
+        ) {
+            formData.append('reference_syllables', JSON.stringify(referenceSyllables));
         }
         if (Number.isInteger(expectedSyllables) && expectedSyllables > 0) {
             formData.append('expected_syllables', String(expectedSyllables));

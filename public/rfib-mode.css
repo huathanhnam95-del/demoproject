@@ -37,6 +37,52 @@
   gap: 12px;
   border-left: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.12);
   padding-left: 16px;
+  position: relative;
+}
+
+.rfib-audio-lock-overlay {
+  display: none;
+  position: absolute;
+  inset: -4px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border-radius: 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 10;
+  padding: 8px 12px;
+  text-align: center;
+  transition: opacity 0.25s ease;
+  pointer-events: auto;
+}
+
+.rfib-audio-card.is-locked .rfib-audio-lock-overlay {
+  display: flex;
+}
+
+.rfib-audio-card.is-locked .rfib-audio-head,
+.rfib-audio-card.is-locked .rfib-audio-actions,
+.rfib-audio-card.is-locked .rfib-audio-slider-container {
+  filter: blur(4px);
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+.rfib-audio-lock-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.rfib-audio-lock-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--rfib-ink);
+  line-height: 1.25;
 }
 
 .rfib-audio-head,
@@ -278,18 +324,25 @@
   position: relative;
 }
 
-/* ── Correct answer label (shown inline below incorrect blanks) ── */
+/* ── Correct answer label (shown inline next to incorrect/unchosen blanks) ── */
 .rfib-correct-label {
   display: none;
-  font-size: 0.78rem;
-  color: var(--rfib-success);
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  padding: 2px 7px;
+  border-radius: 6px;
   white-space: nowrap;
   margin-left: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  line-height: 1.25;
 }
 
 .rfib-correct-label.is-visible {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ── Inline ? hint button ─────────────────────────────────────── */

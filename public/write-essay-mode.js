@@ -1458,8 +1458,16 @@
         onExit: onExit,
         loadEntries: loadEntries,
         updateAiScoreButtonState: updateAiScoreButtonState,
-        shouldConfirmExit: shouldConfirmExit
+        shouldConfirmExit: shouldConfirmExit,
+        onEnter: onEnter
     };
+
+    function onEnter() {
+        init();
+        if (currentEntry?.id && window.PracticeRouter) {
+            window.PracticeRouter.replaceRoute('essay', currentEntry.id);
+        }
+    }
 
     // Deep-link support: listen for PracticeRouter question navigation events
     window.addEventListener('practice-route-question', (event) => {

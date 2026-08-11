@@ -588,31 +588,54 @@ async function run() {
       app.currentWordRef = {
         id: '8888888888888888',
         displayIpa: '/ˈfoʊtəˌɡræf/',
-        syllableCount: 3
+        syllableCount: 3,
+        syllables: [{ ipa: 'foʊ' }, { ipa: 'tə' }, { ipa: 'ɡræf' }]
       };
       app.expectedData = { syllables: 3, ipa: '/ˈfoʊtəˌɡræf/' };
+      app.versionComparisonBoundarySource = 'v3';
+      app.versionComparison = {
+        comparisonId: '0123456789abcdef0123456789abcdef',
+        revisions: { v3: 'pronunciation-analysis-v3' }
+      };
+      app.versionComparisonView = {
+        columns: [{
+          version: 'v3',
+          partitionConvention: 'ctc-interspan-midpoint-contiguous-v1',
+          boundarySource: 'ctc-contiguous-partition',
+          analysis: { analysisVersion: 'pronunciation-analysis-v3' }
+        }]
+      };
       app.syllableVerifier = {
         destroy() {},
         syllables: [
-          { startTime: 0.05, endTime: 0.2 },
-          { startTime: 0.2, endTime: 0.42 },
-          { startTime: 0.42, endTime: 0.68 }
+          { startTime: 0.08, endTime: 0.16, partitionStartTime: 0.05, partitionEndTime: 0.2 },
+          { startTime: 0.24, endTime: 0.34, partitionStartTime: 0.2, partitionEndTime: 0.42 },
+          { startTime: 0.46, endTime: 0.62, partitionStartTime: 0.42, partitionEndTime: 0.68 }
         ]
       };
       window.firebaseAuthFunctions = {
         getCurrentUser: () => ({ getIdToken: async () => 'manual-review-test-token' })
       };
       return app.saveManualReview([
-        { startTime: 0.08, endTime: 0.19 },
-        { startTime: 0.21, endTime: 0.4 },
-        { startTime: 0.43, endTime: 0.7 }
+        { startTime: 0.08, endTime: 0.2 },
+        { startTime: 0.2, endTime: 0.42 },
+        { startTime: 0.42, endTime: 0.7 }
       ]).then((result) => ({ result, saved: window.__savedManualReviews, auth: window.__manualReviewAuthHeader }));
     });
     assert.equal(manualCloudSave.result.sampleId, manualCloudSave.saved[0].sampleId);
-    assert.equal(manualCloudSave.saved[0].needsManualReview, true);
-    assert.equal(manualCloudSave.saved[0].reviewReason, 'manual_syllable_segmentation');
+    assert.equal(manualCloudSave.saved[0].needsManualReview, false);
+    assert.equal(manualCloudSave.saved[0].reviewReason, null);
+    assert.equal(manualCloudSave.saved[0].segmentationConvention, 'ipa-phonological-contiguous-v1');
+    assert.deepEqual(manualCloudSave.saved[0].referenceSyllableIpa, ['foʊ', 'tə', 'ɡræf']);
+    assert.equal(manualCloudSave.saved[0].automaticSegmentationConvention, 'ctc-interspan-midpoint-contiguous-v1');
+    assert.equal(manualCloudSave.saved[0].analysisRevision, 'pronunciation-analysis-v3');
+    assert.equal(manualCloudSave.saved[0].sourceComparisonId, '0123456789abcdef0123456789abcdef');
     assert.equal(manualCloudSave.saved[0].manualSegments.length, 3);
     assert.equal(manualCloudSave.saved[0].automaticSegments.length, 3);
+    assert.deepEqual(
+      manualCloudSave.saved[0].automaticSegments.map(({ startTime, endTime }) => ({ startTime, endTime })),
+      [{ startTime: 0.05, endTime: 0.2 }, { startTime: 0.2, endTime: 0.42 }, { startTime: 0.42, endTime: 0.68 }]
+    );
     assert.equal(manualCloudSave.auth, 'Bearer manual-review-test-token');
     const manualLocalSave = await page.evaluate(async () => {
       const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
@@ -640,9 +663,9 @@ async function run() {
       window.auth = { currentUser: null };
       window.__savedLocalSamples = [];
       const result = await app.saveManualReview([
-        { startTime: 0.08, endTime: 0.19 },
-        { startTime: 0.21, endTime: 0.4 },
-        { startTime: 0.43, endTime: 0.7 }
+        { startTime: 0.08, endTime: 0.2 },
+        { startTime: 0.2, endTime: 0.42 },
+        { startTime: 0.42, endTime: 0.7 }
       ]);
       return { result, saved: window.__savedLocalSamples };
     });
@@ -1020,7 +1043,7 @@ async function run() {
       const toggleGroup = document.getElementById('pa-chart-mode-toggle');
       const volumeBtn = toggleGroup.querySelector('[data-mode="intensity"]');
       volumeBtn.click();
-      const intensityTitle = window.__charts.at(-2).options.scales.y.title.text;
+      const intensityTitle = app.visualizer.pitchChart.options.scales.y.title.text;
 
       return {
         pitch: pitchTitle,

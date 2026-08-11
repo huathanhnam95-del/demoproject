@@ -61,12 +61,20 @@ function validateCorpusMetadata(metadata) {
   const rerecordReason = needsRerecording
     ? String(metadata.rerecordReason || '').trim().slice(0, 120) || 'verification_failed'
     : null;
-  const needsManualReview = metadata.needsManualReview === true;
+  const manualSegments = normalizeTimingSegments(metadata.manualSegments, 'manualSegments');
+  const automaticSegments = normalizeTimingSegments(metadata.automaticSegments, 'automaticSegments');
+  const hasCompletedManualReview = Boolean(manualSegments?.length);
+  const needsManualReview = hasCompletedManualReview ? false : metadata.needsManualReview === true;
   const reviewReason = needsManualReview
     ? String(metadata.reviewReason || '').trim().slice(0, 120) || 'model_acoustic_disagreement'
     : null;
-  const manualSegments = normalizeTimingSegments(metadata.manualSegments, 'manualSegments');
-  const automaticSegments = normalizeTimingSegments(metadata.automaticSegments, 'automaticSegments');
+  const segmentationConvention = String(metadata.segmentationConvention || '').trim() || null;
+  const automaticSegmentationConvention = String(metadata.automaticSegmentationConvention || '').trim() || null;
+  const analysisRevision = String(metadata.analysisRevision || '').trim() || null;
+  const sourceComparisonId = String(metadata.sourceComparisonId || '').trim() || null;
+  const referenceSyllableIpa = metadata.referenceSyllableIpa == null
+    ? null
+    : metadata.referenceSyllableIpa;
 
   if (!SAMPLE_ID_RE.test(sampleId)) fail('sampleId must match ^[a-z0-9-]+$.');
   if (!targetWord) fail('targetWord must be a non-empty string.');
@@ -81,6 +89,36 @@ function validateCorpusMetadata(metadata) {
     fail(`category must be one of: ${Array.from(ALLOWED_CATEGORIES).join(', ')}`);
   }
   if (!/^[a-z0-9-]+$/.test(speakerCohort)) fail('speakerCohort must match ^[a-z0-9-]+$.');
+  if (hasCompletedManualReview && manualSegments.length !== metadata.expectedObservedCount) {
+    fail('manualSegments length must equal expectedObservedCount for a completed review.');
+  }
+  if (hasCompletedManualReview && segmentationConvention !== 'ipa-phonological-contiguous-v1') {
+    fail('Completed manual reviews require segmentationConvention ipa-phonological-contiguous-v1.');
+  }
+  if (segmentationConvention === 'ipa-phonological-contiguous-v1') {
+    for (let index = 1; index < (manualSegments || []).length; index += 1) {
+      if (Math.abs(manualSegments[index].startTime - manualSegments[index - 1].endTime) > 0.000001) {
+        fail('manualSegments must be contiguous under ipa-phonological-contiguous-v1.');
+      }
+    }
+  }
+  if (referenceSyllableIpa !== null) {
+    if (!Array.isArray(referenceSyllableIpa)
+      || referenceSyllableIpa.length !== metadata.targetSyllableCount
+      || referenceSyllableIpa.some((syllable) => typeof syllable !== 'string' || !syllable.trim())) {
+      fail('referenceSyllableIpa must contain one non-empty string per target syllable.');
+    }
+  }
+  for (const [field, value, limit] of [
+    ['automaticSegmentationConvention', automaticSegmentationConvention, 120],
+    ['analysisRevision', analysisRevision, 200],
+    ['sourceComparisonId', sourceComparisonId, 200]
+  ]) {
+    if (value && value.length > limit) fail(`${field} is too long.`);
+  }
+  if (sourceComparisonId && !/^[a-zA-Z0-9:_-]+$/.test(sourceComparisonId)) {
+    fail('sourceComparisonId contains invalid characters.');
+  }
 
   return {
     sampleId,
@@ -94,6 +132,12 @@ function validateCorpusMetadata(metadata) {
     rerecordReason,
     needsManualReview,
     reviewReason,
+    reviewStatus: hasCompletedManualReview ? 'complete' : (needsManualReview ? 'pending' : null),
+    segmentationConvention,
+    referenceSyllableIpa: referenceSyllableIpa?.map((syllable) => syllable.trim()) || null,
+    automaticSegmentationConvention,
+    analysisRevision,
+    sourceComparisonId,
     manualSegments,
     automaticSegments,
     labelProvenance: manualSegments?.length ? 'manual' : null,

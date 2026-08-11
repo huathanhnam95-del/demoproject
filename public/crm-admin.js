@@ -7605,7 +7605,10 @@
         const analysis = await api.analyzeV3(audioBlob, {
           expectedSyllables,
           targetWord: sample.targetWord || '',
-          referenceIpa: sample.referenceIpa || ''
+          referenceIpa: sample.referenceIpa || '',
+          referenceSyllables: Array.isArray(sample.referenceSyllableIpa)
+            ? sample.referenceSyllableIpa
+            : undefined
         });
         analysisBySampleId.set(sampleId, { analysis });
         renderSampleAnalysis(sample, resultContainer, { analysis });

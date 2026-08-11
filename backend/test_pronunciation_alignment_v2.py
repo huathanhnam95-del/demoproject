@@ -990,6 +990,41 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
             expected_syllables=3,
         )
 
+    def test_pipeline_uses_authoritative_reference_syllables_for_photograph(self):
+        captured = {}
+        self_result = self._recognize_v2_result()
+
+        class FakeClient:
+            def recognize_v2(self, wav_bytes, reference_syllables, expected_count, *, variant_id=None):
+                captured["wav_bytes"] = wav_bytes
+                captured["reference_syllables"] = reference_syllables
+                captured["expected_count"] = expected_count
+                captured["variant_id"] = variant_id
+                return self_result
+
+        authoritative = ["foʊ", "tə", "ɡræf"]
+        with (
+            patch.object(server, "analyze_audio_v2", return_value=self.PRAAT),
+            patch(
+                "backend.local_server.phoneme_client.create_phoneme_client",
+                return_value=FakeClient(),
+            ),
+        ):
+            result = server.run_v3_pipeline(
+                "unused.wav",
+                wav_bytes=b"RIFFfixture",
+                reference_ipa="/ˈfoʊtəˌɡræf/",
+                reference_syllables=authoritative,
+                expected_syllables=3,
+                target_word="photograph",
+                variant_id="variant-photograph",
+            )
+
+        self.assertIs(result["phoneme_result"], self_result)
+        self.assertEqual(captured["reference_syllables"], authoritative)
+        self.assertEqual(captured["expected_count"], 3)
+        self.assertEqual(captured["variant_id"], "variant-photograph")
+
     def test_v2_confidence_is_the_aligned_syllable_mean_not_zero(self):
         response = self._build(self._recognize_v2_result())
         self.assertNotEqual(response["confidence"], 0.0)
@@ -1015,6 +1050,164 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
         response = self._build(self._recognize_v2_result())
         self.assertEqual(response["syllable_count"], 3)
         self.assertEqual(len(response["observed_syllables"]), 3)
+
+    def test_v2_response_derives_contiguous_partition_without_overwriting_raw_spans(self):
+        response = self._build(self._recognize_v2_result())
+
+        self.assertEqual(
+            response.get("partition_convention"),
+            "ctc-interspan-midpoint-contiguous-v1",
+        )
+        spans = response["observed_syllables"]
+        self.assertEqual(
+            [
+                (span.get("partitionStartTime"), span.get("partitionEndTime"))
+                for span in spans
+            ],
+            [(0.0, 0.175), (0.175, 0.375), (0.375, 0.55)],
+        )
+        self.assertEqual(
+            [(span["startTime"], span["endTime"]) for span in spans],
+            [(0.0, 0.15), (0.2, 0.35), (0.4, 0.55)],
+        )
+        self.assertEqual(
+            [span.get("partitionDuration") for span in spans],
+            [0.175, 0.2, 0.175],
+        )
+
+    def test_wide_gap_with_late_vowel_tail_moves_boundary_to_intensity_decay(self):
+        spans = [
+            {
+                "start_time": 1.189219,
+                "end_time": 1.310156,
+                "measurement_start_time": 1.29,
+                "measurement_end_time": 1.410937,
+                "partition_start_time": 1.189219,
+                "partition_end_time": 1.400859,
+            },
+            {
+                "start_time": 1.491562,
+                "end_time": 1.552031,
+                "partition_start_time": 1.400859,
+                "partition_end_time": 1.582266,
+            },
+            {
+                "start_time": 1.6125,
+                "end_time": 2.015625,
+                "partition_start_time": 1.582266,
+                "partition_end_time": 2.015625,
+            },
+        ]
+        intensity = {
+            "times": [1.19, 1.25, 1.30, 1.32, 1.35, 1.40, 1.41, 1.42, 1.43, 1.44, 1.45, 1.49],
+            "values": [80.0, 86.5, 85.0, 85.5, 87.0, 82.0, 81.5, 80.5, 79.2, 78.0, 75.0, 70.0],
+        }
+
+        changed = server._refine_partition_boundaries_with_acoustic_tail(spans, intensity)
+
+        self.assertTrue(changed)
+        self.assertAlmostEqual(spans[0]["partition_end_time"], 1.44, places=6)
+        self.assertEqual(
+            spans[0]["partition_end_time"],
+            spans[1]["partition_start_time"],
+        )
+        self.assertEqual(spans[0]["end_time"], 1.310156)
+        self.assertEqual(spans[0]["measurement_end_time"], 1.410937)
+        self.assertEqual(spans[1]["partition_end_time"], 1.582266)
+
+    def test_acoustic_tail_refinement_leaves_symmetric_gap_midpoint_unchanged(self):
+        spans = [
+            {
+                "start_time": 0.7,
+                "end_time": 0.9,
+                "partition_start_time": 0.7,
+                "partition_end_time": 1.0,
+            },
+            {
+                "start_time": 1.1,
+                "end_time": 1.3,
+                "partition_start_time": 1.0,
+                "partition_end_time": 1.3,
+            },
+        ]
+        intensity = {
+            "times": [0.7, 0.8, 0.9, 0.92, 0.96, 1.0, 1.04, 1.08, 1.1],
+            "values": [86.0, 84.0, 82.0, 81.0, 79.0, 77.0, 72.0, 68.0, 70.0],
+        }
+
+        changed = server._refine_partition_boundaries_with_acoustic_tail(spans, intensity)
+
+        self.assertFalse(changed)
+        self.assertEqual(spans[0]["partition_end_time"], 1.0)
+        self.assertEqual(spans[1]["partition_start_time"], 1.0)
+
+    def test_fricative_onset_uses_v2_boundary_when_intensity_valley_corroborates_it(self):
+        spans = [
+            {
+                "ipa": "k\u0259n",
+                "start_time": 0.786393,
+                "end_time": 0.967869,
+                "nucleus_end_time": 0.867049,
+                "partition_start_time": 0.786393,
+                "partition_end_time": 1.028361,
+            },
+            {
+                "ipa": "k\u0251k",
+                "start_time": 1.088852,
+                "end_time": 1.431639,
+                "nucleus_end_time": 1.23,
+                "partition_start_time": 1.028361,
+                "partition_end_time": 1.471967,
+            },
+            {
+                "ipa": "\u0283\u0259n",
+                "start_time": 1.512295,
+                "end_time": 1.79459,
+                "nucleus_start_time": 1.633279,
+                "partition_start_time": 1.471967,
+                "partition_end_time": 1.79459,
+            },
+        ]
+        acoustic_syllables = [
+            {"startTime": 0.805, "endTime": 1.025},
+            {"startTime": 1.025, "endTime": 1.375},
+            {"startTime": 1.375, "endTime": 1.775},
+        ]
+        intensity = {
+            "times": [1.23, 1.28, 1.33, 1.36, 1.38, 1.40, 1.42, 1.45, 1.48, 1.51],
+            "values": [82.4, 82.7, 71.0, 64.3, 58.4, 53.3, 60.1, 72.6, 75.2, 75.0],
+        }
+
+        response = server._build_v3_active_response(
+            {
+                "pitch": {"times": [1.2, 1.3], "values": [146.0, 140.0]},
+                "intensity": intensity,
+                "duration": 2.46,
+                "sampleRate": 48000,
+                "quality": {"rateable": True},
+                "observed": {"syllables": acoustic_syllables},
+            },
+            {
+                "contract_version": "recognize-v2",
+                "decoded_syllable_count": 3,
+                "decoded_is_rateable": True,
+                "canonical_alignment": {
+                    "aligned": True,
+                    "syllables": spans,
+                    "syllable_span_type": "ctc-token-coverage",
+                    "partition_span_type": "ctc-interspan-midpoint-contiguous-v1",
+                },
+                "model_revision": "fixture",
+            },
+            reference_ipa="/k\u0259n\u02c8k\u0251k\u0283\u0259n/",
+            expected_syllables=3,
+        )
+
+        output = response["observed_syllables"]
+        self.assertEqual(output[1]["partitionEndTime"], 1.375)
+        self.assertEqual(output[2]["partitionStartTime"], 1.375)
+        self.assertEqual(output[1]["endTime"], 1.431639)
+        self.assertEqual(output[2]["startTime"], 1.512295)
 
     def test_v2_response_exposes_raw_and_measurement_span_provenance(self):
         payload = self._recognize_v2_result()

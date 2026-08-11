@@ -294,6 +294,11 @@ const ColloDictateMode = (() => {
     updateNavUI();
     updateQuestionMetaUI();
     updateScoreUI();
+
+    if (window.PracticeRouter && currentPhrase) {
+      const audioKey = getColloAudioKey(currentPhrase) || currentPhrase;
+      window.PracticeRouter.replaceRoute('collo-dictate', audioKey);
+    }
   }
 
   function goNext() {

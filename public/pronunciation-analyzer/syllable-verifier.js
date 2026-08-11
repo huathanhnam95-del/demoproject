@@ -31,6 +31,8 @@ class SyllableVerifier {
 
         this.manualReviewActive = false;
         this.manualSegments = [];
+        this.manualBoundaryTimes = [];
+        this.manualConvention = 'ipa-phonological-contiguous-v1';
         this.pendingManualStart = null;
         this.manualSaveInProgress = false;
         this.manualReviewSaved = false;
@@ -74,7 +76,7 @@ class SyllableVerifier {
                 </div>
                 
                 <div class="sv-info" id="sv-info">
-                    <p>Click on any syllable to hear it individually.</p>
+                    <p>Use the numbered syllable labels below the waveform to hear them individually.</p>
                 </div>
                 
                 ${this.manualReviewEnabled ? `
@@ -129,12 +131,10 @@ class SyllableVerifier {
             console.error('SyllableVerifier: Failed to register Regions plugin', err);
         }
 
-        // Region click handler
-        this.regions.on('region-clicked', (region, e) => {
-            e.stopPropagation();
-            if (this.manualReviewActive) return;
-            this.playSyllable(region.id);
-        });
+        // Region click on the waveform is intentionally not wired to
+        // playback — users expect clicking the waveform to seek, not to
+        // replay a whole syllable.  Playback is triggered only by the
+        // label bar buttons ("1st", "2nd", …) below the waveform.
 
         // Playback events
         this.wavesurfer.on('finish', () => {
@@ -241,6 +241,7 @@ class SyllableVerifier {
 
     handleManualInteraction(rawTime) {
         if (!this.manualReviewActive || !this.wavesurfer) return false;
+        this.manualConvention = 'ipa-phonological-contiguous-v1';
         const duration = Number(this.wavesurfer.getDuration?.() || 0);
         const time = Number(rawTime);
         if (!Number.isFinite(time) || !Number.isFinite(duration) || duration <= 0) return false;
@@ -253,39 +254,59 @@ class SyllableVerifier {
         }
         this.lastManualInteraction = { at: now, time: clampedTime };
 
-        if (this.pendingManualStart === null) {
-            const lastSegment = this.manualSegments[this.manualSegments.length - 1];
-            if (lastSegment && clampedTime < lastSegment.endTime) {
-                this.setManualStatus('Choose the next start point after the previous segment.', 'error');
-                return false;
-            }
-            this.pendingManualStart = clampedTime;
-            this.renderManualPendingMarker();
-            this.updateManualReviewUi();
-            return true;
-        }
-
-        const startTime = Math.min(this.pendingManualStart, clampedTime);
-        const endTime = Math.max(this.pendingManualStart, clampedTime);
-        if (endTime - startTime < 0.01) {
-            this.setManualStatus('The two points are too close together. Choose a wider syllable span.', 'error');
+        const expectedCount = this.getExpectedManualSegmentCount();
+        const requiredBoundaryCount = expectedCount + 1;
+        if (this.manualBoundaryTimes.length >= requiredBoundaryCount) {
+            this.setManualStatus('All required boundaries are already marked. Use Undo to change them.', 'error');
             return false;
         }
 
-        this.manualSegments.push({
-            index: this.manualSegments.length,
-            startTime,
-            endTime,
-            duration: endTime - startTime,
-            source: 'manual-review'
-        });
-        this.pendingManualStart = null;
+        const previousBoundary = this.manualBoundaryTimes.at(-1);
+        if (Number.isFinite(previousBoundary) && clampedTime - previousBoundary < 0.01) {
+            this.setManualStatus('Choose each next boundary after the previous one.', 'error');
+            return false;
+        }
+
+        this.manualBoundaryTimes.push(clampedTime);
+        this.rebuildManualSegmentsFromBoundaries();
+        this.pendingManualStart = this.manualBoundaryTimes.length < requiredBoundaryCount
+            ? clampedTime
+            : null;
         this.manualReviewSaved = false;
-        this.removeManualPendingMarker();
+        if (this.pendingManualStart === null) this.removeManualPendingMarker();
+        else this.renderManualPendingMarker();
         this.createManualRegions();
         this.updateManualReviewUi();
         this.notifyManualSegmentsChanged();
         return true;
+    }
+
+    getExpectedManualSegmentCount() {
+        const ipaCount = Array.isArray(this.ipaSegments) ? this.ipaSegments.length : 0;
+        return Math.max(1, ipaCount || this.syllables.length || 1);
+    }
+
+    rebuildManualSegmentsFromBoundaries() {
+        this.manualSegments = this.manualBoundaryTimes.slice(1).map((endTime, index) => {
+            const startTime = this.manualBoundaryTimes[index];
+            return {
+                index,
+                startTime,
+                endTime,
+                duration: Number((endTime - startTime).toFixed(6)),
+                source: 'manual-review'
+            };
+        });
+    }
+
+    hasCompleteManualReview() {
+        const expectedCount = this.getExpectedManualSegmentCount();
+        return this.manualSegments.length === expectedCount
+            && this.manualBoundaryTimes.length === expectedCount + 1
+            && this.manualSegments.every((segment, index) => (
+                segment.endTime > segment.startTime
+                && (index === 0 || segment.startTime === this.manualSegments[index - 1].endTime)
+            ));
     }
 
     renderManualPendingMarker() {
@@ -341,9 +362,13 @@ class SyllableVerifier {
     }
 
     undoManualSegment() {
-        if (!this.manualSegments.length) return;
-        this.manualSegments.pop();
+        if (!this.manualBoundaryTimes.length) return;
+        this.manualBoundaryTimes.pop();
+        this.rebuildManualSegmentsFromBoundaries();
+        this.pendingManualStart = this.manualBoundaryTimes.at(-1) ?? null;
         this.manualReviewSaved = false;
+        if (this.pendingManualStart === null) this.removeManualPendingMarker();
+        else this.renderManualPendingMarker();
         this.createManualRegions();
         this.setManualStatus('Last manual segment removed.', 'idle');
         this.updateManualReviewUi();
@@ -352,6 +377,7 @@ class SyllableVerifier {
 
     clearManualSegments() {
         this.manualSegments = [];
+        this.manualBoundaryTimes = [];
         this.pendingManualStart = null;
         this.manualReviewSaved = false;
         this.removeManualPendingMarker();
@@ -363,30 +389,39 @@ class SyllableVerifier {
 
     updateManualReviewUi() {
         const count = this.manualSegments.length;
+        const expectedCount = this.getExpectedManualSegmentCount();
         const countEl = this.container.querySelector('#sv-manual-count');
         const instructions = this.container.querySelector('#sv-manual-instructions');
         const undo = this.container.querySelector('#sv-manual-undo');
         const clear = this.container.querySelector('#sv-manual-clear');
         const save = this.container.querySelector('#sv-manual-save');
-        if (countEl) countEl.textContent = `${count} segment${count === 1 ? '' : 's'}`;
+        if (countEl) countEl.textContent = `${count} of ${expectedCount} segments`;
         if (instructions) {
             // Name the IPA syllable being marked so cluster consonants land on
             // the phonological side of the boundary. Without this the annotator
             // falls back to the spelling and the corpus records a convention
             // the aligner does not share.
-            const target = this.ipaSegments?.[count];
-            const targetHint = target ? ` /${target}/` : '';
-            this.manualConvention = 'ipa-phonological';
-            instructions.textContent = this.pendingManualStart === null
-                ? (target
-                    ? `Mark syllable ${count + 1} of ${this.ipaSegments.length}:${targetHint} — click its start, then its end. Use IPA boundaries, not spelling.`
-                    : 'Click the start and end of each syllable on the waveform. Use IPA boundaries, not spelling.')
-                : `Now click the end of syllable ${count + 1}${targetHint}.`;
+            const boundaryCount = this.manualBoundaryTimes.length;
+            const previousTarget = this.ipaSegments?.[Math.max(0, boundaryCount - 1)];
+            const nextTarget = this.ipaSegments?.[boundaryCount];
+            this.manualConvention = 'ipa-phonological-contiguous-v1';
+            if (this.hasCompleteManualReview()) {
+                instructions.textContent = 'All contiguous syllable boundaries are marked. Review them, then save.';
+            } else if (boundaryCount === 0) {
+                instructions.textContent = 'Click the start of the spoken word.';
+            } else if (boundaryCount < expectedCount) {
+                const boundaryLabel = previousTarget && nextTarget
+                    ? ` between /${previousTarget}/ and /${nextTarget}/`
+                    : '';
+                instructions.textContent = `Click shared syllable boundary ${boundaryCount} of ${expectedCount - 1}${boundaryLabel}.`;
+            } else {
+                instructions.textContent = 'Click the end of the spoken word.';
+            }
         }
-        if (undo) undo.disabled = count === 0 || this.manualSaveInProgress;
-        if (clear) clear.disabled = count === 0 || this.manualSaveInProgress;
+        if (undo) undo.disabled = this.manualBoundaryTimes.length === 0 || this.manualSaveInProgress;
+        if (clear) clear.disabled = this.manualBoundaryTimes.length === 0 || this.manualSaveInProgress;
         if (save) {
-            save.disabled = count === 0 || this.manualSaveInProgress || this.manualReviewSaved;
+            save.disabled = !this.hasCompleteManualReview() || this.manualSaveInProgress || this.manualReviewSaved;
             save.textContent = this.manualReviewSaved ? 'Saved' : 'Save to cloud';
         }
     }
@@ -405,7 +440,14 @@ class SyllableVerifier {
     }
 
     async saveManualReview() {
-        if (this.manualSaveInProgress || !this.manualSegments.length) return;
+        if (this.manualSaveInProgress) return;
+        if (!this.hasCompleteManualReview()) {
+            this.setManualStatus(
+                `Mark exactly ${this.getExpectedManualSegmentCount()} syllables before saving.`,
+                'error'
+            );
+            return;
+        }
         if (typeof this.options.onManualSave !== 'function') {
             this.setManualStatus('Cloud save is not available in this session.', 'error');
             return;
@@ -448,6 +490,7 @@ class SyllableVerifier {
         this.syllables = syllables;
         this.ipaSegments = Array.isArray(ipaSegments) ? ipaSegments.slice() : [];
         this.manualSegments = [];
+        this.manualBoundaryTimes = [];
         this.pendingManualStart = null;
         this.manualReviewSaved = false;
         this.removeManualPendingMarker();
@@ -672,7 +715,7 @@ class SyllableVerifier {
                     <span class="sv-info-value">${(total / Math.max(1, this.syllables.length)).toFixed(2)}s</span>
                 </div>
             </div>
-            <p class="sv-hint">💡 Click any region to hear that syllable</p>
+            <p class="sv-hint">💡 Use a numbered label to hear that syllable</p>
         `;
     }
 

@@ -91,6 +91,16 @@
   font-weight: 600;
   font-size: 0.96rem;
   color: var(--dd-ink);
+  cursor: grab;
+}
+
+.dd-placed-chip:active {
+  cursor: grabbing;
+}
+
+.dd-blank-slot.is-drag-source {
+  opacity: 0.35;
+  border-style: dashed;
 }
 
 .dd-blank-slot.is-correct .dd-placed-chip {
@@ -134,6 +144,12 @@
   background: rgba(248, 239, 226, 0.25);
   border-radius: var(--read-radius-container);
   border: 1px dashed rgba(110, 84, 54, 0.15);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.dd-word-bank.drag-over {
+  border-color: var(--dd-accent);
+  background-color: var(--dd-accent-soft);
 }
 
 /* Surface (radius / border / shadow / hover / focus) comes from
@@ -284,6 +300,16 @@
   padding: 12px 14px 8px;
   border-bottom: 1px solid rgba(110, 84, 54, 0.1);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.dd-popover.is-dragging .dd-popover-header {
+  cursor: grabbing;
+}
+
+.dd-popover.is-dragging {
+  transition: none;
 }
 
 .dd-popover-blank-label {

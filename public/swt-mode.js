@@ -1032,6 +1032,10 @@
     renderPicker();
     renderSource();
 
+    if (window.PracticeRouter && questions[currentIndex]?.id != null) {
+      window.PracticeRouter.replaceRoute('swt', questions[currentIndex].id);
+    }
+
     if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
       window.PTEAttemptArchive.updateHistoryUI('swt', questions[currentIndex]?.id);
     }

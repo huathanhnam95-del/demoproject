@@ -59,10 +59,20 @@ function validateComparisonMetadata(metadata, audio = {}) {
   const targetWord = String(context.targetWord || '').trim();
   const referenceIpa = String(context.referenceIpa || '').trim();
   const expectedSyllables = Number(context.expectedSyllables);
+  const referenceSyllableIpa = context.referenceSyllableIpa == null
+    ? null
+    : context.referenceSyllableIpa;
   if (!targetWord) fail('context.targetWord must be a non-empty string.');
   if (!referenceIpa) fail('context.referenceIpa must be a non-empty string.');
   if (!Number.isInteger(expectedSyllables) || expectedSyllables < 1 || expectedSyllables > 20) {
     fail('context.expectedSyllables must be an integer between 1 and 20.');
+  }
+  if (referenceSyllableIpa !== null && (
+    !Array.isArray(referenceSyllableIpa)
+    || referenceSyllableIpa.length !== expectedSyllables
+    || referenceSyllableIpa.some((syllable) => typeof syllable !== 'string' || !syllable.trim())
+  )) {
+    fail('context.referenceSyllableIpa must contain one non-empty string per expected syllable.');
   }
 
   const revisions = requirePlainObject(metadata.revisions, 'revisions');
@@ -94,6 +104,18 @@ function validateComparisonMetadata(metadata, audio = {}) {
   }
 
   const manualSegments = normalizeTimingSegments(metadata.manualSegments, 'manualSegments') || [];
+  const manualSegmentationConvention = String(metadata.manualSegmentationConvention || '').trim() || null;
+  if (manualSegments.length && manualSegments.length !== expectedSyllables) {
+    fail('manualSegments must match the expected syllable count.');
+  }
+  if (manualSegments.length && manualSegmentationConvention !== 'ipa-phonological-contiguous-v1') {
+    fail('manualSegments require manualSegmentationConvention ipa-phonological-contiguous-v1.');
+  }
+  if (manualSegments.some((segment, index) => (
+    index > 0 && Math.abs(segment.startTime - manualSegments[index - 1].endTime) > 0.000001
+  ))) {
+    fail('manualSegments must be contiguous.');
+  }
   const duration = Number(audio.duration);
   if (Number.isFinite(duration) && manualSegments.some((segment) => segment.endTime > duration + 0.02)) {
     fail('manualSegments must fall within the uploaded audio duration.');
@@ -106,6 +128,7 @@ function validateComparisonMetadata(metadata, audio = {}) {
     context: {
       targetWord,
       referenceIpa,
+      referenceSyllableIpa: referenceSyllableIpa?.map((syllable) => syllable.trim()) || null,
       expectedSyllables,
       variantId: context.variantId ? String(context.variantId).slice(0, 200) : null,
       requestReferenceId: context.requestReferenceId ? String(context.requestReferenceId).slice(0, 200) : null
@@ -117,6 +140,7 @@ function validateComparisonMetadata(metadata, audio = {}) {
       v3Model: revisions.v3Model ? String(revisions.v3Model).slice(0, 200) : null
     },
     judgment,
+    manualSegmentationConvention,
     manualSegments,
     analyses: normalizedAnalyses
   };
@@ -191,6 +215,7 @@ function registerPronunciationComparisonRoutes(router, deps) {
         context: normalized.context,
         revisions: normalized.revisions,
         judgment: normalized.judgment,
+        manualSegmentationConvention: normalized.manualSegmentationConvention,
         manualSegments: normalized.manualSegments,
         analyses: normalized.analyses,
         sourceHash,

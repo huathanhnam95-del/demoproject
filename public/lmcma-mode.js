@@ -16,6 +16,7 @@
     submitted: false,
     pickerOpen: false,
     explanationVisible: false,
+    explanationFontScale: 100,
     currentSpeed: 1.0,
     activeVoiceId: null
   };
@@ -164,6 +165,9 @@
     elements.resultBox = document.getElementById('lmcma-result-box');
     elements.explanationPanel = document.getElementById('lmcma-explanation-panel');
     elements.explanationContent = document.getElementById('lmcma-explanation-content');
+    elements.fontDecrease = document.getElementById('lmcma-font-decrease');
+    elements.fontIncrease = document.getElementById('lmcma-font-increase');
+    elements.fontLabel = document.getElementById('lmcma-font-label');
   }
 
   function setupEventListeners() {
@@ -231,6 +235,12 @@
 
     if (elements.explanationToggle) {
       elements.explanationToggle.addEventListener('click', toggleExplanation);
+    }
+    if (elements.fontDecrease) {
+      elements.fontDecrease.addEventListener('click', () => adjustFontSize(-10));
+    }
+    if (elements.fontIncrease) {
+      elements.fontIncrease.addEventListener('click', () => adjustFontSize(10));
     }
 
     document.addEventListener('keydown', (event) => {
@@ -424,7 +434,12 @@
     }
     if (elements.explanationContent) {
       elements.explanationContent.replaceChildren();
+      elements.explanationContent.style.fontSize = '';
     }
+    state.explanationFontScale = 100;
+    if (elements.fontLabel) elements.fontLabel.textContent = '100%';
+    if (elements.fontDecrease) elements.fontDecrease.disabled = false;
+    if (elements.fontIncrease) elements.fontIncrease.disabled = false;
   }
 
   function setLoadingState(message) {
@@ -830,6 +845,19 @@
       elements.explanationToggle.textContent = 'Show explanation';
       elements.explanationToggle.setAttribute('aria-expanded', 'false');
     }
+  }
+
+  function adjustFontSize(delta) {
+    const MIN = 70, MAX = 150;
+    state.explanationFontScale = Math.max(MIN, Math.min(MAX, state.explanationFontScale + delta));
+    if (elements.explanationContent) {
+      elements.explanationContent.style.fontSize = (0.96 * state.explanationFontScale / 100) + 'rem';
+    }
+    if (elements.fontLabel) {
+      elements.fontLabel.textContent = state.explanationFontScale + '%';
+    }
+    if (elements.fontDecrease) elements.fontDecrease.disabled = state.explanationFontScale <= MIN;
+    if (elements.fontIncrease) elements.fontIncrease.disabled = state.explanationFontScale >= MAX;
   }
 
   async function loadQuestionById(questionId) {

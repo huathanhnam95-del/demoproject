@@ -58,6 +58,7 @@ const baseMetadata = {
   context: {
     targetWord: 'actual',
     referenceIpa: '/\u02c8\u00e6k.t\u0283u.\u0259l/',
+    referenceSyllableIpa: ['æk', 'tʃu', 'əl'],
     expectedSyllables: 3,
     variantId: 'cmudict:actual',
     requestReferenceId: 'cmudict:actual'
@@ -69,10 +70,29 @@ const baseMetadata = {
     v3Model: 'model-rev-1'
   },
   judgment: 'v3',
-  manualSegments: [{ startTime: 0.1, endTime: 0.3 }],
+  manualSegmentationConvention: 'ipa-phonological-contiguous-v1',
+  manualSegments: [
+    { startTime: 0.1, endTime: 0.3 },
+    { startTime: 0.3, endTime: 0.5 },
+    { startTime: 0.5, endTime: 0.8 }
+  ],
   analyses: {
     v2: { status: 'available', reason: null, analysis: { analysisVersion: 'pronunciation-analysis-v2', observed: { syllableCount: 2 } } },
-    v3: { status: 'available', reason: null, analysis: { analysisVersion: 'pronunciation-analysis-v3', syllable_count: 3 } }
+    v3: { status: 'available', reason: null, analysis: {
+      analysisVersion: 'pronunciation-analysis-v3',
+      syllable_count: 3,
+      segmentation_convention: 'ctc-token-coverage',
+      measurement_convention: 'ctc-blank-midpoint-v1',
+      partition_convention: 'ctc-interspan-midpoint-contiguous-v1',
+      observed_syllables: [{
+        startTime: 0.12,
+        endTime: 0.24,
+        measurementStartTime: 0.1,
+        measurementEndTime: 0.3,
+        partitionStartTime: 0.08,
+        partitionEndTime: 0.3
+      }]
+    } }
   }
 };
 
@@ -80,7 +100,14 @@ assert.strictEqual(COLLECTION, 'pronunciation_analysis_comparisons');
 assert.doesNotThrow(() => validateWavBuffer(makeWavBuffer()));
 assert.deepStrictEqual(
   validateComparisonMetadata(baseMetadata, { duration: 2 }),
-  { ...baseMetadata, manualSegments: [{ index: 0, startTime: 0.1, endTime: 0.3, duration: 0.2 }] }
+  {
+    ...baseMetadata,
+    manualSegments: [
+      { index: 0, startTime: 0.1, endTime: 0.3, duration: 0.2 },
+      { index: 1, startTime: 0.3, endTime: 0.5, duration: 0.2 },
+      { index: 2, startTime: 0.5, endTime: 0.8, duration: 0.3 }
+    ]
+  }
 );
 assert.throws(
   () => validateComparisonMetadata({ ...baseMetadata, comparisonId: '../escape' }, { duration: 2 }),
@@ -95,8 +122,24 @@ assert.throws(
   /judgment/
 );
 assert.throws(
-  () => validateComparisonMetadata({ ...baseMetadata, manualSegments: [{ startTime: 1.8, endTime: 2.2 }] }, { duration: 2 }),
+  () => validateComparisonMetadata({ ...baseMetadata, manualSegments: [
+    { startTime: 0.1, endTime: 0.3 },
+    { startTime: 0.3, endTime: 0.5 },
+    { startTime: 0.5, endTime: 2.2 }
+  ] }, { duration: 2 }),
   /audio duration/
+);
+assert.throws(
+  () => validateComparisonMetadata({ ...baseMetadata, manualSegments: baseMetadata.manualSegments.slice(0, 2) }, { duration: 2 }),
+  /expected syllable count/
+);
+assert.throws(
+  () => validateComparisonMetadata({ ...baseMetadata, manualSegments: [
+    { startTime: 0.1, endTime: 0.3 },
+    { startTime: 0.35, endTime: 0.5 },
+    { startTime: 0.5, endTime: 0.8 }
+  ] }, { duration: 2 }),
+  /contiguous/
 );
 assert.throws(
   () => validateComparisonMetadata({ ...baseMetadata, analyses: { ...baseMetadata.analyses, v2: { status: 'available', analysis: 'x'.repeat(256 * 1024 + 1) } } }, { duration: 2 }),
@@ -167,8 +210,14 @@ assert(saveHandlers.length >= 2, 'comparison route must include auth/admin middl
   assert.strictEqual(records.get(baseMetadata.comparisonId).uid, undefined);
   assert.strictEqual(records.get(baseMetadata.comparisonId).email, undefined);
   assert.match(records.get(baseMetadata.comparisonId).sourceHash, /^[0-9a-f]{64}$/);
+  assert.deepStrictEqual(records.get(baseMetadata.comparisonId).context.referenceSyllableIpa, ['æk', 'tʃu', 'əl']);
+  assert.strictEqual(records.get(baseMetadata.comparisonId).manualSegmentationConvention, 'ipa-phonological-contiguous-v1');
+  assert.strictEqual(records.get(baseMetadata.comparisonId).analyses.v3.analysis.partition_convention, 'ctc-interspan-midpoint-contiguous-v1');
+  assert.strictEqual(records.get(baseMetadata.comparisonId).analyses.v3.analysis.observed_syllables[0].startTime, 0.12);
+  assert.strictEqual(records.get(baseMetadata.comparisonId).analyses.v3.analysis.observed_syllables[0].measurementStartTime, 0.1);
+  assert.strictEqual(records.get(baseMetadata.comparisonId).analyses.v3.analysis.observed_syllables[0].partitionStartTime, 0.08);
   assert.strictEqual(files.size, 1);
-  console.log('production pronunciation comparison route behavior passed');
+  process.stdout.write('production pronunciation comparison route behavior passed\n');
 
   const app = express();
   app.use('/api/admin', (req, _res, next) => {
@@ -185,11 +234,11 @@ assert(saveHandlers.length >= 2, 'comparison route must include auth/admin middl
     formData.append('audio', new Blob([makeWavBuffer()], { type: 'audio/wav' }), 'recording.wav');
     const upload = await fetch(`http://127.0.0.1:${port}/api/admin/dev/save-analysis-comparison`, { method: 'POST', body: formData });
     assert.strictEqual(upload.status, 200);
-    console.log('production pronunciation comparison Firebase rawBody upload passed');
+    process.stdout.write('production pronunciation comparison Firebase rawBody upload passed\n');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
 })().catch((error) => {
-  console.error(error);
+  process.stderr.write(`${error.stack || error}\n`);
   process.exit(1);
 });

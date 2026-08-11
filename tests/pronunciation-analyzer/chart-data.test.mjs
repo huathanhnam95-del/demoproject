@@ -7,7 +7,8 @@ import {
     canShowDetailedFeedback,
     cleanPitchContour,
     hzToRelativeSemitones,
-    normalizeChartSpans
+    normalizeChartSpans,
+    normalizePlaybackSpans
 } from '../../public/pronunciation-analyzer/chart-data.js';
 
 assert.equal(hzToRelativeSemitones(200, 100), 12);
@@ -184,6 +185,58 @@ assert.deepEqual(normalizeChartSpans([{ startTime: 0.9, endTime: 0.2 }]), []);
 assert.deepEqual(normalizeChartSpans([{ startTime: null, endTime: 0.2 }]), []);
 assert.deepEqual(normalizeChartSpans(null), []);
 assert.deepEqual(normalizeChartSpans(undefined), []);
+// Playback/waveform regions use contiguous partitions, while chart spans keep
+// using the measurement window from the same serialized syllable.
+const multiIntervalSyllable = [{
+    startTime: 0.2,
+    endTime: 0.4,
+    measurementStartTime: 0.18,
+    measurementEndTime: 0.46,
+    partitionStartTime: 0.1,
+    partitionEndTime: 0.5
+}];
+assert.deepEqual(
+    normalizeChartSpans(multiIntervalSyllable).map(({ startTime, endTime }) => ({ startTime, endTime })),
+    [{ startTime: 0.18, endTime: 0.46 }]
+);
+assert.deepEqual(
+    normalizePlaybackSpans(multiIntervalSyllable).map(({ startTime, endTime, duration }) => ({ startTime, endTime, duration })),
+    [{ startTime: 0.1, endTime: 0.5, duration: 0.4 }]
+);
+// Duration bars must describe the same contiguous syllable partitions shown
+// by the waveform. Tiny acoustic/vowel measurement windows remain available
+// for pitch, intensity, and stress, but must not replace total syllable time.
+const photographDurationSpans = normalizePlaybackSpans([
+    {
+        partitionStartTime: 1.00,
+        partitionEndTime: 1.24,
+        partitionDuration: 0.24,
+        measurementStartTime: 1.10,
+        measurementEndTime: 1.12,
+        vowelDuration: 0.02
+    },
+    {
+        partitionStartTime: 1.24,
+        partitionEndTime: 1.68,
+        partitionDuration: 0.44,
+        measurementStartTime: 1.40,
+        measurementEndTime: 1.42,
+        vowelDuration: 0.02
+    },
+    {
+        partitionStartTime: 1.68,
+        partitionEndTime: 2.00,
+        partitionDuration: 0.32,
+        measurementStartTime: 1.80,
+        measurementEndTime: 1.82,
+        vowelDuration: 0.02
+    }
+]);
+assert.deepEqual(
+    buildDurationLanes([], photographDurationSpans).observed.durations,
+    [0.24, 0.44, 0.32],
+    'V3 duration bars must use contiguous partition durations rather than vowel measurement windows'
+);
 // Zero-duration lanes were the visible symptom; guard the end-to-end shape.
 assert.deepEqual(
     buildDurationLanes([], normalizeChartSpans([
@@ -191,4 +244,37 @@ assert.deepEqual(
         { startTime: 0.950217, endTime: 1.152391 }
     ])).observed.durations.map((value) => Number(value.toFixed(6))),
     [0.101086, 0.202174]
+);
+
+// A genuine pitch descent across syllables (e.g. "photograph": stressed syl 1
+// at ~140 Hz, unstressed syl 3 at ~77 Hz) produces a segment near -10.7 ST.
+// The octave correction must NOT shift it by +12 — the descent is real, not a
+// tracker error.  Neighbor context (segment 2 at -8.7 ST) confirms continuity.
+const descentContour = cleanPitchContour([
+    { x: 0.84, y: -0.3, rawHz: 139 },
+    { x: 0.88, y: 0.2, rawHz: 142 },
+    { x: 0.92, y: 0.3, rawHz: 143 },
+    { x: 0.96, y: 0.1, rawHz: 141 },
+    { x: 1.00, y: -0.1, rawHz: 140 },
+    { x: 1.02, y: null, rawHz: null },
+    { x: 1.04, y: null, rawHz: null },
+    { x: 1.06, y: null, rawHz: null },
+    { x: 1.08, y: -5.6, rawHz: 102 },
+    { x: 1.10, y: -7.4, rawHz: 92 },
+    { x: 1.12, y: -8.7, rawHz: 84 },
+    { x: 1.14, y: -10.0, rawHz: 79 },
+    { x: 1.16, y: -9.9, rawHz: 80 },
+    { x: 1.18, y: null, rawHz: null },
+    { x: 1.20, y: null, rawHz: null },
+    { x: 1.22, y: null, rawHz: null },
+    { x: 1.24, y: null, rawHz: null },
+    { x: 1.26, y: -10.3, rawHz: 78 },
+    { x: 1.28, y: -10.7, rawHz: 76 },
+    { x: 1.30, y: -10.5, rawHz: 77 },
+    { x: 1.32, y: -10.6, rawHz: 76 }
+]);
+const seg3Vals = descentContour.slice(17, 21).map((p) => p.y);
+assert.ok(
+    seg3Vals.every((v) => v < -5),
+    `genuine pitch descent to -10 ST must not be shifted up by 12; got [${seg3Vals}]`
 );

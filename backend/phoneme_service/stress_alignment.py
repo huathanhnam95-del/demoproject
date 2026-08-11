@@ -13,6 +13,7 @@ count while still allowing a reliable native reference to guide measurements.
 from __future__ import annotations
 
 import unicodedata
+import math
 from typing import Any, Iterable, Sequence
 
 import numpy as np
@@ -26,8 +27,74 @@ FRAME_INTERVAL = "half-open"
 SYLLABLE_SPAN_TYPE = "ctc-token-coverage"
 NUCLEUS_SPAN_TYPE = "ctc-vowel-token-coverage"
 MEASUREMENT_SPAN_TYPE = "ctc-blank-midpoint-v1"
+PARTITION_SPAN_TYPE = "ctc-interspan-midpoint-contiguous-v1"
 VOWEL_MARKERS = set("aeiouɐɑɒɔəɚɛɜɝɞɟɪʊʌæœɨɵɶː")
 MODEL_IGNORABLE_DIACRITICS = {"̬"}
+
+
+def derive_contiguous_partition_spans(
+    syllable_spans: list[dict],
+    *,
+    frame_count: int | None = None,
+) -> list[dict]:
+    """Add a contiguous phonological partition without changing CTC coverage.
+
+    Raw CTC spans deliberately leave blank-state gaps (and can occasionally
+    overlap after normalization).  A user-facing syllable timeline instead
+    needs one shared boundary between every adjacent pair.  The midpoint of
+    the two raw token edges is used, constrained to fall between the adjacent
+    vowel-nucleus centres.  Outer edges remain the first/last raw CTC edges.
+    """
+    partitioned = [{**span} for span in syllable_spans]
+    if not partitioned:
+        return partitioned
+
+    frame_limit = max(0, int(frame_count)) if frame_count is not None else None
+
+    def clamp_frame(value: float) -> int:
+        rounded = int(math.floor(float(value) + 0.5))
+        if frame_limit is None:
+            return max(0, rounded)
+        return min(frame_limit, max(0, rounded))
+
+    outer_start = clamp_frame(partitioned[0]["start_frame"])
+    outer_end = clamp_frame(partitioned[-1]["end_frame"])
+    boundaries = [outer_start]
+
+    for index in range(len(partitioned) - 1):
+        current = partitioned[index]
+        following = partitioned[index + 1]
+        raw_midpoint = (
+            float(current["end_frame"]) + float(following["start_frame"])
+        ) / 2.0
+        current_nucleus_centre = (
+            float(current.get("nucleus_start_frame", current["start_frame"]))
+            + float(current.get("nucleus_end_frame", current["end_frame"]))
+        ) / 2.0
+        following_nucleus_centre = (
+            float(following.get("nucleus_start_frame", following["start_frame"]))
+            + float(following.get("nucleus_end_frame", following["end_frame"]))
+        ) / 2.0
+        lower = min(current_nucleus_centre, following_nucleus_centre)
+        upper = max(current_nucleus_centre, following_nucleus_centre)
+        candidate = clamp_frame(min(upper, max(lower, raw_midpoint)))
+
+        # Reserve at least one frame for every remaining partition whenever
+        # the aligned outer interval is wide enough to do so.
+        minimum = boundaries[-1] + 1
+        remaining = len(partitioned) - index - 1
+        maximum = outer_end - remaining
+        if maximum >= minimum:
+            candidate = min(maximum, max(minimum, candidate))
+        else:
+            candidate = max(boundaries[-1], min(outer_end, candidate))
+        boundaries.append(candidate)
+
+    boundaries.append(outer_end)
+    for index, span in enumerate(partitioned):
+        span["partition_start_frame"] = boundaries[index]
+        span["partition_end_frame"] = boundaries[index + 1]
+    return partitioned
 
 
 def tokenize_ipa(ipa: str, symbol_table: Sequence[str]) -> list[int]:
@@ -148,9 +215,14 @@ def align_reference_syllables(
         )
 
     syllable_spans = _derive_measurement_spans(syllable_spans)
+    alignment_frame_count = max(1, int(np.asarray(log_probs).shape[0]))
+    syllable_spans = derive_contiguous_partition_spans(
+        syllable_spans,
+        frame_count=alignment_frame_count,
+    )
 
     if sample_count and sample_rate:
-        frame_count = max(1, int(np.asarray(log_probs).shape[0]))
+        frame_count = alignment_frame_count
         for span in syllable_spans:
             span["start_time"] = round(span["start_frame"] / frame_count * sample_count / sample_rate, 6)
             span["end_time"] = round(span["end_frame"] / frame_count * sample_count / sample_rate, 6)
@@ -158,6 +230,8 @@ def align_reference_syllables(
             span["nucleus_end_time"] = round(span["nucleus_end_frame"] / frame_count * sample_count / sample_rate, 6)
             span["measurement_start_time"] = round(span["measurement_start_frame"] / frame_count * sample_count / sample_rate, 6)
             span["measurement_end_time"] = round(span["measurement_end_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["partition_start_time"] = round(span["partition_start_frame"] / frame_count * sample_count / sample_rate, 6)
+            span["partition_end_time"] = round(span["partition_end_frame"] / frame_count * sample_count / sample_rate, 6)
     return {
         "aligned": True,
         "syllables": syllable_spans,
@@ -166,6 +240,7 @@ def align_reference_syllables(
         "syllable_span_type": SYLLABLE_SPAN_TYPE,
         "nucleus_span_type": NUCLEUS_SPAN_TYPE,
         "measurement_span_type": MEASUREMENT_SPAN_TYPE,
+        "partition_span_type": PARTITION_SPAN_TYPE,
         "alignment": alignment,
     }
 

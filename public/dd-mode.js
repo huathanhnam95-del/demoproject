@@ -179,9 +179,32 @@
         if (state.submitted) return;
         const chip = e.target.closest('.dd-option-chip');
         if (!chip || chip.classList.contains('is-used')) return;
-        
+
         const optionId = chip.dataset.optionId;
         selectOption(optionId);
+      });
+
+      elements.wordBank.addEventListener('dragover', (e) => {
+        if (state.submitted) return;
+        const sourceBlank = e.dataTransfer.types.includes('application/x-dd-source-blank');
+        if (sourceBlank) {
+          e.preventDefault();
+          elements.wordBank.classList.add('drag-over');
+        }
+      });
+
+      elements.wordBank.addEventListener('dragleave', () => {
+        elements.wordBank.classList.remove('drag-over');
+      });
+
+      elements.wordBank.addEventListener('drop', (e) => {
+        if (state.submitted) return;
+        elements.wordBank.classList.remove('drag-over');
+        const sourceBlank = e.dataTransfer.getData('application/x-dd-source-blank');
+        if (sourceBlank) {
+          e.preventDefault();
+          removeOption(sourceBlank);
+        }
       });
     }
 
@@ -241,7 +264,9 @@
           e.preventDefault();
           slot.classList.remove('drag-over');
           const optionId = e.dataTransfer.getData('text/plain');
+          const sourceBlank = e.dataTransfer.getData('application/x-dd-source-blank');
           if (optionId) {
+            if (sourceBlank && sourceBlank === slot.dataset.blankId) return;
             placeOption(optionId, slot.dataset.blankId);
           }
         }
@@ -485,8 +510,18 @@
           chipSpan.textContent = placed.text;
 
           if (!state.submitted) {
-            // Decorative only. Activating the slot already removes the word,
-            // and a <button> cannot legally contain another button.
+            chipSpan.setAttribute('draggable', 'true');
+            chipSpan.addEventListener('dragstart', (e) => {
+              e.stopPropagation();
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', placed.optionId);
+              e.dataTransfer.setData('application/x-dd-source-blank', seg.blankId);
+              slot.classList.add('is-drag-source');
+            });
+            chipSpan.addEventListener('dragend', () => {
+              slot.classList.remove('is-drag-source');
+            });
+
             const removeMark = document.createElement('span');
             removeMark.className = 'dd-placed-chip-remove';
             removeMark.setAttribute('aria-hidden', 'true');
@@ -736,11 +771,48 @@
       }
     });
 
+    // Close on click outside (skip during drag)
+    let isDragging = false;
     document.addEventListener('mousedown', (e) => {
+      if (isDragging) return;
       if (!popoverEl?.classList.contains('is-visible')) return;
       if (popoverEl.contains(e.target)) return;
       if (e.target.closest('.dd-hint-btn')) return;
       hidePopover();
+    });
+
+    // Drag-to-move via header
+    const header = popoverEl.querySelector('.dd-popover-header');
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let popStartX = 0;
+    let popStartY = 0;
+
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.dd-popover-close')) return;
+      e.preventDefault();
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      popStartX = popoverEl.offsetLeft;
+      popStartY = popoverEl.offsetTop;
+      popoverEl.classList.add('is-dragging');
+      const arrow = popoverEl.querySelector('.dd-popover-arrow');
+      if (arrow) arrow.style.display = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      popoverEl.style.left = `${popStartX + dx}px`;
+      popoverEl.style.top = `${popStartY + dy}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      popoverEl.classList.remove('is-dragging');
     });
 
     return popoverEl;
@@ -885,6 +957,8 @@
 
     popoverEl.querySelector('.dd-popover-body').innerHTML = buildPopoverBodyHtml(res);
 
+    const arrowReset = popoverEl.querySelector('.dd-popover-arrow');
+    if (arrowReset) arrowReset.style.display = '';
     positionPopover(anchorEl);
     popoverEl.classList.add('is-visible');
   }

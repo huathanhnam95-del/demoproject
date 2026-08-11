@@ -411,6 +411,32 @@ class TestConfidenceExtraction(unittest.TestCase):
             result["syllables"][1]["nucleus_start_frame"],
         )
 
+    def test_reference_alignment_exposes_contiguous_partition_contract_and_times(self):
+        from backend.phoneme_service.stress_alignment import align_reference_syllables
+
+        log_probs = np.log(np.array([
+            [0.90, 0.08, 0.02],
+            [0.03, 0.94, 0.03],
+            [0.03, 0.04, 0.93],
+            [0.90, 0.08, 0.02],
+            [0.04, 0.93, 0.03],
+            [0.90, 0.08, 0.02],
+        ]))
+
+        result = align_reference_syllables(
+            log_probs,
+            ["ab", "a"],
+            ["<pad>", "a", "b"],
+            sample_count=9600,
+            sample_rate=16000,
+        )
+
+        self.assertEqual(result.get("partition_span_type"), "ctc-interspan-midpoint-contiguous-v1")
+        first, second = result["syllables"]
+        self.assertEqual(first.get("partition_end_frame"), second.get("partition_start_frame"))
+        self.assertEqual(first.get("partition_end_time"), second.get("partition_start_time"))
+        self.assertGreater(first.get("partition_end_time", 0), first.get("partition_start_time", 0))
+
     def test_measurement_spans_split_blank_gaps_without_mutating_raw_coverage(self):
         from backend.phoneme_service.stress_alignment import _derive_measurement_spans
 
@@ -502,6 +528,84 @@ class TestConfidenceExtraction(unittest.TestCase):
         self.assertEqual(
             [(span["measurement_start_frame"], span["measurement_end_frame"]) for span in spans],
             [(36, 42), (49, 53), (60, 61)],
+        )
+
+    def test_contiguous_partition_deriver_is_available(self):
+        from backend.phoneme_service import stress_alignment
+
+        self.assertTrue(
+            hasattr(stress_alignment, "derive_contiguous_partition_spans"),
+            "V3 alignment must expose a distinct contiguous partition derivation step",
+        )
+
+    def test_contiguous_partitions_split_ctc_gaps_without_mutating_raw_spans(self):
+        from backend.phoneme_service.stress_alignment import derive_contiguous_partition_spans
+
+        raw = [
+            {"start_frame": 2, "end_frame": 5, "nucleus_start_frame": 3, "nucleus_end_frame": 5},
+            {"start_frame": 8, "end_frame": 11, "nucleus_start_frame": 8, "nucleus_end_frame": 9},
+            {"start_frame": 13, "end_frame": 16, "nucleus_start_frame": 14, "nucleus_end_frame": 15},
+        ]
+
+        partitioned = derive_contiguous_partition_spans(raw, frame_count=20)
+
+        self.assertEqual(
+            [(span.get("partition_start_frame"), span.get("partition_end_frame")) for span in partitioned],
+            [(2, 7), (7, 12), (12, 16)],
+        )
+        self.assertEqual(
+            [(span["start_frame"], span["end_frame"]) for span in partitioned],
+            [(2, 5), (8, 11), (13, 16)],
+        )
+        self.assertNotIn("partition_start_frame", raw[0])
+
+    def test_contiguous_partitions_handle_one_syllable_zero_gap_and_overlap(self):
+        from backend.phoneme_service.stress_alignment import derive_contiguous_partition_spans
+
+        one = derive_contiguous_partition_spans([
+            {"start_frame": 3, "end_frame": 9, "nucleus_start_frame": 4, "nucleus_end_frame": 7},
+        ], frame_count=12)
+        touching = derive_contiguous_partition_spans([
+            {"start_frame": 0, "end_frame": 3, "nucleus_start_frame": 1, "nucleus_end_frame": 3},
+            {"start_frame": 3, "end_frame": 6, "nucleus_start_frame": 3, "nucleus_end_frame": 5},
+        ], frame_count=6)
+        overlap = derive_contiguous_partition_spans([
+            {"start_frame": 1, "end_frame": 8, "nucleus_start_frame": 2, "nucleus_end_frame": 4},
+            {"start_frame": 6, "end_frame": 12, "nucleus_start_frame": 9, "nucleus_end_frame": 11},
+        ], frame_count=14)
+
+        self.assertEqual((one[0].get("partition_start_frame"), one[0].get("partition_end_frame")), (3, 9))
+        self.assertEqual(touching[0].get("partition_end_frame"), touching[1].get("partition_start_frame"))
+        self.assertEqual(overlap[0].get("partition_end_frame"), overlap[1].get("partition_start_frame"))
+        self.assertEqual(overlap[0].get("partition_end_frame"), 7)
+
+    def test_contiguous_partitions_clamp_boundaries_between_nucleus_centres_and_audio(self):
+        from backend.phoneme_service.stress_alignment import derive_contiguous_partition_spans
+
+        partitioned = derive_contiguous_partition_spans([
+            {"start_frame": -2, "end_frame": 20, "nucleus_start_frame": 1, "nucleus_end_frame": 3},
+            {"start_frame": 22, "end_frame": 40, "nucleus_start_frame": 5, "nucleus_end_frame": 7},
+        ], frame_count=10)
+
+        self.assertEqual(partitioned[0].get("partition_start_frame"), 0)
+        self.assertEqual(partitioned[0].get("partition_end_frame"), 6)
+        self.assertEqual(partitioned[1].get("partition_start_frame"), 6)
+        self.assertEqual(partitioned[1].get("partition_end_frame"), 10)
+        self.assertGreater(partitioned[0].get("partition_end_frame", -1), partitioned[0].get("partition_start_frame", -1))
+        self.assertGreater(partitioned[1].get("partition_end_frame", -1), partitioned[1].get("partition_start_frame", -1))
+
+    def test_photograph_partition_matches_expected_midpoint_boundaries(self):
+        from backend.phoneme_service.stress_alignment import derive_contiguous_partition_spans
+
+        partitioned = derive_contiguous_partition_spans([
+            {"start_frame": 32, "end_frame": 37, "nucleus_start_frame": 36, "nucleus_end_frame": 37},
+            {"start_frame": 47, "end_frame": 50, "nucleus_start_frame": 49, "nucleus_end_frame": 50},
+            {"start_frame": 56, "end_frame": 73, "nucleus_start_frame": 60, "nucleus_end_frame": 61},
+        ], frame_count=80)
+
+        self.assertEqual(
+            [(span.get("partition_start_frame"), span.get("partition_end_frame")) for span in partitioned],
+            [(32, 42), (42, 53), (53, 73)],
         )
 
 

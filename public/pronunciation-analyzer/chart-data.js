@@ -23,32 +23,63 @@ export function hzToRelativeSemitones(value, speakerMedianF0) {
 
 export function cleanPitchContour(points) {
     const cleaned = points.map((point) => ({ ...point }));
-    let segmentStart = 0;
 
-    while (segmentStart < points.length) {
-        while (segmentStart < points.length && points[segmentStart].y === null) segmentStart += 1;
-        if (segmentStart >= points.length) break;
-
-        let segmentEnd = segmentStart;
-        while (segmentEnd + 1 < points.length && points[segmentEnd + 1].y !== null) segmentEnd += 1;
-
-        // Pitch trackers commonly lock onto a harmonic and report an exact
-        // octave jump. Work in semitones and anchor every voiced run to the
-        // speaker median independently. This corrects a tracker that resumes
-        // one octave high after silence without blending samples across the
-        // gap. Then unwrap any remaining within-run octave discontinuities.
-        const segmentCenter = median(
-            cleaned.slice(segmentStart, segmentEnd + 1).map((point) => point.y)
+    // First pass: identify all voiced segments and compute their medians.
+    const segments = [];
+    let cursor = 0;
+    while (cursor < points.length) {
+        while (cursor < points.length && points[cursor].y === null) cursor += 1;
+        if (cursor >= points.length) break;
+        let end = cursor;
+        while (end + 1 < points.length && points[end + 1].y !== null) end += 1;
+        const segMedian = median(
+            cleaned.slice(cursor, end + 1).map((point) => point.y)
         );
-        const octaveOffset = Number.isFinite(segmentCenter)
-            ? Math.round(segmentCenter / 12) * 12
+        segments.push({ start: cursor, end, median: segMedian, octaveOffset: 0 });
+        cursor = end + 1;
+    }
+
+    // Second pass: decide octave correction using neighbor context.
+    // A genuine pitch descent (e.g. stressed → unstressed) can reach -10 ST,
+    // which sits close to -12 and would be falsely "corrected" without context.
+    for (let s = 0; s < segments.length; s += 1) {
+        const seg = segments[s];
+        const segmentCenter = seg.median;
+        if (!Number.isFinite(segmentCenter)) continue;
+        const nearestOctave = Math.round(segmentCenter / 12) * 12;
+        if (nearestOctave === 0) continue;
+        if (Math.abs(segmentCenter - nearestOctave) >= 3) continue;
+
+        const correctedMedian = segmentCenter - nearestOctave;
+        let distUncorrected = 0;
+        let distCorrected = 0;
+        let neighborCount = 0;
+        if (s > 0) {
+            const prev = segments[s - 1].median - segments[s - 1].octaveOffset;
+            distUncorrected += Math.abs(segmentCenter - prev);
+            distCorrected += Math.abs(correctedMedian - prev);
+            neighborCount += 1;
+        }
+        if (s < segments.length - 1) {
+            const next = segments[s + 1].median;
+            distUncorrected += Math.abs(segmentCenter - next);
+            distCorrected += Math.abs(correctedMedian - next);
+            neighborCount += 1;
+        }
+        seg.octaveOffset = (neighborCount > 0 && distCorrected < distUncorrected)
+            ? nearestOctave
             : 0;
-        if (octaveOffset !== 0) {
-            for (let index = segmentStart; index <= segmentEnd; index += 1) {
-                cleaned[index].y = Number((cleaned[index].y - octaveOffset).toFixed(4));
+    }
+
+    // Third pass: apply corrections, within-run unwrapping, and smoothing.
+    for (const seg of segments) {
+        if (seg.octaveOffset !== 0) {
+            for (let index = seg.start; index <= seg.end; index += 1) {
+                cleaned[index].y = Number((cleaned[index].y - seg.octaveOffset).toFixed(4));
             }
         }
-        for (let index = segmentStart + 1; index <= segmentEnd; index += 1) {
+
+        for (let index = seg.start + 1; index <= seg.end; index += 1) {
             const previous = cleaned[index - 1].y;
             let current = cleaned[index].y;
             while (current - previous > 6) current -= 12;
@@ -56,23 +87,19 @@ export function cleanPitchContour(points) {
             cleaned[index].y = Number(current.toFixed(4));
         }
 
-        // Short voiced runs do not contain enough context to distinguish a
-        // real contour movement from ordinary noise. Preserve the unwrapped
-        // values without applying the median/weighted noise filter.
-        if (segmentEnd - segmentStart + 1 >= 5) {
+        if (seg.end - seg.start + 1 >= 5) {
             const medianFiltered = cleaned.map((point) => ({ ...point }));
-            for (let index = segmentStart; index <= segmentEnd; index += 1) {
-                const windowStart = Math.max(segmentStart, index - 2);
-                const windowEnd = Math.min(segmentEnd, index + 2);
+            for (let index = seg.start; index <= seg.end; index += 1) {
+                const windowStart = Math.max(seg.start, index - 2);
+                const windowEnd = Math.min(seg.end, index + 2);
                 const window = [];
-                for (let cursor = windowStart; cursor <= windowEnd; cursor += 1) {
-                    window.push(cleaned[cursor].y);
+                for (let c = windowStart; c <= windowEnd; c += 1) {
+                    window.push(cleaned[c].y);
                 }
                 medianFiltered[index].y = Number(median(window).toFixed(4));
             }
-
-            for (let index = segmentStart; index <= segmentEnd; index += 1) {
-                if (index === segmentStart || index === segmentEnd) {
+            for (let index = seg.start; index <= seg.end; index += 1) {
+                if (index === seg.start || index === seg.end) {
                     cleaned[index].y = medianFiltered[index].y;
                     continue;
                 }
@@ -83,8 +110,6 @@ export function cleanPitchContour(points) {
                 ).toFixed(4));
             }
         }
-
-        segmentStart = segmentEnd + 1;
     }
 
     return cleaned;
@@ -284,10 +309,56 @@ export function normalizeChartSpans(syllables) {
         .filter(Boolean);
 }
 
+/**
+ * Normalize the full contiguous spans used by waveform regions and playback.
+ * Raw CTC coverage and acoustic measurement windows remain untouched on the
+ * returned objects for technical inspection and chart calculations.
+ */
+export function normalizePlaybackSpans(syllables) {
+    return (Array.isArray(syllables) ? syllables : [])
+        .map((syllable) => {
+            const start = syllable?.partitionStartTime
+                ?? syllable?.partition_start_time
+                ?? syllable?.startTime
+                ?? syllable?.start_time;
+            const end = syllable?.partitionEndTime
+                ?? syllable?.partition_end_time
+                ?? syllable?.endTime
+                ?? syllable?.end_time;
+            if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+            return {
+                ...syllable,
+                startTime: start,
+                endTime: end,
+                duration: end - start
+            };
+        })
+        .filter(Boolean);
+}
+
 export function buildDurationLanes(targetSyllables = [], observedSyllables = []) {
-    const duration = (syllable) => Number(
-        syllable?.vowelDuration ?? syllable?.duration ?? 0
-    );
+    const duration = (syllable) => {
+        const explicitPartitionDuration = Number(
+            syllable?.partitionDuration ?? syllable?.partition_duration
+        );
+        if (Number.isFinite(explicitPartitionDuration) && explicitPartitionDuration >= 0) {
+            return explicitPartitionDuration;
+        }
+        const partitionStart = Number(
+            syllable?.partitionStartTime ?? syllable?.partition_start_time
+        );
+        const partitionEnd = Number(
+            syllable?.partitionEndTime ?? syllable?.partition_end_time
+        );
+        if (
+            Number.isFinite(partitionStart)
+            && Number.isFinite(partitionEnd)
+            && partitionEnd >= partitionStart
+        ) {
+            return partitionEnd - partitionStart;
+        }
+        return Number(syllable?.vowelDuration ?? syllable?.duration ?? 0);
+    };
     return {
         countsMatch: targetSyllables.length === observedSyllables.length,
         target: {

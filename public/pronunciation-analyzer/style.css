@@ -179,6 +179,10 @@
     opacity: 0.58;
 }
 
+.pa-local-sample-status[data-state="saving"] {
+    color: #92400e;
+}
+
 .pa-local-sample-status[data-state="saved"] {
     color: #166534;
 }

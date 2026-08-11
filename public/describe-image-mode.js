@@ -670,7 +670,11 @@ Please provide:
 
     function onEnter() {
         init();
-        if (!hasLoadedEntries) loadEntries();
+        if (!hasLoadedEntries) {
+            loadEntries();
+        } else if (currentEntry) {
+            updateQuestionDisplay();
+        }
     }
 
     function onExit() {

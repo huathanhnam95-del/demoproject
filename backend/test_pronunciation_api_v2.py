@@ -552,6 +552,7 @@ class PronunciationV3ApiTest(unittest.TestCase):
         return {
             "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
             "reference_ipa": "/\u02c8h\u025b.lo\u028a/",
+            "reference_syllables": json.dumps(["hɛ", "loʊ"]),
             "expected_syllables": "2",
             "target_word": "actual",
             "variant_id": "cmudict:actual",
@@ -726,7 +727,7 @@ class PronunciationV3ApiTest(unittest.TestCase):
     def test_compare_returns_v2_and_v3_while_global_mode_is_shadow(self):
         with patch.object(server, '_PRONUNCIATION_V3_MODE', 'shadow'), \
              patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
-             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()):
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()) as run_v3:
             response = self.client.post(
                 "/analyze/compare",
                 data=self._valid_comparison_form(),
@@ -739,6 +740,8 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(body['v2']['status'], 'available')
         self.assertEqual(body['v3']['status'], 'available')
         self.assertEqual(body['context']['targetWord'], 'actual')
+        self.assertEqual(body['context']['referenceSyllableIpa'], ["hɛ", "loʊ"])
+        self.assertEqual(run_v3.call_args.kwargs['reference_syllables'], ["hɛ", "loʊ"])
         self.assertRegex(body['comparisonId'], r'^[0-9a-f]{32}$')
 
     def test_compare_preserves_v2_when_v3_is_unavailable(self):

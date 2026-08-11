@@ -2499,6 +2499,206 @@ def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_sylla
     }
 
 
+def _refine_partition_boundaries_with_acoustic_tail(spans, intensity):
+    """Move only wide-gap midpoints that demonstrably split a late vowel tail.
+
+    CTC blank gaps are normally partitioned at their midpoint. In a wide gap,
+    however, the preceding vowel can continue beyond its raw aligned token.
+    When that vowel reaches its acoustic peak inside the gap, keep its decaying
+    tail with the preceding syllable until intensity falls 8 dB below the peak
+    measured in the preceding raw span. The correction is capped at 50 ms and
+    never changes raw CTC or measurement intervals.
+    """
+    if not isinstance(spans, list) or len(spans) < 2 or not isinstance(intensity, dict):
+        return False
+    times = intensity.get('times')
+    values = intensity.get('values')
+    if not isinstance(times, list) or not isinstance(values, list) or len(times) != len(values):
+        return False
+    contour = []
+    for time_value, intensity_value in zip(times, values):
+        try:
+            time_number = float(time_value)
+            intensity_number = float(intensity_value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(time_number) and np.isfinite(intensity_number):
+            contour.append((time_number, intensity_number))
+    if not contour:
+        return False
+
+    def span_time(span, snake_key, camel_key, fallback=None):
+        value = span.get(snake_key, span.get(camel_key, fallback))
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    changed = False
+    for index in range(len(spans) - 1):
+        current = spans[index]
+        following = spans[index + 1]
+        raw_start = span_time(current, 'start_time', 'startTime')
+        gap_start = span_time(current, 'end_time', 'endTime')
+        gap_end = span_time(following, 'start_time', 'startTime')
+        boundary = span_time(current, 'partition_end_time', 'partitionEndTime')
+        next_partition_end = span_time(
+            following, 'partition_end_time', 'partitionEndTime', gap_end
+        )
+        if any(value is None for value in (
+            raw_start, gap_start, gap_end, boundary, next_partition_end
+        )):
+            continue
+        if gap_end - gap_start < 0.14:
+            continue
+
+        preceding_values = [
+            value for time_value, value in contour
+            if raw_start <= time_value <= gap_start
+        ]
+        gap_values = [
+            (time_value, value) for time_value, value in contour
+            if gap_start <= time_value <= gap_end
+        ]
+        if not preceding_values or not gap_values:
+            continue
+        peak_reference = max(preceding_values)
+        gap_peak_time, _gap_peak_value = max(gap_values, key=lambda item: item[1])
+        if gap_peak_time - gap_start < 0.02 or gap_peak_time > boundary:
+            continue
+
+        threshold = peak_reference - 8.0
+        candidates = [
+            time_value for time_value, value in gap_values
+            if time_value >= boundary and value <= threshold
+        ]
+        if not candidates:
+            continue
+        candidate = min(candidates[0], boundary + 0.05, gap_end)
+        candidate = min(candidate, next_partition_end - 0.000001)
+        if candidate - boundary < 0.001:
+            continue
+        candidate = round(candidate, 6)
+        current['partition_end_time'] = candidate
+        following['partition_start_time'] = candidate
+        changed = True
+    return changed
+
+
+def _refine_partition_boundaries_with_fricative_onset(
+    spans,
+    intensity,
+    acoustic_syllables,
+):
+    """Use a corroborated acoustic boundary when CTC splits onset frication.
+
+    Stop-to-fricative sequences can make a forced CTC token for the coda stop
+    latch onto the rising frication.  A blank-gap midpoint then assigns the
+    first part of the following fricative to the preceding syllable.  Shift
+    only when the next authoritative syllable begins with a fricative, V2's
+    acoustic boundary is materially earlier, and the intensity valley agrees.
+    Raw CTC and measurement intervals remain unchanged.
+    """
+    if (
+        not isinstance(spans, list)
+        or len(spans) < 2
+        or not isinstance(acoustic_syllables, list)
+        or len(acoustic_syllables) != len(spans)
+        or not isinstance(intensity, dict)
+    ):
+        return False
+    times = intensity.get('times')
+    values = intensity.get('values')
+    if not isinstance(times, list) or not isinstance(values, list) or len(times) != len(values):
+        return False
+    contour = []
+    for time_value, intensity_value in zip(times, values):
+        try:
+            time_number = float(time_value)
+            intensity_number = float(intensity_value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(time_number) and np.isfinite(intensity_number):
+            contour.append((time_number, intensity_number))
+    if not contour:
+        return False
+
+    fricative_onsets = ('s', 'z', 'ʃ', 'ʒ', 'f', 'v', 'θ', 'ð', 'h')
+
+    def number(source, *keys):
+        for key in keys:
+            if isinstance(source, dict) and source.get(key) is not None:
+                try:
+                    return float(source[key])
+                except (TypeError, ValueError):
+                    return None
+        return None
+
+    changed = False
+    for index in range(len(spans) - 1):
+        current = spans[index]
+        following = spans[index + 1]
+        following_ipa = unicodedata.normalize('NFC', str(following.get('ipa') or ''))
+        following_ipa = following_ipa.lstrip('/[.( ˈˌ')
+        if not following_ipa.startswith(fricative_onsets):
+            continue
+
+        boundary = number(current, 'partition_end_time', 'partitionEndTime')
+        next_partition_end = number(following, 'partition_end_time', 'partitionEndTime')
+        acoustic_end = number(acoustic_syllables[index], 'endTime', 'end_time', 'end')
+        acoustic_next_start = number(
+            acoustic_syllables[index + 1], 'startTime', 'start_time', 'start'
+        )
+        current_nucleus_end = number(
+            current, 'nucleus_end_time', 'nucleusEndTime', 'end_time', 'endTime'
+        )
+        following_raw_start = number(following, 'start_time', 'startTime')
+        if any(value is None for value in (
+            boundary,
+            next_partition_end,
+            acoustic_end,
+            acoustic_next_start,
+            current_nucleus_end,
+            following_raw_start,
+        )):
+            continue
+
+        acoustic_boundary = (acoustic_end + acoustic_next_start) / 2.0
+        if boundary - acoustic_boundary < 0.05:
+            continue
+        valley_window = [
+            item for item in contour
+            if current_nucleus_end + 0.02 <= item[0] <= following_raw_start
+        ]
+        if len(valley_window) < 3:
+            continue
+        valley_time, valley_value = min(valley_window, key=lambda item: item[1])
+        if abs(acoustic_boundary - valley_time) > 0.04:
+            continue
+        preceding_peak = max(
+            (value for time_value, value in valley_window if time_value <= valley_time),
+            default=valley_value,
+        )
+        following_peak = max(
+            (value for time_value, value in valley_window if time_value >= valley_time),
+            default=valley_value,
+        )
+        if preceding_peak - valley_value < 6.0 or following_peak - valley_value < 6.0:
+            continue
+
+        candidate = min(acoustic_boundary, next_partition_end - 0.000001)
+        previous_partition_start = number(
+            current, 'partition_start_time', 'partitionStartTime'
+        )
+        if previous_partition_start is None or candidate <= previous_partition_start:
+            continue
+        candidate = round(candidate, 6)
+        current['partition_end_time'] = candidate
+        following['partition_start_time'] = candidate
+        changed = True
+    return changed
+
+
 def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, expected_syllables=None):
     """Build v3 response from phoneme recognition + Praat contours.
 
@@ -2557,6 +2757,81 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
 
     _ensure_measurement_boundaries(syllables_from_recognizer)
 
+    partition_convention = 'ctc-interspan-midpoint-contiguous-v1'
+
+    def _ensure_partition_boundaries(spans):
+        """Add a contiguous display/playback partition beside raw CTC spans."""
+        if not spans or not isinstance(spans, list):
+            return spans
+        if all(
+            s.get('partition_start_time') is not None
+            and s.get('partition_end_time') is not None
+            for s in spans
+        ):
+            return spans
+
+        def _span_time(span, snake_key, camel_key, fallback):
+            value = span.get(snake_key, span.get(camel_key, fallback))
+            return float(value)
+
+        raw_starts = [
+            _span_time(span, 'start_time', 'startTime', 0.0)
+            for span in spans
+        ]
+        raw_ends = [
+            _span_time(span, 'end_time', 'endTime', raw_starts[index])
+            for index, span in enumerate(spans)
+        ]
+        total_duration = max(0.0, float(praat_result.get('duration') or raw_ends[-1]))
+        outer_start = min(total_duration, max(0.0, raw_starts[0]))
+        outer_end = min(total_duration, max(outer_start, raw_ends[-1]))
+        boundaries = [outer_start]
+
+        for index in range(len(spans) - 1):
+            current = spans[index]
+            following = spans[index + 1]
+            candidate = (raw_ends[index] + raw_starts[index + 1]) / 2.0
+            current_nucleus_start = _span_time(
+                current, 'nucleus_start_time', 'nucleusStartTime', raw_starts[index]
+            )
+            current_nucleus_end = _span_time(
+                current, 'nucleus_end_time', 'nucleusEndTime', raw_ends[index]
+            )
+            next_nucleus_start = _span_time(
+                following, 'nucleus_start_time', 'nucleusStartTime', raw_starts[index + 1]
+            )
+            next_nucleus_end = _span_time(
+                following, 'nucleus_end_time', 'nucleusEndTime', raw_ends[index + 1]
+            )
+            current_centre = (current_nucleus_start + current_nucleus_end) / 2.0
+            next_centre = (next_nucleus_start + next_nucleus_end) / 2.0
+            lower, upper = sorted((current_centre, next_centre))
+            candidate = min(upper, max(lower, candidate))
+            candidate = min(outer_end, max(boundaries[-1], candidate))
+            boundaries.append(round(candidate, 6))
+
+        boundaries.append(round(outer_end, 6))
+        for index, span in enumerate(spans):
+            span['partition_start_time'] = boundaries[index]
+            span['partition_end_time'] = boundaries[index + 1]
+        return spans
+
+    _ensure_partition_boundaries(syllables_from_recognizer)
+    acoustic_tail_refined = _refine_partition_boundaries_with_acoustic_tail(
+        syllables_from_recognizer,
+        praat_result.get('intensity'),
+    )
+    fricative_onset_refined = _refine_partition_boundaries_with_fricative_onset(
+        syllables_from_recognizer,
+        praat_result.get('intensity'),
+        (praat_result.get('observed') or {}).get('syllables') or [],
+    )
+    partition_refined = acoustic_tail_refined or fricative_onset_refined
+    if fricative_onset_refined:
+        partition_convention = 'ctc-interspan-acoustic-hybrid-contiguous-v3'
+    elif acoustic_tail_refined:
+        partition_convention = 'ctc-interspan-acoustic-tail-contiguous-v2'
+
     def public_syllable_span(span):
         start_time = span.get('start_time', span.get('startTime', span.get('start', 0)))
         end_time = span.get('end_time', span.get('endTime', span.get('end', 0)))
@@ -2572,9 +2847,15 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
             ('nucleus_end_time', 'nucleusEndTime'),
             ('measurement_start_time', 'measurementStartTime'),
             ('measurement_end_time', 'measurementEndTime'),
+            ('partition_start_time', 'partitionStartTime'),
+            ('partition_end_time', 'partitionEndTime'),
         ):
             if source in span and span[source] is not None:
                 output[target] = span[source]
+        if 'partitionStartTime' in output and 'partitionEndTime' in output:
+            output['partitionDuration'] = round(
+                output['partitionEndTime'] - output['partitionStartTime'], 6
+            )
         return output
 
     return {
@@ -2592,6 +2873,11 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         'segmentation_convention': canonical_alignment.get('syllable_span_type'),
         'nucleus_convention': canonical_alignment.get('nucleus_span_type'),
         'measurement_convention': canonical_alignment.get('measurement_span_type'),
+        'partition_convention': (
+            partition_convention
+            if partition_refined
+            else (canonical_alignment.get('partition_span_type') or partition_convention)
+        ) if syllables_from_recognizer else None,
         'syllable_count': syllable_count,
         'comparison': comparison,
         'reference_stress': (praat_result.get('observed', {}).get('stressEvidence', {}).get('referenceStress')
@@ -3011,6 +3297,7 @@ def run_v3_pipeline(
     *,
     wav_bytes=None,
     reference_ipa=None,
+    reference_syllables=None,
     expected_syllables=None,
     target_word=None,
     variant_id=None,
@@ -3059,11 +3346,16 @@ def run_v3_pipeline(
             # independent signal rather than a re-segmentation of the target.
             expected_syllable_count=None,
         )
-        try:
-            parsed_reference = parse_pronunciation(reference_ipa) if reference_ipa else None
-            reference_syllables = [item.get('ipa', '') for item in parsed_reference.syllables] if parsed_reference else []
-        except Exception:
-            reference_syllables = []
+        if reference_syllables is None:
+            try:
+                parsed_reference = parse_pronunciation(reference_ipa) if reference_ipa else None
+                resolved_reference_syllables = [
+                    item.get('ipa', '') for item in parsed_reference.syllables
+                ] if parsed_reference else []
+            except Exception:
+                resolved_reference_syllables = []
+        else:
+            resolved_reference_syllables = list(reference_syllables)
 
         try:
             client = create_phoneme_client()
@@ -3077,7 +3369,7 @@ def run_v3_pipeline(
                 phoneme_future = executor.submit(
                     recognizer_call,
                     wav_bytes,
-                    reference_syllables,
+                    resolved_reference_syllables,
                     expected_syllables or 0,
                     variant_id=request_reference_id,
                 )
@@ -3192,6 +3484,29 @@ def _build_v3_active_result_from_pipeline(
     return response, None
 
 
+def _parse_reference_syllables_payload(raw_value, expected_syllables):
+    """Validate an optional authoritative per-syllable IPA request field."""
+    if raw_value is None or not str(raw_value).strip():
+        return None
+    try:
+        syllables = json.loads(raw_value)
+    except (TypeError, json.JSONDecodeError) as error:
+        raise ValueError('REFERENCE_SYLLABLES_INVALID') from error
+    if (
+        not isinstance(syllables, list)
+        or not 1 <= len(syllables) <= 8
+        or len(syllables) != expected_syllables
+        or any(
+            not isinstance(syllable, str)
+            or not syllable
+            or syllable != unicodedata.normalize('NFC', syllable)
+            for syllable in syllables
+        )
+    ):
+        raise ValueError('REFERENCE_SYLLABLES_INVALID')
+    return syllables
+
+
 @app.route('/analyze/v3', methods=['POST'])
 def analyze_v3():
     """V3 pronunciation analysis with optional phoneme recognition."""
@@ -3203,6 +3518,14 @@ def analyze_v3():
     expected_syllables = request.form.get('expected_syllables', type=int)
     target_word = request.form.get('target_word')
     variant_id = request.form.get('variant_id')
+    try:
+        reference_syllables = _parse_reference_syllables_payload(
+            request.form.get('reference_syllables'),
+            expected_syllables,
+        )
+    except ValueError as error:
+        code = str(error)
+        return jsonify({'error': code, 'code': code}), 400
     request_reference_id = variant_id or _derive_request_reference_id(
         target_word,
         reference_ipa,
@@ -3227,6 +3550,7 @@ def analyze_v3():
         pipeline = run_v3_pipeline(
             tmp_path,
             reference_ipa=reference_ipa,
+            reference_syllables=reference_syllables,
             expected_syllables=expected_syllables,
             target_word=target_word,
             variant_id=request_reference_id,
@@ -3356,6 +3680,14 @@ def analyze_comparison():
     expected_syllables = request.form.get('expected_syllables', type=int)
     target_word = (request.form.get('target_word') or '').strip()
     variant_id = (request.form.get('variant_id') or '').strip() or None
+    try:
+        reference_syllables = _parse_reference_syllables_payload(
+            request.form.get('reference_syllables'),
+            expected_syllables,
+        )
+    except ValueError as error:
+        code = str(error)
+        return jsonify({'error': code, 'code': code}), 400
     reference_error = _comparison_reference_error(reference_ipa, expected_syllables)
     if reference_error:
         return jsonify({'error': reference_error, 'code': reference_error}), 400
@@ -3395,6 +3727,7 @@ def analyze_comparison():
             pipeline = run_v3_pipeline(
                 tmp_path,
                 reference_ipa=reference_ipa,
+                reference_syllables=reference_syllables,
                 expected_syllables=expected_syllables,
                 target_word=target_word,
                 variant_id=request_reference_id,
@@ -3429,6 +3762,7 @@ def analyze_comparison():
             'context': {
                 'targetWord': target_word,
                 'referenceIpa': reference_ipa,
+                'referenceSyllableIpa': reference_syllables,
                 'expectedSyllables': expected_syllables,
                 'variantId': variant_id,
                 'requestReferenceId': request_reference_id,

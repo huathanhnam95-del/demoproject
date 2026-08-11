@@ -1,3 +1,16 @@
+## [V1.8.60] - 2026-08-11
+
+### Added & Enhanced
+- **RFIB Practice Mode**: Added explicit missing answer indicators when blanks are unchosen, enhanced answer visibility styling and feedback card rendering, and locked RFIB audio behind the Check button with a blurred overlay until submitted.
+- **MCMA & MCSA Explanation Cards**: Redesigned explanation panels into floating, resizable cards with font size controls matching the DD/RFIB design system.
+- **SWT Practice Layout**: Converted Summarize Written Text layout from side-by-side split view to an ergonomic stacked layout with the source text on top and response composition area below.
+- **CRM Books Study Module**: Resolved 5 audit items (chunk fallback, list rendering, action button state, regeneration flow, Firestore persistence) and added chapter summary mode alongside whole-book outlines.
+- **Pronunciation Analyzer Cloud Debug**: Added Cloud debug save feature to production for rapid troubleshooting and improved V3 CTC syllable boundary vowel alignment.
+
+### Fixed
+- **Practice Mode URL Routing**: Synchronized `?question=N` query parameters across all practice modes (ASQ, RS, DI, DD, RFIB, SWT, Essay, etc.) with pushState and popState navigation.
+- **Repeat Sentence Step Indicator**: Fixed 3-step indicator status reset when navigating to Next/Prev questions.
+
 ## [V1.8.59] - 2026-08-10
 
 ### Added & Enhanced

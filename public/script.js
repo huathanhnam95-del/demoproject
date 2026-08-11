@@ -2218,8 +2218,12 @@
         await window.ROPMode.activate();
       } else if (mode === 'dd' && window.DDMode && typeof window.DDMode.activate === 'function') {
         await window.DDMode.activate();
-      } else if (mode === 'essay' && window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
-        window.WriteEssayMode.init();
+      } else if (mode === 'essay' && window.WriteEssayMode) {
+        if (typeof window.WriteEssayMode.onEnter === 'function') {
+          window.WriteEssayMode.onEnter();
+        } else if (typeof window.WriteEssayMode.init === 'function') {
+          window.WriteEssayMode.init();
+        }
       } else if (mode === 'read-aloud') {
         // Hide the type-mode question box that bleeds through
         const typeQuestionBox = document.getElementById('mode-type');
@@ -5965,6 +5969,9 @@
     if (currentQuestionIdExtended) {
       currentQuestionIdExtended.textContent = questionId;
     }
+    if (window.PracticeRouter && questionId != null) {
+      window.PracticeRouter.replaceRoute('extended', questionId);
+    }
     startAttemptContext('extended', questionId);
     window.questionStartTime = null;
     window.extendedQuestionStartTime = Date.now();
@@ -8332,6 +8339,7 @@
               if (checkBtnSpeak) checkBtnSpeak.style.display = 'none';
               resetScaffolding();
               if (playBtnSpeak) playBtnSpeak.style.display = 'inline-block';
+              window.SpeakingPracticeController?.sync?.('speak');
             }
           });
         }
@@ -8500,6 +8508,10 @@
       currentQuestionIdSpeak.textContent = questionId;
     }
 
+    if (window.PracticeRouter && questionId != null) {
+      window.PracticeRouter.replaceRoute(mode, questionId);
+    }
+
     startAttemptContext(mode, questionId);
     window.questionStartTime = null;
     window.currentQuestionAttempts = 0;
@@ -8524,9 +8536,14 @@
     // Reset scaffolding state (replay counters, auto-hints)
     resetScaffoldingState(mode);
 
+    // Sync SpeakingPracticeController to immediately reflect reset UI state (e.g. 3-step indicator reset to Step 1)
+    window.SpeakingPracticeController?.sync?.(mode);
+
     // Load mastery status for this question (logged-in users only)
     // Pass the mode so mastery status is shown for the correct mode
     await loadMasteryStatus(questionId, mode);
+
+    window.SpeakingPracticeController?.sync?.(mode);
 
     return true;
   };
@@ -8998,18 +9015,18 @@
   };
 
   // Question selector event listeners
-  questionSelectType.addEventListener("change", (e) => {
+  questionSelectType.addEventListener("change", async (e) => {
     const questionId = parseInt(e.target.value, 10);
-    if (questionId && loadQuestion("type", questionId)) {
+    if (questionId && await loadQuestion("type", questionId)) {
       currentTypeQuestionId = questionId;
       currentQuestionIdType.textContent = questionId;
     }
     refreshRecommendationUI('type');
   });
 
-  questionSelectSpeak.addEventListener("change", (e) => {
+  questionSelectSpeak.addEventListener("change", async (e) => {
     const questionId = parseInt(e.target.value, 10);
-    if (questionId && loadQuestion("speak", questionId)) {
+    if (questionId && await loadQuestion("speak", questionId)) {
       currentSpeakQuestionId = questionId;
       currentQuestionIdSpeak.textContent = questionId;
     }

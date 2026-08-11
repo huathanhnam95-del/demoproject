@@ -145,7 +145,10 @@ class StressVisualizer {
                         this.lastUserAnalysis,
                         this.lastNativeAnalysis,
                         this.lastReferenceSyllables,
-                        { learnerSyllables: this.lastLearnerSyllables }
+                        {
+                            learnerSyllables: this.lastLearnerSyllables,
+                            drawDuration: false
+                        }
                     );
                 } else if (this.lastNativeAnalysis) {
                     this.drawNativePitchContour(
@@ -850,8 +853,8 @@ class StressVisualizer {
 
         if (this.comparisonChartMode === 'pitch') {
             datasets = [
-                dataset('Native relative pitch', chartData.native.pitch, 'rgb(34, 197, 94)', 'y', true),
-                dataset('Your relative pitch', chartData.learner.pitch, 'rgb(21, 128, 61)', 'y')
+                dataset('Native relative pitch', chartData.native.pitch, 'rgb(99, 102, 241)', 'y', true),
+                dataset('Your relative pitch', chartData.learner.pitch, 'rgb(34, 197, 94)', 'y')
             ];
             yScales = {
                 x: { title: { display: true, text: 'Time (s)' } },
@@ -862,8 +865,8 @@ class StressVisualizer {
             };
         } else {
             datasets = [
-                dataset('Native relative intensity', chartData.native.intensity, 'rgb(244, 114, 182)', 'y', true),
-                dataset('Your relative intensity', chartData.learner.intensity, 'rgb(219, 39, 119)', 'y')
+                dataset('Native relative intensity', chartData.native.intensity, 'rgb(99, 102, 241)', 'y', true),
+                dataset('Your relative intensity', chartData.learner.intensity, 'rgb(244, 114, 182)', 'y')
             ];
             yScales = {
                 x: { title: { display: true, text: 'Time (s)' } },

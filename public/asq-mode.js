@@ -697,6 +697,9 @@ class AsqMode {
       await this.init();
     }
     this.setStatus('Play the prompt audio, then record your answer.', 'muted');
+    if (window.PracticeRouter && this.currentId) {
+      window.PracticeRouter.replaceRoute('asq', this.currentId);
+    }
   }
 
   onExit() {

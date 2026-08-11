@@ -4,15 +4,20 @@ const path = require('path');
 
 const registerBookRoutes = require(path.resolve(__dirname, '../../functions/src/routes/admin/books.js'));
 
-const handlers = { patch: [] };
+const handlers = { get: [], post: [], patch: [] };
 const router = {
-    get() {},
-    post() {},
+    get(pathname, ...routeHandlers) {
+        handlers.get.push({ pathname, routeHandlers, handler: routeHandlers[routeHandlers.length - 1] });
+    },
+    post(pathname, ...routeHandlers) {
+        handlers.post.push({ pathname, routeHandlers, handler: routeHandlers[routeHandlers.length - 1] });
+    },
     delete() {},
     patch(pathname, ...routeHandlers) {
         handlers.patch.push({ pathname, routeHandlers, handler: routeHandlers[routeHandlers.length - 1] });
     }
 };
+
 
 let updatedPayload = null;
 let threadExists = true;
@@ -84,8 +89,17 @@ async function invoke(body) {
     response = await invoke({ title: 'Missing thread' });
     assert.strictEqual(response.statusCode, 404, 'Missing threads must return 404.');
 
-    console.log('books route rename contracts passed');
+    const getNotesRoute = handlers.get.find((entry) => entry.pathname === '/books/:bookId/sections/:sectionIndex/study-notes');
+    assert(getNotesRoute, 'Books routes must register GET study-notes endpoint.');
+    assert.strictEqual(getNotesRoute.routeHandlers[0], adminGuard, 'GET study-notes must have admin guard.');
+
+    const postNotesRoute = handlers.post.find((entry) => entry.pathname === '/books/:bookId/sections/:sectionIndex/study-notes');
+    assert(postNotesRoute, 'Books routes must register POST study-notes endpoint.');
+    assert.strictEqual(postNotesRoute.routeHandlers[0], adminGuard, 'POST study-notes must have admin guard.');
+
+    console.log('books route rename and study-notes contracts passed');
 })().catch((error) => {
     console.error(error.stack || error);
     process.exitCode = 1;
 });
+

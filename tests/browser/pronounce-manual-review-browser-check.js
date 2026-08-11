@@ -74,12 +74,23 @@ async function run() {
           return { sampleId: 'photograph-manual-review-test' };
         }
       });
+      const initialHint = document.querySelector('#sv-info p')?.textContent || '';
       await verifier.loadAudio(new Blob(['wav']), [
         { startTime: 0, endTime: 0.25, duration: 0.25 },
         { startTime: 0.25, endTime: 0.5, duration: 0.25 }
       ], ['pho', 'to'], ['foʊ', 'tə']);
+      const loadedHint = document.querySelector('#sv-info .sv-hint')?.textContent || '';
       const waveform = document.getElementById('sv-waveform');
       waveform.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 80, right: 1000, bottom: 80 });
+      let syllablePlaybackCalls = 0;
+      verifier.playSyllable = () => { syllablePlaybackCalls += 1; };
+      document.querySelector('.sv-syllable-label')?.click();
+      const automaticRegion = verifier.regions.getRegions().find((region) => region.id === 'syllable-0');
+      verifier.regions.emit('region-clicked', automaticRegion, { stopPropagation() {} });
+      const playbackContract = {
+        afterLabelClick: syllablePlaybackCalls,
+        afterRegionClick: syllablePlaybackCalls
+      };
       document.getElementById('sv-manual-review').click();
       const clickAt = (clientX) => waveform.dispatchEvent(new MouseEvent('click', {
         bubbles: true,
@@ -92,13 +103,16 @@ async function run() {
       clickAt(100);
       const pendingInstructions = document.getElementById('sv-manual-instructions').textContent;
       clickAt(350);
-      clickAt(500);
+      const endInstructions = document.getElementById('sv-manual-instructions').textContent;
+      const saveDisabledBeforeSpeechEnd = document.getElementById('sv-manual-save').disabled;
       clickAt(700);
       document.getElementById('sv-manual-save').click();
       await new Promise((resolve) => setTimeout(resolve, 0));
       const cloudResult = {
         firstTargetInstructions,
         pendingInstructions,
+        endInstructions,
+        saveDisabledBeforeSpeechEnd,
         count: document.getElementById('sv-manual-count').textContent,
         instructions: document.getElementById('sv-manual-instructions').textContent,
         status: document.getElementById('sv-manual-status').textContent,
@@ -118,24 +132,42 @@ async function run() {
       verifier.clearManualSegments();
       clickAt(100);
       clickAt(300);
+      clickAt(700);
       document.getElementById('sv-manual-save').click();
       await new Promise((resolve) => setTimeout(resolve, 0));
       return {
+        initialHint,
+        loadedHint,
+        playbackContract,
         cloudResult,
         localStatus: document.getElementById('sv-manual-status').textContent
       };
     });
 
-    assert.equal(result.cloudResult.count, '2 segments');
+    if (process.env.PRONOUNCE_MANUAL_REVIEW_SCREENSHOT) {
+      await page.screenshot({
+        path: process.env.PRONOUNCE_MANUAL_REVIEW_SCREENSHOT,
+        fullPage: true
+      });
+    }
+
+    assert.equal(result.initialHint, 'Use the numbered syllable labels below the waveform to hear them individually.');
+    assert.equal(result.loadedHint, '💡 Use a numbered label to hear that syllable');
+    assert.deepEqual(result.playbackContract, { afterLabelClick: 1, afterRegionClick: 1 });
+    assert.equal(result.cloudResult.count, '2 of 2 segments');
     assert.equal(
       result.cloudResult.firstTargetInstructions,
-      'Mark syllable 1 of 2: /foʊ/ — click its start, then its end. Use IPA boundaries, not spelling.'
+      'Click the start of the spoken word.'
     );
-    assert.equal(result.cloudResult.pendingInstructions, 'Now click the end of syllable 1 /foʊ/.');
-    // Every syllable is marked, so there is no next IPA target to name.
+    assert.equal(
+      result.cloudResult.pendingInstructions,
+      'Click shared syllable boundary 1 of 1 between /foʊ/ and /tə/.'
+    );
+    assert.equal(result.cloudResult.endInstructions, 'Click the end of the spoken word.');
+    assert.equal(result.cloudResult.saveDisabledBeforeSpeechEnd, true);
     assert.equal(
       result.cloudResult.instructions,
-      'Click the start and end of each syllable on the waveform. Use IPA boundaries, not spelling.'
+      'All contiguous syllable boundaries are marked. Review them, then save.'
     );
     assert.match(result.cloudResult.status, /^Saved to cloud: photograph-manual-review-test$/);
     assert.equal(result.cloudResult.saveText, 'Saved');
@@ -143,7 +175,7 @@ async function run() {
     assert.equal(result.cloudResult.hasAbButton, false);
     assert.deepEqual(result.cloudResult.manualRegions, [
       { start: 0.1, end: 0.35 },
-      { start: 0.5, end: 0.7 }
+      { start: 0.35, end: 0.7 }
     ]);
     assert.match(result.localStatus, /^Saved locally for review: photograph-manual-review-local-test$/);
     assert.deepEqual(result.cloudResult.save.map(({ index, startTime, endTime, duration }) => ({
@@ -153,7 +185,7 @@ async function run() {
       duration: Number(duration.toFixed(3))
     })), [
       { index: 0, startTime: 0.1, endTime: 0.35, duration: 0.25 },
-      { index: 1, startTime: 0.5, endTime: 0.7, duration: 0.2 }
+      { index: 1, startTime: 0.35, endTime: 0.7, duration: 0.35 }
     ]);
   } finally {
     await browser.close();

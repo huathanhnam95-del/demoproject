@@ -16,6 +16,7 @@ const completeComparison = {
     context: {
         targetWord: 'actual',
         referenceIpa: '/\u02c8\u00e6k.t\u0283u.\u0259l/',
+        referenceSyllableIpa: ['æk', 'tʃu', 'əl'],
         expectedSyllables: 3,
         variantId: 'cmudict:actual'
     },
@@ -68,7 +69,7 @@ describe('V2/V3 comparison model', () => {
         assert.equal(view.rows[0].label, 'Syllable count');
     });
 
-    it('labels V3 raw boundary spans as CTC token coverage', () => {
+    it('uses V3 contiguous partitions for waveform boundaries while preserving provenance', () => {
         const view = buildComparisonViewModel({
             ...completeComparison,
             v3: {
@@ -76,14 +77,54 @@ describe('V2/V3 comparison model', () => {
                 analysis: {
                     ...completeComparison.v3.analysis,
                     segmentation_convention: 'ctc-token-coverage',
-                    measurement_convention: 'ctc-blank-midpoint-v1'
+                    measurement_convention: 'ctc-blank-midpoint-v1',
+                    partition_convention: 'ctc-interspan-acoustic-hybrid-contiguous-v3',
+                    observed_syllables: [
+                        {
+                            startTime: 1.07191,
+                            endTime: 1.132584,
+                            measurementStartTime: 1.11236,
+                            measurementEndTime: 1.173034,
+                            partitionStartTime: 0.980899,
+                            partitionEndTime: 1.173034,
+                            partitionDuration: 0.192135,
+                            label: 'to'
+                        },
+                        {
+                            startTime: 1.213483,
+                            endTime: 1.557303,
+                            measurementStartTime: 1.334831,
+                            measurementEndTime: 1.355056,
+                            partitionStartTime: 1.173034,
+                            partitionEndTime: 1.557303,
+                            partitionDuration: 0.384269,
+                            label: 'graph'
+                        }
+                    ]
                 }
             }
         });
         const v3 = view.columns.find((column) => column.version === 'v3');
-        assert.equal(v3.boundarySource, 'ctc-token-coverage');
-        assert.match(v3.boundaryLabel, /CTC token coverage/i);
+        assert.equal(v3.boundarySource, 'ctc-contiguous-partition');
+        assert.match(v3.boundaryLabel, /contiguous phonological partition/i);
         assert.equal(v3.measurementConvention, 'ctc-blank-midpoint-v1');
+        assert.equal(v3.partitionConvention, 'ctc-interspan-acoustic-hybrid-contiguous-v3');
+        assert.deepEqual(
+            v3.boundarySpans.map(({ startTime, endTime }) => ({ startTime, endTime })),
+            [
+                { startTime: 0.980899, endTime: 1.173034 },
+                { startTime: 1.173034, endTime: 1.557303 }
+            ],
+            'waveform boundaries must use the contiguous partition, not raw CTC or measurement windows'
+        );
+        assert.deepEqual(v3.rawCtcSpans.map(({ startTime, endTime }) => ({ startTime, endTime })), [
+            { startTime: 1.07191, endTime: 1.132584 },
+            { startTime: 1.213483, endTime: 1.557303 }
+        ]);
+        assert.deepEqual(v3.measurementSpans.map(({ startTime, endTime }) => ({ startTime, endTime })), [
+            { startTime: 1.11236, endTime: 1.173034 },
+            { startTime: 1.334831, endTime: 1.355056 }
+        ]);
     });
 
     it('marks available legacy recognizer spans when convention metadata is absent', () => {
@@ -215,8 +256,7 @@ describe('V2/V3 comparison model', () => {
         assert.deepEqual(COMPARISON_JUDGMENTS, ['v2', 'v3', 'tie', 'neither']);
         for (const judgment of COMPARISON_JUDGMENTS) {
             const metadata = buildComparisonSaveMetadata(completeComparison, {
-                judgment,
-                manualSegments: [{ startTime: 0.1, endTime: 0.2, label: 'manual' }]
+                judgment
             });
             assert.equal(metadata.judgment, judgment);
         }
@@ -236,15 +276,19 @@ describe('V2/V3 comparison model', () => {
     it('copies and normalizes manual segments without mutating the comparison', () => {
         const manualSegments = [
             { startTime: '0.4', endTime: '0.8', label: 'second' },
-            { startTime: 0.1, endTime: 0.4, label: 'first' }
+            { startTime: 0.1, endTime: 0.4, label: 'first' },
+            { startTime: 0.8, endTime: 0.9, label: 'third' }
         ];
         const metadata = buildComparisonSaveMetadata(completeComparison, { manualSegments });
         assert.deepEqual(metadata.manualSegments, [
             { startTime: 0.1, endTime: 0.4, label: 'first', index: 0 },
-            { startTime: 0.4, endTime: 0.8, label: 'second', index: 1 }
+            { startTime: 0.4, endTime: 0.8, label: 'second', index: 1 },
+            { startTime: 0.8, endTime: 0.9, label: 'third', index: 2 }
         ]);
         assert.equal(manualSegments[0].startTime, '0.4');
         assert.equal(Object.hasOwn(metadata, 'manualSegments'), true);
+        assert.equal(metadata.manualSegmentationConvention, 'ipa-phonological-contiguous-v1');
+        assert.deepEqual(metadata.context.referenceSyllableIpa, ['æk', 'tʃu', 'əl']);
     });
 
     it('keeps serializable analyses while omitting binary and identity fields', () => {

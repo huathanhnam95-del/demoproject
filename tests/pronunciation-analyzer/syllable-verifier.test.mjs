@@ -75,6 +75,61 @@ describe('SyllableVerifier v3 features', () => {
         assert.deepEqual(verifier.manualSegments, [{ startTime: 0.4, endTime: 0.6, source: 'manual-review' }]);
     });
 
+    it('builds three contiguous syllables from four ordered boundary clicks', () => {
+        verifier.manualReviewActive = true;
+        verifier.wavesurfer = { getDuration: () => 1 };
+        verifier.ipaSegments = ['foʊ', 'tə', 'ɡræf'];
+        verifier.manualBoundaryTimes = [];
+        verifier.manualSegments = [];
+        verifier.pendingManualStart = null;
+        verifier.lastManualInteraction = null;
+        verifier.manualReviewSaved = false;
+        verifier.renderManualPendingMarker = () => {};
+        verifier.removeManualPendingMarker = () => {};
+        verifier.createManualRegions = () => {};
+        verifier.updateManualReviewUi = () => {};
+        verifier.notifyManualSegmentsChanged = () => {};
+        verifier.setManualStatus = () => {};
+
+        for (const time of [0.1, 0.3, 0.5, 0.8]) {
+            assert.equal(verifier.handleManualInteraction(time), true);
+            verifier.lastManualInteraction = null;
+        }
+
+        assert.deepEqual(
+            verifier.manualSegments.map(({ index, startTime, endTime, duration }) => ({
+                index, startTime, endTime, duration
+            })),
+            [
+                { index: 0, startTime: 0.1, endTime: 0.3, duration: 0.2 },
+                { index: 1, startTime: 0.3, endTime: 0.5, duration: 0.2 },
+                { index: 2, startTime: 0.5, endTime: 0.8, duration: 0.3 }
+            ]
+        );
+        assert.equal(verifier.manualConvention, 'ipa-phonological-contiguous-v1');
+    });
+
+    it('does not save until the exact expected contiguous segment count is complete', async () => {
+        let saves = 0;
+        const statuses = [];
+        verifier.ipaSegments = ['foʊ', 'tə', 'ɡræf'];
+        verifier.manualSegments = [
+            { startTime: 0.1, endTime: 0.3 },
+            { startTime: 0.3, endTime: 0.5 }
+        ];
+        verifier.manualSaveInProgress = false;
+        verifier.manualReviewSaved = false;
+        verifier.options = { onManualSave: async () => { saves += 1; } };
+        verifier.updateManualReviewUi = () => {};
+        verifier.setManualStatus = (message, state) => statuses.push({ message, state });
+
+        await verifier.saveManualReview();
+
+        assert.equal(saves, 0);
+        assert.match(statuses.at(-1)?.message || '', /exactly 3 syllables/i);
+        assert.equal(statuses.at(-1)?.state, 'error');
+    });
+
     describe('formatSyllableDuration()', () => {
         it('shows total duration when finite', () => {
             const result = verifier.formatSyllableDuration({

@@ -7,6 +7,7 @@ const { closeServer, startServer } = require('./pronounce-mode-browser-check.js'
 
 async function run() {
   const { server, origin } = await startServer();
+  const captureDurationScreenshot = Boolean(process.env.PRONUNCIATION_DURATION_SCREENSHOT);
   const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await context.addInitScript(() => {
@@ -69,10 +70,10 @@ async function run() {
         const learnerIntensity = learnerTimes.map((_value, index) => 65 + (index % 8));
         return jsonResponse({
           schemaVersion: 'pronunciation-comparison-v1', mode: 'comparison', status: 'complete', comparisonId: 'browser-comparison-1',
-          context: { targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌɡræf/', expectedSyllables: 3, variantId: '8888888888888888' },
+          context: { targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌɡræf/', referenceSyllableIpa: ['foʊ', 'tə', 'ɡræf'], expectedSyllables: 3, variantId: '8888888888888888' },
           revisions: { comparisonSchema: 'pronunciation-comparison-v1', v2: 'pronunciation-analysis-v2', v3: 'pronunciation-analysis-v3', v3Model: 'browser-model' },
           v2: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v2', quality: { confidence: 0.81 }, duration: 0.8, pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, observed: { syllableCount: 2, syllables: [{ startTime: 0.05, endTime: 0.35, duration: 0.3, vowelDuration: 0.18, label: 'pho' }, { startTime: 0.35, endTime: 0.8, duration: 0.45, vowelDuration: 0.22, label: 'graph' }] } } },
-          v3: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v3', confidence: 0.94, total_duration: 0.78, segmentation_convention: 'ctc-token-coverage', measurement_convention: 'ctc-blank-midpoint-v1', pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, syllable_count: 3, observed_syllables: [{ startTime: 0.05, endTime: 0.25, measurementStartTime: 0.07, measurementEndTime: 0.27, duration: 0.2, label: 'pho' }, { startTime: 0.25, endTime: 0.48, measurementStartTime: 0.27, measurementEndTime: 0.45, duration: 0.23, label: 'to' }, { startTime: 0.48, endTime: 0.78, measurementStartTime: 0.48, measurementEndTime: 0.7, duration: 0.3, label: 'graph' }] } }
+          v3: { status: 'available', analysis: { analysisVersion: 'pronunciation-analysis-v3', confidence: 0.94, total_duration: 0.78, segmentation_convention: 'ctc-token-coverage', measurement_convention: 'ctc-blank-midpoint-v1', partition_convention: 'ctc-interspan-midpoint-contiguous-v1', pitch: { times: learnerTimes, values: learnerPitch }, intensity: { times: learnerTimes, values: learnerIntensity }, syllable_count: 3, observed_syllables: [{ startTime: 0.05, endTime: 0.2, measurementStartTime: 0.07, measurementEndTime: 0.27, partitionStartTime: 0.05, partitionEndTime: 0.23, duration: 0.15, label: 'pho' }, { startTime: 0.26, endTime: 0.43, measurementStartTime: 0.27, measurementEndTime: 0.45, partitionStartTime: 0.23, partitionEndTime: 0.47, duration: 0.17, label: 'to' }, { startTime: 0.51, endTime: 0.78, measurementStartTime: 0.48, measurementEndTime: 0.7, partitionStartTime: 0.47, partitionEndTime: 0.78, duration: 0.27, label: 'graph' }] } }
         });
       }
       if (url.includes('/api/admin/dev/save-analysis-comparison')) {
@@ -96,7 +97,7 @@ async function run() {
     await page.goto(`${origin}/pronounce-v2-harness`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(250);
 
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async ({ captureDurationScreenshot }) => {
       const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
       const app = bootPronunciationApp();
       const comparison = await app.praatAPI.analyzeComparison(
@@ -165,7 +166,11 @@ async function run() {
           ?.filter((point) => Number.isFinite(point?.y)).length || 0
       };
       app.renderVersionComparison(comparison, app.userAudioBlob);
-      const originalManual = [{ startTime: 0.1, endTime: 0.2, source: 'manual-review' }];
+      const originalManual = [
+        { startTime: 0.1, endTime: 0.3, source: 'manual-review' },
+        { startTime: 0.3, endTime: 0.5, source: 'manual-review' },
+        { startTime: 0.5, endTime: 0.7, source: 'manual-review' }
+      ];
       app.versionComparisonManualSegments = originalManual.map((segment) => ({ ...segment }));
       app.setVersionComparisonBoundarySource('v3');
       const sourceAfterToggle = app.versionComparisonBoundarySource;
@@ -174,6 +179,9 @@ async function run() {
         label: set.label,
         values: (set.data || []).filter((value) => typeof value === 'number')
       }));
+      if (captureDurationScreenshot) {
+        return { v3ToggleDurationLanes };
+      }
       const manualAfterToggle = app.versionComparisonManualSegments;
       const saveDisabledBeforeVote = document.querySelector('#pa-version-save').disabled;
       const v2Count = document.querySelector('#pa-version-v2 .pa-version-metric-row dd')?.textContent;
@@ -212,7 +220,20 @@ async function run() {
         auth: window.__comparisonSaveAuthHeader,
         overflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth
       };
-    });
+    }, { captureDurationScreenshot });
+
+    if (captureDurationScreenshot) {
+      await page.screenshot({
+        path: path.resolve(process.env.PRONUNCIATION_DURATION_SCREENSHOT),
+        fullPage: true
+      });
+      const capturedObservedLane = result.v3ToggleDurationLanes.find((lane) => /observed/i.test(lane.label));
+      assert.deepEqual(
+        capturedObservedLane?.values.map((value) => Number(value.toFixed(2))),
+        [0.18, 0.24, 0.31]
+      );
+      return;
+    }
 
     // Fix regression guard: the comparison used to leave both charts showing
     // the native-only reference, so the recording never appeared on them.
@@ -284,17 +305,21 @@ async function run() {
     assert.equal(result.compareRequests, 1);
     assert.equal(result.v2Count, '2');
     assert.equal(result.v3Count, '3');
-    assert.match(result.v3BoundaryLabel, /CTC token coverage/i);
+    assert.match(result.v3BoundaryLabel, /Contiguous phonological partition/i);
     assert.equal(result.radioCount, 4);
     assert.equal(result.visible, true);
     assert.equal(result.sourceAfterToggle, 'v3');
     const v3ObservedLane = result.v3ToggleDurationLanes.find((lane) => /observed/i.test(lane.label));
     assert.deepEqual(
       v3ObservedLane?.values.map((value) => Number(value.toFixed(2))),
-      [0.2, 0.23, 0.3],
-      'chart-mode toggles must retain the selected V3 boundary durations'
+      [0.18, 0.24, 0.31],
+      `V3 duration bars must match the contiguous partitions shown by the waveform; got ${JSON.stringify(v3ObservedLane?.values)}`
     );
-    assert.deepEqual(result.manualAfterToggle, [{ startTime: 0.1, endTime: 0.2, source: 'manual-review' }]);
+    assert.deepEqual(result.manualAfterToggle, [
+      { startTime: 0.1, endTime: 0.3, source: 'manual-review' },
+      { startTime: 0.3, endTime: 0.5, source: 'manual-review' },
+      { startTime: 0.5, endTime: 0.7, source: 'manual-review' }
+    ]);
     assert.equal(result.saveDisabledBeforeVote, true);
     assert.equal(result.saveEnabledAfterVote, false);
     assert.equal(result.saved.length, 2);

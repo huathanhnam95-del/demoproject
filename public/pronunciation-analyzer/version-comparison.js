@@ -31,25 +31,36 @@ function nonNegativeNumber(value) {
     return number !== null && number >= 0 ? number : null;
 }
 
-function normalizeSpan(span, index) {
+function normalizeSpan(span, index, { source = 'measurement' } = {}) {
     const measuredStart = finiteNumber(span?.measurementStartTime ?? span?.measurement_start_time);
     const measuredEnd = finiteNumber(span?.measurementEndTime ?? span?.measurement_end_time);
     const rawStart = finiteNumber(span?.startTime ?? span?.start_time);
     const rawEnd = finiteNumber(span?.endTime ?? span?.end_time);
-    const startTime = measuredStart ?? rawStart;
-    const endTime = measuredEnd ?? rawEnd;
+    const partitionStart = finiteNumber(span?.partitionStartTime ?? span?.partition_start_time);
+    const partitionEnd = finiteNumber(span?.partitionEndTime ?? span?.partition_end_time);
+    const startTime = source === 'partition'
+        ? (partitionStart ?? rawStart ?? measuredStart)
+        : (source === 'raw' ? (rawStart ?? measuredStart) : (measuredStart ?? rawStart));
+    const endTime = source === 'partition'
+        ? (partitionEnd ?? rawEnd ?? measuredEnd)
+        : (source === 'raw' ? (rawEnd ?? measuredEnd) : (measuredEnd ?? rawEnd));
     if (startTime === null || endTime === null || endTime <= startTime) return null;
     const label = String(span?.label || span?.ipa || span?.symbol || '').trim();
     // When measurement boundaries widened the span, recompute duration to
     // match.  Otherwise keep the analyzer-owned duration — the chart prefers
     // vowelDuration over the full boundary interval for V2 timing evidence.
-    const widened = measuredStart !== null || measuredEnd !== null;
-    const duration = widened ? (endTime - startTime) : nonNegativeNumber(span?.duration);
+    const usesExplicitWindow = source === 'partition'
+        ? (partitionStart !== null || partitionEnd !== null)
+        : (source === 'raw' || measuredStart !== null || measuredEnd !== null);
+    const duration = usesExplicitWindow
+        ? (endTime - startTime)
+        : nonNegativeNumber(span?.duration);
     const vowelDuration = nonNegativeNumber(span?.vowelDuration ?? span?.vowel_duration);
     return {
         startTime,
         endTime,
         ...(duration !== null ? { duration } : {}),
+        ...(source === 'partition' && duration !== null ? { partitionDuration: duration } : {}),
         ...(vowelDuration !== null ? { vowelDuration } : {}),
         ...(label ? { label } : {}),
         index
@@ -133,7 +144,13 @@ export function buildComparisonViewModel(comparison) {
         const isPraatFallback = !available && analysis?.segmentation_source === 'praat-fallback';
         const segmentationConvention = String(analysis?.segmentation_convention || '').trim();
         const measurementConvention = String(analysis?.measurement_convention || '').trim();
+        const partitionConvention = String(analysis?.partition_convention || '').trim();
         const isCtcTokenCoverage = available && segmentationConvention === 'ctc-token-coverage';
+        const hasContiguousPartition = available && (
+            partitionConvention === 'ctc-interspan-midpoint-contiguous-v1'
+            || partitionConvention === 'ctc-interspan-acoustic-tail-contiguous-v2'
+            || partitionConvention === 'ctc-interspan-acoustic-hybrid-contiguous-v3'
+        );
         const isLegacyBoundaryConvention = available && !segmentationConvention;
         return {
             version,
@@ -148,12 +165,23 @@ export function buildComparisonViewModel(comparison) {
             confidence: available ? analysisConfidence(analysis) : null,
             duration: analysisDuration(analysis),
             boundaryStatus: available ? 'automatic' : 'display-only',
-            boundarySource: isPraatFallback ? 'praat-acoustic' : (isCtcTokenCoverage ? 'ctc-token-coverage' : (isLegacyBoundaryConvention ? 'recognizer-legacy' : (available ? 'recognizer' : 'none'))),
+            boundarySource: isPraatFallback ? 'praat-acoustic' : (hasContiguousPartition ? 'ctc-contiguous-partition' : (isCtcTokenCoverage ? 'ctc-token-coverage' : (isLegacyBoundaryConvention ? 'recognizer-legacy' : (available ? 'recognizer' : 'none')))),
             boundaryLabel: isPraatFallback
                 ? 'Display-only acoustic boundaries (Praat fallback)'
-                : (isCtcTokenCoverage ? 'CTC token coverage boundaries' : (isLegacyBoundaryConvention ? 'Legacy recognizer boundaries (convention unknown)' : (available ? 'Automatic boundaries' : 'No automatic boundaries available'))),
+                : (hasContiguousPartition ? 'Contiguous phonological partition boundaries' : (isCtcTokenCoverage ? 'CTC token coverage boundaries' : (isLegacyBoundaryConvention ? 'Legacy recognizer boundaries (convention unknown)' : (available ? 'Automatic boundaries' : 'No automatic boundaries available')))),
             measurementConvention: measurementConvention || null,
-            boundarySpans: syllables.map((span, index) => normalizeSpan(span, index)).filter(Boolean)
+            partitionConvention: partitionConvention || null,
+            boundarySpans: syllables
+                .map((span, index) => normalizeSpan(span, index, {
+                    source: hasContiguousPartition ? 'partition' : (isCtcTokenCoverage ? 'raw' : 'measurement')
+                }))
+                .filter(Boolean),
+            rawCtcSpans: isCtcTokenCoverage
+                ? syllables.map((span, index) => normalizeSpan(span, index, { source: 'raw' })).filter(Boolean)
+                : [],
+            measurementSpans: measurementConvention
+                ? syllables.map((span, index) => normalizeSpan(span, index, { source: 'measurement' })).filter(Boolean)
+                : []
         };
     });
     const rows = [
@@ -189,6 +217,19 @@ export function buildComparisonSaveMetadata(comparison, { judgment = null, manua
         throw new Error(`Invalid comparison judgment: ${judgment}`);
     }
     const normalizedJudgment = complete ? (judgment || null) : null;
+    const normalizedManualSegments = normalizeManualSegments(manualSegments);
+    const expectedCount = Number(comparison?.context?.expectedSyllables);
+    if (normalizedManualSegments.length) {
+        if (Number.isInteger(expectedCount) && normalizedManualSegments.length !== expectedCount) {
+            throw new Error(`Manual segments must match the expected syllable count (${expectedCount}).`);
+        }
+        if (normalizedManualSegments.some((segment, index) => (
+            index > 0
+            && Math.abs(segment.startTime - normalizedManualSegments[index - 1].endTime) > 0.000001
+        ))) {
+            throw new Error('Manual segments must be contiguous.');
+        }
+    }
     const envelope = (version) => {
         const source = comparison[version] || {};
         return sanitizeSerializable({
@@ -204,7 +245,10 @@ export function buildComparisonSaveMetadata(comparison, { judgment = null, manua
         context: sanitizeSerializable(comparison.context || {}),
         revisions: sanitizeSerializable(comparison.revisions || {}),
         judgment: normalizedJudgment,
-        manualSegments: normalizeManualSegments(manualSegments),
+        manualSegmentationConvention: normalizedManualSegments.length
+            ? 'ipa-phonological-contiguous-v1'
+            : null,
+        manualSegments: normalizedManualSegments,
         analyses: {
             v2: envelope('v2'),
             v3: envelope('v3')

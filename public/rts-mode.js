@@ -305,6 +305,11 @@
         // Show start button
         show(el.playRtsBtn);
         window.SpeakingPracticeController?.sync?.('rts');
+
+        // Update URL with current question ID
+        if (window.PracticeRouter && currentEntry?.id) {
+            window.PracticeRouter.replaceRoute('rts', currentEntry.id);
+        }
     }
 
     function getItems() {
@@ -977,6 +982,8 @@
         // If we have entries, ensure current question is loaded
         if (entries.length > 0 && !currentEntry) {
             loadQuestion(0);
+        } else if (currentEntry && window.PracticeRouter) {
+            window.PracticeRouter.replaceRoute('rts', currentEntry.id);
         }
         renderPicker();
     }
@@ -989,4 +996,14 @@
     /* ──────────────────────────── EXPORT ──────────────────────────── */
 
     window.RTSMode = { onEnter, onExit, getItems, getCurrentId, select };
+
+    // Deep-link support: listen for PracticeRouter question navigation events
+    window.addEventListener('practice-route-question', (event) => {
+        const { mode, questionId } = event.detail || {};
+        if (mode !== 'rts' || !questionId) return;
+        const idx = entries.findIndex((e) => String(e.id) === String(questionId));
+        if (idx >= 0) {
+            loadQuestion(idx);
+        }
+    });
 })();

@@ -61,11 +61,16 @@ describe('PraatAPI v3 integration', () => {
 
         const result = await api.analyzeV3(
             new Blob(['audio'], { type: 'audio/wav' }),
-            { referenceIpa: '/kɑr/', expectedSyllables: 1 }
+            {
+                referenceIpa: '/kɑr/',
+                referenceSyllables: ['kɑr'],
+                expectedSyllables: 1
+            }
         );
 
         assert.equal(capturedUrl, 'https://backend.example/analyze/v3');
         assert.equal(capturedBody.get('reference_ipa'), '/kɑr/');
+        assert.equal(capturedBody.get('reference_syllables'), JSON.stringify(['kɑr']));
         assert.equal(capturedBody.get('expected_syllables'), '1');
         assert.equal(result.syllable_count, 1);
     });
@@ -90,6 +95,7 @@ describe('PraatAPI v3 integration', () => {
             new Blob(['audio'], { type: 'audio/wav' }),
             {
                 referenceIpa: '/\u02c8\u00e6k.t\u0283u.\u0259l/',
+                referenceSyllables: ['\u00e6k', 't\u0283u', '\u0259l'],
                 expectedSyllables: 3,
                 targetWord: 'actual',
                 variantId: 'cmudict:actual'
@@ -98,6 +104,10 @@ describe('PraatAPI v3 integration', () => {
 
         assert.equal(capturedUrl, 'https://backend.example/analyze/compare');
         assert.equal(capturedBody.get('reference_ipa'), '/\u02c8\u00e6k.t\u0283u.\u0259l/');
+        assert.equal(
+            capturedBody.get('reference_syllables'),
+            JSON.stringify(['\u00e6k', 't\u0283u', '\u0259l'])
+        );
         assert.equal(capturedBody.get('expected_syllables'), '3');
         assert.equal(capturedBody.get('target_word'), 'actual');
         assert.equal(capturedBody.get('variant_id'), 'cmudict:actual');

@@ -23,27 +23,20 @@
   --swt-danger: var(--read-danger);
 }
 
-/* The source column reads like a Reading passage. It scrolls independently so
-   a long source cannot push the compose box off screen on the split layout. */
-#mode-swt .swt-source-text,
-#mode-swt .swt-source-card .essay-prompt-display {
-  max-height: 46vh;
-  overflow-y: auto;
-  padding-right: 8px;
+/* Stacked layout: source text on top, compose box below — not side-by-side.
+   The #mode-swt prefix beats the base .swt-split-layout selector without
+   redeclaring the same selector the base uses in its media query, so the
+   cascade audit stays green. */
+#mode-swt .swt-split-layout {
+  grid-template-columns: 1fr;
+}
+
+#mode-swt .swt-compose-card {
+  border-top: 1px solid var(--read-border-soft);
 }
 
 /* One sentence, not an essay — a tall textarea would invite the wrong answer
    shape. Reading's own guidance is that the control should suggest the task. */
 #mode-swt .essay-textarea {
   min-height: 132px;
-}
-
-@media (max-width: 900px) {
-  /* Stacked, so the source no longer competes for height with the compose box. */
-  #mode-swt .swt-source-text,
-  #mode-swt .swt-source-card .essay-prompt-display {
-    max-height: none;
-    overflow-y: visible;
-    padding-right: 0;
-  }
 }

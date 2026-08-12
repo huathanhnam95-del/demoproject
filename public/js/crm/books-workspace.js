@@ -1419,17 +1419,19 @@ window.CrmBooksWorkspace = (function () {
         let mindMapStartMouseY = 0;
         let mindMapEventsBound = false;
 
+        function docQs(sel) { return document.querySelector(sel); }
+
         function applyMindMapTransform() {
-            const canvas = qs('#crm-mindmap-canvas');
-            const svg = qs('#crm-mindmap-svg');
+            const canvas = docQs('#crm-mindmap-canvas');
+            const svg = docQs('#crm-mindmap-svg');
             const transformStr = `translate(${mindMapPanX}px, ${mindMapPanY}px) scale(${mindMapZoom})`;
             if (canvas) canvas.style.transform = transformStr;
             if (svg) svg.style.transform = transformStr;
         }
 
         function renderMindMapNodes(data) {
-            const canvas = qs('#crm-mindmap-canvas');
-            const svg = qs('#crm-mindmap-svg');
+            const canvas = docQs('#crm-mindmap-canvas');
+            const svg = docQs('#crm-mindmap-svg');
             if (!canvas || !svg) return;
 
             const categories = Array.isArray(data.categories) ? data.categories : [];
@@ -1509,7 +1511,7 @@ window.CrmBooksWorkspace = (function () {
             svg.innerHTML = svgPathsHtml;
 
             // Auto fit to viewport center
-            const viewport = qs('#crm-mindmap-viewport');
+            const viewport = docQs('#crm-mindmap-viewport');
             const vw = viewport ? viewport.clientWidth : window.innerWidth;
             const vh = viewport ? viewport.clientHeight : window.innerHeight;
 
@@ -1523,15 +1525,15 @@ window.CrmBooksWorkspace = (function () {
             if (mindMapEventsBound) return;
             mindMapEventsBound = true;
 
-            const modal = qs('#crm-books-mindmap-modal');
-            const viewport = qs('#crm-mindmap-viewport');
-            const closeBtn = qs('#crm-mindmap-close-btn');
-            const regenBtn = qs('#crm-mindmap-regenerate-btn');
-            const zoomInBtn = qs('#crm-mindmap-zoom-in');
-            const zoomOutBtn = qs('#crm-mindmap-zoom-out');
-            const zoomResetBtn = qs('#crm-mindmap-zoom-reset');
-            const inspector = qs('#crm-mindmap-inspector');
-            const inspectorClose = qs('#crm-mindmap-inspector-close');
+            const modal = docQs('#crm-books-mindmap-modal');
+            const viewport = docQs('#crm-mindmap-viewport');
+            const closeBtn = docQs('#crm-mindmap-close-btn');
+            const regenBtn = docQs('#crm-mindmap-regenerate-btn');
+            const zoomInBtn = docQs('#crm-mindmap-zoom-in');
+            const zoomOutBtn = docQs('#crm-mindmap-zoom-out');
+            const zoomResetBtn = docQs('#crm-mindmap-zoom-reset');
+            const inspector = docQs('#crm-mindmap-inspector');
+            const inspectorClose = docQs('#crm-mindmap-inspector-close');
 
             closeBtn?.addEventListener('click', () => {
                 if (modal) modal.style.display = 'none';
@@ -1606,7 +1608,7 @@ window.CrmBooksWorkspace = (function () {
             }, { passive: false });
 
             // Node Click Inspector Handler
-            qs('#crm-mindmap-canvas')?.addEventListener('click', (e) => {
+            docQs('#crm-mindmap-canvas')?.addEventListener('click', (e) => {
                 const node = e.target.closest('.crm-mindmap-node');
                 if (!node) return;
 
@@ -1620,10 +1622,10 @@ window.CrmBooksWorkspace = (function () {
                 const summary = node.dataset.summary || '';
                 const fullText = node.dataset.fulltext || summary || 'No additional note content.';
 
-                const tagEl = qs('#crm-mindmap-inspector-tag');
-                const titleEl = qs('#crm-mindmap-inspector-title');
-                const summaryEl = qs('#crm-mindmap-inspector-summary');
-                const fullTextEl = qs('#crm-mindmap-inspector-fulltext');
+                const tagEl = docQs('#crm-mindmap-inspector-tag');
+                const titleEl = docQs('#crm-mindmap-inspector-title');
+                const summaryEl = docQs('#crm-mindmap-inspector-summary');
+                const fullTextEl = docQs('#crm-mindmap-inspector-fulltext');
 
                 if (tagEl) {
                     tagEl.textContent = catTitle;
@@ -1639,11 +1641,11 @@ window.CrmBooksWorkspace = (function () {
 
         async function openMindMapModal(bookId, force = false) {
             bindMindMapModalEvents();
-            const modal = qs('#crm-books-mindmap-modal');
-            const titleEl = qs('#crm-mindmap-title');
-            const subtitleEl = qs('#crm-mindmap-subtitle');
-            const canvas = qs('#crm-mindmap-canvas');
-            const svg = qs('#crm-mindmap-svg');
+            const modal = docQs('#crm-books-mindmap-modal');
+            const titleEl = docQs('#crm-mindmap-title');
+            const subtitleEl = docQs('#crm-mindmap-subtitle');
+            const canvas = docQs('#crm-mindmap-canvas');
+            const svg = docQs('#crm-mindmap-svg');
 
             if (!modal) return;
             modal.style.display = 'flex';
@@ -1713,7 +1715,7 @@ window.CrmBooksWorkspace = (function () {
                 const timeStr = n.savedAt ? new Date(n.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
                 const isOpen = !!expandedNotes[n.id];
                 const { title, body } = extractNoteTitle(n.text);
-                const preview = body ? body.replace(/[#*>\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+                const preview = body ? body.replace(/[#*>-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
                 return `<div class="crm-books-note-card${isOpen ? ' open' : ''}" data-note-id="${escapeHtml(n.id)}">` +
                     `<div class="crm-books-note-header" data-note-toggle="${escapeHtml(n.id)}">` +
                     `<span class="crm-books-note-chevron">${isOpen ? '▾' : '▸'}</span>` +

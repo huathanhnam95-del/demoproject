@@ -12,7 +12,7 @@ const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const leadWorkspace = read('public/js/crm/lead-workspace.js');
 const schedulerWorkspace = read('public/js/crm/scheduler-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260811-v1.8.61';
+const CRM_ADMIN_ASSET_VERSION = '20260812-v1.8.62';
 
 assert(!html.includes('id="lead-templates-automations"'), 'Removed Templates and Automations UI must not remain in the CRM shell.');
 assert(/<select id="lead-source"[^>]*\brequired\b/.test(html), 'Lead source must be required.');

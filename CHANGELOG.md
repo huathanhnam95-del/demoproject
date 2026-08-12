@@ -1,4 +1,10 @@
+## [V1.8.62] - 2026-08-12
+
+### Fixed
+- **CRM Books Mind Map Modal Scoping**: Fixed element lookup scope in `books-workspace.js` by using `document.querySelector` (`docQs`) for document-body level `#crm-books-mindmap-modal` elements so clicking "🧠 Create Mind Map" reliably launches the fullscreen mind map modal.
+
 ## [V1.8.61] - 2026-08-11
+
 
 ### Added & Enhanced
 - **CRM Books Mind Map**: Added an interactive "Create Mind Map" feature to the CRM Books Notes section. Synthesizes saved user notes into a coherent concept hierarchy using AI (Gemini), rendered inside a glassmorphic fullscreen SVG modal with zoom, pan, expand/collapse, and full note inspector drawer.

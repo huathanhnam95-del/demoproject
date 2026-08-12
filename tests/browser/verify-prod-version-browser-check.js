@@ -9,7 +9,10 @@ async function main() {
   const expectedToken = `v${packageJson.version}`;
   console.log(`Launching Playwright Chrome browser check against live production (Expecting ${expectedVersion})...`);
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ ignoreHTTPSErrors: true });
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    extraHTTPHeaders: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+  });
   const page = await context.newPage();
 
   const prodUrl = 'https://listening-tasks-3ae34.web.app';

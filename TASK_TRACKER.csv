@@ -1222,4 +1222,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 630,2026-08-12,Review debug and refactor CRM Books study notes modal and overlay styles,Done,2026-08-12
 631,2026-08-12,Interactive Mind Map overhaul - light theme + drag-and-drop + user nodes + notes + PATCH API,Done,2026-08-12
 632,2026-08-12,Pronunciation analyzer: fix V3 reason codes + duration chart mismatch + V2/V3 toggle in syllable verifier,Done,2026-08-12
-633,2026-08-12,Deploy release V1.8.64 to production and run browser verification,In Progress,
+633,2026-08-12,Deploy release V1.8.64 to production and run browser verification,Done,2026-08-12

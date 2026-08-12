@@ -3226,6 +3226,20 @@ const SRSReview = (function () {
             return definitionCache.get(cacheKey);
         }
 
+        if (typeof window !== 'undefined' && window.DictionaryService && window.DictionaryService.getDefinition) {
+            try {
+                const defData = await window.DictionaryService.getDefinition(searchTerm, preferredPOS);
+                if (defData && defData.definition) {
+                    const result = { definition: defData.definition, example: defData.example || '' };
+                    definitionCache.set(cacheKey, result);
+                    saveDefinitionCache();
+                    return result;
+                }
+            } catch (serviceErr) {
+                log.warn('DictionaryService getDefinition failed:', serviceErr);
+            }
+        }
+
         try {
             const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${searchTerm}`);
             if (!response.ok) throw new Error('Not found');

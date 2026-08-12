@@ -38,7 +38,8 @@ export const config = {
         showPronunciationVersionComparison: true,
         saveToDatabase: true,
         usePraatBackend: true,
-        usePronunciationV3LearnerAnalysis: false
+        usePronunciationV3LearnerAnalysis: false,
+        useGeneratedPronunciationReferenceAudio: false
     },
 
     // Cache Settings

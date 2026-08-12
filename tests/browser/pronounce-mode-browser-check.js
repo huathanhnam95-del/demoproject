@@ -42,6 +42,7 @@ function harnessHtml() {
               </div>
               <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
                 <button id="pa-play-native-btn" class="pa-btn-play-native" type="button">🔊 Listen</button>
+                <span id="pa-audio-source-label" class="pa-audio-source-label"></span>
                 <audio id="pa-native-audio" preload="none"></audio>
               </div>
             </div>
@@ -295,6 +296,16 @@ async function run() {
           displayIpa: '/ɪmˈpɔrt/', count: 2, stress: 1
         })
       ],
+      perfect: [
+        variant({
+          id: '23212949e88a26e3', pos: 'adjective', rawIpa: '\u02c8p\u025arf\u026akt',
+          displayIpa: '/\u02c8p\u0259rf\u026akt/', count: 2, stress: 0, labels: ['PER', 'fect']
+        }),
+        variant({
+          id: 'c2c0d94fb4bf1723', pos: 'verb', rawIpa: 'p\u0259r\u02c8f\u025bkt',
+          displayIpa: '/p\u0259r\u02c8f\u025bkt/', count: 2, stress: 1, labels: ['per', 'FECT']
+        })
+      ],
       tunnel: [variant({
         id: '5555555555555555', rawIpa: 'ˈtʌnᵊl', displayIpa: '/ˈtʌnᵊl/', count: 2, stress: 0
       })],
@@ -346,6 +357,45 @@ async function run() {
         ) {
           return jsonResponse({ error: 'Temporary analysis outage' }, 503);
         }
+        if (request.variantId === '23212949e88a26e3') {
+          const pitchValues = [
+            186.5, 188.3, 188.1, 189.6, 191.0, 190.6, 189.8,
+            188.1, 184.0, 177.3, 165.9, 156.3, 151.8,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            447.0, 456.3, 465.6, 471.7, 474.8
+          ];
+          const pitchTimes = pitchValues.map((_, index) => Number((index * 0.01).toFixed(2)));
+          const correctedPitchValues = pitchValues.map((value, index) => index >= 23 ? value / 2 : value);
+          return jsonResponse({
+            analysisVersion: 'pronunciation-analysis-v2',
+            variantId: request.variantId,
+            canonicalSyllableCount: 2,
+            canonicalPrimaryStress: 0,
+            pitchProcessing: { version: 'canonical-pitch-v1', status: 'corrected', reasons: [] },
+            audioCompatibility: { version: 'reference-audio-compatibility-v1', status: 'compatible', confidence: 0.9, reasons: [] },
+            graphSource: { kind: 'measured-dictionary', label: 'Measured dictionary reference', measured: true, version: 'canonical-pitch-v1' },
+            quality: { rateable: true, confidence: 1, reasons: [] },
+            segmentation: {
+              rawCandidateCount: 2, evidenceCandidateCount: 2, selectedCount: 2,
+              method: 'acoustic-candidate-selection', confidence: 1, conflicts: []
+            },
+            observed: {
+              syllableCount: 2,
+              primaryStress: 0,
+              syllables: [
+                { startTime: 0, endTime: 0.13, duration: 0.13, vowelDuration: 0.1, avgPitch: 181.3, maxPitch: 190.8, intensity: 78.8 },
+                { startTime: 0.23, endTime: 0.28, duration: 0.05, vowelDuration: 0.05, avgPitch: 230.8, maxPitch: 237.4, intensity: 69.8 }
+              ],
+              stressEvidence: { rateable: true, confidence: 0.873, primaryStress: 0 }
+            },
+            pitch: { times: pitchTimes, values: correctedPitchValues, rawValues: pitchValues },
+            intensity: {
+              times: pitchTimes,
+              values: pitchValues.map((value) => value > 0 ? 70 : 0)
+            },
+            capabilities: { showNativeGraphs: true }
+          });
+        }
         const count = request.expectedSyllableCount;
         const contourOnly = request.variantId === 'bbbbbbbbbbbbbbbb';
         const observedCount = contourOnly ? count - 1 : count;
@@ -353,6 +403,9 @@ async function run() {
           analysisVersion: 'pronunciation-analysis-v2',
           variantId: request.variantId,
           canonicalSyllableCount: count,
+          pitchProcessing: { version: 'canonical-pitch-v1', status: contourOnly ? 'unrateable' : 'clean', reasons: contourOnly ? ['ACOUSTIC_COUNT_MISMATCH'] : [] },
+          audioCompatibility: { version: 'reference-audio-compatibility-v1', status: contourOnly ? 'unrateable' : 'compatible', confidence: contourOnly ? 0 : 0.9, reasons: contourOnly ? ['ACOUSTIC_COUNT_MISMATCH'] : [] },
+          graphSource: { kind: 'measured-dictionary', label: 'Measured dictionary reference', measured: true, version: 'canonical-pitch-v1' },
           quality: contourOnly
             ? { rateable: false, confidence: 0, reasons: ['ACOUSTIC_COUNT_MISMATCH'] }
             : { rateable: true, confidence: 0.92, reasons: [] },
@@ -959,7 +1012,7 @@ async function run() {
     await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent === '/kɑntʊr/');
     assert.equal(
       await page.locator('#pa-stress-chart').evaluate((node) => node.closest('.pa-chart-card').hidden),
-      true
+      false
     );
 
     await page.fill('#pa-word-input', 'tunnel');
@@ -971,14 +1024,16 @@ async function run() {
     await page.click('#pa-search-btn');
     await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent.includes('saɪlənt'));
     assert.equal(await page.locator('#pa-record-btn').isDisabled(), false);
-    assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), true);
+    assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), false);
+    assert.equal(await page.locator('#pa-audio-source-label').textContent(), 'Temporary device voice');
 
     await page.fill('#pa-word-input', 'fallback');
     await page.click('#pa-search-btn');
     await page.waitForFunction(() => document.querySelector('#pa-reference-status')?.textContent.includes('CMU pronunciation fallback'));
     assert.equal(await page.locator('#pa-record-btn').isDisabled(), false);
-    assert.equal(await page.locator('#pa-native-audio-container').evaluate((node) => node.style.display), 'none');
-    assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), true);
+    assert.equal(await page.locator('#pa-native-audio-container').evaluate((node) => node.style.display), 'flex');
+    assert.equal(await page.locator('#pa-audio-source-label').textContent(), 'Temporary device voice');
+    assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), false);
 
     await page.fill('#pa-word-input', 'conflict');
     await page.click('#pa-search-btn');
@@ -1027,7 +1082,7 @@ async function run() {
     const comparisonAxes = await page.evaluate(async () => {
       const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
       const app = bootPronunciationApp();
-      const native = app.currentWordRef.nativeAnalysis;
+      const native = app.currentWordRef.referenceAnalysis;
       const learner = structuredClone(native);
       learner.variantId = undefined;
       learner.pitch.values = [220, 240, 210];
@@ -1055,10 +1110,55 @@ async function run() {
     assert.equal(comparisonAxes.intensity, 'Relative intensity (dB from voiced median)');
     assert.match(comparisonAxes.tooltip, /semitones.*Hz/);
 
+    await page.fill('#pa-word-input', 'perfect');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => (
+      document.querySelector('#pa-word-forms button.active')?.dataset.variantId === '23212949e88a26e3'
+    ));
+    assert.equal(
+      await page.locator('#pa-word-forms button.active').getAttribute('data-variant-id'),
+      '23212949e88a26e3'
+    );
+    assert.match(await page.locator('#pa-pattern-display').textContent(), /Primary stress on PER, syllable 1/);
+    const perfectAdjectiveChart = await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      const native = app.currentWordRef.referenceAnalysis;
+      const learner = structuredClone(native);
+      learner.variantId = undefined;
+      learner.pitch.values = learner.pitch.values.map((value) => value > 0 ? 180 : 0);
+      app.visualizer.comparisonChartMode = 'pitch';
+      app.visualizer.drawComparisonPitchContour(
+        learner,
+        native,
+        app.currentWordRef.syllables,
+        { drawDuration: false }
+      );
+      const chart = window.__charts.at(-1);
+      const nativeDataset = chart.data.datasets.find((dataset) => dataset.label === 'Measured dictionary reference relative pitch');
+      const voiced = nativeDataset.data.filter((point) => point.y !== null);
+      return {
+        maxRelativeSemitones: Math.max(...voiced.map((point) => point.y)),
+        maxRawHz: Math.max(...voiced.map((point) => point.rawHz))
+      };
+    });
+    assert.ok(
+      perfectAdjectiveChart.maxRelativeSemitones < 6,
+      `perfect adjective chart must stay below +6 semitones; got ${perfectAdjectiveChart.maxRelativeSemitones}`
+    );
+    assert.equal(perfectAdjectiveChart.maxRawHz, 237.4);
+    assert.equal(await page.locator('#pa-audio-source-label').textContent(), 'Dictionary recording');
+    if (screenshotDir) {
+      await page.screenshot({
+        path: path.join(screenshotDir, 'perfect-adjective-native-chart.png'),
+        fullPage: true
+      });
+    }
+
     const mismatchLanes = await page.evaluate(async () => {
       const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
       const app = bootPronunciationApp();
-      const native = app.currentWordRef.nativeAnalysis;
+      const native = app.currentWordRef.referenceAnalysis;
       const learner = structuredClone(native);
       learner.observed.syllableCount = 3;
       learner.observed.syllables.push({

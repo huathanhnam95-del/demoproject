@@ -7184,6 +7184,15 @@
     const progressAdversarialEl = document.getElementById('corpus-adversarial-count');
     const progressAccentedEl = document.getElementById('corpus-accented-count');
     const progressFillEl = document.getElementById('corpus-progress-fill');
+    const referenceAudioQueueItems = document.getElementById('reference-audio-queue-items');
+    const referenceAudioWaitingCount = document.getElementById('reference-audio-waiting-count');
+    const referenceAudioGeneratedCount = document.getElementById('reference-audio-generated-count');
+    const referenceAudioSearch = document.getElementById('reference-audio-search');
+    const referenceAudioPosFilter = document.getElementById('reference-audio-pos-filter');
+    const referenceAudioReasonFilter = document.getElementById('reference-audio-reason-filter');
+    const btnReferenceAudioRefresh = document.getElementById('btn-reference-audio-refresh');
+    const btnReferenceAudioExport = document.getElementById('btn-reference-audio-export');
+    const referenceAudioPreview = document.getElementById('reference-audio-preview');
 
     let currentWord = 'busy';
     let currentIpa = 'ˈbɪz.i';
@@ -7218,6 +7227,123 @@
     const samplesNeedingReviewByWord = new Map();
     const samplesAutoUnrateableByWord = new Map();
     let pendingRerecord = null;
+    let referenceAudioItems = [];
+    let referenceAudioPreviewUrl = null;
+
+    function formatQueueDate(value) {
+      const raw = value?._seconds ? value._seconds * 1000 : value;
+      const date = raw ? new Date(raw) : null;
+      return date && Number.isFinite(date.getTime()) ? date.toLocaleString() : '—';
+    }
+
+    function queueCell(textValue, className = '') {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      cell.textContent = String(textValue ?? '—');
+      return cell;
+    }
+
+    async function playReferenceAudio(item) {
+      if (!referenceAudioPreview || item.verificationStatus !== 'passed') return;
+      const user = firebase.auth().currentUser;
+      if (!user) throw new Error('Please log in as admin first.');
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/admin/dev/reference-audio-queue/${encodeURIComponent(item.referenceAudioKey || item.id)}/audio`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error(`Audio request failed (${response.status})`);
+      if (referenceAudioPreviewUrl) URL.revokeObjectURL(referenceAudioPreviewUrl);
+      referenceAudioPreviewUrl = URL.createObjectURL(await response.blob());
+      referenceAudioPreview.src = referenceAudioPreviewUrl;
+      referenceAudioPreview.hidden = false;
+      await referenceAudioPreview.play();
+    }
+
+    function renderReferenceAudioQueue() {
+      if (!referenceAudioQueueItems) return;
+      const query = String(referenceAudioSearch?.value || '').trim().toLowerCase();
+      const pos = String(referenceAudioPosFilter?.value || '');
+      const reason = String(referenceAudioReasonFilter?.value || '');
+      const items = referenceAudioItems.filter((item) => {
+        const searchable = `${item.word || ''} ${item.displayIpa || ''} ${item.partOfSpeech || ''}`.toLowerCase();
+        return (!query || searchable.includes(query))
+          && (!pos || item.partOfSpeech === pos)
+          && (!reason || item.discoveryReason === reason);
+      });
+      const rows = items.map((item) => {
+        const row = document.createElement('tr');
+        row.appendChild(queueCell(`${item.word || '—'}${item.partOfSpeech ? ` · ${item.partOfSpeech}` : ''}`));
+        row.appendChild(queueCell(`${item.displayIpa || '—'} · stress ${Number.isInteger(item.primaryStress) ? item.primaryStress + 1 : '—'}`));
+        row.appendChild(queueCell(String(item.discoveryReason || '—').replaceAll('_', ' ')));
+        const verification = String(item.verificationStatus || 'pending');
+        row.appendChild(queueCell(`${item.generationStatus || 'waiting'} · ${verification}`, `reference-audio-status reference-audio-status--${verification}`));
+        row.appendChild(queueCell(formatQueueDate(item.lastSeenAt)));
+        const actionCell = document.createElement('td');
+        if (verification === 'passed') {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'crm-btn crm-btn-secondary';
+          button.textContent = 'Play';
+          button.addEventListener('click', () => playReferenceAudio(item).catch((error) => showToast(error.message, 'error')));
+          actionCell.appendChild(button);
+        } else {
+          actionCell.textContent = item.lastError || 'Not published';
+        }
+        row.appendChild(actionCell);
+        return row;
+      });
+      if (!rows.length) {
+        const row = document.createElement('tr');
+        const cell = queueCell('No queue items match these filters.', 'crm-muted');
+        cell.colSpan = 6;
+        row.appendChild(cell);
+        rows.push(row);
+      }
+      referenceAudioQueueItems.replaceChildren(...rows);
+    }
+
+    async function loadReferenceAudioQueue() {
+      if (!referenceAudioQueueItems) return;
+      try {
+        const json = await apiFetchJson('/api/admin/dev/reference-audio-queue', { method: 'GET' });
+        referenceAudioItems = json.items || json.data?.items || [];
+        if (referenceAudioWaitingCount) referenceAudioWaitingCount.textContent = String(referenceAudioItems.filter((item) => item.generationStatus === 'waiting').length);
+        if (referenceAudioGeneratedCount) referenceAudioGeneratedCount.textContent = String(referenceAudioItems.filter((item) => item.generationStatus === 'generated').length);
+        if (referenceAudioPosFilter) {
+          const selected = referenceAudioPosFilter.value;
+          const options = [document.createElement('option')];
+          options[0].value = '';
+          options[0].textContent = 'All parts of speech';
+          [...new Set(referenceAudioItems.map((item) => item.partOfSpeech).filter(Boolean))].sort().forEach((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            options.push(option);
+          });
+          referenceAudioPosFilter.replaceChildren(...options);
+          referenceAudioPosFilter.value = selected;
+        }
+        renderReferenceAudioQueue();
+      } catch (error) {
+        const row = document.createElement('tr');
+        const cell = queueCell(`Reference audio queue unavailable: ${error?.message || 'request failed'}`, 'crm-muted');
+        cell.colSpan = 6;
+        row.appendChild(cell);
+        referenceAudioQueueItems.replaceChildren(row);
+      }
+    }
+
+    async function exportReferenceAudioManifest() {
+      const json = await apiFetchJson('/api/admin/dev/reference-audio-queue/manifest', { method: 'GET' });
+      const manifest = json.data || json;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' }));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'pronunciation-reference-audio-pending.json';
+      anchor.click();
+      URL.revokeObjectURL(url);
+    }
 
     const CORPUS_VERSIONS = [
       {
@@ -8456,6 +8582,12 @@
     if (btnRedo) btnRedo.addEventListener('click', redoRecording);
     if (btnSave) btnSave.addEventListener('click', saveToCorpus);
     if (btnRefresh) btnRefresh.addEventListener('click', () => loadSavedSamples());
+    if (btnReferenceAudioRefresh) btnReferenceAudioRefresh.addEventListener('click', loadReferenceAudioQueue);
+    if (btnReferenceAudioExport) btnReferenceAudioExport.addEventListener('click', () => exportReferenceAudioManifest().catch((error) => showToast(error.message, 'error')));
+    [referenceAudioSearch, referenceAudioPosFilter, referenceAudioReasonFilter].forEach((control) => {
+      control?.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderReferenceAudioQueue);
+    });
+    loadReferenceAudioQueue();
 
     // Word search filter
     if (wordSearchInput) wordSearchInput.addEventListener('input', () => {

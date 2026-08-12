@@ -778,8 +778,8 @@ def process_question(
         overall_confidence_scores.append(conf)
 
         revision_blanks.append({
-            "blank_index": rev["blank_index"],
-            "correct_answer": rev["correct_answer"],
+            "blank_index": rev.get("blank_index", i + 1),
+            "correct_answer": rev.get("correct_answer", b_info["correct"]),
             "grammar_tag": rev.get("grammar_tag", synth.get("grammar_tag", "Grammar")),
             "dr_reasoning": diag.get("correct_reason", ""),
             "dr_distractor_analysis": diag.get("distractor_analysis", []),

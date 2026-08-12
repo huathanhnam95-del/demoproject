@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.63",
+  "version": "1.8.64",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -29,6 +29,7 @@
     "test:pronounce:logic": "node --no-warnings tests/pronunciation-analyzer/analysis-pipeline.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-detector.test.mjs && node --no-warnings tests/pronunciation-analyzer/stress-utils.test.mjs && node --no-warnings tests/pronunciation-analyzer/native-audio-player.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/pronunciation-summary.test.mjs && node --no-warnings tests/pronunciation-analyzer/reference-ui-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/praat-api-v2.test.mjs && node --no-warnings tests/pronunciation-analyzer/version-comparison.test.mjs && node --no-warnings tests/pronunciation-analyzer/version-comparison-ui-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/chart-data.test.mjs && node --no-warnings tests/pronunciation-analyzer/syllable-verifier.test.mjs && node --no-warnings tests/pronunciation-analyzer/verification-attempt-policy.test.mjs && node --no-warnings tests/pronunciation-analyzer/crm-verification-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/local-launcher-contract.test.mjs && node --no-warnings tests/pronunciation-analyzer/pitch-analyzer.test.mjs",
     "audit:pronounce:100": "python scripts/audit/pronunciation-reference-audit.py --base-url http://127.0.0.1:8081 --sample-size 100 --seed 20260711 --output test-results/pronunciation-audit-100.json",
     "audit:pronounce:1000": "python scripts/audit/pronunciation-reference-audit.py --base-url http://127.0.0.1:8081 --sample-size 1000 --seed 20260711 --output test-results/pronunciation-audit-1000.json",
+    "backfill:pronunciation:reference-audio": "node scripts/audit/backfill_pronunciation_reference_audio.js",
     "campaign:pronounce:manifest": "python scripts/audit/pronunciation-reference-audit.py --create-manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --sample-size 3000 --seed 20260712",
     "campaign:pronounce:cohort1": "python scripts/audit/pronunciation-reference-audit.py --manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --cohort 1 --output test-results/pronunciation-audit-3000/cohort-1-rows.jsonl",
     "campaign:pronounce:cohort2": "python scripts/audit/pronunciation-reference-audit.py --manifest test-results/pronunciation-audit-3000/manifest-3000-seed-20260712.json --cohort 2 --output test-results/pronunciation-audit-3000/cohort-2-rows.jsonl",
@@ -59,6 +60,7 @@
     "test:read-aloud:speech-coach-audio": "node tests/speech-coach-kokoro-audio.test.js",
     "test:read-aloud:speech-coach-audio:browser": "node tests/browser/speech-coach-model-audio-browser-check.js",
     "generate:read-aloud:speech-coach-audio": "node scripts/kokoro/generate_speech_coach_audio.js",
+    "generate:pronunciation:reference-audio": "node scripts/kokoro/generate_pronunciation_reference_audio.js",
     "verify:read-aloud:speech-coach-audio": "node scripts/kokoro/verify_speech_coach_audio.js",
     "test:difficulty": "node tests/difficulty-logic.test.mjs && node tests/performance-tracker.test.js && node tests/difficulty-manager-state.test.mjs && node tests/difficulty-manager-profiles.test.mjs && node tests/difficulty-filter-migration.test.mjs",
     "test:difficulty:browser": "node tests/browser/adaptive-difficulty-browser-check.js",

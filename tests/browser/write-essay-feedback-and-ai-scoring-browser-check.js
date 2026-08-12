@@ -10,6 +10,8 @@ const path = require('path');
 
   const app = express();
   const publicDir = path.join(__dirname, '..', '..', 'public');
+  app.use(express.json());
+  app.post('/api/practice-attempts/save', (_req, res) => res.json({ success: true, data: { attemptId: 'browser-gemini-attempt-001' } }));
   app.use(express.static(publicDir));
   app.get('/', (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -54,9 +56,12 @@ const path = require('path');
     contentType: 'application/javascript',
     body: `
       export const getFunctions = () => ({});
+      export const connectFunctionsEmulator = () => {};
       export const httpsCallable = (functions, name) => {
-        return async () => {
+        return async (payload) => {
           console.log('[MOCK] httpsCallable called for:', name);
+          window.__essayCallableCalls = window.__essayCallableCalls || [];
+          window.__essayCallableCalls.push({ name, payload });
           if (name === 'scoreEssay') return { data: window.mockScoreEssayResult };
           return { data: { success: true } };
         };
@@ -113,6 +118,16 @@ const path = require('path');
   try {
     await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
+    await page.evaluate(() => window.history.replaceState({}, '', '/practice/writing/essay/5'));
+    await page.evaluate(() => {
+      window.PTEAttemptArchive = {
+        saveTextAttempt: async () => ({ attemptId: 'browser-gemini-attempt-001' }),
+        patchAttempt: async (attemptId, patch) => {
+          window.__essayArchivePatch = { attemptId, patch };
+          return { attemptId };
+        }
+      };
+    });
 
     // Dismiss blocking overlays (entry-modal, preloader)
     await page.evaluate(() => {
@@ -261,6 +276,8 @@ const path = require('path');
     // Check that AI score is disabled for guest
     const aiBtnDisabled = await page.$eval('#essay-ai-score-btn', btn => btn.disabled);
     assert.strictEqual(aiBtnDisabled, true, 'AI scoring button should be disabled for guests');
+    const localBtnDisabled = await page.$eval('#essay-local-ai-score-btn', btn => btn.disabled);
+    assert.strictEqual(localBtnDisabled, true, 'Local AI queue button should be disabled for guests');
 
     // Click AI Scoring as guest -> should show login hint
     await page.evaluate(() => {
@@ -277,7 +294,7 @@ const path = require('path');
     // 4. Submit as Authenticated User
     // Mock login and re-render
     await page.evaluate(() => {
-      window.mockUser = { uid: 'test-admin' };
+      window.mockUser = { uid: 'test-admin', getIdToken: async () => 'test-token' };
       sessionStorage.setItem('guestMode', 'false');
       
       // Ensure the mock is where the app looks
@@ -296,6 +313,8 @@ const path = require('path');
 
     const aiBtnEnabled = await page.$eval('#essay-ai-score-btn', btn => !btn.disabled);
     assert.strictEqual(aiBtnEnabled, true, 'AI scoring button should be enabled for logged-in users');
+    const localBtnEnabled = await page.$eval('#essay-local-ai-score-btn', btn => !btn.disabled);
+    assert.strictEqual(localBtnEnabled, true, 'Local AI queue button should be enabled for logged-in users');
 
     await page.evaluate(() => {
       window.__essayRenderedAdvice = [];
@@ -341,6 +360,15 @@ const path = require('path');
       return document.querySelectorAll('.essay-score-row').length;
     });
     assert.strictEqual(scoreRowCount, 7, 'Should display 7 score categories');
+
+    const geminiCall = await page.evaluate(() => (window.__essayCallableCalls || []).find((call) => call.name === 'scoreEssay'));
+    assert.ok(geminiCall, 'Gemini callable should be invoked');
+    assert.equal(geminiCall.payload.text, essayText.slice(0, 6000), 'Gemini payload should include the essay text');
+    assert.equal(geminiCall.payload.promptText.length > 0, true, 'Gemini payload should include the learner prompt');
+    assert.equal(geminiCall.payload.rubricText.length > 0, true, 'Gemini payload should include the rubric text');
+    assert.deepEqual(geminiCall.payload.context, { entryType: 'pte_essay', questionId: promptIdAtIndex0 });
+    const archivePatch = await page.evaluate(() => window.__essayArchivePatch || null);
+    assert.equal(archivePatch?.patch?.scoringSnapshot?.source, 'gemini', 'Gemini result should patch the archived attempt');
 
     // 5. Test BEL Assistant Integration
     // Verify that the df-messenger element exists (required for teacher advice)

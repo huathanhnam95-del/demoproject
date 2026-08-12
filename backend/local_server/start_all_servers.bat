@@ -130,7 +130,7 @@ start "HTTPS Server 8443" /min cmd /c "cd /d %~dp0\..\.. && set FIRESTORE_EMULAT
 
 echo [5/5] Starting Flask API Server (port 8081)...
 if !PHONEME_READY!==1 (
-    start "Flask API 8081" /min cmd /c "cd /d %~dp0 && set PHONEME_SERVICE_URL=http://127.0.0.1:8082&& set PHONEME_SERVICE_AUTH=disabled&& set PRONUNCIATION_V3_MODE=off&& python server.py"
+    start "Flask API 8081" /min cmd /c "cd /d %~dp0 && set PHONEME_SERVICE_URL=http://127.0.0.1:8082&& set PHONEME_SERVICE_AUTH=disabled&& set PRONUNCIATION_V3_MODE=shadow&& python server.py"
 ) else (
     start "Flask API 8081" /min cmd /c "cd /d %~dp0 && set PHONEME_SERVICE_URL=&& set PHONEME_SERVICE_AUTH=&& set PRONUNCIATION_V3_MODE=off&& python server.py"
 )

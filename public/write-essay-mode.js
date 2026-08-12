@@ -27,10 +27,14 @@
     let lastSubmittedEssayText = '';
     let lastSubmittedEssayPrompt = '';
     let lastSubmittedEssayWordCount = 0;
+    let lastBasicFeedbackSectionsHtml = '';
     let lastArchiveAttemptId = null;
     let lastArchiveSavePromise = null;
 
     // Cached resources / callables
+    let scoreEssayFn = null;
+    let rubricTextCache = null;
+    let rubricTextPromise = null;
     let submitEssayDeepAiFn = null;
     let authStateRefreshBound = false;
 
@@ -74,6 +78,7 @@
         lastSubmittedEssayText = '';
         lastSubmittedEssayPrompt = '';
         lastSubmittedEssayWordCount = 0;
+        lastBasicFeedbackSectionsHtml = '';
         lastArchiveAttemptId = null;
         lastArchiveSavePromise = null;
         if (el.practiceArea) el.practiceArea.style.display = 'none';
@@ -90,8 +95,10 @@
         if (el.resultsContainer) el.resultsContainer.innerHTML = '';
         if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
         if (el.aiScoreHint) { el.aiScoreHint.style.display = 'none'; el.aiScoreHint.innerHTML = ''; }
-        if (el.aiScoreBtn) { el.aiScoreBtn.disabled = false; el.aiScoreBtn.textContent = 'Queue AI scoring'; }
+        if (el.aiScoreBtn) { el.aiScoreBtn.disabled = false; el.aiScoreBtn.textContent = 'Score with Gemini'; }
+        if (el.localAiScoreBtn) { el.localAiScoreBtn.disabled = false; el.localAiScoreBtn.textContent = 'Queue local AI scoring'; }
         if (el.aiScoreStatus) { el.aiScoreStatus.style.display = 'none'; el.aiScoreStatus.textContent = ''; }
+        if (el.localAiScoreStatus) { el.localAiScoreStatus.style.display = 'none'; el.localAiScoreStatus.textContent = ''; }
         renderPromptPreview();
         updateWordCount();
     }
@@ -133,8 +140,10 @@
         el.resultsContainer = document.getElementById('essay-results-container');
         el.retryBtn = document.getElementById('essay-retry-btn');
         el.aiScoreBtn = document.getElementById('essay-ai-score-btn');
+        el.localAiScoreBtn = document.getElementById('essay-local-ai-score-btn');
         el.aiScoreHint = document.getElementById('essay-ai-score-hint');
         el.aiScoreStatus = document.getElementById('essay-ai-score-status');
+        el.localAiScoreStatus = document.getElementById('essay-local-ai-score-status');
     }
 
     /* ──────────────────────────── EVENT LISTENERS ────────────────── */
@@ -178,7 +187,8 @@
         if (el.essayInput) el.essayInput.addEventListener('input', updateWordCount);
         if (el.submitBtn) el.submitBtn.addEventListener('click', submitEssay);
         if (el.retryBtn) el.retryBtn.addEventListener('click', retryPractice);
-        if (el.aiScoreBtn) el.aiScoreBtn.addEventListener('click', submitToAiScoring);
+        if (el.aiScoreBtn) el.aiScoreBtn.addEventListener('click', submitToGeminiScoring);
+        if (el.localAiScoreBtn) el.localAiScoreBtn.addEventListener('click', submitToLocalAiScoring);
     }
 
     /* ──────────────────────────── DATA LOADING ───────────────────── */
@@ -657,6 +667,7 @@
             feedbackSectionsHtml
         });
 
+        lastBasicFeedbackSectionsHtml = feedbackSectionsHtml;
 
         // Display results
         el.stepWrite.style.display = 'none';
@@ -716,6 +727,24 @@
             return attemptId || lastArchiveAttemptId;
         }
         return null;
+    }
+
+    function renderScoreRow(label, result, maxScore) {
+        const score = typeof result?.score === 'number' ? result.score : -1;
+        const isUnavailable = score < 0;
+        const badgeClass = isUnavailable ? 'essay-score-na' :
+            score === maxScore ? 'essay-score-full' :
+                score > 0 ? 'essay-score-partial' : 'essay-score-zero';
+
+        return `
+            <div class="essay-score-row">
+                <div class="essay-score-label">${escapeHtml(label)}</div>
+                <div class="essay-score-badge ${badgeClass}">
+                    ${isUnavailable ? 'N/A' : `${score}/${maxScore}`}
+                </div>
+                <div class="essay-score-detail">${escapeHtml(result?.detail || '')}</div>
+            </div>
+        `;
     }
 
     async function checkWithLanguageTool(text) {
@@ -1056,15 +1085,17 @@
     }
 
     function updateAiScoreButtonState() {
-        if (!el.aiScoreBtn) return;
+        if (!el.aiScoreBtn && !el.localAiScoreBtn) return;
         if (!lastSubmittedEssayText) {
-            el.aiScoreBtn.disabled = true;
+            if (el.aiScoreBtn) el.aiScoreBtn.disabled = true;
+            if (el.localAiScoreBtn) el.localAiScoreBtn.disabled = true;
             return;
         }
 
         const user = getCurrentUser();
         const allowed = Boolean(user) && !isGuestMode();
-        el.aiScoreBtn.disabled = !allowed;
+        if (el.aiScoreBtn) el.aiScoreBtn.disabled = !allowed || isAiScoring;
+        if (el.localAiScoreBtn) el.localAiScoreBtn.disabled = !allowed || isAiScoring;
 
         if (!el.aiScoreHint) return;
 
@@ -1108,6 +1139,41 @@
         });
     }
 
+    async function getRubricText() {
+        if (rubricTextCache) return rubricTextCache;
+        if (rubricTextPromise) return rubricTextPromise;
+
+        rubricTextPromise = fetch('/database/knowledge-base/Write Essay Score Guide.txt', { cache: 'no-store' })
+            .then((resp) => {
+                if (!resp.ok) throw new Error(`Rubric not found (${resp.status})`);
+                return resp.text();
+            })
+            .then((txt) => {
+                rubricTextCache = String(txt || '');
+                return rubricTextCache;
+            })
+            .catch((err) => {
+                rubricTextPromise = null;
+                throw err;
+            });
+
+        return rubricTextPromise;
+    }
+
+    async function getScoreEssayCallable() {
+        if (scoreEssayFn) return scoreEssayFn;
+        if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
+            const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+            scoreEssayFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'scoreEssay');
+            return scoreEssayFn;
+        }
+        if (typeof firebase !== 'undefined' && firebase.functions) {
+            scoreEssayFn = firebase.functions().httpsCallable('scoreEssay');
+            return scoreEssayFn;
+        }
+        throw new Error('Gemini scoring unavailable (Firebase functions not loaded)');
+    }
+
     async function getSubmitEssayDeepAiCallable() {
         if (submitEssayDeepAiFn) return submitEssayDeepAiFn;
         if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
@@ -1119,10 +1185,10 @@
             submitEssayDeepAiFn = firebase.functions().httpsCallable('submitEssayDeepAi');
             return submitEssayDeepAiFn;
         }
-        throw new Error('AI scoring unavailable (Firebase functions not loaded)');
+        throw new Error('Local AI scoring unavailable (Firebase functions not loaded)');
     }
 
-    async function submitToAiScoring() {
+    async function submitToGeminiScoring() {
         if (isAiScoring) return;
         if (!lastSubmittedEssayText) {
             alert('Please submit your essay first.');
@@ -1130,15 +1196,104 @@
         }
 
         updateAiScoreButtonState();
-        if (el.aiScoreBtn && el.aiScoreBtn.disabled) {
-            return;
-        }
+        if (el.aiScoreBtn && el.aiScoreBtn.disabled) return;
 
         isAiScoring = true;
         if (el.aiScoreBtn) {
             el.aiScoreBtn.disabled = true;
-            el.aiScoreBtn.textContent = '⏳ AI scoring…';
+            el.aiScoreBtn.textContent = '⏳ Scoring with Gemini…';
         }
+        if (el.localAiScoreBtn) el.localAiScoreBtn.disabled = true;
+        if (el.aiScoreHint) el.aiScoreHint.style.display = 'none';
+        if (el.aiScoreStatus) el.aiScoreStatus.style.display = 'none';
+
+        try {
+            const rubricText = await getRubricText();
+            const callable = await getScoreEssayCallable();
+            const result = await callable({
+                text: String(lastSubmittedEssayText || '').slice(0, 6000),
+                promptText: String(lastSubmittedEssayPrompt || '').slice(0, 2000),
+                rubricText: String(rubricText || '').slice(0, 15000),
+                context: {
+                    entryType: 'pte_essay',
+                    questionId: currentEntry?.id || ''
+                }
+            });
+
+            const data = result?.data || {};
+            if (data.limited) {
+                if (el.aiScoreStatus) {
+                    el.aiScoreStatus.style.display = 'block';
+                    el.aiScoreStatus.textContent = data.message || 'Gemini daily scoring limit reached. Try again tomorrow.';
+                }
+                return;
+            }
+            if (!data.success) throw new Error(data.message || 'Gemini scoring failed');
+
+            if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
+            displayAiScoreResults(data);
+            const archiveAttemptId = await ensureArchiveAttemptId();
+            let archiveSaveFailed = false;
+            if (archiveAttemptId) {
+                try {
+                    if (typeof window.PTEAttemptArchive?.patchAttempt !== 'function') {
+                        throw new Error('Essay archive patch is unavailable');
+                    }
+                    await window.PTEAttemptArchive.patchAttempt(archiveAttemptId, {
+                        resultSnapshot: {
+                            overall: data.overall || null,
+                            scores: data.scores || null,
+                            teacherAdvice: data.teacherAdvice || data.teacherAdviceChat || null
+                        },
+                        scoringSnapshot: {
+                            source: 'gemini',
+                            success: true,
+                            teacherAdviceChat: data.teacherAdviceChat || data.teacherAdvice || null
+                        }
+                    });
+                } catch (archiveError) {
+                    archiveSaveFailed = true;
+                    console.warn('[PTE Archive] Gemini essay score patch failed:', archiveError);
+                }
+            } else {
+                archiveSaveFailed = true;
+            }
+
+            const teacherAdvice = String(data.teacherAdviceChat || data.teacherAdvice || '').trim();
+            if (teacherAdvice) postTeacherAdviceToChat(teacherAdvice);
+            if (archiveSaveFailed && el.aiScoreStatus) {
+                el.aiScoreStatus.style.display = 'block';
+                el.aiScoreStatus.textContent = 'Gemini score is shown, but the archive could not be updated. Please try again.';
+            }
+        } catch (error) {
+            console.error('[WriteEssay] Gemini scoreEssay failed:', error);
+            if (el.aiScoreStatus) {
+                el.aiScoreStatus.style.display = 'block';
+                el.aiScoreStatus.textContent = 'Gemini scoring failed. Please try again.';
+            }
+        } finally {
+            isAiScoring = false;
+            if (el.aiScoreBtn) el.aiScoreBtn.textContent = 'Score with Gemini';
+            updateAiScoreButtonState();
+        }
+    }
+
+    async function submitToLocalAiScoring() {
+        if (isAiScoring) return;
+        if (!lastSubmittedEssayText) {
+            alert('Please submit your essay first.');
+            return;
+        }
+
+        updateAiScoreButtonState();
+        if (el.localAiScoreBtn && el.localAiScoreBtn.disabled) return;
+
+        isAiScoring = true;
+        if (el.localAiScoreBtn) {
+            el.localAiScoreBtn.disabled = true;
+            el.localAiScoreBtn.textContent = '⏳ Queueing local scoring…';
+        }
+        if (el.aiScoreBtn) el.aiScoreBtn.disabled = true;
         if (el.aiScoreHint) el.aiScoreHint.style.display = 'none';
 
         try {
@@ -1146,28 +1301,113 @@
             if (!attemptId) throw new Error('Essay archive is still saving. Please try again.');
             const callable = await getSubmitEssayDeepAiCallable();
             const result = await callable({ attemptId });
-
             const data = result?.data || {};
             if (!data.queueId || !data.status) {
-                throw new Error(data?.message || 'AI scoring queue returned an invalid response');
+                throw new Error(data.message || 'Local AI queue returned an invalid response');
             }
-
-            if (el.aiScoreStatus) {
-                el.aiScoreStatus.style.display = 'block';
-                el.aiScoreStatus.textContent = data.created === false
+            if (el.localAiScoreStatus) {
+                el.localAiScoreStatus.style.display = 'block';
+                el.localAiScoreStatus.textContent = data.created === false
                     ? `This essay is already ${data.status}.`
                     : 'Queued for local AI scoring. You will receive a notification when results are ready.';
             }
         } catch (error) {
-            console.error('[WriteEssay] scoreEssay failed:', error);
-            alert('AI scoring failed. Please try again.');
+            console.error('[WriteEssay] local AI queue failed:', error);
+            if (el.localAiScoreStatus) {
+                el.localAiScoreStatus.style.display = 'block';
+                el.localAiScoreStatus.textContent = error?.message || 'Local AI scoring could not be queued. Please try again.';
+            }
         } finally {
             isAiScoring = false;
-            if (el.aiScoreBtn) {
-                el.aiScoreBtn.textContent = 'Queue AI scoring';
-            }
+            if (el.localAiScoreBtn) el.localAiScoreBtn.textContent = 'Queue local AI scoring';
             updateAiScoreButtonState();
         }
+    }
+
+    function displayAiScoreResults(data) {
+        if (!el.resultsContainer) return;
+
+        const overall = data.overall || {};
+        const total = Number(overall.total || 0);
+        const maxTotal = Number(overall.maxTotal || 0);
+        const percent = Number.isFinite(Number(overall.percent))
+            ? Number(overall.percent)
+            : (maxTotal > 0 ? Math.round((total / maxTotal) * 100) : 0);
+        const scores = data.scores && typeof data.scores === 'object' ? data.scores : {};
+        const ordered = [
+            { key: 'content', label: 'Content', max: 6 },
+            { key: 'form', label: 'Form', max: 2 },
+            { key: 'development_structure_coherence', label: 'Development, Structure and Coherence', max: 6 },
+            { key: 'grammar', label: 'Grammar', max: 2 },
+            { key: 'general_linguistic_range', label: 'General Linguistic Range', max: 6 },
+            { key: 'vocabulary_range', label: 'Vocabulary Range', max: 2 },
+            { key: 'spelling', label: 'Spelling', max: 2 }
+        ];
+        const breakdownHtml = ordered.map((item) => {
+            const score = scores[item.key] || {};
+            const detailParts = [];
+            const rationale = score.rationale || score.detail || '';
+            if (rationale) detailParts.push(String(rationale));
+            if (Array.isArray(score.fixTips) && score.fixTips.length > 0) {
+                detailParts.push('Fix: ' + score.fixTips.slice(0, 2).join(' | '));
+            }
+            if (Array.isArray(score.evidence) && score.evidence.length > 0) {
+                detailParts.push('Evidence: ' + score.evidence.slice(0, 1).join(''));
+            }
+            return renderScoreRow(item.label, {
+                score: Number.isFinite(Number(score.score)) ? Number(score.score) : -1,
+                detail: detailParts.join(' ')
+            }, item.max);
+        }).join('');
+        const basicFeedbackDetails = lastBasicFeedbackSectionsHtml ? `
+            <details class="essay-basic-feedback">
+                <summary>Basic feedback (Form/Grammar/Spelling)</summary>
+                <div class="essay-basic-feedback-body">${lastBasicFeedbackSectionsHtml}</div>
+            </details>
+        ` : '';
+
+        el.resultsContainer.innerHTML = `
+            ${renderSubmittedEssayBlockHtml({ essayText: lastSubmittedEssayText, promptText: lastSubmittedEssayPrompt, wordCount: lastSubmittedEssayWordCount })}
+            <div class="essay-results-summary">
+                <div class="essay-results-score-circle">
+                    <span class="essay-score-number">${total}</span>
+                    <span class="essay-score-divider">/</span>
+                    <span class="essay-score-total">${maxTotal}</span>
+                </div>
+                <div class="essay-results-percentage">${percent}%</div>
+            </div>
+            <div class="essay-results-breakdown">${breakdownHtml}</div>
+            ${basicFeedbackDetails}
+        `;
+
+        const sampleResponses = currentEntry && currentEntry.sampleResponses ? currentEntry.sampleResponses : null;
+        const sampleHtml = renderSampleEssays(sampleResponses);
+        if (sampleHtml) {
+            el.resultsContainer.insertAdjacentHTML('beforeend', sampleHtml);
+            initSampleEssaysUI(sampleResponses);
+        }
+    }
+
+    function postTeacherAdviceToChat(text) {
+        const advice = String(text || '').trim();
+        if (!advice) return;
+        const openChat = () => {
+            const bubble = document.querySelector('df-messenger-chat-bubble');
+            if (bubble && typeof bubble.openChat === 'function') bubble.openChat();
+        };
+        const render = () => {
+            const df = document.querySelector('df-messenger');
+            if (df && typeof df.renderCustomText === 'function') {
+                df.renderCustomText(advice, true);
+                return true;
+            }
+            return false;
+        };
+        openChat();
+        if (render()) return;
+        const handler = () => render();
+        window.addEventListener('df-messenger-loaded', handler, { once: true });
+        window.addEventListener('dfMessengerLoaded', handler, { once: true });
     }
 
     /* ──────────────────────────── HELPERS ────────────────────────── */

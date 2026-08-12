@@ -64,6 +64,12 @@ function validReference(overrides = {}) {
     };
 }
 
+const currentPitchContract = {
+    pitchProcessing: { version: 'canonical-pitch-v1', status: 'clean', reasons: [] },
+    audioCompatibility: { version: 'reference-audio-compatibility-v1', status: 'compatible', reasons: [] },
+    graphSource: { kind: 'dictionary', label: 'Measured dictionary reference' }
+};
+
 assert.equal(SCHEMA_VERSION, 10);
 assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v4');
 assert.ok(
@@ -213,6 +219,7 @@ assert.throws(
 const variant = validVariant();
 const nativeAnalysis = {
     analysisVersion: 'pronunciation-analysis-v2',
+    ...currentPitchContract,
     variantId: variant.id,
     canonicalSyllableCount: 1,
     quality: { rateable: true, confidence: 0.91, reasons: [] },
@@ -259,6 +266,7 @@ assert.throws(
 );
 
 const contourOnlyAnalysis = {
+    ...currentPitchContract,
     ...nativeAnalysis,
     canonicalSyllableCount: 2,
     quality: { rateable: false, confidence: 0, reasons: ['ACOUSTIC_COUNT_MISMATCH'] },
@@ -301,8 +309,9 @@ assert.deepEqual(
     referenceWithContours.variants[0].nativeAnalysis.pitch,
     contourOnlyAnalysis.pitch
 );
-assert.equal(referenceWithContours.variants[0].nativeAnalysis.capabilities.showNativeGraphs, true);
-assert.equal(referenceWithContours.variants[0].capabilities.showNativeGraphs, true);
+assert.equal(referenceWithContours.variants[0].nativeAnalysis.capabilities.showNativeGraphs, false);
+assert.equal(referenceWithContours.variants[0].capabilities.showNativeGraphs, false);
+assert.equal(referenceWithContours.variants[0].analysisValidation.status, 'unavailable');
 
 const secondVariant = validVariant({
     id: 'fedcba9876543210',
@@ -383,6 +392,7 @@ assert.equal(
     const audioVariant = validVariant();
     const brokenAnalysis = {
         analysisVersion: 'pronunciation-analysis-v2',
+        ...currentPitchContract,
         variantId: audioVariant.id,
         canonicalSyllableCount: 1,
         quality: { rateable: true, confidence: 0.91, reasons: [] },
@@ -403,6 +413,7 @@ assert.equal(
     const audioVariant = validVariant();
     const goodAnalysis = {
         analysisVersion: 'pronunciation-analysis-v2',
+        ...currentPitchContract,
         variantId: audioVariant.id,
         canonicalSyllableCount: 1,
         quality: { rateable: true, confidence: 0.91, reasons: [] },
@@ -477,6 +488,7 @@ assert.equal(
     const audioVariant = validVariant();
     const goodAnalysis = {
         analysisVersion: 'pronunciation-analysis-v2',
+        ...currentPitchContract,
         variantId: audioVariant.id,
         canonicalSyllableCount: 1,
         quality: { rateable: true, confidence: 0.91, reasons: [] },
@@ -497,6 +509,7 @@ assert.equal(
     const second = validVariant({ id: 'eeeeeeeeeeeeeeee', partOfSpeech: 'verb' });
     const analysisFor = (candidate) => ({
         analysisVersion: 'pronunciation-analysis-v2',
+        ...currentPitchContract,
         variantId: candidate.id,
         canonicalSyllableCount: candidate.syllableCount,
         quality: { rateable: true, confidence: 0.91, reasons: [] },

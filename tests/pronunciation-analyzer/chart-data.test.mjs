@@ -84,6 +84,42 @@ assert.equal(
 assert.equal(nativeWithSustainedOctaveJump.pitch[3].y, null, 'internal unvoiced native frames must remain gaps');
 assert.equal(nativeWithSustainedOctaveJump.pitch[7].y, null, 'trailing unvoiced native frames must remain gaps');
 
+// Merriam-Webster's adjective recording for "perfect" (perfec01.mp3) is
+// tracked near 188 Hz in the first syllable and near 465 Hz after an unvoiced
+// gap. The latter is a harmonic lock, not the verb pronunciation. Preserve
+// the raw measurement for diagnostics while keeping the displayed contour in
+// the octave register supported by the neighboring voiced run.
+const perfectAdjectiveContour = cleanPitchContour([
+    { x: 0.00, y: -0.0781, rawHz: 186.5 },
+    { x: 0.01, y: -0.0689, rawHz: 188.3 },
+    { x: 0.02, y: -0.0322, rawHz: 188.1 },
+    { x: 0.03, y: 0.0343, rawHz: 189.6 },
+    { x: 0.04, y: 0.0732, rawHz: 191.0 },
+    { x: 0.05, y: 0.0777, rawHz: 190.6 },
+    { x: 0.06, y: 0.0388, rawHz: 189.8 },
+    { x: 0.07, y: -0.1345, rawHz: 188.1 },
+    { x: 0.08, y: -0.5248, rawHz: 184.0 },
+    { x: 0.09, y: -1.2288, rawHz: 177.3 },
+    { x: 0.10, y: -2.0937, rawHz: 165.9 },
+    { x: 0.11, y: -2.7683, rawHz: 156.3 },
+    { x: 0.12, y: -3.2842, rawHz: 151.8 },
+    { x: 0.13, y: null, rawHz: null },
+    { x: 0.23, y: 15.2637, rawHz: 447.0 },
+    { x: 0.24, y: 15.4383, rawHz: 456.3 },
+    { x: 0.25, y: 15.5975, rawHz: 465.6 },
+    { x: 0.26, y: 15.7257, rawHz: 471.7 },
+    { x: 0.27, y: 15.8384, rawHz: 474.8 }
+]);
+assert.ok(
+    Math.max(...perfectAdjectiveContour.map((point) => point.y).filter(Number.isFinite)) < 6,
+    'perfect adjective must not render its second voiced run in the verb-like upper octave'
+);
+assert.equal(
+    perfectAdjectiveContour.at(-1).rawHz,
+    474.8,
+    'perfect adjective correction must retain the measured harmonic for diagnostics'
+);
+
 const equalLanes = buildDurationLanes(
     [
         { ipa: 'ɪm', duration: 0.2 },

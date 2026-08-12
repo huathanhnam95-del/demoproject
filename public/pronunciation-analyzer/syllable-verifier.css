@@ -18,11 +18,56 @@
     gap: 10px;
 }
 
+.sv-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .sv-header h4 {
     margin: 0;
     color: #1e293b;
     font-size: 0.95rem;
     font-weight: 600;
+}
+
+.sv-version-toggle {
+    display: inline-flex;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.sv-version-btn {
+    padding: 4px 12px;
+    border: none;
+    border-right: 1px solid #cbd5e1;
+    background: #fff;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sv-version-btn:last-child {
+    border-right: none;
+}
+
+.sv-version-btn:hover:not(:disabled) {
+    background: #f1f5f9;
+}
+
+.sv-version-btn.is-active {
+    background: #1e40af;
+    color: #fff;
+}
+
+.sv-version-btn.is-disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+    background: #f8fafc;
 }
 
 .sv-controls {

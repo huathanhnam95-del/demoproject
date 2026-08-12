@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.63</div>
+  <div id="version-indicator" class="version-indicator">V1.8.64</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1990,6 +1990,7 @@
                       <button id="pa-play-native-btn" class="pa-btn-play-native" type="button" title="Listen to native speaker">
                         🔊 Listen
                       </button>
+                      <span id="pa-audio-source-label" class="pa-audio-source-label"></span>
                       <audio id="pa-native-audio" preload="none"></audio>
                     </div>
                   </div>
@@ -4592,13 +4593,15 @@
               </div>
               <div id="essay-result-box" class="essay-result-box" role="status" aria-live="polite"></div>
               <div id="essay-results-container" class="essay-results-container"></div>
-              <!-- Reading order: primary action first, then Retry, then the AI action. -->
+              <!-- Keep the learner actions explicit: retry, hosted Gemini, then local queue. -->
               <div class="essay-results-controls">
                 <button id="essay-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
-                <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Queue AI scoring</button>
+                <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Score with Gemini</button>
+                <button id="essay-local-ai-score-btn" class="modern-btn modern-btn--play" type="button">Queue local AI scoring</button>
               </div>
               <div id="essay-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
               <div id="essay-ai-score-status" class="essay-ai-score-hint" style="display:none;" role="status" aria-live="polite"></div>
+              <div id="essay-local-ai-score-status" class="essay-ai-score-hint" style="display:none;" role="status" aria-live="polite"></div>
             </div>
           </div>
         </div>
@@ -6031,11 +6034,11 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.63"></script>
+  <script src="/read-aloud-mode.js?v=1.8.64"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
-  <script src="/write-essay-mode.js?v=20260509_write_essay_feedback_ai_scoring"></script>
+  <script src="/write-essay-mode.js?v=20260812_dual_ai_scoring"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

@@ -11,7 +11,13 @@ const REASON_COPY = Object.freeze({
     REFERENCE_CONFLICT: 'Analysis unavailable because the pronunciation reference conflicts.',
     V3_NOT_ACTIVE: 'Analysis unavailable because V3 is not active.',
     RECOGNIZER_CONFIG_MISSING: 'Analysis unavailable because the local phoneme recognizer is not configured.',
-    RECOGNIZER_UNREACHABLE: 'Analysis unavailable because the recognizer could not be reached.'
+    RECOGNIZER_UNREACHABLE: 'Analysis unavailable because the recognizer could not be reached.',
+    DECODED_UNRATEABLE: 'Analysis unavailable because the recording could not be decoded reliably.',
+    RECOGNIZER_CONTRACT_INVALID: 'Analysis unavailable because the recognizer returned an invalid response.',
+    RECOGNIZER_BUSY: 'Analysis unavailable because the recognizer is temporarily busy.',
+    CONTRACT_MISMATCH: 'Analysis unavailable because the recognizer contract version is incompatible.',
+    RECOGNIZER_AUTH_FAILED: 'Analysis unavailable because recognizer authentication failed.',
+    V3_VERIFICATION_UNAVAILABLE: 'Analysis unavailable because V3 verification could not be completed.'
 });
 
 const BINARY_KEYS = new Set([

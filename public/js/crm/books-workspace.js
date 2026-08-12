@@ -1418,6 +1418,14 @@ window.CrmBooksWorkspace = (function () {
         let mindMapStartMouseX = 0;
         let mindMapStartMouseY = 0;
         let mindMapEventsBound = false;
+        let mindMapPositions = {};
+        let mindMapUserNodes = [];
+        let mindMapUserEdits = {};
+        let mindMapDirty = false;
+        let mindMapNodeDrag = null;
+        let mindMapDragRafId = null;
+        let mindMapSaveTimeout = null;
+        let mindMapContextNodeId = null;
 
         function docQs(sel) { return document.querySelector(sel); }
 
@@ -1427,6 +1435,118 @@ window.CrmBooksWorkspace = (function () {
             const transformStr = `translate(${mindMapPanX}px, ${mindMapPanY}px) scale(${mindMapZoom})`;
             if (canvas) canvas.style.transform = transformStr;
             if (svg) svg.style.transform = transformStr;
+        }
+
+        function getNodeId(node) {
+            return node?.dataset?.nodeId || '';
+        }
+
+        function getNodeCenter(nodeEl) {
+            const left = parseFloat(nodeEl.style.left) || 0;
+            const top = parseFloat(nodeEl.style.top) || 0;
+            const w = nodeEl.offsetWidth || 200;
+            const h = nodeEl.offsetHeight || 50;
+            return { x: left + w / 2, y: top + h / 2 };
+        }
+
+        function rebuildSVGPaths() {
+            const svg = docQs('#crm-mindmap-svg');
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (!svg || !canvas) return;
+
+            const nodes = canvas.querySelectorAll('.crm-mindmap-node[data-node-id]');
+            const nodeMap = {};
+            nodes.forEach(n => { nodeMap[n.dataset.nodeId] = n; });
+
+            let pathsHtml = '';
+            const centralNode = nodeMap['central'];
+            if (!centralNode) { svg.innerHTML = ''; return; }
+            const centralCenter = getNodeCenter(centralNode);
+
+            const categories = currentMindMapData?.categories || [];
+            categories.forEach((cat, cIdx) => {
+                const catId = cat.id || `cat_${cIdx}`;
+                const catNode = nodeMap[catId];
+                if (!catNode) return;
+                const catCenter = getNodeCenter(catNode);
+                const catColor = mindMapUserEdits[catId]?.color || cat.color || '#4f46e5';
+
+                const qx = (centralCenter.x + catCenter.x) / 2;
+                const qy = (centralCenter.y + catCenter.y) / 2 - 20;
+                pathsHtml += `<path d="M ${centralCenter.x} ${centralCenter.y} Q ${qx} ${qy} ${catCenter.x} ${catCenter.y}" stroke="${catColor}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.45" />`;
+
+                const subtopics = cat.subtopics || [];
+                subtopics.forEach((sub, sIdx) => {
+                    const subId = sub.id || `sub_${cIdx}_${sIdx}`;
+                    const subNode = nodeMap[subId];
+                    if (!subNode) return;
+                    const subCenter = getNodeCenter(subNode);
+                    const sqx = (catCenter.x + subCenter.x) / 2;
+                    const sqy = (catCenter.y + subCenter.y) / 2;
+                    pathsHtml += `<path d="M ${catCenter.x} ${catCenter.y} Q ${sqx} ${sqy} ${subCenter.x} ${subCenter.y}" stroke="${catColor}" stroke-width="1.5" stroke-dasharray="5,4" fill="none" opacity="0.35" />`;
+                });
+            });
+
+            mindMapUserNodes.forEach(un => {
+                if (un.parentId) {
+                    const parentNode = nodeMap[un.parentId];
+                    const childNode = nodeMap[un.id];
+                    if (parentNode && childNode) {
+                        const pc = getNodeCenter(parentNode);
+                        const cc = getNodeCenter(childNode);
+                        const mqx = (pc.x + cc.x) / 2;
+                        const mqy = (pc.y + cc.y) / 2;
+                        pathsHtml += `<path d="M ${pc.x} ${pc.y} Q ${mqx} ${mqy} ${cc.x} ${cc.y}" stroke="${un.color || '#F59E0B'}" stroke-width="1.5" stroke-dasharray="5,4" fill="none" opacity="0.4" />`;
+                    }
+                }
+            });
+
+            svg.innerHTML = pathsHtml;
+        }
+
+        function updateSaveStatus(status) {
+            const el = docQs('#crm-mindmap-save-status');
+            if (!el) return;
+            el.className = 'crm-mindmap-save-status';
+            if (status === 'saving') { el.textContent = 'Saving...'; el.classList.add('is-saving'); }
+            else if (status === 'saved') { el.textContent = 'Saved'; }
+            else if (status === 'error') { el.textContent = 'Save failed'; el.classList.add('is-error'); }
+            else if (status === 'unsaved') { el.textContent = 'Unsaved changes'; }
+            else { el.textContent = ''; }
+        }
+
+        function scheduleMindMapAutoSave() {
+            mindMapDirty = true;
+            updateSaveStatus('unsaved');
+            if (mindMapSaveTimeout) clearTimeout(mindMapSaveTimeout);
+            mindMapSaveTimeout = setTimeout(() => saveMindMapEdits(), 2000);
+        }
+
+        async function saveMindMapEdits() {
+            if (!mindMapDirty || !selectedBookId) return;
+            updateSaveStatus('saving');
+            try {
+                await apiPatch(`/api/admin/books/${selectedBookId}/mind-map`, {
+                    positions: mindMapPositions,
+                    userNodes: mindMapUserNodes,
+                    userEdits: mindMapUserEdits
+                });
+                mindMapDirty = false;
+                updateSaveStatus('saved');
+            } catch (err) {
+                console.error('Failed to save mind map edits:', err);
+                updateSaveStatus('error');
+            }
+        }
+
+        function applyNotesIndicators() {
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (!canvas) return;
+            canvas.querySelectorAll('.crm-mindmap-node[data-node-id]').forEach(node => {
+                const nid = node.dataset.nodeId;
+                const hasNotes = mindMapUserEdits[nid]?.notes?.trim();
+                node.classList.toggle('has-notes', !!hasNotes);
+            });
         }
 
         function renderMindMapNodes(data) {
@@ -1448,48 +1568,48 @@ window.CrmBooksWorkspace = (function () {
             svg.setAttribute('height', canvasHeight);
 
             let canvasHtml = '';
-            let svgPathsHtml = '';
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-            // Central Node
-            const centralW = 280;
+            const centralW = 300;
             const centralEstH = 80;
-            const centralLeft = centerX - centralW / 2;
-            const centralTop = centerY - centralEstH / 2;
+            let centralLeft = centerX - centralW / 2;
+            let centralTop = centerY - centralEstH / 2;
+            if (mindMapPositions['central']) {
+                centralLeft = mindMapPositions['central'].x;
+                centralTop = mindMapPositions['central'].y;
+            }
 
-            canvasHtml += `<div class="crm-mindmap-node central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; max-width:${centralW}px;">${escapeHtml(centralTitle)}</div>`;
-
-            let minX = centralLeft, minY = centralTop;
-            let maxX = centralLeft + centralW, maxY = centralTop + centralEstH;
+            canvasHtml += `<div class="crm-mindmap-node central" data-node-id="central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; max-width:${centralW}px;"><div class="crm-mindmap-node-title">${escapeHtml(mindMapUserEdits['central']?.title || centralTitle)}</div></div>`;
+            minX = Math.min(minX, centralLeft); minY = Math.min(minY, centralTop);
+            maxX = Math.max(maxX, centralLeft + centralW); maxY = Math.max(maxY, centralTop + centralEstH);
 
             const numCats = categories.length;
             const radiusCat = 480;
 
             categories.forEach((cat, cIdx) => {
-                const catColor = cat.color || '#4f46e5';
+                const catId = cat.id || `cat_${cIdx}`;
+                const catColor = mindMapUserEdits[catId]?.color || cat.color || '#4f46e5';
                 const angle = (cIdx * 2 * Math.PI / Math.max(1, numCats)) - (Math.PI / 2);
-                const catX = centerX + radiusCat * Math.cos(angle);
-                const catY = centerY + radiusCat * Math.sin(angle);
+                const defaultCatX = centerX + radiusCat * Math.cos(angle);
+                const defaultCatY = centerY + radiusCat * Math.sin(angle);
 
                 const catW = 200;
                 const catEstH = 50;
-                const catLeft = catX - catW / 2;
-                const catTop = catY - catEstH / 2;
+                let catLeft = defaultCatX - catW / 2;
+                let catTop = defaultCatY - catEstH / 2;
+                if (mindMapPositions[catId]) {
+                    catLeft = mindMapPositions[catId].x;
+                    catTop = mindMapPositions[catId].y;
+                }
 
-                minX = Math.min(minX, catLeft);
-                minY = Math.min(minY, catTop);
-                maxX = Math.max(maxX, catLeft + catW);
-                maxY = Math.max(maxY, catTop + catEstH);
+                minX = Math.min(minX, catLeft); minY = Math.min(minY, catTop);
+                maxX = Math.max(maxX, catLeft + catW); maxY = Math.max(maxY, catTop + catEstH);
 
-                canvasHtml += `<div class="crm-mindmap-node category" data-cat-id="${escapeHtml(cat.id || `cat_${cIdx}`)}" data-title="${escapeHtml(cat.title || 'Category')}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catW}px; --node-color:${catColor}; border-color:${catColor};">` +
-                    `<div class="crm-mindmap-node-title">${escapeHtml(cat.title || 'Category')}</div>` +
+                const catTitle = mindMapUserEdits[catId]?.title || cat.title || 'Category';
+                canvasHtml += `<div class="crm-mindmap-node category" data-node-id="${escapeHtml(catId)}" data-cat-id="${escapeHtml(catId)}" data-title="${escapeHtml(catTitle)}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catW}px; --node-color:${catColor};">` +
+                    `<div class="crm-mindmap-node-title">${escapeHtml(catTitle)}</div>` +
                     `</div>`;
 
-                // SVG curve from Central to Category
-                const qx = (centerX + catX) / 2;
-                const qy = (centerY + catY) / 2 - 30 * Math.sin(angle);
-                svgPathsHtml += `<path d="M ${centerX} ${centerY} Q ${qx} ${qy} ${catX} ${catY}" stroke="${catColor}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.75" />`;
-
-                // Subtopics
                 const subtopics = Array.isArray(cat.subtopics) ? cat.subtopics : [];
                 const numSubs = subtopics.length;
                 const radiusSub = 350;
@@ -1498,41 +1618,57 @@ window.CrmBooksWorkspace = (function () {
                 const arcSpan = Math.min(maxArcSpan, 0.35 * numSubs);
 
                 subtopics.forEach((sub, sIdx) => {
+                    const subId = sub.id || `sub_${cIdx}_${sIdx}`;
+                    const subColor = mindMapUserEdits[subId]?.color || catColor;
                     const subAngle = angle + (numSubs > 1 ? (-arcSpan / 2 + sIdx * (arcSpan / (numSubs - 1))) : 0);
-                    const subX = catX + radiusSub * Math.cos(subAngle);
-                    const subY = catY + radiusSub * Math.sin(subAngle);
+                    const defaultSubX = (mindMapPositions[catId] ? mindMapPositions[catId].x + catW / 2 : defaultCatX) + radiusSub * Math.cos(subAngle);
+                    const defaultSubY = (mindMapPositions[catId] ? mindMapPositions[catId].y + catEstH / 2 : defaultCatY) + radiusSub * Math.sin(subAngle);
 
                     const subW = 220;
                     const subEstH = 80;
-                    const subLeft = subX - subW / 2;
-                    const subTop = subY - subEstH / 2;
+                    let subLeft = defaultSubX - subW / 2;
+                    let subTop = defaultSubY - subEstH / 2;
+                    if (mindMapPositions[subId]) {
+                        subLeft = mindMapPositions[subId].x;
+                        subTop = mindMapPositions[subId].y;
+                    }
 
-                    minX = Math.min(minX, subLeft);
-                    minY = Math.min(minY, subTop);
-                    maxX = Math.max(maxX, subLeft + subW);
-                    maxY = Math.max(maxY, subTop + subEstH);
+                    minX = Math.min(minX, subLeft); minY = Math.min(minY, subTop);
+                    maxX = Math.max(maxX, subLeft + subW); maxY = Math.max(maxY, subTop + subEstH);
 
-                    canvasHtml += `<div class="crm-mindmap-node subtopic" data-sub-id="${escapeHtml(sub.id || `sub_${cIdx}_${sIdx}`)}" data-cat-title="${escapeHtml(cat.title || '')}" data-cat-color="${catColor}" data-title="${escapeHtml(sub.title || '')}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${catColor}; border-color:${catColor};">` +
-                        `<div class="crm-mindmap-node-title">${escapeHtml(sub.title || 'Subtopic')}</div>` +
+                    const subTitle = mindMapUserEdits[subId]?.title || sub.title || 'Subtopic';
+                    canvasHtml += `<div class="crm-mindmap-node subtopic" data-node-id="${escapeHtml(subId)}" data-sub-id="${escapeHtml(subId)}" data-cat-title="${escapeHtml(catTitle)}" data-cat-color="${subColor}" data-title="${escapeHtml(subTitle)}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${subColor};">` +
+                        `<div class="crm-mindmap-node-title">${escapeHtml(subTitle)}</div>` +
                         `<div class="crm-mindmap-node-summary">${escapeHtml(sub.summary || '')}</div>` +
                         `</div>`;
-
-                    // SVG curve from Category to Subtopic
-                    const sqx = (catX + subX) / 2;
-                    const sqy = (catY + subY) / 2;
-                    svgPathsHtml += `<path d="M ${catX} ${catY} Q ${sqx} ${sqy} ${subX} ${subY}" stroke="${catColor}" stroke-width="1.8" stroke-dasharray="4,4" fill="none" opacity="0.6" />`;
                 });
             });
 
-            canvas.innerHTML = canvasHtml;
-            svg.innerHTML = svgPathsHtml;
+            mindMapUserNodes.forEach(un => {
+                const unColor = un.color || '#F59E0B';
+                const unW = 200;
+                const unEstH = 60;
+                const unLeft = un.x ?? (centerX - unW / 2);
+                const unTop = un.y ?? (centerY + 200);
+                minX = Math.min(minX, unLeft); minY = Math.min(minY, unTop);
+                maxX = Math.max(maxX, unLeft + unW); maxY = Math.max(maxY, unTop + unEstH);
 
-            // Auto fit to actual content bounding box
+                canvasHtml += `<div class="crm-mindmap-node user-node" data-node-id="${escapeHtml(un.id)}" data-title="${escapeHtml(un.title || '')}" data-summary="${escapeHtml(un.text || '')}" data-fulltext="${escapeHtml(un.text || '')}" data-cat-title="Your Note" data-cat-color="${unColor}" style="left:${unLeft}px; top:${unTop}px; width:${unW}px; --node-color:${unColor};">` +
+                    `<div class="crm-mindmap-node-title">${escapeHtml(un.title || 'New thought')}</div>` +
+                    (un.text ? `<div class="crm-mindmap-node-summary">${escapeHtml(un.text)}</div>` : '') +
+                    `</div>`;
+            });
+
+            canvas.innerHTML = canvasHtml;
+            rebuildSVGPaths();
+            applyNotesIndicators();
+
             const viewport = docQs('#crm-mindmap-viewport');
             const vw = viewport ? viewport.clientWidth : window.innerWidth;
             const vh = viewport ? viewport.clientHeight : window.innerHeight;
-            const margin = 60;
+            const margin = 80;
 
+            if (minX === Infinity) { minX = 0; minY = 0; maxX = canvasWidth; maxY = canvasHeight; }
             const contentW = maxX - minX;
             const contentH = maxY - minY;
             const contentCenterX = minX + contentW / 2;
@@ -1548,6 +1684,150 @@ window.CrmBooksWorkspace = (function () {
             applyMindMapTransform();
         }
 
+        function handleNodeClick(nodeId) {
+            const canvas = docQs('#crm-mindmap-canvas');
+            const inspector = docQs('#crm-mindmap-inspector');
+            if (!canvas || !inspector) return;
+
+            const node = canvas.querySelector(`[data-node-id="${nodeId}"]`);
+            if (!node) return;
+            if (node.classList.contains('central')) return;
+
+            const catTitle = node.dataset.catTitle || node.dataset.title || 'Category';
+            const catColor = node.dataset.catColor || node.style.getPropertyValue('--node-color') || '#4f46e5';
+            const title = mindMapUserEdits[nodeId]?.title || node.dataset.title || 'Node';
+            const summary = node.dataset.summary || '';
+            const fullText = node.dataset.fulltext || summary || 'No additional note content.';
+
+            const tagEl = docQs('#crm-mindmap-inspector-tag');
+            const titleEl = docQs('#crm-mindmap-inspector-title');
+            const summaryEl = docQs('#crm-mindmap-inspector-summary');
+            const fullTextEl = docQs('#crm-mindmap-inspector-fulltext');
+            const notesEl = docQs('#crm-mindmap-inspector-notes');
+
+            if (tagEl) { tagEl.textContent = catTitle; tagEl.style.setProperty('--node-color', catColor); }
+            if (titleEl) titleEl.textContent = title;
+            if (summaryEl) summaryEl.textContent = summary;
+            if (fullTextEl) fullTextEl.textContent = fullText;
+            if (notesEl) {
+                notesEl.value = mindMapUserEdits[nodeId]?.notes || '';
+                notesEl.dataset.nodeId = nodeId;
+            }
+
+            inspector.style.display = 'flex';
+        }
+
+        function startInlineEdit(nodeId) {
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (!canvas) return;
+            const node = canvas.querySelector(`[data-node-id="${nodeId}"]`);
+            if (!node) return;
+            const titleEl = node.querySelector('.crm-mindmap-node-title');
+            if (!titleEl) return;
+
+            titleEl.contentEditable = 'true';
+            titleEl.focus();
+            const range = document.createRange();
+            range.selectNodeContents(titleEl);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            const finishEdit = () => {
+                titleEl.contentEditable = 'false';
+                const newText = titleEl.textContent.trim() || 'Untitled';
+                titleEl.textContent = newText;
+                node.dataset.title = newText;
+
+                const userNode = mindMapUserNodes.find(u => u.id === nodeId);
+                if (userNode) {
+                    userNode.title = newText;
+                } else {
+                    if (!mindMapUserEdits[nodeId]) mindMapUserEdits[nodeId] = {};
+                    mindMapUserEdits[nodeId].title = newText;
+                }
+                scheduleMindMapAutoSave();
+                titleEl.removeEventListener('blur', finishEdit);
+                titleEl.removeEventListener('keydown', handleKey);
+            };
+
+            const handleKey = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); titleEl.blur(); }
+                if (e.key === 'Escape') { titleEl.blur(); }
+            };
+
+            titleEl.addEventListener('blur', finishEdit);
+            titleEl.addEventListener('keydown', handleKey);
+        }
+
+        function addUserNode(canvasX, canvasY, parentId) {
+            const id = 'user_' + Date.now();
+            const newNode = { id, title: 'New thought', text: '', color: '#F59E0B', x: canvasX, y: canvasY, parentId: parentId || null };
+            mindMapUserNodes.push(newNode);
+
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (canvas) {
+                const nodeHtml = `<div class="crm-mindmap-node user-node" data-node-id="${escapeHtml(id)}" data-title="New thought" data-summary="" data-fulltext="" data-cat-title="Your Note" data-cat-color="#F59E0B" style="left:${canvasX}px; top:${canvasY}px; width:200px; --node-color:#F59E0B;">` +
+                    `<div class="crm-mindmap-node-title">New thought</div>` +
+                    `</div>`;
+                canvas.insertAdjacentHTML('beforeend', nodeHtml);
+                rebuildSVGPaths();
+                scheduleMindMapAutoSave();
+                setTimeout(() => startInlineEdit(id), 50);
+            }
+        }
+
+        function deleteUserNode(nodeId) {
+            const idx = mindMapUserNodes.findIndex(u => u.id === nodeId);
+            if (idx === -1) return;
+            mindMapUserNodes.splice(idx, 1);
+            delete mindMapPositions[nodeId];
+            delete mindMapUserEdits[nodeId];
+            const canvas = docQs('#crm-mindmap-canvas');
+            const node = canvas?.querySelector(`[data-node-id="${nodeId}"]`);
+            if (node) node.remove();
+            rebuildSVGPaths();
+            scheduleMindMapAutoSave();
+        }
+
+        function changeNodeColor(nodeId, color) {
+            const canvas = docQs('#crm-mindmap-canvas');
+            const node = canvas?.querySelector(`[data-node-id="${nodeId}"]`);
+            if (node) {
+                node.style.setProperty('--node-color', color);
+                node.dataset.catColor = color;
+            }
+            const userNode = mindMapUserNodes.find(u => u.id === nodeId);
+            if (userNode) {
+                userNode.color = color;
+            } else {
+                if (!mindMapUserEdits[nodeId]) mindMapUserEdits[nodeId] = {};
+                mindMapUserEdits[nodeId].color = color;
+            }
+            rebuildSVGPaths();
+            scheduleMindMapAutoSave();
+        }
+
+        function showContextMenu(nodeId, clientX, clientY) {
+            mindMapContextNodeId = nodeId;
+            const menu = docQs('#crm-mindmap-context-menu');
+            if (!menu) return;
+
+            const isUserNode = mindMapUserNodes.some(u => u.id === nodeId);
+            const deleteBtn = menu.querySelector('[data-action="delete-node"]');
+            if (deleteBtn) deleteBtn.style.display = isUserNode ? '' : 'none';
+
+            menu.style.left = clientX + 'px';
+            menu.style.top = clientY + 'px';
+            menu.style.display = 'block';
+        }
+
+        function hideContextMenu() {
+            const menu = docQs('#crm-mindmap-context-menu');
+            if (menu) menu.style.display = 'none';
+            mindMapContextNodeId = null;
+        }
+
         function bindMindMapModalEvents() {
             if (mindMapEventsBound) return;
             mindMapEventsBound = true;
@@ -1561,13 +1841,26 @@ window.CrmBooksWorkspace = (function () {
             const zoomResetBtn = docQs('#crm-mindmap-zoom-reset');
             const inspector = docQs('#crm-mindmap-inspector');
             const inspectorClose = docQs('#crm-mindmap-inspector-close');
+            const contextMenu = docQs('#crm-mindmap-context-menu');
+            const addNodeBtn = docQs('#crm-mindmap-add-node-btn');
 
             closeBtn?.addEventListener('click', () => {
+                if (mindMapDirty) saveMindMapEdits();
                 if (modal) modal.style.display = 'none';
             });
 
             inspectorClose?.addEventListener('click', () => {
                 if (inspector) inspector.style.display = 'none';
+            });
+
+            const notesEl = docQs('#crm-mindmap-inspector-notes');
+            notesEl?.addEventListener('blur', () => {
+                const nodeId = notesEl.dataset.nodeId;
+                if (!nodeId) return;
+                if (!mindMapUserEdits[nodeId]) mindMapUserEdits[nodeId] = {};
+                mindMapUserEdits[nodeId].notes = notesEl.value;
+                applyNotesIndicators();
+                scheduleMindMapAutoSave();
             });
 
             regenBtn?.addEventListener('click', () => {
@@ -1587,46 +1880,104 @@ window.CrmBooksWorkspace = (function () {
             });
 
             zoomResetBtn?.addEventListener('click', () => {
-                if (currentMindMapData) {
-                    renderMindMapNodes(currentMindMapData);
-                }
+                if (currentMindMapData) renderMindMapNodes(currentMindMapData);
             });
 
-            // ESC key to close
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && modal && modal.style.display !== 'none') {
+                    hideContextMenu();
                     if (inspector && inspector.style.display !== 'none') {
                         inspector.style.display = 'none';
                     } else {
+                        if (mindMapDirty) saveMindMapEdits();
                         modal.style.display = 'none';
                     }
                 }
             });
 
-            // Viewport Pan Dragging
             viewport?.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.crm-mindmap-node') || e.target.closest('#crm-mindmap-inspector')) return;
-                isMindMapPanning = true;
-                mindMapStartMouseX = e.clientX - mindMapPanX;
-                mindMapStartMouseY = e.clientY - mindMapPanY;
-                viewport.classList.add('is-panning');
+                hideContextMenu();
+                if (e.target.closest('#crm-mindmap-inspector') || e.target.closest('.crm-mindmap-toolbar')) return;
+
+                const node = e.target.closest('.crm-mindmap-node');
+                if (node && e.button === 0) {
+                    const nodeId = getNodeId(node);
+                    if (!nodeId) return;
+                    mindMapNodeDrag = {
+                        nodeId,
+                        nodeEl: node,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        origLeft: parseFloat(node.style.left) || 0,
+                        origTop: parseFloat(node.style.top) || 0,
+                        active: false
+                    };
+                    e.preventDefault();
+                    return;
+                }
+
+                if (e.button === 0) {
+                    isMindMapPanning = true;
+                    mindMapStartMouseX = e.clientX - mindMapPanX;
+                    mindMapStartMouseY = e.clientY - mindMapPanY;
+                    viewport.classList.add('is-panning');
+                }
             });
 
             window.addEventListener('mousemove', (e) => {
-                if (!isMindMapPanning) return;
-                mindMapPanX = e.clientX - mindMapStartMouseX;
-                mindMapPanY = e.clientY - mindMapStartMouseY;
-                applyMindMapTransform();
+                if (mindMapNodeDrag) {
+                    const dx = e.clientX - mindMapNodeDrag.startX;
+                    const dy = e.clientY - mindMapNodeDrag.startY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (!mindMapNodeDrag.active && dist < 6) return;
+
+                    if (!mindMapNodeDrag.active) {
+                        mindMapNodeDrag.active = true;
+                        mindMapNodeDrag.nodeEl.classList.add('is-dragging');
+                    }
+
+                    const newLeft = mindMapNodeDrag.origLeft + dx / mindMapZoom;
+                    const newTop = mindMapNodeDrag.origTop + dy / mindMapZoom;
+                    mindMapNodeDrag.nodeEl.style.left = newLeft + 'px';
+                    mindMapNodeDrag.nodeEl.style.top = newTop + 'px';
+
+                    if (mindMapDragRafId) cancelAnimationFrame(mindMapDragRafId);
+                    mindMapDragRafId = requestAnimationFrame(() => rebuildSVGPaths());
+                    return;
+                }
+
+                if (isMindMapPanning) {
+                    mindMapPanX = e.clientX - mindMapStartMouseX;
+                    mindMapPanY = e.clientY - mindMapStartMouseY;
+                    applyMindMapTransform();
+                }
             });
 
-            window.addEventListener('mouseup', () => {
+            window.addEventListener('mouseup', (e) => {
+                if (mindMapNodeDrag) {
+                    const drag = mindMapNodeDrag;
+                    mindMapNodeDrag = null;
+                    drag.nodeEl.classList.remove('is-dragging');
+
+                    if (!drag.active) {
+                        handleNodeClick(drag.nodeId);
+                    } else {
+                        const finalLeft = parseFloat(drag.nodeEl.style.left) || 0;
+                        const finalTop = parseFloat(drag.nodeEl.style.top) || 0;
+                        mindMapPositions[drag.nodeId] = { x: finalLeft, y: finalTop };
+                        const userNode = mindMapUserNodes.find(u => u.id === drag.nodeId);
+                        if (userNode) { userNode.x = finalLeft; userNode.y = finalTop; }
+                        scheduleMindMapAutoSave();
+                    }
+                    return;
+                }
+
                 if (isMindMapPanning) {
                     isMindMapPanning = false;
                     viewport?.classList.remove('is-panning');
                 }
             });
 
-            // Wheel zoom
             viewport?.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -1634,35 +1985,66 @@ window.CrmBooksWorkspace = (function () {
                 applyMindMapTransform();
             }, { passive: false });
 
-            // Node Click Inspector Handler
-            docQs('#crm-mindmap-canvas')?.addEventListener('click', (e) => {
+            viewport?.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.crm-mindmap-node')) {
+                    const node = e.target.closest('.crm-mindmap-node');
+                    const nodeId = getNodeId(node);
+                    if (nodeId) startInlineEdit(nodeId);
+                    return;
+                }
+                if (e.target.closest('#crm-mindmap-inspector') || e.target.closest('.crm-mindmap-toolbar')) return;
+
+                const viewportRect = viewport.getBoundingClientRect();
+                const canvasX = (e.clientX - viewportRect.left - mindMapPanX) / mindMapZoom;
+                const canvasY = (e.clientY - viewportRect.top - mindMapPanY) / mindMapZoom;
+                addUserNode(canvasX, canvasY);
+            });
+
+            addNodeBtn?.addEventListener('click', () => {
+                const vp = docQs('#crm-mindmap-viewport');
+                if (!vp) return;
+                const cx = (vp.clientWidth / 2 - mindMapPanX) / mindMapZoom;
+                const cy = (vp.clientHeight / 2 - mindMapPanY) / mindMapZoom;
+                addUserNode(cx, cy);
+            });
+
+            viewport?.addEventListener('contextmenu', (e) => {
                 const node = e.target.closest('.crm-mindmap-node');
                 if (!node) return;
+                const nodeId = getNodeId(node);
+                if (!nodeId || node.classList.contains('central')) return;
+                e.preventDefault();
+                showContextMenu(nodeId, e.clientX, e.clientY);
+            });
 
-                const isSub = node.classList.contains('subtopic');
-                const isCat = node.classList.contains('category');
-                if (!isSub && !isCat) return;
-
-                const catTitle = node.dataset.catTitle || node.dataset.title || 'Category';
-                const catColor = node.dataset.catColor || '#4f46e5';
-                const title = node.dataset.title || 'Node';
-                const summary = node.dataset.summary || '';
-                const fullText = node.dataset.fulltext || summary || 'No additional note content.';
-
-                const tagEl = docQs('#crm-mindmap-inspector-tag');
-                const titleEl = docQs('#crm-mindmap-inspector-title');
-                const summaryEl = docQs('#crm-mindmap-inspector-summary');
-                const fullTextEl = docQs('#crm-mindmap-inspector-fulltext');
-
-                if (tagEl) {
-                    tagEl.textContent = catTitle;
-                    tagEl.style.setProperty('--node-color', catColor);
+            contextMenu?.addEventListener('click', (e) => {
+                const item = e.target.closest('[data-action]');
+                const swatch = e.target.closest('.crm-mindmap-color-swatch');
+                if (swatch && mindMapContextNodeId) {
+                    changeNodeColor(mindMapContextNodeId, swatch.dataset.color);
+                    hideContextMenu();
+                    return;
                 }
-                if (titleEl) titleEl.textContent = title;
-                if (summaryEl) summaryEl.textContent = summary;
-                if (fullTextEl) fullTextEl.textContent = fullText;
+                if (!item || !mindMapContextNodeId) return;
+                const action = item.dataset.action;
+                const nid = mindMapContextNodeId;
+                hideContextMenu();
 
-                if (inspector) inspector.style.display = 'flex';
+                if (action === 'edit-title') startInlineEdit(nid);
+                else if (action === 'add-child') {
+                    const parentNode = docQs(`#crm-mindmap-canvas [data-node-id="${nid}"]`);
+                    if (parentNode) {
+                        const px = parseFloat(parentNode.style.left) || 0;
+                        const py = parseFloat(parentNode.style.top) || 0;
+                        addUserNode(px + 250, py + 60, nid);
+                    }
+                }
+                else if (action === 'add-note') handleNodeClick(nid);
+                else if (action === 'delete-node') deleteUserNode(nid);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#crm-mindmap-context-menu')) hideContextMenu();
             });
         }
 
@@ -1676,9 +2058,10 @@ window.CrmBooksWorkspace = (function () {
 
             if (!modal) return;
             modal.style.display = 'flex';
+            updateSaveStatus('');
 
             if (canvas) {
-                canvas.innerHTML = `<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#cbd5e1; font-size:1.1rem; font-weight:600; text-align:center;">` +
+                canvas.innerHTML = `<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#6B7280; font-size:1.1rem; font-weight:600; text-align:center;">` +
                     `<div style="margin-bottom:12px; font-size:2rem;">🧠</div>` +
                     `Synthesizing saved notes into Mind Map...` +
                     `</div>`;
@@ -1691,6 +2074,11 @@ window.CrmBooksWorkspace = (function () {
                     throw new Error(res?.message || 'Failed to generate Mind Map.');
                 }
                 currentMindMapData = res.mindMap;
+                mindMapPositions = res.mindMap.positions || {};
+                mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
+                mindMapUserEdits = res.mindMap.userEdits || {};
+                mindMapDirty = false;
+
                 if (titleEl) titleEl.textContent = `🧠 ${currentMindMapData.centralTopic || 'Mind Map'}`;
                 if (subtitleEl) subtitleEl.textContent = `${currentMindMapData.categories?.length || 0} categories • ${currentMindMapData.noteCount || 0} notes synthesized`;
 
@@ -1698,10 +2086,10 @@ window.CrmBooksWorkspace = (function () {
             } catch (err) {
                 console.error('Failed to open mind map:', err);
                 if (canvas) {
-                    canvas.innerHTML = `<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#f87171; font-size:1rem; text-align:center; max-width:400px; padding:24px; background:rgba(30,41,59,0.9); border:1px solid #ef4444; border-radius:12px;">` +
+                    canvas.innerHTML = `<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#EF4444; font-size:1rem; text-align:center; max-width:400px; padding:24px; background:#FEF2F2; border:1px solid #FECACA; border-radius:12px;">` +
                         `<div style="font-size:1.8rem; margin-bottom:8px;">⚠️</div>` +
-                        `<div style="font-weight:700; margin-bottom:6px;">Mind Map Error</div>` +
-                        `<div>${escapeHtml(err?.message || 'Failed to generate mind map.')}</div>` +
+                        `<div style="font-weight:700; margin-bottom:6px; color:#991B1B;">Mind Map Error</div>` +
+                        `<div style="color:#7F1D1D;">${escapeHtml(err?.message || 'Failed to generate mind map.')}</div>` +
                         `</div>`;
                 }
             }
@@ -2786,19 +3174,22 @@ window.CrmBooksWorkspace = (function () {
             const existing = document.getElementById('crm-books-study-notes-modal');
             if (existing) existing.remove();
 
+            const isDark = document.querySelector('[data-panel="books"]')?.classList.contains('books-dark');
+            const darkClass = isDark ? ' books-dark' : '';
+
             const title = studyNotes.title || 'Comprehensive Study Notes';
-            const overview = studyNotes.overview ? `<p class="crm-books-notes-overview" style="margin-bottom:16px; padding:12px; background:var(--books-surface-dim); border-radius:8px; line-height:1.8;"><strong>Overview:</strong> ${escapeHtml(studyNotes.overview)}</p>` : '';
+            const overview = studyNotes.overview ? `<p class="crm-books-notes-overview"><strong>Overview:</strong> ${escapeHtml(studyNotes.overview)}</p>` : '';
             const content = studyNotes.content || '';
 
             let keyTermsHtml = '';
             if (Array.isArray(studyNotes.keyTerms) && studyNotes.keyTerms.length > 0) {
                 keyTermsHtml = `<div class="crm-books-study-keyterms" style="margin-bottom:20px;">` +
-                    `<h4 style="margin-bottom:10px; font-size:1.05em; font-family:var(--books-font-display); color:var(--books-text);">Key Terms & Concepts</h4>` +
+                    `<h4 style="margin-bottom:10px; font-size:1.05em; font-family:var(--books-font-display, inherit); color:var(--books-text, #1B1B1F);">Key Terms & Concepts</h4>` +
                     `<div class="crm-books-keyterms-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">` +
                     studyNotes.keyTerms.map((kt) =>
-                        `<div class="crm-books-keyterm-card" style="padding:10px 12px; background:var(--books-surface-dim); border-radius:6px; border-left:3px solid var(--books-accent);">` +
-                        `<strong style="color:var(--books-accent);">${escapeHtml(kt.term || '')}:</strong> ${escapeHtml(kt.definition || '')}` +
-                        (kt.example ? `<br><small style="font-size:0.85em; color:var(--books-text-muted);">Example: ${escapeHtml(kt.example)}</small>` : '') +
+                        `<div class="crm-books-keyterm-card">` +
+                        `<strong style="color:var(--books-accent, #B8860B);">${escapeHtml(kt.term || '')}:</strong> ${escapeHtml(kt.definition || '')}` +
+                        (kt.example ? `<br><small style="font-size:0.85em; color:var(--books-text-muted, #6B6560);">Example: ${escapeHtml(kt.example)}</small>` : '') +
                         `</div>`
                     ).join('') +
                     `</div></div>`;
@@ -2807,18 +3198,18 @@ window.CrmBooksWorkspace = (function () {
             const contentHtml = formatStudyNotesMarkdown(content);
 
             const modalHtml = `
-            <div id="crm-books-study-notes-modal" class="crm-books-modal-overlay" style="position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:20px;">
-              <div class="crm-books-modal-content crm-books-study-notes-dialog" style="background:var(--books-surface); border-radius:var(--books-radius); max-width:860px; width:100%; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); font-family:var(--books-font-body); color:var(--books-text);">
-                <div class="crm-books-modal-header" style="padding:16px 20px; border-bottom:1px solid var(--books-border); display:flex; align-items:center; justify-content:space-between;">
-                  <h3 style="margin:0; font-size:1.15em; font-family:var(--books-font-display); display:flex; align-items:center; gap:8px; color:var(--books-text);">⚡ ${escapeHtml(title)}</h3>
-                  <button type="button" class="crm-books-modal-close" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:var(--books-text-muted);" aria-label="Close">&times;</button>
+            <div id="crm-books-study-notes-modal" class="crm-books-modal-overlay${darkClass}" role="dialog" aria-modal="true" aria-labelledby="crm-books-study-notes-title">
+              <div class="crm-books-modal-content crm-books-study-notes-dialog">
+                <div class="crm-books-modal-header" style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--books-border, #E8E2D9);">
+                  <h3 id="crm-books-study-notes-title" style="margin:0; font-size:1.15em; font-family:var(--books-font-display, inherit); display:flex; align-items:center; gap:8px; color:var(--books-text, #1B1B1F);">⚡ ${escapeHtml(title)}</h3>
+                  <button type="button" class="crm-books-modal-close" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:var(--books-text-muted, #6B6560);" aria-label="Close">&times;</button>
                 </div>
                 <div class="crm-books-modal-body crm-books-study-notes-body" style="padding:20px; overflow-y:auto; flex:1; font-size:1.02em; line-height:1.8;">
                   ${overview}
                   ${keyTermsHtml}
                   <div class="crm-books-study-notes-markdown" style="line-height:1.85;">${contentHtml}</div>
                 </div>
-                <div class="crm-books-modal-footer" style="padding:14px 20px; border-top:1px solid var(--books-border); display:flex; align-items:center; justify-content:flex-end; gap:10px;">
+                <div class="crm-books-modal-footer" style="padding:14px 20px; display:flex; align-items:center; justify-content:flex-end; gap:10px; border-top:1px solid var(--books-border, #E8E2D9);">
                   <button type="button" class="crm-btn crm-btn-secondary crm-books-regenerate-notes-btn" data-section-index="${sectionIndex != null ? sectionIndex : ''}" title="Re-generate study notes from scratch">🔄 Regenerate</button>
                   <button type="button" class="crm-btn crm-btn-secondary crm-books-copy-notes-btn">📋 Copy Notes</button>
                   <button type="button" class="crm-btn crm-btn-primary crm-books-save-notes-btn">💾 Save to Notes</button>
@@ -2830,10 +3221,21 @@ window.CrmBooksWorkspace = (function () {
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             const modal = document.getElementById('crm-books-study-notes-modal');
 
-            const closeModal = () => modal.remove();
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape') closeModal();
+            };
+
+            const closeModal = () => {
+                document.removeEventListener('keydown', handleKeyDown);
+                modal.remove();
+            };
+
+            document.addEventListener('keydown', handleKeyDown);
+
             modal.querySelector('.crm-books-modal-close').addEventListener('click', closeModal);
             modal.querySelector('.crm-books-modal-cancel').addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
 
             modal.querySelector('.crm-books-copy-notes-btn').addEventListener('click', async () => {
                 try {
@@ -2869,12 +3271,12 @@ window.CrmBooksWorkspace = (function () {
             if (!md) return '';
             let html = escapeHtml(md);
             html = html
-                .replace(/^### (.*$)/gim, '<h4 style="margin-top:16px; margin-bottom:8px; font-size:1.08em; font-family:var(--books-font-display); color:var(--books-text);">$1</h4>')
-                .replace(/^## (.*$)/gim, '<h3 style="margin-top:20px; margin-bottom:10px; font-size:1.18em; font-family:var(--books-font-display); border-bottom:1px solid var(--books-border); padding-bottom:4px; color:var(--books-text);">$1</h3>')
-                .replace(/^# (.*$)/gim, '<h2 style="margin-top:24px; margin-bottom:12px; font-size:1.3em; font-family:var(--books-font-display); color:var(--books-text);">$1</h2>')
+                .replace(/^### (.*$)/gim, '<h4 style="margin-top:16px; margin-bottom:8px; font-size:1.08em; font-family:var(--books-font-display, inherit); color:var(--books-text, #1B1B1F);">$1</h4>')
+                .replace(/^## (.*$)/gim, '<h3 style="margin-top:20px; margin-bottom:10px; font-size:1.18em; font-family:var(--books-font-display, inherit); border-bottom:1px solid var(--books-border, #E8E2D9); padding-bottom:4px; color:var(--books-text, #1B1B1F);">$1</h3>')
+                .replace(/^# (.*$)/gim, '<h2 style="margin-top:24px; margin-bottom:12px; font-size:1.3em; font-family:var(--books-font-display, inherit); color:var(--books-text, #1B1B1F);">$1</h2>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/^&gt; (.*$)/gim, '<blockquote style="margin:12px 0; padding:8px 14px; background:var(--books-surface-dim); border-left:4px solid var(--books-accent); font-style:italic;">$1</blockquote>')
+                .replace(/^&gt; (.*$)/gim, '<blockquote style="margin:12px 0; padding:8px 14px; background:var(--books-surface-dim, #F3F0EA); border-left:4px solid var(--books-accent, #B8860B); font-style:italic; color:var(--books-text, #1B1B1F);">$1</blockquote>')
                 .replace(/^- (.*$)/gim, '<li style="margin-bottom:4px;">$1</li>')
                 .replace(/\n\n/g, '<br><br>');
             html = html.replace(/(<li style="margin-bottom:4px;">.*?<\/li>(?:\s*<li style="margin-bottom:4px;">.*?<\/li>)*)/gim, (block) => {

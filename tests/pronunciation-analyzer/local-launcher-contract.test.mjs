@@ -32,7 +32,7 @@ test('local launcher waits for phoneme readiness before injecting recognizer con
     assert.ok(phonemeWaitBlock.length > 0, 'phoneme readiness block not found');
     assert.doesNotMatch(phonemeWaitBlock, /for \/L %%i in/i);
     assert.match(launcher, /--connect-timeout\s+1\s+--max-time\s+5/i);
-    assert.match(launcher, /if !PHONEME_READY!==1[\s\S]*PHONEME_SERVICE_URL=http:\/\/127\.0\.0\.1:8082[\s\S]*PHONEME_SERVICE_AUTH=disabled/i);
+    assert.match(launcher, /if !PHONEME_READY!==1[\s\S]*PHONEME_SERVICE_URL=http:\/\/127\.0\.0\.1:8082[\s\S]*PHONEME_SERVICE_AUTH=disabled[\s\S]*PRONUNCIATION_V3_MODE=shadow/i);
     // A V3-disabled session must be impossible to miss, and must name
     // RECOGNIZER_CONFIG_MISSING so nobody debugs the analyzer instead.
     assert.match(launcher, /WARNING: V3 IS DISABLED FOR THIS SESSION/i);

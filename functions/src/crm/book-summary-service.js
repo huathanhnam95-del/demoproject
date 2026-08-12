@@ -402,7 +402,7 @@ async function generateBookMindMap(db, bookId, force = false) {
 
     await db.collection(CRM_BOOKS).doc(bookId)
         .collection('artifacts').doc('mind_map')
-        .set(mindMap);
+        .set(mindMap, { merge: true });
 
     return mindMap;
 }

@@ -132,11 +132,11 @@ const path = require('node:path');
     }, { timeout: 30000 });
     console.log('Essay submitted, results step visible.');
 
-    const aiBtn = await page.$('#essay-ai-score-btn');
+    const aiBtn = await page.$('#essay-local-ai-score-btn');
     if (aiBtn) {
-      console.log('Found #essay-ai-score-btn, enabling & clicking...');
+      console.log('Found #essay-local-ai-score-btn, enabling & clicking...');
       await page.evaluate(() => {
-        const btn = document.getElementById('essay-ai-score-btn');
+        const btn = document.getElementById('essay-local-ai-score-btn');
         if (btn) btn.disabled = false;
       });
       await aiBtn.click();

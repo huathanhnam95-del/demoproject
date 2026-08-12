@@ -298,5 +298,12 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // Generated pronunciation reference assets are created and transitioned
+    // only by authenticated server routes. Admins may inspect queue metadata.
+    match /pronunciationReferenceAudio/{referenceAudioKey} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
   }
 }

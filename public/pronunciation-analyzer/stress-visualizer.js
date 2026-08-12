@@ -600,6 +600,8 @@ class StressVisualizer {
 
         if (this.pitchChart) this.pitchChart.destroy();
         const chartData = buildNativeOnlyChartData(nativeAnalysis);
+        const referenceLabel = nativeAnalysis?.graphSource?.label || 'Measured dictionary reference';
+        const pitchUnit = nativeAnalysis?.pitch?.unit === 'semitones' ? 'semitones' : 'Hz';
 
         const showPitch = this.comparisonChartMode === 'pitch';
         const showIntensity = this.comparisonChartMode === 'intensity';
@@ -607,7 +609,7 @@ class StressVisualizer {
         const chartDatasets = [];
         if (showPitch) {
             chartDatasets.push({
-                label: 'Native pitch (Hz)',
+                label: `${referenceLabel} pitch (${pitchUnit})`,
                 data: chartData.pitch,
                 borderColor: 'rgb(34, 197, 94)',
                 pointRadius: 0,
@@ -618,7 +620,7 @@ class StressVisualizer {
         }
         if (showIntensity) {
             chartDatasets.push({
-                label: 'Native intensity (dB)',
+                label: `${referenceLabel} intensity (dB)`,
                 data: chartData.intensity,
                 borderColor: 'rgba(244, 114, 182, 0.8)',
                 pointRadius: 0,
@@ -655,12 +657,12 @@ class StressVisualizer {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: showPitch ? 'Native pronunciation pitch contour' : 'Native pronunciation intensity contour' },
+                    title: { display: true, text: showPitch ? `${referenceLabel} pitch contour` : `${referenceLabel} intensity contour` },
                     tooltip: {
                         callbacks: {
                             label: (context) => (
                                 context.dataset.yAxisID === 'y'
-                                    ? context.dataset.label + ': ' + Math.round(context.parsed.y) + ' Hz'
+                                    ? context.dataset.label + ': ' + Number(context.parsed.y).toFixed(pitchUnit === 'Hz' ? 0 : 1) + ' ' + pitchUnit
                                     : context.dataset.label + ': ' + Number(context.parsed.y).toFixed(1) + ' dB'
                             )
                         }
@@ -837,6 +839,7 @@ class StressVisualizer {
         }
         if (this.pitchChart) this.pitchChart.destroy();
         const chartData = buildComparisonChartData(nativeAnalysis, userAnalysis);
+        const referenceLabel = nativeAnalysis?.graphSource?.label || 'Measured dictionary reference';
         const dataset = (label, data, color, axis, dashed = false) => ({
             label,
             data,
@@ -853,7 +856,7 @@ class StressVisualizer {
 
         if (this.comparisonChartMode === 'pitch') {
             datasets = [
-                dataset('Native relative pitch', chartData.native.pitch, 'rgb(99, 102, 241)', 'y', true),
+                dataset(`${referenceLabel} relative pitch`, chartData.native.pitch, 'rgb(99, 102, 241)', 'y', true),
                 dataset('Your relative pitch', chartData.learner.pitch, 'rgb(34, 197, 94)', 'y')
             ];
             yScales = {
@@ -865,7 +868,7 @@ class StressVisualizer {
             };
         } else {
             datasets = [
-                dataset('Native relative intensity', chartData.native.intensity, 'rgb(99, 102, 241)', 'y', true),
+                dataset(`${referenceLabel} relative intensity`, chartData.native.intensity, 'rgb(99, 102, 241)', 'y', true),
                 dataset('Your relative intensity', chartData.learner.intensity, 'rgb(244, 114, 182)', 'y')
             ];
             yScales = {
@@ -884,7 +887,7 @@ class StressVisualizer {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Your recording compared with the native pattern' },
+                    title: { display: true, text: 'Your recording compared with the reference pattern' },
                     tooltip: {
                         callbacks: {
                             label: (context) => {

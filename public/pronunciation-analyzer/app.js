@@ -144,6 +144,9 @@ export class PronunciationApp {
         // Native audio element
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
         this.nativeAudio = document.getElementById('pa-native-audio');
+        this.playNativeBtn = document.getElementById('pa-play-native-btn');
+        this.audioSourceLabel = document.getElementById('pa-audio-source-label');
+        this.audioPlaybackKind = null;
         this.nativeAudioPlayer = new NativeAudioPlayer(this.audioCapture.audioContext, this.nativeAudio);
 
         this.initLocalSampleTools();
@@ -270,9 +273,13 @@ export class PronunciationApp {
         }
 
         // Native play button click
-        const playNativeBtn = document.getElementById('pa-play-native-btn');
+        const playNativeBtn = this.playNativeBtn;
         if (playNativeBtn) {
             playNativeBtn.addEventListener('click', () => {
+                if (this.audioPlaybackKind === 'device') {
+                    this.playDeviceVoice();
+                    return;
+                }
                 if (this.nativeAudio) {
                     this.nativeAudio.currentTime = 0;
                     this.nativeAudio.play().catch((err) => {
@@ -281,6 +288,16 @@ export class PronunciationApp {
                 }
             });
         }
+    }
+
+    playDeviceVoice() {
+        if (!('speechSynthesis' in window) || !this.currentLookupWord) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(this.currentLookupWord);
+        utterance.lang = 'en-US';
+        const voice = window.speechSynthesis.getVoices().find((candidate) => candidate.lang === 'en-US');
+        if (voice) utterance.voice = voice;
+        window.speechSynthesis.speak(utterance);
     }
 
     initLocalSampleTools() {
@@ -629,6 +646,7 @@ export class PronunciationApp {
         this.updateSelectedVersionComparisonColumn();
         this.renderVersionComparisonCharts();
         if (this.syllableVerifier) {
+            this.syllableVerifier.setActiveVersion(version);
             this.syllableVerifier.setAutomaticSyllables(
                 column.boundarySpans,
                 column.boundarySpans.map((span) => span.label),
@@ -832,6 +850,7 @@ export class PronunciationApp {
     async updateWordData() {
         const word = this.wordInput.value.trim();
         if (!word) return;
+        this.currentLookupWord = word;
 
         // Selecting a word is the strongest signal that a recording is coming.
         this.warmV3Recognizer();
@@ -1116,7 +1135,7 @@ export class PronunciationApp {
                     const analysis = result.analysis;
                     this.visualizer.drawComparisonPitchContour(
                         analysis,
-                        this.currentWordRef?.nativeAnalysis,
+                        this.currentWordRef?.referenceAnalysis,
                         this.currentWordRef?.syllables || []
                     );
                     this.renderSyllableFeedback(
@@ -1147,7 +1166,7 @@ export class PronunciationApp {
                     };
                     this.visualizer.drawComparisonPitchContour(
                         learnerAnalysis,
-                        this.currentWordRef?.nativeAnalysis,
+                        this.currentWordRef?.referenceAnalysis,
                         this.currentWordRef?.syllables || []
                     );
                     this.renderSyllableFeedback(
@@ -1268,7 +1287,7 @@ export class PronunciationApp {
         // against the native reference.
         this.visualizer.drawComparisonPitchContour(
             analysis,
-            this.currentWordRef?.nativeAnalysis,
+            this.currentWordRef?.referenceAnalysis,
             this.currentWordRef?.syllables || [],
             { learnerSyllables: measurementSpans, drawDuration: false }
         );
@@ -1390,7 +1409,7 @@ export class PronunciationApp {
         // Create a single learner waveform. Native audio remains available in
         // the reference player above; the verifier is reserved for learner
         // segmentation and manual review.
-        this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container', {
+        const verifierOptions = {
             enableManualReview,
             onManualSave: (segments) => this.saveManualReview(segments),
             onManualSegmentsChange: comparisonMode
@@ -1399,7 +1418,17 @@ export class PronunciationApp {
                     this.updateVersionComparisonSaveState();
                 }
                 : undefined
-        });
+        };
+        if (comparisonMode && this.versionComparisonView?.columns) {
+            verifierOptions.versionSources = this.versionComparisonView.columns.map((col) => ({
+                version: col.version,
+                label: col.label,
+                status: col.status
+            }));
+            verifierOptions.activeVersion = this.versionComparisonBoundarySource;
+            verifierOptions.onVersionSwitch = (version) => this.setVersionComparisonBoundarySource(version);
+        }
+        this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container', verifierOptions);
         await this.syllableVerifier.loadAudio(
             audioBlob,
             syllables,
@@ -1514,7 +1543,7 @@ export class PronunciationApp {
     getTargetDurationSyllables() {
         const candidates = [
             this.nativePattern,
-            this.currentWordRef?.nativeAnalysis?.observed?.syllables
+            this.currentWordRef?.referenceAnalysis?.observed?.syllables
         ];
         return candidates.find((candidate) => (
             Array.isArray(candidate) &&
@@ -1611,9 +1640,9 @@ export class PronunciationApp {
         const detailed = canShowDetailedFeedback({
             targetCount,
             observedCount: syllables.length,
-            nativeQuality: this.currentWordRef?.nativeAnalysis?.quality,
+            nativeQuality: this.currentWordRef?.referenceAnalysis?.quality,
             learnerQuality,
-            nativeStressEvidence: this.currentWordRef?.nativeAnalysis?.observed?.stressEvidence,
+            nativeStressEvidence: this.currentWordRef?.referenceAnalysis?.observed?.stressEvidence,
             learnerStressEvidence
         });
         const lexicalFallback = buildLexicalFallbackFeedback({
@@ -2021,12 +2050,15 @@ export class PronunciationApp {
         const isValid = wordRef.validation?.status === 'valid';
         const isCmuFallback = wordRef.source?.provider === 'cmu-pronouncing-dictionary';
         const canScore = isValid && wordRef.capabilities.scoreCountStress;
+        const referenceAnalysis = wordRef.referenceAnalysis;
         const canShowGraphs = (
             isValid &&
-            wordRef.capabilities.showNativeGraphs &&
-            hasUsableNativeContours(wordRef.nativeAnalysis)
+            wordRef.capabilities.showReferenceGraph &&
+            hasUsableNativeContours(referenceAnalysis)
         );
-        const contourOnly = canShowGraphs && wordRef.nativeAnalysis?.quality?.rateable !== true;
+        const contourOnly = canShowGraphs && referenceAnalysis?.quality?.rateable !== true;
+        const graphSource = referenceAnalysis?.graphSource || wordRef.graphSource;
+        const isModeledGraph = graphSource?.kind === 'modeled';
 
         this.expectedData = {
             ipa: wordRef.learnerDisplayIpa || wordRef.displayIpa || '',
@@ -2042,6 +2074,8 @@ export class PronunciationApp {
                 ? 'Pronunciation reference under review.'
                 : isCmuFallback
                     ? 'CMU pronunciation fallback · native audio and contour unavailable.'
+                    : isModeledGraph
+                        ? 'Expected stress pattern shown. No measured reference contour is available.'
                     : contourOnly
                         ? 'Native pitch and volume shown. Syllable duration analysis is unavailable for this recording.'
                         : wordRef.audioUrl && !canShowGraphs
@@ -2054,18 +2088,34 @@ export class PronunciationApp {
         if (this.feedbackSection) this.feedbackSection.style.display = 'none';
         if (this.resultsSummary) this.resultsSummary.innerHTML = '';
 
-        // Show native audio player if audio available
+        // Real reference audio is preferred. Device speech is temporary and
+        // never becomes a measured reference or scoring input.
         if (this.nativeAudio && this.nativeAudioContainer) {
             if (wordRef.audioUrl && wordRef.capabilities.playAudio) {
                 const proxiedUrl = this.wordRefService.getProxiedAudioUrl(wordRef.audioUrl);
                 this.nativeAudioUrl = proxiedUrl;
                 this.nativeAudio.src = proxiedUrl;
                 this.nativeAudioContainer.style.display = 'flex';
+                this.audioPlaybackKind = wordRef.audioSourceKind === 'generated' ? 'generated' : 'dictionary';
+                if (this.audioSourceLabel) {
+                    this.audioSourceLabel.textContent = this.audioPlaybackKind === 'generated'
+                        ? 'Verified generated reference'
+                        : 'Dictionary recording';
+                }
+                if (this.playNativeBtn) this.playNativeBtn.textContent = '🔊 Listen';
                 this.nativeAudioPlayer.setAudioElement(this.nativeAudio);
                 this.nativeAudioPlayer.preload(proxiedUrl).catch(() => {});
-
+            } else if ('speechSynthesis' in window && this.currentLookupWord) {
+                this.nativeAudioUrl = null;
+                this.audioPlaybackKind = 'device';
+                this.nativeAudio.removeAttribute('src');
+                this.nativeAudioContainer.style.display = 'flex';
+                this.nativeAudioPlayer.clearSource();
+                if (this.audioSourceLabel) this.audioSourceLabel.textContent = 'Temporary device voice';
+                if (this.playNativeBtn) this.playNativeBtn.textContent = '🔊 Device voice';
             } else {
                 this.nativeAudioUrl = null;
+                this.audioPlaybackKind = null;
                 this.nativeAudioContainer.style.display = 'none';
                 this.nativeAudioPlayer.clearSource();
             }
@@ -2073,10 +2123,10 @@ export class PronunciationApp {
 
         if (this.visualizer) {
             this.visualizer.clear();
-            if (canShowGraphs && wordRef.nativeAnalysis.pitch?.values?.length > 0) {
+            if (canShowGraphs && referenceAnalysis.pitch?.values?.length > 0) {
                 this.visualizer.drawNativePitchContour(
-                    wordRef.nativeAnalysis,
-                    wordRef.nativeAnalysis?.observed?.syllables || [],
+                    referenceAnalysis,
+                    referenceAnalysis?.observed?.syllables || [],
                     wordRef.syllables || []
                 );
                 this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);

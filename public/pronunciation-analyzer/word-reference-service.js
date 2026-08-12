@@ -12,11 +12,17 @@ import {
     ALGORITHM_VERSION,
     SCHEMA_VERSION,
     attachValidatedNativeAnalyses,
+    buildReferenceAudioReportRequest,
     buildReferenceCacheKey,
     compressAnalysisV2,
+    buildNativeAnalysisRequest,
     referenceNeedsNativeAnalysisRefresh,
     validateReferenceV2
 } from './reference-contract.js';
+import {
+    applyGeneratedAudioResolution,
+    resolveReferenceVariants
+} from './reference-graph-model.js';
 
 const CACHE_VERSION = SCHEMA_VERSION;
 
@@ -154,30 +160,63 @@ export class WordReferenceService {
             throw new Error('No pronunciation reference is available for this word');
         }
 
-        return attachValidatedNativeAnalyses(
+        const analyzed = await attachValidatedNativeAnalyses(
             dictResult,
             (variant) => this.analyzeNativeVariant(variant)
         );
+        const resolved = await this.attachGeneratedAudioAssets(resolveReferenceVariants(analyzed));
+        this.reportReferenceAudioNeeds(word, resolved);
+        return resolved;
     }
 
     async refreshCachedReference(reference) {
-        if (!referenceNeedsNativeAnalysisRefresh(reference)) return reference;
-        return attachValidatedNativeAnalyses(
-            reference,
-            (variant) => this.analyzeNativeVariant(variant),
-            { refreshOnly: true }
-        );
+        const analyzed = referenceNeedsNativeAnalysisRefresh(reference)
+            ? await attachValidatedNativeAnalyses(
+                reference,
+                (variant) => this.analyzeNativeVariant(variant),
+                { refreshOnly: true }
+            )
+            : reference;
+        const resolved = await this.attachGeneratedAudioAssets(resolveReferenceVariants(analyzed));
+        this.reportReferenceAudioNeeds(reference.word, resolved);
+        return resolved;
+    }
+
+    async attachGeneratedAudioAssets(reference) {
+        if (config.features?.useGeneratedPronunciationReferenceAudio !== true) return reference;
+        const variants = await Promise.all((reference?.variants || []).map(async (variant) => {
+            if (variant.referenceAnalysis?.graphSource?.kind !== 'modeled') return variant;
+            try {
+                const params = new URLSearchParams({ word: reference.word, variantId: variant.id });
+                const response = await fetch(`/api/pronunciation-reference-audio/resolve?${params}`);
+                if (!response.ok) return variant;
+                const payload = await response.json();
+                return applyGeneratedAudioResolution(variant, payload.data || payload);
+            } catch (_) {
+                return variant;
+            }
+        }));
+        return { ...reference, variants };
+    }
+
+    reportReferenceAudioNeeds(word, reference) {
+        (reference?.variants || []).forEach((variant) => {
+            const body = buildReferenceAudioReportRequest(word, variant);
+            if (!body) return;
+            fetch('/api/pronunciation-reference-audio/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                keepalive: true
+            }).catch((error) => console.warn('Reference audio report failed:', error?.message || error));
+        });
     }
 
     async analyzeNativeVariant(variant) {
         const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url/v2`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                audioUrl: variant.audioUrl,
-                variantId: variant.id,
-                expectedSyllableCount: variant.syllableCount
-            })
+            body: JSON.stringify(buildNativeAnalysisRequest(variant))
         });
         if (!analyzeResponse.ok) {
             const error = new Error('Native pronunciation analysis failed');
@@ -204,6 +243,7 @@ export class WordReferenceService {
      */
     getProxiedAudioUrl(originalUrl) {
         if (!originalUrl) return null;
+        if (String(originalUrl).startsWith('/')) return originalUrl;
         return `${this.backendUrl}/proxy-audio?url=${encodeURIComponent(originalUrl)}`;
     }
 
@@ -214,8 +254,11 @@ export class WordReferenceService {
     getExpectedPattern(wordReference) {
         if (!wordReference) return null;
 
-        const { syllableCount, primaryStress, nativeAnalysis } = wordReference;
-        const nativeSyllables = nativeAnalysis?.observed?.syllables;
+        const { syllableCount, primaryStress, referenceAnalysis } = wordReference;
+        if (referenceAnalysis?.graphSource?.kind === 'modeled') {
+            return this.generateTheoreticalPattern(syllableCount, primaryStress);
+        }
+        const nativeSyllables = referenceAnalysis?.observed?.syllables;
 
         // If we have native analysis, use actual values
         if (Array.isArray(nativeSyllables) && nativeSyllables.length === syllableCount) {

@@ -1218,3 +1218,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 626,2026-08-12,Evaluate simultaneous local model execution hardware capacity,Done,2026-08-12
 627,2026-08-12,Fix CRM full screen width display at 100 percent scale,Done,2026-08-12
 628,2026-08-12,Fix CRM Books Mind Map UI layout - SVG alignment and node positioning,Done,2026-08-12
+629,2026-08-12,Fix transparent modal background in CRM Books study notes modal,Done,2026-08-12
+630,2026-08-12,Review debug and refactor CRM Books study notes modal and overlay styles,Done,2026-08-12
+631,2026-08-12,Interactive Mind Map overhaul - light theme + drag-and-drop + user nodes + notes + PATCH API,Done,2026-08-12
+632,2026-08-12,Pronunciation analyzer: fix V3 reason codes + duration chart mismatch + V2/V3 toggle in syllable verifier,Done,2026-08-12
+633,2026-08-12,Deploy release V1.8.64 to production and run browser verification,In Progress,

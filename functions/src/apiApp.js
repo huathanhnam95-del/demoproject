@@ -17,6 +17,7 @@ const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-att
 const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
 const readAloudRoutes = require('./routes/read-aloud');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
+const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
 const {
     practiceAttemptsLimiterByUid,
     sharedPracticeAttemptsLimiter,
@@ -337,6 +338,12 @@ const essayAiAdminRouter = createEssayAiAdminRouter({
     sendSuccess,
     sendError
 });
+const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRouter({
+    db,
+    sendSuccess,
+    sendError,
+    getStorageBucket
+});
 
 app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/admin', crmRouter);
@@ -347,6 +354,7 @@ app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, 
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 app.use('/api', optionalAuthMiddleware, azureAssessmentRateLimiter, readAloudRoutes);
 app.use('/api', optionalAuthMiddleware, azureAssessmentRateLimiter, pronunciationTestRoutes);
+app.use('/api', optionalAuthMiddleware, azureAssessmentRateLimiter, pronunciationReferenceAudioRouter);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

@@ -21,6 +21,13 @@ class SyllableVerifier {
             ...options
         };
         this.manualReviewEnabled = this.options.enableManualReview !== false;
+        this.onVersionSwitch = typeof this.options.onVersionSwitch === 'function'
+            ? this.options.onVersionSwitch
+            : null;
+        this.versionSources = Array.isArray(this.options.versionSources)
+            ? this.options.versionSources
+            : [];
+        this.activeVersion = this.options.activeVersion || null;
 
         this.wavesurfer = null;
         this.regions = null;
@@ -45,10 +52,18 @@ class SyllableVerifier {
 
     init() {
         // Create UI structure
+        const versionToggleHtml = this.versionSources.length >= 2
+            ? `<div class="sv-version-toggle" id="sv-version-toggle" role="radiogroup" aria-label="Engine version">${
+                this.versionSources.map((src) => `<button class="sv-version-btn${src.version === this.activeVersion ? ' is-active' : ''}${src.status !== 'available' ? ' is-disabled' : ''}" type="button" data-version="${src.version}" ${src.status !== 'available' ? 'disabled' : ''} aria-pressed="${src.version === this.activeVersion}">${src.label || src.version.toUpperCase()}</button>`).join('')
+            }</div>`
+            : '';
         this.container.innerHTML = `
             <div class="sv-wrapper">
                 <div class="sv-header">
-                    <h4>🔍 Syllable Verification</h4>
+                    <div class="sv-header-left">
+                        <h4>🔍 Syllable Verification</h4>
+                        ${versionToggleHtml}
+                    </div>
                     <div class="sv-controls">
                         <button class="sv-btn" id="sv-play-all" title="Play All">
                             ▶️ Play
@@ -170,6 +185,17 @@ class SyllableVerifier {
         }
 
         this.speedSelect = speedSelect;
+        const versionToggle = this.container.querySelector('#sv-version-toggle');
+        if (versionToggle && this.onVersionSwitch) {
+            versionToggle.addEventListener('click', (e) => {
+                const btn = e.target.closest('.sv-version-btn');
+                if (!btn || btn.disabled) return;
+                const version = btn.dataset.version;
+                if (version && version !== this.activeVersion) {
+                    this.onVersionSwitch(version);
+                }
+            });
+        }
         manualReviewBtn?.addEventListener('click', () => {
             this.setManualReviewActive(!this.manualReviewActive);
         });
@@ -604,6 +630,18 @@ class SyllableVerifier {
         });
 
         if (preserveManual) this.createManualRegions();
+    }
+
+    setActiveVersion(version) {
+        if (version === this.activeVersion) return;
+        this.activeVersion = version;
+        const toggle = this.container?.querySelector('#sv-version-toggle');
+        if (!toggle) return;
+        toggle.querySelectorAll('.sv-version-btn').forEach((btn) => {
+            const isActive = btn.dataset.version === version;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', String(isActive));
+        });
     }
 
     /**

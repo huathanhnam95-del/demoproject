@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "listening-tasks-3ae34"
+  },
   "targets": {
     "listening-tasks-3ae34": {
       "hosting": {

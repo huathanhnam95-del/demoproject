@@ -51,6 +51,10 @@
         ],
         "headers": [
             {
+                "source": "/index.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
                 "source": "/crm-admin.html",
                 "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
             },

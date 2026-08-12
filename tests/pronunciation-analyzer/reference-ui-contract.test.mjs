@@ -30,6 +30,7 @@ assert.match(htmlSource, /id="pa-primary-stress"/);
 assert.match(htmlSource, /id="pa-secondary-stress"/);
 assert.match(htmlSource, /id="pa-syllable-strip"/);
 assert.match(htmlSource, /id="pa-pattern-display"[^>]*class="pa-sr-only"/);
+assert.match(htmlSource, /id="pa-audio-source-label"/);
 
 assert.ok(!appSource.includes('window.Phonetics'), 'legacy IPA fallback must not enter scoring paths');
 assert.match(appSource, /selectReferenceVariant/);
@@ -50,10 +51,15 @@ assert.equal(
 assert.match(appSource, /Pronunciation reference under review\./);
 assert.match(appSource, /CMU pronunciation fallback/);
 assert.match(appSource, /capabilities\.scoreCountStress/);
-assert.match(appSource, /capabilities\.showNativeGraphs/);
+assert.match(appSource, /capabilities\.showReferenceGraph/);
+assert.match(appSource, /wordRef\.referenceAnalysis/);
+assert.match(appSource, /Device voice/);
+assert.match(appSource, /SpeechSynthesisUtterance/);
+assert.match(appSource, /utterance\.lang = 'en-US'/);
 assert.match(appSource, /primaryStress/);
 assert.match(appSource, /secondaryStress/);
-assert.match(appSource, /nativeAnalysis\?\.observed\?\.syllables/);
+assert.match(appSource, /referenceAnalysis\?\.observed\?\.syllables/);
+assert.match(referenceServiceSource, /useGeneratedPronunciationReferenceAudio/);
 assert.match(appSource, /setAttribute\('aria-pressed'/);
 assert.ok(!appSource.includes('findUserStressedSyllable'), 'learner UI must not guess a stressed syllable');
 assert.ok(!appSource.includes('Detected stress:'), 'learner UI must not display guessed stress locations');

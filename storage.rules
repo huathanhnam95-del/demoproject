@@ -135,5 +135,11 @@ service firebase.storage {
         && feedbackData(attemptId, feedbackId).audioPath == ('practice-attempt-feedback/' + attemptId + '/' + feedbackId + '/' + request.auth.uid + '.wav');
       allow read: if false;
     }
+
+    // Verified generated references are served through Functions after the
+    // Firestore verification gate; clients never access Storage directly.
+    match /pronunciation-reference-audio/{allPaths=**} {
+      allow read, write: if false;
+    }
   }
 }

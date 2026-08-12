@@ -112,7 +112,7 @@ async function run() {
       const times = Array.from({ length: 40 }, (_value, index) => index * 0.02);
       app.currentWordRef = {
         syllables: [{ ipa: 'pho' }, { ipa: 'to' }, { ipa: 'graph' }],
-        nativeAnalysis: {
+        referenceAnalysis: {
           quality: { rateable: true, confidence: 0.9 },
           pitch: { times, values: times.map((_value, index) => 180 + (index % 7)) },
           intensity: { times, values: times.map((_value, index) => 70 + (index % 5)) },

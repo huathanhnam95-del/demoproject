@@ -784,6 +784,131 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(analyze.call_args.kwargs["expected_syllable_count"], 7)
         self.assertFalse(analyze.call_args.kwargs["native"])
 
+    def test_native_analysis_uses_canonical_pitch_for_stress_and_preserves_raw_track(self):
+        raw = {
+            "duration": 0.8,
+            "sampleRate": 24000,
+            "pitch": {
+                "times": [0.10, 0.15, 0.20, 0.25, 0.50, 0.55, 0.60],
+                "values": [188.0, 190.0, 187.0, None, 465.0, 474.8, 468.0],
+            },
+            "intensity": {
+                "times": [0.10, 0.15, 0.20, 0.25, 0.50, 0.55, 0.60],
+                "values": [78.0, 78.0, 78.0, 0.0, 69.0, 69.0, 69.0],
+            },
+            "syllables": [
+                {"startTime": 0.05, "endTime": 0.30, "duration": 0.25,
+                 "vowelDuration": 0.22, "avgPitch": 188.0, "maxPitch": 190.0,
+                 "intensity": 78.0},
+                {"startTime": 0.45, "endTime": 0.70, "duration": 0.25,
+                 "vowelDuration": 0.14, "avgPitch": 469.0, "maxPitch": 474.8,
+                 "intensity": 69.0},
+            ],
+        }
+
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=2,
+            native=True,
+            reference_ipa="/ˈpərfɪkt/",
+            expected_primary_stress=0,
+        )
+
+        self.assertEqual(result["pitchProcessing"]["version"], "canonical-pitch-v1")
+        self.assertEqual(result["pitch"]["rawValues"][-2], 474.8)
+        self.assertAlmostEqual(result["pitch"]["values"][-2], 237.4, places=1)
+        self.assertEqual(result["canonicalPrimaryStress"], 0)
+        self.assertEqual(result["observed"]["primaryStress"], 0)
+        self.assertEqual(result["audioCompatibility"]["status"], "compatible")
+        self.assertEqual(result["audioCompatibility"]["version"], "reference-audio-compatibility-v1")
+        self.assertEqual(result["graphSource"]["kind"], "measured-dictionary")
+
+    def test_unresolved_native_harmonic_track_fails_closed(self):
+        raw = {
+            "duration": 0.6,
+            "sampleRate": 24000,
+            "pitch": {"times": [0.1, 0.2, 0.3, 0.4], "values": [155.0, 157.0, 495.0, 492.0]},
+            "intensity": {"times": [0.1, 0.2, 0.3, 0.4], "values": [72.0, 72.0, 71.0, 71.0]},
+            "syllables": [
+                {"startTime": 0.05, "endTime": 0.22, "duration": 0.17,
+                 "vowelDuration": 0.13, "avgPitch": 156.0, "maxPitch": 157.0, "intensity": 72.0},
+                {"startTime": 0.28, "endTime": 0.48, "duration": 0.20,
+                 "vowelDuration": 0.14, "avgPitch": 493.0, "maxPitch": 495.0, "intensity": 71.0},
+            ],
+        }
+
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=2,
+            native=True,
+            reference_ipa="/kənˈtrækt/",
+            expected_primary_stress=1,
+        )
+
+        self.assertEqual(result["pitchProcessing"]["status"], "unrateable")
+        self.assertEqual(result["audioCompatibility"]["status"], "unrateable")
+        self.assertFalse(result["capabilities"]["showNativeGraphs"])
+        self.assertIn("UNRESOLVED_HARMONIC_RUN", result["quality"]["reasons"])
+
+    def test_native_url_endpoint_forwards_authoritative_variant_metadata(self):
+        server.app.testing = True
+        client = server.app.test_client()
+        fake_result = {
+            "analysisVersion": "pronunciation-analysis-v2",
+            "quality": {"rateable": True, "confidence": 1, "reasons": []},
+            "pitch": {"times": [0.1], "values": [150.0], "rawValues": [150.0]},
+            "intensity": {"times": [0.1], "values": [70.0]},
+        }
+        with patch.object(server.http_requests, "get") as get_audio, \
+             patch.object(server, "analyze_audio_v2", return_value=fake_result) as analyze:
+            get_audio.return_value.ok = True
+            get_audio.return_value.content = b"mp3"
+            response = client.post("/analyze-url/v2", json={
+                "audioUrl": "https://media.merriam-webster.com/audio/prons/en/us/mp3/p/perfec01.mp3",
+                "variantId": "23212949e88a26e3",
+                "expectedSyllableCount": 2,
+                "referenceIpa": "/ˈpərfɪkt/",
+                "referencePrimaryStress": 0,
+                "referenceSyllables": [{"index": 0, "ipa": "pər"}, {"index": 1, "ipa": "fɪkt"}],
+                "partOfSpeech": "adjective",
+                "audioSourceKind": "dictionary",
+            })
+
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        self.assertRegex(response.get_json()["audioContentHash"], r"^[a-f0-9]{64}$")
+        self.assertEqual(analyze.call_args.kwargs["reference_ipa"], "/ˈpərfɪkt/")
+        self.assertEqual(analyze.call_args.kwargs["expected_primary_stress"], 0)
+        self.assertEqual(analyze.call_args.kwargs["audio_source_kind"], "dictionary")
+
+    def test_generated_reference_endpoint_forwards_exact_variant_metadata(self):
+        server.app.testing = True
+        client = server.app.test_client()
+        fake_result = {
+            "analysisVersion": "pronunciation-analysis-v2",
+            "quality": {"rateable": True, "confidence": 1, "reasons": []},
+            "audioCompatibility": {"status": "compatible"},
+        }
+        with patch.object(server, "analyze_audio_v2", return_value=fake_result) as analyze:
+            response = client.post(
+                "/analyze-reference/v2",
+                data={
+                    "audio": (io.BytesIO(b"ID3fixture"), "reference.mp3"),
+                    "variantId": "23212949e88a26e3",
+                    "expectedSyllableCount": "2",
+                    "referenceIpa": "/ˈpərfɪkt/",
+                    "referencePrimaryStress": "0",
+                    "referenceSyllables": '[{"index":0,"ipa":"pər"},{"index":1,"ipa":"fɪkt"}]',
+                    "partOfSpeech": "adjective",
+                },
+                content_type="multipart/form-data",
+            )
+
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        self.assertRegex(response.get_json()["audioContentHash"], r"^[a-f0-9]{64}$")
+        self.assertEqual(analyze.call_args.kwargs["expected_syllable_count"], 2)
+        self.assertEqual(analyze.call_args.kwargs["expected_primary_stress"], 0)
+        self.assertEqual(analyze.call_args.kwargs["audio_source_kind"], "generated")
+
 
 # ============================================================================
 # V3 PHONEME ALIGNMENT / COMPARISON TESTS

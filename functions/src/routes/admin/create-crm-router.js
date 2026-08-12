@@ -31,6 +31,7 @@ const registerReportingRoutes = require('./reporting');
 const registerReadAloudReportingRoutes = require('./read-aloud-reporting');
 const registerPronunciationCorpusRoutes = require('./pronunciation-corpus');
 const registerPronunciationComparisonRoutes = require('./pronunciation-comparisons');
+const registerPronunciationReferenceAudioRoutes = require('./pronunciation-reference-audio');
 const registerGovernanceRoutes = require('./governance');
 const registerLiveSessionRoutes = require('./live-sessions');
 const registerBookRoutes = require('./books');
@@ -271,6 +272,7 @@ module.exports = function createCrmRouter(rawDeps) {
     if (typeof deps.getStorageBucket === 'function') {
         registerPronunciationCorpusRoutes(router, routeDeps);
         registerPronunciationComparisonRoutes(router, routeDeps);
+        registerPronunciationReferenceAudioRoutes(router, routeDeps);
     }
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);

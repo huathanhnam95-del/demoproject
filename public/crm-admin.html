@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260812-v1.8.63">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260812-v1.8.64">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260812-v1.8.63" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260812-v1.8.63" />
+  <link rel="stylesheet" href="style.css?v=20260812-v1.8.64" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260812-v1.8.64" />
 </head>
 
 <body>
@@ -204,6 +204,40 @@
             <div class="corpus-progress-bar-fill" id="corpus-progress-fill" style="width: 0%;"></div>
           </div>
         </div>
+
+        <section id="reference-audio-queue" class="reference-audio-queue" aria-labelledby="reference-audio-queue-heading">
+          <div class="reference-audio-queue-header">
+            <div>
+              <h3 id="reference-audio-queue-heading">Reference Audio Queue</h3>
+              <p class="crm-muted">Missing, conflicting, and acoustically unrateable dictionary variants awaiting a verified replacement.</p>
+            </div>
+            <div class="reference-audio-queue-counts" aria-label="Reference audio queue counts">
+              <span><strong id="reference-audio-waiting-count">0</strong> Waiting</span>
+              <span><strong id="reference-audio-generated-count">0</strong> Generated</span>
+            </div>
+          </div>
+          <div class="reference-audio-queue-controls">
+            <input id="reference-audio-search" class="crm-input" type="search" placeholder="Search word or IPA" aria-label="Search reference audio queue" />
+            <select id="reference-audio-pos-filter" class="crm-input" aria-label="Filter reference audio by part of speech">
+              <option value="">All parts of speech</option>
+            </select>
+            <select id="reference-audio-reason-filter" class="crm-input" aria-label="Filter reference audio by reason">
+              <option value="">All reasons</option>
+              <option value="missing_source_audio">Missing source audio</option>
+              <option value="source_variant_conflict">Source variant conflict</option>
+              <option value="acoustic_unrateable">Acoustic unrateable</option>
+            </select>
+            <button id="btn-reference-audio-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh queue</button>
+            <button id="btn-reference-audio-export" class="crm-btn crm-btn-secondary" type="button">Export pending manifest</button>
+          </div>
+          <div class="crm-table-container reference-audio-table-wrap">
+            <table class="crm-table">
+              <thead><tr><th>Word / form</th><th>IPA / stress</th><th>Reason</th><th>Status</th><th>Last seen</th><th>Audio</th></tr></thead>
+              <tbody id="reference-audio-queue-items"><tr><td colspan="6" class="crm-muted">Queue not loaded yet.</td></tr></tbody>
+            </table>
+          </div>
+          <audio id="reference-audio-preview" preload="none" hidden></audio>
+        </section>
         
         <div class="crm-dashboard-layout" style="margin-top: 24px; display: grid; grid-template-columns: 280px 1fr; gap: 24px;">
           <!-- Left Column: Word navigation and metadata -->
@@ -2433,48 +2467,48 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260812-v1.8.63"></script>
-  <script src="js/classroom-api.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/utils.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/state.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/dom.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/courses.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/students.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/student-360.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/classrooms.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/leads.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/activities.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/enrollments.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/attendance.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/finance-workflow.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/finance.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/communications.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/staff-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/student-finance.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/live-delivery.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/classroom-modal.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/student-modal.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/course-modal.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/lead-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/communications-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/books-workspace.js?v=20260812-v1.8.63&books-reader=r3"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/dashboard.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/governance.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/index.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260812-v1.8.63"></script>
-  <script src="js/crm/devtools-access.js?v=20260812-v1.8.63&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260812-v1.8.63"></script>
-  <script src="arpabet-ipa-map.js?v=20260812-v1.8.63"></script>
-  <script src="phonetics.js?v=20260812-v1.8.63"></script>
-  <script src="crm-admin.js?v=20260812-v1.8.63"></script>
+  <script src="js/auth-session-guard.js?v=20260812-v1.8.64"></script>
+  <script src="js/classroom-api.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/utils.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/state.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/dom.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/courses.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/students.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/student-360.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/classrooms.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/leads.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/activities.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/enrollments.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/attendance.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/finance-workflow.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/finance.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/communications.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/staff-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/student-finance.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/live-delivery.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/classroom-modal.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/student-modal.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/course-modal.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/lead-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/communications-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/books-workspace.js?v=20260812-v1.8.64&books-reader=r3"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/dashboard.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/governance.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/index.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/devtools-access.js?v=20260812-v1.8.64&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260812-v1.8.64"></script>
+  <script src="arpabet-ipa-map.js?v=20260812-v1.8.64"></script>
+  <script src="phonetics.js?v=20260812-v1.8.64"></script>
+  <script src="crm-admin.js?v=20260812-v1.8.64"></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
@@ -2494,8 +2528,33 @@
       <div id="crm-mindmap-viewport" class="crm-mindmap-viewport">
         <svg id="crm-mindmap-svg" class="crm-mindmap-svg"></svg>
         <div id="crm-mindmap-canvas" class="crm-mindmap-canvas"></div>
+        <!-- Floating Toolbar -->
+        <div id="crm-mindmap-toolbar" class="crm-mindmap-toolbar">
+          <button id="crm-mindmap-add-node-btn" class="crm-mindmap-toolbar-btn" title="Double-click canvas to add a thought block">+ Add Note</button>
+          <div class="crm-mindmap-toolbar-divider"></div>
+          <span id="crm-mindmap-save-status" class="crm-mindmap-save-status"></span>
+        </div>
       </div>
-      <!-- Slide-over Inspector Drawer for Node Full Note -->
+      <!-- Right-click Context Menu -->
+      <div id="crm-mindmap-context-menu" class="crm-mindmap-context-menu">
+        <button class="crm-mindmap-context-item" data-action="edit-title">✏️ Edit Title</button>
+        <button class="crm-mindmap-context-item" data-action="add-child">➕ Add Child</button>
+        <button class="crm-mindmap-context-item" data-action="add-note">📝 Add Note</button>
+        <div class="crm-mindmap-context-divider"></div>
+        <div class="crm-mindmap-color-swatches" data-action="change-color">
+          <div class="crm-mindmap-color-swatch" data-color="#3B82F6" style="background:#3B82F6" title="Blue"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#22C55E" style="background:#22C55E" title="Green"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#F59E0B" style="background:#F59E0B" title="Amber"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#EF4444" style="background:#EF4444" title="Red"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#8B5CF6" style="background:#8B5CF6" title="Purple"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#EC4899" style="background:#EC4899" title="Pink"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#06B6D4" style="background:#06B6D4" title="Cyan"></div>
+          <div class="crm-mindmap-color-swatch" data-color="#F97316" style="background:#F97316" title="Orange"></div>
+        </div>
+        <div class="crm-mindmap-context-divider"></div>
+        <button class="crm-mindmap-context-item is-danger" data-action="delete-node">🗑 Delete</button>
+      </div>
+      <!-- Slide-over Inspector Drawer -->
       <aside id="crm-mindmap-inspector" class="crm-mindmap-inspector" style="display: none;">
         <div class="crm-mindmap-inspector-header">
           <span id="crm-mindmap-inspector-tag" class="crm-mindmap-inspector-tag">Category</span>
@@ -2507,6 +2566,11 @@
         <div class="crm-mindmap-inspector-section">
           <h4>Full Saved Note</h4>
           <div id="crm-mindmap-inspector-fulltext" class="crm-mindmap-inspector-fulltext"></div>
+        </div>
+        <hr class="crm-mindmap-divider" />
+        <div class="crm-mindmap-inspector-section">
+          <h4>Your Notes</h4>
+          <textarea id="crm-mindmap-inspector-notes" class="crm-mindmap-inspector-notes" placeholder="Add your thoughts, annotations, or comments about this concept..." rows="5"></textarea>
         </div>
       </aside>
     </div>

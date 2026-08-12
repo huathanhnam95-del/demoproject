@@ -10703,21 +10703,55 @@
           if (modalBody) modalBody.innerHTML = '<div style="padding: 20px; text-align: center;">Fetching definition...</div>';
 
           try {
-            const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(currentSelectedText)}`);
-            if (!resp.ok) throw new Error('Not found');
-            const data = await resp.json();
+            const cleanText = currentSelectedText.trim().toLowerCase();
+            const [wordData, phoneticsData] = await Promise.all([
+              window.DictionaryService ? window.DictionaryService.getWordData(cleanText) : Promise.resolve({ definition: '', example: '', vietnameseTranslation: '', sentences: [] }),
+              window.Phonetics && typeof window.Phonetics.getIPAWithSource === 'function' ? window.Phonetics.getIPAWithSource(cleanText) : Promise.resolve({ ipa: '' })
+            ]);
 
             let html = '';
-            if (data && data[0] && data[0].meanings) {
-              data[0].meanings.forEach(m => {
-                html += `<h4 class="dict-peek-pos">${m.partOfSpeech}</h4><ul class="dict-peek-defs">`;
-                m.definitions.slice(0, 3).forEach(d => {
-                  html += `<li>${d.definition}</li>`;
-                });
-                html += '</ul>';
-              });
+
+            // Header info: Phonetics & Translation
+            if (phoneticsData?.ipa || wordData?.vietnameseTranslation) {
+              html += `<div class="dict-peek-header-info" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,0.08);border-radius:8px;font-size:14px;">`;
+              if (phoneticsData?.ipa) {
+                html += `<span class="dict-peek-ipa" style="font-family:'Charis SIL',Georgia,serif;color:#2563eb;font-weight:600;font-size:15px;">${phoneticsData.ipa}</span>`;
+              }
+              if (wordData?.vietnameseTranslation) {
+                html += `<span class="dict-peek-vi" style="color:#059669;font-weight:500;">(${wordData.vietnameseTranslation})</span>`;
+              }
+              html += `</div>`;
+            }
+
+            if (wordData?.definition) {
+              const posLabel = wordData.partOfSpeech ? `<span class="dict-peek-pos" style="display:inline-block;padding:2px 8px;border-radius:4px;background:#e2e8f0;font-size:12px;color:#475569;margin-bottom:6px;">${wordData.partOfSpeech}</span>` : '';
+              html += `${posLabel}<p class="dict-peek-def" style="margin-bottom:10px;line-height:1.5;color:#1e293b;">${wordData.definition}</p>`;
+              if (wordData.example) {
+                html += `<p class="dict-peek-example" style="font-style:italic;color:#64748b;font-size:13px;border-left:3px solid #cbd5e1;padding-left:8px;margin-bottom:10px;">"${wordData.example}"</p>`;
+              }
             } else {
-              html = '<p>No definitions found.</p>';
+              // Fallback to legacy dictionaryapi lookup if DictionaryService returned empty
+              try {
+                const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanText)}`);
+                if (resp.ok) {
+                  const data = await resp.json();
+                  if (data && data[0] && data[0].meanings) {
+                    data[0].meanings.forEach(m => {
+                      html += `<h4 class="dict-peek-pos" style="font-weight:600;margin-top:8px;color:#334155;">${m.partOfSpeech}</h4><ul class="dict-peek-defs" style="padding-left:18px;margin:4px 0;">`;
+                      m.definitions.slice(0, 3).forEach(d => {
+                        html += `<li style="margin-bottom:4px;">${d.definition}</li>`;
+                      });
+                      html += '</ul>';
+                    });
+                  }
+                }
+              } catch (fallbackErr) {
+                // Ignore fallback error
+              }
+            }
+
+            if (!html) {
+              html = `<p>Definition not found for "${currentSelectedText}".</p>`;
             }
             if (modalBody) modalBody.innerHTML = html;
 

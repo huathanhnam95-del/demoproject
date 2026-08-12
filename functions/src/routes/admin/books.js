@@ -243,7 +243,30 @@ module.exports = function registerBookRoutes(router, deps) {
         }
     });
 
+    router.patch('/books/:bookId/mind-map', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
 
+            const { positions, userNodes, userEdits } = req.body || {};
+            const update = {};
+            if (positions && typeof positions === 'object') update.positions = positions;
+            if (Array.isArray(userNodes)) update.userNodes = userNodes;
+            if (userEdits && typeof userEdits === 'object') update.userEdits = userEdits;
+
+            if (Object.keys(update).length === 0) {
+                return sendError(res, 400, 'INVALID_PARAMS', 'No valid fields to update.');
+            }
+
+            await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map')
+                .set(update, { merge: true });
+
+            return sendSuccess(res, { ok: true }, 'Mind map edits saved.');
+        } catch (error) {
+            return sendError(res, 500, 'SAVE_MIND_MAP_ERROR', 'Failed to save mind map edits.', error?.message || error);
+        }
+    });
 
     // --- Book Notes CRUD (Firestore-backed) ---
     router.get('/books/:bookId/notes', ...requireAdminHandlers, async (req, res) => {

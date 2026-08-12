@@ -24,6 +24,11 @@ try:
         build_pronunciation_variant,
         parse_pronunciation,
     )
+    from .pitch_processing import (
+        PITCH_PROCESSING_VERSION,
+        apply_canonical_pitch_to_syllables,
+        canonicalize_pitch_track,
+    )
 except ImportError:
     from pronunciation_reference import (  # type: ignore
         ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
@@ -31,6 +36,11 @@ except ImportError:
         build_pronunciation_reference,
         build_pronunciation_variant,
         parse_pronunciation,
+    )
+    from pitch_processing import (  # type: ignore
+        PITCH_PROCESSING_VERSION,
+        apply_canonical_pitch_to_syllables,
+        canonicalize_pitch_track,
     )
 try:
     from scipy.ndimage import uniform_filter1d  # type: ignore
@@ -1941,6 +1951,7 @@ def score_lexical_stress_v2(
     syllables,
     confidence_threshold=None,
     expected_primary_stress=None,
+    pitch_reliability=1.0,
 ):
     """Score stress from within-recording relative pitch, duration, and intensity."""
     if confidence_threshold is None:
@@ -2018,8 +2029,9 @@ def score_lexical_stress_v2(
     pitch_semitones = 12.0 * np.log2(pitches / pitch_median)
     duration_prominence = np.log2(durations / duration_median)
     intensity_prominence = intensities - intensity_median
+    pitch_reliability = min(1.0, max(0.0, float(pitch_reliability)))
     scores = (
-        pitch_semitones * AnalysisConfig.STRESS_WEIGHT_PITCH
+        pitch_semitones * AnalysisConfig.STRESS_WEIGHT_PITCH * pitch_reliability
         + duration_prominence * AnalysisConfig.STRESS_WEIGHT_DURATION
         + intensity_prominence * AnalysisConfig.STRESS_WEIGHT_INTENSITY
     )
@@ -2040,6 +2052,7 @@ def score_lexical_stress_v2(
             'pitchSemitones': [round(float(value), 4) for value in pitch_semitones],
             'relativeDuration': [round(float(value), 4) for value in duration_prominence],
             'relativeIntensityDb': [round(float(value), 4) for value in intensity_prominence],
+            'pitchReliability': round(pitch_reliability, 3),
         },
     }
     if expected_primary_stress is not None:
@@ -2071,6 +2084,14 @@ def score_lexical_stress_v2(
         else:
             reference['reason'] = 'REFERENCE_STRESS_OUT_OF_RANGE'
         result['referenceStress'] = reference
+        if reference['matches'] and reference['rateable'] and result['primaryStress'] is None:
+            result.update({
+                'primaryStress': expected,
+                'confidence': reference['confidence'],
+                'rateable': True,
+                'reasons': [],
+                'decisionMode': 'reference-conditioned-acoustic-verification',
+            })
     return result
 
 
@@ -2079,8 +2100,28 @@ def build_analysis_v2_response(
     expected_syllable_count=None,
     native=False,
     reference_ipa=None,
+    expected_primary_stress=None,
+    audio_source_kind='dictionary',
 ):
+    explicit_expected_primary_stress = expected_primary_stress is not None
+    pitch_processing = None
+    canonical_pitch = raw_analysis.get('pitch') or {'times': [], 'values': []}
     syllables = list(raw_analysis.get('syllables') or [])
+    if native:
+        pitch_processing = canonicalize_pitch_track(
+            canonical_pitch.get('times') or [],
+            canonical_pitch.get('values') or [],
+        )
+        canonical_pitch = {
+            **canonical_pitch,
+            'values': pitch_processing['values'],
+            'rawValues': pitch_processing['rawValues'],
+        }
+        syllables = apply_canonical_pitch_to_syllables(
+            syllables,
+            canonical_pitch.get('times') or [],
+            canonical_pitch.get('values') or [],
+        )
     candidates = [_candidate_from_syllable(syllable) for syllable in syllables]
     if native:
         segmentation = select_native_acoustic_candidates(
@@ -2128,7 +2169,7 @@ def build_analysis_v2_response(
 
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])
-    expected_primary_stress = None
+    parsed_primary_stress = None
     reference_count_conflict = False
     if reference_ipa:
         try:
@@ -2138,14 +2179,21 @@ def build_analysis_v2_response(
                 and parsed_reference.phonological_count != expected_syllable_count
             )
             if parsed_reference.primary_stress is not None:
-                expected_primary_stress = parsed_reference.primary_stress
+                parsed_primary_stress = parsed_reference.primary_stress
         except Exception:
-            expected_primary_stress = None
+            parsed_primary_stress = None
+    if expected_primary_stress is None:
+        expected_primary_stress = parsed_primary_stress
     stress = score_lexical_stress_v2(
         selected_syllables,
         expected_primary_stress=expected_primary_stress,
+        pitch_reliability=(
+            0.25
+            if pitch_processing and pitch_processing.get('correctedRunCount', 0) > 0
+            else 1.0
+        ),
     )
-    if reference_count_conflict and stress.get('referenceStress'):
+    if reference_count_conflict and not explicit_expected_primary_stress and stress.get('referenceStress'):
         stress['referenceStress'].update({
             'matches': False,
             'rateable': False,
@@ -2162,6 +2210,8 @@ def build_analysis_v2_response(
             and stress.get('primaryStress') is not None
             and index == int(stress['primaryStress'])
         )
+    if pitch_processing and pitch_processing['status'] == 'unrateable':
+        reasons.extend(reason for reason in pitch_processing['reasons'] if reason not in reasons)
     rateable = bool(selected_syllables) and not reasons
     primary_stress = stress['primaryStress']
     public_segmentation = {
@@ -2169,15 +2219,52 @@ def build_analysis_v2_response(
         for key, value in segmentation.items()
         if key != 'selected'
     }
-    pitch_values = list((raw_analysis.get('pitch') or {}).get('values') or [])
+    pitch_values = list(canonical_pitch.get('values') or [])
     intensity_values = list((raw_analysis.get('intensity') or {}).get('values') or [])
     has_native_contours = bool(
         native
         and any(_finite_number(value) and float(value) > 0 for value in pitch_values)
         and any(_finite_number(value) for value in intensity_values)
     )
-    return {
+    compatibility = {
+        'version': 'reference-audio-compatibility-v1',
+        'status': 'unrateable',
+        'expectedPrimaryStress': expected_primary_stress,
+        'observedPrimaryStress': primary_stress,
+        'confidence': 0.0,
+        'reasons': [],
+    }
+    reference_stress = stress.get('referenceStress')
+    if pitch_processing and pitch_processing['status'] == 'unrateable':
+        compatibility['reasons'] = list(pitch_processing['reasons'])
+    elif reference_stress and reference_stress.get('matches'):
+        compatibility.update({
+            'status': 'compatible',
+            'confidence': reference_stress.get('confidence', 0.0),
+        })
+    elif (
+        expected_primary_stress is not None
+        and stress.get('rateable')
+        and primary_stress is not None
+        and int(primary_stress) != int(expected_primary_stress)
+    ):
+        compatibility.update({
+            'status': 'conflict',
+            'confidence': stress.get('confidence', 0.0),
+            'reasons': ['REFERENCE_STRESS_CONFLICT'],
+        })
+    elif reference_stress:
+        compatibility['confidence'] = reference_stress.get('confidence', 0.0)
+        compatibility['reasons'] = [reference_stress.get('reason') or 'REFERENCE_STRESS_UNCERTAIN']
+
+    can_show_measured_graph = bool(
+        has_native_contours
+        and compatibility['status'] != 'conflict'
+        and (not pitch_processing or pitch_processing['status'] != 'unrateable')
+    )
+    result = {
         'analysisVersion': 'pronunciation-analysis-v2',
+        'canonicalPrimaryStress': expected_primary_stress,
         'quality': {
             'rateable': rateable,
             'confidence': segmentation['confidence'],
@@ -2190,14 +2277,27 @@ def build_analysis_v2_response(
             'syllables': selected_syllables,
             'stressEvidence': stress,
         },
-        'pitch': raw_analysis.get('pitch') or {'times': [], 'values': []},
+        'pitch': canonical_pitch,
         'intensity': raw_analysis.get('intensity') or {'times': [], 'values': []},
         'duration': raw_analysis.get('duration', 0),
         'sampleRate': raw_analysis.get('sampleRate'),
         'capabilities': {
-            'showNativeGraphs': has_native_contours,
+            'showNativeGraphs': can_show_measured_graph,
         },
     }
+    if native:
+        result['pitchProcessing'] = {
+            key: value for key, value in pitch_processing.items()
+            if key not in {'values', 'rawValues'}
+        }
+        result['audioCompatibility'] = compatibility
+        result['graphSource'] = {
+            'kind': 'measured-generated' if audio_source_kind == 'generated' else 'measured-dictionary',
+            'label': 'Measured generated reference' if audio_source_kind == 'generated' else 'Measured dictionary reference',
+            'measured': True,
+            'version': PITCH_PROCESSING_VERSION,
+        }
+    return result
 
 
 def analyze_audio_v2(
@@ -2205,6 +2305,8 @@ def analyze_audio_v2(
     expected_syllable_count=None,
     native=False,
     reference_ipa=None,
+    expected_primary_stress=None,
+    audio_source_kind='dictionary',
 ):
     # Native references and learner attempts are aligned to the trusted target
     # count so every expected syllable receives measured acoustic feedback.
@@ -2223,6 +2325,8 @@ def analyze_audio_v2(
         expected_syllable_count=expected_syllable_count,
         native=native,
         reference_ipa=reference_ipa,
+        expected_primary_stress=expected_primary_stress,
+        audio_source_kind=audio_source_kind,
     )
 
 
@@ -2263,12 +2367,23 @@ def analyze_from_url_v2():
     audio_url = str(data.get('audioUrl') or '').strip()
     variant_id = str(data.get('variantId') or '').strip()
     expected_count = data.get('expectedSyllableCount')
+    reference_ipa = str(data.get('referenceIpa') or '').strip() or None
+    expected_primary_stress = data.get('referencePrimaryStress')
+    audio_source_kind = str(data.get('audioSourceKind') or 'dictionary').strip()
     if not audio_url.startswith('https://media.merriam-webster.com/'):
         return jsonify({'error': 'Invalid audio URL'}), 400
     if not re.fullmatch(r'[0-9a-f]{16}', variant_id):
         return jsonify({'error': 'Valid variantId is required'}), 400
     if not isinstance(expected_count, int) or expected_count < 1:
         return jsonify({'error': 'Valid expectedSyllableCount is required'}), 400
+    if expected_primary_stress is not None and (
+        not isinstance(expected_primary_stress, int)
+        or expected_primary_stress < 0
+        or expected_primary_stress >= expected_count
+    ):
+        return jsonify({'error': 'Valid referencePrimaryStress is required'}), 400
+    if audio_source_kind not in {'dictionary', 'generated'}:
+        return jsonify({'error': 'Valid audioSourceKind is required'}), 400
 
     try:
         response = http_requests.get(audio_url, timeout=15)
@@ -2282,9 +2397,13 @@ def analyze_from_url_v2():
                 tmp_path,
                 expected_syllable_count=expected_count,
                 native=True,
+                reference_ipa=reference_ipa,
+                expected_primary_stress=expected_primary_stress,
+                audio_source_kind=audio_source_kind,
             )
             result['variantId'] = variant_id
             result['canonicalSyllableCount'] = expected_count
+            result['audioContentHash'] = hashlib.sha256(response.content).hexdigest()
             return jsonify(result)
         finally:
             if os.path.exists(tmp_path):
@@ -2295,6 +2414,56 @@ def analyze_from_url_v2():
             'error': 'Native pronunciation analysis unavailable',
             'code': 'ANALYSIS_FAILED',
         }), 500
+
+
+@app.route('/analyze-reference/v2', methods=['POST'])
+def analyze_generated_reference_v2():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'Generated reference audio is required'}), 400
+    variant_id = str(request.form.get('variantId') or '').strip()
+    expected_count = request.form.get('expectedSyllableCount', type=int)
+    reference_ipa = str(request.form.get('referenceIpa') or '').strip()
+    expected_primary_stress = request.form.get('referencePrimaryStress', type=int)
+    try:
+        reference_syllables = json.loads(str(request.form.get('referenceSyllables') or '[]'))
+    except Exception:
+        reference_syllables = None
+    if not re.fullmatch(r'[0-9a-f]{16}', variant_id):
+        return jsonify({'error': 'Valid variantId is required'}), 400
+    if not isinstance(expected_count, int) or expected_count < 1:
+        return jsonify({'error': 'Valid expectedSyllableCount is required'}), 400
+    if not reference_ipa:
+        return jsonify({'error': 'Valid referenceIpa is required'}), 400
+    if not isinstance(expected_primary_stress, int) or not 0 <= expected_primary_stress < expected_count:
+        return jsonify({'error': 'Valid referencePrimaryStress is required'}), 400
+    if not isinstance(reference_syllables, list) or len(reference_syllables) != expected_count:
+        return jsonify({'error': 'Valid referenceSyllables are required'}), 400
+
+    audio_file = request.files['audio']
+    suffix = '.mp3' if str(audio_file.filename or '').lower().endswith('.mp3') else '.wav'
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+    try:
+        result = analyze_audio_v2(
+            tmp_path,
+            expected_syllable_count=expected_count,
+            native=True,
+            reference_ipa=reference_ipa,
+            expected_primary_stress=expected_primary_stress,
+            audio_source_kind='generated',
+        )
+        result['variantId'] = variant_id
+        result['canonicalSyllableCount'] = expected_count
+        with open(tmp_path, 'rb') as generated_audio:
+            result['audioContentHash'] = hashlib.sha256(generated_audio.read()).hexdigest()
+        return jsonify(result)
+    except Exception as error:
+        print(f'Generated reference analysis error: {error}')
+        return jsonify({'error': 'Generated pronunciation analysis unavailable', 'code': 'ANALYSIS_FAILED'}), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 # ============================================
 # V3 PRONUNCIATION ANALYSIS ENDPOINT

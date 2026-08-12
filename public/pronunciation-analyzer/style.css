@@ -619,6 +619,12 @@
     display: none;
 }
 
+.pa-audio-source-label {
+    color: var(--pa-text-muted, #64748b);
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
 /* Comparison Result Styles */
 .pa-comparison-result {
     padding: 8px;

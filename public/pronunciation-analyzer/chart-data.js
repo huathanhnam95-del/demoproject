@@ -1,4 +1,5 @@
 export const ANALYSIS_CONFIDENCE_THRESHOLD = 0.65;
+const OCTAVE_EQUIVALENCE_TOLERANCE_ST = 4;
 
 function finitePositive(value) {
     return Number.isFinite(Number(value)) && Number(value) > 0;
@@ -48,7 +49,7 @@ export function cleanPitchContour(points) {
         if (!Number.isFinite(segmentCenter)) continue;
         const nearestOctave = Math.round(segmentCenter / 12) * 12;
         if (nearestOctave === 0) continue;
-        if (Math.abs(segmentCenter - nearestOctave) >= 3) continue;
+        if (Math.abs(segmentCenter - nearestOctave) >= OCTAVE_EQUIVALENCE_TOLERANCE_ST) continue;
 
         const correctedMedian = segmentCenter - nearestOctave;
         let distUncorrected = 0;
@@ -260,6 +261,21 @@ export function buildNativeOnlyChartData(nativeAnalysis) {
     const pitchValues = Array.isArray(nativeAnalysis?.pitch?.values) ? nativeAnalysis.pitch.values : [];
     const intensityTimes = Array.isArray(nativeAnalysis?.intensity?.times) ? nativeAnalysis.intensity.times : [];
     const intensityValues = Array.isArray(nativeAnalysis?.intensity?.values) ? nativeAnalysis.intensity.values : [];
+    if (nativeAnalysis?.pitch?.unit === 'semitones') {
+        return {
+            pitchAxisLabel: 'Relative pitch (semitones)',
+            intensityAxisLabel: nativeAnalysis?.intensity?.unit === 'relative-dB' ? 'Relative intensity (dB)' : 'Intensity (dB)',
+            pitch: pitchTimes.map((time, index) => ({
+                x: Number(time),
+                y: Number.isFinite(Number(pitchValues[index])) ? Number(pitchValues[index]) : null,
+                rawHz: null
+            })),
+            intensity: intensityTimes.map((time, index) => ({
+                x: Number(time),
+                y: Number.isFinite(Number(intensityValues[index])) ? Number(intensityValues[index]) : null
+            }))
+        };
+    }
     const speakerMedianF0 = octaveNormalizedPitchMedian(pitchValues);
     const rawPitch = pitchTimes.map((time, index) => {
         const rawHz = finitePositive(pitchValues[index]) ? Number(pitchValues[index]) : null;
@@ -357,7 +373,7 @@ export function buildDurationLanes(targetSyllables = [], observedSyllables = [])
         ) {
             return partitionEnd - partitionStart;
         }
-        return Number(syllable?.vowelDuration ?? syllable?.duration ?? 0);
+        return Number(syllable?.duration ?? syllable?.vowelDuration ?? 0);
     };
     return {
         countsMatch: targetSyllables.length === observedSyllables.length,

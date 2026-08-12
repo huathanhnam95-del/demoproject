@@ -1,6 +1,8 @@
 export const SCHEMA_VERSION = 10;
 export const ALGORITHM_VERSION = 'pronunciation-reference-v4';
 export const ANALYSIS_VERSION = 'pronunciation-analysis-v2';
+export const PITCH_PROCESSING_VERSION = 'canonical-pitch-v1';
+export const ACOUSTIC_COMPATIBILITY_VERSION = 'reference-audio-compatibility-v1';
 export const DIALECT = 'en-US';
 export const NATIVE_ANALYSIS_RETRY_DELAY_MS = 500;
 
@@ -211,6 +213,8 @@ export function needsNativeAnalysisRefresh(variant) {
     if (variant?.validation?.status !== 'valid') return false;
     // No native analysis attached at all
     if (!variant.nativeAnalysis) return true;
+    if (variant.nativeAnalysis?.pitchProcessing?.version !== PITCH_PROCESSING_VERSION) return true;
+    if (variant.nativeAnalysis?.audioCompatibility?.version !== ACOUSTIC_COMPATIBILITY_VERSION) return true;
     // Has analysis but contours are unusable
     if (!hasUsableNativeContours(variant.nativeAnalysis)) return true;
     return false;
@@ -231,6 +235,8 @@ export function validateNativeAnalysisForVariant(analysis, variant) {
     invariant(analysis && typeof analysis === 'object', 'native analysis is required');
     invariant(analysis.analysisVersion === ANALYSIS_VERSION, 'analysis version mismatch');
     invariant(analysis.variantId === variant.id, 'variant mismatch');
+    invariant(analysis.pitchProcessing?.version === PITCH_PROCESSING_VERSION, 'pitch processing version mismatch');
+    invariant(analysis.audioCompatibility?.version === ACOUSTIC_COMPATIBILITY_VERSION, 'audio compatibility version mismatch');
     invariant(
         analysis.canonicalSyllableCount === variant.syllableCount,
         'canonical count mismatch'
@@ -258,11 +264,19 @@ export function compressAnalysisV2(analysis) {
         const sampleRate = Math.max(1, Math.min(3, Math.floor(length / 100)));
         const compressedTimes = [];
         const compressedValues = [];
+        const rawValues = Array.isArray(series?.rawValues) ? series.rawValues : null;
+        const compressedRawValues = [];
         for (let index = 0; index < length; index += sampleRate) {
             compressedTimes.push(times[index]);
             compressedValues.push(values[index]);
+            if (rawValues) compressedRawValues.push(rawValues[index]);
         }
-        return { times: compressedTimes, values: compressedValues };
+        return {
+            ...series,
+            times: compressedTimes,
+            values: compressedValues,
+            ...(rawValues ? { rawValues: compressedRawValues } : {})
+        };
     };
     return {
         ...analysis,
@@ -275,6 +289,68 @@ export function compressAnalysisV2(analysis) {
         pitch: compressSeries(analysis.pitch),
         intensity: compressSeries(analysis.intensity)
     };
+}
+
+export function buildNativeAnalysisRequest(variant, { audioSourceKind = 'dictionary' } = {}) {
+    invariant(variant && typeof variant === 'object', 'variant is required');
+    return {
+        audioUrl: variant.generatedAudio?.url || variant.audioUrl,
+        variantId: variant.id,
+        expectedSyllableCount: variant.syllableCount,
+        referenceIpa: variant.displayIpa,
+        referencePrimaryStress: variant.primaryStress,
+        referenceSyllables: variant.syllables,
+        partOfSpeech: variant.partOfSpeech || null,
+        audioSourceKind
+    };
+}
+
+export function buildReferenceAudioReportRequest(word, variant) {
+    if (variant?.referenceAnalysis?.graphSource?.kind !== 'modeled') return null;
+    const reason = variant.referenceAnalysis?.sourceDiagnostics?.reason;
+    if (!['MISSING_SOURCE_AUDIO', 'REFERENCE_STRESS_CONFLICT', 'UNRESOLVED_HARMONIC_RUN', 'REFERENCE_ANALYSIS_UNAVAILABLE'].includes(reason)) {
+        return null;
+    }
+    return {
+        word: String(word || '').trim().toLowerCase(),
+        variantId: variant.id
+    };
+}
+
+function variantStressSignature(variant) {
+    return JSON.stringify([variant?.displayIpa, variant?.primaryStress, variant?.syllableCount]);
+}
+
+export function quarantineIncompatibleSharedAudio(sourceVariants) {
+    const variants = (sourceVariants || []).map((variant) => structuredClone(variant));
+    const groups = new Map();
+    variants.forEach((variant, index) => {
+        const identity = variant?.nativeAnalysis?.audioContentHash || variant?.audioUrl;
+        if (!identity) return;
+        if (!groups.has(identity)) groups.set(identity, []);
+        groups.get(identity).push(index);
+    });
+    groups.forEach((indexes) => {
+        if (new Set(indexes.map((index) => variantStressSignature(variants[index]))).size < 2) return;
+        const compatible = indexes
+            .filter((index) => variants[index]?.nativeAnalysis?.audioCompatibility?.status === 'compatible')
+            .sort((left, right) => Number(variants[right].nativeAnalysis.audioCompatibility.confidence || 0) - Number(variants[left].nativeAnalysis.audioCompatibility.confidence || 0));
+        const retainedIndex = compatible.length === 1 ? compatible[0] : null;
+        indexes.forEach((index) => {
+            if (index === retainedIndex) return;
+            const variant = variants[index];
+            if (!variant.nativeAnalysis) return;
+            variant.nativeAnalysis.audioCompatibility = {
+                ...variant.nativeAnalysis.audioCompatibility,
+                status: 'conflict',
+                reasons: ['SHARED_AUDIO_VARIANT_CONFLICT']
+            };
+            variant.nativeAnalysis.capabilities = { ...variant.nativeAnalysis.capabilities, showNativeGraphs: false };
+            variant.capabilities = { ...variant.capabilities, showNativeGraphs: false };
+            variant.analysisValidation = { status: 'unavailable', conflicts: ['SHARED_AUDIO_VARIANT_CONFLICT'] };
+        });
+    });
+    return variants;
 }
 
 export async function attachValidatedNativeAnalyses(
@@ -305,18 +381,19 @@ export async function attachValidatedNativeAnalyses(
         }
         const attemptAnalysis = async () => {
             const sourceAnalysis = await analyzeVariant(variant);
-            const analysis = (
-                hasUsableNativeContours(sourceAnalysis) &&
-                sourceAnalysis?.capabilities?.showNativeGraphs !== true
-            )
-                ? {
-                    ...sourceAnalysis,
-                    capabilities: {
-                        ...sourceAnalysis.capabilities,
-                        showNativeGraphs: true
-                    }
-                }
-                : sourceAnalysis;
+            const analysis = sourceAnalysis;
+            if (
+                analysis?.pitchProcessing?.version === PITCH_PROCESSING_VERSION &&
+                analysis?.capabilities?.showNativeGraphs !== true
+            ) {
+                variant.nativeAnalysis = analysis;
+                variant.capabilities.showNativeGraphs = false;
+                variant.analysisValidation = {
+                    status: 'unavailable',
+                    conflicts: analysis.audioCompatibility?.reasons || analysis.pitchProcessing?.reasons || ['ACOUSTIC_VALIDATION_FAILED']
+                };
+                return;
+            }
             variant.nativeAnalysis = validateNativeAnalysisForVariant(analysis, variant);
             variant.capabilities.showNativeGraphs = analysis.capabilities.showNativeGraphs;
         };
@@ -353,6 +430,6 @@ export async function attachValidatedNativeAnalyses(
     }));
     return validateReferenceV2({
         ...validated,
-        variants
+        variants: quarantineIncompatibleSharedAudio(variants)
     });
 }

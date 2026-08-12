@@ -1451,15 +1451,18 @@ window.CrmBooksWorkspace = (function () {
             let svgPathsHtml = '';
 
             // Central Node
-            const centralW = 260;
-            const centralH = 70;
+            const centralW = 280;
+            const centralEstH = 80;
             const centralLeft = centerX - centralW / 2;
-            const centralTop = centerY - centralH / 2;
+            const centralTop = centerY - centralEstH / 2;
 
-            canvasHtml += `<div class="crm-mindmap-node central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; height:${centralH}px;">${escapeHtml(centralTitle)}</div>`;
+            canvasHtml += `<div class="crm-mindmap-node central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; max-width:${centralW}px;">${escapeHtml(centralTitle)}</div>`;
+
+            let minX = centralLeft, minY = centralTop;
+            let maxX = centralLeft + centralW, maxY = centralTop + centralEstH;
 
             const numCats = categories.length;
-            const radiusCat = 420;
+            const radiusCat = 480;
 
             categories.forEach((cat, cIdx) => {
                 const catColor = cat.color || '#4f46e5';
@@ -1468,8 +1471,14 @@ window.CrmBooksWorkspace = (function () {
                 const catY = centerY + radiusCat * Math.sin(angle);
 
                 const catW = 200;
+                const catEstH = 50;
                 const catLeft = catX - catW / 2;
-                const catTop = catY - 25;
+                const catTop = catY - catEstH / 2;
+
+                minX = Math.min(minX, catLeft);
+                minY = Math.min(minY, catTop);
+                maxX = Math.max(maxX, catLeft + catW);
+                maxY = Math.max(maxY, catTop + catEstH);
 
                 canvasHtml += `<div class="crm-mindmap-node category" data-cat-id="${escapeHtml(cat.id || `cat_${cIdx}`)}" data-title="${escapeHtml(cat.title || 'Category')}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catW}px; --node-color:${catColor}; border-color:${catColor};">` +
                     `<div class="crm-mindmap-node-title">${escapeHtml(cat.title || 'Category')}</div>` +
@@ -1483,8 +1492,10 @@ window.CrmBooksWorkspace = (function () {
                 // Subtopics
                 const subtopics = Array.isArray(cat.subtopics) ? cat.subtopics : [];
                 const numSubs = subtopics.length;
-                const radiusSub = 280;
-                const arcSpan = Math.min(1.2, 0.4 * numSubs);
+                const radiusSub = 350;
+                const angleStep = 2 * Math.PI / Math.max(1, numCats);
+                const maxArcSpan = Math.min(angleStep * 0.75, Math.PI);
+                const arcSpan = Math.min(maxArcSpan, 0.35 * numSubs);
 
                 subtopics.forEach((sub, sIdx) => {
                     const subAngle = angle + (numSubs > 1 ? (-arcSpan / 2 + sIdx * (arcSpan / (numSubs - 1))) : 0);
@@ -1492,8 +1503,14 @@ window.CrmBooksWorkspace = (function () {
                     const subY = catY + radiusSub * Math.sin(subAngle);
 
                     const subW = 220;
+                    const subEstH = 80;
                     const subLeft = subX - subW / 2;
-                    const subTop = subY - 35;
+                    const subTop = subY - subEstH / 2;
+
+                    minX = Math.min(minX, subLeft);
+                    minY = Math.min(minY, subTop);
+                    maxX = Math.max(maxX, subLeft + subW);
+                    maxY = Math.max(maxY, subTop + subEstH);
 
                     canvasHtml += `<div class="crm-mindmap-node subtopic" data-sub-id="${escapeHtml(sub.id || `sub_${cIdx}_${sIdx}`)}" data-cat-title="${escapeHtml(cat.title || '')}" data-cat-color="${catColor}" data-title="${escapeHtml(sub.title || '')}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${catColor}; border-color:${catColor};">` +
                         `<div class="crm-mindmap-node-title">${escapeHtml(sub.title || 'Subtopic')}</div>` +
@@ -1510,14 +1527,24 @@ window.CrmBooksWorkspace = (function () {
             canvas.innerHTML = canvasHtml;
             svg.innerHTML = svgPathsHtml;
 
-            // Auto fit to viewport center
+            // Auto fit to actual content bounding box
             const viewport = docQs('#crm-mindmap-viewport');
             const vw = viewport ? viewport.clientWidth : window.innerWidth;
             const vh = viewport ? viewport.clientHeight : window.innerHeight;
+            const margin = 60;
 
-            mindMapZoom = 0.85;
-            mindMapPanX = (vw / 2) - (centerX * mindMapZoom);
-            mindMapPanY = (vh / 2) - (centerY * mindMapZoom);
+            const contentW = maxX - minX;
+            const contentH = maxY - minY;
+            const contentCenterX = minX + contentW / 2;
+            const contentCenterY = minY + contentH / 2;
+
+            mindMapZoom = Math.max(0.3, Math.min(
+                (vw - 2 * margin) / contentW,
+                (vh - 2 * margin) / contentH,
+                1.2
+            ));
+            mindMapPanX = (vw / 2) - (contentCenterX * mindMapZoom);
+            mindMapPanY = (vh / 2) - (contentCenterY * mindMapZoom);
             applyMindMapTransform();
         }
 

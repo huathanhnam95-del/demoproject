@@ -1216,3 +1216,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 624,2026-08-12,Write Muse Glimmer research findings and proposal to markdown file,Done,2026-08-12
 625,2026-08-12,Check system specs and evaluate Muse Glimmer hardware compatibility,Done,2026-08-12
 626,2026-08-12,Evaluate simultaneous local model execution hardware capacity,Done,2026-08-12
+627,2026-08-12,Fix CRM full screen width display at 100 percent scale,Done,2026-08-12
+628,2026-08-12,Fix CRM Books Mind Map UI layout - SVG alignment and node positioning,Done,2026-08-12

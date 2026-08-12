@@ -1,4 +1,10 @@
+## [V1.8.63] - 2026-08-12
+
+### Added & Enhanced
+- **CRM Books Mind Map UI**: Enhanced radial graph node placement (480px category radius, 350px subtopic radius), implemented dynamic content bounding box auto-fitting for zoom & pan initialization, and synchronized SVG bezier curve connector transforms.
+
 ## [V1.8.62] - 2026-08-12
+
 
 ### Fixed
 - **CRM Books Mind Map Modal Scoping**: Fixed element lookup scope in `books-workspace.js` by using `document.querySelector` (`docQs`) for document-body level `#crm-books-mindmap-modal` elements so clicking "🧠 Create Mind Map" reliably launches the fullscreen mind map modal.

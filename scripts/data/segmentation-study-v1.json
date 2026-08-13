@@ -1,0 +1,2766 @@
+{
+  "studyId": "segmentation-study-v1",
+  "version": "1.0.0",
+  "createdAt": "2026-08-13T00:00:00Z",
+  "selection": {
+    "wordList": "The_Oxford_5000.csv",
+    "ipaPrimary": "public/oxford-american-ipa.json",
+    "ipaFallback": "public/ipa-dict.json",
+    "seed": 20260813,
+    "rules": "alphabetic words with one deterministic 2-5 syllable IPA variant"
+  },
+  "splitCounts": {
+    "development": {
+      "2": 18,
+      "3": 18,
+      "4": 17,
+      "5": 17
+    },
+    "holdout": {
+      "2": 7,
+      "3": 7,
+      "4": 8,
+      "5": 8
+    }
+  },
+  "entries": [
+    {
+      "taskId": "segmentation-study-v1-0001",
+      "order": 1,
+      "targetWord": "able",
+      "referenceIpa": "/ˈeɪbəl/",
+      "referenceSyllableIpa": [
+        "ˈeɪ",
+        "bəl"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0002",
+      "order": 2,
+      "targetWord": "about",
+      "referenceIpa": "/əˈbaʊt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbaʊt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0003",
+      "order": 3,
+      "targetWord": "above",
+      "referenceIpa": "/əˈbəv/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbəv"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0004",
+      "order": 4,
+      "targetWord": "abroad",
+      "referenceIpa": "/əˈbrɔd/",
+      "referenceSyllableIpa": [
+        "əˈb",
+        "rɔd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0005",
+      "order": 5,
+      "targetWord": "absence",
+      "referenceIpa": "/ˈæbsəns/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "səns"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0006",
+      "order": 6,
+      "targetWord": "absent",
+      "referenceIpa": "/ˈæbsənt/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "sənt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0007",
+      "order": 7,
+      "targetWord": "absorb",
+      "referenceIpa": "/əbˈzɔrb/",
+      "referenceSyllableIpa": [
+        "əb",
+        "ˈzɔrb"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0008",
+      "order": 8,
+      "targetWord": "absurd",
+      "referenceIpa": "/əbˈsɝd/",
+      "referenceSyllableIpa": [
+        "əb",
+        "ˈsɝd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0009",
+      "order": 9,
+      "targetWord": "access",
+      "referenceIpa": "/ˈækˌsɛs/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "ˌsɛs"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0010",
+      "order": 10,
+      "targetWord": "account",
+      "referenceIpa": "/əˈkaʊnt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkaʊnt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0011",
+      "order": 11,
+      "targetWord": "accurate",
+      "referenceIpa": "/ˈækjɝət/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "jɝət"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0012",
+      "order": 12,
+      "targetWord": "accuse",
+      "referenceIpa": "/əkˈjuz/",
+      "referenceSyllableIpa": [
+        "ək",
+        "ˈjuz"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0013",
+      "order": 13,
+      "targetWord": "accused",
+      "referenceIpa": "/əkˈjuzd/",
+      "referenceSyllableIpa": [
+        "ək",
+        "ˈjuzd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0014",
+      "order": 14,
+      "targetWord": "acquire",
+      "referenceIpa": "/əˈkwaɪɝ/",
+      "referenceSyllableIpa": [
+        "əˈk",
+        "waɪɝ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0015",
+      "order": 15,
+      "targetWord": "acre",
+      "referenceIpa": "/ˈeɪkɝ/",
+      "referenceSyllableIpa": [
+        "ˈeɪ",
+        "kɝ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0016",
+      "order": 16,
+      "targetWord": "admire",
+      "referenceIpa": "/ædˈmaɪr/",
+      "referenceSyllableIpa": [
+        "æd",
+        "ˈmaɪr"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0017",
+      "order": 17,
+      "targetWord": "admit",
+      "referenceIpa": "/ədˈmɪt/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0018",
+      "order": 18,
+      "targetWord": "almost",
+      "referenceIpa": "/ˈɔlˌmoʊst/",
+      "referenceSyllableIpa": [
+        "ˈɔl",
+        "ˌmoʊst"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "liquid_glide->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0019",
+      "order": 19,
+      "targetWord": "amazed",
+      "referenceIpa": "/əˈmeɪzd/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈmeɪzd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0020",
+      "order": 20,
+      "targetWord": "amend",
+      "referenceIpa": "/əˈmɛnd/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈmɛnd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0021",
+      "order": 21,
+      "targetWord": "arise",
+      "referenceIpa": "/ɝˈaɪz/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪz"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0022",
+      "order": 22,
+      "targetWord": "arrange",
+      "referenceIpa": "/ɝˈeɪndʒ/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪndʒ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0023",
+      "order": 23,
+      "targetWord": "array",
+      "referenceIpa": "/ɝˈeɪ/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0024",
+      "order": 24,
+      "targetWord": "arrest",
+      "referenceIpa": "/ɝˈɛst/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɛst"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0025",
+      "order": 25,
+      "targetWord": "arrive",
+      "referenceIpa": "/ɝˈaɪv/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪv"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0026",
+      "order": 26,
+      "targetWord": "abolish",
+      "referenceIpa": "/əˈbɑlɪʃ/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbɑ",
+        "lɪʃ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0027",
+      "order": 27,
+      "targetWord": "abortion",
+      "referenceIpa": "/əˈbɔrʃən/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbɔr",
+        "ʃən"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "liquid_glide->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0028",
+      "order": 28,
+      "targetWord": "absolute",
+      "referenceIpa": "/ˈæbsəˌlut/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "sə",
+        "ˌlut"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0029",
+      "order": 29,
+      "targetWord": "accident",
+      "referenceIpa": "/ˈæksədənt/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "sə",
+        "dənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0030",
+      "order": 30,
+      "targetWord": "accomplish",
+      "referenceIpa": "/əˈkɑmplɪʃ/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkɑmp",
+        "lɪʃ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0031",
+      "order": 31,
+      "targetWord": "accuracy",
+      "referenceIpa": "/ˈækjɝəsi/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "jɝə",
+        "si"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0032",
+      "order": 32,
+      "targetWord": "acknowledge",
+      "referenceIpa": "/ækˈnɑlɪdʒ/",
+      "referenceSyllableIpa": [
+        "æk",
+        "ˈnɑ",
+        "lɪdʒ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0033",
+      "order": 33,
+      "targetWord": "activate",
+      "referenceIpa": "/ˈæktəˌveɪt/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "tə",
+        "ˌveɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0034",
+      "order": 34,
+      "targetWord": "adjustment",
+      "referenceIpa": "/əˈdʒəstmənt/",
+      "referenceSyllableIpa": [
+        "əˈd",
+        "ʒəst",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0035",
+      "order": 35,
+      "targetWord": "agreement",
+      "referenceIpa": "/əˈɡrimənt/",
+      "referenceSyllableIpa": [
+        "əˈɡ",
+        "ri",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0036",
+      "order": 36,
+      "targetWord": "alignment",
+      "referenceIpa": "/əˈlaɪnmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈlaɪn",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "nasal->nasal"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0037",
+      "order": 37,
+      "targetWord": "allocate",
+      "referenceIpa": "/ˈæləˌkeɪt/",
+      "referenceSyllableIpa": [
+        "ˈæ",
+        "lə",
+        "ˌkeɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0038",
+      "order": 38,
+      "targetWord": "analyst",
+      "referenceIpa": "/ˈænəlɪst/",
+      "referenceSyllableIpa": [
+        "ˈæ",
+        "nə",
+        "lɪst"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0039",
+      "order": 39,
+      "targetWord": "apartment",
+      "referenceIpa": "/əˈpɑrtmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈpɑrt",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0040",
+      "order": 40,
+      "targetWord": "appointment",
+      "referenceIpa": "/əˈpɔɪntmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈpɔɪnt",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0041",
+      "order": 41,
+      "targetWord": "arena",
+      "referenceIpa": "/ɝˈinə/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈi",
+        "nə"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0042",
+      "order": 42,
+      "targetWord": "arrangement",
+      "referenceIpa": "/ɝˈeɪndʒmənt/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪndʒ",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "affricate->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0043",
+      "order": 43,
+      "targetWord": "arrival",
+      "referenceIpa": "/ɝˈaɪvəl/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪ",
+        "vəl"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0044",
+      "order": 44,
+      "targetWord": "audio",
+      "referenceIpa": "/ˈɑdiˌoʊ/",
+      "referenceSyllableIpa": [
+        "ˈɑ",
+        "di",
+        "ˌoʊ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0045",
+      "order": 45,
+      "targetWord": "authorize",
+      "referenceIpa": "/ˈɔθɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈɔ",
+        "θɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0046",
+      "order": 46,
+      "targetWord": "cigarette",
+      "referenceIpa": "/ˌsɪɡɝˈɛt/",
+      "referenceSyllableIpa": [
+        "ˌsɪ",
+        "ɡɝ",
+        "ˈɛt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0047",
+      "order": 47,
+      "targetWord": "correction",
+      "referenceIpa": "/kɝˈɛkʃən/",
+      "referenceSyllableIpa": [
+        "kɝ",
+        "ˈɛk",
+        "ʃən"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0048",
+      "order": 48,
+      "targetWord": "correctly",
+      "referenceIpa": "/kɝˈɛktli/",
+      "referenceSyllableIpa": [
+        "kɝ",
+        "ˈɛkt",
+        "li"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0049",
+      "order": 49,
+      "targetWord": "generate",
+      "referenceIpa": "/ˈdʒɛnɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "ˈdʒɛ",
+        "nɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0050",
+      "order": 50,
+      "targetWord": "summarize",
+      "referenceIpa": "/ˈsəmɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈsə",
+        "mɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0051",
+      "order": 51,
+      "targetWord": "accomplishment",
+      "referenceIpa": "/əˈkɑmplɪʃmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkɑmp",
+        "lɪʃ",
+        "mənt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->liquid_glide",
+        "fricative->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0052",
+      "order": 52,
+      "targetWord": "agriculture",
+      "referenceIpa": "/ˈæɡrɪˌkəltʃɝ/",
+      "referenceSyllableIpa": [
+        "ˈæɡ",
+        "rɪ",
+        "ˌkəlt",
+        "ʃɝ"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->stop",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0053",
+      "order": 53,
+      "targetWord": "analogy",
+      "referenceIpa": "/əˈnælədʒi/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈnæ",
+        "ləd",
+        "ʒi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->liquid_glide",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0054",
+      "order": 54,
+      "targetWord": "appreciate",
+      "referenceIpa": "/əˈpriʃiˌeɪt/",
+      "referenceSyllableIpa": [
+        "əˈp",
+        "ri",
+        "ʃi",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0055",
+      "order": 55,
+      "targetWord": "biography",
+      "referenceIpa": "/baɪˈɑɡrəfi/",
+      "referenceSyllableIpa": [
+        "baɪ",
+        "ˈɑɡ",
+        "rə",
+        "fi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->liquid_glide",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0056",
+      "order": 56,
+      "targetWord": "biology",
+      "referenceIpa": "/baɪˈɑlədʒi/",
+      "referenceSyllableIpa": [
+        "baɪ",
+        "ˈɑ",
+        "ləd",
+        "ʒi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0057",
+      "order": 57,
+      "targetWord": "characterize",
+      "referenceIpa": "/ˈkɛrəktɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈkɛ",
+        "rək",
+        "tɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "stop->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0058",
+      "order": 58,
+      "targetWord": "coincidence",
+      "referenceIpa": "/koʊˈɪnsɪdəns/",
+      "referenceSyllableIpa": [
+        "koʊ",
+        "ˈɪn",
+        "sɪ",
+        "dəns"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "nasal->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0059",
+      "order": 59,
+      "targetWord": "collaborate",
+      "referenceIpa": "/kəˈlæbɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "kə",
+        "ˈlæ",
+        "bɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0060",
+      "order": 60,
+      "targetWord": "combination",
+      "referenceIpa": "/ˌkɑmbəˈneɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌkɑm",
+        "bə",
+        "ˈneɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "vowel->nasal",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0061",
+      "order": 61,
+      "targetWord": "commentary",
+      "referenceIpa": "/ˈkɑmənˌtɛri/",
+      "referenceSyllableIpa": [
+        "ˈkɑ",
+        "mən",
+        "ˌtɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "nasal->stop",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0062",
+      "order": 62,
+      "targetWord": "communicate",
+      "referenceIpa": "/kəmˈjunəˌkeɪt/",
+      "referenceSyllableIpa": [
+        "kəm",
+        "ˈju",
+        "nə",
+        "ˌkeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0063",
+      "order": 63,
+      "targetWord": "congressional",
+      "referenceIpa": "/kənˈɡrɛʃənəl/",
+      "referenceSyllableIpa": [
+        "kənˈɡ",
+        "rɛ",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0064",
+      "order": 64,
+      "targetWord": "corporation",
+      "referenceIpa": "/ˌkɔrpɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌkɔr",
+        "pɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "liquid_glide->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0065",
+      "order": 65,
+      "targetWord": "declaration",
+      "referenceIpa": "/ˌdɛklɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌdɛk",
+        "lɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0066",
+      "order": 66,
+      "targetWord": "democratic",
+      "referenceIpa": "/ˌdɛməˈkrætɪk/",
+      "referenceSyllableIpa": [
+        "ˌdɛ",
+        "məˈk",
+        "ræ",
+        "tɪk"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "stop->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0067",
+      "order": 67,
+      "targetWord": "deteriorate",
+      "referenceIpa": "/dɪˈtɪriɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "dɪ",
+        "ˈtɪ",
+        "riɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->liquid_glide",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0068",
+      "order": 68,
+      "targetWord": "diplomatic",
+      "referenceIpa": "/ˌdɪpləˈmætɪk/",
+      "referenceSyllableIpa": [
+        "ˌdɪp",
+        "lə",
+        "ˈmæ",
+        "tɪk"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0069",
+      "order": 69,
+      "targetWord": "disappointment",
+      "referenceIpa": "/ˌdɪsəˈpɔɪntmənt/",
+      "referenceSyllableIpa": [
+        "ˌdɪ",
+        "sə",
+        "ˈpɔɪnt",
+        "mənt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0070",
+      "order": 70,
+      "targetWord": "generation",
+      "referenceIpa": "/ˌdʒɛnɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌdʒɛ",
+        "nɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0071",
+      "order": 71,
+      "targetWord": "immediately",
+      "referenceIpa": "/ˌɪˈmiˌdiətli/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈmi",
+        "ˌdiət",
+        "li"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0072",
+      "order": 72,
+      "targetWord": "initiate",
+      "referenceIpa": "/ˌɪˈnɪʃiˌeɪt/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈnɪ",
+        "ʃi",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0073",
+      "order": 73,
+      "targetWord": "original",
+      "referenceIpa": "/ɝˈɪdʒənəl/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɪd",
+        "ʒə",
+        "nəl"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0074",
+      "order": 74,
+      "targetWord": "originate",
+      "referenceIpa": "/ɝˈɪdʒəˌneɪt/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɪd",
+        "ʒə",
+        "ˌneɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0075",
+      "order": 75,
+      "targetWord": "parameter",
+      "referenceIpa": "/pɝˈæmətɝ/",
+      "referenceSyllableIpa": [
+        "pɝ",
+        "ˈæ",
+        "mə",
+        "tɝ"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0076",
+      "order": 76,
+      "targetWord": "accommodation",
+      "referenceIpa": "/əˌkɑməˈdeɪʃən/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˌkɑ",
+        "mə",
+        "ˈdeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0077",
+      "order": 77,
+      "targetWord": "administration",
+      "referenceIpa": "/ædˌmɪnɪˈstreɪʃən/",
+      "referenceSyllableIpa": [
+        "æd",
+        "ˌmɪ",
+        "nɪˈst",
+        "reɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "stop->liquid_glide",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0078",
+      "order": 78,
+      "targetWord": "administrative",
+      "referenceIpa": "/ədˈmɪnəˌstreɪtɪv/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪ",
+        "nəˌst",
+        "reɪ",
+        "tɪv"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "stop->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0079",
+      "order": 79,
+      "targetWord": "administrator",
+      "referenceIpa": "/ədˈmɪnəˌstreɪtɝ/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪ",
+        "nəˌst",
+        "reɪ",
+        "tɝ"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "stop->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0080",
+      "order": 80,
+      "targetWord": "appreciation",
+      "referenceIpa": "/əˌpriʃiˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "əˌp",
+        "ri",
+        "ʃi",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->fricative",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0081",
+      "order": 81,
+      "targetWord": "approximately",
+      "referenceIpa": "/əˈprɑksəmətli/",
+      "referenceSyllableIpa": [
+        "əˈp",
+        "rɑk",
+        "sə",
+        "mət",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "stop->fricative",
+        "vowel->nasal",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0082",
+      "order": 82,
+      "targetWord": "characteristic",
+      "referenceIpa": "/ˌkɛrəktɝˈɪstɪk/",
+      "referenceSyllableIpa": [
+        "ˌkɛ",
+        "rək",
+        "tɝ",
+        "ˈɪs",
+        "tɪk"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "stop->stop",
+        "vowel->vowel",
+        "fricative->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0083",
+      "order": 83,
+      "targetWord": "collaboration",
+      "referenceIpa": "/kəˌlæbɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "kə",
+        "ˌlæ",
+        "bɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0084",
+      "order": 84,
+      "targetWord": "communication",
+      "referenceIpa": "/kəmˌjunəˈkeɪʃən/",
+      "referenceSyllableIpa": [
+        "kəm",
+        "ˌju",
+        "nə",
+        "ˈkeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0085",
+      "order": 85,
+      "targetWord": "consideration",
+      "referenceIpa": "/kənˌsɪdɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "kən",
+        "ˌsɪ",
+        "dɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->fricative",
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0086",
+      "order": 86,
+      "targetWord": "constitutional",
+      "referenceIpa": "/ˌkɑnstəˈtuʃənəl/",
+      "referenceSyllableIpa": [
+        "ˌkɑns",
+        "tə",
+        "ˈtu",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "fricative->stop",
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0087",
+      "order": 87,
+      "targetWord": "contemporary",
+      "referenceIpa": "/kənˈtɛmpɝˌɛri/",
+      "referenceSyllableIpa": [
+        "kən",
+        "ˈtɛm",
+        "pɝ",
+        "ˌɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "nasal->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0088",
+      "order": 88,
+      "targetWord": "curiosity",
+      "referenceIpa": "/ˌkjʊriˈɑsəti/",
+      "referenceSyllableIpa": [
+        "ˌkjʊ",
+        "ri",
+        "ˈɑ",
+        "sə",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->vowel",
+        "vowel->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0089",
+      "order": 89,
+      "targetWord": "experimental",
+      "referenceIpa": "/ɪkˌspɛrɪˈmɛntəl/",
+      "referenceSyllableIpa": [
+        "ɪkˌs",
+        "pɛ",
+        "rɪ",
+        "ˈmɛn",
+        "təl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "fricative->stop",
+        "vowel->liquid_glide",
+        "vowel->nasal",
+        "nasal->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0090",
+      "order": 90,
+      "targetWord": "ideology",
+      "referenceIpa": "/ˌaɪdiˈɑlədʒi/",
+      "referenceSyllableIpa": [
+        "ˌaɪ",
+        "di",
+        "ˈɑ",
+        "ləd",
+        "ʒi"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0091",
+      "order": 91,
+      "targetWord": "imaginary",
+      "referenceIpa": "/ˌɪˈmædʒəˌnɛri/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈmæd",
+        "ʒə",
+        "ˌnɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "stop->fricative",
+        "vowel->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0092",
+      "order": 92,
+      "targetWord": "inability",
+      "referenceIpa": "/ˌɪnəˈbɪlɪti/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "nə",
+        "ˈbɪ",
+        "lɪ",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v1-0093",
+      "order": 93,
+      "targetWord": "inevitably",
+      "referenceIpa": "/ˌɪˈnɛvətəbli/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈnɛ",
+        "və",
+        "təb",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0094",
+      "order": 94,
+      "targetWord": "negotiation",
+      "referenceIpa": "/nɪˌɡoʊʃiˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "nɪ",
+        "ˌɡoʊ",
+        "ʃi",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0095",
+      "order": 95,
+      "targetWord": "operational",
+      "referenceIpa": "/ˌɑpɝˈeɪʃənəl/",
+      "referenceSyllableIpa": [
+        "ˌɑ",
+        "pɝ",
+        "ˈeɪ",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0096",
+      "order": 96,
+      "targetWord": "personality",
+      "referenceIpa": "/ˌpɝsəˈnælɪti/",
+      "referenceSyllableIpa": [
+        "ˌpɝ",
+        "sə",
+        "ˈnæ",
+        "lɪ",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->nasal",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0097",
+      "order": 97,
+      "targetWord": "sexuality",
+      "referenceIpa": "/ˌsɛkʃuˈæləti/",
+      "referenceSyllableIpa": [
+        "ˌsɛk",
+        "ʃu",
+        "ˈæ",
+        "lə",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0098",
+      "order": 98,
+      "targetWord": "significantly",
+      "referenceIpa": "/sɪɡˈnɪfɪkəntli/",
+      "referenceSyllableIpa": [
+        "sɪɡ",
+        "ˈnɪ",
+        "fɪ",
+        "kənt",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0099",
+      "order": 99,
+      "targetWord": "technological",
+      "referenceIpa": "/ˌtɛknəˈlɑdʒɪkəl/",
+      "referenceSyllableIpa": [
+        "ˌtɛk",
+        "nə",
+        "ˈlɑd",
+        "ʒɪ",
+        "kəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->liquid_glide",
+        "stop->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v1-0100",
+      "order": 100,
+      "targetWord": "temporarily",
+      "referenceIpa": "/ˌtɛmpɝˈɛrəli/",
+      "referenceSyllableIpa": [
+        "ˌtɛm",
+        "pɝ",
+        "ˈɛ",
+        "rə",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v1",
+      "labelProvenance": "deterministic-transform",
+      "split": "holdout"
+    }
+  ],
+  "manifestSha256": "652b4121496038855a8d0abee8a297ecdd7a7ffcbf8d649f48de3a3db21790ec"
+}

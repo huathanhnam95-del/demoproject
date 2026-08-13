@@ -1,6 +1,15 @@
 {
   "indexes": [
     {
+      "collectionGroup": "pronunciationSegmentationStudyTasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studyVersion", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "jobs",
       "queryScope": "COLLECTION",
       "fields": [

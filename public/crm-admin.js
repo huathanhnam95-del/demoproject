@@ -1140,6 +1140,11 @@
 
     if (state.accessMode === 'admin') {
       initCorpusTool();
+      if (window.CrmSegmentationStudy && typeof window.CrmSegmentationStudy.init === 'function') {
+        window.CrmSegmentationStudy.init().catch((error) => {
+          console.error('[Segmentation Study] Initialization failed:', error);
+        });
+      }
       if (isLikelyLocalEnvironment()) {
         await initDevTools();
       }

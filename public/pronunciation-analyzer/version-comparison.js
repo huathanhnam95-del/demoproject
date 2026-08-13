@@ -156,6 +156,7 @@ export function buildComparisonViewModel(comparison) {
             partitionConvention === 'ctc-interspan-midpoint-contiguous-v1'
             || partitionConvention === 'ctc-interspan-acoustic-tail-contiguous-v2'
             || partitionConvention === 'ctc-interspan-acoustic-hybrid-contiguous-v3'
+            || partitionConvention === 'ctc-interspan-acoustic-confidence-hybrid-contiguous-v4'
         );
         const isLegacyBoundaryConvention = available && !segmentationConvention;
         return {
@@ -187,7 +188,19 @@ export function buildComparisonViewModel(comparison) {
                 : [],
             measurementSpans: measurementConvention
                 ? syllables.map((span, index) => normalizeSpan(span, index, { source: 'measurement' })).filter(Boolean)
-                : []
+                : [],
+            partitionVariants: analysis?.partitionVariants && typeof analysis.partitionVariants === 'object'
+                ? {
+                    schemaVersion: String(analysis.partitionVariants.schemaVersion || ''),
+                    v3: Array.isArray(analysis.partitionVariants.v3)
+                        ? analysis.partitionVariants.v3.map((span, index) => normalizeSpan(span, index, { source: 'partition' })).filter(Boolean)
+                        : [],
+                    v4: Array.isArray(analysis.partitionVariants.v4)
+                        ? analysis.partitionVariants.v4.map((span, index) => normalizeSpan(span, index, { source: 'partition' })).filter(Boolean)
+                        : [],
+                    v4Diagnostics: sanitizeSerializable(analysis.partitionVariants.v4Diagnostics || [])
+                }
+                : null
         };
     });
     const rows = [

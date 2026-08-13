@@ -89,6 +89,8 @@ class TestCloudRunPackaging(unittest.TestCase):
     def test_pronunciation_dockerfile_packages_pitch_processing_module(self):
         dockerfile = Path(__file__).with_name('Dockerfile').read_text(encoding='utf-8')
         self.assertIn('COPY backend/local_server/pitch_processing.py ./local_server/pitch_processing.py', dockerfile)
+        gcloudignore = Path(__file__).parents[1].parent.joinpath('.gcloudignore').read_text(encoding='utf-8')
+        self.assertIn('!backend/local_server/pitch_processing.py', gcloudignore)
 
 
 class TestBlendWeight(unittest.TestCase):

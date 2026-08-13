@@ -10,6 +10,7 @@ backend/local_server/*
 !backend/local_server/__init__.py
 !backend/local_server/server.py
 !backend/local_server/pronunciation_reference.py
+!backend/local_server/pitch_processing.py
 # Every module backend/Dockerfile COPYs must be whitelisted here or the build
 # context excludes it and the image build fails on a missing path.
 !backend/local_server/phoneme_client.py

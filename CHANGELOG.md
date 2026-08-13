@@ -1,3 +1,8 @@
+## [V1.8.66] - 2026-08-13
+
+### Fixed
+- **CRM Books Study Module Modal Visibility**: Fixed malformed CSS comment syntax right above `.crm-books-modal-overlay` in `public/crm-admin.css` that caused the browser to invalidate `.crm-books-modal-overlay` rules, falling back to `position: static` (rendering 952px below the screen). Restored `position: fixed; inset: 0; z-index: 10000;` fullscreen modal overlay placement.
+
 ## [V1.8.65] - 2026-08-13
 
 ### Added & Enhanced

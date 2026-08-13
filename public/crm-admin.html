@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
+    content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
   <link rel="stylesheet" href="style.css?v=20260812-v1.8.64" />
@@ -409,6 +409,118 @@
             <div class="crm-muted">No samples loaded yet.</div>
           </div>
         </div>
+
+        <section id="segmentation-study-workspace" class="segmentation-study-workspace" aria-labelledby="segmentation-study-title">
+          <div class="segmentation-study-header">
+            <div>
+              <h3 id="segmentation-study-title">Segmentation Study</h3>
+              <p class="crm-muted">Record one clear word, compare V2/V3/V4, then mark the shared syllable boundaries.</p>
+            </div>
+            <div class="segmentation-study-identity">
+              <label for="segmentation-study-operator">Your name</label>
+              <input id="segmentation-study-operator" class="crm-input" type="text" autocomplete="name" placeholder="Enter your name" />
+              <span id="segmentation-study-identity-status" class="crm-muted" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+
+          <nav class="segmentation-study-modes" aria-label="Segmentation study mode">
+            <button type="button" class="segmentation-study-mode is-active" data-study-mode="record">Record &amp; review</button>
+            <button type="button" class="segmentation-study-mode" data-study-mode="previous">Previous samples</button>
+          </nav>
+
+          <div class="segmentation-study-stats" aria-label="Segmentation study progress">
+            <span><strong id="segmentation-study-available">0</strong> available</span>
+            <span><strong id="segmentation-study-reserved">0</strong> reserved</span>
+            <span><strong id="segmentation-study-completed">0</strong> completed</span>
+            <span><strong id="segmentation-study-uncertain">0</strong> uncertain</span>
+            <span><strong id="segmentation-study-failed">0</strong> failed</span>
+          </div>
+
+          <div class="segmentation-study-toolbar">
+            <button id="segmentation-study-claim" class="crm-btn crm-btn-primary" type="button">Claim next word</button>
+            <button id="segmentation-study-release" class="crm-btn crm-btn-secondary" type="button" disabled>Skip / release word</button>
+            <button id="segmentation-study-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
+            <span id="segmentation-study-status" class="crm-muted" role="status" aria-live="polite">Enter your name to join the study.</span>
+          </div>
+
+          <div class="segmentation-study-queue-layout">
+            <div class="segmentation-study-queue-pane">
+              <h4>Study queue</h4>
+              <p class="crm-muted">The shared queue reserves one word at a time. Previous samples are shown after you choose that mode.</p>
+              <ol id="segmentation-study-queue" class="segmentation-study-queue" aria-label="Segmentation study words"></ol>
+            </div>
+
+            <div class="segmentation-study-review-pane" aria-live="polite">
+              <div class="segmentation-study-task-heading">
+                <div>
+                  <span class="crm-muted" id="segmentation-study-step">Step 1 · Claim a word</span>
+                  <h4 id="segmentation-study-word">No word claimed</h4>
+                  <p id="segmentation-study-reference" class="segmentation-study-reference">The selected word and IPA will appear here.</p>
+                </div>
+                <span id="segmentation-study-claim-status" class="segmentation-study-claim-status">Not reserved</span>
+              </div>
+
+              <div class="segmentation-study-record-controls">
+                <button id="segmentation-study-record" class="crm-btn crm-btn-primary" type="button" disabled>Record</button>
+                <button id="segmentation-study-stop" class="crm-btn crm-btn-secondary" type="button" disabled>Stop</button>
+                <button id="segmentation-study-redo" class="crm-btn crm-btn-secondary" type="button" disabled>Redo</button>
+                <audio id="segmentation-study-audio" controls preload="metadata" hidden></audio>
+                <label class="segmentation-study-speed">Playback speed
+                  <select id="segmentation-study-playback-speed" aria-label="Playback speed">
+                    <option value="0.5">0.5×</option>
+                    <option value="0.75">0.75×</option>
+                    <option value="1" selected>1×</option>
+                    <option value="1.25">1.25×</option>
+                  </select>
+                </label>
+                <span id="segmentation-study-record-status" class="crm-muted" role="status" aria-live="polite">No recording yet.</span>
+              </div>
+
+              <div class="segmentation-study-analysis-actions">
+                <button id="segmentation-study-analyze" class="crm-btn crm-btn-secondary" type="button" disabled>Analyze V2/V3/V4</button>
+                <span id="segmentation-study-analysis-status" class="crm-muted" role="status" aria-live="polite">Analysis is required before review.</span>
+              </div>
+
+              <div class="segmentation-study-tabs" role="tablist" aria-label="Automatic and manual boundaries">
+                <button id="segmentation-study-tab-v2" class="segmentation-study-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="segmentation-study-panel-v2" data-study-version="v2">V2</button>
+                <button id="segmentation-study-tab-v3" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v3" data-study-version="v3">V3</button>
+                <button id="segmentation-study-tab-v4" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v4" data-study-version="v4">V4</button>
+                <button id="segmentation-study-tab-manual" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-manual" data-study-version="manual">Manual review</button>
+              </div>
+
+              <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
+                <div id="segmentation-study-waveform" class="segmentation-study-waveform"></div>
+                <div id="segmentation-study-time-ruler" class="segmentation-study-time-ruler" aria-hidden="true"></div>
+                <div id="segmentation-study-spectrogram" class="segmentation-study-spectrogram"></div>
+                <div id="segmentation-study-timeline-empty" class="crm-muted">Record or load a sample to see its waveform and spectrogram.</div>
+              </div>
+
+              <div class="segmentation-study-version-panels">
+                <div id="segmentation-study-panel-v2" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v2"></div>
+                <div id="segmentation-study-panel-v3" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v3" hidden></div>
+                <div id="segmentation-study-panel-v4" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v4" hidden></div>
+                <div id="segmentation-study-panel-manual" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-manual" hidden>
+                  <p id="segmentation-study-manual-instructions">Mark the start, each shared internal boundary, and the end of the word.</p>
+                  <p class="crm-muted">Keyboard: use ←/→ for 5 ms steps; hold Shift for 1 ms fine steps. Focus the timeline first.</p>
+                  <p id="segmentation-study-manual-summary" class="crm-muted" aria-live="polite">No manual segments marked yet.</p>
+                  <div class="segmentation-study-manual-controls">
+                    <button id="segmentation-study-manual-undo" class="crm-btn crm-btn-secondary" type="button" disabled>Undo</button>
+                    <button id="segmentation-study-manual-clear" class="crm-btn crm-btn-secondary" type="button" disabled>Clear</button>
+                    <label><input id="segmentation-study-manual-certainty" type="radio" name="segmentation-study-certainty" value="certain" /> Certain</label>
+                    <label><input type="radio" name="segmentation-study-certainty" value="uncertain" /> Unsure</label>
+                    <span id="segmentation-study-manual-count" class="crm-muted">0 boundaries</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="segmentation-study-summary" id="segmentation-study-summary" role="status" aria-live="polite"></div>
+              <div class="segmentation-study-actions">
+                <button id="segmentation-study-save" class="crm-btn crm-btn-primary" type="button" disabled>Save sample</button>
+                <button id="segmentation-study-next" class="crm-btn crm-btn-secondary" type="button" disabled>Next word</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <!-- Dashboard -->
@@ -2508,19 +2620,53 @@
   <script src="js/crm/bel-assistant.js?v=20260812-v1.8.64"></script>
   <script src="arpabet-ipa-map.js?v=20260812-v1.8.64"></script>
   <script src="phonetics.js?v=20260812-v1.8.64"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="crm-admin.js?v=20260812-v1.8.64"></script>
+  <script src="js/crm/segmentation-study.js?v=20260813-v1" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
       <div class="crm-mindmap-header-left">
         <h2 id="crm-mindmap-title" class="crm-mindmap-title">🧠 Mind Map</h2>
+        <div id="crm-mindmap-map-selector" class="crm-mindmap-map-selector">
+          <button id="crm-mindmap-map-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Switch or create mind map">
+            <span id="crm-mindmap-map-name">Default Map</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <div id="crm-mindmap-map-dropdown" class="crm-mindmap-map-dropdown" style="display:none;">
+            <!-- populated dynamically -->
+          </div>
+        </div>
         <span id="crm-mindmap-subtitle" class="crm-mindmap-subtitle">Synthesis of saved notes</span>
       </div>
       <div class="crm-mindmap-header-actions">
+        <div id="crm-mindmap-member-selector" class="crm-mindmap-member-selector">
+          <button id="crm-mindmap-member-btn" class="crm-btn crm-btn-secondary crm-btn-sm crm-mindmap-member-btn" title="Switch team member">
+            <span id="crm-mindmap-member-emoji">🔴</span>
+            <span id="crm-mindmap-member-name">Member 1</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <div id="crm-mindmap-member-dropdown" class="crm-mindmap-member-dropdown" style="display:none;">
+            <!-- populated dynamically -->
+          </div>
+        </div>
         <button id="crm-mindmap-regenerate-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Regenerate Mind Map with AI">⚡ Regenerate</button>
         <button id="crm-mindmap-zoom-in" class="crm-btn crm-btn-secondary crm-btn-sm" title="Zoom In">+</button>
         <button id="crm-mindmap-zoom-out" class="crm-btn crm-btn-secondary crm-btn-sm" title="Zoom Out">-</button>
         <button id="crm-mindmap-zoom-reset" class="crm-btn crm-btn-secondary crm-btn-sm" title="Fit to View">Fit View</button>
+        <button id="crm-mindmap-outline-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Outline View">📋 Outline</button>
+        <button id="crm-mindmap-history-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="View Version History">📜 History</button>
+        <div class="crm-mindmap-export-wrap">
+          <button id="crm-mindmap-export-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Export Mind Map">📤 Export</button>
+          <div id="crm-mindmap-export-dropdown" class="crm-mindmap-export-dropdown" style="display:none;">
+            <button class="crm-mindmap-export-option" data-export="png">📸 Export as PNG</button>
+            <button class="crm-mindmap-export-option" data-export="markdown">📄 Export as Markdown</button>
+            <button class="crm-mindmap-export-option" data-export="clipboard">📋 Copy Outline to Clipboard</button>
+          </div>
+        </div>
         <button id="crm-mindmap-close-btn" class="crm-btn crm-btn-close" aria-label="Close Mind Map">&times;</button>
       </div>
     </div>
@@ -2531,6 +2677,8 @@
         <!-- Floating Toolbar -->
         <div id="crm-mindmap-toolbar" class="crm-mindmap-toolbar">
           <button id="crm-mindmap-add-node-btn" class="crm-mindmap-toolbar-btn" title="Double-click canvas to add a thought block">+ Add Note</button>
+          <div class="crm-mindmap-toolbar-divider"></div>
+          <input id="crm-mindmap-search" class="crm-mindmap-search-input" type="text" placeholder="Find node..." />
           <div class="crm-mindmap-toolbar-divider"></div>
           <span id="crm-mindmap-save-status" class="crm-mindmap-save-status"></span>
         </div>
@@ -2552,6 +2700,14 @@
           <div class="crm-mindmap-color-swatch" data-color="#F97316" style="background:#F97316" title="Orange"></div>
         </div>
         <div class="crm-mindmap-context-divider"></div>
+        <div class="crm-mindmap-tag-options" data-action="toggle-tag">
+          <button class="crm-mindmap-tag-option" data-tag="objective">🎯 Objective</button>
+          <button class="crm-mindmap-tag-option" data-tag="outcome">📊 Outcome</button>
+          <button class="crm-mindmap-tag-option" data-tag="key-concept">💡 Key Concept</button>
+          <button class="crm-mindmap-tag-option" data-tag="action-item">✅ Action Item</button>
+          <button class="crm-mindmap-tag-option" data-tag="research">🔬 Research</button>
+        </div>
+        <div class="crm-mindmap-context-divider"></div>
         <button class="crm-mindmap-context-item is-danger" data-action="delete-node">🗑 Delete</button>
       </div>
       <!-- Slide-over Inspector Drawer -->
@@ -2561,10 +2717,17 @@
           <button id="crm-mindmap-inspector-close" class="crm-btn-close" aria-label="Close Inspector">&times;</button>
         </div>
         <h3 id="crm-mindmap-inspector-title" class="crm-mindmap-inspector-title">Node Title</h3>
+        <span id="crm-mindmap-inspector-attribution" class="crm-mindmap-inspector-attribution"></span>
+        <div id="crm-mindmap-inspector-tags" class="crm-mindmap-inspector-tags"></div>
         <p id="crm-mindmap-inspector-summary" class="crm-mindmap-inspector-summary">Summary</p>
         <hr class="crm-mindmap-divider" />
         <div class="crm-mindmap-inspector-section">
-          <h4>Full Saved Note</h4>
+          <h4>Source Notes</h4>
+          <div id="crm-mindmap-inspector-sources" class="crm-mindmap-inspector-sources"></div>
+        </div>
+        <hr class="crm-mindmap-divider" />
+        <div class="crm-mindmap-inspector-section">
+          <h4>AI Summary</h4>
           <div id="crm-mindmap-inspector-fulltext" class="crm-mindmap-inspector-fulltext"></div>
         </div>
         <hr class="crm-mindmap-divider" />
@@ -2573,6 +2736,28 @@
           <textarea id="crm-mindmap-inspector-notes" class="crm-mindmap-inspector-notes" placeholder="Add your thoughts, annotations, or comments about this concept..." rows="5"></textarea>
         </div>
       </aside>
+      <!-- Version History Panel -->
+      <aside id="crm-mindmap-versions" class="crm-mindmap-versions-panel" style="display:none;">
+        <div class="crm-mindmap-versions-header">
+          <h3>📜 Version History</h3>
+          <button class="crm-btn-close" id="crm-mindmap-versions-close">&times;</button>
+        </div>
+        <div id="crm-mindmap-versions-list" class="crm-mindmap-versions-list">
+          <!-- dynamically populated -->
+        </div>
+      </aside>
+      <!-- Outline View Panel -->
+      <aside id="crm-mindmap-outline" class="crm-mindmap-outline-panel" style="display:none;">
+        <div class="crm-mindmap-outline-header">
+          <h3>📋 Outline View</h3>
+          <button class="crm-btn-close" id="crm-mindmap-outline-close">&times;</button>
+        </div>
+        <div id="crm-mindmap-outline-tree" class="crm-mindmap-outline-tree"></div>
+      </aside>
+      <div id="crm-mindmap-minimap" class="crm-mindmap-minimap">
+        <canvas id="crm-mindmap-minimap-canvas" width="180" height="120"></canvas>
+        <div id="crm-mindmap-minimap-viewport" class="crm-mindmap-minimap-viewport"></div>
+      </div>
     </div>
   </div>
 

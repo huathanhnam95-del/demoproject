@@ -1426,6 +1426,166 @@ window.CrmBooksWorkspace = (function () {
         let mindMapDragRafId = null;
         let mindMapSaveTimeout = null;
         let mindMapContextNodeId = null;
+        let mindMapCollapsedCategories = new Set();
+        let mindMapActiveMapId = 'default';
+        let mindMapAvailableMaps = {};
+
+        function saveMapState(bookId, mapId) {
+            if (!bookId || !mapId) return;
+            const state = {
+                data: currentMindMapData,
+                positions: mindMapPositions,
+                userNodes: mindMapUserNodes,
+                userEdits: mindMapUserEdits
+            };
+            try {
+                localStorage.setItem(`crm_books_mapstate_${bookId}_${mapId}`, JSON.stringify(state));
+            } catch (_) {}
+        }
+
+        function loadMapState(bookId, mapId) {
+            if (!bookId || !mapId) return null;
+            try {
+                const raw = localStorage.getItem(`crm_books_mapstate_${bookId}_${mapId}`);
+                return raw ? JSON.parse(raw) : null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        async function switchToMap(bookId, mapId) {
+            if (mindMapDirty) await saveMindMapEdits();
+            saveMapState(bookId, mindMapActiveMapId);
+            mindMapActiveMapId = mapId;
+
+            const saved = loadMapState(bookId, mapId);
+            if (saved && saved.data) {
+                currentMindMapData = saved.data;
+                mindMapPositions = saved.positions || {};
+                mindMapUserNodes = Array.isArray(saved.userNodes) ? saved.userNodes : [];
+                mindMapUserEdits = saved.userEdits || {};
+                mindMapDirty = false;
+
+                const titleEl = docQs('#crm-mindmap-title');
+                const subtitleEl = docQs('#crm-mindmap-subtitle');
+                if (titleEl) titleEl.textContent = `🧠 ${currentMindMapData.centralTopic || 'Mind Map'}`;
+                if (subtitleEl) subtitleEl.textContent = `${currentMindMapData.categories?.length || 0} categories • ${currentMindMapData.noteCount || 0} notes synthesized`;
+
+                renderMindMapNodes(currentMindMapData);
+                updateSaveStatus('');
+            } else {
+                const maps = JSON.parse(localStorage.getItem(`crm_books_maps_${bookId}`) || '{}');
+                const mapMeta = maps[mapId];
+                const noteIds = mapMeta?.noteIds;
+                if (noteIds && noteIds.length > 0) {
+                    await openMindMapModal(bookId, false, noteIds);
+                } else {
+                    await openMindMapModal(bookId, false);
+                }
+            }
+        }
+
+        function showNewMapDialog(bookId, maps, updateMapUI) {
+            const notes = loadBookNotes(bookId);
+            const modal = docQs('#crm-books-mindmap-modal');
+            if (!modal) return;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'crm-mindmap-newmap-overlay';
+            overlay.innerHTML = `
+              <div class="crm-mindmap-newmap-dialog">
+                <h3>Create new mind map</h3>
+                <label class="crm-mindmap-newmap-label">Map name</label>
+                <input type="text" class="crm-mindmap-newmap-input" placeholder="e.g. Chapter 3 Focus" autofocus />
+                <label class="crm-mindmap-newmap-label">Select notes to include</label>
+                <div class="crm-mindmap-newmap-actions-row">
+                  <button class="crm-mindmap-newmap-sel-btn" data-sel="all">Select all</button>
+                  <button class="crm-mindmap-newmap-sel-btn" data-sel="none">Select none</button>
+                  <span class="crm-mindmap-newmap-count">${notes.length} notes</span>
+                </div>
+                <div class="crm-mindmap-newmap-notes">${notes.length === 0 ? '<div style="padding:12px; color:var(--crm-text-muted, #9CA3AF); text-align:center;">No saved notes for this book.</div>' : notes.map(n => {
+                    const ex = typeof extractNoteTitle === 'function' ? extractNoteTitle(n.text) : { title: n.text?.substring(0, 60) || 'Note' };
+                    return `<label class="crm-mindmap-newmap-note-item">
+                      <input type="checkbox" value="${escapeHtml(n.id)}" checked />
+                      <span>${escapeHtml(ex.title?.substring(0, 80) || 'Untitled')}</span>
+                    </label>`;
+                }).join('')}</div>
+                <div class="crm-mindmap-newmap-btns">
+                  <button class="crm-btn crm-btn-secondary crm-btn-sm" data-action="cancel">Cancel</button>
+                  <button class="crm-btn crm-btn-primary crm-btn-sm" data-action="create">Create Map</button>
+                </div>
+              </div>`;
+
+            modal.appendChild(overlay);
+
+            const nameInput = overlay.querySelector('.crm-mindmap-newmap-input');
+            nameInput?.focus();
+
+            overlay.querySelector('[data-sel="all"]')?.addEventListener('click', () => {
+                overlay.querySelectorAll('.crm-mindmap-newmap-note-item input').forEach(cb => cb.checked = true);
+            });
+            overlay.querySelector('[data-sel="none"]')?.addEventListener('click', () => {
+                overlay.querySelectorAll('.crm-mindmap-newmap-note-item input').forEach(cb => cb.checked = false);
+            });
+
+            overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => overlay.remove());
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+            overlay.querySelector('[data-action="create"]')?.addEventListener('click', async () => {
+                const name = nameInput?.value?.trim();
+                if (!name) { nameInput?.focus(); return; }
+                const selectedIds = [...overlay.querySelectorAll('.crm-mindmap-newmap-note-item input:checked')].map(cb => cb.value);
+                const newId = 'map_' + Date.now();
+                maps[newId] = { name, createdAt: Date.now(), noteIds: selectedIds };
+                localStorage.setItem(`crm_books_maps_${bookId}`, JSON.stringify(maps));
+                overlay.remove();
+                if (mindMapDirty) await saveMindMapEdits();
+                saveMapState(bookId, mindMapActiveMapId);
+                mindMapActiveMapId = newId;
+                updateMapUI();
+                await openMindMapModal(bookId, false, selectedIds.length > 0 && selectedIds.length < notes.length ? selectedIds : null);
+            });
+        }
+
+        const DEFAULT_TEAM_MEMBERS = [
+            { id: 'member_1', name: 'Member 1', color: '#EF4444', emoji: '🔴' },
+            { id: 'member_2', name: 'Member 2', color: '#3B82F6', emoji: '🔵' },
+            { id: 'member_3', name: 'Member 3', color: '#22C55E', emoji: '🟢' },
+            { id: 'member_4', name: 'Member 4', color: '#EAB308', emoji: '🟡' }
+        ];
+
+        function getTeamMembers() {
+            try {
+                const raw = localStorage.getItem('crm_books_team_members');
+                if (raw) return JSON.parse(raw);
+            } catch (_) {}
+            return DEFAULT_TEAM_MEMBERS;
+        }
+
+        function saveTeamMembers(members) {
+            try { localStorage.setItem('crm_books_team_members', JSON.stringify(members)); } catch (_) {}
+        }
+
+        function getActiveTeamMember() {
+            try {
+                const raw = sessionStorage.getItem('crm_books_active_member');
+                if (raw) return JSON.parse(raw);
+            } catch (_) {}
+            return getTeamMembers()[0];
+        }
+
+        function setActiveTeamMember(member) {
+            try { sessionStorage.setItem('crm_books_active_member', JSON.stringify(member)); } catch (_) {}
+        }
+
+        const MINDMAP_TAGS = [
+            { id: 'objective', label: 'Objective', emoji: '🎯', color: '#8B5CF6' },
+            { id: 'outcome', label: 'Outcome', emoji: '📊', color: '#059669' },
+            { id: 'key-concept', label: 'Key Concept', emoji: '💡', color: '#F59E0B' },
+            { id: 'action-item', label: 'Action Item', emoji: '✅', color: '#3B82F6' },
+            { id: 'research', label: 'Research', emoji: '🔬', color: '#EC4899' }
+        ];
+        let mindMapActiveTagFilter = null; // null = show all, or tag id string
 
         function docQs(sel) { return document.querySelector(sel); }
 
@@ -1435,10 +1595,68 @@ window.CrmBooksWorkspace = (function () {
             const transformStr = `translate(${mindMapPanX}px, ${mindMapPanY}px) scale(${mindMapZoom})`;
             if (canvas) canvas.style.transform = transformStr;
             if (svg) svg.style.transform = transformStr;
+            if (typeof updateMinimap === 'function') updateMinimap();
         }
 
         function getNodeId(node) {
             return node?.dataset?.nodeId || '';
+        }
+
+        function getNodeNoteIds(nodeId) {
+            if (!currentMindMapData || !currentMindMapData.categories) return [];
+            let noteIds = new Set();
+            for (const cat of currentMindMapData.categories) {
+                if (cat.id === nodeId) {
+                    (cat.subtopics || []).forEach(sub => {
+                        (sub.noteIds || []).forEach(id => noteIds.add(id));
+                    });
+                } else {
+                    const sub = (cat.subtopics || []).find(s => s.id === nodeId);
+                    if (sub) {
+                        (sub.noteIds || []).forEach(id => noteIds.add(id));
+                    }
+                }
+            }
+            return Array.from(noteIds);
+        }
+
+        function getTagsHtml(nodeId) {
+            const tags = mindMapUserEdits[nodeId]?.tags || [];
+            if (tags.length === 0) return '';
+            let html = '<div class="crm-mindmap-node-tags">';
+            tags.forEach(tId => {
+                const tag = MINDMAP_TAGS.find(t => t.id === tId);
+                if (tag) {
+                    html += `<span class="crm-mindmap-tag-pill" style="background:${tag.color}20; color:${tag.color}; border: 1px solid ${tag.color}40">${tag.emoji} ${tag.label}</span>`;
+                }
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function getBadgeHtml(createdBy) {
+            if (!createdBy) return '';
+            const member = getTeamMembers().find(m => m.id === createdBy);
+            if (!member) return '';
+            return `<span class="crm-mindmap-node-badge" style="background:${member.color}" title="${escapeHtml(member.name)}">${member.emoji}</span>`;
+        }
+
+        function updateNodeDimming() {
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (!canvas) return;
+            canvas.querySelectorAll('.crm-mindmap-node[data-node-id]').forEach(node => {
+                if (!mindMapActiveTagFilter) {
+                    node.classList.remove('crm-mindmap-dimmed');
+                } else {
+                    const nid = node.dataset.nodeId;
+                    const tags = mindMapUserEdits[nid]?.tags || [];
+                    if (tags.includes(mindMapActiveTagFilter)) {
+                        node.classList.remove('crm-mindmap-dimmed');
+                    } else {
+                        node.classList.add('crm-mindmap-dimmed');
+                    }
+                }
+            });
         }
 
         function getNodeCenter(nodeEl) {
@@ -1504,10 +1722,15 @@ window.CrmBooksWorkspace = (function () {
             svg.innerHTML = pathsHtml;
         }
 
-        function updateSaveStatus(status) {
+        function updateSaveStatus(status, tempMsg) {
             const el = docQs('#crm-mindmap-save-status');
             if (!el) return;
             el.className = 'crm-mindmap-save-status';
+            if (tempMsg) {
+                el.textContent = tempMsg;
+                setTimeout(() => { el.textContent = ''; }, 2000);
+                return;
+            }
             if (status === 'saving') { el.textContent = 'Saving...'; el.classList.add('is-saving'); }
             else if (status === 'saved') { el.textContent = 'Saved'; }
             else if (status === 'error') { el.textContent = 'Save failed'; el.classList.add('is-error'); }
@@ -1533,6 +1756,7 @@ window.CrmBooksWorkspace = (function () {
                 });
                 mindMapDirty = false;
                 updateSaveStatus('saved');
+                saveMapState(selectedBookId, mindMapActiveMapId);
             } catch (err) {
                 console.error('Failed to save mind map edits:', err);
                 updateSaveStatus('error');
@@ -1606,42 +1830,52 @@ window.CrmBooksWorkspace = (function () {
                 maxX = Math.max(maxX, catLeft + catW); maxY = Math.max(maxY, catTop + catEstH);
 
                 const catTitle = mindMapUserEdits[catId]?.title || cat.title || 'Category';
+                const isCollapsed = mindMapCollapsedCategories.has(catId);
+                const subtopics = Array.isArray(cat.subtopics) ? cat.subtopics : [];
+                
+                let collapseBtnHtml = `<button class="crm-mindmap-collapse-btn" data-cat-id="${escapeHtml(catId)}">${isCollapsed ? '+' : '−'}</button>`;
+                let collapseBadgeHtml = (isCollapsed && subtopics.length > 0) ? `<div class="crm-mindmap-collapse-badge">+${subtopics.length}</div>` : '';
+
                 canvasHtml += `<div class="crm-mindmap-node category" data-node-id="${escapeHtml(catId)}" data-cat-id="${escapeHtml(catId)}" data-title="${escapeHtml(catTitle)}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catW}px; --node-color:${catColor};">` +
+                    collapseBtnHtml + collapseBadgeHtml +
                     `<div class="crm-mindmap-node-title">${escapeHtml(catTitle)}</div>` +
+                    getTagsHtml(catId) +
                     `</div>`;
 
-                const subtopics = Array.isArray(cat.subtopics) ? cat.subtopics : [];
                 const numSubs = subtopics.length;
                 const radiusSub = 350;
                 const angleStep = 2 * Math.PI / Math.max(1, numCats);
                 const maxArcSpan = Math.min(angleStep * 0.75, Math.PI);
                 const arcSpan = Math.min(maxArcSpan, 0.35 * numSubs);
 
-                subtopics.forEach((sub, sIdx) => {
-                    const subId = sub.id || `sub_${cIdx}_${sIdx}`;
-                    const subColor = mindMapUserEdits[subId]?.color || catColor;
-                    const subAngle = angle + (numSubs > 1 ? (-arcSpan / 2 + sIdx * (arcSpan / (numSubs - 1))) : 0);
-                    const defaultSubX = (mindMapPositions[catId] ? mindMapPositions[catId].x + catW / 2 : defaultCatX) + radiusSub * Math.cos(subAngle);
-                    const defaultSubY = (mindMapPositions[catId] ? mindMapPositions[catId].y + catEstH / 2 : defaultCatY) + radiusSub * Math.sin(subAngle);
+                if (!isCollapsed) {
+                    subtopics.forEach((sub, sIdx) => {
+                        const subId = sub.id || `sub_${cIdx}_${sIdx}`;
+                        const subColor = mindMapUserEdits[subId]?.color || catColor;
+                        const subAngle = angle + (numSubs > 1 ? (-arcSpan / 2 + sIdx * (arcSpan / (numSubs - 1))) : 0);
+                        const defaultSubX = (mindMapPositions[catId] ? mindMapPositions[catId].x + catW / 2 : defaultCatX) + radiusSub * Math.cos(subAngle);
+                        const defaultSubY = (mindMapPositions[catId] ? mindMapPositions[catId].y + catEstH / 2 : defaultCatY) + radiusSub * Math.sin(subAngle);
 
-                    const subW = 220;
-                    const subEstH = 80;
-                    let subLeft = defaultSubX - subW / 2;
-                    let subTop = defaultSubY - subEstH / 2;
-                    if (mindMapPositions[subId]) {
-                        subLeft = mindMapPositions[subId].x;
-                        subTop = mindMapPositions[subId].y;
-                    }
+                        const subW = 220;
+                        const subEstH = 80;
+                        let subLeft = defaultSubX - subW / 2;
+                        let subTop = defaultSubY - subEstH / 2;
+                        if (mindMapPositions[subId]) {
+                            subLeft = mindMapPositions[subId].x;
+                            subTop = mindMapPositions[subId].y;
+                        }
 
-                    minX = Math.min(minX, subLeft); minY = Math.min(minY, subTop);
-                    maxX = Math.max(maxX, subLeft + subW); maxY = Math.max(maxY, subTop + subEstH);
+                        minX = Math.min(minX, subLeft); minY = Math.min(minY, subTop);
+                        maxX = Math.max(maxX, subLeft + subW); maxY = Math.max(maxY, subTop + subEstH);
 
-                    const subTitle = mindMapUserEdits[subId]?.title || sub.title || 'Subtopic';
-                    canvasHtml += `<div class="crm-mindmap-node subtopic" data-node-id="${escapeHtml(subId)}" data-sub-id="${escapeHtml(subId)}" data-cat-title="${escapeHtml(catTitle)}" data-cat-color="${subColor}" data-title="${escapeHtml(subTitle)}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${subColor};">` +
-                        `<div class="crm-mindmap-node-title">${escapeHtml(subTitle)}</div>` +
-                        `<div class="crm-mindmap-node-summary">${escapeHtml(sub.summary || '')}</div>` +
-                        `</div>`;
-                });
+                        const subTitle = mindMapUserEdits[subId]?.title || sub.title || 'Subtopic';
+                        canvasHtml += `<div class="crm-mindmap-node subtopic" data-node-id="${escapeHtml(subId)}" data-sub-id="${escapeHtml(subId)}" data-cat-title="${escapeHtml(catTitle)}" data-cat-color="${subColor}" data-title="${escapeHtml(subTitle)}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${subColor};">` +
+                            `<div class="crm-mindmap-node-title">${escapeHtml(subTitle)}</div>` +
+                            `<div class="crm-mindmap-node-summary">${escapeHtml(sub.summary || '')}</div>` +
+                            getTagsHtml(subId) +
+                            `</div>`;
+                    });
+                }
             });
 
             mindMapUserNodes.forEach(un => {
@@ -1656,12 +1890,31 @@ window.CrmBooksWorkspace = (function () {
                 canvasHtml += `<div class="crm-mindmap-node user-node" data-node-id="${escapeHtml(un.id)}" data-title="${escapeHtml(un.title || '')}" data-summary="${escapeHtml(un.text || '')}" data-fulltext="${escapeHtml(un.text || '')}" data-cat-title="Your Note" data-cat-color="${unColor}" style="left:${unLeft}px; top:${unTop}px; width:${unW}px; --node-color:${unColor};">` +
                     `<div class="crm-mindmap-node-title">${escapeHtml(un.title || 'New thought')}</div>` +
                     (un.text ? `<div class="crm-mindmap-node-summary">${escapeHtml(un.text)}</div>` : '') +
+                    getTagsHtml(un.id) +
+                    getBadgeHtml(un.createdBy) +
                     `</div>`;
             });
 
             canvas.innerHTML = canvasHtml;
+            
+            canvas.querySelectorAll('.crm-mindmap-collapse-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const catId = e.target.dataset.catId;
+                    if (mindMapCollapsedCategories.has(catId)) {
+                        mindMapCollapsedCategories.delete(catId);
+                    } else {
+                        mindMapCollapsedCategories.add(catId);
+                    }
+                    renderMindMapNodes(currentMindMapData);
+                });
+            });
+
             rebuildSVGPaths();
             applyNotesIndicators();
+            updateNodeDimming();
+            if (typeof renderOutlineTree === 'function') renderOutlineTree();
+            if (typeof updateMinimap === 'function') updateMinimap();
 
             const viewport = docQs('#crm-mindmap-viewport');
             const vw = viewport ? viewport.clientWidth : window.innerWidth;
@@ -1704,14 +1957,74 @@ window.CrmBooksWorkspace = (function () {
             const summaryEl = docQs('#crm-mindmap-inspector-summary');
             const fullTextEl = docQs('#crm-mindmap-inspector-fulltext');
             const notesEl = docQs('#crm-mindmap-inspector-notes');
+            const attrEl = docQs('#crm-mindmap-inspector-attribution');
+            const tagsEl = docQs('#crm-mindmap-inspector-tags');
+            const sourcesEl = docQs('#crm-mindmap-inspector-sources');
 
             if (tagEl) { tagEl.textContent = catTitle; tagEl.style.setProperty('--node-color', catColor); }
             if (titleEl) titleEl.textContent = title;
             if (summaryEl) summaryEl.textContent = summary;
-            if (fullTextEl) fullTextEl.textContent = fullText;
+            if (fullTextEl) {
+                if (typeof formatStudyNotesMarkdown === 'function') {
+                    fullTextEl.innerHTML = formatStudyNotesMarkdown(fullText);
+                } else {
+                    fullTextEl.textContent = fullText;
+                }
+            }
             if (notesEl) {
                 notesEl.value = mindMapUserEdits[nodeId]?.notes || '';
                 notesEl.dataset.nodeId = nodeId;
+            }
+
+            if (attrEl) {
+                const userNode = mindMapUserNodes.find(u => u.id === nodeId);
+                const createdBy = userNode?.createdBy || mindMapUserEdits[nodeId]?.editedBy;
+                if (createdBy) {
+                    const member = getTeamMembers().find(m => m.id === createdBy);
+                    if (member) {
+                        attrEl.innerHTML = `${member.emoji} <strong>${escapeHtml(member.name)}</strong>`;
+                    } else {
+                        attrEl.innerHTML = '';
+                    }
+                } else {
+                    attrEl.innerHTML = '';
+                }
+            }
+
+            if (tagsEl) {
+                tagsEl.innerHTML = getTagsHtml(nodeId);
+            }
+
+            if (sourcesEl) {
+                const noteIds = getNodeNoteIds(nodeId);
+                sourcesEl.innerHTML = '';
+                if (noteIds.length > 0) {
+                    const sectionEl = sourcesEl.closest('.crm-mindmap-inspector-section');
+                    if (sectionEl) sectionEl.style.display = 'block';
+                    try {
+                        const allNotes = loadBookNotes(selectedBookId);
+                        let html = '';
+                        noteIds.forEach(nid => {
+                            const note = allNotes.find(n => n.id === nid);
+                            if (note) {
+                                const extracted = typeof extractNoteTitle === 'function' ? extractNoteTitle(note.text) : { title: 'Note' };
+                                const title = extracted?.title || 'Note';
+                                const dateStr = note.savedAt ? new Date(note.savedAt).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+                                const preview = (note.text || '').substring(0, 100).replace(/\n/g, ' ') + (note.text && note.text.length > 100 ? '...' : '');
+                                html += `<div class="crm-mindmap-source-note" data-note-id="${escapeHtml(nid)}">` +
+                                  `<div class="crm-mindmap-source-note-header">📖 <strong>${escapeHtml(title)}</strong> <span class="crm-muted">${dateStr}</span></div>` +
+                                  `<div class="crm-mindmap-source-note-preview">${escapeHtml(preview)}</div>` +
+                                `</div>`;
+                            }
+                        });
+                        sourcesEl.innerHTML = html;
+                    } catch (err) {
+                        console.error('Failed to load source notes:', err);
+                    }
+                } else {
+                    const sectionEl = sourcesEl.closest('.crm-mindmap-inspector-section');
+                    if (sectionEl) sectionEl.style.display = 'none';
+                }
             }
 
             inspector.style.display = 'flex';
@@ -1747,6 +2060,7 @@ window.CrmBooksWorkspace = (function () {
                     mindMapUserEdits[nodeId].title = newText;
                 }
                 scheduleMindMapAutoSave();
+                if (typeof renderOutlineTree === 'function') renderOutlineTree();
                 titleEl.removeEventListener('blur', finishEdit);
                 titleEl.removeEventListener('keydown', handleKey);
             };
@@ -1762,7 +2076,8 @@ window.CrmBooksWorkspace = (function () {
 
         function addUserNode(canvasX, canvasY, parentId) {
             const id = 'user_' + Date.now();
-            const newNode = { id, title: 'New thought', text: '', color: '#F59E0B', x: canvasX, y: canvasY, parentId: parentId || null };
+            const createdBy = getActiveTeamMember().id;
+            const newNode = { id, title: 'New thought', text: '', color: '#F59E0B', x: canvasX, y: canvasY, parentId: parentId || null, createdBy };
             mindMapUserNodes.push(newNode);
 
             const canvas = docQs('#crm-mindmap-canvas');
@@ -1772,6 +2087,7 @@ window.CrmBooksWorkspace = (function () {
                     `</div>`;
                 canvas.insertAdjacentHTML('beforeend', nodeHtml);
                 rebuildSVGPaths();
+                if (typeof renderOutlineTree === 'function') renderOutlineTree();
                 scheduleMindMapAutoSave();
                 setTimeout(() => startInlineEdit(id), 50);
             }
@@ -1787,6 +2103,7 @@ window.CrmBooksWorkspace = (function () {
             const node = canvas?.querySelector(`[data-node-id="${nodeId}"]`);
             if (node) node.remove();
             rebuildSVGPaths();
+            if (typeof renderOutlineTree === 'function') renderOutlineTree();
             scheduleMindMapAutoSave();
         }
 
@@ -1805,6 +2122,7 @@ window.CrmBooksWorkspace = (function () {
                 mindMapUserEdits[nodeId].color = color;
             }
             rebuildSVGPaths();
+            if (typeof renderOutlineTree === 'function') renderOutlineTree();
             scheduleMindMapAutoSave();
         }
 
@@ -1817,6 +2135,16 @@ window.CrmBooksWorkspace = (function () {
             const deleteBtn = menu.querySelector('[data-action="delete-node"]');
             if (deleteBtn) deleteBtn.style.display = isUserNode ? '' : 'none';
 
+            const tagBtns = menu.querySelectorAll('.crm-mindmap-tag-option');
+            const currentTags = mindMapUserEdits[nodeId]?.tags || [];
+            tagBtns.forEach(btn => {
+                if (currentTags.includes(btn.dataset.tag)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
             menu.style.left = clientX + 'px';
             menu.style.top = clientY + 'px';
             menu.style.display = 'block';
@@ -1826,6 +2154,180 @@ window.CrmBooksWorkspace = (function () {
             const menu = docQs('#crm-mindmap-context-menu');
             if (menu) menu.style.display = 'none';
             mindMapContextNodeId = null;
+        }
+
+        function updateMinimap() {
+            const canvas = docQs('#crm-mindmap-minimap-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const nodes = docQs('#crm-mindmap-canvas')?.querySelectorAll('.crm-mindmap-node');
+            if (!nodes || nodes.length === 0) return;
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const nodeData = [];
+            nodes.forEach(node => {
+                const left = parseFloat(node.style.left) || 0;
+                const top = parseFloat(node.style.top) || 0;
+                const width = parseFloat(node.style.width) || 200;
+                const height = node.offsetHeight || 50;
+                const color = node.style.getPropertyValue('--node-color') || '#e2e8f0';
+                
+                minX = Math.min(minX, left);
+                minY = Math.min(minY, top);
+                maxX = Math.max(maxX, left + width);
+                maxY = Math.max(maxY, top + height);
+                
+                nodeData.push({ left, top, width, height, color });
+            });
+            
+            minX -= 500; minY -= 500; maxX += 500; maxY += 500;
+            const contentW = maxX - minX;
+            const contentH = maxY - minY;
+            
+            const scaleX = canvas.width / contentW;
+            const scaleY = canvas.height / contentH;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const offsetX = (canvas.width - contentW * scale) / 2 - minX * scale;
+            const offsetY = (canvas.height - contentH * scale) / 2 - minY * scale;
+            
+            nodeData.forEach(n => {
+                ctx.fillStyle = n.color;
+                ctx.fillRect(n.left * scale + offsetX, n.top * scale + offsetY, n.width * scale, n.height * scale);
+            });
+            
+            const viewportEl = docQs('#crm-mindmap-viewport');
+            const minimapVp = docQs('#crm-mindmap-minimap-viewport');
+            if (viewportEl && minimapVp) {
+                const vw = viewportEl.clientWidth;
+                const vh = viewportEl.clientHeight;
+                
+                const vpLeft = (-mindMapPanX) / mindMapZoom;
+                const vpTop = (-mindMapPanY) / mindMapZoom;
+                const vpWidth = vw / mindMapZoom;
+                const vpHeight = vh / mindMapZoom;
+                
+                minimapVp.style.left = (vpLeft * scale + offsetX) + 'px';
+                minimapVp.style.top = (vpTop * scale + offsetY) + 'px';
+                minimapVp.style.width = (vpWidth * scale) + 'px';
+                minimapVp.style.height = (vpHeight * scale) + 'px';
+            }
+        }
+
+        function zoomToNode(nodeId) {
+            const canvas = docQs('#crm-mindmap-canvas');
+            if (!canvas) return;
+            const node = canvas.querySelector(`[data-node-id="${nodeId}"]`);
+            if (!node) return;
+            
+            const viewport = docQs('#crm-mindmap-viewport');
+            if (!viewport) return;
+            
+            const vw = viewport.clientWidth;
+            const vh = viewport.clientHeight;
+            
+            const left = parseFloat(node.style.left) || 0;
+            const top = parseFloat(node.style.top) || 0;
+            const w = parseFloat(node.style.width) || 200;
+            const h = 100;
+            
+            const targetZoom = 1.0;
+            const targetPanX = (vw / 2) - ((left + w / 2) * targetZoom);
+            const targetPanY = (vh / 2) - ((top + h / 2) * targetZoom);
+            
+            const startZoom = mindMapZoom;
+            const startPanX = mindMapPanX;
+            const startPanY = mindMapPanY;
+            const duration = 400;
+            let start = null;
+            
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                
+                mindMapZoom = startZoom + (targetZoom - startZoom) * ease;
+                mindMapPanX = startPanX + (targetPanX - startPanX) * ease;
+                mindMapPanY = startPanY + (targetPanY - startPanY) * ease;
+                
+                applyMindMapTransform();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+            
+            const tEl = node.querySelector('.crm-mindmap-node-title');
+            if (tEl) {
+                tEl.style.transition = 'color 0.3s';
+                tEl.style.color = '#3B82F6';
+                setTimeout(() => { tEl.style.color = ''; }, 1000);
+            }
+        }
+
+        function renderOutlineTree() {
+            const tree = docQs('#crm-mindmap-outline-tree');
+            const panel = docQs('#crm-mindmap-outline');
+            if (!tree || !currentMindMapData) return;
+            if (panel && panel.style.display === 'none') return;
+            
+            let html = '';
+            
+            const renderItem = (id, title, color) => {
+                const tagsHtml = getTagsHtml(id);
+                return `<div class="crm-outline-item" data-node-id="${escapeHtml(id)}">
+                  <span class="crm-outline-color" style="background:${color}"></span>
+                  <span class="crm-outline-title">${escapeHtml(title)}</span>
+                  <div class="crm-outline-tags">${tagsHtml}</div>
+                </div>`;
+            };
+
+            const categories = currentMindMapData.categories || [];
+            categories.forEach(cat => {
+                const catId = cat.id;
+                const catTitle = mindMapUserEdits[catId]?.title || cat.title || 'Category';
+                const catColor = mindMapUserEdits[catId]?.color || cat.color || '#4f46e5';
+                const subs = cat.subtopics || [];
+                
+                const isOpen = !mindMapCollapsedCategories.has(catId);
+                
+                html += `<div class="crm-outline-category">
+                  <div class="crm-outline-category-header" data-node-id="${escapeHtml(catId)}">
+                    <span class="crm-outline-toggle ${isOpen ? 'is-open' : ''}">▸</span>
+                    <span class="crm-outline-color" style="background:${catColor}"></span>
+                    <span class="crm-outline-title">${escapeHtml(catTitle)}</span>
+                    <span class="crm-outline-count">${subs.length} subtopics</span>
+                  </div>
+                  <div class="crm-outline-children ${isOpen ? 'is-open' : ''}">`;
+                  
+                subs.forEach(sub => {
+                    const subId = sub.id;
+                    const subTitle = mindMapUserEdits[subId]?.title || sub.title || 'Subtopic';
+                    const subColor = mindMapUserEdits[subId]?.color || catColor;
+                    html += renderItem(subId, subTitle, subColor);
+                });
+                html += `</div></div>`;
+            });
+            
+            if (mindMapUserNodes.length > 0) {
+                html += `<div class="crm-outline-category">
+                  <div class="crm-outline-category-header" data-node-id="user_nodes_cat">
+                    <span class="crm-outline-toggle is-open">▸</span>
+                    <span class="crm-outline-color" style="background:#F59E0B"></span>
+                    <span class="crm-outline-title">Custom Notes</span>
+                    <span class="crm-outline-count">${mindMapUserNodes.length} notes</span>
+                  </div>
+                  <div class="crm-outline-children is-open">`;
+                mindMapUserNodes.forEach(un => {
+                    html += renderItem(un.id, un.title || 'New thought', un.color || '#F59E0B');
+                });
+                html += `</div></div>`;
+            }
+            
+            tree.innerHTML = html;
         }
 
         function bindMindMapModalEvents() {
@@ -1843,6 +2345,227 @@ window.CrmBooksWorkspace = (function () {
             const inspectorClose = docQs('#crm-mindmap-inspector-close');
             const contextMenu = docQs('#crm-mindmap-context-menu');
             const addNodeBtn = docQs('#crm-mindmap-add-node-btn');
+            
+            // Outline View binding
+            const outlineBtn = docQs('#crm-mindmap-outline-btn');
+            const outlinePanel = docQs('#crm-mindmap-outline');
+            const outlineClose = docQs('#crm-mindmap-outline-close');
+            const outlineTree = docQs('#crm-mindmap-outline-tree');
+            
+            outlineBtn?.addEventListener('click', () => {
+                if (outlinePanel) {
+                    outlinePanel.style.display = outlinePanel.style.display === 'none' ? 'flex' : 'none';
+                    if (outlinePanel.style.display === 'flex') {
+                        renderOutlineTree();
+                    }
+                }
+            });
+            
+            outlineClose?.addEventListener('click', () => {
+                if (outlinePanel) outlinePanel.style.display = 'none';
+            });
+            
+            outlineTree?.addEventListener('click', (e) => {
+                const header = e.target.closest('.crm-outline-category-header');
+                if (header) {
+                    const catId = header.dataset.nodeId;
+                    if (catId === 'user_nodes_cat') {
+                        const children = header.nextElementSibling;
+                        const toggle = header.querySelector('.crm-outline-toggle');
+                        if (children.classList.contains('is-open')) {
+                            children.classList.remove('is-open');
+                            toggle.classList.remove('is-open');
+                        } else {
+                            children.classList.add('is-open');
+                            toggle.classList.add('is-open');
+                        }
+                        return;
+                    }
+                    if (mindMapCollapsedCategories.has(catId)) {
+                        mindMapCollapsedCategories.delete(catId);
+                    } else {
+                        mindMapCollapsedCategories.add(catId);
+                    }
+                    renderMindMapNodes(currentMindMapData);
+                    return;
+                }
+                
+                const item = e.target.closest('.crm-outline-item');
+                if (item) {
+                    const nodeId = item.dataset.nodeId;
+                    zoomToNode(nodeId);
+                    handleNodeClick(nodeId);
+                }
+            });
+            
+            // Minimap drag
+            const minimap = docQs('#crm-mindmap-minimap');
+            const minimapCanvas = docQs('#crm-mindmap-minimap-canvas');
+            if (minimap && minimapCanvas && !minimap.dataset.bound) {
+                minimap.dataset.bound = '1';
+                let isDragging = false;
+                const handleDrag = (e) => {
+                    if (!isDragging) return;
+                    const rect = minimapCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const nodes = docQs('#crm-mindmap-canvas')?.querySelectorAll('.crm-mindmap-node');
+                    if (!nodes || nodes.length === 0) return;
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    nodes.forEach(node => {
+                        const left = parseFloat(node.style.left) || 0;
+                        const top = parseFloat(node.style.top) || 0;
+                        const width = parseFloat(node.style.width) || 200;
+                        const height = node.offsetHeight || 50;
+                        minX = Math.min(minX, left); minY = Math.min(minY, top);
+                        maxX = Math.max(maxX, left + width); maxY = Math.max(maxY, top + height);
+                    });
+                    minX -= 500; minY -= 500; maxX += 500; maxY += 500;
+                    const contentW = maxX - minX;
+                    const contentH = maxY - minY;
+                    
+                    const scaleX = minimapCanvas.width / contentW;
+                    const scaleY = minimapCanvas.height / contentH;
+                    const scale = Math.min(scaleX, scaleY);
+                    const offsetX = (minimapCanvas.width - contentW * scale) / 2 - minX * scale;
+                    const offsetY = (minimapCanvas.height - contentH * scale) / 2 - minY * scale;
+                    
+                    const canvasX = (x - offsetX) / scale;
+                    const canvasY = (y - offsetY) / scale;
+                    
+                    const vp = docQs('#crm-mindmap-viewport');
+                    if (vp) {
+                        mindMapPanX = (vp.clientWidth / 2) - canvasX * mindMapZoom;
+                        mindMapPanY = (vp.clientHeight / 2) - canvasY * mindMapZoom;
+                        applyMindMapTransform();
+                        updateMinimap();
+                    }
+                };
+                minimap.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    handleDrag(e);
+                });
+                window.addEventListener('mousemove', handleDrag);
+                window.addEventListener('mouseup', () => { isDragging = false; });
+            }
+
+            // Map selector setup
+            const mapBtn = docQs('#crm-mindmap-map-btn');
+            const mapDropdown = docQs('#crm-mindmap-map-dropdown');
+            const mapNameSpan = docQs('#crm-mindmap-map-name');
+            
+            if (mapBtn && mapDropdown && !mapBtn.dataset.bound) {
+                mapBtn.dataset.bound = '1';
+                
+                function updateMapUI() {
+                    const maps = JSON.parse(localStorage.getItem(`crm_books_maps_${selectedBookId}`) || '{"default": {"name": "Default Map"}}');
+                    const currentMap = maps[mindMapActiveMapId] || { name: 'Default Map' };
+                    if (mapNameSpan) mapNameSpan.textContent = currentMap.name;
+                    
+                    mapDropdown.innerHTML = '';
+                    Object.entries(maps).forEach(([id, map]) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'crm-mindmap-map-option' + (id === mindMapActiveMapId ? ' active' : '');
+                        btn.textContent = map.name;
+                        btn.onclick = async () => {
+                            if (id === mindMapActiveMapId) { mapDropdown.style.display = 'none'; return; }
+                            mapDropdown.style.display = 'none';
+                            await switchToMap(selectedBookId, id);
+                            updateMapUI();
+                        };
+                        mapDropdown.appendChild(btn);
+                    });
+                    
+                    const divider = document.createElement('div');
+                    divider.className = 'crm-mindmap-map-divider';
+                    mapDropdown.appendChild(divider);
+                    
+                    const newBtn = document.createElement('button');
+                    newBtn.className = 'crm-mindmap-map-option';
+                    newBtn.textContent = '+ New Map';
+                    newBtn.onclick = () => {
+                        mapDropdown.style.display = 'none';
+                        showNewMapDialog(selectedBookId, maps, updateMapUI);
+                    };
+                    mapDropdown.appendChild(newBtn);
+                }
+                
+                mapBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    updateMapUI();
+                    mapDropdown.style.display = mapDropdown.style.display === 'none' ? 'block' : 'none';
+                };
+            }
+
+            // Member selector setup
+            const memberBtn = docQs('#crm-mindmap-member-btn');
+            const memberDropdown = docQs('#crm-mindmap-member-dropdown');
+            if (memberBtn && memberDropdown && !memberBtn.dataset.bound) {
+                memberBtn.dataset.bound = '1';
+                
+                function updateMemberUI() {
+                    const active = getActiveTeamMember();
+                    const emojiEl = docQs('#crm-mindmap-member-emoji');
+                    const nameEl = docQs('#crm-mindmap-member-name');
+                    if (emojiEl) emojiEl.textContent = active.emoji;
+                    if (nameEl) nameEl.textContent = active.name;
+                    
+                    memberDropdown.innerHTML = '';
+                    getTeamMembers().forEach(m => {
+                        const btn = document.createElement('button');
+                        btn.className = 'crm-mindmap-member-option' + (m.id === active.id ? ' active' : '');
+                        btn.innerHTML = `${m.emoji} ${escapeHtml(m.name)}`;
+                        btn.onclick = () => {
+                            setActiveTeamMember(m);
+                            updateMemberUI();
+                            memberDropdown.style.display = 'none';
+                        };
+                        memberDropdown.appendChild(btn);
+                    });
+                }
+                updateMemberUI();
+                
+                memberBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    memberDropdown.style.display = memberDropdown.style.display === 'none' ? 'block' : 'none';
+                };
+            }
+
+            // Tag Filter Chips setup
+            const toolbar = docQs('#crm-mindmap-toolbar');
+            if (toolbar && !toolbar.dataset.filtersBound) {
+                toolbar.dataset.filtersBound = '1';
+                const saveStatus = docQs('#crm-mindmap-save-status');
+                if (saveStatus) {
+                    MINDMAP_TAGS.forEach(tag => {
+                        const chip = document.createElement('button');
+                        chip.className = 'crm-mindmap-filter-chip';
+                        chip.innerHTML = `${tag.emoji} ${tag.label}`;
+                        chip.style.setProperty('--chip-color', tag.color);
+                        chip.onclick = () => {
+                            if (mindMapActiveTagFilter === tag.id) {
+                                mindMapActiveTagFilter = null;
+                                chip.classList.remove('active');
+                                chip.style.background = 'transparent';
+                            } else {
+                                mindMapActiveTagFilter = tag.id;
+                                toolbar.querySelectorAll('.crm-mindmap-filter-chip').forEach(c => {
+                                    c.classList.remove('active');
+                                    c.style.background = 'transparent';
+                                });
+                                chip.classList.add('active');
+                                chip.style.background = tag.color;
+                            }
+                            updateNodeDimming();
+                        };
+                        toolbar.insertBefore(chip, saveStatus);
+                    });
+                    const div = document.createElement('div');
+                    div.className = 'crm-mindmap-toolbar-divider';
+                    toolbar.insertBefore(div, saveStatus);
+                }
+            }
 
             closeBtn?.addEventListener('click', () => {
                 if (mindMapDirty) saveMindMapEdits();
@@ -1859,13 +2582,116 @@ window.CrmBooksWorkspace = (function () {
                 if (!nodeId) return;
                 if (!mindMapUserEdits[nodeId]) mindMapUserEdits[nodeId] = {};
                 mindMapUserEdits[nodeId].notes = notesEl.value;
+                mindMapUserEdits[nodeId].editedBy = getActiveTeamMember().id;
                 applyNotesIndicators();
                 scheduleMindMapAutoSave();
             });
 
             regenBtn?.addEventListener('click', () => {
-                if (selectedBookId) {
-                    openMindMapModal(selectedBookId, true).catch(console.error);
+                if (!selectedBookId) return;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'crm-mindmap-confirm-overlay';
+                overlay.innerHTML = `
+                  <div class="crm-mindmap-confirm-card">
+                    <h3>⚡ Regenerate Mind Map?</h3>
+                    <p>This will re-synthesize the map from your current saved notes. The AI structure (categories/subtopics) will be rebuilt.</p>
+                    <p style="font-weight:600; color:#059669;">✓ Your custom nodes, annotations, and tags will be preserved.</p>
+                    <p style="font-weight:600; color:#059669;">✓ A snapshot of the current map will be saved to History.</p>
+                    <div class="crm-mindmap-confirm-actions">
+                      <button class="crm-btn crm-btn-secondary" data-action="cancel">Cancel</button>
+                      <button class="crm-btn crm-btn-primary" data-action="confirm">Regenerate</button>
+                    </div>
+                  </div>
+                `;
+                const modal = docQs('#crm-books-mindmap-modal');
+                if (modal && modal.classList.contains('books-dark')) {
+                    overlay.classList.add('books-dark');
+                }
+                (modal || document.body).appendChild(overlay);
+
+                overlay.addEventListener('click', async (e) => {
+                    const action = e.target.closest('button')?.dataset.action;
+                    if (action === 'cancel') {
+                        overlay.remove();
+                    } else if (action === 'confirm') {
+                        overlay.remove();
+                        try {
+                            const btn = docQs('#crm-mindmap-regenerate-btn');
+                            if (btn) btn.disabled = true;
+                            await apiPost(`/api/admin/books/${selectedBookId}/mind-map/snapshot`, { name: 'Before regeneration' });
+                            await openMindMapModal(selectedBookId, true);
+                        } catch (err) {
+                            console.error(err);
+                            alert('Failed to regenerate: ' + err.message);
+                        } finally {
+                            const btn = docQs('#crm-mindmap-regenerate-btn');
+                            if (btn) btn.disabled = false;
+                        }
+                    }
+                });
+            });
+
+            const searchInput = docQs('#crm-mindmap-search');
+            searchInput?.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const nodes = Array.from(docQs('#crm-mindmap-canvas').querySelectorAll('.crm-mindmap-node'));
+                if (!query) {
+                    nodes.forEach(n => {
+                        n.classList.remove('crm-mindmap-search-match');
+                        n.classList.remove('crm-mindmap-search-dim');
+                    });
+                    return;
+                }
+
+                let matches = [];
+                nodes.forEach(n => {
+                    const title = (n.dataset.title || '').toLowerCase();
+                    const summary = (n.dataset.summary || '').toLowerCase();
+                    if (title.includes(query) || summary.includes(query)) {
+                        n.classList.add('crm-mindmap-search-match');
+                        n.classList.remove('crm-mindmap-search-dim');
+                        matches.push(n);
+                    } else {
+                        n.classList.remove('crm-mindmap-search-match');
+                        n.classList.add('crm-mindmap-search-dim');
+                    }
+                });
+
+                if (matches.length === 1) {
+                    zoomToNode(matches[0].dataset.nodeId);
+                }
+            });
+
+            const historyBtn = docQs('#crm-mindmap-history-btn');
+            const historyCloseBtn = docQs('#crm-mindmap-versions-close');
+            
+            historyBtn?.addEventListener('click', openVersionHistoryPanel);
+            historyCloseBtn?.addEventListener('click', () => {
+                const panel = docQs('#crm-mindmap-versions');
+                if (panel) panel.style.display = 'none';
+            });
+
+            const exportBtn = docQs('#crm-mindmap-export-btn');
+            const exportDropdown = docQs('#crm-mindmap-export-dropdown');
+            
+            exportBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (exportDropdown) {
+                    exportDropdown.style.display = exportDropdown.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+            
+            docQs('#crm-mindmap-export-dropdown')?.addEventListener('click', (e) => {
+                const action = e.target.closest('.crm-mindmap-export-option')?.dataset.export;
+                if (!action) return;
+                
+                if (action === 'png') {
+                    exportMindMapPNG();
+                } else if (action === 'markdown') {
+                    exportMindMapMarkdown(false);
+                } else if (action === 'clipboard') {
+                    exportMindMapMarkdown(true);
                 }
             });
 
@@ -1985,6 +2811,124 @@ window.CrmBooksWorkspace = (function () {
                 applyMindMapTransform();
             }, { passive: false });
 
+            // === Touch Events (Phase 4 deferred — mobile/tablet support) ===
+            let touchState = { type: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startZoom: 1, startDist: 0, nodeEl: null, nodeId: null, origLeft: 0, origTop: 0, moved: false };
+
+            viewport?.addEventListener('touchstart', (e) => {
+                hideContextMenu();
+                const touches = e.touches;
+
+                if (touches.length === 1) {
+                    const touch = touches[0];
+                    const node = touch.target.closest ? touch.target.closest('.crm-mindmap-node') : null;
+                    if (touch.target.closest('#crm-mindmap-inspector') || touch.target.closest('.crm-mindmap-toolbar')) return;
+
+                    if (node) {
+                        const nodeId = getNodeId(node);
+                        if (nodeId) {
+                            touchState = {
+                                type: 'node-drag',
+                                startX: touch.clientX, startY: touch.clientY,
+                                startPanX: 0, startPanY: 0, startZoom: mindMapZoom, startDist: 0,
+                                nodeEl: node, nodeId,
+                                origLeft: parseFloat(node.style.left) || 0,
+                                origTop: parseFloat(node.style.top) || 0,
+                                moved: false
+                            };
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+
+                    touchState = {
+                        type: 'pan',
+                        startX: touch.clientX - mindMapPanX,
+                        startY: touch.clientY - mindMapPanY,
+                        startPanX: mindMapPanX, startPanY: mindMapPanY, startZoom: mindMapZoom, startDist: 0,
+                        nodeEl: null, nodeId: null, origLeft: 0, origTop: 0, moved: false
+                    };
+                    viewport.classList.add('is-panning');
+                    e.preventDefault();
+                } else if (touches.length === 2) {
+                    const dx = touches[0].clientX - touches[1].clientX;
+                    const dy = touches[0].clientY - touches[1].clientY;
+                    touchState = {
+                        type: 'pinch',
+                        startX: 0, startY: 0,
+                        startPanX: mindMapPanX, startPanY: mindMapPanY,
+                        startZoom: mindMapZoom,
+                        startDist: Math.sqrt(dx * dx + dy * dy),
+                        nodeEl: null, nodeId: null, origLeft: 0, origTop: 0, moved: false
+                    };
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            viewport?.addEventListener('touchmove', (e) => {
+                const touches = e.touches;
+
+                if (touchState.type === 'node-drag' && touches.length === 1) {
+                    const touch = touches[0];
+                    const dx = touch.clientX - touchState.startX;
+                    const dy = touch.clientY - touchState.startY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (!touchState.moved && dist < 8) return;
+                    touchState.moved = true;
+                    e.preventDefault();
+
+                    if (touchState.nodeEl) {
+                        touchState.nodeEl.classList.add('is-dragging');
+                        const newLeft = touchState.origLeft + dx / mindMapZoom;
+                        const newTop = touchState.origTop + dy / mindMapZoom;
+                        touchState.nodeEl.style.left = newLeft + 'px';
+                        touchState.nodeEl.style.top = newTop + 'px';
+                        if (mindMapDragRafId) cancelAnimationFrame(mindMapDragRafId);
+                        mindMapDragRafId = requestAnimationFrame(() => rebuildSVGPaths());
+                    }
+                } else if (touchState.type === 'pan' && touches.length === 1) {
+                    const touch = touches[0];
+                    mindMapPanX = touch.clientX - touchState.startX;
+                    mindMapPanY = touch.clientY - touchState.startY;
+                    touchState.moved = true;
+                    applyMindMapTransform();
+                    e.preventDefault();
+                } else if (touchState.type === 'pinch' && touches.length === 2) {
+                    const dx = touches[0].clientX - touches[1].clientX;
+                    const dy = touches[0].clientY - touches[1].clientY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (touchState.startDist > 0) {
+                        const scale = dist / touchState.startDist;
+                        mindMapZoom = Math.max(0.3, Math.min(2.5, touchState.startZoom * scale));
+                        applyMindMapTransform();
+                    }
+                    touchState.moved = true;
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            viewport?.addEventListener('touchend', (e) => {
+                if (touchState.type === 'node-drag') {
+                    const state = { ...touchState };
+                    if (state.nodeEl) state.nodeEl.classList.remove('is-dragging');
+
+                    if (!state.moved && state.nodeId) {
+                        // Tap on node → open inspector
+                        handleNodeClick(state.nodeId);
+                    } else if (state.moved && state.nodeId && state.nodeEl) {
+                        // Save dragged position
+                        const finalLeft = parseFloat(state.nodeEl.style.left) || 0;
+                        const finalTop = parseFloat(state.nodeEl.style.top) || 0;
+                        mindMapPositions[state.nodeId] = { x: finalLeft, y: finalTop };
+                        const userNode = mindMapUserNodes.find(u => u.id === state.nodeId);
+                        if (userNode) { userNode.x = finalLeft; userNode.y = finalTop; }
+                        scheduleMindMapAutoSave();
+                    }
+                } else if (touchState.type === 'pan') {
+                    viewport?.classList.remove('is-panning');
+                }
+                touchState = { type: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startZoom: 1, startDist: 0, nodeEl: null, nodeId: null, origLeft: 0, origTop: 0, moved: false };
+            });
+
             viewport?.addEventListener('dblclick', (e) => {
                 if (e.target.closest('.crm-mindmap-node')) {
                     const node = e.target.closest('.crm-mindmap-node');
@@ -2025,6 +2969,22 @@ window.CrmBooksWorkspace = (function () {
                     hideContextMenu();
                     return;
                 }
+                const tagBtn = e.target.closest('.crm-mindmap-tag-option');
+                if (tagBtn && mindMapContextNodeId) {
+                    const tagId = tagBtn.dataset.tag;
+                    if (!mindMapUserEdits[mindMapContextNodeId]) mindMapUserEdits[mindMapContextNodeId] = {};
+                    if (!mindMapUserEdits[mindMapContextNodeId].tags) mindMapUserEdits[mindMapContextNodeId].tags = [];
+                    const tags = mindMapUserEdits[mindMapContextNodeId].tags;
+                    if (tags.includes(tagId)) {
+                        tags.splice(tags.indexOf(tagId), 1);
+                    } else {
+                        tags.push(tagId);
+                    }
+                    scheduleMindMapAutoSave();
+                    renderMindMapNodes(currentMindMapData);
+                    hideContextMenu();
+                    return;
+                }
                 if (!item || !mindMapContextNodeId) return;
                 const action = item.dataset.action;
                 const nid = mindMapContextNodeId;
@@ -2045,10 +3005,217 @@ window.CrmBooksWorkspace = (function () {
 
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#crm-mindmap-context-menu')) hideContextMenu();
+                const memberDropdown = docQs('#crm-mindmap-member-dropdown');
+                if (memberDropdown && !e.target.closest('#crm-mindmap-member-selector')) {
+                    memberDropdown.style.display = 'none';
+                }
+                const mapDropdown = docQs('#crm-mindmap-map-dropdown');
+                if (mapDropdown && !e.target.closest('#crm-mindmap-map-selector')) {
+                    mapDropdown.style.display = 'none';
+                }
+                const exportDropdown = docQs('#crm-mindmap-export-dropdown');
+                if (exportDropdown && !e.target.closest('.crm-mindmap-export-wrap')) {
+                    exportDropdown.style.display = 'none';
+                }
             });
         }
 
-        async function openMindMapModal(bookId, force = false) {
+        async function openVersionHistoryPanel() {
+            const panel = docQs('#crm-mindmap-versions');
+            const list = docQs('#crm-mindmap-versions-list');
+            if (!panel || !list || !selectedBookId) return;
+
+            panel.style.display = 'flex';
+            list.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--crm-text-muted);">Loading versions...</div>`;
+
+            try {
+                const res = await apiGet(`/api/admin/books/${selectedBookId}/mind-map/versions`);
+                const versions = res?.versions || [];
+
+                if (versions.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--crm-text-muted);">No saved versions yet.</div>`;
+                    return;
+                }
+
+                list.innerHTML = versions.map(v => `
+                    <div class="crm-mindmap-version-item">
+                        <div class="crm-mindmap-version-item-name">${escapeHtml(v.name || 'Untitled Version')}</div>
+                        <div class="crm-mindmap-version-item-meta">
+                            ${new Date(v.timestamp).toLocaleString()} • ${v.categoryCount || 0} categories, ${v.noteCount || 0} notes
+                        </div>
+                        <button class="crm-mindmap-version-restore-btn" data-id="${v.id}">Restore</button>
+                    </div>
+                `).join('');
+
+                list.querySelectorAll('.crm-mindmap-version-restore-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const versionId = e.target.dataset.id;
+                        if (!confirm('Are you sure you want to restore this version? Your current map will be overwritten.')) return;
+                        
+                        try {
+                            e.target.disabled = true;
+                            e.target.textContent = 'Restoring...';
+                            const res = await apiPost(`/api/admin/books/${selectedBookId}/mind-map/restore/${versionId}`);
+                            if (res && res.mindMap) {
+                                currentMindMapData = res.mindMap;
+                                mindMapPositions = res.mindMap.positions || {};
+                                mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
+                                mindMapUserEdits = res.mindMap.userEdits || {};
+                                mindMapDirty = false;
+                                renderMindMapNodes(currentMindMapData);
+                                panel.style.display = 'none';
+                                updateSaveStatus(null, '✅ Version restored');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Failed to restore version: ' + err.message);
+                            e.target.disabled = false;
+                            e.target.textContent = 'Restore';
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<div style="text-align:center; padding: 20px; color: #EF4444;">Failed to load versions.</div>`;
+            }
+        }
+
+        function exportMindMapPNG() {
+            try {
+                const canvas = docQs('#crm-mindmap-canvas');
+                const svg = docQs('#crm-mindmap-svg');
+                if (!canvas || !svg) return;
+
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = parseInt(canvas.style.width) || 3000;
+                exportCanvas.height = parseInt(canvas.style.height) || 2000;
+                const ctx = exportCanvas.getContext('2d');
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+                // Draw connecting lines
+                ctx.strokeStyle = '#D1D5DB';
+                ctx.lineWidth = 2;
+                const paths = svg.querySelectorAll('path');
+                paths.forEach(path => {
+                    const d = path.getAttribute('d');
+                    if (d) {
+                        const p = new Path2D(d);
+                        ctx.stroke(p);
+                    }
+                });
+
+                // Draw nodes
+                const nodes = canvas.querySelectorAll('.crm-mindmap-node');
+                nodes.forEach(node => {
+                    const rect = node.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+                    
+                    const left = parseFloat(node.style.left) || 0;
+                    const top = parseFloat(node.style.top) || 0;
+                    const width = parseFloat(node.style.width) || 200;
+                    const height = node.offsetHeight;
+                    
+                    const bgColor = window.getComputedStyle(node).backgroundColor;
+                    const borderColor = window.getComputedStyle(node).borderColor;
+                    
+                    ctx.fillStyle = bgColor;
+                    ctx.strokeStyle = borderColor;
+                    ctx.lineWidth = 1;
+                    
+                    // rounded rect
+                    ctx.beginPath();
+                    ctx.roundRect(left, top, width, height, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // text
+                    ctx.fillStyle = window.getComputedStyle(node).color || '#111827';
+                    ctx.font = 'bold 14px "Inter", sans-serif';
+                    const title = node.querySelector('.crm-mindmap-node-title')?.textContent || '';
+                    
+                    const textMargin = 16;
+                    let yPos = top + textMargin + 14;
+                    ctx.fillText(title.substring(0, 30) + (title.length > 30 ? '...' : ''), left + textMargin, yPos);
+                    
+                    const summary = node.querySelector('.crm-mindmap-node-summary')?.textContent || '';
+                    if (summary) {
+                        ctx.fillStyle = '#4B5563';
+                        ctx.font = '12px "Inter", sans-serif';
+                        yPos += 20;
+                        ctx.fillText(summary.substring(0, 40) + (summary.length > 40 ? '...' : ''), left + textMargin, yPos);
+                    }
+                });
+
+                exportCanvas.toBlob(blob => {
+                    if (!blob) return;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `mindmap_${selectedBookId}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            } catch (err) {
+                console.error('Export PNG failed', err);
+                alert('Failed to export PNG: ' + err.message);
+            }
+        }
+
+        function exportMindMapMarkdown(toClipboard = false) {
+            if (!currentMindMapData) return;
+            
+            let md = `# ${currentMindMapData.centralTopic || 'Mind Map'}\n\n`;
+            
+            const categories = currentMindMapData.categories || [];
+            categories.forEach(cat => {
+                const catTitle = mindMapUserEdits[cat.id]?.title || cat.title || 'Category';
+                md += `## ${catTitle}\n`;
+                if (cat.summary) md += `*${cat.summary}*\n\n`;
+                
+                const subtopics = cat.subtopics || [];
+                subtopics.forEach(sub => {
+                    const subTitle = mindMapUserEdits[sub.id]?.title || sub.title || 'Subtopic';
+                    md += `- **${subTitle}**: ${sub.summary || ''}\n`;
+                    
+                    if (mindMapUserEdits[sub.id]?.notes) {
+                        md += `  - *Notes:* ${mindMapUserEdits[sub.id].notes.replace(/\\n/g, ' ')}\n`;
+                    }
+                });
+                md += '\n';
+            });
+            
+            if (mindMapUserNodes && mindMapUserNodes.length > 0) {
+                md += `## Custom Notes\n`;
+                mindMapUserNodes.forEach(un => {
+                    md += `- **${un.title || 'Note'}**: ${un.text || ''}\n`;
+                });
+                md += '\n';
+            }
+            
+            if (toClipboard) {
+                navigator.clipboard.writeText(md).then(() => {
+                    updateSaveStatus(null, '\ud83d\udccb Copied to clipboard!');
+                }).catch(err => {
+                    alert('Failed to copy: ' + err.message);
+                });
+            } else {
+                const blob = new Blob([md], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `mindmap_${selectedBookId}.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        async function openMindMapModal(bookId, force = false, noteIds = null) {
             bindMindMapModalEvents();
             const modal = docQs('#crm-books-mindmap-modal');
             const titleEl = docQs('#crm-mindmap-title');
@@ -2058,6 +3225,12 @@ window.CrmBooksWorkspace = (function () {
 
             if (!modal) return;
             modal.style.display = 'flex';
+
+            // Sync dark mode from books panel (modal is body-level, not nested)
+            const booksPanel = document.querySelector('[data-panel="books"]');
+            const isDark = booksPanel?.classList.contains('books-dark');
+            modal.classList.toggle('books-dark', !!isDark);
+
             updateSaveStatus('');
 
             if (canvas) {
@@ -2069,20 +3242,41 @@ window.CrmBooksWorkspace = (function () {
             if (svg) svg.innerHTML = '';
 
             try {
-                const res = await apiPost(`/api/admin/books/${bookId}/mind-map`, { force });
+                let oldPositions = {};
+                let oldUserNodes = [];
+                let oldUserEdits = {};
+                if (force) {
+                    oldPositions = { ...mindMapPositions };
+                    oldUserNodes = [ ...mindMapUserNodes ];
+                    oldUserEdits = { ...mindMapUserEdits };
+                }
+
+                const payload = { force };
+                if (noteIds && noteIds.length > 0) payload.noteIds = noteIds;
+                const res = await apiPost(`/api/admin/books/${bookId}/mind-map`, payload);
                 if (!res || !res.mindMap) {
                     throw new Error(res?.message || 'Failed to generate Mind Map.');
                 }
                 currentMindMapData = res.mindMap;
-                mindMapPositions = res.mindMap.positions || {};
-                mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
-                mindMapUserEdits = res.mindMap.userEdits || {};
-                mindMapDirty = false;
+
+                if (force) {
+                    mindMapPositions = { ...(res.mindMap.positions || {}), ...oldPositions };
+                    mindMapUserNodes = oldUserNodes;
+                    mindMapUserEdits = { ...(res.mindMap.userEdits || {}), ...oldUserEdits };
+                    mindMapDirty = true;
+                    saveMindMapEdits();
+                } else {
+                    mindMapPositions = res.mindMap.positions || {};
+                    mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
+                    mindMapUserEdits = res.mindMap.userEdits || {};
+                    mindMapDirty = false;
+                }
 
                 if (titleEl) titleEl.textContent = `🧠 ${currentMindMapData.centralTopic || 'Mind Map'}`;
                 if (subtitleEl) subtitleEl.textContent = `${currentMindMapData.categories?.length || 0} categories • ${currentMindMapData.noteCount || 0} notes synthesized`;
 
                 renderMindMapNodes(currentMindMapData);
+                saveMapState(bookId, mindMapActiveMapId);
             } catch (err) {
                 console.error('Failed to open mind map:', err);
                 if (canvas) {
@@ -2574,6 +3768,172 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
+        function showDownloadSourceModal(initialBookId) {
+            const existing = qs('.crm-books-download-modal');
+            if (existing) existing.remove();
+
+            if (!books || books.length === 0) {
+                showToast?.('No sources available in your library.', 'info');
+                return;
+            }
+
+            const isDark = document.querySelector('[data-panel="books"]')?.classList.contains('books-dark');
+            const darkClass = isDark ? ' books-dark' : '';
+
+            const modal = document.createElement('div');
+            modal.className = `crm-modal-overlay crm-books-modal-overlay crm-books-download-modal${darkClass}`;
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-labelledby', 'crm-books-download-title');
+
+            const availableBooks = books;
+            const initialSelectedMap = {};
+            if (initialBookId) {
+                initialSelectedMap[initialBookId] = true;
+            } else {
+                availableBooks.forEach(b => { initialSelectedMap[b.bookId] = true; });
+            }
+
+            const itemsHtml = availableBooks.map((b) => {
+                const isChecked = !!initialSelectedMap[b.bookId];
+                const pageLabel = b.pageCount ? `${b.pageCount} pages` : '';
+                const metaStr = [escapeHtml(b.author || ''), pageLabel].filter(Boolean).join(' \u00b7 ');
+                return `<label class="crm-books-download-item${isChecked ? ' selected' : ''}" data-book-id="${escapeHtml(b.bookId)}" style="display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--books-border, #E8E2D9); border-radius:8px; cursor:pointer; transition:background 0.15s ease, border-color 0.15s ease; user-select:none;">` +
+                    `<input type="checkbox" class="crm-books-source-item-cb" data-book-id="${escapeHtml(b.bookId)}" ${isChecked ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--accent-color, #C25E00); cursor:pointer; flex-shrink:0;">` +
+                    `<div style="flex:1; min-width:0;">` +
+                    `<div style="font-weight:500; font-size:0.9rem; color:var(--books-text, #2D2926); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(b.title)}</div>` +
+                    (metaStr ? `<div class="crm-muted" style="font-size:0.78rem; margin-top:2px;">${metaStr}</div>` : '') +
+                    `</div>` +
+                    `</label>`;
+            }).join('');
+
+            const allInitiallyChecked = availableBooks.length > 0 && availableBooks.every(b => initialSelectedMap[b.bookId]);
+
+            modal.innerHTML =
+                `<div class="crm-modal-container crm-books-download-dialog" style="max-width:520px; width:100%;">` +
+                `<div class="crm-modal-header" style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--books-border, #E8E2D9);">` +
+                `<div style="display:flex; align-items:center; gap:8px;">` +
+                `<span style="display:flex; color:var(--accent-color, #C25E00);">${ICON_DOWNLOAD}</span>` +
+                `<h2 id="crm-books-download-title" style="margin:0; font-size:1.1rem; font-weight:600;">Download Sources</h2>` +
+                `</div>` +
+                `<button class="crm-icon-btn crm-books-download-modal-close" title="Close" aria-label="Close modal">${ICON_CLOSE}</button>` +
+                `</div>` +
+                `<div class="crm-modal-body" style="padding:16px 20px; display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto;">` +
+                `<p class="crm-muted" style="margin:0; font-size:0.875rem;">Choose which source files to download from your library:</p>` +
+                `<div class="crm-books-download-toolbar" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--books-card-bg, #F9F6F0); border:1px solid var(--books-border, #E8E2D9); border-radius:8px;">` +
+                `<label style="display:flex; align-items:center; gap:10px; font-weight:600; cursor:pointer; user-select:none; margin:0; font-size:0.9rem;">` +
+                `<input type="checkbox" id="crm-books-download-all-cb" ${allInitiallyChecked ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--accent-color, #C25E00); cursor:pointer;">` +
+                `<span>Download all</span>` +
+                `</label>` +
+                `<span class="crm-books-download-count-badge crm-muted" style="font-size:0.8rem;">0 selected</span>` +
+                `</div>` +
+                `<div class="crm-books-download-list" style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">` +
+                itemsHtml +
+                `</div>` +
+                `</div>` +
+                `<div class="crm-modal-footer" style="padding:12px 20px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--books-border, #E8E2D9);">` +
+                `<button class="crm-btn-secondary crm-books-download-modal-cancel">Cancel</button>` +
+                `<button class="crm-btn-primary crm-books-download-modal-submit">${ICON_DOWNLOAD}<span>Download</span></button>` +
+                `</div>` +
+                `</div>`;
+
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                modal.remove();
+                document.removeEventListener('keydown', handleEsc);
+            };
+
+            const handleEsc = (e) => {
+                if (e.key === 'Escape') closeModal();
+            };
+            document.addEventListener('keydown', handleEsc);
+
+            modal.querySelector('.crm-books-download-modal-close').addEventListener('click', closeModal);
+            modal.querySelector('.crm-books-download-modal-cancel').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            const downloadAllCb = modal.querySelector('#crm-books-download-all-cb');
+            const itemCbs = Array.from(modal.querySelectorAll('.crm-books-source-item-cb'));
+            const countBadge = modal.querySelector('.crm-books-download-count-badge');
+            const submitBtn = modal.querySelector('.crm-books-download-modal-submit');
+            const submitSpan = submitBtn.querySelector('span');
+
+            const updateState = () => {
+                const checkedCount = itemCbs.filter(cb => cb.checked).length;
+                const totalCount = itemCbs.length;
+
+                if (downloadAllCb) {
+                    downloadAllCb.checked = totalCount > 0 && checkedCount === totalCount;
+                    downloadAllCb.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+                }
+
+                itemCbs.forEach(cb => {
+                    const itemLabel = cb.closest('.crm-books-download-item');
+                    if (itemLabel) {
+                        if (cb.checked) {
+                            itemLabel.classList.add('selected');
+                            itemLabel.style.borderColor = 'var(--accent-color, #C25E00)';
+                        } else {
+                            itemLabel.classList.remove('selected');
+                            itemLabel.style.borderColor = 'var(--books-border, #E8E2D9)';
+                        }
+                    }
+                });
+
+                if (countBadge) {
+                    countBadge.textContent = `${checkedCount} of ${totalCount} selected`;
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = checkedCount === 0;
+                    if (submitSpan) {
+                        submitSpan.textContent = checkedCount > 0 ? `Download (${checkedCount})` : 'Download';
+                    }
+                }
+            };
+
+            if (downloadAllCb) {
+                downloadAllCb.addEventListener('change', () => {
+                    const isChecked = downloadAllCb.checked;
+                    itemCbs.forEach(cb => { cb.checked = isChecked; });
+                    updateState();
+                });
+            }
+
+            itemCbs.forEach(cb => {
+                cb.addEventListener('change', updateState);
+            });
+
+            updateState();
+
+            submitBtn.addEventListener('click', async () => {
+                const selectedBookIds = itemCbs.filter(cb => cb.checked).map(cb => cb.dataset.bookId).filter(Boolean);
+                if (selectedBookIds.length === 0) return;
+
+                submitBtn.disabled = true;
+                if (submitSpan) submitSpan.textContent = 'Downloading...';
+
+                showToast?.(`Starting download for ${selectedBookIds.length} source file(s)...`, 'info');
+
+                closeModal();
+
+                for (let i = 0; i < selectedBookIds.length; i++) {
+                    const bookId = selectedBookIds[i];
+                    try {
+                        await downloadSource(bookId);
+                    } catch (err) {
+                        console.error('[CRM Books] Error in batch download for book:', bookId, err);
+                    }
+                    if (i < selectedBookIds.length - 1) {
+                        await new Promise(r => setTimeout(r, 250));
+                    }
+                }
+            });
+        }
+
         async function deleteBook(bookId) {
             if (!confirm('Delete this book? It will be moved to the recycle bin.')) return;
             try {
@@ -2786,7 +4146,7 @@ window.CrmBooksWorkspace = (function () {
                     }
                     if (target.classList.contains('crm-books-download-btn')) {
                         e.stopPropagation();
-                        await downloadSource(bookId);
+                        showDownloadSourceModal(bookId);
                         return;
                     }
                     if (target.classList.contains('crm-books-retry-btn')) {

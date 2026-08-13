@@ -1,3 +1,20 @@
+## [V1.8.65] - 2026-08-13
+
+### Added & Enhanced
+- **CRM Books Mind Map Optimization & Enhancements**:
+  - **Outline View (Phase 6)**: Added a toggleable outline side panel with a collapsible hierarchy tree, node highlight/zoom-to-node navigation, and bidirectional synchronization with canvas edits.
+  - **Minimap Navigator (Phase 4)**: Integrated a bottom-left minimap navigator with real-time node rendering, draggable viewport frame, and smooth 400ms ease-out `zoomToNode` animations.
+  - **Touch & Mobile Support (Phase 4)**: Implemented single-finger canvas panning, pinch-to-zoom (0.3x-2.5x), single-finger node dragging with threshold dead-zone, and tap-to-inspect gestures.
+  - **Multi-Map Management (Phase 7)**: Implemented multiple mind map creation and switching per book via map selector header dropdown with localStorage persistence.
+
+### Fixed
+- **CRM Books Mind Map Runtime & UI Fixes**:
+  - Resolved `window.loadBookNotes` scope crash by converting to closure-scoped synchronous calls.
+  - Corrected `extractNoteTitle` object return handling (`{ title, body }`).
+  - Fixed `updateSaveStatus` signature for custom status messages.
+  - Replaced non-existent `saveMindMap` call with `saveMindMapEdits`.
+  - Fixed modal dark mode inheritance by applying self-selector `.crm-books-mindmap-modal.books-dark` and syncing class state on modal open.
+
 ## [V1.8.63] - 2026-08-12
 
 ### Added & Enhanced

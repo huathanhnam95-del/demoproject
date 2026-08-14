@@ -1376,6 +1376,31 @@
       });
     }
 
+    // For essay mode, also support a secondary toggle button on the results screen
+    if (mode === 'essay') {
+      const resultsHost = document.getElementById('essay-history-action-host');
+      if (resultsHost && !document.getElementById('essay-results-history-toggle')) {
+        const resultsToggle = document.createElement('button');
+        resultsToggle.id = 'essay-results-history-toggle';
+        resultsToggle.type = 'button';
+        resultsToggle.className = 'modern-btn modern-btn--history';
+        resultsToggle.style.cssText = 'margin-left: 8px; vertical-align: middle;';
+        resultsToggle.textContent = '🕒 Previous Attempts';
+        resultsHost.appendChild(resultsToggle);
+
+        resultsToggle.addEventListener('click', async () => {
+          const latestQuestionId = resolveHistoryQuestionId('essay', toggleBtn.dataset.questionId || questionId);
+          const isCollapsed = historyContainer.style.display === 'none';
+          if (isCollapsed) {
+            historyContainer.style.display = 'block';
+            await refreshHistoryList('essay', latestQuestionId, historyContainer);
+          } else {
+            historyContainer.style.display = 'none';
+          }
+        });
+      }
+    }
+
     // Migrate an already-created legacy node if the dedicated host becomes
     // available after mode initialization.
     if (dedicatedActionHost && toggleBtn && !dedicatedActionHost.contains(toggleBtn)) {

@@ -68,8 +68,8 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
         effective_prompt = "/no_think\n\n" + prompt
 
     # Adjust context size per model architecture to prevent CUDA VRAM memory bounds
-    num_ctx = 4096 if "gemma" in model.lower() else 8192
-    num_predict = 2048 if "gemma" in model.lower() else 4096
+    num_ctx = 8192 if "gemma" in model.lower() else 16384
+    num_predict = 4096
 
     for attempt in range(1, max_retries + 1):
         temp = temperature if attempt == 1 else 0.0
@@ -835,6 +835,7 @@ def parse_args():
     parser.add_argument("--ids", type=str, help="Comma-separated IDs")
     parser.add_argument("--start", type=int, help="Zero-based start index")
     parser.add_argument("--limit", type=int, help="Max questions to process")
+    parser.add_argument("--start-id", type=int, help="Minimum Question ID to process (skip all lower IDs)")
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--reset-sidecar", action="store_true")
     parser.add_argument("--save-every", type=int, default=10)
@@ -921,6 +922,9 @@ def main():
         selected_ids = all_ids[args.start:end]
     else:
         selected_ids = all_ids[: (args.limit or len(all_ids))]
+
+    if args.start_id is not None:
+        selected_ids = [qid for qid in selected_ids if qid >= args.start_id]
 
     succeeded = 0
     failed_ids = []

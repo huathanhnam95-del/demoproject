@@ -1309,7 +1309,10 @@
                 el.localAiScoreStatus.style.display = 'block';
                 el.localAiScoreStatus.textContent = data.created === false
                     ? `This essay is already ${data.status}.`
-                    : 'Queued for local AI scoring. You will receive a notification when results are ready.';
+                    : 'Queued for local AI scoring. Waiting for AI feedback…';
+            }
+            if (data.queueId) {
+                pollLocalAiScoreResult(data.queueId, attemptId);
             }
         } catch (error) {
             console.error('[WriteEssay] local AI queue failed:', error);
@@ -1322,6 +1325,54 @@
             if (el.localAiScoreBtn) el.localAiScoreBtn.textContent = 'Queue local AI scoring';
             updateAiScoreButtonState();
         }
+    }
+
+    async function pollLocalAiScoreResult(queueId, attemptId) {
+        if (!queueId) return;
+        const startTime = Date.now();
+        const maxWaitMs = 180000;
+        const timer = setInterval(async () => {
+            try {
+                if (!window.__FIREBASE_INTERNAL__?.db) return;
+                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                const snap = await getDoc(doc(window.__FIREBASE_INTERNAL__.db, 'essay_ai_queue', queueId));
+                if (snap.exists()) {
+                    const qData = snap.data() || {};
+                    if (qData.status === 'completed' && qData.resultSnapshot) {
+                        clearInterval(timer);
+                        if (el.localAiScoreStatus) {
+                            el.localAiScoreStatus.style.display = 'block';
+                            el.localAiScoreStatus.textContent = '✅ Local AI scoring complete!';
+                        }
+                        if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores (Local AI)';
+                        displayAiScoreResults(qData.resultSnapshot);
+                        const teacherAdvice = String(qData.resultSnapshot.teacherAdviceChat || qData.resultSnapshot.teacherAdvice || '').trim();
+                        if (teacherAdvice) postTeacherAdviceToChat(teacherAdvice);
+                        if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
+                            window.PTEAttemptArchive.updateHistoryUI('essay', currentEntry?.id);
+                        }
+                        return;
+                    }
+                    if (qData.status === 'failed') {
+                        clearInterval(timer);
+                        if (el.localAiScoreStatus) {
+                            el.localAiScoreStatus.style.display = 'block';
+                            el.localAiScoreStatus.textContent = qData.error || 'Local AI scoring failed.';
+                        }
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('[WriteEssay] Local AI poll check failed:', e);
+            }
+            if (Date.now() - startTime > maxWaitMs) {
+                clearInterval(timer);
+                if (el.localAiScoreStatus) {
+                    el.localAiScoreStatus.style.display = 'block';
+                    el.localAiScoreStatus.textContent = 'Queued for local AI scoring. Check back or click Previous Attempts for results.';
+                }
+            }
+        }, 3000);
     }
 
     function displayAiScoreResults(data) {

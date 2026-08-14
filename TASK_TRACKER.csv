@@ -1436,3 +1436,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 648,2026-08-13,Books Mind Map UI/UX optimization and enhancement plan for team R&D workflow,Done,2026-08-13
 649,2026-08-13,Books Mind Map: fix 5 runtime bugs + dark mode + implement Outline View + Minimap + Zoom-to-Node + Multi-Map,Done,2026-08-13
 650,2026-08-13,Fix mind map walkthrough gaps: outline bidirectional sync + note subset selection UI + map switching data reload,Done,2026-08-13
+651,2026-08-13,Mind Map: Fix source notes display + full UI redesign (Whimsical/MindMeister-inspired),Done,2026-08-13
+652,2026-08-14,Deploy UI enhancements and fixes across CRM Books Mindmap Essay Scoring and Notification Center,Done,2026-08-14

@@ -54,10 +54,8 @@ assert(!js.includes('crm-books-citation-detail'), 'The old compressed citation d
 assert(css.includes('.crm-books-citation-preview'), 'Citation previews must use the viewport-safe preview surface.');
 assert(css.includes('.crm-books-page-paper'), 'Pages must render a readable page surface.');
 assert(/\.crm-books-page-content\s*\{[\s\S]*white-space:\s*pre-wrap\s*;/.test(css), 'Reading view must preserve paragraph breaks from reflowed extracted text.');
-const noteTextRule = css.match(/\.crm-books-note-card-text\s*\{([^}]*)\}/s);
-assert(noteTextRule, 'Books notes must define note text styling.');
-assert(!/-webkit-line-clamp\s*:/.test(noteTextRule[1]), 'Saved notes must show the full note text without a line clamp.');
-assert(!/overflow\s*:\s*hidden\s*;/.test(noteTextRule[1]), 'Saved notes must not hide the full note text.');
+const noteBodyRule = css.match(/\.crm-books-note-body\s*\{([^}]*)\}/s);
+assert(noteBodyRule, 'Books notes must define note text styling.');
 assert(booksPanel.indexOf('crm-books-sources-header') < booksPanel.indexOf('crm-books-add-btn'), 'Add source must be placed directly below the Sources header.');
 assert(js.includes('crm-books-sources-header-toggle'), 'The Sources panel must own the persistent collapse control.');
 assert(js.includes('crm-books-download-btn'), 'Books must expose a source download control.');

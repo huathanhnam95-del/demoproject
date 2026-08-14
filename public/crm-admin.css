@@ -4710,23 +4710,27 @@ body {
    CRM Books Fullscreen Mind Map Modal & Interactive Node Styling
    ========================================================================== */
 .crm-books-mindmap-modal {
-  --mm-bg: #F8FAFC;
-  --mm-grid-dot: rgba(0,0,0,0.07);
+  --mm-bg: #F5F5F0;
+  --mm-grid-dot: rgba(0,0,0,0.04);
   --mm-node-bg: #FFFFFF;
-  --mm-node-text: #1F2937;
-  --mm-node-text-secondary: #6B7280;
-  --mm-node-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --mm-node-shadow-hover: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
-  --mm-node-shadow-drag: 0 12px 28px rgba(0,0,0,0.18), 0 4px 8px rgba(0,0,0,0.1);
-  --mm-node-radius: 10px;
-  --mm-node-border: #E5E7EB;
-  --mm-header-bg: #FFFFFF;
-  --mm-header-border: #E5E7EB;
-  --mm-header-text: #111827;
+  --mm-node-text: #2D2B2E;
+  --mm-node-text-secondary: #78716C;
+  --mm-node-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  --mm-node-shadow-hover: 0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+  --mm-node-shadow-drag: 0 16px 32px rgba(0,0,0,0.14), 0 4px 8px rgba(0,0,0,0.08);
+  --mm-node-radius: 12px;
+  --mm-node-border: rgba(0,0,0,0.08);
+  --mm-header-bg: rgba(255,255,255,0.82);
+  --mm-header-border: rgba(0,0,0,0.06);
+  --mm-header-text: #1C1917;
   --mm-inspector-bg: #FFFFFF;
-  --mm-inspector-border: #E5E7EB;
-  --mm-inspector-text: #1F2937;
-  --mm-inspector-text-secondary: #6B7280;
+  --mm-inspector-border: rgba(0,0,0,0.08);
+  --mm-inspector-text: #2D2B2E;
+  --mm-inspector-text-secondary: #78716C;
+  --mm-glass: rgba(255,255,255,0.72);
+  --mm-glass-border: rgba(255,255,255,0.5);
+  --mm-accent: #4F46E5;
+  --mm-accent-soft: rgba(79,70,229,0.08);
   position: fixed;
   top: 0;
   left: 0;
@@ -4737,15 +4741,17 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--mm-node-text);
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
 .crm-mindmap-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: var(--mm-header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--mm-header-border);
   z-index: 10;
 }
@@ -4753,40 +4759,93 @@ body {
 .crm-mindmap-header-left {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  min-width: 0;
 }
 
 .crm-mindmap-title {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: var(--mm-header-text);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .crm-mindmap-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--mm-node-text-secondary);
+  letter-spacing: 0.01em;
 }
 
 .crm-mindmap-header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .crm-mindmap-header-actions .crm-btn-secondary {
-  background: var(--mm-node-bg);
-  color: var(--mm-header-text);
-  border: 1px solid var(--mm-header-border);
+  background: transparent;
+  color: var(--mm-node-text-secondary);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
 }
 .crm-mindmap-header-actions .crm-btn-secondary:hover {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
+  background: rgba(0,0,0,0.05);
+  color: var(--mm-header-text);
 }
 .crm-mindmap-header-actions .crm-btn-close {
   color: var(--mm-node-text-secondary);
-  font-size: 1.4rem;
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+.crm-mindmap-header-actions .crm-btn-close:hover {
+  background: rgba(239,68,68,0.08);
+  color: #EF4444;
+}
+.crm-mindmap-header-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--mm-header-border);
+  margin: 0 4px;
+}
+.crm-mindmap-header-actions .crm-btn-secondary.crm-btn-accent {
+  background: var(--mm-accent-soft);
+  color: var(--mm-accent);
+  font-weight: 600;
+}
+.crm-mindmap-header-actions .crm-btn-secondary.crm-btn-accent:hover {
+  background: rgba(79,70,229,0.14);
+}
+.crm-mindmap-zoom-group {
+  display: flex;
+  align-items: center;
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+  padding: 1px;
+  gap: 0;
+}
+.crm-mindmap-zoom-group .crm-btn-secondary {
+  padding: 5px 8px;
+  border-radius: 6px;
+  min-width: 28px;
+  justify-content: center;
+  font-size: 0.82rem;
+}
+.crm-mindmap-zoom-group .crm-btn-secondary:hover {
+  background: rgba(0,0,0,0.06);
 }
 
 .crm-mindmap-body {
@@ -4805,8 +4864,8 @@ body {
   cursor: grab;
   user-select: none;
   background-color: var(--mm-bg);
-  background-image: radial-gradient(circle, var(--mm-grid-dot) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle, var(--mm-grid-dot) 0.8px, transparent 0.8px);
+  background-size: 28px 28px;
 }
 
 .crm-mindmap-viewport.is-panning {
@@ -4840,20 +4899,20 @@ body {
 .crm-mindmap-node {
   position: absolute;
   border-radius: var(--mm-node-radius);
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: var(--mm-node-bg);
   border: 1px solid var(--mm-node-border);
-  border-left: 4px solid var(--node-color, #4f46e5);
+  border-left: 3px solid var(--node-color, #4f46e5);
   color: var(--mm-node-text);
   box-shadow: var(--mm-node-shadow);
   cursor: pointer;
   user-select: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
 .crm-mindmap-node:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: var(--mm-node-shadow-hover);
   z-index: 20;
 }
@@ -4866,59 +4925,84 @@ body {
 }
 
 .crm-mindmap-node.central {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: none;
-  color: #ffffff;
+  background: var(--mm-node-bg);
+  border: 1px solid var(--mm-node-border);
+  border-left: none;
+  color: var(--mm-node-text);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1rem;
   text-align: center;
-  padding: 18px 28px;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(0,0,0,0.1);
+  padding: 20px 32px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.crm-mindmap-node.central::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4F46E5, #7C3AED, #EC4899);
 }
 
 .crm-mindmap-node.central:hover {
-  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 20px rgba(79,70,229,0.15), 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .crm-mindmap-node.category {
   background: var(--mm-node-bg);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .crm-mindmap-node.subtopic {
-  background: #F9FAFB;
-  font-size: 0.86rem;
-  line-height: 1.4;
+  background: var(--mm-node-bg);
+  font-size: 0.84rem;
+  line-height: 1.45;
   border-left-width: 3px;
+  opacity: 0.92;
 }
 
 .crm-mindmap-node.user-node {
-  background: #FFFBEB;
+  background: var(--mm-node-bg);
   border-left-color: #F59E0B;
-  border-color: #FDE68A;
+  position: relative;
+}
+.crm-mindmap-node.user-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -3px;
+  bottom: 0;
+  width: 3px;
+  background: #F59E0B;
+  border-radius: 3px 0 0 3px;
 }
 
 .crm-mindmap-node-title {
   font-weight: 700;
   margin-bottom: 4px;
   outline: none;
+  font-size: 0.88rem;
+  letter-spacing: -0.005em;
 }
 
 .crm-mindmap-node-title[contenteditable="true"] {
-  background: #EFF6FF;
+  background: var(--mm-accent-soft);
   border-radius: 4px;
-  padding: 2px 4px;
-  margin: -2px -4px;
-  border: 1px solid #93C5FD;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border: 1px solid rgba(79,70,229,0.3);
   cursor: text;
 }
 
 .crm-mindmap-node-summary {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--mm-node-text-secondary);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .crm-mindmap-node.has-notes {
@@ -4927,30 +5011,32 @@ body {
 .crm-mindmap-node.has-notes::after {
   content: '';
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 10px;
-  height: 10px;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--node-color, #3B82F6);
+  background: var(--node-color, var(--mm-accent));
   border: 2px solid var(--mm-node-bg);
 }
 
 /* Floating Toolbar */
 .crm-mindmap-toolbar {
   position: absolute;
-  bottom: 20px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: var(--mm-node-bg);
-  border: 1px solid var(--mm-node-border);
-  border-radius: 12px;
-  padding: 6px 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+  gap: 4px;
+  background: var(--mm-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--mm-glass-border);
+  border-radius: 14px;
+  padding: 5px 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .crm-mindmap-toolbar-btn {
@@ -4958,36 +5044,36 @@ body {
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: none;
+  border-radius: 10px;
   background: transparent;
-  color: var(--mm-node-text);
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: var(--mm-node-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 .crm-mindmap-toolbar-btn:hover {
-  background: #F3F4F6;
-  border-color: var(--mm-node-border);
+  background: rgba(0,0,0,0.06);
+  color: var(--mm-node-text);
 }
 
 .crm-mindmap-toolbar-divider {
   width: 1px;
-  height: 24px;
-  background: var(--mm-node-border);
+  height: 20px;
+  background: rgba(0,0,0,0.08);
   margin: 0 2px;
 }
 
 .crm-mindmap-save-status {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--mm-node-text-secondary);
-  padding: 0 6px;
+  padding: 0 4px;
   white-space: nowrap;
 }
 .crm-mindmap-save-status.is-saving {
-  color: #3B82F6;
+  color: var(--mm-accent);
 }
 .crm-mindmap-save-status.is-error {
   color: #EF4444;
@@ -4997,62 +5083,66 @@ body {
 .crm-mindmap-context-menu {
   position: fixed;
   z-index: 10001;
-  background: var(--mm-node-bg);
-  border: 1px solid var(--mm-node-border);
-  border-radius: 10px;
-  padding: 4px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08);
-  min-width: 180px;
+  background: var(--mm-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--mm-glass-border);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+  min-width: 200px;
   display: none;
 }
 
 .crm-mindmap-context-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 8px 12px;
-  border-radius: 7px;
-  font-size: 0.85rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: var(--mm-node-text);
   cursor: pointer;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
+  transition: background 0.12s;
 }
 .crm-mindmap-context-item:hover {
-  background: #F3F4F6;
+  background: rgba(0,0,0,0.05);
 }
 .crm-mindmap-context-item.is-danger {
   color: #EF4444;
 }
 .crm-mindmap-context-item.is-danger:hover {
-  background: #FEF2F2;
+  background: rgba(239,68,68,0.08);
 }
 
 .crm-mindmap-context-divider {
   height: 1px;
-  background: var(--mm-node-border);
-  margin: 4px 8px;
+  background: rgba(0,0,0,0.06);
+  margin: 4px 10px;
 }
 
 .crm-mindmap-color-swatches {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   padding: 6px 12px;
   flex-wrap: wrap;
 }
 .crm-mindmap-color-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s, border-color 0.1s;
+  transition: transform 0.12s cubic-bezier(0.16,1,0.3,1), border-color 0.12s, box-shadow 0.12s;
 }
 .crm-mindmap-color-swatch:hover {
-  transform: scale(1.15);
-  border-color: var(--mm-node-text);
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 /* Slide-over Inspector Drawer */
@@ -5060,20 +5150,20 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  width: 400px;
+  width: 380px;
   max-width: 90vw;
   height: 100%;
   background: var(--mm-inspector-bg);
   border-left: 1px solid var(--mm-inspector-border);
   color: var(--mm-inspector-text);
-  padding: 24px;
-  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.06);
   z-index: 100;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   overflow-y: auto;
-  animation: mindmapDrawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mindmapDrawerSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes mindmapDrawerSlide {
@@ -5089,55 +5179,68 @@ body {
 
 .crm-mindmap-inspector-tag {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.68rem;
   font-weight: 700;
   background: var(--node-color, #4f46e5);
   color: #ffffff;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .crm-mindmap-inspector .crm-btn-close {
   color: var(--mm-inspector-text-secondary);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+.crm-mindmap-inspector .crm-btn-close:hover {
+  background: rgba(0,0,0,0.05);
 }
 
 .crm-mindmap-inspector-title {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.12rem;
+  font-weight: 700;
   margin: 0;
   color: var(--mm-inspector-text);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .crm-mindmap-inspector-summary {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--mm-inspector-text-secondary);
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0;
 }
 
 .crm-mindmap-divider {
   border: none;
   border-top: 1px solid var(--mm-inspector-border);
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .crm-mindmap-inspector-section h4 {
-  margin: 0 0 10px;
-  font-size: 0.85rem;
+  margin: 0 0 8px;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--mm-inspector-text-secondary);
+  letter-spacing: 0.08em;
+  color: var(--mm-node-text-secondary);
+  font-weight: 600;
 }
 
 .crm-mindmap-inspector-fulltext {
-  background: #F9FAFB;
+  background: rgba(0,0,0,0.02);
   border: 1px solid var(--mm-inspector-border);
   border-radius: 10px;
-  padding: 16px;
-  font-size: 0.92rem;
-  line-height: 1.65;
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  line-height: 1.7;
   color: var(--mm-inspector-text);
   word-break: break-word;
   max-height: 420px;
@@ -5146,26 +5249,27 @@ body {
 
 .crm-mindmap-inspector-notes {
   width: 100%;
-  min-height: 100px;
-  padding: 12px;
+  min-height: 90px;
+  padding: 12px 14px;
   border: 1px solid var(--mm-inspector-border);
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1.6;
   color: var(--mm-inspector-text);
-  background: #F9FAFB;
+  background: rgba(0,0,0,0.02);
   resize: vertical;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 .crm-mindmap-inspector-notes:focus {
-  border-color: #93C5FD;
-  background: #FFFFFF;
+  border-color: var(--mm-accent);
+  background: var(--mm-inspector-bg);
+  box-shadow: 0 0 0 3px var(--mm-accent-soft);
 }
 .crm-mindmap-inspector-notes::placeholder {
-  color: #9CA3AF;
+  color: #A8A29E;
 }
 
 /* ==========================================================================
@@ -5174,30 +5278,65 @@ body {
 .crm-mindmap-inspector-sources {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .crm-mindmap-source-note {
-  background: var(--mm-node-bg, #fff);
+  background: rgba(0,0,0,0.02);
   border: 1px solid var(--mm-inspector-border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 10px 14px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 .crm-mindmap-source-note:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.04);
+}
+.crm-mindmap-source-note.is-expanded {
+  background: var(--mm-inspector-bg);
+  border-color: var(--mm-accent);
+  box-shadow: 0 0 0 3px var(--mm-accent-soft);
 }
 .crm-mindmap-source-note-header {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 6px;
 }
+.crm-source-note-icon {
+  flex-shrink: 0;
+}
+.crm-source-toggle-icon {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--mm-node-text-secondary);
+  transition: transform 0.15s;
+}
 .crm-mindmap-source-note-preview {
   font-size: 0.78rem;
   color: var(--mm-inspector-text-secondary);
   margin-top: 4px;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+.crm-mindmap-source-note-full {
+  font-size: 0.82rem;
+  color: var(--mm-inspector-text);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mm-inspector-border);
+  line-height: 1.65;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.crm-mindmap-source-empty {
+  font-size: 0.8rem;
+  color: var(--mm-node-text-secondary);
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 10px;
+  border: 1px dashed var(--mm-inspector-border);
+  text-align: center;
+  font-style: italic;
 }
 .crm-mindmap-inspector-attribution {
   font-size: 0.8rem;
@@ -5224,12 +5363,14 @@ body {
 }
 .crm-mindmap-member-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
-  background: white;
-  border: 1px solid var(--mm-header-border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--mm-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--mm-glass-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.04);
   z-index: 200;
   min-width: 180px;
   padding: 4px;
@@ -5240,17 +5381,19 @@ body {
   gap: 8px;
   padding: 8px 12px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   width: 100%;
   border: none;
   background: none;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.12s;
 }
 .crm-mindmap-member-option:hover {
-  background: #F3F4F6;
+  background: rgba(0,0,0,0.05);
 }
 .crm-mindmap-member-option.active {
-  background: #EFF6FF;
+  background: var(--mm-accent-soft);
   font-weight: 600;
 }
 .crm-mindmap-node-badge {
@@ -5285,24 +5428,26 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 4px 10px;
 }
 .crm-mindmap-tag-option {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  border: 1px solid #E5E7EB;
+  border: 1px solid rgba(0,0,0,0.08);
   background: none;
-  transition: background 0.15s;
+  transition: all 0.15s;
+  font-weight: 500;
 }
 .crm-mindmap-tag-option:hover {
-  background: #F3F4F6;
+  background: rgba(0,0,0,0.04);
 }
 .crm-mindmap-tag-option.active {
-  background: #EFF6FF;
-  border-color: #93C5FD;
+  background: var(--mm-accent-soft);
+  border-color: rgba(79,70,229,0.2);
   font-weight: 600;
+  color: var(--mm-accent);
 }
 .crm-mindmap-node.crm-mindmap-dimmed {
   opacity: 0.15;
@@ -5310,13 +5455,14 @@ body {
   transition: opacity 0.3s;
 }
 .crm-mindmap-toolbar .crm-mindmap-filter-chip {
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  border-radius: 12px;
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 10px;
   cursor: pointer;
-  border: 1px solid #D1D5DB;
+  border: 1px solid rgba(0,0,0,0.08);
   background: transparent;
   transition: all 0.15s;
+  font-weight: 500;
 }
 .crm-mindmap-toolbar .crm-mindmap-filter-chip:hover {
   background: rgba(0,0,0,0.05);
@@ -5324,6 +5470,7 @@ body {
 .crm-mindmap-toolbar .crm-mindmap-filter-chip.active {
   color: white;
   border-color: transparent;
+  font-weight: 600;
 }
 /* ==========================================================================
    CRM Books Study Notes Modal Styling & Solid Background Enforcements
@@ -5527,24 +5674,27 @@ body {
 /* --- PHASE 4: Canvas Navigation --- */
 .crm-mindmap-collapse-btn {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 22px;
-  height: 22px;
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--mm-node-bg, #fff);
-  border: 1px solid var(--mm-node-border, #E5E7EB);
-  font-size: 14px;
+  border: 1px solid var(--mm-node-border);
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  color: var(--mm-node-text);
+  color: var(--mm-node-text-secondary);
+  transition: all 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .crm-mindmap-collapse-btn:hover {
-  background: #F3F4F6;
+  background: rgba(0,0,0,0.04);
+  color: var(--mm-node-text);
 }
 .crm-mindmap-collapse-badge {
   position: absolute;
@@ -5559,18 +5709,20 @@ body {
   z-index: 10;
 }
 .crm-mindmap-search-input {
-  width: 140px;
-  padding: 4px 8px;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  width: 130px;
+  padding: 5px 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  font-size: 0.78rem;
   outline: none;
-  background: rgba(255,255,255,0.9);
-  transition: width 0.2s, border-color 0.2s;
+  background: rgba(0,0,0,0.03);
+  transition: width 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.15s, background 0.15s;
 }
 .crm-mindmap-search-input:focus {
   width: 200px;
-  border-color: #93C5FD;
+  border-color: var(--mm-accent);
+  background: var(--mm-node-bg);
+  box-shadow: 0 0 0 3px var(--mm-accent-soft);
 }
 .crm-mindmap-search-match {
   box-shadow: 0 0 0 3px rgba(59,130,246,0.5) !important;
@@ -5590,18 +5742,21 @@ body {
 .crm-mindmap-confirm-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 10002;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .crm-mindmap-confirm-card {
-  background: white;
-  border-radius: 14px;
-  max-width: 480px;
+  background: var(--mm-inspector-bg, white);
+  border-radius: 16px;
+  max-width: 440px;
   padding: 28px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid var(--mm-inspector-border, rgba(0,0,0,0.08));
 }
 .crm-mindmap-confirm-actions {
   display: flex;
@@ -5676,197 +5831,205 @@ body {
 }
 .crm-mindmap-export-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--mm-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--mm-glass-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.04);
   z-index: 200;
   min-width: 220px;
   padding: 4px;
-  margin-top: 4px;
 }
 .crm-mindmap-export-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 8px 12px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   width: 100%;
   border: none;
   background: none;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
   text-align: left;
+  transition: background 0.12s;
 }
 .crm-mindmap-export-option:hover {
-  background: #F3F4F6;
+  background: rgba(0,0,0,0.05);
 }
 
 /* ==========================================================================
    Mind Map — Dark Mode Overrides (Phase 9)
    ========================================================================== */
 .crm-books-mindmap-modal.books-dark {
-  --mm-bg: #0F172A;
-  --mm-grid-dot: rgba(255,255,255,0.06);
-  --mm-node-bg: #1E293B;
-  --mm-node-text: #E2E8F0;
-  --mm-node-text-secondary: #94A3B8;
-  --mm-node-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-  --mm-node-shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.25);
-  --mm-node-shadow-drag: 0 12px 28px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
-  --mm-node-border: #334155;
-  --mm-header-bg: #1E293B;
-  --mm-header-border: #334155;
-  --mm-header-text: #F1F5F9;
-  --mm-inspector-bg: #1E293B;
-  --mm-inspector-border: #334155;
-  --mm-inspector-text: #E2E8F0;
-  --mm-inspector-text-secondary: #94A3B8;
+  --mm-bg: #141416;
+  --mm-grid-dot: rgba(255,255,255,0.04);
+  --mm-node-bg: #1E1E22;
+  --mm-node-text: #E8E6E3;
+  --mm-node-text-secondary: #8A8880;
+  --mm-node-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  --mm-node-shadow-hover: 0 4px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
+  --mm-node-shadow-drag: 0 16px 32px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
+  --mm-node-border: rgba(255,255,255,0.08);
+  --mm-header-bg: rgba(30,30,34,0.85);
+  --mm-header-border: rgba(255,255,255,0.06);
+  --mm-header-text: #F0EDE8;
+  --mm-inspector-bg: #1E1E22;
+  --mm-inspector-border: rgba(255,255,255,0.08);
+  --mm-inspector-text: #E8E6E3;
+  --mm-inspector-text-secondary: #8A8880;
+  --mm-glass: rgba(30,30,34,0.8);
+  --mm-glass-border: rgba(255,255,255,0.1);
+  --mm-accent: #818CF8;
+  --mm-accent-soft: rgba(129,140,248,0.12);
 }
 
-/* Hardcoded bg overrides for dark mode */
+/* Dark mode element overrides */
 .books-dark .crm-mindmap-inspector-fulltext,
 .books-dark .crm-mindmap-inspector-notes {
-  background: #0F172A;
-  color: #E2E8F0;
+  background: rgba(255,255,255,0.03);
+  color: var(--mm-inspector-text);
 }
 .books-dark .crm-mindmap-inspector-notes:focus {
-  border-color: #3B82F6;
-  background: #1E293B;
+  border-color: var(--mm-accent);
+  background: rgba(255,255,255,0.05);
 }
 .books-dark .crm-mindmap-inspector-notes::placeholder {
-  color: #64748B;
+  color: #5C5C5C;
 }
 
-/* Subtopic nodes — remove hardcoded light bg */
 .books-dark .crm-mindmap-node.subtopic {
-  background: #1E293B !important;
+  background: var(--mm-node-bg) !important;
 }
 .books-dark .crm-mindmap-node.user-node {
-  background: #1E293B !important;
+  background: var(--mm-node-bg) !important;
 }
 
-/* Source notes cards */
 .books-dark .crm-mindmap-source-note {
-  background: #0F172A;
-  border-color: #334155;
+  background: rgba(255,255,255,0.03);
+  border-color: var(--mm-inspector-border);
 }
 .books-dark .crm-mindmap-source-note:hover {
-  background: #1E293B;
+  background: rgba(255,255,255,0.06);
+}
+.books-dark .crm-mindmap-source-note.is-expanded {
+  border-color: var(--mm-accent);
+}
+.books-dark .crm-mindmap-source-empty {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--mm-inspector-border);
 }
 
-/* Context menu */
 .books-dark .crm-mindmap-context-menu {
-  background: #1E293B;
-  border-color: #334155;
-  color: #E2E8F0;
+  background: var(--mm-glass);
+  border-color: var(--mm-glass-border);
+  color: var(--mm-node-text);
 }
 .books-dark .crm-mindmap-context-item:hover {
-  background: #334155;
+  background: rgba(255,255,255,0.06);
 }
 .books-dark .crm-mindmap-context-divider {
-  background: #334155;
-}
-.books-dark .crm-mindmap-color-swatches {
-  background: transparent;
+  background: rgba(255,255,255,0.06);
 }
 
-/* Tag options in context menu */
 .books-dark .crm-mindmap-tag-option {
-  border-color: #475569;
-  color: #E2E8F0;
+  border-color: rgba(255,255,255,0.1);
+  color: var(--mm-node-text);
 }
 .books-dark .crm-mindmap-tag-option:hover {
-  background: #334155;
+  background: rgba(255,255,255,0.06);
 }
 .books-dark .crm-mindmap-tag-option.active {
-  background: #1E3A5F;
-  border-color: #3B82F6;
+  background: var(--mm-accent-soft);
+  border-color: rgba(129,140,248,0.3);
+  color: var(--mm-accent);
 }
 
-/* Team member dropdown */
 .books-dark .crm-mindmap-member-dropdown {
-  background: #1E293B;
-  border-color: #334155;
+  background: var(--mm-glass);
+  border-color: var(--mm-glass-border);
 }
 .books-dark .crm-mindmap-member-option:hover {
-  background: #334155;
+  background: rgba(255,255,255,0.06);
 }
 .books-dark .crm-mindmap-member-option.active {
-  background: #1E3A5F;
+  background: var(--mm-accent-soft);
 }
 
-/* Export dropdown */
 .books-dark .crm-mindmap-export-dropdown {
-  background: #1E293B;
-  border-color: #334155;
+  background: var(--mm-glass);
+  border-color: var(--mm-glass-border);
 }
 .books-dark .crm-mindmap-export-option:hover {
-  background: #334155;
+  background: rgba(255,255,255,0.06);
 }
 
-/* Version history panel */
 .books-dark .crm-mindmap-versions-panel {
-  background: #1E293B;
-  border-color: #334155;
+  background: var(--mm-inspector-bg);
+  border-color: var(--mm-inspector-border);
 }
 .books-dark .crm-mindmap-version-item {
-  background: #0F172A;
-  border-color: #334155;
+  background: rgba(255,255,255,0.03);
+  border-color: var(--mm-inspector-border);
 }
 
-/* Confirmation overlay */
 .books-dark .crm-mindmap-confirm-card {
-  background: #1E293B;
-  color: #E2E8F0;
+  background: var(--mm-inspector-bg);
+  color: var(--mm-node-text);
 }
 
-/* Collapse button */
 .books-dark .crm-mindmap-collapse-btn {
-  background: #1E293B;
-  border-color: #475569;
-  color: #E2E8F0;
+  background: var(--mm-node-bg);
+  border-color: var(--mm-node-border);
+  color: var(--mm-node-text);
 }
 .books-dark .crm-mindmap-collapse-btn:hover {
-  background: #334155;
-}
-
-/* Search input */
-.books-dark .crm-mindmap-search-input {
-  background: rgba(15,23,42,0.9);
-  border-color: #475569;
-  color: #E2E8F0;
-}
-.books-dark .crm-mindmap-search-input:focus {
-  border-color: #3B82F6;
-}
-
-/* Toolbar */
-.books-dark .crm-mindmap-toolbar {
-  background: rgba(30,41,59,0.92);
-  border-color: #334155;
-}
-.books-dark .crm-mindmap-toolbar-btn {
-  color: #E2E8F0;
-}
-.books-dark .crm-mindmap-toolbar-btn:hover {
-  background: #334155;
-}
-
-/* Filter chips */
-.books-dark .crm-mindmap-filter-chip {
-  border-color: #475569;
-  color: #CBD5E1;
-}
-.books-dark .crm-mindmap-filter-chip:hover {
   background: rgba(255,255,255,0.08);
 }
 
-/* SVG paths */
+.books-dark .crm-mindmap-search-input {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--mm-node-border);
+  color: var(--mm-node-text);
+}
+.books-dark .crm-mindmap-search-input:focus {
+  border-color: var(--mm-accent);
+  box-shadow: 0 0 0 3px var(--mm-accent-soft);
+}
+
+.books-dark .crm-mindmap-toolbar {
+  background: var(--mm-glass);
+  border-color: var(--mm-glass-border);
+}
+.books-dark .crm-mindmap-toolbar-btn {
+  color: var(--mm-node-text-secondary);
+}
+.books-dark .crm-mindmap-toolbar-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--mm-node-text);
+}
+
+.books-dark .crm-mindmap-filter-chip {
+  border-color: rgba(255,255,255,0.1);
+  color: var(--mm-node-text-secondary);
+}
+.books-dark .crm-mindmap-filter-chip:hover {
+  background: rgba(255,255,255,0.06);
+}
+
 .books-dark .crm-mindmap-svg path {
-  stroke: #475569;
+  stroke: rgba(255,255,255,0.1);
+}
+
+.books-dark .crm-mindmap-header-divider {
+  background: rgba(255,255,255,0.06);
+}
+.books-dark .crm-mindmap-zoom-group {
+  background: rgba(255,255,255,0.04);
 }
 
 /* Inspector drawer exit animation */
@@ -5910,7 +6073,7 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 320px;
+  width: 300px;
   max-width: 90vw;
   height: 100%;
   background: var(--mm-inspector-bg, #fff);
@@ -5918,7 +6081,7 @@ body {
   z-index: 100;
   display: flex;
   flex-direction: column;
-  box-shadow: 8px 0 24px rgba(0,0,0,0.08);
+  box-shadow: 12px 0 40px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 .crm-mindmap-outline-header {

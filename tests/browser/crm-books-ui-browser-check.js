@@ -214,6 +214,8 @@ async function main() {
         await page.click('.crm-books-sources-header-toggle');
 
         await page.click('.crm-books-download-btn');
+        await page.waitForSelector('.crm-books-download-modal');
+        await page.click('.crm-books-download-modal-submit');
         await page.waitForFunction(() => window.__crmBookRequests.some((request) => request.path === '/api/admin/books/book-1/source'));
 
         await page.click('.crm-books-tab[data-books-tab="pages"]');
@@ -435,8 +437,10 @@ async function main() {
 
         await page.locator('.crm-books-msg-save-btn').click();
         await page.click('.crm-books-tab[data-books-tab="notes"]');
-        await page.waitForSelector('.crm-books-note-card-text');
-        const savedNote = await page.locator('.crm-books-note-card-text').first().evaluate((element) => {
+        await page.waitForSelector('.crm-books-note-card');
+        await page.click('.crm-books-note-header');
+        await page.waitForSelector('.crm-books-note-body');
+        const savedNote = await page.locator('.crm-books-note-body').first().evaluate((element) => {
             const styles = getComputedStyle(element);
             return {
                 text: element.textContent || '',

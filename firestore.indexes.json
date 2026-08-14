@@ -1,6 +1,15 @@
 {
   "indexes": [
     {
+      "collectionGroup": "pronunciationSegmentationStudyTasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studyVersion", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "jobs",
       "queryScope": "COLLECTION",
       "fields": [
@@ -244,6 +253,14 @@
       "fields": [
         { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "isRead", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "user_notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },

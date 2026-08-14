@@ -1689,9 +1689,11 @@ window.CrmBooksWorkspace = (function () {
                 const catCenter = getNodeCenter(catNode);
                 const catColor = mindMapUserEdits[catId]?.color || cat.color || '#4f46e5';
 
-                const qx = (centralCenter.x + catCenter.x) / 2;
-                const qy = (centralCenter.y + catCenter.y) / 2 - 20;
-                pathsHtml += `<path d="M ${centralCenter.x} ${centralCenter.y} Q ${qx} ${qy} ${catCenter.x} ${catCenter.y}" stroke="${catColor}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.45" />`;
+                const dx = catCenter.x - centralCenter.x;
+                const dy = catCenter.y - centralCenter.y;
+                const qx = centralCenter.x + dx * 0.5 - dy * 0.08;
+                const qy = centralCenter.y + dy * 0.5 + dx * 0.08;
+                pathsHtml += `<path d="M ${centralCenter.x} ${centralCenter.y} Q ${qx} ${qy} ${catCenter.x} ${catCenter.y}" stroke="${catColor}" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.28" />`;
 
                 const subtopics = cat.subtopics || [];
                 subtopics.forEach((sub, sIdx) => {
@@ -1699,9 +1701,11 @@ window.CrmBooksWorkspace = (function () {
                     const subNode = nodeMap[subId];
                     if (!subNode) return;
                     const subCenter = getNodeCenter(subNode);
-                    const sqx = (catCenter.x + subCenter.x) / 2;
-                    const sqy = (catCenter.y + subCenter.y) / 2;
-                    pathsHtml += `<path d="M ${catCenter.x} ${catCenter.y} Q ${sqx} ${sqy} ${subCenter.x} ${subCenter.y}" stroke="${catColor}" stroke-width="1.5" stroke-dasharray="5,4" fill="none" opacity="0.35" />`;
+                    const sdx = subCenter.x - catCenter.x;
+                    const sdy = subCenter.y - catCenter.y;
+                    const sqx = catCenter.x + sdx * 0.5 - sdy * 0.06;
+                    const sqy = catCenter.y + sdy * 0.5 + sdx * 0.06;
+                    pathsHtml += `<path d="M ${catCenter.x} ${catCenter.y} Q ${sqx} ${sqy} ${subCenter.x} ${subCenter.y}" stroke="${catColor}" stroke-width="1" stroke-dasharray="4,6" fill="none" stroke-linecap="round" opacity="0.22" />`;
                 });
             });
 
@@ -1998,32 +2002,53 @@ window.CrmBooksWorkspace = (function () {
             if (sourcesEl) {
                 const noteIds = getNodeNoteIds(nodeId);
                 sourcesEl.innerHTML = '';
+                const sectionEl = sourcesEl.closest('.crm-mindmap-inspector-section');
                 if (noteIds.length > 0) {
-                    const sectionEl = sourcesEl.closest('.crm-mindmap-inspector-section');
                     if (sectionEl) sectionEl.style.display = 'block';
                     try {
                         const allNotes = loadBookNotes(selectedBookId);
                         let html = '';
+                        let matchCount = 0;
                         noteIds.forEach(nid => {
-                            const note = allNotes.find(n => n.id === nid);
+                            const note = allNotes.find(n => n.id === nid || n.firestoreId === nid || n.id === 'fs_' + nid);
                             if (note) {
+                                matchCount++;
                                 const extracted = typeof extractNoteTitle === 'function' ? extractNoteTitle(note.text) : { title: 'Note' };
                                 const title = extracted?.title || 'Note';
                                 const dateStr = note.savedAt ? new Date(note.savedAt).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
-                                const preview = (note.text || '').substring(0, 100).replace(/\n/g, ' ') + (note.text && note.text.length > 100 ? '...' : '');
+                                const fullText = note.text || '';
+                                const preview = fullText.substring(0, 120).replace(/\n/g, ' ') + (fullText.length > 120 ? '...' : '');
+                                const escapedFull = escapeHtml(fullText).replace(/\n/g, '<br>');
                                 html += `<div class="crm-mindmap-source-note" data-note-id="${escapeHtml(nid)}">` +
-                                  `<div class="crm-mindmap-source-note-header">📖 <strong>${escapeHtml(title)}</strong> <span class="crm-muted">${dateStr}</span></div>` +
+                                  `<div class="crm-mindmap-source-note-header"><span class="crm-source-note-icon">📖</span> <strong>${escapeHtml(title)}</strong> <span class="crm-muted">${dateStr}</span><span class="crm-source-toggle-icon">▸</span></div>` +
                                   `<div class="crm-mindmap-source-note-preview">${escapeHtml(preview)}</div>` +
+                                  `<div class="crm-mindmap-source-note-full" style="display:none;">${escapedFull}</div>` +
                                 `</div>`;
                             }
                         });
+                        if (matchCount === 0) {
+                            html = '<div class="crm-mindmap-source-empty">Source notes were referenced but could not be matched to saved notes. Try regenerating the mind map.</div>';
+                        }
                         sourcesEl.innerHTML = html;
+                        sourcesEl.querySelectorAll('.crm-mindmap-source-note').forEach(el => {
+                            el.addEventListener('click', () => {
+                                const previewEl = el.querySelector('.crm-mindmap-source-note-preview');
+                                const fullEl = el.querySelector('.crm-mindmap-source-note-full');
+                                const toggleIcon = el.querySelector('.crm-source-toggle-icon');
+                                if (!fullEl) return;
+                                const isExpanded = fullEl.style.display !== 'none';
+                                fullEl.style.display = isExpanded ? 'none' : 'block';
+                                if (previewEl) previewEl.style.display = isExpanded ? 'block' : 'none';
+                                if (toggleIcon) toggleIcon.textContent = isExpanded ? '▸' : '▾';
+                                el.classList.toggle('is-expanded', !isExpanded);
+                            });
+                        });
                     } catch (err) {
                         console.error('Failed to load source notes:', err);
                     }
                 } else {
-                    const sectionEl = sourcesEl.closest('.crm-mindmap-inspector-section');
-                    if (sectionEl) sectionEl.style.display = 'none';
+                    if (sectionEl) sectionEl.style.display = 'block';
+                    sourcesEl.innerHTML = '<div class="crm-mindmap-source-empty">No source notes linked to this node.</div>';
                 }
             }
 

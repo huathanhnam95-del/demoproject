@@ -219,6 +219,7 @@ module.exports = function registerBookRoutes(router, deps) {
         try {
             const bookId = cleanStr(req.params.bookId);
             const force = req.body?.force === true;
+            const noteIds = Array.isArray(req.body?.noteIds) ? req.body.noteIds : null;
             if (!bookId) {
                 return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
             }
@@ -228,7 +229,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
             }
 
-            const mindMap = await generateBookMindMap(db, bookId, force);
+            const mindMap = await generateBookMindMap(db, bookId, force, noteIds);
 
             await writeAuditLog?.({
                 action: 'book.mind_map_generated',
@@ -267,6 +268,113 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendError(res, 500, 'SAVE_MIND_MAP_ERROR', 'Failed to save mind map edits.', error?.message || error);
         }
     });
+
+    // ── Mind Map Version History ───────────────────────────────────────
+    router.get('/books/:bookId/mind-map/versions', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
+
+            const snap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map')
+                .collection('versions')
+                .orderBy('createdAt', 'desc')
+                .limit(10)
+                .get();
+
+            const versions = snap.docs.map(d => ({
+                id: d.id,
+                name: d.data().name || 'Snapshot',
+                createdAt: d.data().createdAt,
+                noteCount: d.data().noteCount || 0,
+                categoryCount: d.data().categoryCount || 0
+            }));
+
+            return sendSuccess(res, { versions });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_VERSIONS_ERROR', 'Failed to list mind map versions.', error?.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/mind-map/snapshot', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const name = cleanStr(req.body?.name) || `Snapshot ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+            if (!bookId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
+
+            const currentDoc = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map').get();
+
+            if (!currentDoc.exists) {
+                return sendError(res, 404, 'NO_MIND_MAP', 'No mind map exists to snapshot.');
+            }
+
+            const currentData = currentDoc.data();
+            const versionData = {
+                name,
+                createdAt: new Date().toISOString(),
+                noteCount: currentData.noteCount || 0,
+                categoryCount: (currentData.categories || []).length,
+                centralTopic: currentData.centralTopic || '',
+                categories: currentData.categories || [],
+                positions: currentData.positions || {},
+                userNodes: currentData.userNodes || [],
+                userEdits: currentData.userEdits || {}
+            };
+
+            const versionsRef = db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map')
+                .collection('versions');
+
+            await versionsRef.add(versionData);
+
+            // Prune old versions beyond 10
+            const allVersions = await versionsRef.orderBy('createdAt', 'desc').get();
+            if (allVersions.size > 10) {
+                const batch = db.batch();
+                allVersions.docs.slice(10).forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
+
+            return sendSuccess(res, { ok: true, name }, 'Snapshot saved.');
+        } catch (error) {
+            return sendError(res, 500, 'SNAPSHOT_ERROR', 'Failed to save mind map snapshot.', error?.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/mind-map/restore/:versionId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const versionId = cleanStr(req.params.versionId);
+            if (!bookId || !versionId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or version ID.');
+
+            const versionDoc = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map')
+                .collection('versions').doc(versionId).get();
+
+            if (!versionDoc.exists) {
+                return sendError(res, 404, 'VERSION_NOT_FOUND', 'Version not found.');
+            }
+
+            const versionData = versionDoc.data();
+            const restore = {
+                centralTopic: versionData.centralTopic,
+                categories: versionData.categories || [],
+                positions: versionData.positions || {},
+                userNodes: versionData.userNodes || [],
+                userEdits: versionData.userEdits || {}
+            };
+
+            await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('artifacts').doc('mind_map')
+                .set(restore, { merge: true });
+
+            return sendSuccess(res, { mindMap: { ...restore, noteCount: versionData.noteCount } }, 'Mind map restored from snapshot.');
+        } catch (error) {
+            return sendError(res, 500, 'RESTORE_ERROR', 'Failed to restore mind map version.', error?.message || error);
+        }
+    });
+
 
     // --- Book Notes CRUD (Firestore-backed) ---
     router.get('/books/:bookId/notes', ...requireAdminHandlers, async (req, res) => {

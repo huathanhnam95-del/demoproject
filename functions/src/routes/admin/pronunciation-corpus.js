@@ -7,6 +7,7 @@ const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_SECONDS = 15;
 const ALLOWED_CATEGORIES = new Set(['clean', 'omission', 'insertion', 'accented', 'unrateable']);
 const SAMPLE_ID_RE = /^[a-z0-9-]+$/;
+const REVIEW_SESSION_ID_RE = /^[a-z0-9][a-z0-9_-]{11,79}$/i;
 
 class CorpusValidationError extends Error {
   constructor(message) {
@@ -49,6 +50,14 @@ function normalizeTimingSegments(value, fieldName) {
       duration: Number((endTime - startTime).toFixed(6))
     };
   });
+}
+
+function validateContiguousSegments(segments, fieldName = 'manualSegments') {
+  for (let index = 1; index < (segments || []).length; index += 1) {
+    if (Math.abs(segments[index].startTime - segments[index - 1].endTime) > 0.000001) {
+      fail(`${fieldName} must be contiguous under ipa-phonological-contiguous-v1.`);
+    }
+  }
 }
 
 function validateCorpusMetadata(metadata) {
@@ -96,11 +105,7 @@ function validateCorpusMetadata(metadata) {
     fail('Completed manual reviews require segmentationConvention ipa-phonological-contiguous-v1.');
   }
   if (segmentationConvention === 'ipa-phonological-contiguous-v1') {
-    for (let index = 1; index < (manualSegments || []).length; index += 1) {
-      if (Math.abs(manualSegments[index].startTime - manualSegments[index - 1].endTime) > 0.000001) {
-        fail('manualSegments must be contiguous under ipa-phonological-contiguous-v1.');
-      }
-    }
+    validateContiguousSegments(manualSegments);
   }
   if (referenceSyllableIpa !== null) {
     if (!Array.isArray(referenceSyllableIpa)
@@ -202,6 +207,79 @@ function validateWavBuffer(buffer) {
     sampleRate: fmt.sampleRate,
     channels: fmt.channels,
     bitsPerSample: fmt.bitsPerSample
+  };
+}
+
+function validateManualReviewMetadata(body, sample) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) fail('Manual review payload must be an object.');
+  const manualSegments = normalizeTimingSegments(body.manualSegments, 'manualSegments');
+  const expectedCount = Number(sample?.expectedObservedCount ?? sample?.targetSyllableCount);
+  if (!manualSegments?.length) fail('manualSegments must contain at least one segment.');
+  if (Number.isInteger(expectedCount) && expectedCount > 0 && manualSegments.length !== expectedCount) {
+    fail('manualSegments length must equal the sample expectedObservedCount.');
+  }
+
+  const segmentationConvention = String(body.manualSegmentationConvention || body.segmentationConvention || '').trim();
+  if (segmentationConvention !== 'ipa-phonological-contiguous-v1') {
+    fail('manualSegmentationConvention must be ipa-phonological-contiguous-v1.');
+  }
+  validateContiguousSegments(manualSegments);
+
+  const certainty = String(body.certainty || '').trim().toLowerCase();
+  if (!['certain', 'uncertain'].includes(certainty)) fail('certainty must be certain or uncertain.');
+  if (body.automaticBoundariesVisible !== true) fail('automaticBoundariesVisible must be true.');
+
+  const reviewerName = String(body.reviewerName || '').trim().slice(0, 80);
+  if (!reviewerName) fail('reviewerName is required.');
+  const reviewerSessionId = String(body.reviewerSessionId || '').trim().slice(0, 80);
+  if (!REVIEW_SESSION_ID_RE.test(reviewerSessionId)) {
+    fail('reviewerSessionId must contain 12-80 letters, numbers, hyphens, or underscores.');
+  }
+
+  const duration = Number(sample?.durationSeconds);
+  if (Number.isFinite(duration) && manualSegments.some((segment) => segment.endTime > duration + 0.02)) {
+    fail('manualSegments must fall within the sample audio duration.');
+  }
+
+  return {
+    manualSegments,
+    segmentationConvention,
+    certainty,
+    reviewStatus: certainty === 'uncertain' ? 'uncertain' : 'complete',
+    automaticBoundariesVisible: true,
+    reviewerName,
+    reviewerSessionId,
+    reviewNotes: String(body.reviewNotes || '').trim().slice(0, 500) || null,
+    analysisRevision: String(body.analysisRevision || '').trim().slice(0, 200) || null
+  };
+}
+
+function buildManualReviewRecord({ sampleId, normalized, createdAt, createdByUid = null, createdByEmail = null, extra = {} }) {
+  const fingerprint = crypto.createHash('sha256').update(JSON.stringify({
+    sampleId,
+    manualSegments: normalized.manualSegments,
+    segmentationConvention: normalized.segmentationConvention,
+    certainty: normalized.certainty,
+    reviewerSessionId: normalized.reviewerSessionId
+  })).digest('hex');
+  const reviewId = `review-${fingerprint}`;
+  return {
+    reviewId,
+    sampleId,
+    manualSegments: normalized.manualSegments,
+    verifiedSpans: normalized.manualSegments.map((segment) => ({ start: segment.startTime, end: segment.endTime })),
+    segmentationConvention: normalized.segmentationConvention,
+    certainty: normalized.certainty,
+    reviewStatus: normalized.reviewStatus,
+    automaticBoundariesVisible: true,
+    reviewerName: normalized.reviewerName,
+    reviewerSessionId: normalized.reviewerSessionId,
+    reviewNotes: normalized.reviewNotes,
+    analysisRevision: normalized.analysisRevision,
+    createdByUid,
+    createdByEmail,
+    createdAt,
+    ...extra
   };
 }
 
@@ -374,6 +452,9 @@ function registerPronunciationCorpusRoutes(router, deps) {
       const createdAt = deps.serverTimestamp();
       const record = {
         ...normalized,
+        studyVersion: String(metadata.studyVersion || '').trim() || null,
+        studyPreviousSample: metadata.studyPreviousSample === true,
+        sourceKind: String(metadata.sourceKind || '').trim().slice(0, 80) || null,
         sourceHash,
         storagePath,
         contentType: 'audio/wav',
@@ -455,6 +536,98 @@ function registerPronunciationCorpusRoutes(router, deps) {
     }
   });
 
+  router.post('/dev/corpus-samples/:sampleId/manual-reviews', ...requireAdminHandlers, async (req, res) => {
+    try {
+      const sampleId = String(req.params.sampleId || '').trim();
+      if (!SAMPLE_ID_RE.test(sampleId)) return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid sampleId.');
+
+      const sampleRef = deps.db.collection(COLLECTION).doc(sampleId);
+      const sampleSnapshot = await sampleRef.get();
+      if (!sampleSnapshot.exists) return sendError(res, 404, 'NOT_FOUND', 'Corpus sample not found.');
+
+      const sample = sampleSnapshot.data() || {};
+      let normalized;
+      try {
+        normalized = validateManualReviewMetadata(req.body || {}, sample);
+      } catch (error) {
+        const status = error instanceof CorpusValidationError ? 400 : 500;
+        return sendError(res, status, status === 400 ? 'CORPUS_REVIEW_ERROR' : 'CORPUS_REVIEW_STORAGE_ERROR', error?.message || 'Invalid manual review.');
+      }
+
+      const fingerprint = crypto.createHash('sha256').update(JSON.stringify({
+        sampleId,
+        manualSegments: normalized.manualSegments,
+        segmentationConvention: normalized.segmentationConvention,
+        certainty: normalized.certainty,
+        reviewerSessionId: normalized.reviewerSessionId
+      })).digest('hex');
+      const reviewId = `review-${fingerprint}`;
+      const reviewRef = sampleRef.collection('manualReviews').doc(reviewId);
+      const createdAt = deps.serverTimestamp();
+      const reviewRecord = {
+        reviewId,
+        sampleId,
+        manualSegments: normalized.manualSegments,
+        verifiedSpans: normalized.manualSegments.map((segment) => ({ start: segment.startTime, end: segment.endTime })),
+        segmentationConvention: normalized.segmentationConvention,
+        certainty: normalized.certainty,
+        reviewStatus: normalized.reviewStatus,
+        automaticBoundariesVisible: true,
+        reviewerName: normalized.reviewerName,
+        reviewerSessionId: normalized.reviewerSessionId,
+        reviewNotes: normalized.reviewNotes,
+        analysisRevision: normalized.analysisRevision,
+        createdByUid: req.user?.uid || null,
+        createdByEmail: req.user?.email || null,
+        createdAt
+      };
+
+      let result = null;
+      let idempotent = false;
+      await deps.db.runTransaction(async (tx) => {
+        const [currentSampleSnapshot, existingReviewSnapshot] = await Promise.all([
+          tx.get(sampleRef),
+          tx.get(reviewRef)
+        ]);
+        if (!currentSampleSnapshot.exists) {
+          throw Object.assign(new Error('Corpus sample not found.'), { status: 404, code: 'NOT_FOUND' });
+        }
+        if (existingReviewSnapshot.exists) {
+          idempotent = true;
+          result = { id: existingReviewSnapshot.id, ...existingReviewSnapshot.data() };
+          return;
+        }
+
+        const currentSample = currentSampleSnapshot.data() || {};
+        tx.set(reviewRef, reviewRecord, { merge: false });
+        tx.set(sampleRef, {
+          manualSegments: normalized.manualSegments,
+          verifiedSpans: reviewRecord.verifiedSpans,
+          segmentationConvention: normalized.segmentationConvention,
+          labelProvenance: 'manual',
+          needsManualReview: normalized.certainty !== 'certain',
+          reviewReason: normalized.certainty === 'uncertain' ? 'operator_uncertain' : null,
+          reviewStatus: normalized.reviewStatus,
+          certainty: normalized.certainty,
+          automaticBoundariesVisible: true,
+          activeManualReviewId: reviewId,
+          manualReviewCount: Number(currentSample.manualReviewCount || 0) + 1,
+          updatedAt: deps.serverTimestamp()
+        }, { merge: true });
+        result = { id: reviewId, ...reviewRecord };
+      });
+
+      return sendSuccess(res, {
+        sampleId,
+        review: result,
+        idempotent
+      }, idempotent ? 'Manual review already recorded.' : 'Manual review appended.');
+    } catch (error) {
+      const status = error?.status || 500;
+      return sendError(res, status, error?.code || 'CORPUS_REVIEW_STORAGE_ERROR', error?.message || 'Failed to append manual review.');
+    }
+  });
+
   router.delete('/dev/corpus-samples/:sampleId', ...requireAdminHandlers, async (req, res) => {
     try {
       const sampleId = String(req.params.sampleId || '').trim();
@@ -483,6 +656,9 @@ function registerPronunciationCorpusRoutes(router, deps) {
 module.exports = registerPronunciationCorpusRoutes;
 module.exports.COLLECTION = COLLECTION;
 module.exports.normalizeTimingSegments = normalizeTimingSegments;
+module.exports.validateContiguousSegments = validateContiguousSegments;
 module.exports.parseRawMultipartRequest = parseRawMultipartRequest;
 module.exports.validateCorpusMetadata = validateCorpusMetadata;
+module.exports.validateManualReviewMetadata = validateManualReviewMetadata;
+module.exports.buildManualReviewRecord = buildManualReviewRecord;
 module.exports.validateWavBuffer = validateWavBuffer;

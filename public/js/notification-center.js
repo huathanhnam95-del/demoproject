@@ -61,8 +61,22 @@ import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/fi
     unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
       currentNotifications = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
       render();
-    }, () => {
-      renderMessage('Notifications are temporarily unavailable.');
+    }, (error) => {
+      console.warn('[NotificationCenter] Indexed query failed, trying unindexed fallback:', error);
+      const fallbackQuery = query(collection(window.__FIREBASE_INTERNAL__.db, 'user_notifications'), where('uid', '==', user.uid), limit(50));
+      unsubscribe = onSnapshot(fallbackQuery, (snapshot) => {
+        currentNotifications = snapshot.docs
+          .map((item) => ({ id: item.id, ...item.data() }))
+          .sort((a, b) => {
+            const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+            const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+            return timeB - timeA;
+          })
+          .slice(0, 30);
+        render();
+      }, () => {
+        renderMessage('Notifications are temporarily unavailable.');
+      });
     });
   }
 

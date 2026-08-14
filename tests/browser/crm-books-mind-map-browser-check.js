@@ -180,8 +180,8 @@ async function main() {
         }, { book: BOOK, notes: SAMPLE_NOTES, mockMap: MOCK_MIND_MAP });
 
         // Click book item in sources list to ensure active state
-        await page.waitForSelector('.crm-books-item');
-        await page.click('.crm-books-item');
+        await page.waitForSelector('.crm-books-list-item');
+        await page.click('.crm-books-list-item');
 
         // Switch tab to notes
         await page.waitForSelector('[data-books-tab="notes"]');

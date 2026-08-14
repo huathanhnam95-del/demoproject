@@ -1,3 +1,18 @@
+## [V1.8.67] - 2026-08-14
+
+### Added & Enhanced
+- **CRM Books Mind Map UI Redesign & Source Notes**:
+  - Refined bezier connector line curvatures, opacity, and stroke widths for cleaner visual clarity.
+  - Upgraded source notes in Inspector drawer with expandable inline preview/full-text toggles (`📖 Title ▸`), robust note ID resolution (supporting raw, firestore, and prefixed IDs), and informative empty state indicators.
+  - Enhanced Dark Mode palette with modern glassmorphism (`--mm-glass`, `--mm-accent-soft`), subtle border contrasts, and unified surface depths.
+- **Write Essay Mode Local AI Result Polling**:
+  - Added real-time polling on `essay_ai_queue` documents when queuing local AI scoring.
+  - Automatically updates the UI status, renders the complete score breakdown in the results card, posts teacher advice directly to chat, and refreshes the previous attempts history list.
+- **PTE Attempt Archive & History UI**:
+  - Added secondary "🕒 Previous Attempts" action toggle to Essay results view.
+- **Notification Center Reliability**:
+  - Added unindexed Firestore query fallback for user notifications when composite indexes are pending or unavailable.
+
 ## [V1.8.66] - 2026-08-13
 
 ### Fixed

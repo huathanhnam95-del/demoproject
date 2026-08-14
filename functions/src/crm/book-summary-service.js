@@ -332,6 +332,7 @@ INSTRUCTIONS:
 2. Group the notes into 3 to 6 major categories / themes. Choose distinct color hex codes for each category (e.g. #4f46e5, #059669, #d97706, #dc2626, #7c3aed, #0891b2).
 3. Inside each category, break down into logical subtopics / note blocks. Each subtopic should reference the relevant noteId(s) from the provided notes, provide a clear concise title, a 1-2 sentence summary, and the full representative note text.
 4. Ensure every note is organized into at least one relevant theme.
+5. IMPORTANT: Use the exact note ID strings (e.g. "note_1723537890123_abc" or "fs_abc123") from the [Note #X | ID: xxx] headers above, not invented IDs. Every subtopic MUST have a non-empty "noteIds" array containing at least one real note ID.
 
 Return a JSON object with this exact structure:
 {
@@ -356,14 +357,14 @@ Return a JSON object with this exact structure:
 }`;
 }
 
-async function generateBookMindMap(db, bookId, force = false) {
+async function generateBookMindMap(db, bookId, force = false, noteIds = null) {
     const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
     if (!bookSnap.exists) {
         throw new Error(`Book ${bookId} not found`);
     }
     const bookData = bookSnap.data() || {};
 
-    if (!force) {
+    if (!force && !noteIds) {
         const existing = await db.collection(CRM_BOOKS).doc(bookId)
             .collection('artifacts').doc('mind_map').get();
         if (existing.exists) {
@@ -377,7 +378,11 @@ async function generateBookMindMap(db, bookId, force = false) {
         .limit(200)
         .get();
 
-    const notes = notesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let notes = notesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (noteIds && noteIds.length > 0) {
+        const idSet = new Set(noteIds);
+        notes = notes.filter(n => idSet.has(n.id));
+    }
     if (notes.length === 0) {
         throw new Error('No saved notes found for this book. Save some notes first to generate a Mind Map.');
     }
@@ -400,9 +405,11 @@ async function generateBookMindMap(db, bookId, force = false) {
         generatedAt: new Date()
     };
 
-    await db.collection(CRM_BOOKS).doc(bookId)
-        .collection('artifacts').doc('mind_map')
-        .set(mindMap, { merge: true });
+    if (!noteIds) {
+        await db.collection(CRM_BOOKS).doc(bookId)
+            .collection('artifacts').doc('mind_map')
+            .set(mindMap, { merge: true });
+    }
 
     return mindMap;
 }

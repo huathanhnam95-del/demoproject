@@ -11,6 +11,7 @@ window.CrmBooksWorkspace = (function () {
     const ICON_ERROR = '<svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
     const ICON_UPLOAD = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>';
     const ICON_DOC = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+    const ICON_MUSIC = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
 
     function fallbackEscapeHtml(value) {
         const div = document.createElement('div');
@@ -782,6 +783,7 @@ window.CrmBooksWorkspace = (function () {
                 `<p class="crm-books-explorer-meta">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' \u00b7 ')}</p>` +
                 `</div>` +
                 usageHtml +
+                `<button class="crm-books-bgm-btn" data-book-id="${escapeHtml(b.bookId)}" title="Upload & manage background music (MP3)" aria-label="Background music">${ICON_MUSIC}<span>Background Music</span></button>` +
                 `<button class="crm-books-download-btn" data-book-id="${escapeHtml(b.bookId)}" title="Download source" aria-label="Download source">${ICON_DOWNLOAD}<span>Download source</span></button>` +
                 `<button class="crm-books-dark-toggle" title="Toggle dark mode">${darkIcon}</button>` +
                 `<button class="crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book">${ICON_TRASH}</button>` +
@@ -1253,6 +1255,8 @@ window.CrmBooksWorkspace = (function () {
                 `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
                 `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
                 `</label>` +
+                `<button class="crm-books-open-bgm" data-book-id="${escapeHtml(selectedBookId)}" title="Upload & manage background music (MP3)">` +
+                `${ICON_MUSIC}<span>Background music</span></button>` +
                 `<button class="crm-books-open-bookview" title="Open book view">` +
                 `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
                 `<span>Open book view</span></button>` +
@@ -1266,6 +1270,182 @@ window.CrmBooksWorkspace = (function () {
         // ─── Fullscreen Book View ───
         const ICON_CHEVRON_LEFT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
         const ICON_CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
+
+        // ─── Background Music & Player State ───
+        let bookAudioTracks = [];
+        let bookAudioIndex = 0;
+        let bookAudioEl = null;
+        let isBookAudioPlaying = false;
+        let bookAudioVolume = 0.5;
+        try {
+            const storedVol = parseFloat(localStorage.getItem('crm_books_bgm_vol'));
+            if (Number.isFinite(storedVol)) bookAudioVolume = Math.max(0, Math.min(1, storedVol));
+        } catch (_) {
+            bookAudioVolume = 0.5;
+        }
+
+        const DEFAULT_BGM_TRACKS = [
+            { id: 'default-1', title: 'Study Ambience', downloadUrl: 'audio/survival_bgm_01.mp3' }
+        ];
+
+        async function loadBookAudio(bookId) {
+            try {
+                const res = await apiGet(`/api/admin/books/${bookId}/audio`);
+                const tracks = Array.isArray(res?.tracks) ? res.tracks : [];
+                bookAudioTracks = tracks.length > 0 ? tracks : DEFAULT_BGM_TRACKS;
+            } catch (err) {
+                console.warn('[CRM Books] Failed to load audio tracks:', err);
+                bookAudioTracks = DEFAULT_BGM_TRACKS;
+            }
+            if (bookAudioIndex >= bookAudioTracks.length) {
+                bookAudioIndex = 0;
+            }
+            updateBookPlayerUi();
+        }
+
+        function updateBookPlayerUi(overlay) {
+            if (!overlay) overlay = document.querySelector('.crm-bv-overlay');
+            if (!overlay) return;
+
+            const playerEl = overlay.querySelector('.crm-bv-player');
+            const playIcon = overlay.querySelector('.crm-bv-play-icon');
+            const pauseIcon = overlay.querySelector('.crm-bv-pause-icon');
+            const trackText = overlay.querySelector('.crm-bv-player-track-text');
+            const trackEl = overlay.querySelector('.crm-bv-player-track');
+            const slider = overlay.querySelector('.crm-bv-volume-slider');
+
+            if (playerEl) {
+                playerEl.classList.toggle('is-playing', isBookAudioPlaying);
+            }
+            if (playIcon && pauseIcon) {
+                playIcon.style.display = isBookAudioPlaying ? 'none' : 'block';
+                pauseIcon.style.display = isBookAudioPlaying ? 'block' : 'none';
+            }
+            const currentTrack = bookAudioTracks[bookAudioIndex];
+            const total = bookAudioTracks.length;
+            const title = currentTrack?.title || 'Background Music';
+            if (trackText) {
+                trackText.textContent = total > 1 ? `${bookAudioIndex + 1}/${total}: ${title}` : title;
+            }
+            if (trackEl) {
+                trackEl.title = title;
+            }
+            if (slider && !slider.matches(':focus')) {
+                slider.value = Math.round(bookAudioVolume * 100);
+            }
+        }
+
+        function playBookAudio(overlay) {
+            if (!bookAudioTracks || bookAudioTracks.length === 0) return;
+            const track = bookAudioTracks[bookAudioIndex];
+            if (!track || !track.downloadUrl) return;
+
+            if (!bookAudioEl) {
+                bookAudioEl = new Audio();
+                bookAudioEl.addEventListener('ended', () => {
+                    nextBookAudio(overlay, true);
+                });
+                bookAudioEl.addEventListener('error', (e) => {
+                    console.warn('[CRM Books Audio] Playback error:', e);
+                    isBookAudioPlaying = false;
+                    updateBookPlayerUi(overlay);
+                });
+            }
+
+            if (bookAudioEl.src !== track.downloadUrl && !bookAudioEl.src.endsWith(track.downloadUrl)) {
+                bookAudioEl.src = track.downloadUrl;
+            }
+            bookAudioEl.volume = bookAudioVolume;
+
+            bookAudioEl.play().then(() => {
+                isBookAudioPlaying = true;
+                updateBookPlayerUi(overlay);
+            }).catch((err) => {
+                console.warn('[CRM Books Audio] Autoplay/play error:', err);
+                isBookAudioPlaying = false;
+                updateBookPlayerUi(overlay);
+            });
+        }
+
+        function pauseBookAudio(overlay) {
+            if (bookAudioEl) {
+                bookAudioEl.pause();
+            }
+            isBookAudioPlaying = false;
+            updateBookPlayerUi(overlay);
+        }
+
+        function togglePlayBookAudio(overlay) {
+            if (isBookAudioPlaying) {
+                pauseBookAudio(overlay);
+            } else {
+                playBookAudio(overlay);
+            }
+        }
+
+        function nextBookAudio(overlay, autoPlay = false) {
+            if (!bookAudioTracks || bookAudioTracks.length === 0) return;
+            bookAudioIndex = (bookAudioIndex + 1) % bookAudioTracks.length;
+            const track = bookAudioTracks[bookAudioIndex];
+            if (isBookAudioPlaying || autoPlay) {
+                if (bookAudioEl) {
+                    bookAudioEl.src = track.downloadUrl;
+                    bookAudioEl.play().then(() => {
+                        isBookAudioPlaying = true;
+                        updateBookPlayerUi(overlay);
+                    }).catch(() => {});
+                } else {
+                    playBookAudio(overlay);
+                }
+            }
+            updateBookPlayerUi(overlay);
+        }
+
+        function prevBookAudio(overlay) {
+            if (!bookAudioTracks || bookAudioTracks.length === 0) return;
+            bookAudioIndex = (bookAudioIndex - 1 + bookAudioTracks.length) % bookAudioTracks.length;
+            const track = bookAudioTracks[bookAudioIndex];
+            if (isBookAudioPlaying) {
+                if (bookAudioEl) {
+                    bookAudioEl.src = track.downloadUrl;
+                    bookAudioEl.play().then(() => {
+                        isBookAudioPlaying = true;
+                        updateBookPlayerUi(overlay);
+                    }).catch(() => {});
+                } else {
+                    playBookAudio(overlay);
+                }
+            }
+            updateBookPlayerUi(overlay);
+        }
+
+        function setBookAudioVolume(volumeFraction, overlay) {
+            bookAudioVolume = Math.max(0, Math.min(1, volumeFraction));
+            try {
+                localStorage.setItem('crm_books_bgm_vol', String(bookAudioVolume));
+            } catch (_) {
+                /* ignore */
+            }
+            if (bookAudioEl) {
+                bookAudioEl.volume = bookAudioVolume;
+            }
+            updateBookPlayerUi(overlay);
+        }
+
+        function fadeOutAndStopBookAudio() {
+            if (!bookAudioEl || !isBookAudioPlaying) return;
+            let vol = bookAudioVolume;
+            const fadeTimer = setInterval(() => {
+                if (vol > 0.08) {
+                    vol = Math.max(0, vol - 0.1);
+                    if (bookAudioEl) bookAudioEl.volume = vol;
+                } else {
+                    clearInterval(fadeTimer);
+                    pauseBookAudio();
+                    if (bookAudioEl) bookAudioEl.volume = bookAudioVolume;
+                }
+            }, 35);
+        }
 
         function setBookViewTheme(themeId) {
             if (!BOOK_THEMES.some(t => t.id === themeId)) return;
@@ -1409,6 +1589,9 @@ window.CrmBooksWorkspace = (function () {
             if (bookViewSpread % 2 === 0) bookViewSpread -= 1;
             bookViewOpen = true;
             bookViewTurning = false;
+            if (selectedBookId) {
+                loadBookAudio(selectedBookId);
+            }
             renderBookView();
             document.addEventListener('keydown', handleBookViewKeydown);
         }
@@ -1417,6 +1600,7 @@ window.CrmBooksWorkspace = (function () {
             bookViewOpen = false;
             bookViewTurning = false;
             document.removeEventListener('keydown', handleBookViewKeydown);
+            fadeOutAndStopBookAudio();
             const overlay = document.querySelector('.crm-bv-overlay');
             if (overlay) {
                 overlay.classList.add('crm-bv-closing');
@@ -1437,35 +1621,118 @@ window.CrmBooksWorkspace = (function () {
             if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); bookViewPrev(); return; }
         }
 
+        function renderBookPageHtml(virtualPageData, isLeft) {
+            const b = selectedBook || {};
+            const footerText = isLeft ? (b.title || '') : (b.author || '');
+            const num = virtualPageData ? virtualPageData.pageLabel : '';
+            const body = virtualPageData ? virtualPageData.html : '<p class="crm-bv-page-empty">End of book.</p>';
+            return `<div class="crm-bv-page-fold"></div>` +
+                `<div class="crm-bv-page-num">${escapeHtml(num)}</div>` +
+                `<div class="crm-bv-page-body">${body}</div>` +
+                `<div class="crm-bv-page-footer">${escapeHtml(footerText)}</div>`;
+        }
+
         function bookViewNext() {
             if (bookViewTurning) return;
             const total = bookViewPages.length;
             if (bookViewSpread + 2 > total) return;
-            bookViewTurning = true;
             const overlay = document.querySelector('.crm-bv-overlay');
-            const rightPage = overlay?.querySelector('.crm-bv-page-right');
-            if (!rightPage) { bookViewTurning = false; return; }
-            rightPage.classList.add('crm-bv-flipping-forward');
+            if (!overlay) return;
+            const spread = overlay.querySelector('.crm-bv-spread');
+            if (!spread) return;
+
+            const isNarrow = window.innerWidth <= 740;
+            const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (isNarrow || prefersReducedMotion) {
+                bookViewSpread += 2;
+                updateBookViewPages(overlay);
+                return;
+            }
+
+            bookViewTurning = true;
+            const currentRightData = getBookViewVirtualPage(bookViewSpread);
+            const nextLeftData = getBookViewVirtualPage(bookViewSpread + 1);
+            const nextRightData = getBookViewVirtualPage(bookViewSpread + 2);
+
+            // 1. Prepare base right page to immediately display next right page (so it's visible underneath as leaf flips away)
+            const rightPageEl = spread.querySelector('.crm-bv-page-right');
+            if (rightPageEl) {
+                rightPageEl.innerHTML = renderBookPageHtml(nextRightData, false);
+            }
+
+            // 2. Create the 3D flipping leaf with dual faces (Front = current right page, Back = next left page)
+            const leaf = document.createElement('div');
+            leaf.className = 'crm-bv-leaf crm-bv-leaf-next';
+            leaf.innerHTML =
+                `<div class="crm-bv-leaf-face crm-bv-leaf-front">${renderBookPageHtml(currentRightData, false)}</div>` +
+                `<div class="crm-bv-leaf-face crm-bv-leaf-back">${renderBookPageHtml(nextLeftData, true)}</div>`;
+            spread.appendChild(leaf);
+
+            // Trigger animation on next frame for smooth GPU transition
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    leaf.classList.add('is-flipping');
+                });
+            });
+
+            const FLIP_DURATION = 850; // Smooth, natural 0.85s book turn
             setTimeout(() => {
                 bookViewSpread += 2;
+                leaf.remove();
                 bookViewTurning = false;
                 updateBookViewPages(overlay);
-            }, 600);
+            }, FLIP_DURATION);
         }
 
         function bookViewPrev() {
             if (bookViewTurning) return;
             if (bookViewSpread <= 1) return;
-            bookViewTurning = true;
             const overlay = document.querySelector('.crm-bv-overlay');
-            const leftPage = overlay?.querySelector('.crm-bv-page-left');
-            if (!leftPage) { bookViewTurning = false; return; }
-            leftPage.classList.add('crm-bv-flipping-backward');
+            if (!overlay) return;
+            const spread = overlay.querySelector('.crm-bv-spread');
+            if (!spread) return;
+
+            const isNarrow = window.innerWidth <= 740;
+            const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (isNarrow || prefersReducedMotion) {
+                bookViewSpread = Math.max(1, bookViewSpread - 2);
+                updateBookViewPages(overlay);
+                return;
+            }
+
+            bookViewTurning = true;
+            const currentLeftData = getBookViewVirtualPage(bookViewSpread - 1);
+            const prevRightData = getBookViewVirtualPage(bookViewSpread - 2);
+            const prevLeftData = getBookViewVirtualPage(bookViewSpread - 3);
+
+            // 1. Prepare base left page to immediately display prev left page (so it's visible underneath as leaf flips away)
+            const leftPageEl = spread.querySelector('.crm-bv-page-left');
+            if (leftPageEl) {
+                leftPageEl.innerHTML = renderBookPageHtml(prevLeftData, true);
+            }
+
+            // 2. Create the 3D flipping leaf with dual faces (Front = current left page, Back = prev right page)
+            const leaf = document.createElement('div');
+            leaf.className = 'crm-bv-leaf crm-bv-leaf-prev';
+            leaf.innerHTML =
+                `<div class="crm-bv-leaf-face crm-bv-leaf-front">${renderBookPageHtml(currentLeftData, true)}</div>` +
+                `<div class="crm-bv-leaf-face crm-bv-leaf-back">${renderBookPageHtml(prevRightData, false)}</div>`;
+            spread.appendChild(leaf);
+
+            // Trigger animation on next frame
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    leaf.classList.add('is-flipping');
+                });
+            });
+
+            const FLIP_DURATION = 850; // Smooth, natural 0.85s book turn
             setTimeout(() => {
                 bookViewSpread = Math.max(1, bookViewSpread - 2);
+                leaf.remove();
                 bookViewTurning = false;
                 updateBookViewPages(overlay);
-            }, 600);
+            }, FLIP_DURATION);
         }
 
         function updateBookViewPages(overlay) {
@@ -1475,20 +1742,13 @@ window.CrmBooksWorkspace = (function () {
             const leftData = getBookViewVirtualPage(bookViewSpread - 1);
             const rightData = getBookViewVirtualPage(bookViewSpread);
 
-            const leftBody = overlay.querySelector('.crm-bv-page-left .crm-bv-page-body');
-            const rightBody = overlay.querySelector('.crm-bv-page-right .crm-bv-page-body');
-            const leftNumEl = overlay.querySelector('.crm-bv-page-left .crm-bv-page-num');
-            const rightNumEl = overlay.querySelector('.crm-bv-page-right .crm-bv-page-num');
             const leftPage = overlay.querySelector('.crm-bv-page-left');
             const rightPage = overlay.querySelector('.crm-bv-page-right');
 
-            if (leftBody) leftBody.innerHTML = leftData ? leftData.html : '<p class="crm-bv-page-empty">End of book.</p>';
-            if (rightBody) rightBody.innerHTML = rightData ? rightData.html : '<p class="crm-bv-page-empty">End of book.</p>';
-            if (leftNumEl) leftNumEl.textContent = leftData ? leftData.pageLabel : '';
-            if (rightNumEl) rightNumEl.textContent = rightData ? rightData.pageLabel : '';
+            if (leftPage) leftPage.innerHTML = renderBookPageHtml(leftData, true);
+            if (rightPage) rightPage.innerHTML = renderBookPageHtml(rightData, false);
 
-            leftPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
-            rightPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
+            overlay.querySelectorAll('.crm-bv-leaf').forEach(l => l.remove());
 
             const navInfo = overlay.querySelector('.crm-bv-nav-info');
             if (navInfo) {
@@ -1522,7 +1782,6 @@ window.CrmBooksWorkspace = (function () {
 
             const total = bookViewPages.length;
             const totalPdf = pagesData?.totalPages || 0;
-            const b = selectedBook || {};
             const leftData = getBookViewVirtualPage(bookViewSpread - 1);
             const rightData = getBookViewVirtualPage(bookViewSpread);
             const leftLabel = leftData ? leftData.pageLabel : '';
@@ -1545,6 +1804,35 @@ window.CrmBooksWorkspace = (function () {
                             `</div>` +
                         `</div>` +
                         `<div class="crm-bv-topbar-right">` +
+                            `<div class="crm-bv-player${isBookAudioPlaying ? ' is-playing' : ''}">` +
+                                `<button class="crm-bv-player-btn crm-bv-player-prev" title="Previous track">` +
+                                    `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>` +
+                                `</button>` +
+                                `<button class="crm-bv-player-btn crm-bv-player-play" title="Play / Pause BGM">` +
+                                    `<svg class="crm-bv-play-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:${isBookAudioPlaying ? 'none' : 'block'};"><path d="M8 5v14l11-7z"/></svg>` +
+                                    `<svg class="crm-bv-pause-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:${isBookAudioPlaying ? 'block' : 'none'};"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>` +
+                                `</button>` +
+                                `<button class="crm-bv-player-btn crm-bv-player-next" title="Next track">` +
+                                    `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>` +
+                                `</button>` +
+                                `<div class="crm-bv-wave" aria-hidden="true">` +
+                                    `<span class="crm-bv-wave-bar"></span>` +
+                                    `<span class="crm-bv-wave-bar"></span>` +
+                                    `<span class="crm-bv-wave-bar"></span>` +
+                                `</div>` +
+                                `<div class="crm-bv-player-track" title="${escapeHtml(bookAudioTracks[bookAudioIndex]?.title || 'Background Music')}">` +
+                                    `<span class="crm-bv-player-track-text">${escapeHtml(bookAudioTracks.length > 1 ? `${bookAudioIndex + 1}/${bookAudioTracks.length}: ${bookAudioTracks[bookAudioIndex]?.title || 'BGM'}` : (bookAudioTracks[bookAudioIndex]?.title || 'Study Ambience'))}</span>` +
+                                `</div>` +
+                                `<div class="crm-bv-volume-wrapper">` +
+                                    `<button class="crm-bv-player-btn crm-bv-volume-btn" title="Volume">` +
+                                        `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>` +
+                                    `</button>` +
+                                    `<div class="crm-bv-volume-slider-box">` +
+                                        `<input type="range" class="crm-bv-volume-slider" min="0" max="100" step="1" value="${Math.round(bookAudioVolume * 100)}" aria-label="BGM Volume">` +
+                                    `</div>` +
+                                `</div>` +
+                                `<button class="crm-bv-player-btn crm-bv-player-upload" title="Upload & Manage BGM Tracks">${ICON_PLUS}</button>` +
+                            `</div>` +
                             `<div class="crm-bv-font-controls">` +
                                 `<button class="crm-bv-font-btn crm-bv-font-down" title="Decrease font size">A−</button>` +
                                 `<input type="range" class="crm-bv-font-slider" min="${BOOK_VIEW_FONT_MIN}" max="${BOOK_VIEW_FONT_MAX}" step="${BOOK_VIEW_FONT_STEP}" value="${bookViewFontScale}">` +
@@ -1557,19 +1845,9 @@ window.CrmBooksWorkspace = (function () {
                     `<div class="crm-bv-stage">` +
                         `<div class="crm-bv-theme-panel">${themePanelHtml}</div>` +
                         `<div class="crm-bv-spread" style="--crm-bv-font-scale:${bookViewFontScale}">` +
-                            `<div class="crm-bv-page crm-bv-page-left">` +
-                                `<div class="crm-bv-page-fold"></div>` +
-                                `<div class="crm-bv-page-num">${leftLabel}</div>` +
-                                `<div class="crm-bv-page-body">${leftData ? leftData.html : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
-                                `<div class="crm-bv-page-footer">${escapeHtml(b.title || '')}</div>` +
-                            `</div>` +
+                            `<div class="crm-bv-page crm-bv-page-left">${renderBookPageHtml(leftData, true)}</div>` +
                             `<div class="crm-bv-spine"></div>` +
-                            `<div class="crm-bv-page crm-bv-page-right">` +
-                                `<div class="crm-bv-page-fold"></div>` +
-                                `<div class="crm-bv-page-num">${rightData ? rightLabel : ''}</div>` +
-                                `<div class="crm-bv-page-body">${rightData ? rightData.html : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
-                                `<div class="crm-bv-page-footer">${escapeHtml(b.author || '')}</div>` +
-                            `</div>` +
+                            `<div class="crm-bv-page crm-bv-page-right">${renderBookPageHtml(rightData, false)}</div>` +
                         `</div>` +
                     `</div>` +
                     `<div class="crm-bv-controls">` +
@@ -1583,6 +1861,20 @@ window.CrmBooksWorkspace = (function () {
             overlay.querySelector('.crm-bv-close')?.addEventListener('click', closeBookView);
             overlay.querySelector('.crm-bv-prev')?.addEventListener('click', bookViewPrev);
             overlay.querySelector('.crm-bv-next')?.addEventListener('click', bookViewNext);
+
+            // Audio player controls
+            overlay.querySelector('.crm-bv-player-play')?.addEventListener('click', () => togglePlayBookAudio(overlay));
+            overlay.querySelector('.crm-bv-player-prev')?.addEventListener('click', () => prevBookAudio(overlay));
+            overlay.querySelector('.crm-bv-player-next')?.addEventListener('click', () => nextBookAudio(overlay));
+            overlay.querySelector('.crm-bv-player-upload')?.addEventListener('click', () => { if (selectedBookId) openBookBgmModal(selectedBookId); });
+            overlay.querySelector('.crm-bv-volume-slider')?.addEventListener('input', (e) => setBookAudioVolume(Number(e.target.value) / 100, overlay));
+            overlay.querySelector('.crm-bv-volume-btn')?.addEventListener('click', () => {
+                if (bookAudioVolume > 0) {
+                    setBookAudioVolume(0, overlay);
+                } else {
+                    setBookAudioVolume(0.5, overlay);
+                }
+            });
 
             // Theme panel: delegate click to individual swatches
             overlay.querySelector('.crm-bv-theme-panel')?.addEventListener('click', (e) => {
@@ -4306,6 +4598,258 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
+        // --- Background Music Modal ---
+        async function openBookBgmModal(bookId) {
+            if (!bookId) return;
+            const existing = qs('.crm-books-bgm-modal');
+            if (existing) existing.remove();
+
+            const book = books.find(b => b.bookId === bookId) || selectedBook || {};
+            const isDark = panel?.classList.contains('books-dark');
+            const darkClass = isDark ? ' books-dark' : '';
+
+            const modal = document.createElement('div');
+            modal.className = `crm-modal-overlay crm-books-modal-overlay crm-books-bgm-modal${darkClass}`;
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.innerHTML =
+                `<div class="crm-modal-container">` +
+                    `<div class="crm-modal-header">` +
+                        `<h2>Background Music &middot; ${escapeHtml(book.title || 'Book')}</h2>` +
+                        `<button class="crm-icon-btn crm-books-modal-close" title="Close">${ICON_CLOSE}</button>` +
+                    `</div>` +
+                    `<div class="crm-modal-body" style="flex-direction:column; padding:20px;">` +
+                        `<div class="crm-books-bgm-dropzone" id="crm-books-bgm-dropzone">` +
+                            `<div class="crm-books-bgm-dropzone-icon">🎵</div>` +
+                            `<p><strong>Click to browse</strong> or drag &amp; drop MP3 files here</p>` +
+                            `<span>Supported: MP3 audio files up to 30 MB</span>` +
+                            `<input type="file" accept="audio/mp3,audio/mpeg,.mp3" style="display:none;" id="crm-books-bgm-file-input">` +
+                        `</div>` +
+                        `<div class="crm-books-bgm-progress-bar">` +
+                            `<div class="crm-books-bgm-progress-fill"></div>` +
+                        `</div>` +
+                        `<div style="margin-bottom:8px; font-weight:600; font-size:0.85rem; color:var(--books-text, inherit);">` +
+                            `Uploaded Audio Tracks (<span class="crm-books-bgm-count">0</span>)` +
+                        `</div>` +
+                        `<div class="crm-books-bgm-list" id="crm-books-bgm-list">` +
+                            `<div style="text-align:center; padding:20px; color:var(--books-text-muted, #6b7280); font-size:0.82rem;">Loading tracks...</div>` +
+                        `</div>` +
+                    `</div>` +
+                    `<div class="crm-modal-footer" style="padding:12px 20px; display:flex; justify-content:flex-end;">` +
+                        `<button class="crm-btn-secondary crm-books-modal-close-btn">Done</button>` +
+                    `</div>` +
+                `</div>`;
+
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+
+            let previewAudio = null;
+            let playingTrackId = null;
+
+            const closeModal = () => {
+                if (previewAudio) {
+                    previewAudio.pause();
+                    previewAudio = null;
+                }
+                modal.style.display = 'none';
+                modal.remove();
+            };
+
+            modal.querySelector('.crm-books-modal-close').addEventListener('click', closeModal);
+            modal.querySelector('.crm-books-modal-close-btn').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            const dropzone = modal.querySelector('#crm-books-bgm-dropzone');
+            const fileInput = modal.querySelector('#crm-books-bgm-file-input');
+            const progressBar = modal.querySelector('.crm-books-bgm-progress-bar');
+            const progressFill = modal.querySelector('.crm-books-bgm-progress-fill');
+            const listEl = modal.querySelector('#crm-books-bgm-list');
+            const countEl = modal.querySelector('.crm-books-bgm-count');
+
+            let tracks = [];
+
+            async function loadTracks() {
+                try {
+                    const res = await apiGet(`/api/admin/books/${bookId}/audio`);
+                    tracks = Array.isArray(res?.tracks) ? res.tracks : [];
+                    renderTracks();
+                } catch (err) {
+                    console.error('[CRM Books] Failed to load tracks:', err);
+                    listEl.innerHTML = `<div style="text-align:center; padding:16px; color:#ef4444; font-size:0.82rem;">Failed to load tracks: ${escapeHtml(err.message || 'Error')}</div>`;
+                }
+            }
+
+            function renderTracks() {
+                countEl.textContent = String(tracks.length);
+                if (tracks.length === 0) {
+                    listEl.innerHTML = `<div style="text-align:center; padding:24px; color:var(--books-text-muted, #6b7280); font-size:0.82rem;">No custom background music uploaded yet.<br><span style="font-size:0.75rem; opacity:0.8;">Default study ambience will be played during book reading.</span></div>`;
+                    return;
+                }
+
+                listEl.innerHTML = tracks.map(t => {
+                    const sizeMb = t.sizeBytes ? (t.sizeBytes / (1024 * 1024)).toFixed(1) + ' MB' : '';
+                    const isPlaying = playingTrackId === t.id;
+                    return `<div class="crm-books-bgm-item" data-audio-id="${escapeHtml(t.id)}">` +
+                        `<div class="crm-books-bgm-item-left">` +
+                            `<button class="crm-books-bgm-preview-btn" data-audio-id="${escapeHtml(t.id)}" title="${isPlaying ? 'Pause preview' : 'Play preview'}">` +
+                                (isPlaying
+                                    ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+                                    : '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>') +
+                            `</button>` +
+                            `<div class="crm-books-bgm-item-info">` +
+                                `<div class="crm-books-bgm-item-title">${escapeHtml(t.title)}</div>` +
+                                `<div class="crm-books-bgm-item-meta">${[escapeHtml(t.originalFilename), sizeMb].filter(Boolean).join(' &middot; ')}</div>` +
+                            `</div>` +
+                        `</div>` +
+                        `<div class="crm-books-bgm-item-actions">` +
+                            `<button class="crm-books-bgm-delete-btn" data-audio-id="${escapeHtml(t.id)}" title="Delete track">${ICON_TRASH}</button>` +
+                        `</div>` +
+                    `</div>`;
+                }).join('');
+            }
+
+            listEl.addEventListener('click', async (e) => {
+                const previewBtn = e.target.closest('.crm-books-bgm-preview-btn');
+                if (previewBtn) {
+                    const audioId = previewBtn.dataset.audioId;
+                    const track = tracks.find(t => t.id === audioId);
+                    if (!track || !track.downloadUrl) return;
+
+                    if (playingTrackId === audioId && previewAudio && !previewAudio.paused) {
+                        previewAudio.pause();
+                        playingTrackId = null;
+                        renderTracks();
+                        return;
+                    }
+
+                    if (previewAudio) previewAudio.pause();
+                    previewAudio = new Audio(track.downloadUrl);
+                    previewAudio.addEventListener('ended', () => {
+                        playingTrackId = null;
+                        renderTracks();
+                    });
+                    playingTrackId = audioId;
+                    renderTracks();
+                    previewAudio.play().catch(err => {
+                        console.warn('[CRM Books] Preview failed:', err);
+                        playingTrackId = null;
+                        renderTracks();
+                    });
+                    return;
+                }
+
+                const deleteBtn = e.target.closest('.crm-books-bgm-delete-btn');
+                if (deleteBtn) {
+                    const audioId = deleteBtn.dataset.audioId;
+                    if (!confirm('Are you sure you want to remove this background music track?')) return;
+                    if (playingTrackId === audioId && previewAudio) {
+                        previewAudio.pause();
+                        previewAudio = null;
+                        playingTrackId = null;
+                    }
+                    deleteBtn.disabled = true;
+                    try {
+                        await apiDelete(`/api/admin/books/${bookId}/audio/${audioId}`);
+                        tracks = tracks.filter(t => t.id !== audioId);
+                        renderTracks();
+                        showToast?.('Track removed.', 'info');
+                        if (selectedBookId === bookId) {
+                            await loadBookAudio(bookId);
+                        }
+                    } catch (err) {
+                        console.error('[CRM Books] Failed to delete audio:', err);
+                        showToast?.('Failed to delete track: ' + (err.message || 'Error'), 'error');
+                        deleteBtn.disabled = false;
+                    }
+                }
+            });
+
+            // Upload handling
+            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const file = e.dataTransfer?.files?.[0];
+                if (file) handleAudioUpload(file);
+            });
+
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files?.[0];
+                if (file) handleAudioUpload(file);
+            });
+
+            async function handleAudioUpload(file) {
+                if (!file) return;
+                if (!file.name.toLowerCase().endsWith('.mp3') && !file.type.includes('audio')) {
+                    showToast?.('Please select an MP3 audio file.', 'error');
+                    return;
+                }
+                if (file.size > 30 * 1024 * 1024) {
+                    showToast?.('Audio file must be under 30 MB.', 'error');
+                    return;
+                }
+
+                const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ').trim();
+                const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const storagePath = `crm-books/${bookId}/bgm/${Date.now()}_${safeFilename}`;
+
+                progressBar.style.display = 'block';
+                progressFill.style.width = '0%';
+
+                try {
+                    const storageRef = firebaseApp.storage().ref(storagePath);
+                    const uploadTask = storageRef.put(file, { contentType: 'audio/mpeg' });
+
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                            progressFill.style.width = `${pct}%`;
+                        },
+                        (err) => {
+                            console.error('[CRM Books] Audio upload failed:', err);
+                            progressBar.style.display = 'none';
+                            showToast?.('Audio upload failed: ' + (err.message || 'Error'), 'error');
+                        },
+                        async () => {
+                            try {
+                                const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                                const res = await apiPost(`/api/admin/books/${bookId}/audio`, {
+                                    title: cleanTitle,
+                                    storagePath,
+                                    downloadUrl,
+                                    originalFilename: file.name,
+                                    sizeBytes: file.size
+                                });
+                                progressBar.style.display = 'none';
+                                showToast?.('Background music uploaded successfully!', 'success');
+                                if (res?.track) {
+                                    tracks.push(res.track);
+                                    renderTracks();
+                                } else {
+                                    await loadTracks();
+                                }
+                                if (selectedBookId === bookId) {
+                                    await loadBookAudio(bookId);
+                                }
+                            } catch (postErr) {
+                                console.error('[CRM Books] Failed to save audio metadata:', postErr);
+                                progressBar.style.display = 'none';
+                                showToast?.('Failed to save audio record: ' + (postErr.message || 'Error'), 'error');
+                            }
+                        }
+                    );
+                } catch (err) {
+                    console.error('[CRM Books] Upload error:', err);
+                    progressBar.style.display = 'none';
+                    showToast?.('Failed to start audio upload: ' + (err.message || 'Error'), 'error');
+                }
+            }
+
+            await loadTracks();
+        }
+
         // --- Upload ---
         function openAddBookModal() {
             const existing = qs('.crm-books-add-modal');
@@ -4887,6 +5431,11 @@ window.CrmBooksWorkspace = (function () {
                     if (target.classList.contains('crm-books-delete-btn')) {
                         e.stopPropagation();
                         await deleteBook(bookId);
+                        return;
+                    }
+                    if (target.classList.contains('crm-books-bgm-btn') || target.classList.contains('crm-books-open-bgm')) {
+                        e.stopPropagation();
+                        openBookBgmModal(bookId || selectedBookId);
                         return;
                     }
                     if (target.classList.contains('crm-books-download-btn')) {

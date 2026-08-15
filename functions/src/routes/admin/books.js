@@ -951,4 +951,122 @@ module.exports = function registerBookRoutes(router, deps) {
         }
     });
 
+    // ─── Background Music (Audio) ───
+    router.get('/books/:bookId/audio', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
+
+            const audioSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('audio')
+                .orderBy('createdAt', 'asc')
+                .get();
+
+            const tracks = audioSnap.docs.map((doc) => {
+                const d = doc.data();
+                return {
+                    id: doc.id,
+                    title: d.title || 'Untitled Track',
+                    storagePath: d.storagePath || '',
+                    downloadUrl: d.downloadUrl || '',
+                    originalFilename: d.originalFilename || '',
+                    sizeBytes: d.sizeBytes || null,
+                    duration: d.duration || null,
+                    createdAt: d.createdAt?.toDate?.() ?? d.createdAt ?? null
+                };
+            });
+
+            return sendSuccess(res, { tracks, count: tracks.length });
+        } catch (error) {
+            return sendError(res, 500, 'GET_AUDIO_ERROR', 'Failed to load background music tracks.', error?.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/audio', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
+
+            const title = cleanStr(req.body?.title) || cleanStr(req.body?.originalFilename) || 'Background Music';
+            const storagePath = cleanStr(req.body?.storagePath);
+            const downloadUrl = cleanStr(req.body?.downloadUrl);
+            const originalFilename = cleanStr(req.body?.originalFilename);
+            const sizeBytes = Number(req.body?.sizeBytes) || null;
+            const duration = Number(req.body?.duration) || null;
+
+            if (!storagePath && !downloadUrl) {
+                return sendError(res, 400, 'INVALID_AUDIO_DATA', 'Either storagePath or downloadUrl is required.');
+            }
+
+            const ref = db.collection(CRM_BOOKS).doc(bookId).collection('audio').doc();
+            const payload = {
+                title,
+                storagePath,
+                downloadUrl,
+                originalFilename,
+                sizeBytes,
+                duration,
+                createdAt: serverTimestamp(),
+                createdByUid: req.user?.uid || null
+            };
+
+            await ref.set(payload);
+
+            await writeAuditLog?.({
+                action: 'book.audio_added',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { audioId: ref.id, title, originalFilename }
+            }, { user: req.user });
+
+            return sendSuccess(res, { track: { id: ref.id, ...payload } }, 'Audio track saved.');
+        } catch (error) {
+            return sendError(res, 500, 'POST_AUDIO_ERROR', 'Failed to save background music track.', error?.message || error);
+        }
+    });
+
+    router.delete('/books/:bookId/audio/:audioId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const audioId = cleanStr(req.params.audioId);
+            if (!bookId || !audioId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or audio ID.');
+
+            const docRef = db.collection(CRM_BOOKS).doc(bookId).collection('audio').doc(audioId);
+            const docSnap = await docRef.get();
+            if (!docSnap.exists) {
+                return sendError(res, 404, 'AUDIO_NOT_FOUND', 'Audio track not found.');
+            }
+
+            const data = docSnap.data() || {};
+            const storagePath = data.storagePath;
+
+            if (storagePath && getStorageBucket) {
+                try {
+                    const bucket = await getStorageBucket();
+                    const file = bucket.file(storagePath);
+                    const [exists] = await file.exists();
+                    if (exists) {
+                        await file.delete();
+                    }
+                } catch (storageErr) {
+                    console.warn('[CRM Books] Failed to delete audio file from storage:', storageErr);
+                }
+            }
+
+            await docRef.delete();
+
+            await writeAuditLog?.({
+                action: 'book.audio_deleted',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { audioId, title: data.title }
+            }, { user: req.user });
+
+            return sendSuccess(res, { audioId }, 'Audio track deleted.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_AUDIO_ERROR', 'Failed to delete audio track.', error?.message || error);
+        }
+    });
+
 };
+

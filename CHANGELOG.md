@@ -7,6 +7,17 @@
   - Added subtle animated atmospheric effects (`::before` glow/shimmer) for Campfire (flickering warm amber), Ocean (caustic underwater light shimmer), and Potter (Hogwarts candlelight library glow with gold accents and aged parchment).
   - Stored theme preferences persistently in `localStorage` (`crm_books_reader_theme`) with backward compatibility for existing dark mode settings.
   - Implemented responsive collapsing for mobile viewports (≤740px), rendering a centered floating bottom strip.
+- **CRM Books Realistic 3D Dual-Sided Page Flip Animation**:
+  - Implemented dynamic 3D leaf rotation (`rotateY(-180deg)` on next, `rotateY(180deg)` on prev) with backface-visibility and gradient fold shadows for genuine paper-turning aesthetics.
+- **CRM Books BGM & In-Reader Audio Player**:
+  - Added custom MP3 background music upload modal with progress tracking, storage management, and live audio player with track selection, volume slider, animated wave bars, and auto-advance.
+
+### Fixed
+- **Word Segmentation Over-Splitting & Text Glitch Resolution**:
+  - Upgraded English dictionary corpus from 43k to 257,000+ words with accurate Zipf frequency log-costs, preventing false splitting of valid vocabulary (e.g. `andragogical`, `readiness`, `Skinner`, `Differential`, `readable`, `known`).
+  - Fixed regex escape strings in client-side text preprocessor to prevent accidental character stripping across camelCase, number, and punctuation boundaries.
+  - Implemented automatic hyphenation repair across line breaks (`child-\nlearning` → `child learning`, `differen-\ntiated` → `differentiated`).
+  - Added OCR bigram normalization (e.g. `area good deal` → `are a good deal`).
 
 ## [V1.8.71] - 2026-08-15
 

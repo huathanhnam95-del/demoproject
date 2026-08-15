@@ -1455,3 +1455,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 667,2026-08-15,Implement client-side English dictionary word segmentation to fix glued PDF text in CRM Books,Done,2026-08-15
 668,2026-08-15,Fix book font size slider and implement dynamic virtual page pagination eliminating scrollbars,Done,2026-08-15
 669,2026-08-15,Implement 8 immersive background themes for Book Reader full-page view with left-side theme panel,Done,2026-08-15
+670,2026-08-15,Implement Admin MP3 BGM upload for Books and full-page Book Reader audio player with controls,Done,2026-08-15
+671,2026-08-15,Make BGM upload button prominently visible in Book header Pages toolbar and Add Book modal,Done,2026-08-15
+672,2026-08-15,Fix reversed text on page flip by implementing dual-faced 3D leaf animation and slow down flip timing to 0.85s,Done,2026-08-15

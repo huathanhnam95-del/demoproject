@@ -204,26 +204,27 @@ async function signInOnPage(page, credentials) {
         await page.screenshot({ path: SCREENSHOTS.pageNav });
         console.log(`  ✓ Navigation works. Before: "${navBefore}" → After: "${navAfter}"`);
 
-        // ── Step 8: Dark Mode ──
-        console.log('Step 8: Testing dark mode toggle...');
-        await page.click('.crm-bv-mode-dark');
-        await page.waitForTimeout(500);
+        // ── Step 8: Theme Switcher ──
+        console.log('Step 8: Testing theme switcher...');
+        const inkSwatch = await page.$('.crm-bv-theme-swatch[data-theme="ink"]');
+        if (inkSwatch) {
+            await inkSwatch.click();
+            await page.waitForTimeout(500);
+        }
 
-        results.darkMode = await page.evaluate(() => {
+        results.themeMode = await page.evaluate(() => {
             const container = document.querySelector('.crm-bv-container');
-            const darkBtn = document.querySelector('.crm-bv-mode-dark');
+            const activeSwatch = document.querySelector('.crm-bv-theme-swatch.active');
             return {
-                isDark: container?.classList.contains('crm-bv-dark'),
-                isNotLight: !container?.classList.contains('crm-bv-light'),
-                darkBtnActive: darkBtn?.classList.contains('active'),
+                themeClass: container ? container.className : '',
+                activeTheme: activeSwatch?.dataset.theme || '',
                 bgColor: container ? getComputedStyle(container).backgroundColor : ''
             };
         });
 
-        assert(results.darkMode.isDark, 'Container should have crm-bv-dark class.');
-        assert(results.darkMode.isNotLight, 'Container should NOT have crm-bv-light class.');
+        assert(results.themeMode.themeClass.includes('crm-bv-theme-ink'), 'Container should have crm-bv-theme-ink class.');
         await page.screenshot({ path: SCREENSHOTS.darkMode });
-        console.log(`  ✓ Dark mode active. BG: ${results.darkMode.bgColor}`);
+        console.log(`  ✓ Theme switcher active. Theme: ${results.themeMode.activeTheme}, BG: ${results.themeMode.bgColor}`);
 
         // ── Step 9: Exit Book View ──
         console.log('Step 9: Exiting book view...');

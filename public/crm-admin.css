@@ -4929,10 +4929,12 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transition: background 0.4s, color 0.4s, box-shadow 0.4s;
 }
+.crm-bv-page::-webkit-scrollbar { display: none; }
 .crm-bv-page-left { border-radius: 4px 0 0 4px; }
 .crm-bv-page-right { border-radius: 0 4px 4px 0; }
 .crm-bv-light .crm-bv-page { background: #faf6ef; color: #2c2420; box-shadow: 0 2px 14px rgba(60,40,20,0.08); }
@@ -4969,7 +4971,11 @@ body {
   font-size: calc(0.88rem * var(--crm-bv-font-scale, 100) / 100);
   line-height: 1.82;
   overflow-wrap: break-word;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.crm-bv-page-body::-webkit-scrollbar { display: none; }
 .crm-bv-page-body p { margin: 0 0 14px; text-align: justify; hyphens: auto; }
 .crm-bv-page-body h2 { font-size: 1.2em; font-weight: 600; margin: 0 0 10px; }
 .crm-bv-page-body h3 { font-size: 1.05em; font-weight: 600; margin: 0 0 10px; }

@@ -1,3 +1,14 @@
+## [V1.8.71] - 2026-08-15
+
+### Fixed & Enhanced
+- **CRM Books Fullscreen Reader Dynamic Virtual Page Flow**:
+  - Eliminated all scrollbars from book pages (`overflow: hidden` on page spread and body).
+  - Implemented dynamic virtual pagination (`buildBookViewPages` + `splitBlocksIntoReaderPages`) that automatically decomposes extracted PDF pages into clean, book-sized spreads without overflowing the viewport.
+  - Multi-part pages are cleanly labeled (e.g., `Page 4 (1/2)` & `Page 4 (2/2)`) and advance seamlessly with page flips.
+- **Fixed Font Size Slider Scaling**:
+  - Corrected CSS variable parsing for `--crm-bv-font-scale` to pass unitless numeric scale values, fixing broken CSS `calc()` operations.
+  - Live slider updates now dynamically reflow content into more or fewer virtual pages in real time.
+
 ## [V1.8.70] - 2026-08-15
 
 ### Fixed & Enhanced

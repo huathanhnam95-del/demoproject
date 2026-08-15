@@ -164,7 +164,7 @@ window.CrmBooksWorkspace = (function () {
         return true;
     }
 
-    function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
+    function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
         const repaired = repairMissingSpaces(String(text ?? '').replace(/\r\n?/g, '\n'));
         const lines = repaired
@@ -254,7 +254,11 @@ window.CrmBooksWorkspace = (function () {
             index += 1;
         }
         flushParagraph();
-        return html.join('');
+        return html;
+    }
+
+    function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
+        return formatPageBlocks(text, escHtml, highlightQuote).join('');
     }
 
     function getReadablePageNumbers(pages) {
@@ -1237,27 +1241,130 @@ window.CrmBooksWorkspace = (function () {
         }
 
         // ─── Fullscreen Book View ───
-        const ICON_SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>';
+        const ICON_SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 000-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 000-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>';
         const ICON_MOON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
         const ICON_CHEVRON_LEFT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
         const ICON_CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
 
-        function getBookViewFormattedPage(pageNum) {
-            if (!pagesData || pageNum < 1 || pageNum > pagesData.totalPages) return '';
-            const text = pagesData.pages[pageNum - 1] || '';
-            if (!clean(text)) return '<p class="crm-bv-page-empty">No extractable text on this page.</p>';
-            return formatPageText(text, escapeHtml, '');
+        let bookViewPages = [];
+
+        function splitBlocksIntoReaderPages(rawBlocks, targetWords) {
+            const pages = [];
+            let currentBlocks = [];
+            let currentWords = 0;
+
+            for (const block of rawBlocks) {
+                const textOnly = block.replace(/<[^>]+>/g, ' ').trim();
+                const words = textOnly.split(/\s+/).filter(Boolean).length;
+
+                if (words > targetWords) {
+                    if (currentBlocks.length > 0) {
+                        pages.push(currentBlocks.join(''));
+                        currentBlocks = [];
+                        currentWords = 0;
+                    }
+
+                    const tagMatch = block.match(/^<([a-z0-9]+)[^>]*>([\s\S]*)<\/[a-z0-9]+>$/i);
+                    const tag = tagMatch ? tagMatch[1] : 'p';
+                    const inner = tagMatch ? tagMatch[2] : block;
+
+                    const sentences = inner.match(/[^.!?]+[.!?]+(?:["'”’)]|\s|$)+|[^.!?]+$/g) || [inner];
+                    let subSentences = [];
+                    let subWords = 0;
+
+                    for (const s of sentences) {
+                        const sWords = s.trim().split(/\s+/).filter(Boolean).length;
+                        if (subWords > 0 && subWords + sWords > targetWords) {
+                            pages.push(`<${tag}>${subSentences.join('')}</${tag}>`);
+                            subSentences = [s];
+                            subWords = sWords;
+                        } else {
+                            subSentences.push(s);
+                            subWords += sWords;
+                        }
+                    }
+                    if (subSentences.length > 0) {
+                        currentBlocks.push(`<${tag}>${subSentences.join('')}</${tag}>`);
+                        currentWords = subWords;
+                    }
+                    continue;
+                }
+
+                if (currentWords > 0 && currentWords + words > targetWords) {
+                    pages.push(currentBlocks.join(''));
+                    currentBlocks = [block];
+                    currentWords = words;
+                } else {
+                    currentBlocks.push(block);
+                    currentWords += words;
+                }
+            }
+
+            if (currentBlocks.length > 0) {
+                pages.push(currentBlocks.join(''));
+            }
+
+            return pages.length > 0 ? pages : ['<p class="crm-bv-page-empty">No extractable text on this page.</p>'];
         }
 
-        function bookViewSpreadForPage(page) {
-            if (page <= 1) return 1;
-            return page % 2 === 0 ? page : page - 1;
+        function buildBookViewPages(pData, fontScale = 100) {
+            if (!pData || !Array.isArray(pData.pages) || pData.pages.length === 0) {
+                return [];
+            }
+
+            // Target word count per page based on font scale to avoid vertical overflow
+            const targetWords = Math.max(90, Math.floor(180 * (100 / fontScale)));
+            const result = [];
+
+            pData.pages.forEach((rawText, idx) => {
+                const pdfPageNum = idx + 1;
+                if (!clean(rawText)) {
+                    result.push({
+                        pdfPageNum,
+                        partIndex: 0,
+                        partCount: 1,
+                        pageLabel: `${pdfPageNum}`,
+                        html: '<p class="crm-bv-page-empty">No extractable text on this page.</p>'
+                    });
+                    return;
+                }
+                const blocks = formatPageBlocks(rawText, escapeHtml, '');
+                const subPages = splitBlocksIntoReaderPages(blocks, targetWords);
+
+                subPages.forEach((html, partIdx) => {
+                    const pageLabel = subPages.length > 1
+                        ? `${pdfPageNum} (${partIdx + 1}/${subPages.length})`
+                        : `${pdfPageNum}`;
+
+                    result.push({
+                        pdfPageNum,
+                        partIndex: partIdx,
+                        partCount: subPages.length,
+                        pageLabel,
+                        html
+                    });
+                });
+            });
+
+            return result;
+        }
+
+        function rebuildBookViewPages() {
+            bookViewPages = buildBookViewPages(pagesData, bookViewFontScale);
+        }
+
+        function getBookViewVirtualPage(index) {
+            if (!bookViewPages || index < 0 || index >= bookViewPages.length) return null;
+            return bookViewPages[index];
         }
 
         function openBookView() {
             if (!pagesData || pagesData.totalPages === 0) return;
+            rebuildBookViewPages();
+            const startingIdx = bookViewPages.findIndex((p) => p.pdfPageNum >= currentPage);
+            bookViewSpread = startingIdx >= 0 ? startingIdx + 1 : 1;
+            if (bookViewSpread % 2 === 0) bookViewSpread -= 1;
             bookViewOpen = true;
-            bookViewSpread = bookViewSpreadForPage(currentPage);
             bookViewTurning = false;
             renderBookView();
             document.addEventListener('keydown', handleBookViewKeydown);
@@ -1272,7 +1379,10 @@ window.CrmBooksWorkspace = (function () {
                 overlay.classList.add('crm-bv-closing');
                 setTimeout(() => overlay.remove(), 250);
             }
-            currentPage = bookViewSpread;
+            const currentVirtual = getBookViewVirtualPage(bookViewSpread - 1);
+            if (currentVirtual) {
+                currentPage = currentVirtual.pdfPageNum;
+            }
             resetPageCitation();
             renderExplorerPanel();
         }
@@ -1286,7 +1396,7 @@ window.CrmBooksWorkspace = (function () {
 
         function bookViewNext() {
             if (bookViewTurning) return;
-            const total = pagesData?.totalPages || 0;
+            const total = bookViewPages.length;
             if (bookViewSpread + 2 > total) return;
             bookViewTurning = true;
             const overlay = document.querySelector('.crm-bv-overlay');
@@ -1317,9 +1427,10 @@ window.CrmBooksWorkspace = (function () {
 
         function updateBookViewPages(overlay) {
             if (!overlay) return;
-            const total = pagesData?.totalPages || 0;
-            const leftNum = bookViewSpread;
-            const rightNum = bookViewSpread + 1;
+            const total = bookViewPages.length;
+            const totalPdf = pagesData?.totalPages || 0;
+            const leftData = getBookViewVirtualPage(bookViewSpread - 1);
+            const rightData = getBookViewVirtualPage(bookViewSpread);
 
             const leftBody = overlay.querySelector('.crm-bv-page-left .crm-bv-page-body');
             const rightBody = overlay.querySelector('.crm-bv-page-right .crm-bv-page-body');
@@ -1328,18 +1439,22 @@ window.CrmBooksWorkspace = (function () {
             const leftPage = overlay.querySelector('.crm-bv-page-left');
             const rightPage = overlay.querySelector('.crm-bv-page-right');
 
-            if (leftBody) leftBody.innerHTML = getBookViewFormattedPage(leftNum);
-            if (rightBody) rightBody.innerHTML = rightNum <= total
-                ? getBookViewFormattedPage(rightNum)
-                : '<p class="crm-bv-page-empty">End of book.</p>';
-            if (leftNumEl) leftNumEl.textContent = leftNum;
-            if (rightNumEl) rightNumEl.textContent = rightNum <= total ? rightNum : '';
+            if (leftBody) leftBody.innerHTML = leftData ? leftData.html : '<p class="crm-bv-page-empty">End of book.</p>';
+            if (rightBody) rightBody.innerHTML = rightData ? rightData.html : '<p class="crm-bv-page-empty">End of book.</p>';
+            if (leftNumEl) leftNumEl.textContent = leftData ? leftData.pageLabel : '';
+            if (rightNumEl) rightNumEl.textContent = rightData ? rightData.pageLabel : '';
 
             leftPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
             rightPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
 
             const navInfo = overlay.querySelector('.crm-bv-nav-info');
-            if (navInfo) navInfo.textContent = `Pages ${leftNum}–${Math.min(rightNum, total)} of ${total}`;
+            if (navInfo) {
+                const leftLabel = leftData ? leftData.pageLabel : '';
+                const rightLabel = rightData ? rightData.pageLabel : leftLabel;
+                navInfo.textContent = leftLabel === rightLabel
+                    ? `Page ${leftLabel} of ${totalPdf}`
+                    : `Pages ${leftLabel}–${rightLabel} of ${totalPdf}`;
+            }
             const prevBtn = overlay.querySelector('.crm-bv-prev');
             const nextBtn = overlay.querySelector('.crm-bv-next');
             if (prevBtn) prevBtn.disabled = bookViewSpread <= 1;
@@ -1348,7 +1463,7 @@ window.CrmBooksWorkspace = (function () {
 
         function applyBookViewFontScale(overlay) {
             const spread = overlay?.querySelector('.crm-bv-spread');
-            if (spread) spread.style.setProperty('--crm-bv-font-scale', `${bookViewFontScale}%`);
+            if (spread) spread.style.setProperty('--crm-bv-font-scale', String(bookViewFontScale));
             const output = overlay?.querySelector('.crm-bv-font-output');
             if (output) output.textContent = `${bookViewFontScale}%`;
         }
@@ -1362,10 +1477,13 @@ window.CrmBooksWorkspace = (function () {
             }
             overlay.classList.remove('crm-bv-closing');
 
-            const total = pagesData?.totalPages || 0;
+            const total = bookViewPages.length;
+            const totalPdf = pagesData?.totalPages || 0;
             const b = selectedBook || {};
-            const leftNum = bookViewSpread;
-            const rightNum = bookViewSpread + 1;
+            const leftData = getBookViewVirtualPage(bookViewSpread - 1);
+            const rightData = getBookViewVirtualPage(bookViewSpread);
+            const leftLabel = leftData ? leftData.pageLabel : '';
+            const rightLabel = rightData ? rightData.pageLabel : leftLabel;
             const modeClass = bookViewDark ? 'crm-bv-dark' : 'crm-bv-light';
 
             overlay.innerHTML =
@@ -1391,25 +1509,25 @@ window.CrmBooksWorkspace = (function () {
                         `</div>` +
                     `</div>` +
                     `<div class="crm-bv-stage">` +
-                        `<div class="crm-bv-spread" style="--crm-bv-font-scale:${bookViewFontScale}%">` +
+                        `<div class="crm-bv-spread" style="--crm-bv-font-scale:${bookViewFontScale}">` +
                             `<div class="crm-bv-page crm-bv-page-left">` +
                                 `<div class="crm-bv-page-fold"></div>` +
-                                `<div class="crm-bv-page-num">${leftNum}</div>` +
-                                `<div class="crm-bv-page-body">${getBookViewFormattedPage(leftNum)}</div>` +
+                                `<div class="crm-bv-page-num">${leftLabel}</div>` +
+                                `<div class="crm-bv-page-body">${leftData ? leftData.html : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
                                 `<div class="crm-bv-page-footer">${escapeHtml(b.title || '')}</div>` +
                             `</div>` +
                             `<div class="crm-bv-spine"></div>` +
                             `<div class="crm-bv-page crm-bv-page-right">` +
                                 `<div class="crm-bv-page-fold"></div>` +
-                                `<div class="crm-bv-page-num">${rightNum <= total ? rightNum : ''}</div>` +
-                                `<div class="crm-bv-page-body">${rightNum <= total ? getBookViewFormattedPage(rightNum) : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
+                                `<div class="crm-bv-page-num">${rightData ? rightLabel : ''}</div>` +
+                                `<div class="crm-bv-page-body">${rightData ? rightData.html : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
                                 `<div class="crm-bv-page-footer">${escapeHtml(b.author || '')}</div>` +
                             `</div>` +
                         `</div>` +
                     `</div>` +
                     `<div class="crm-bv-controls">` +
                         `<button class="crm-bv-nav-btn crm-bv-prev"${bookViewSpread <= 1 ? ' disabled' : ''} title="Previous spread (A / ←)">${ICON_CHEVRON_LEFT}</button>` +
-                        `<div class="crm-bv-nav-info">Pages ${leftNum}–${Math.min(rightNum, total)} of ${total}</div>` +
+                        `<div class="crm-bv-nav-info">${leftLabel === rightLabel ? `Page ${leftLabel} of ${totalPdf}` : `Pages ${leftLabel}–${rightLabel} of ${totalPdf}`}</div>` +
                         `<button class="crm-bv-nav-btn crm-bv-next"${bookViewSpread + 2 > total ? ' disabled' : ''} title="Next spread (D / →)">${ICON_CHEVRON_RIGHT}</button>` +
                     `</div>` +
                     `<div class="crm-bv-shortcuts">A / ← previous · D / → next · Esc exit</div>` +
@@ -1434,21 +1552,31 @@ window.CrmBooksWorkspace = (function () {
                 overlay.querySelector('.crm-bv-mode-light')?.classList.remove('active');
             });
 
-            overlay.querySelector('.crm-bv-font-slider')?.addEventListener('input', (e) => {
-                bookViewFontScale = clampReaderFontScale(e.target.value);
+            const onFontScaleChange = (newScale) => {
+                const currentPdf = bookViewPages[bookViewSpread - 1]?.pdfPageNum || 1;
+                bookViewFontScale = clampReaderFontScale(newScale);
+                rebuildBookViewPages();
+                const newIdx = bookViewPages.findIndex((p) => p.pdfPageNum >= currentPdf);
+                bookViewSpread = Math.max(1, newIdx >= 0 ? newIdx + 1 : 1);
+                if (bookViewSpread % 2 === 0) bookViewSpread -= 1;
                 applyBookViewFontScale(overlay);
+                updateBookViewPages(overlay);
+            };
+
+            overlay.querySelector('.crm-bv-font-slider')?.addEventListener('input', (e) => {
+                onFontScaleChange(e.target.value);
             });
             overlay.querySelector('.crm-bv-font-down')?.addEventListener('click', () => {
-                bookViewFontScale = clampReaderFontScale(bookViewFontScale - BOOK_VIEW_FONT_STEP);
+                const nextVal = clampReaderFontScale(bookViewFontScale - BOOK_VIEW_FONT_STEP);
                 const slider = overlay.querySelector('.crm-bv-font-slider');
-                if (slider) slider.value = bookViewFontScale;
-                applyBookViewFontScale(overlay);
+                if (slider) slider.value = nextVal;
+                onFontScaleChange(nextVal);
             });
             overlay.querySelector('.crm-bv-font-up')?.addEventListener('click', () => {
-                bookViewFontScale = clampReaderFontScale(bookViewFontScale + BOOK_VIEW_FONT_STEP);
+                const nextVal = clampReaderFontScale(bookViewFontScale + BOOK_VIEW_FONT_STEP);
                 const slider = overlay.querySelector('.crm-bv-font-slider');
-                if (slider) slider.value = bookViewFontScale;
-                applyBookViewFontScale(overlay);
+                if (slider) slider.value = nextVal;
+                onFontScaleChange(nextVal);
             });
         }
 

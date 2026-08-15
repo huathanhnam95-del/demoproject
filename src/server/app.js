@@ -138,6 +138,7 @@ function createApp(options = {}) {
     entranceTestRoutes: require('../routes/entrance-tests'),
     readingJourneyRoutes: require('../routes/reading-journey'),
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
+    pronunciationAiRoutes: require('../routes/pronunciation-ai'),
     readAloudRoutes: require('../routes/read-aloud')
   };
   const firebase = options.firebase || require('../utils/firebase');
@@ -274,6 +275,7 @@ function createApp(options = {}) {
   };
 
   app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.pronunciationTestRoutes);
+  app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
   app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.readAloudRoutes);
 
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');

@@ -1,3 +1,16 @@
+## [V1.8.68] - 2026-08-15
+
+### Fixed & Enhanced
+- **CRM Books Page Reader PDF Formatting & Paragraph Reflow**:
+  - Implemented heuristic paragraph break inference (`inferParagraphBreaks`, `looksLikeParagraphEnd`) for PDF text extraction without losing natural line and paragraph structure.
+  - Added support for inline and multi-level numbered lists (`splitInlineNumberedListLine`, `pageListItemStart`) and heading detection in reader page formatting.
+  - Refined quote and citation text highlighting across rendered paragraphs.
+- **CRM Books Mind Map Custom Connections**:
+  - Added interactive anchor-point dragging to draw custom bezier links between mind map nodes.
+  - Added custom connection context menu for editing and deleting links with bidirectional synchronization.
+- **Pronunciation Analyzer Cloud AI Feedback**:
+  - Integrated Vertex AI Gemini 3 Flash proxy route for pronunciation summary and teacher advice generation.
+
 ## [V1.8.67] - 2026-08-14
 
 ### Added & Enhanced

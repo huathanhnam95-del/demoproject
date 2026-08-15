@@ -45,7 +45,6 @@ export const config = {
     // Cache Settings
     sessionCacheEnabled: true,
 
-    // Google AI Studio / Gemini API Key (for AI-generated pronunciation feedback)
-    // Get yours at: https://aistudio.google.com/apikey
-    geminiApiKey: 'AIzaSyB-7-Z_akwDLmHj40KD-5W1t6qKJbTfqZs'
+    // AI Pronunciation Feedback Endpoint (Backend Proxy with Vertex AI)
+    aiSummaryEndpoint: '/api/pronunciation-ai/summary'
 };

@@ -26,6 +26,7 @@ RUN mkdir -p ./local_server
 COPY backend/local_server/__init__.py ./local_server/__init__.py
 COPY backend/local_server/server.py ./local_server/server.py
 COPY backend/local_server/pronunciation_reference.py ./local_server/pronunciation_reference.py
+COPY backend/local_server/pitch_processing.py ./local_server/pitch_processing.py
 COPY backend/local_server/phoneme_client.py ./local_server/phoneme_client.py
 COPY backend/local_server/pronunciation_verifier.py ./local_server/pronunciation_verifier.py
 RUN mkdir -p ./local_server/models

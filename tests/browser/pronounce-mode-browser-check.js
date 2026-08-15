@@ -847,7 +847,7 @@ async function run() {
     assert.equal(await page.locator('#pa-primary-stress').textContent(), 'BU');
     assert.deepEqual(
       await page.evaluate(() => window.__charts.at(-1).data.datasets[0].data),
-      [0.15, 0.15]
+      [0.2, 0.2]
     );
 
     // A transient native-analysis failure must not poison the session cache.

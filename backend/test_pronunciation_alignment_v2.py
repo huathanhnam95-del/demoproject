@@ -1334,6 +1334,50 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
         self.assertEqual(output[1]["endTime"], 1.431639)
         self.assertEqual(output[2]["startTime"], 1.512295)
 
+    def test_partition_variants_keep_v3_snapshot_separate_from_v4(self):
+        response = server._build_v3_active_response(
+            self.PRAAT,
+            self._recognize_v2_result(),
+            reference_ipa="/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/",
+            expected_syllables=3,
+            include_partition_variants=True,
+        )
+        variants = response.get("partitionVariants")
+        self.assertIsInstance(variants, dict)
+        self.assertEqual(variants.get("schemaVersion"), "pronunciation-partition-variants-v1")
+        self.assertEqual(len(variants.get("v3") or []), 3)
+        self.assertEqual(len(variants.get("v4") or []), 3)
+        self.assertEqual(response["observed_syllables"][0]["partitionStartTime"], variants["v3"][0]["startTime"])
+        self.assertEqual(response["observed_syllables"][1]["partitionEndTime"], variants["v3"][1]["endTime"])
+        self.assertNotIn("measurementStartTime", variants["v3"][0])
+        self.assertNotIn("measurementEndTime", variants["v4"][0])
+
+    def test_v4_comparison_candidate_does_not_mutate_active_v3_partitions(self):
+        praat = dict(self.PRAAT)
+        praat["duration"] = 0.7
+        praat["intensity"] = {
+            "times": [index / 100 for index in range(71)],
+            "values": [45.0 if 20 <= index < 30 else 65.0 for index in range(71)],
+        }
+        response = server._build_v3_active_response(
+            praat,
+            self._recognize_v2_result(confidences=(0.1, 0.1, 0.1)),
+            reference_ipa="/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/",
+            expected_syllables=3,
+            include_partition_variants=True,
+        )
+        variants = response["partitionVariants"]
+        self.assertNotEqual(variants["v3"], variants["v4"])
+        self.assertNotEqual(response["partition_convention"], "ctc-interspan-acoustic-confidence-hybrid-contiguous-v4")
+        self.assertEqual(
+            [span["partitionStartTime"] for span in response["observed_syllables"]],
+            [span["startTime"] for span in variants["v3"]],
+        )
+
+    def test_learner_v3_response_does_not_run_or_expose_v4_candidate(self):
+        response = self._build(self._recognize_v2_result(confidences=(0.1, 0.1, 0.1)))
+        self.assertNotIn("partitionVariants", response)
+
     def test_v2_response_exposes_raw_and_measurement_span_provenance(self):
         payload = self._recognize_v2_result()
         payload["canonical_alignment"]["span_contract_version"] = "ctc-alignment-v2"

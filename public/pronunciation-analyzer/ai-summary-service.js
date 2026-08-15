@@ -1,16 +1,14 @@
 /**
  * AI Summary Service for Pronunciation Feedback
- * Uses Google AI Studio (Gemini) API to generate friendly, teacher-like summaries.
- * Falls back to template-based summaries if API is unavailable.
+ * Uses Google Cloud Vertex AI (via backend proxy) to generate friendly, teacher-like summaries.
+ * Falls back to instant template-based summaries if API is unavailable.
  */
 
 import { config } from './config.js';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
 export class AISummaryService {
     constructor() {
-        this.apiKey = config.geminiApiKey || null;
+        this.endpoint = config.aiSummaryEndpoint || '/api/pronunciation-ai/summary';
     }
 
     /**
@@ -93,67 +91,29 @@ export class AISummaryService {
     }
 
     /**
-     * Call Gemini API for richer, context-aware summary
+     * Call backend proxy for Vertex AI summary
      */
     async _callGeminiAPI(word, comparison, userSyllables, ipa) {
-        if (!this.apiKey) return null;
-
-        const prompt = this._buildPrompt(word, comparison, userSyllables, ipa);
-
-        const response = await fetch(`${GEMINI_API_URL}?key=${this.apiKey}`, {
+        const response = await fetch(this.endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    maxOutputTokens: 150,
-                    temperature: 0.7,
-                    topP: 0.9
-                }
+                word,
+                comparison,
+                userSyllables,
+                ipa
             })
         });
 
         if (!response.ok) {
-            throw new Error(`Gemini API error: ${response.status}`);
+            throw new Error(`Summary API error: ${response.status}`);
         }
 
         const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const summary = data?.summary || data?.data?.summary;
 
-        if (!text) return null;
+        if (!summary) return null;
 
-        // Clean up: remove markdown, ensure it's concise
-        return text
-            .replace(/\*\*/g, '')
-            .replace(/\*/g, '')
-            .replace(/^#+\s*/gm, '')
-            .trim();
-    }
-
-    /**
-     * Build the Gemini prompt
-     */
-    _buildPrompt(word, comparison, userSyllables, ipa) {
-        const syllableInfo = userSyllables.map((s, i) => 
-            `Syllable ${i+1}: duration=${s.duration?.toFixed(3)}s, pitch=${s.maxPitch ? Math.round(s.maxPitch) + 'Hz' : 'undetected'}`
-        ).join(', ');
-
-        return `You are a friendly English pronunciation coach giving brief feedback to a student who just practiced saying "${word}" (IPA: ${ipa || 'unknown'}).
-
-Here are their scores compared to a native speaker:
-- Prosody match: ${comparison.overallScore}%
-- Pitch / melody: ${comparison.pitchScore}%
-- Duration / rhythm: ${comparison.durationScore}%
-- Volume / emphasis: ${comparison.intensityScore}%
-- Stress pattern match: ${comparison.stressMatches ? 'correct' : 'incorrect — ' + (comparison.stressFeedback || 'wrong stress cue')}
-${comparison.syllableCountMatches === false ? `- They pronounced ${userSyllables.length} syllables instead of the expected count` : ''}
-- Their syllables: ${syllableInfo}
-
-Write a 2-3 sentence summary that:
-1. Starts with encouragement (not generic — reference their specific strengths)
-2. Points out the ONE most important thing to improve, explained simply
-3. Uses casual, warm teacher language (like talking to a friend)
-
-Keep it under 60 words. Do NOT use bullet points, emojis, or formatting. Just plain conversational text.`;
+        return String(summary).trim();
     }
 }

@@ -165,11 +165,16 @@ test-results/
 # Test screenshots
 tests/screenshots/
 tests/browser/*.png
+tests/browser/screenshots/
 tests/browser/verify-wfd-spc.js
 tests/browser/ra-verify.js
 tests/browser/ra-verify2.js
 tests/browser/wfd-verify.js
 tests/browser/prod-verify.js
+tests/browser/*-prod.js
+
+# Compiled manual reviews
+outputs/compiled_manual_reviews/
 
 # Debug scripts
 visio_debug_trace.ps1

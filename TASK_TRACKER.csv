@@ -1438,3 +1438,14 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 650,2026-08-13,Fix mind map walkthrough gaps: outline bidirectional sync + note subset selection UI + map switching data reload,Done,2026-08-13
 651,2026-08-13,Mind Map: Fix source notes display + full UI redesign (Whimsical/MindMeister-inspired),Done,2026-08-13
 652,2026-08-14,Deploy UI enhancements and fixes across CRM Books Mindmap Essay Scoring and Notification Center,Done,2026-08-14
+653,2026-08-14,Deploy entrance test UI bug fix to production and verify test completed result links via browser testing,Done,2026-08-14
+654,2026-08-14,Mind Map: Source note reader modal + slim reference cards + draggable anchor points for connections,Done,2026-08-14
+655,2026-08-14,Check and clean up current worktree,Done,2026-08-14
+656,2026-08-14,UI/UX Overhaul handoff plan + edge case audit for Practice page,Done,2026-08-14
+657,2026-08-14,Practice Page UI/UX Overhaul implementation (green palette + hero card + progress + a11y),Done,2026-08-14
+658,2026-08-14,Fix 3 UI overhaul bugs: broken layout/colors + retention forecast leak + missing PTE toggle,Done,2026-08-14
+659,2026-08-14,Migrate Pronounce mode AI feedback from AI Studio to Vertex AI using Gemini 3 Flash,Done,2026-08-14
+660,2026-08-14,Complete Practice UI overhaul audit fixes and E2E browser verification,Done,2026-08-14
+661,2026-08-14,Revert Practice UI overhaul changes back to original UI state,Done,2026-08-14
+662,2026-08-15,Fix CRM Books page reader losing paragraph formatting from PDF text extraction,Done,2026-08-15
+663,2026-08-15,Deploy V1.8.68 release to production with CRM Books page reader PDF paragraph formatting fix,Done,2026-08-15

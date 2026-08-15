@@ -2868,7 +2868,324 @@ def _refine_partition_boundaries_with_fricative_onset(
     return changed
 
 
-def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, expected_syllables=None):
+def _refine_partition_boundaries_with_confidence_weighted_acoustic(
+    spans,
+    intensity,
+    pitch,
+    acoustic_syllables,
+    total_duration,
+):
+    """Confidence-weighted acoustic correction for CTC partition boundaries.
+
+    Addresses three systematic errors found in diagnostic review of manual
+    annotations: late onset (+46ms avg), last-syllable truncation (-49ms avg),
+    and position-dependent accuracy degradation.  Low-confidence syllables
+    receive more acoustic correction; high-confidence syllables are untouched.
+    Raw CTC and measurement intervals remain unchanged.
+    """
+    empty_result = {'changed': False, 'corrections': []}
+    if not isinstance(spans, list) or len(spans) < 1:
+        return empty_result
+    if not isinstance(intensity, dict):
+        return empty_result
+
+    i_times = intensity.get('times')
+    i_values = intensity.get('values')
+    if (
+        not isinstance(i_times, list)
+        or not isinstance(i_values, list)
+        or len(i_times) != len(i_values)
+    ):
+        return empty_result
+    contour = []
+    for t, v in zip(i_times, i_values):
+        try:
+            tf = float(t)
+            vf = float(v)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(tf) and np.isfinite(vf):
+            contour.append((tf, vf))
+    if not contour:
+        return empty_result
+
+    pitch_contour = []
+    if isinstance(pitch, dict):
+        p_times = pitch.get('times') or []
+        p_values = pitch.get('values') or []
+        for t, v in zip(p_times, p_values):
+            try:
+                tf = float(t)
+            except (TypeError, ValueError):
+                continue
+            if v is not None:
+                try:
+                    vf = float(v)
+                except (TypeError, ValueError):
+                    vf = None
+            else:
+                vf = None
+            if np.isfinite(tf):
+                pitch_contour.append((tf, vf))
+
+    has_confidence = any(s.get('confidence') is not None for s in spans)
+    if not has_confidence:
+        return empty_result
+
+    CONFIDENCE_HIGH = 0.55
+    CONFIDENCE_LOW = 0.20
+    POSITION_PENALTY = 0.05
+    MAX_ONSET_SHIFT = 0.080
+    MAX_FINAL_EXTENSION = 0.100
+    ONSET_SEARCH_WINDOW = 0.080
+    FINAL_SEARCH_WINDOW = 0.100
+    INTENSITY_RISE_DB = 6.0
+    VOICING_DECAY_DB = 12.0
+
+    def _number(source, *keys):
+        for key in keys:
+            if isinstance(source, dict) and source.get(key) is not None:
+                try:
+                    return float(source[key])
+                except (TypeError, ValueError):
+                    return None
+        return None
+
+    def _nucleus_centre(span):
+        ns = _number(span, 'nucleus_start_time', 'nucleusStartTime', 'start_time', 'startTime')
+        ne = _number(span, 'nucleus_end_time', 'nucleusEndTime', 'end_time', 'endTime')
+        if ns is not None and ne is not None:
+            return (ns + ne) / 2.0
+        return None
+
+    def _blend_weight(confidence, index, count):
+        position_ratio = index / max(1, count - 1) if count > 1 else 0.0
+        effective = confidence - (position_ratio * POSITION_PENALTY)
+        if effective >= CONFIDENCE_HIGH:
+            return 0.0
+        if effective <= CONFIDENCE_LOW:
+            return 1.0
+        return (CONFIDENCE_HIGH - effective) / (CONFIDENCE_HIGH - CONFIDENCE_LOW)
+
+    def _align_praat_to_ctc(ctc_spans, praat_syls):
+        anchors = [None] * len(ctc_spans)
+        if not praat_syls:
+            return anchors
+        ctc_centres = [_nucleus_centre(s) for s in ctc_spans]
+        used = set()
+        for ci, cc in enumerate(ctc_centres):
+            if cc is None:
+                continue
+            best_dist = 0.200
+            best_pi = None
+            for pi, ps in enumerate(praat_syls):
+                if pi in used:
+                    continue
+                ps_start = _number(ps, 'startTime', 'start_time', 'start')
+                ps_end = _number(ps, 'endTime', 'end_time', 'end')
+                if ps_start is None or ps_end is None:
+                    continue
+                pc = (ps_start + ps_end) / 2.0
+                dist = abs(cc - pc)
+                if dist < best_dist:
+                    best_dist = dist
+                    best_pi = pi
+            if best_pi is not None:
+                anchors[ci] = praat_syls[best_pi]
+                used.add(best_pi)
+        return anchors
+
+    def _find_intensity_onset(boundary, search_window, rise_db):
+        window_start = boundary - search_window
+        window = [(t, v) for t, v in contour if window_start <= t <= boundary]
+        if len(window) < 2:
+            return None
+        min_val = min(v for _, v in window)
+        for t, v in window:
+            if v >= min_val + rise_db:
+                return t
+        return None
+
+    def _find_voicing_or_decay_end(boundary, search_window, decay_db, span_peak_db):
+        window_end = boundary + search_window
+        window = [(t, v) for t, v in contour if boundary <= t <= window_end]
+        if not window:
+            return None
+        threshold = span_peak_db - decay_db
+        voicing_end = None
+        if pitch_contour:
+            voiced_frames = [
+                t for t, v in pitch_contour
+                if boundary <= t <= window_end and v is not None and v > 0
+            ]
+            if voiced_frames:
+                voicing_end = max(voiced_frames)
+        decay_end = None
+        for t, v in window:
+            if v >= threshold:
+                decay_end = t
+        candidates = [c for c in (voicing_end, decay_end) if c is not None and c > boundary]
+        if candidates:
+            return max(candidates)
+        return None
+
+    praat_anchors = _align_praat_to_ctc(spans, acoustic_syllables)
+    n = len(spans)
+    changed = False
+    corrections = []
+
+    for i in range(n):
+        span = spans[i]
+        raw_confidence = span.get('confidence')
+        if raw_confidence is None:
+            corrections.append({
+                'index': i, 'correction_type': 'none',
+                'confidence': 0.0, 'blend_weight': 0.0,
+                'shift_ms': 0.0, 'reason': 'no confidence data',
+            })
+            continue
+        confidence = float(raw_confidence)
+        w = _blend_weight(confidence, i, n)
+
+        correction = {
+            'index': i,
+            'correction_type': 'none',
+            'confidence': round(confidence, 4),
+            'blend_weight': round(w, 4),
+            'shift_ms': 0.0,
+            'reason': 'high confidence, no correction needed' if w == 0 else '',
+        }
+
+        if w == 0:
+            corrections.append(correction)
+            continue
+
+        current_part_start = _number(span, 'partition_start_time', 'partitionStartTime')
+        current_part_end = _number(span, 'partition_end_time', 'partitionEndTime')
+
+        if current_part_start is None or current_part_end is None:
+            correction['reason'] = 'missing partition boundaries'
+            corrections.append(correction)
+            continue
+
+        # --- Onset correction (syllables after the first) ---
+        if i > 0:
+            prev_span = spans[i - 1]
+            prev_nucleus_centre = _nucleus_centre(prev_span)
+            acoustic_onset = _find_intensity_onset(
+                current_part_start, ONSET_SEARCH_WINDOW, INTENSITY_RISE_DB,
+            )
+            praat_anchor = praat_anchors[i]
+            if praat_anchor is not None:
+                praat_start = _number(praat_anchor, 'startTime', 'start_time', 'start')
+                if praat_start is not None and praat_start < current_part_start:
+                    if acoustic_onset is not None:
+                        acoustic_onset = min(acoustic_onset, praat_start)
+                    else:
+                        acoustic_onset = praat_start
+
+            if acoustic_onset is not None and acoustic_onset < current_part_start:
+                raw_shift = current_part_start - acoustic_onset
+                capped_shift = min(raw_shift, MAX_ONSET_SHIFT)
+                blended_shift = w * capped_shift
+                corrected = current_part_start - blended_shift
+                lower_bound = (prev_nucleus_centre + 0.001) if prev_nucleus_centre is not None else 0.0
+                corrected = max(corrected, lower_bound)
+                actual_shift = current_part_start - corrected
+                if actual_shift > 0.001:
+                    corrected = round(corrected, 6)
+                    span['partition_start_time'] = corrected
+                    prev_span['partition_end_time'] = corrected
+                    correction['correction_type'] = 'onset'
+                    correction['shift_ms'] = round(-actual_shift * 1000, 1)
+                    correction['reason'] = (
+                        f'onset corrected by {correction["shift_ms"]}ms (w={w:.2f})'
+                    )
+                    changed = True
+
+        # --- Final syllable extension (last syllable only) ---
+        if i == n - 1:
+            current_part_end = _number(span, 'partition_end_time', 'partitionEndTime')
+            span_values = [v for t, v in contour
+                          if current_part_start <= t <= current_part_end]
+            span_peak = max(span_values) if span_values else 60.0
+            acoustic_end = _find_voicing_or_decay_end(
+                current_part_end, FINAL_SEARCH_WINDOW, VOICING_DECAY_DB, span_peak,
+            )
+            praat_anchor = praat_anchors[i]
+            if praat_anchor is not None:
+                praat_end = _number(praat_anchor, 'endTime', 'end_time', 'end')
+                if praat_end is not None and praat_end > current_part_end:
+                    if acoustic_end is not None:
+                        acoustic_end = max(acoustic_end, praat_end)
+                    else:
+                        acoustic_end = praat_end
+
+            if acoustic_end is not None and acoustic_end > current_part_end:
+                raw_extension = acoustic_end - current_part_end
+                capped_extension = min(raw_extension, MAX_FINAL_EXTENSION)
+                blended_extension = w * capped_extension
+                upper_bound = total_duration - 0.005 if total_duration > 0 else current_part_end
+                corrected = min(current_part_end + blended_extension, upper_bound)
+                actual_extension = corrected - current_part_end
+                if actual_extension > 0.001:
+                    corrected = round(corrected, 6)
+                    span['partition_end_time'] = corrected
+                    correction['correction_type'] = 'final_extension'
+                    correction['shift_ms'] = round(actual_extension * 1000, 1)
+                    correction['reason'] = (
+                        f'final syllable extended by {correction["shift_ms"]}ms (w={w:.2f})'
+                    )
+                    changed = True
+
+        # --- Interior boundary correction (when Praat anchors available for both sides) ---
+        if 0 < i < n - 1 and correction['correction_type'] == 'none':
+            praat_curr = praat_anchors[i]
+            praat_next = praat_anchors[i + 1]
+            if praat_curr is not None and praat_next is not None:
+                praat_curr_end = _number(praat_curr, 'endTime', 'end_time', 'end')
+                praat_next_start = _number(praat_next, 'startTime', 'start_time', 'start')
+                if praat_curr_end is not None and praat_next_start is not None:
+                    acoustic_midpoint = (praat_curr_end + praat_next_start) / 2.0
+                    current_boundary = _number(span, 'partition_end_time', 'partitionEndTime')
+                    if current_boundary is not None and abs(acoustic_midpoint - current_boundary) > 0.005:
+                        next_span = spans[i + 1]
+                        next_confidence = float(next_span.get('confidence') or 0.0)
+                        next_w = _blend_weight(next_confidence, i + 1, n)
+                        effective_w = max(w, next_w)
+                        if effective_w > 0:
+                            shift = effective_w * (acoustic_midpoint - current_boundary)
+                            corrected = current_boundary + shift
+                            curr_nc = _nucleus_centre(span)
+                            next_nc = _nucleus_centre(next_span)
+                            if curr_nc is not None and next_nc is not None:
+                                lower, upper = sorted((curr_nc, next_nc))
+                                corrected = min(upper, max(lower + 0.001, corrected))
+                            actual_shift = corrected - current_boundary
+                            if abs(actual_shift) > 0.001:
+                                corrected = round(corrected, 6)
+                                span['partition_end_time'] = corrected
+                                next_span['partition_start_time'] = corrected
+                                correction['correction_type'] = 'interior'
+                                correction['shift_ms'] = round(actual_shift * 1000, 1)
+                                correction['reason'] = (
+                                    f'interior boundary shifted by {correction["shift_ms"]}ms (w={effective_w:.2f})'
+                                )
+                                changed = True
+
+        corrections.append(correction)
+
+    return {'changed': changed, 'corrections': corrections}
+
+
+def _build_v3_active_response(
+    praat_result,
+    phoneme_result,
+    reference_ipa=None,
+    expected_syllables=None,
+    *,
+    include_partition_variants=False,
+):
     """Build v3 response from phoneme recognition + Praat contours.
 
     Both recognizer contracts land here. ``recognize`` (v1) reports a free
@@ -2996,6 +3313,58 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         (praat_result.get('observed') or {}).get('syllables') or [],
     )
     partition_refined = acoustic_tail_refined or fricative_onset_refined
+
+    def _snapshot_partition_spans(spans):
+        """Capture the public contiguous partition before another refinement mutates it.
+
+        The recognizer's raw CTC, nucleus, and measurement spans are kept in the
+        original objects.  These small snapshots are intentionally limited to
+        display partitions so the CRM comparison can show V3 and V4 as separate
+        versions without duplicating or rewriting authoritative measurements.
+        """
+        if not isinstance(spans, list):
+            return []
+        snapshot = []
+        for index, span in enumerate(spans):
+            if not isinstance(span, dict):
+                continue
+            start = span.get('partition_start_time', span.get('partitionStartTime'))
+            end = span.get('partition_end_time', span.get('partitionEndTime'))
+            try:
+                start = float(start)
+                end = float(end)
+            except (TypeError, ValueError):
+                continue
+            if not np.isfinite(start) or not np.isfinite(end) or end <= start:
+                continue
+            snapshot.append({
+                'index': index,
+                'startTime': round(start, 6),
+                'endTime': round(end, 6),
+                'duration': round(end - start, 6),
+                'source': 'partition-snapshot'
+            })
+        return snapshot
+
+    partition_variants = None
+    if include_partition_variants:
+        v3_partition_snapshot = _snapshot_partition_spans(syllables_from_recognizer)
+        # V4 is comparison-only.  Never let its experimental boundary movement
+        # mutate the active V3 spans returned to learner-facing Pronounce.
+        v4_candidate_spans = [dict(span) for span in syllables_from_recognizer]
+        v4_result = _refine_partition_boundaries_with_confidence_weighted_acoustic(
+            v4_candidate_spans,
+            praat_result.get('intensity'),
+            praat_result.get('pitch'),
+            (praat_result.get('observed') or {}).get('syllables') or [],
+            float(praat_result.get('duration') or 0),
+        )
+        partition_variants = {
+            'schemaVersion': 'pronunciation-partition-variants-v1',
+            'v3': v3_partition_snapshot,
+            'v4': _snapshot_partition_spans(v4_candidate_spans),
+            'v4Diagnostics': v4_result.get('corrections', []) if isinstance(v4_result, dict) else []
+        }
     if fricative_onset_refined:
         partition_convention = 'ctc-interspan-acoustic-hybrid-contiguous-v3'
     elif acoustic_tail_refined:
@@ -3027,7 +3396,7 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
             )
         return output
 
-    return {
+    response = {
         'analysisVersion': 'pronunciation-analysis-v3',
         'mode': 'active',
         'engine': 'ctc-praat',
@@ -3064,6 +3433,9 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
             'phoneme_alignment': bool(phonemes),
         },
     }
+    if partition_variants is not None:
+        response['partitionVariants'] = partition_variants
+    return response
 
 
 def _recognizer_syllable_count(phoneme_result):
@@ -3613,6 +3985,7 @@ def _build_v3_active_result_from_pipeline(
     *,
     reference_ipa=None,
     expected_syllables=None,
+    include_partition_variants=False,
 ):
     """Build the active V3 response and its stable unavailable reason."""
     pipeline = pipeline or {}
@@ -3637,6 +4010,7 @@ def _build_v3_active_result_from_pipeline(
         phoneme_result,
         reference_ipa=reference_ipa,
         expected_syllables=expected_syllables,
+        include_partition_variants=include_partition_variants,
     )
     response['verification'] = _build_v3_verification(
         praat_result,
@@ -3905,6 +4279,7 @@ def analyze_comparison():
                 pipeline,
                 reference_ipa=reference_ipa,
                 expected_syllables=expected_syllables,
+                include_partition_variants=True,
             )
             if v3_reason:
                 v3_envelope = {

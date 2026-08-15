@@ -1,81 +1,73 @@
 const express = require('express');
+const { VertexAI } = require('@google-cloud/vertexai');
 const { sendError, sendSuccess } = require('../utils/response-helper');
 /* eslint-disable no-console */
 
 const router = express.Router();
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const DEFAULT_PRIMARY_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
+const DEFAULT_LOCATION = 'global';
 
-/**
- * POST /api/pronunciation-ai/summary
- * Proxies the Gemini API call for pronunciation AI summaries.
- * Keeps the API key server-side only.
- */
-router.post('/pronunciation-ai/summary', async (req, res) => {
-  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-  if (!apiKey) {
-    return sendError(res, 500, 'CONFIG_ERROR', 'Gemini API key not configured.');
+let cachedVertexClient = null;
+const modelCache = new Map();
+
+function normalizeScalar(value) {
+  return String(value ?? '').trim();
+}
+
+function getProjectId() {
+  return normalizeScalar(process.env.FIREBASE_PROJECT_ID)
+    || normalizeScalar(process.env.GOOGLE_CLOUD_PROJECT)
+    || normalizeScalar(process.env.GCLOUD_PROJECT)
+    || normalizeScalar(process.env.GCP_PROJECT);
+}
+
+function getVertexClient(customLocation) {
+  if (cachedVertexClient) return cachedVertexClient;
+  const project = getProjectId();
+  const location = normalizeScalar(customLocation)
+    || normalizeScalar(process.env.AI_PRONOUNCE_VERTEX_LOCATION)
+    || normalizeScalar(process.env.GOOGLE_CLOUD_LOCATION)
+    || DEFAULT_LOCATION;
+
+  if (!project) {
+    throw new Error('Missing Google Cloud Project ID for Vertex AI.');
   }
 
-  const { word, comparison, userSyllables, ipa } = req.body || {};
+  cachedVertexClient = new VertexAI({ project, location });
+  return cachedVertexClient;
+}
 
-  if (!word || !comparison) {
-    return sendError(res, 400, 'INVALID_INPUT', 'Missing word or comparison data.');
+function getGenerativeModel(modelName, options = {}) {
+  const safeName = normalizeScalar(modelName) || DEFAULT_PRIMARY_MODEL;
+  const cacheKey = `${safeName}:${options.location || ''}`;
+  if (modelCache.has(cacheKey)) {
+    return modelCache.get(cacheKey);
   }
 
-  const prompt = buildPrompt(word, comparison, userSyllables || [], ipa || 'unknown');
-
-  try {
-    const url = `${GEMINI_API_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          maxOutputTokens: 300,
-          temperature: 0.7,
-          topP: 0.9
-        }
-      })
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.warn(`[Pronunciation-AI] Gemini API error: ${response.status}`);
-      return sendSuccess(res, { summary: null, source: 'api_error' });
+  const client = getVertexClient(options.location);
+  const model = client.getGenerativeModel({
+    model: safeName,
+    generationConfig: {
+      maxOutputTokens: 300,
+      temperature: 0.7,
+      topP: 0.9
     }
+  });
 
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  modelCache.set(cacheKey, model);
+  return model;
+}
 
-    if (!text) {
-      return sendSuccess(res, { summary: null, source: 'empty_response' });
-    }
-
-    // Clean up markdown artifacts
-    const cleaned = text
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/^#+\s*/gm, '')
-      .trim();
-
-    return sendSuccess(res, { summary: cleaned, source: 'gemini' });
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      console.warn('[Pronunciation-AI] Gemini API timeout');
-    } else {
-      console.warn('[Pronunciation-AI] Error:', err.message);
-    }
-    return sendSuccess(res, { summary: null, source: 'error' });
-  }
-});
+function cleanGeneratedSummary(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/^#+\s*/gm, '')
+    .trim();
+}
 
 function buildPrompt(word, comparison, userSyllables, ipa) {
   const syllableInfo = (Array.isArray(userSyllables) ? userSyllables : [])
@@ -102,4 +94,61 @@ Write a 2-3 sentence summary that:
 Keep it under 60 words. Do NOT use bullet points, emojis, or formatting. Just plain conversational text.`;
 }
 
+async function generateAiSummary(prompt, clientOptions = {}) {
+  const primaryModelName = normalizeScalar(process.env.AI_PRONOUNCE_GEMINI_MODEL) || DEFAULT_PRIMARY_MODEL;
+  const fallbackModelName = normalizeScalar(process.env.AI_PRONOUNCE_GEMINI_FALLBACK_MODEL) || DEFAULT_FALLBACK_MODEL;
+
+  try {
+    const model = clientOptions.modelOverride || getGenerativeModel(primaryModelName);
+    const response = await model.generateContent(prompt);
+    const text = response?.response?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) {
+      return { summary: cleanGeneratedSummary(text), model: primaryModelName, source: 'vertex-ai' };
+    }
+  } catch (err) {
+    console.warn(`[Pronunciation-AI] Primary Vertex AI model (${primaryModelName}) failed:`, err.message || err);
+
+    if (fallbackModelName && fallbackModelName !== primaryModelName && !clientOptions.modelOverride) {
+      try {
+        const fallbackModel = getGenerativeModel(fallbackModelName);
+        const response = await fallbackModel.generateContent(prompt);
+        const text = response?.response?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          return { summary: cleanGeneratedSummary(text), model: fallbackModelName, source: 'vertex-ai-fallback' };
+        }
+      } catch (fallbackErr) {
+        console.warn(`[Pronunciation-AI] Fallback Vertex AI model (${fallbackModelName}) failed:`, fallbackErr.message || fallbackErr);
+      }
+    }
+    throw err;
+  }
+
+  return { summary: null, source: 'empty_response' };
+}
+
+/**
+ * POST /api/pronunciation-ai/summary
+ * Generates an AI pronunciation coaching summary using Google Cloud Vertex AI.
+ */
+router.post('/pronunciation-ai/summary', async (req, res) => {
+  const { word, comparison, userSyllables, ipa } = req.body || {};
+
+  if (!word || !comparison) {
+    return sendError(res, 400, 'INVALID_INPUT', 'Missing word or comparison data.');
+  }
+
+  const prompt = buildPrompt(word, comparison, userSyllables || [], ipa || 'unknown');
+
+  try {
+    const result = await generateAiSummary(prompt);
+    return sendSuccess(res, result);
+  } catch (err) {
+    console.warn('[Pronunciation-AI] Summary generation error:', err.message || err);
+    return sendSuccess(res, { summary: null, source: 'error', error: err.message || 'Generation failed' });
+  }
+});
+
 module.exports = router;
+module.exports.buildPrompt = buildPrompt;
+module.exports.cleanGeneratedSummary = cleanGeneratedSummary;
+module.exports.generateAiSummary = generateAiSummary;

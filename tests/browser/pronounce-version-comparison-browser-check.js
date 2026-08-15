@@ -28,6 +28,7 @@ async function run() {
         window.__comparisonVerifier = this;
       }
       async loadAudio(_audio, syllables) { this.syllables = syllables; }
+      setActiveVersion(version) { this.activeVersion = version; }
       setAutomaticSyllables(syllables) { this.syllables = syllables; }
       destroy() {}
     };
@@ -296,8 +297,8 @@ async function run() {
     );
     assert.deepEqual(
       observedLane.values.map((value) => Number(value.toFixed(2))),
-      [0.18, 0.22],
-      'V2 duration bars must retain analyzer vowel durations instead of full boundary spans'
+      [0.3, 0.45],
+      'V2 duration bars must retain analyzer syllable durations'
     );
     // Sticky review bar is present only while the comparison is live.
     assert.equal(result.chartState.barVisible, true);

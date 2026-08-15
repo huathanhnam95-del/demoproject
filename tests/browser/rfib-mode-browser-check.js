@@ -163,7 +163,8 @@ async function setupFirebaseMocks(context) {
         export const setPersistence = () => Promise.resolve();
         export const browserLocalPersistence = 'local';
         export const signInWithEmailAndPassword = () => Promise.resolve({ user: {} });
-        export const signOut = () => Promise.resolve();
+        export const signInWithCustomToken = () => Promise.resolve({ user: {} });
+        export const signOut = async () => {};
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
@@ -296,7 +297,10 @@ async function setupFirebaseMocks(context) {
       return !!panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none';
     }, { timeout: 30000 });
 
-    await page.selectOption('#rfib-question-select', String(target.id));
+    const currentSelected = await page.$eval('#rfib-question-select', (el) => el.value);
+    if (currentSelected !== String(target.id)) {
+      await page.selectOption('#rfib-question-select', String(target.id));
+    }
     await waitForQuestion(page, target.id);
     await waitForBlanks(page, target.blankCount);
 

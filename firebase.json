@@ -5,7 +5,8 @@
             "codebase": "default",
             "runtime": "nodejs20",
             "predeploy": [
-                "node scripts/read-aloud/build-connected-speech-index.js"
+                "node scripts/read-aloud/build-connected-speech-index.js",
+                "node scripts/segmentation-study/sync-manifest.js"
             ]
         }
     ],

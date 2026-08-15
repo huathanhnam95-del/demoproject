@@ -631,7 +631,30 @@ window.CrmBooksWorkspace = (function () {
         let pageTurnAnimationCleanup = null;
         let pageTurnToken = 0;
         let bookViewOpen = false;
-        let bookViewDark = false;
+        const BOOK_THEMES = [
+            { id: 'classic', name: 'Classic', swatch: '#e8e0d4' },
+            { id: 'ink', name: 'Ink', swatch: '#28282e' },
+            { id: 'campfire', name: 'Campfire', swatch: '#d4873a' },
+            { id: 'ocean', name: 'Ocean', swatch: '#2d8a9a' },
+            { id: 'forest', name: 'Forest', swatch: '#4a7a3a' },
+            { id: 'lavender', name: 'Lavender', swatch: '#9a7ab0' },
+            { id: 'sunset', name: 'Sunset', swatch: '#d07060' },
+            { id: 'midnight', name: 'Midnight', swatch: '#2a3458' },
+            { id: 'potter', name: 'Potter', swatch: '#6a1830' }
+        ];
+        const BOOK_THEME_STORAGE_KEY = 'crm_books_reader_theme';
+        let bookViewTheme = (function() {
+            try {
+                const stored = localStorage.getItem(BOOK_THEME_STORAGE_KEY);
+                if (stored && BOOK_THEMES.some(t => t.id === stored)) return stored;
+                // Backward compat: if old dark mode was saved, map to 'ink'
+                const oldDark = localStorage.getItem('crm_books_reader_dark');
+                if (oldDark === 'true') { localStorage.removeItem('crm_books_reader_dark'); return 'ink'; }
+            } catch (_) {
+                /* ignore */
+            }
+            return 'classic';
+        })();
         let bookViewFontScale = 100;
         let bookViewSpread = 1;
         let bookViewTurning = false;
@@ -1241,10 +1264,30 @@ window.CrmBooksWorkspace = (function () {
         }
 
         // ─── Fullscreen Book View ───
-        const ICON_SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/></svg>';
-        const ICON_MOON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
         const ICON_CHEVRON_LEFT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
         const ICON_CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
+
+        function setBookViewTheme(themeId) {
+            if (!BOOK_THEMES.some(t => t.id === themeId)) return;
+            bookViewTheme = themeId;
+            try {
+                localStorage.setItem(BOOK_THEME_STORAGE_KEY, themeId);
+            } catch (_) {
+                /* ignore */
+            }
+            const container = document.querySelector('.crm-bv-container');
+            if (container) {
+                BOOK_THEMES.forEach(t => container.classList.remove('crm-bv-theme-' + t.id));
+                container.classList.add('crm-bv-theme-' + themeId);
+            }
+            // Update swatch active states
+            const panel = document.querySelector('.crm-bv-theme-panel');
+            if (panel) {
+                panel.querySelectorAll('.crm-bv-theme-swatch').forEach(sw => {
+                    sw.classList.toggle('active', sw.dataset.theme === themeId);
+                });
+            }
+        }
 
         let bookViewPages = [];
 
@@ -1484,10 +1527,15 @@ window.CrmBooksWorkspace = (function () {
             const rightData = getBookViewVirtualPage(bookViewSpread);
             const leftLabel = leftData ? leftData.pageLabel : '';
             const rightLabel = rightData ? rightData.pageLabel : leftLabel;
-            const modeClass = bookViewDark ? 'crm-bv-dark' : 'crm-bv-light';
+            const themeClass = 'crm-bv-theme-' + bookViewTheme;
+
+            // Build theme swatch buttons
+            const themePanelHtml = BOOK_THEMES.map(t =>
+                `<button class="crm-bv-theme-swatch${t.id === bookViewTheme ? ' active' : ''}" data-theme="${t.id}" title="${t.name}" style="background:${t.swatch}"></button>`
+            ).join('');
 
             overlay.innerHTML =
-                `<div class="crm-bv-container ${modeClass}">` +
+                `<div class="crm-bv-container ${themeClass}">` +
                     `<div class="crm-bv-topbar">` +
                         `<div class="crm-bv-topbar-left">` +
                             `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
@@ -1503,12 +1551,11 @@ window.CrmBooksWorkspace = (function () {
                                 `<button class="crm-bv-font-btn crm-bv-font-up" title="Increase font size">A+</button>` +
                                 `<span class="crm-bv-font-output">${bookViewFontScale}%</span>` +
                             `</div>` +
-                            `<button class="crm-bv-mode-btn crm-bv-mode-light${!bookViewDark ? ' active' : ''}" title="Light mode">${ICON_SUN}</button>` +
-                            `<button class="crm-bv-mode-btn crm-bv-mode-dark${bookViewDark ? ' active' : ''}" title="Dark mode">${ICON_MOON}</button>` +
                             `<button class="crm-bv-close" title="Exit book view (Esc)">${ICON_CLOSE}</button>` +
                         `</div>` +
                     `</div>` +
                     `<div class="crm-bv-stage">` +
+                        `<div class="crm-bv-theme-panel">${themePanelHtml}</div>` +
                         `<div class="crm-bv-spread" style="--crm-bv-font-scale:${bookViewFontScale}">` +
                             `<div class="crm-bv-page crm-bv-page-left">` +
                                 `<div class="crm-bv-page-fold"></div>` +
@@ -1537,19 +1584,12 @@ window.CrmBooksWorkspace = (function () {
             overlay.querySelector('.crm-bv-prev')?.addEventListener('click', bookViewPrev);
             overlay.querySelector('.crm-bv-next')?.addEventListener('click', bookViewNext);
 
-            overlay.querySelector('.crm-bv-mode-light')?.addEventListener('click', () => {
-                bookViewDark = false;
-                const c = overlay.querySelector('.crm-bv-container');
-                c?.classList.replace('crm-bv-dark', 'crm-bv-light');
-                overlay.querySelector('.crm-bv-mode-light')?.classList.add('active');
-                overlay.querySelector('.crm-bv-mode-dark')?.classList.remove('active');
-            });
-            overlay.querySelector('.crm-bv-mode-dark')?.addEventListener('click', () => {
-                bookViewDark = true;
-                const c = overlay.querySelector('.crm-bv-container');
-                c?.classList.replace('crm-bv-light', 'crm-bv-dark');
-                overlay.querySelector('.crm-bv-mode-dark')?.classList.add('active');
-                overlay.querySelector('.crm-bv-mode-light')?.classList.remove('active');
+            // Theme panel: delegate click to individual swatches
+            overlay.querySelector('.crm-bv-theme-panel')?.addEventListener('click', (e) => {
+                const swatch = e.target.closest('.crm-bv-theme-swatch');
+                if (swatch && swatch.dataset.theme) {
+                    setBookViewTheme(swatch.dataset.theme);
+                }
             });
 
             const onFontScaleChange = (newScale) => {

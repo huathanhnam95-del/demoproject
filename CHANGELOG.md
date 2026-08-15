@@ -1,3 +1,13 @@
+## [V1.8.72] - 2026-08-15
+
+### Added & Enhanced
+- **CRM Books Fullscreen Reader 9 Atmospheric Background Themes**:
+  - Replaced simple light/dark toggle with a CSS custom property theme engine supporting 9 distinct aesthetic atmospheres: Classic, Ink, Campfire, Ocean, Forest, Lavender, Sunset, Midnight, and Potter.
+  - Implemented vertical theme switcher panel with color-coded circular swatches on the left margin with frosted glass backdrop and active indicator rings.
+  - Added subtle animated atmospheric effects (`::before` glow/shimmer) for Campfire (flickering warm amber), Ocean (caustic underwater light shimmer), and Potter (Hogwarts candlelight library glow with gold accents and aged parchment).
+  - Stored theme preferences persistently in `localStorage` (`crm_books_reader_theme`) with backward compatibility for existing dark mode settings.
+  - Implemented responsive collapsing for mobile viewports (≤740px), rendering a centered floating bottom strip.
+
 ## [V1.8.71] - 2026-08-15
 
 ### Fixed & Enhanced

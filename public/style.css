@@ -2,39 +2,35 @@
   color-scheme: light;
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 
-  /* Color System - Google AI Inspired */
-  --primary: #1a73e8;
-  /* Google Blue */
-  --primary-hover: #1765cc;
-  --primary-light: rgba(26, 115, 232, 0.08);
-  --primary-tonal: #f8fbff;
+  /* Color System — references design-tokens.css primitives */
+  --primary: var(--blue-600);
+  --primary-hover: var(--blue-700);
+  --primary-light: rgba(37, 99, 235, 0.08);
+  --primary-tonal: var(--blue-50);
 
-  --success: #1e8e3e;
-  /* Google Green */
-  --success-hover: #187232;
-  --success-light: #e6f4ea;
-  --success-text: #137333;
+  --success: var(--color-success);
+  --success-hover: var(--green-700);
+  --success-light: var(--green-100);
+  --success-text: var(--green-800);
 
-  --danger: #d93025;
-  /* Google Red */
-  --danger-hover: #b3261e;
-  --danger-light: #fce8e6;
-  --danger-text: #a50e0e;
+  --danger: var(--color-danger);
+  --danger-hover: var(--red-700);
+  --danger-light: var(--red-100);
+  --danger-text: var(--red-800);
 
-  --warning: #f9ab00;
-  /* Google Amber */
-  --warning-bg: linear-gradient(135deg, #fef7e0 0%, #feefc3 100%);
-  --warning-text: #b06000;
+  --warning: var(--color-warning);
+  --warning-bg: linear-gradient(135deg, var(--gold-50) 0%, var(--gold-100) 100%);
+  --warning-text: var(--gold-800);
 
-  --bg-main: #f8f9fa;
+  --bg-main: var(--gray-50);
   --bg-card: #ffffff;
-  --bg-input: #f1f3f4;
+  --bg-input: var(--gray-100);
 
-  --text-main: #202124;
-  --text-muted: #5f6368;
-  --border-light: #dadce0;
+  --text-main: var(--gray-900);
+  --text-muted: var(--gray-500);
+  --border-light: var(--gray-200);
 
-  /* Elevation & Radius - Airy Feel */
+  /* Elevation & Radius */
   --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.302), 0 1px 3px 1px rgba(60, 64, 67, 0.149);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-premium: 0 10px 40px rgba(0, 0, 0, 0.04);
@@ -45,8 +41,14 @@
   --radius-xl: 32px;
   --radius-pill: 500px;
 
+  /* Card-specific */
+  --r-card: 22px;
+  --r-inner: 18px;
+  --ease-smooth: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --sh-1: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --sh-2: 0 18px 60px rgba(15, 23, 42, 0.12);
+
   --transition-base: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Bouncy spring transition */
   --transition-fast: all 0.2s ease-out;
 }
 
@@ -649,23 +651,23 @@ h1 {
 }
 
 .practice-skill-btn.card-speaking {
-  --accent-color: #3b82f6;
-  --accent-rgb: 59, 130, 246;
+  --accent-color: #2563eb;
+  --accent-rgb: 37, 99, 235;
 }
 
 .practice-skill-btn.card-listening {
-  --accent-color: #8b5cf6;
-  --accent-rgb: 139, 92, 246;
+  --accent-color: #1b8a4f;
+  --accent-rgb: 27, 138, 79;
 }
 
 .practice-skill-btn.card-reading {
-  --accent-color: #10b981;
-  --accent-rgb: 16, 185, 129;
+  --accent-color: #2563eb;
+  --accent-rgb: 37, 99, 235;
 }
 
 .practice-skill-btn.card-writing {
-  --accent-color: #f59e0b;
-  --accent-rgb: 245, 158, 11;
+  --accent-color: #b8860b;
+  --accent-rgb: 184, 134, 11;
 }
 
 
@@ -695,20 +697,20 @@ h1 {
 }
 
 .practice-skill-btn.card-listening.is-active {
-  background: #f5f3ff;
-  border-color: #7c3aed;
+  background: #f0fdf4;
+  border-color: #1b8a4f;
   border-width: 2px;
 }
 
 .practice-skill-btn.card-reading.is-active {
-  background: #ecfdf5;
-  border-color: #059669;
+  background: #eff6ff;
+  border-color: #2563eb;
   border-width: 2px;
 }
 
 .practice-skill-btn.card-writing.is-active {
-  background: #fffbeb;
-  border-color: #d97706;
+  background: #fff8e7;
+  border-color: #b8860b;
   border-width: 2px;
 }
 
@@ -847,14 +849,6 @@ h1 {
 }
 
 /* Modern Card Design - Premium (Buttery Smooth) */
-:root {
-  --r-card: 22px;
-  --r-inner: 18px;
-  --ease-smooth: cubic-bezier(0.2, 0.9, 0.2, 1);
-  --sh-1: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --sh-2: 0 18px 60px rgba(15, 23, 42, 0.12);
-}
-
 .modern-card {
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
@@ -2481,8 +2475,8 @@ h1 {
 }
 
 .badge.new {
-  background: var(--success-light);
-  color: var(--success-text);
+  background: var(--blue-50);
+  color: var(--blue-600);
 }
 
 .badge.experimental {
@@ -6953,7 +6947,7 @@ textarea:focus {
 }
 
 .level-badge {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #b8860b, #d4a017);
   color: white;
   font-weight: 700;
   font-size: 0.85rem;
@@ -12936,79 +12930,6 @@ textarea:focus {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Modern Segmented Control Dashboard */
-.dashboard-modern-container {
-  margin-bottom: 24px;
-}
-
-.dashboard-segmented-control {
-  position: relative;
-  display: flex;
-  background: #f1f5f9;
-  padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  width: fit-content;
-  border: 1px solid #e2e8f0;
-}
-
-.segmented-backdrop {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 0;
-  /* Will be set by JS */
-  height: auto;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.segmented-btn {
-  position: relative;
-  z-index: 2;
-  border: none;
-  background: transparent;
-  padding: 8px 20px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #64748b;
-  cursor: pointer;
-  transition: color 0.2s;
-  white-space: nowrap;
-  border-radius: 8px;
-}
-
-.segmented-btn:hover {
-  color: #334155;
-}
-
-.segmented-btn.active {
-  color: #0f172a;
-  font-weight: 600;
-}
-
-.dashboard-content-wrapper {
-  position: relative;
-}
-
-.dashboard-panel {
-  display: none;
-  opacity: 0;
-  transform: translateY(5px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.dashboard-panel.active {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
 /* Modern Card Tweaks */
 .modern-card {
   background: linear-gradient(135deg, #6366f1, #4f46e5);
@@ -13272,72 +13193,6 @@ textarea:focus {
   font-size: 0.85rem;
   color: #6b7280;
   margin-top: 4px;
-}
-
-/* ============================================
-   Dashboard Segmented Control (Modern Pill Switcher)
-   ============================================ */
-.dashboard-modern-container {
-  margin-bottom: 24px;
-}
-
-.dashboard-segmented-control {
-  display: inline-flex;
-  position: relative;
-  background: #f1f5f9;
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 16px;
-}
-
-.segmented-backdrop {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  height: calc(100% - 8px);
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  z-index: 0;
-}
-
-.segmented-btn {
-  position: relative;
-  z-index: 1;
-  padding: 10px 20px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  white-space: nowrap;
-}
-
-.segmented-btn.active {
-  color: #1e293b;
-}
-
-.segmented-btn:hover:not(.active) {
-  color: #334155;
-}
-
-/* Dashboard panels - use visibility instead of display to prevent layout shift */
-.dashboard-panel {
-  display: none;
-}
-
-.dashboard-panel.active {
-  display: block;
-}
-
-/* Ensure consistent content area width */
-.dashboard-content-wrapper {
-  min-height: 100px;
-  /* Prevents collapse when empty */
 }
 
 /* SRS and Tutorial cards within panels */
@@ -21755,4 +21610,36 @@ body.readingjourney-active #readingjourney-root {
   .essay-results-score-circle {
     font-size: 2.2rem;
   }
+}
+
+/* ── Design Token Overrides (Typography & Hover Polish) ── */
+
+h1, h2, h3, .panel-title, .dashboard-title {
+  font-family: var(--font-display) !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.tutorial-grid .tutorial-btn {
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: var(--bg-surface) !important;
+}
+
+.tutorial-grid .tutorial-btn:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.practice-skill-btn {
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.practice-skill-btn:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-lg) !important;
 }

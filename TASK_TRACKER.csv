@@ -1449,3 +1449,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 661,2026-08-14,Revert Practice UI overhaul changes back to original UI state,Done,2026-08-14
 662,2026-08-15,Fix CRM Books page reader losing paragraph formatting from PDF text extraction,Done,2026-08-15
 663,2026-08-15,Deploy V1.8.68 release to production with CRM Books page reader PDF paragraph formatting fix,Done,2026-08-15
+664,2026-08-15,Color theme optimization (white/green/yellow/blue) across design-tokens + style.css + site-header + crm-admin.css,Done,2026-08-15
+665,2026-08-15,Fullscreen book reader mockup design and implementation verification,Done,2026-08-15
+666,2026-08-15,Check and correct all IPA transcriptions in student_handout_e_ae_sounds.docx per Oxford rules,Done,2026-08-15

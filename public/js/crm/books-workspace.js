@@ -606,6 +606,14 @@ window.CrmBooksWorkspace = (function () {
         let pageTurnTimer = null;
         let pageTurnAnimationCleanup = null;
         let pageTurnToken = 0;
+        let bookViewOpen = false;
+        let bookViewDark = false;
+        let bookViewFontScale = 100;
+        let bookViewSpread = 1;
+        let bookViewTurning = false;
+        const BOOK_VIEW_FONT_MIN = 80;
+        const BOOK_VIEW_FONT_MAX = 180;
+        const BOOK_VIEW_FONT_STEP = 10;
         let editingThreadId = '';
         let editingThreadTitle = '';
         let usageData = null;
@@ -1198,11 +1206,230 @@ window.CrmBooksWorkspace = (function () {
                 `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
                 `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
                 `</label>` +
+                `<button class="crm-books-open-bookview" title="Open book view">` +
+                `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
+                `<span>Open book view</span></button>` +
                 `<span class="crm-books-page-turn-status crm-books-sr-only" role="status" aria-live="polite" aria-atomic="true">Page ${currentPage} of ${pagesData.totalPages}</span>` +
                 `</div>` +
                 `<div class="crm-books-reading-label">Reading view · extracted text</div>` +
                 (pageNotice ? `<div class="crm-books-page-notice" role="status">${escapeHtml(pageNotice)}</div>` : '') +
                 `<div class="crm-books-page-stage" data-page-stage>${renderPagePaperHtml(currentPage)}</div>`;
+        }
+
+        // ─── Fullscreen Book View ───
+        const ICON_SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>';
+        const ICON_MOON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
+        const ICON_CHEVRON_LEFT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
+        const ICON_CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
+
+        function getBookViewFormattedPage(pageNum) {
+            if (!pagesData || pageNum < 1 || pageNum > pagesData.totalPages) return '';
+            const text = pagesData.pages[pageNum - 1] || '';
+            if (!clean(text)) return '<p class="crm-bv-page-empty">No extractable text on this page.</p>';
+            return formatPageText(text, escapeHtml, '');
+        }
+
+        function bookViewSpreadForPage(page) {
+            if (page <= 1) return 1;
+            return page % 2 === 0 ? page : page - 1;
+        }
+
+        function openBookView() {
+            if (!pagesData || pagesData.totalPages === 0) return;
+            bookViewOpen = true;
+            bookViewSpread = bookViewSpreadForPage(currentPage);
+            bookViewTurning = false;
+            renderBookView();
+            document.addEventListener('keydown', handleBookViewKeydown);
+        }
+
+        function closeBookView() {
+            bookViewOpen = false;
+            bookViewTurning = false;
+            document.removeEventListener('keydown', handleBookViewKeydown);
+            const overlay = document.querySelector('.crm-bv-overlay');
+            if (overlay) {
+                overlay.classList.add('crm-bv-closing');
+                setTimeout(() => overlay.remove(), 250);
+            }
+            currentPage = bookViewSpread;
+            resetPageCitation();
+            renderExplorerPanel();
+        }
+
+        function handleBookViewKeydown(e) {
+            if (!bookViewOpen) return;
+            if (e.key === 'Escape') { closeBookView(); return; }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); bookViewNext(); return; }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); bookViewPrev(); return; }
+        }
+
+        function bookViewNext() {
+            if (bookViewTurning) return;
+            const total = pagesData?.totalPages || 0;
+            if (bookViewSpread + 2 > total) return;
+            bookViewTurning = true;
+            const overlay = document.querySelector('.crm-bv-overlay');
+            const rightPage = overlay?.querySelector('.crm-bv-page-right');
+            if (!rightPage) { bookViewTurning = false; return; }
+            rightPage.classList.add('crm-bv-flipping-forward');
+            setTimeout(() => {
+                bookViewSpread += 2;
+                bookViewTurning = false;
+                updateBookViewPages(overlay);
+            }, 600);
+        }
+
+        function bookViewPrev() {
+            if (bookViewTurning) return;
+            if (bookViewSpread <= 1) return;
+            bookViewTurning = true;
+            const overlay = document.querySelector('.crm-bv-overlay');
+            const leftPage = overlay?.querySelector('.crm-bv-page-left');
+            if (!leftPage) { bookViewTurning = false; return; }
+            leftPage.classList.add('crm-bv-flipping-backward');
+            setTimeout(() => {
+                bookViewSpread = Math.max(1, bookViewSpread - 2);
+                bookViewTurning = false;
+                updateBookViewPages(overlay);
+            }, 600);
+        }
+
+        function updateBookViewPages(overlay) {
+            if (!overlay) return;
+            const total = pagesData?.totalPages || 0;
+            const leftNum = bookViewSpread;
+            const rightNum = bookViewSpread + 1;
+
+            const leftBody = overlay.querySelector('.crm-bv-page-left .crm-bv-page-body');
+            const rightBody = overlay.querySelector('.crm-bv-page-right .crm-bv-page-body');
+            const leftNumEl = overlay.querySelector('.crm-bv-page-left .crm-bv-page-num');
+            const rightNumEl = overlay.querySelector('.crm-bv-page-right .crm-bv-page-num');
+            const leftPage = overlay.querySelector('.crm-bv-page-left');
+            const rightPage = overlay.querySelector('.crm-bv-page-right');
+
+            if (leftBody) leftBody.innerHTML = getBookViewFormattedPage(leftNum);
+            if (rightBody) rightBody.innerHTML = rightNum <= total
+                ? getBookViewFormattedPage(rightNum)
+                : '<p class="crm-bv-page-empty">End of book.</p>';
+            if (leftNumEl) leftNumEl.textContent = leftNum;
+            if (rightNumEl) rightNumEl.textContent = rightNum <= total ? rightNum : '';
+
+            leftPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
+            rightPage?.classList.remove('crm-bv-flipping-forward', 'crm-bv-flipping-backward');
+
+            const navInfo = overlay.querySelector('.crm-bv-nav-info');
+            if (navInfo) navInfo.textContent = `Pages ${leftNum}–${Math.min(rightNum, total)} of ${total}`;
+            const prevBtn = overlay.querySelector('.crm-bv-prev');
+            const nextBtn = overlay.querySelector('.crm-bv-next');
+            if (prevBtn) prevBtn.disabled = bookViewSpread <= 1;
+            if (nextBtn) nextBtn.disabled = bookViewSpread + 2 > total;
+        }
+
+        function applyBookViewFontScale(overlay) {
+            const spread = overlay?.querySelector('.crm-bv-spread');
+            if (spread) spread.style.setProperty('--crm-bv-font-scale', `${bookViewFontScale}%`);
+            const output = overlay?.querySelector('.crm-bv-font-output');
+            if (output) output.textContent = `${bookViewFontScale}%`;
+        }
+
+        function renderBookView() {
+            let overlay = document.querySelector('.crm-bv-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'crm-bv-overlay';
+                document.body.appendChild(overlay);
+            }
+            overlay.classList.remove('crm-bv-closing');
+
+            const total = pagesData?.totalPages || 0;
+            const b = selectedBook || {};
+            const leftNum = bookViewSpread;
+            const rightNum = bookViewSpread + 1;
+            const modeClass = bookViewDark ? 'crm-bv-dark' : 'crm-bv-light';
+
+            overlay.innerHTML =
+                `<div class="crm-bv-container ${modeClass}">` +
+                    `<div class="crm-bv-topbar">` +
+                        `<div class="crm-bv-topbar-left">` +
+                            `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
+                            `<div class="crm-bv-topbar-info">` +
+                                `<div class="crm-bv-topbar-title">${escapeHtml(b.title || 'Untitled')}</div>` +
+                                `<div class="crm-bv-topbar-meta">${escapeHtml(b.author || '')}${b.pageCount ? ' · ' + b.pageCount + ' pages' : ''}</div>` +
+                            `</div>` +
+                        `</div>` +
+                        `<div class="crm-bv-topbar-right">` +
+                            `<div class="crm-bv-font-controls">` +
+                                `<button class="crm-bv-font-btn crm-bv-font-down" title="Decrease font size">A−</button>` +
+                                `<input type="range" class="crm-bv-font-slider" min="${BOOK_VIEW_FONT_MIN}" max="${BOOK_VIEW_FONT_MAX}" step="${BOOK_VIEW_FONT_STEP}" value="${bookViewFontScale}">` +
+                                `<button class="crm-bv-font-btn crm-bv-font-up" title="Increase font size">A+</button>` +
+                                `<span class="crm-bv-font-output">${bookViewFontScale}%</span>` +
+                            `</div>` +
+                            `<button class="crm-bv-mode-btn crm-bv-mode-light${!bookViewDark ? ' active' : ''}" title="Light mode">${ICON_SUN}</button>` +
+                            `<button class="crm-bv-mode-btn crm-bv-mode-dark${bookViewDark ? ' active' : ''}" title="Dark mode">${ICON_MOON}</button>` +
+                            `<button class="crm-bv-close" title="Exit book view (Esc)">${ICON_CLOSE}</button>` +
+                        `</div>` +
+                    `</div>` +
+                    `<div class="crm-bv-stage">` +
+                        `<div class="crm-bv-spread" style="--crm-bv-font-scale:${bookViewFontScale}%">` +
+                            `<div class="crm-bv-page crm-bv-page-left">` +
+                                `<div class="crm-bv-page-fold"></div>` +
+                                `<div class="crm-bv-page-num">${leftNum}</div>` +
+                                `<div class="crm-bv-page-body">${getBookViewFormattedPage(leftNum)}</div>` +
+                                `<div class="crm-bv-page-footer">${escapeHtml(b.title || '')}</div>` +
+                            `</div>` +
+                            `<div class="crm-bv-spine"></div>` +
+                            `<div class="crm-bv-page crm-bv-page-right">` +
+                                `<div class="crm-bv-page-fold"></div>` +
+                                `<div class="crm-bv-page-num">${rightNum <= total ? rightNum : ''}</div>` +
+                                `<div class="crm-bv-page-body">${rightNum <= total ? getBookViewFormattedPage(rightNum) : '<p class="crm-bv-page-empty">End of book.</p>'}</div>` +
+                                `<div class="crm-bv-page-footer">${escapeHtml(b.author || '')}</div>` +
+                            `</div>` +
+                        `</div>` +
+                    `</div>` +
+                    `<div class="crm-bv-controls">` +
+                        `<button class="crm-bv-nav-btn crm-bv-prev"${bookViewSpread <= 1 ? ' disabled' : ''} title="Previous spread (A / ←)">${ICON_CHEVRON_LEFT}</button>` +
+                        `<div class="crm-bv-nav-info">Pages ${leftNum}–${Math.min(rightNum, total)} of ${total}</div>` +
+                        `<button class="crm-bv-nav-btn crm-bv-next"${bookViewSpread + 2 > total ? ' disabled' : ''} title="Next spread (D / →)">${ICON_CHEVRON_RIGHT}</button>` +
+                    `</div>` +
+                    `<div class="crm-bv-shortcuts">A / ← previous · D / → next · Esc exit</div>` +
+                `</div>`;
+
+            overlay.querySelector('.crm-bv-close')?.addEventListener('click', closeBookView);
+            overlay.querySelector('.crm-bv-prev')?.addEventListener('click', bookViewPrev);
+            overlay.querySelector('.crm-bv-next')?.addEventListener('click', bookViewNext);
+
+            overlay.querySelector('.crm-bv-mode-light')?.addEventListener('click', () => {
+                bookViewDark = false;
+                const c = overlay.querySelector('.crm-bv-container');
+                c?.classList.replace('crm-bv-dark', 'crm-bv-light');
+                overlay.querySelector('.crm-bv-mode-light')?.classList.add('active');
+                overlay.querySelector('.crm-bv-mode-dark')?.classList.remove('active');
+            });
+            overlay.querySelector('.crm-bv-mode-dark')?.addEventListener('click', () => {
+                bookViewDark = true;
+                const c = overlay.querySelector('.crm-bv-container');
+                c?.classList.replace('crm-bv-light', 'crm-bv-dark');
+                overlay.querySelector('.crm-bv-mode-dark')?.classList.add('active');
+                overlay.querySelector('.crm-bv-mode-light')?.classList.remove('active');
+            });
+
+            overlay.querySelector('.crm-bv-font-slider')?.addEventListener('input', (e) => {
+                bookViewFontScale = clampReaderFontScale(e.target.value);
+                applyBookViewFontScale(overlay);
+            });
+            overlay.querySelector('.crm-bv-font-down')?.addEventListener('click', () => {
+                bookViewFontScale = clampReaderFontScale(bookViewFontScale - BOOK_VIEW_FONT_STEP);
+                const slider = overlay.querySelector('.crm-bv-font-slider');
+                if (slider) slider.value = bookViewFontScale;
+                applyBookViewFontScale(overlay);
+            });
+            overlay.querySelector('.crm-bv-font-up')?.addEventListener('click', () => {
+                bookViewFontScale = clampReaderFontScale(bookViewFontScale + BOOK_VIEW_FONT_STEP);
+                const slider = overlay.querySelector('.crm-bv-font-slider');
+                if (slider) slider.value = bookViewFontScale;
+                applyBookViewFontScale(overlay);
+            });
         }
 
         async function loadPagesMetadata() {
@@ -4635,6 +4862,12 @@ window.CrmBooksWorkspace = (function () {
                         deleteBookNote(selectedBookId, noteId);
                         renderExplorerPanel();
                     }
+                    return;
+                }
+
+                // Open book view button
+                if (e.target.closest('.crm-books-open-bookview')) {
+                    openBookView();
                     return;
                 }
 

@@ -1,74 +1,104 @@
-/* design-tokens.css — Single source of truth for UI */
+/* design-tokens.css — Single source of truth for UI palette */
 :root {
-  /* Brand colors (WCAG AA pre-validated) */
-  --brand-primary: #1557b0;
-  --brand-accent: #7c3aed;
-  
-  /* Text colors */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;  /* Guaranteed 4.5:1 on white */
-  --text-muted: #64748b;      /* Guaranteed 4.5:1 on white */
-  
-  /* Semantic colors */
-  --color-success: #1e8e3e;
-  --color-warning: #f9ab00;
-  --color-danger: #d93025;
-  --color-info: #1a73e8;
+  /* ── Primitive Color Ramps ── */
+
+  /* Green (brand) */
+  --green-50:  #f0fdf4;
+  --green-100: #dcfce7;
+  --green-200: #bbf7d0;
+  --green-400: #4ade80;
+  --green-600: #1b8a4f;
+  --green-700: #156d3e;
+  --green-800: #166534;
+
+  /* Blue (interactive) */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-400: #60a5fa;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+
+  /* Gold (accent / warning) */
+  --gold-50:  #fff8e7;
+  --gold-100: #fef3c7;
+  --gold-200: #fde68a;
+  --gold-400: #d4a017;
+  --gold-600: #b8860b;
+  --gold-700: #9a7209;
+  --gold-800: #92400e;
+
+  /* Red (danger) */
+  --red-50:  #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-400: #f87171;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+
+  /* Gray (neutrals) */
+  --gray-50:  #f8f9fa;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* ── Semantic Tokens ── */
+
+  /* Brand */
+  --brand: var(--green-600);
+  --brand-hover: var(--green-700);
+
+  /* Status */
+  --color-success: var(--green-600);
+  --color-info:    var(--blue-600);
+  --color-warning: var(--gold-600);
+  --color-danger:  var(--red-600);
+
+  /* Skill palette (practice page) */
+  --skill-speaking:  var(--blue-600);
+  --skill-listening: var(--green-600);
+  --skill-reading:   var(--blue-600);
+  --skill-writing:   var(--gold-600);
+
+  /* Text */
+  --text-primary:   var(--gray-800);
+  --text-secondary: var(--gray-600);
+  --text-muted:     var(--gray-500);
 
   /* Backgrounds */
-  --bg-main: #f8f9fa;
+  --bg-main:    var(--gray-50);
   --bg-surface: #ffffff;
-  
-  /* Spacing scale (prevents cramped-padding) */
+
+  /* Borders */
+  --border-default: var(--gray-200);
+  --border-light:   var(--gray-200);
+
+  /* Spacing scale */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
-  
-  /* Typography (2 fonts only) */
+
+  /* Typography */
   --font-display: 'Outfit', system-ui, sans-serif;
-  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-body:    'Outfit', system-ui, sans-serif;
   --font-content: 'Lora', Georgia, serif;
-  --font-mono: 'Roboto Mono', monospace;
+  --font-mono:    'Roboto Mono', monospace;
 
   /* Elevations */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+
   /* Transitions */
   --transition-base: all 0.3s ease-out;
-}
-
-/* ── Phase 4: Impeccable UI Overrides (Typography & Hovers) ── */
-
-h1, h2, h3, .panel-title, .dashboard-title {
-  font-family: var(--font-display) !important;
-  color: var(--text-primary) !important;
-  letter-spacing: -0.02em;
-  font-weight: 700;
-}
-
-.tutorial-grid .tutorial-btn {
-  border: none !important;
-  box-shadow: var(--shadow-sm) !important;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  background: var(--bg-surface) !important;
-}
-
-.tutorial-grid .tutorial-btn:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: var(--shadow-md) !important;
-}
-
-.practice-skill-btn {
-  border: none !important;
-  box-shadow: var(--shadow-sm) !important;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.practice-skill-btn:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: var(--shadow-lg) !important;
 }

@@ -1,3 +1,20 @@
+## [V1.8.69] - 2026-08-15
+
+### Added
+- **CRM Books Fullscreen Book Reader**:
+  - Two-page spread overlay with central spine, page fold shadows, and serif typography for a print-book reading experience.
+  - Page flip animation: right page rotates forward (rotateY, 0.6s ease), left page rotates backward on previous.
+  - Light mode (warm parchment #faf6ef on #e8e0d4) and dark mode (cool charcoal #28282e on #1a1a1e) toggle.
+  - Keyboard controls: A/← for previous spread, D/→ for next spread, Esc to exit.
+  - Font size scaling with A−/slider/A+ controls (80%–180% range).
+  - Responsive layout stacking pages vertically on screens ≤740px.
+  - `prefers-reduced-motion` support disabling flip animations.
+
+### Enhanced
+- **Color Theme Optimization**:
+  - Consolidated design tokens across `design-tokens.css`, `style.css`, `site-header.css`, and `crm-admin.css` for white, green, yellow, and blue color themes.
+  - Improved color balance, brightness, and accessibility across all UI surfaces.
+
 ## [V1.8.68] - 2026-08-15
 
 ### Fixed & Enhanced

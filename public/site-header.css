@@ -5,8 +5,8 @@
   --site-header-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
   --site-header-text: #0f172a;
   --site-header-muted: #475569;
-  --site-header-accent: #1d4ed8;
-  --site-header-accent-soft: rgba(29, 78, 216, 0.1);
+  --site-header-accent: #334155;
+  --site-header-accent-soft: #f1f5f9;
   --site-header-max-width: 1180px;
   --site-header-side-gap: 20px;
 }
@@ -67,13 +67,13 @@ body.has-site-header[data-site-section="home"] {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  background: linear-gradient(135deg, #1b8a4f, #2563eb);
   color: #fff;
   font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow: 0 14px 24px rgba(59, 130, 246, 0.24);
+  box-shadow: 0 14px 24px rgba(27, 138, 79, 0.24);
 }
 
 .site-header__brand-copy {
@@ -219,7 +219,7 @@ body.has-site-header[data-site-section="home"] .hero {
 .site-header__notification-badge { position: absolute; top: 2px; right: 0; min-width: 18px; padding: 2px 5px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 0.68rem; font-weight: 700; }
 .notification-center-panel { position: absolute; top: calc(100% - 4px); right: var(--site-header-side-gap); width: min(360px, calc(100vw - 32px)); border: 1px solid var(--site-header-border); border-radius: 16px; background: #fff; box-shadow: var(--site-header-shadow); overflow: hidden; }
 .notification-center-panel__header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--site-header-border); }
-.notification-center-panel__header button { border: 0; background: transparent; color: var(--site-header-accent); cursor: pointer; font-size: 0.78rem; }
+.notification-center-panel__header button { border: 0; background: transparent; color: #2563eb; cursor: pointer; font-size: 0.78rem; }
 .notification-center-panel__list { max-height: 360px; overflow: auto; padding: 8px; }
 .notification-center-item { padding: 10px; border-radius: 10px; }
 .notification-center-item.is-unread { background: var(--site-header-accent-soft); }
@@ -230,7 +230,7 @@ body.has-site-header[data-site-section="home"] .hero {
 .site-header__account-btn:hover,
 .site-header__account-btn:focus-visible {
   background: var(--site-header-accent-soft);
-  border-color: rgba(29, 78, 216, 0.24);
+  border-color: rgba(51, 65, 85, 0.24);
   color: var(--site-header-accent);
   outline: none;
 }

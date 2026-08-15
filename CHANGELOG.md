@@ -1,3 +1,14 @@
+## [V1.8.70] - 2026-08-15
+
+### Fixed & Enhanced
+- **CRM Books Dynamic Programming Word Segmenter**:
+  - Implemented high-performance client-side Viterbi DP English word segmentation (`books-word-segmenter.js`) with an extensive 43,800+ vocabulary corpus (Oxford 5000 + common words + inflections).
+  - Automatically reconstructs missing spaces between glued words in PDF text extraction across both Pages tab and Fullscreen Book reader.
+  - Separates stuck punctuation, numbers, and camelCase boundaries seamlessly without corrupting correctly-spaced text.
+- **CRM Books Fullscreen Reader Viewport Enlargement**:
+  - Expanded book spread max-width to 1360px and dynamic viewport height to fill desktop screens comfortably.
+  - Optimized page padding and readability proportions.
+
 ## [V1.8.69] - 2026-08-15
 
 ### Added

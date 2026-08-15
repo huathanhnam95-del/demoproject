@@ -4905,8 +4905,9 @@ body {
 .crm-bv-spread {
   display: flex;
   width: 100%;
-  max-width: 1280px;
-  height: 100%;
+  max-width: 1360px;
+  height: calc(100vh - 130px);
+  max-height: 880px;
 }
 .crm-bv-spine {
   width: 6px;
@@ -4921,8 +4922,9 @@ body {
 /* Pages */
 .crm-bv-page {
   flex: 1;
+  height: 100%;
   min-height: 480px;
-  padding: 28px 36px 32px;
+  padding: 32px 44px 36px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

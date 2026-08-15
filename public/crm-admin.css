@@ -4898,14 +4898,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 24px;
+  padding: 8px 20px;
   overflow: hidden;
   perspective: 1800px;
 }
 .crm-bv-spread {
   display: flex;
   width: 100%;
-  max-width: 920px;
+  max-width: 1280px;
+  height: 100%;
 }
 .crm-bv-spine {
   width: 6px;
@@ -4920,9 +4921,8 @@ body {
 /* Pages */
 .crm-bv-page {
   flex: 1;
-  min-height: 400px;
-  max-height: 72vh;
-  padding: 28px 32px 32px;
+  min-height: 480px;
+  padding: 28px 36px 32px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

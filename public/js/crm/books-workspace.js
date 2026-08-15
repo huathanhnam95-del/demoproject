@@ -81,6 +81,78 @@ window.CrmBooksWorkspace = (function () {
             .join('\n\n');
     }
 
+    /**
+     * Heuristic repair for PDF text extraction that drops inter-word spaces.
+     * Only activates when the page text has a high ratio of abnormally long
+     * whitespace-delimited tokens (>22 chars), indicating systematic space
+     * loss from the PDF extractor.
+     *
+     * Strategy:
+     *  1. Split punctuation that is glued to the next uppercase letter.
+     *  2. Split camelCase transitions (lowercase→uppercase).
+     *  3. For individual long tokens (>22 chars), attempt to split on
+     *     common English function words ("and", "the", "for", etc.).
+     */
+    function repairMissingSpaces(text) {
+        if (!text || typeof text !== 'string') return text;
+
+        // Quick gate: only activate if the text has the concatenation problem
+        const tokens = text.split(/\s+/).filter(Boolean);
+        if (tokens.length < 3) return text;
+        const longTokenCount = tokens.filter((t) => t.length > 22).length;
+        if (longTokenCount / tokens.length < 0.15) return text;
+
+        let result = text;
+
+        // 1. Space after sentence-ending punctuation glued to next word
+        result = result.replace(/([.,;:!?])([A-ZÀ-Ɵ])/g, '$1 $2');
+
+        // 2. Space at lowercase→uppercase transitions (camelCase boundaries)
+        result = result.replace(/([a-zà-öø-ÿ])([A-ZÀ-Ɵ])/g, '$1 $2');
+
+        // 3. Space between letter and opening/closing parens
+        result = result.replace(/([a-zA-Zà-ɏ])\(/g, '$1 (');
+        result = result.replace(/\)([a-zA-Zà-ɏ])/g, ') $1');
+
+        // 4. For remaining long tokens, split on embedded function words.
+        //    Only target tokens still >22 chars after the above fixes.
+        //    Excludes short words that commonly appear inside real words
+        //    (e.g., "but" in "contributed", "our" in "encourage",
+        //     "her" in "publisher", "has" in "phrases").
+        const functionWords = [
+            'between', 'through', 'without', 'against', 'another',
+            'before', 'during', 'within', 'toward', 'around',
+            'about', 'after', 'which', 'their', 'other', 'these',
+            'those', 'under', 'being', 'where', 'while', 'since',
+            'would', 'could', 'should', 'there',
+            'from', 'with', 'that', 'this', 'have', 'been',
+            'were', 'also', 'into', 'over', 'more', 'than',
+            'both', 'each', 'some', 'such', 'when', 'they',
+            'will', 'many', 'upon',
+            'and', 'the', 'for', 'not'
+        ];
+
+        result = result.replace(/\S{23,}/g, (longToken) => {
+            let fixed = longToken;
+            for (const fw of functionWords) {
+                // Require 4+ letters flanking for short words, 3+ for longer ones
+                const minFlank = fw.length <= 3 ? 4 : 3;
+                const pattern = new RegExp(
+                    `([a-z\u00e0-\u00f6\u00f8-\u00ff]{${minFlank},})(${fw})([a-z\u00e0-\u00f6\u00f8-\u00ff]{${minFlank},})`,
+                    'gi'
+                );
+                let prev;
+                do {
+                    prev = fixed;
+                    fixed = fixed.replace(pattern, '$1 $2 $3');
+                } while (fixed !== prev);
+            }
+            return fixed;
+        });
+
+        return result;
+    }
+
     function pageHeadingLevel(line) {
         if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(line)) return 2;
         if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion)$/i.test(line)) return 3;
@@ -146,8 +218,8 @@ window.CrmBooksWorkspace = (function () {
 
     function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
-        const lines = String(text ?? '')
-            .replace(/\r\n?/g, '\n')
+        const repaired = repairMissingSpaces(String(text ?? '').replace(/\r\n?/g, '\n'));
+        const lines = repaired
             .split('\n')
             .map((line) => line.trim());
         const fullLineThreshold = inferParagraphBreaks(lines);

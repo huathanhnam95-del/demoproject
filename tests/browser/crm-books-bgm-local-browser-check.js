@@ -177,6 +177,7 @@ function installMemoryLocalStorage() {
         await page.click('.crm-books-tab[data-books-tab="pages"]');
         await page.waitForSelector('.crm-books-open-bgm', { timeout: 5000 });
         await page.waitForSelector('.crm-books-open-bookview', { timeout: 5000 });
+        await page.waitForSelector('.crm-books-page-paper', { timeout: 5000 });
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'crm-bgm-local-04-pages-tab.png') });
         console.log('  ✓ Pages tab active with Background Music button. Screenshot saved.');
 
@@ -185,6 +186,8 @@ function installMemoryLocalStorage() {
         console.log('  ✓ Fullscreen book view opened.');
 
         console.log('Step 5: Verifying top-right audio player in book view...');
+        const overlayHtml = await page.evaluate(() => document.querySelector('.crm-bv-overlay')?.innerHTML || 'NO_OVERLAY');
+        console.log('Overlay HTML snippet:', overlayHtml.slice(0, 300));
         const player = await page.waitForSelector('.crm-bv-player', { timeout: 5000 });
         assert(player, 'Audio player pill should exist in top-right.');
 

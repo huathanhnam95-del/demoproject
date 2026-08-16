@@ -1,3 +1,19 @@
+## [V1.8.73] - 2026-08-16
+
+### Added & Enhanced
+- **CRM Books Fullscreen Reader Font Scale Persistence**:
+  - Saved reader font scale level to `localStorage` (`crm_books_bv_font_scale`) so zoom preferences persist across sessions and page reloads.
+- **CRM Books BGM Firestore Fallback**:
+  - Added seamless direct Firestore fallback querying `crmBooks/{bookId}/audio` when API endpoints are unreachable in local or mock environments.
+- **Firebase Storage BGM Security Rules**:
+  - Configured strict admin-only write/delete permissions on `/crm-books/{bookId}/bgm/{audioFile}` with a 50MB maximum size limit and audio MIME type validation.
+- **Automated Live Browser Testing & Evidence Suite**:
+  - Added comprehensive 5-step Playwright test script (`tests/browser/crm-books-bgm-live-evidence.js`) verifying admin login, BGM upload modal, and Fullscreen Book Reader audio playback controls.
+
+### Fixed
+- **CRM Admin Stylesheet Cleanup**:
+  - Removed duplicate `.crm-bv-spread` selector definition in `public/crm-admin.css` to eliminate redundant style shadowing.
+
 ## [V1.8.72] - 2026-08-15
 
 ### Added & Enhanced

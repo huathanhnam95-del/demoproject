@@ -656,7 +656,13 @@ window.CrmBooksWorkspace = (function () {
             }
             return 'classic';
         })();
-        let bookViewFontScale = 100;
+        let bookViewFontScale = (function() {
+            try {
+                const stored = parseInt(localStorage.getItem('crm_books_bv_font_scale'), 10);
+                if (Number.isFinite(stored)) return clampReaderFontScale(stored);
+            } catch (_) { /* ignore */ }
+            return 100;
+        })();
         let bookViewSpread = 1;
         let bookViewTurning = false;
         const BOOK_VIEW_FONT_MIN = 80;
@@ -1294,8 +1300,19 @@ window.CrmBooksWorkspace = (function () {
                 const tracks = Array.isArray(res?.tracks) ? res.tracks : [];
                 bookAudioTracks = tracks.length > 0 ? tracks : DEFAULT_BGM_TRACKS;
             } catch (err) {
-                console.warn('[CRM Books] Failed to load audio tracks:', err);
-                bookAudioTracks = DEFAULT_BGM_TRACKS;
+                console.warn('[CRM Books] Failed to load audio tracks via API, trying Firestore:', err);
+                try {
+                    const db = firebaseApp?.firestore?.() || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
+                    if (db) {
+                        const snap = await db.collection('crmBooks').doc(bookId).collection('audio').orderBy('createdAt', 'asc').get();
+                        const tracks = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        bookAudioTracks = tracks.length > 0 ? tracks : DEFAULT_BGM_TRACKS;
+                    } else {
+                        bookAudioTracks = DEFAULT_BGM_TRACKS;
+                    }
+                } catch (_) {
+                    bookAudioTracks = DEFAULT_BGM_TRACKS;
+                }
             }
             if (bookAudioIndex >= bookAudioTracks.length) {
                 bookAudioIndex = 0;
@@ -1343,12 +1360,13 @@ window.CrmBooksWorkspace = (function () {
             if (!bookAudioEl) {
                 bookAudioEl = new Audio();
                 bookAudioEl.addEventListener('ended', () => {
-                    nextBookAudio(overlay, true);
+                    const liveOverlay = document.querySelector('.crm-bv-overlay');
+                    nextBookAudio(liveOverlay, true);
                 });
                 bookAudioEl.addEventListener('error', (e) => {
                     console.warn('[CRM Books Audio] Playback error:', e);
                     isBookAudioPlaying = false;
-                    updateBookPlayerUi(overlay);
+                    updateBookPlayerUi();
                 });
             }
 
@@ -1782,6 +1800,7 @@ window.CrmBooksWorkspace = (function () {
 
             const total = bookViewPages.length;
             const totalPdf = pagesData?.totalPages || 0;
+            const b = selectedBook || {};
             const leftData = getBookViewVirtualPage(bookViewSpread - 1);
             const rightData = getBookViewVirtualPage(bookViewSpread);
             const leftLabel = leftData ? leftData.pageLabel : '';
@@ -1887,6 +1906,7 @@ window.CrmBooksWorkspace = (function () {
             const onFontScaleChange = (newScale) => {
                 const currentPdf = bookViewPages[bookViewSpread - 1]?.pdfPageNum || 1;
                 bookViewFontScale = clampReaderFontScale(newScale);
+                try { localStorage.setItem('crm_books_bv_font_scale', String(bookViewFontScale)); } catch (_) { /* ignore */ }
                 rebuildBookViewPages();
                 const newIdx = bookViewPages.findIndex((p) => p.pdfPageNum >= currentPdf);
                 bookViewSpread = Math.max(1, newIdx >= 0 ? newIdx + 1 : 1);
@@ -4674,8 +4694,32 @@ window.CrmBooksWorkspace = (function () {
                     tracks = Array.isArray(res?.tracks) ? res.tracks : [];
                     renderTracks();
                 } catch (err) {
-                    console.error('[CRM Books] Failed to load tracks:', err);
-                    listEl.innerHTML = `<div style="text-align:center; padding:16px; color:#ef4444; font-size:0.82rem;">Failed to load tracks: ${escapeHtml(err.message || 'Error')}</div>`;
+                    console.warn('[CRM Books] API load failed, trying Firestore fallback:', err);
+                    try {
+                        const db = firebaseApp?.firestore?.() || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
+                        if (db) {
+                            const snap = await db.collection('crmBooks').doc(bookId).collection('audio').orderBy('createdAt', 'asc').get();
+                            tracks = snap.docs.map(doc => {
+                                const d = doc.data();
+                                return {
+                                    id: doc.id,
+                                    title: d.title || 'Untitled Track',
+                                    storagePath: d.storagePath || '',
+                                    downloadUrl: d.downloadUrl || '',
+                                    originalFilename: d.originalFilename || '',
+                                    sizeBytes: d.sizeBytes || null,
+                                    duration: d.duration || null,
+                                    createdAt: d.createdAt?.toDate?.() ?? d.createdAt ?? null
+                                };
+                            });
+                            renderTracks();
+                            return;
+                        }
+                    } catch (fsErr) {
+                        console.warn('[CRM Books] Firestore fallback failed:', fsErr);
+                    }
+                    tracks = [];
+                    renderTracks();
                 }
             }
 

@@ -119,6 +119,22 @@ service firebase.storage {
       allow read: if false;
     }
 
+    // CRM book background music MP3 uploads (admin-only, audio content-type).
+    match /crm-books/{bookId}/bgm/{audioFile} {
+      allow read: if isSignedIn();
+      allow write: if isCrmAdmin()
+        && request.resource.size > 0
+        && request.resource.size <= 50 * 1024 * 1024
+        && (
+          request.resource.contentType == 'audio/mpeg'
+          || request.resource.contentType == 'audio/mp3'
+          || request.resource.contentType == 'audio/wav'
+          || request.resource.contentType == 'audio/x-wav'
+          || request.resource.contentType.matches('audio/.*')
+        );
+      allow delete: if isCrmAdmin();
+    }
+
     match /crm-books/{bookId}/{derived} {
       allow read, write: if false;
     }

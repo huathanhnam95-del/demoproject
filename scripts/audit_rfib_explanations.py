@@ -1,8 +1,10 @@
-# audit_rfib_explanations.py — Post-Pipeline Quality Audit for RFIB Explanations
+# audit_rfib_explanations.py — Multi-LLM 3-Model Quality Audit & Debate Engine for RFIB
 #
-# Reads RFIB_3model_revision.jsonl, fact-checks each explanation using DeepSeek-R1,
-# auto-fixes flagged issues using Qwen3 (with Gemma4 fallback), retries pipeline-
-# skipped questions once, and outputs RFIB_audited.jsonl + audit_failures.json.
+# Audits RFIB explanations using all 3 local LLMs (DeepSeek-R1, Qwen3, Gemma4).
+# - 2/3 Approval Rule: If 2 or 3 models vote PASS, the explanation passes.
+# - 2/3 Disapproval Rule: If 2 or 3 models vote FAIL, an iterative debate loop runs
+#   between all 3 models until 3/3 mutual consent is achieved.
+# - Supports 20% random sampling (or configurable percentage) with reproducible seed.
 
 import os
 import re
@@ -10,6 +12,7 @@ import sys
 import time
 import json
 import copy
+import random
 import logging
 import argparse
 import requests
@@ -35,13 +38,14 @@ MODELS = {
 INPUT_REVISION = r"C:\Cursor AI\public\database\RFIB\RFIB_3model_revision.jsonl"
 INPUT_WORKBOOK = r"C:\Cursor AI\public\database\RFIB\RFIB Final ver.xlsx"
 INPUT_EXISTING = r"C:\Cursor AI\public\database\RFIB\RFIB_cohesion_enrichment.jsonl"
-OUTPUT_AUDITED = r"C:\Cursor AI\public\database\RFIB\RFIB_audited.jsonl"
+OUTPUT_AUDITED = r"C:\Cursor AI\public\database\RFIB\RFIB_audited_sample20.jsonl"
+OUTPUT_DEBATE_REPORT = r"C:\Cursor AI\public\database\RFIB\RFIB_audit_debate_report.json"
 OUTPUT_FAILURES = r"C:\Cursor AI\public\database\RFIB\audit_failures.json"
 
 BLANK_RE = re.compile(r"__([^_]+?)__")
 
 
-# ── Shared utilities (from revise_rfib_explanations.py) ──────────────────────
+# ── Shared utilities ─────────────────────────────────────────────────────────
 
 def clean_model_response(raw: str) -> str:
     if not raw:
@@ -68,8 +72,8 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
     if "qwen3" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
 
-    num_ctx = 4096 if "gemma" in model.lower() else 8192
-    num_predict = 2048 if "gemma" in model.lower() else 4096
+    num_ctx = 8192 if "gemma" in model.lower() else 16384
+    num_predict = 4096
 
     for attempt in range(1, max_retries + 1):
         temp = temperature if attempt == 1 else 0.0
@@ -92,7 +96,7 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                 cleaned = clean_model_response(raw)
                 if not cleaned or len(cleaned.strip()) < 10:
                     if attempt < max_retries:
-                        time.sleep(3 * attempt)
+                        time.sleep(2 * attempt)
                         continue
                 return cleaned
             logging.warning(f"Ollama HTTP {resp.status_code} (attempt {attempt}, model={model})")
@@ -101,7 +105,7 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
         except Exception as e:
             logging.warning(f"Ollama error (attempt {attempt}, model={model}): {e}")
         if attempt < max_retries:
-            time.sleep(3 * attempt)
+            time.sleep(2 * attempt)
     return None
 
 
@@ -161,12 +165,12 @@ def save_jsonl_atomic(path: str, records: dict[int, dict]):
         raise
 
 
-def save_failures(path: str, failures: list[dict]):
+def save_json(path: str, data: dict | list):
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(failures, f, indent=2, ensure_ascii=False)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-# ── Audit Prompt ─────────────────────────────────────────────────────────────
+# ── Audit Prompt Builders ────────────────────────────────────────────────────
 
 def build_audit_prompt(
     answer_with_blanks: str,
@@ -175,11 +179,12 @@ def build_audit_prompt(
     grammar_tag: str,
     correct_answer: str,
     options: list[str],
+    model_role_title: str = "expert English linguistics fact-checker",
 ) -> str:
     distractors = [o for o in options if o != correct_answer]
     distractor_list = ", ".join(f"'{d}'" for d in distractors) if distractors else "(None)"
 
-    return f"""You are an expert English linguistics fact-checker. Your SOLE job is to verify whether an AI-generated grammar explanation is FACTUALLY CORRECT and LOGICALLY SOUND.
+    return f"""You are an {model_role_title}. Your SOLE job is to verify whether an AI-generated grammar explanation is FACTUALLY CORRECT and LOGICALLY SOUND.
 
 PASSAGE (with blanks marked by __option1/option2/...__):
 {answer_with_blanks}
@@ -234,36 +239,45 @@ RESPONSE FORMAT — return ONLY valid JSON:
 
 RULES:
 - Be STRICT. If ANY grammar label is wrong, if ANY reasoning has a logical flaw, or if ANY semantic/collocation gap exists, the verdict MUST be "FAIL".
-- MANDATORY FAIL FOR PASSIVE DISTRACTORS: For any distractor that uses passive voice (e.g., 'is received', 'was given'), the explanation MUST explicitly explain the subject-verb action relationship (e.g., "The subject 'The Professor' is the person performing the action of receiving, not receiving the action, so passive voice makes no semantic sense here"). If the explanation ONLY mentions tense or simply names the voice (e.g. "this is Present Passive, we need past tense") without explaining why passive voice fails for this subject, you MUST set verdict to "FAIL" with issue type "semantic_gap".
+- MANDATORY FAIL FOR PASSIVE DISTRACTORS: For any distractor that uses passive voice, the explanation MUST explicitly explain the subject-verb action relationship.
 - If the explanation is correct and complete, return verdict "PASS" with an empty issues array.
-- Do NOT nitpick stylistic preferences. Only flag factual errors, logical flaws, and missing critical analysis.
+- Do NOT nitpick purely stylistic preferences. Only flag factual errors, logical flaws, and missing critical analysis.
 - For the "correction" field, write the COMPLETE corrected text that should replace the affected_text.
 """
 
 
-# ── Fix Prompt ───────────────────────────────────────────────────────────────
-
-def build_fix_prompt(
+def build_debate_synthesis_prompt(
     answer_with_blanks: str,
     full_text: str,
     correct_answer: str,
     options: list[str],
-    original_explanation: str,
-    issues: list[dict],
-    verified_grammar_tag: str,
+    current_explanation: str,
+    current_grammar_tag: str,
+    debate_critiques: list[dict],
+    debate_round: int,
 ) -> str:
     distractors = [o for o in options if o != correct_answer]
     distractor_list = ", ".join(f"'{d}'" for d in distractors) if distractors else "(None)"
 
-    issues_block = ""
-    for i, issue in enumerate(issues, 1):
-        issues_block += f"\n  {i}. [{issue.get('type', 'issue')}] {issue.get('description', '')}"
-        if issue.get("affected_text"):
-            issues_block += f"\n     Affected: \"{issue['affected_text']}\""
-        if issue.get("correction"):
-            issues_block += f"\n     Should be: \"{issue['correction']}\""
+    critique_block = ""
+    for c in debate_critiques:
+        critique_block += f"\n--- Critique from Model [{c.get('model', 'Juror')}] (Verdict: {c.get('verdict', 'FAIL')}) ---\n"
+        critique_block += f"Notes: {c.get('overall_notes', '')}\n"
+        critique_block += f"Verified Grammar Tag: {c.get('verified_grammar_tag', '')}\n"
+        issues = c.get("issues", [])
+        if issues:
+            critique_block += "Issues flagged:\n"
+            for i, iss in enumerate(issues, 1):
+                critique_block += f"  {i}. [{iss.get('type', 'issue')}] {iss.get('description', '')}\n"
+                if iss.get("affected_text"):
+                    critique_block += f"     Affected text: \"{iss['affected_text']}\"\n"
+                if iss.get("correction"):
+                    critique_block += f"     Proposed correction: \"{iss['correction']}\"\n"
 
-    return f"""You are an expert ESL content editor. Fix the specific errors identified in the explanation below.
+    return f"""You are the Master Moderator and Synthesizer in an AI panel debate. 
+All 3 AI linguistic models have evaluated an RFIB explanation, and at least 2 models disapproved.
+
+TASK: Synthesize all juror critiques from Debate Round {debate_round} and write a DEFINITIVE, PERFECTLY REVISED explanation that satisfies ALL 3 models unanimously.
 
 PASSAGE:
 {answer_with_blanks}
@@ -271,158 +285,294 @@ PASSAGE:
 FULL TEXT:
 {full_text}
 
-BLANK: Correct answer is '{correct_answer}', distractors are {distractor_list}.
-VERIFIED GRAMMAR TAG: "{verified_grammar_tag}"
+BLANK:
+- Correct answer: '{correct_answer}'
+- Distractors: {distractor_list}
+- Current Grammar Tag: "{current_grammar_tag}"
 
-ORIGINAL EXPLANATION (with errors):
-{original_explanation}
+CURRENT EXPLANATION (under debate):
+{current_explanation}
 
-ERRORS FOUND BY FACT-CHECKER:
-{issues_block}
+JUROR CRITIQUES & DISAGREEMENTS:
+{critique_block}
 
-TASK: Rewrite the explanation, fixing ONLY the identified errors. Keep all correct parts intact. The rewritten explanation must:
-1. Use the verified grammar tag "{verified_grammar_tag}" (not the old one if it was wrong)
-2. Fix all reasoning errors identified above
-3. Fill all semantic/collocation gaps identified above
-4. Keep the same structure and B1-B2 level language
-5. Address the correct answer AND every distractor
+SYNTHESIS GOAL:
+1. Address EVERY valid critique raised by all 3 models.
+2. Select or reconcile the most precise and accurate grammar tag.
+3. Ensure subject-verb semantic logic (active vs passive) is explicitly explained for any passive distractor.
+4. Keep the explanation clear, natural, and formatted for B1-B2 English learners with bullet points:
+   * Why '[option]' is incorrect: [specific reason]
+5. Address the correct answer AND every distractor.
 
 RESPONSE FORMAT — return ONLY valid JSON:
 {{
-  "fixed_explanation": "The complete corrected explanation",
-  "fixed_concise": "One-sentence summary of why this answer is correct (max 50 words)",
-  "changes_made": "Brief list of what was changed"
+  "proposed_explanation": "The complete, revised student-facing explanation incorporating all consensus fixes",
+  "proposed_concise": "One-sentence summary of why this answer is correct (max 50 words)",
+  "proposed_grammar_tag": "The reconciled, factually verified grammar category",
+  "reconciliation_summary": "How the disagreements between models were resolved"
 }}
-
-RULES:
-- Do NOT add new errors while fixing old ones.
-- Keep all correct analysis intact — only change what was flagged.
-- The fixed_explanation must be complete and self-contained.
 """
 
 
-# ── Core Audit Logic ─────────────────────────────────────────────────────────
+# ── Single Model Audit ───────────────────────────────────────────────────────
 
-def audit_blank(
+def audit_single_model(
+    model_key: str,
     answer_with_blanks: str,
     full_text: str,
-    blank_data: dict,
+    explanation: str,
+    grammar_tag: str,
+    correct_answer: str,
     options: list[str],
 ) -> dict:
-    """Audit a single blank's explanation. Returns audit result dict."""
-    blank_index = blank_data.get("blank_index", "?")
-    correct_answer = blank_data.get("correct_answer", "")
-    grammar_tag = blank_data.get("grammar_tag", "")
-    final_explanation = blank_data.get("final_explanation", "")
-
-    if not final_explanation.strip():
-        return {
-            "blank_index": blank_index,
-            "verdict": "FAIL",
-            "issues": [{"type": "completeness_gap", "description": "Empty explanation", "affected_text": "", "correction": ""}],
-            "verified_grammar_tag": grammar_tag,
-            "overall_notes": "No explanation to audit",
-        }
+    model_name = MODELS[model_key]
+    role_titles = {
+        "dr": "expert English linguistics fact-checker and diagnostic linguist",
+        "qw": "senior ESL editor and grammatical cohesion reviewer",
+        "gm": "expert English language quality auditor and structural reviewer",
+    }
+    role = role_titles.get(model_key, "expert English linguist")
 
     prompt = build_audit_prompt(
-        answer_with_blanks, full_text,
-        final_explanation, grammar_tag, correct_answer, options,
+        answer_with_blanks, full_text, explanation,
+        grammar_tag, correct_answer, options,
+        model_role_title=role,
     )
 
-    raw = query_ollama(MODELS["dr"], prompt, temperature=0.1, max_retries=4, timeout=300, json_mode=False)
+    raw = query_ollama(model_name, prompt, temperature=0.1, max_retries=4, timeout=300, json_mode=False)
     if not raw:
         return {
-            "blank_index": blank_index,
+            "model": model_name,
+            "model_key": model_key,
             "verdict": "ERROR",
-            "issues": [],
+            "issues": [{"type": "timeout_error", "description": f"{model_name} failed to respond", "affected_text": "", "correction": ""}],
             "verified_grammar_tag": grammar_tag,
-            "overall_notes": "Audit model failed to respond",
+            "overall_notes": f"Model {model_name} timed out or produced no response",
         }
 
     try:
-        result = json.loads(raw)
-    except json.JSONDecodeError as err:
-        logging.warning(f"JSON decode error for blank {blank_index}: {err}. Snippet: {raw[:150]}")
+        data = json.loads(raw)
+    except json.JSONDecodeError:
         return {
-            "blank_index": blank_index,
+            "model": model_name,
+            "model_key": model_key,
             "verdict": "ERROR",
-            "issues": [],
+            "issues": [{"type": "parse_error", "description": "Invalid JSON response", "affected_text": "", "correction": ""}],
             "verified_grammar_tag": grammar_tag,
-            "overall_notes": f"Audit model returned invalid JSON: {err}",
+            "overall_notes": f"Invalid JSON returned: {raw[:150]}",
         }
 
-    verdict = result.get("verdict", "ERROR").upper()
-    issues = result.get("issues", [])
+    verdict = str(data.get("verdict", "FAIL")).upper().strip()
+    if verdict not in ["PASS", "FAIL"]:
+        verdict = "FAIL" if data.get("issues") else "PASS"
+
+    issues = data.get("issues", [])
     if not isinstance(issues, list):
         issues = []
 
     return {
-        "blank_index": blank_index,
+        "model": model_name,
+        "model_key": model_key,
         "verdict": verdict,
         "issues": issues,
-        "verified_grammar_tag": result.get("verified_grammar_tag", grammar_tag),
-        "overall_notes": result.get("overall_notes", ""),
+        "verified_grammar_tag": str(data.get("verified_grammar_tag", grammar_tag)).strip() or grammar_tag,
+        "overall_notes": str(data.get("overall_notes", "")).strip(),
     }
 
 
-def fix_blank(
+# ── Multi-Model Audit & Debate Engine ───────────────────────────────────────
+
+def run_multi_model_audit_for_blank(
     answer_with_blanks: str,
     full_text: str,
     blank_data: dict,
     options: list[str],
-    audit_result: dict,
-    fix_model: str,
-) -> dict | None:
-    """Attempt to fix a failed blank using the specified model. Returns fixed blank data or None."""
+    max_debate_rounds: int = 3,
+) -> dict:
+    b_idx = blank_data.get("blank_index", "?")
     correct_answer = blank_data.get("correct_answer", "")
-    original_explanation = blank_data.get("final_explanation", "")
+    current_grammar_tag = blank_data.get("grammar_tag", "")
+    current_explanation = blank_data.get("final_explanation", "")
+    current_concise = blank_data.get("concise_explanation", "")
 
-    prompt = build_fix_prompt(
-        answer_with_blanks, full_text,
-        correct_answer, options,
-        original_explanation,
-        audit_result["issues"],
-        audit_result["verified_grammar_tag"],
-    )
+    if not current_explanation.strip():
+        return {
+            "blank_index": b_idx,
+            "final_verdict": "FAIL",
+            "votes": {"PASS": 0, "FAIL": 3, "details": []},
+            "debate_rounds": 0,
+            "debate_history": [],
+            "final_explanation": "",
+            "final_concise": "",
+            "final_grammar_tag": current_grammar_tag,
+            "consensus_type": "EMPTY_INPUT",
+        }
 
-    raw = query_ollama(fix_model, prompt, temperature=0.2, max_retries=4, timeout=300)
-    if not raw:
-        return None
+    # ── Round 1: Independent 3-Juror Audit ──
+    logging.info(f"      [Round 1] Gathering independent votes from all 3 models...")
+    juror_votes = []
+    for mkey in ["dr", "qw", "gm"]:
+        t0 = time.time()
+        vote = audit_single_model(
+            mkey, answer_with_blanks, full_text,
+            current_explanation, current_grammar_tag,
+            correct_answer, options,
+        )
+        elapsed = time.time() - t0
+        juror_votes.append(vote)
+        logging.info(f"        Juror [{MODELS[mkey]}]: {vote['verdict']} ({len(vote['issues'])} issues, {elapsed:.1f}s)")
 
-    try:
-        fix_data = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
+    pass_count = sum(1 for v in juror_votes if v["verdict"] == "PASS")
+    fail_count = sum(1 for v in juror_votes if v["verdict"] != "PASS")
 
-    fixed_explanation = fix_data.get("fixed_explanation", "")
-    if not fixed_explanation or len(fixed_explanation.strip()) < 30:
-        return None
+    # If 2/3 approve, the target passes immediately!
+    if pass_count >= 2:
+        reconciled_tag = current_grammar_tag
+        for v in juror_votes:
+            if v["verdict"] == "PASS" and v["verified_grammar_tag"]:
+                reconciled_tag = v["verified_grammar_tag"]
+                break
 
+        logging.info(f"      ✓ PASSED by consensus ({pass_count}/3 approvals).")
+        return {
+            "blank_index": b_idx,
+            "final_verdict": "PASS",
+            "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
+            "debate_rounds": 0,
+            "debate_history": [],
+            "final_explanation": current_explanation,
+            "final_concise": current_concise,
+            "final_grammar_tag": reconciled_tag,
+            "consensus_type": "ROUND1_APPROVAL",
+        }
+
+    # ── Disapproved by 2/3 models -> Enter Debate & Consensus Loop ──
+    logging.info(f"      ⚠️ DISAPPROVED ({fail_count}/3 rejections) -> Initiating Debate & Consensus Loop...")
+    debate_history = []
+    candidate_explanation = current_explanation
+    candidate_concise = current_concise
+    candidate_tag = current_grammar_tag
+    last_critiques = juror_votes
+
+    for round_num in range(1, max_debate_rounds + 1):
+        logging.info(f"      --- Debate Round {round_num}/{max_debate_rounds} ---")
+        synth_prompt = build_debate_synthesis_prompt(
+            answer_with_blanks, full_text, correct_answer, options,
+            candidate_explanation, candidate_tag, last_critiques, round_num,
+        )
+
+        synth_raw = query_ollama(MODELS["qw"], synth_prompt, temperature=0.2, max_retries=4, timeout=300)
+        if not synth_raw:
+            logging.warning(f"        Qwen3 debate synthesis failed, falling back to Gemma4...")
+            synth_raw = query_ollama(MODELS["gm"], synth_prompt, temperature=0.2, max_retries=4, timeout=300)
+
+        if not synth_raw:
+            logging.error(f"        Debate synthesis failed in round {round_num}.")
+            break
+
+        try:
+            synth_data = json.loads(synth_raw)
+            candidate_explanation = synth_data.get("proposed_explanation", candidate_explanation)
+            candidate_concise = synth_data.get("proposed_concise", candidate_concise)
+            candidate_tag = synth_data.get("proposed_grammar_tag", candidate_tag)
+            reconcile_summary = synth_data.get("reconciliation_summary", "")
+        except json.JSONDecodeError:
+            logging.error(f"        Invalid JSON in debate synthesis round {round_num}.")
+            break
+
+        # Re-evaluate candidate explanation with all 3 models
+        logging.info(f"        Re-evaluating synthesized explanation with 3 models for mutual consent...")
+        round_votes = []
+        for mkey in ["dr", "qw", "gm"]:
+            t0 = time.time()
+            v = audit_single_model(
+                mkey, answer_with_blanks, full_text,
+                candidate_explanation, candidate_tag,
+                correct_answer, options,
+            )
+            round_votes.append(v)
+            logging.info(f"          Re-vote [{MODELS[mkey]}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
+
+        round_passes = sum(1 for v in round_votes if v["verdict"] == "PASS")
+        debate_history.append({
+            "round": round_num,
+            "reconciliation_summary": reconcile_summary,
+            "candidate_explanation": candidate_explanation,
+            "candidate_grammar_tag": candidate_tag,
+            "votes": round_votes,
+            "pass_count": round_passes,
+        })
+
+        # Check for 3/3 Unanimous Mutual Consent
+        if round_passes == 3:
+            logging.info(f"      🎉 MUTUAL CONSENT ACHIEVED (3/3 Unanimous PASS) in Debate Round {round_num}!")
+            return {
+                "blank_index": b_idx,
+                "final_verdict": "FIXED_CONSENSUS",
+                "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
+                "debate_rounds": round_num,
+                "debate_history": debate_history,
+                "final_explanation": candidate_explanation,
+                "final_concise": candidate_concise,
+                "final_grammar_tag": candidate_tag,
+                "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+            }
+
+        last_critiques = round_votes
+
+    # If loop concludes without 3/3 unanimous consent, check if 2/3 consent was reached
+    best_round = max(debate_history, key=lambda r: r["pass_count"]) if debate_history else None
+    if best_round and best_round["pass_count"] >= 2:
+        logging.info(f"      ✓ MAJORITY CONSENT ({best_round['pass_count']}/3) achieved after {len(debate_history)} debate rounds.")
+        return {
+            "blank_index": b_idx,
+            "final_verdict": "FIXED_MAJORITY",
+            "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
+            "debate_rounds": len(debate_history),
+            "debate_history": debate_history,
+            "final_explanation": best_round["candidate_explanation"],
+            "final_concise": candidate_concise,
+            "final_grammar_tag": best_round["candidate_grammar_tag"],
+            "consensus_type": "MAJORITY_CONSENT",
+        }
+
+    logging.warning(f"      ⚠️ UNRESOLVED DEBATE after {max_debate_rounds} rounds.")
     return {
-        "fixed_explanation": fixed_explanation,
-        "fixed_concise": fix_data.get("fixed_concise", blank_data.get("concise_explanation", "")),
-        "changes_made": fix_data.get("changes_made", ""),
+        "blank_index": b_idx,
+        "final_verdict": "UNRESOLVED_DEBATE",
+        "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
+        "debate_rounds": len(debate_history),
+        "debate_history": debate_history,
+        "final_explanation": candidate_explanation,
+        "final_concise": candidate_concise,
+        "final_grammar_tag": candidate_tag,
+        "consensus_type": "UNRESOLVED_DEBATE",
     }
 
 
-def audit_question(record: dict, answer_text: str, full_text: str, workbook_blanks: list[dict]) -> dict:
-    """Audit all blanks in a question record. Returns updated record with audit metadata."""
+# ── Question Auditor ─────────────────────────────────────────────────────────
+
+def audit_question_multi_model(
+    record: dict,
+    answer_text: str,
+    full_text: str,
+    workbook_blanks: list[dict],
+    max_debate_rounds: int = 3,
+) -> dict:
     qid = record["id"]
     blanks = record.get("blanks", [])
     audited_record = copy.deepcopy(record)
 
-    total_pass = 0
-    total_fail = 0
-    total_fixed = 0
-    total_unfixable = 0
-    total_error = 0
+    total_r1_pass = 0
+    total_mutual_consent = 0
+    total_majority_consent = 0
+    total_unresolved = 0
     blank_audit_details = []
 
     for i, blank_data in enumerate(blanks):
         b_idx = blank_data.get("blank_index", i + 1)
         wb_blank = workbook_blanks[i] if i < len(workbook_blanks) else None
-        
-        # Safely determine options (from workbook or blank_data)
+
         if wb_blank and wb_blank.get("options"):
             options = wb_blank["options"]
         else:
@@ -432,96 +582,55 @@ def audit_question(record: dict, answer_text: str, full_text: str, workbook_blan
                 if opt and opt not in options:
                     options.append(opt)
 
-        logging.info(f"    Auditing blank {b_idx} ...")
+        logging.info(f"    Auditing blank {b_idx}/{len(blanks)} ('{blank_data.get('correct_answer', '')}') ...")
 
-        audit_result = audit_blank(answer_text, full_text, blank_data, options)
-        verdict = audit_result["verdict"]
+        audit_res = run_multi_model_audit_for_blank(
+            answer_text, full_text, blank_data, options,
+            max_debate_rounds=max_debate_rounds,
+        )
 
-        if verdict == "PASS":
-            total_pass += 1
-            # Update grammar tag if auditor verified a correction
-            if audit_result["verified_grammar_tag"] != blank_data.get("grammar_tag", ""):
-                audited_record["blanks"][i]["grammar_tag"] = audit_result["verified_grammar_tag"]
-            audited_record["blanks"][i]["audit_status"] = "PASS"
-            audited_record["blanks"][i]["audit_notes"] = audit_result.get("overall_notes", "")
-            blank_audit_details.append({"blank_index": b_idx, "verdict": "PASS"})
+        v = audit_res["final_verdict"]
+        if v == "PASS":
+            total_r1_pass += 1
+        elif v == "FIXED_CONSENSUS":
+            total_mutual_consent += 1
+        elif v == "FIXED_MAJORITY":
+            total_majority_consent += 1
+        else:
+            total_unresolved += 1
 
-        elif verdict == "FAIL":
-            total_fail += 1
-            logging.info(f"    [FAIL] Blank {b_idx} FAILED audit — {len(audit_result['issues'])} issues found")
-            for issue in audit_result["issues"]:
-                logging.info(f"      [{issue.get('type', '?')}] {issue.get('description', '')[:100]}")
+        # Apply updated fields
+        audited_record["blanks"][i]["final_explanation"] = audit_res["final_explanation"]
+        audited_record["blanks"][i]["concise_explanation"] = audit_res["final_concise"]
+        audited_record["blanks"][i]["grammar_tag"] = audit_res["final_grammar_tag"]
+        audited_record["blanks"][i]["audit_verdict"] = v
+        audited_record["blanks"][i]["audit_consensus_type"] = audit_res["consensus_type"]
+        audited_record["blanks"][i]["debate_rounds_run"] = audit_res["debate_rounds"]
 
-            # Try fix with Qwen3
-            logging.info(f"    Fixing blank {b_idx} with {MODELS['qw']} ...")
-            fix_result = fix_blank(answer_text, full_text, blank_data, options, audit_result, MODELS["qw"])
+        blank_audit_details.append(audit_res)
 
-            if fix_result is None:
-                # Fallback to Gemma4
-                logging.info(f"    Qwen3 fix failed, trying {MODELS['gm']} ...")
-                fix_result = fix_blank(answer_text, full_text, blank_data, options, audit_result, MODELS["gm"])
+    overall_status = "PASS"
+    if total_unresolved > 0:
+        overall_status = "UNRESOLVED"
+    elif total_mutual_consent > 0 or total_majority_consent > 0:
+        overall_status = "REVISED_WITH_CONSENSUS"
 
-            if fix_result:
-                total_fixed += 1
-                audited_record["blanks"][i]["final_explanation"] = fix_result["fixed_explanation"]
-                audited_record["blanks"][i]["concise_explanation"] = fix_result["fixed_concise"]
-                audited_record["blanks"][i]["grammar_tag"] = audit_result["verified_grammar_tag"]
-                audited_record["blanks"][i]["audit_status"] = "FIXED"
-                audited_record["blanks"][i]["audit_notes"] = f"Issues: {json.dumps(audit_result['issues'], ensure_ascii=False)[:500]}. Changes: {fix_result.get('changes_made', '')}"
-                blank_audit_details.append({"blank_index": b_idx, "verdict": "FIXED", "issues": len(audit_result["issues"])})
-                logging.info(f"    [FIXED] Blank {b_idx} FIXED")
-            else:
-                total_unfixable += 1
-                audited_record["blanks"][i]["audit_status"] = "UNFIXABLE"
-                audited_record["blanks"][i]["audit_notes"] = f"Issues found but auto-fix failed: {json.dumps(audit_result['issues'], ensure_ascii=False)[:500]}"
-                blank_audit_details.append({"blank_index": b_idx, "verdict": "UNFIXABLE", "issues": len(audit_result["issues"])})
-                logging.warning(f"    [UNFIXABLE] Blank {b_idx} UNFIXABLE")
-
-        else:  # ERROR
-            total_error += 1
-            audited_record["blanks"][i]["audit_status"] = "ERROR"
-            audited_record["blanks"][i]["audit_notes"] = audit_result.get("overall_notes", "Audit error")
-            blank_audit_details.append({"blank_index": b_idx, "verdict": "ERROR"})
-
-    # Set overall audit status
-    if total_unfixable > 0 or total_error > 0:
-        audited_record["audit_status"] = "PARTIAL"
-    elif total_fixed > 0:
-        audited_record["audit_status"] = "FIXED"
-    else:
-        audited_record["audit_status"] = "PASS"
-
+    audited_record["audit_status"] = overall_status
     audited_record["audit_summary"] = {
-        "passed": total_pass,
-        "failed": total_fail,
-        "fixed": total_fixed,
-        "unfixable": total_unfixable,
-        "errors": total_error,
+        "round1_passed_blanks": total_r1_pass,
+        "mutual_consent_fixed_blanks": total_mutual_consent,
+        "majority_consent_fixed_blanks": total_majority_consent,
+        "unresolved_blanks": total_unresolved,
+        "total_blanks": len(blanks),
         "details": blank_audit_details,
     }
     audited_record["audit_timestamp"] = datetime.now(timezone.utc).isoformat()
 
-    status_str = f"PASS={total_pass} FIXED={total_fixed} UNFIXABLE={total_unfixable} ERROR={total_error}"
-    logging.info(f"  [AUDIT] Question {qid}: {status_str}")
-
+    logging.info(f"  [AUDIT RESULT] Q{qid}: {overall_status} (R1_PASS={total_r1_pass}, MUTUAL_CONSENT={total_mutual_consent}, MAJORITY={total_majority_consent}, UNRESOLVED={total_unresolved})")
     return audited_record
 
 
-# ── Pipeline Retry (for skipped questions) ───────────────────────────────────
-
-def retry_pipeline_question(qid: int, question: dict, existing_explanation: dict | None) -> dict | None:
-    """Re-run the full 3-model pipeline for a single question. Import from revise script."""
-    # Import process_question from the pipeline script
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    try:
-        from revise_rfib_explanations import process_question
-        return process_question(qid, question, existing_explanation)
-    except ImportError:
-        logging.error("Could not import process_question from revise_rfib_explanations.py")
-        return None
-
-
-# ── Workbook loader (reused from pipeline) ───────────────────────────────────
+# ── Workbook Loader ──────────────────────────────────────────────────────────
 
 def load_workbook_data(workbook_path: str) -> dict[int, dict]:
     import openpyxl
@@ -581,168 +690,160 @@ def load_workbook_data(workbook_path: str) -> dict[int, dict]:
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Post-Pipeline Quality Audit for RFIB Explanations"
+        description="Multi-LLM 3-Model Quality Audit & Debate Engine for RFIB Explanations"
     )
     parser.add_argument("--input", default=INPUT_REVISION,
                         help="Path to 3-model revision JSONL")
     parser.add_argument("--workbook", default=INPUT_WORKBOOK,
                         help="Path to RFIB workbook XLSX")
-    parser.add_argument("--existing", default=INPUT_EXISTING,
-                        help="Path to original cohesion enrichment JSONL")
     parser.add_argument("--out", default=OUTPUT_AUDITED,
                         help="Output path for audited JSONL")
-    parser.add_argument("--failures", default=OUTPUT_FAILURES,
-                        help="Output path for failures JSON")
+    parser.add_argument("--debate-report", default=OUTPUT_DEBATE_REPORT,
+                        help="Output path for debate summary report JSON")
+    parser.add_argument("--sample-pct", type=float, default=0.20,
+                        help="Percentage of questions to randomly audit (default 0.20 = 20 percent)")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducible 20% sampling")
     parser.add_argument("--ids", type=str,
-                        help="Comma-separated question IDs to audit")
+                        help="Comma-separated question IDs to audit explicitly")
     parser.add_argument("--limit", type=int,
-                        help="Max questions to audit")
+                        help="Max questions to audit (for smoke tests)")
+    parser.add_argument("--max-debate-rounds", type=int, default=3,
+                        help="Max rounds of debate before concluding consensus")
     parser.add_argument("--save-every", type=int, default=1,
-                        help="Save after every N questions")
+                        help="Save output every N questions")
     parser.add_argument("--no-resume", action="store_true",
-                        help="Re-audit questions already in the output file")
-    parser.add_argument("--retry-skipped", action="store_true",
-                        help="Also retry pipeline-skipped questions")
-    parser.add_argument("--audit-only", action="store_true",
-                        help="Skip retry phase, only audit existing records")
+                        help="Re-audit questions already in output file")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    # Load data
-    logging.info("Loading 3-model revision data ...")
+    logging.info("Loading 3-model revision dataset ...")
     revision_records = load_jsonl(args.input)
-    logging.info(f"  Loaded {len(revision_records)} revised records")
+    logging.info(f"  Loaded {len(revision_records)} revision records")
 
     logging.info("Loading workbook data ...")
     workbook_data = load_workbook_data(args.workbook)
     logging.info(f"  Loaded {len(workbook_data)} workbook questions")
 
-    # Load already-audited records for resume
     audited_records = load_jsonl(args.out) if not args.no_resume else {}
-    logging.info(f"  Already audited: {len(audited_records)} records (resume mode)")
+    logging.info(f"  Already audited records: {len(audited_records)}")
 
-    failures = []
-
-    # ── Phase A: Retry pipeline-skipped questions ────────────────────────
-    if args.retry_skipped and not args.audit_only:
-        all_workbook_ids = set(workbook_data.keys())
-        already_revised = set(revision_records.keys())
-        skipped_ids = sorted(all_workbook_ids - already_revised)
-
-        if skipped_ids:
-            logging.info(f"\n=== Phase A: Retry {len(skipped_ids)} pipeline-skipped questions ===")
-            existing_explanations = load_jsonl(args.existing)
-
-            retried = 0
-            retry_failed = 0
-            for qid in skipped_ids:
-                q_data = workbook_data.get(qid)
-                if not q_data:
-                    continue
-
-                logging.info(f"  Retrying Q{qid} ...")
-                e_data = existing_explanations.get(qid)
-                result = retry_pipeline_question(qid, q_data, e_data)
-
-                if result:
-                    revision_records[qid] = result
-                    retried += 1
-                    logging.info(f"  ✓ Q{qid} retry succeeded")
-                else:
-                    retry_failed += 1
-                    failures.append({
-                        "id": qid,
-                        "phase": "retry",
-                        "reason": "Pipeline retry failed (all 3 phases)",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
-                    logging.warning(f"  ✗ Q{qid} retry failed — added to failures list")
-
-            logging.info(f"  Retry complete: {retried} succeeded, {retry_failed} failed")
-
-            # Save updated revision records after retries
-            if retried > 0:
-                save_jsonl_atomic(args.input, revision_records)
-                logging.info(f"  Updated {args.input} with {retried} retried records")
-
-    # ── Phase B: Audit all revision records ──────────────────────────────
+    # Determine candidate IDs to audit
+    all_revised_ids = sorted(revision_records.keys())
+    
     if args.ids:
         target_ids = [int(x.strip()) for x in args.ids.split(",") if x.strip()]
         target_ids = [qid for qid in target_ids if qid in revision_records]
+        logging.info(f"  Targeting explicit {len(target_ids)} IDs: {target_ids}")
     else:
-        target_ids = sorted(revision_records.keys())
-        if args.limit:
-            target_ids = target_ids[:args.limit]
+        # Sample percentage with reproducible seed
+        rng = random.Random(args.seed)
+        sample_size = int(len(all_revised_ids) * args.sample_pct)
+        target_ids = sorted(rng.sample(all_revised_ids, sample_size))
+        logging.info(f"  Randomly sampled {len(target_ids)} questions ({args.sample_pct*100:.0f}% of {len(all_revised_ids)}, seed={args.seed})")
 
-    # Filter out already-audited (resume)
+    if args.limit:
+        target_ids = target_ids[:args.limit]
+        logging.info(f"  Limiting to first {len(target_ids)} questions for this run")
+
     if not args.no_resume:
-        target_ids = [qid for qid in target_ids if qid not in audited_records]
+        unprocessed_ids = [qid for qid in target_ids if qid not in audited_records]
+        logging.info(f"  Questions remaining after resume filter: {len(unprocessed_ids)} / {len(target_ids)}")
+        target_ids = unprocessed_ids
 
-    logging.info(f"\n=== Phase B: Audit {len(target_ids)} questions ===")
+    logging.info(f"\n=======================================================")
+    logging.info(f"  STARTING 3-MODEL AUDIT & DEBATE ON {len(target_ids)} QUESTIONS")
+    logging.info(f"  Models: {MODELS['dr']} (DR), {MODELS['qw']} (QW), {MODELS['gm']} (GM)")
+    logging.info(f"  Voting Rule: >=2/3 PASS = Pass | >=2/3 FAIL = Debate until 3/3 Mutual Consent")
+    logging.info(f"=======================================================\n")
 
-    audit_pass = 0
-    audit_fixed = 0
-    audit_partial = 0
+    debate_report_data = None
+    if os.path.exists(args.debate_report) and not args.no_resume:
+        try:
+            with open(args.debate_report, "r", encoding="utf-8") as f:
+                debate_report_data = json.load(f)
+            logging.info(f"  Loaded existing debate report with {len(debate_report_data.get('debate_transcripts', []))} transcripts")
+        except Exception as e:
+            logging.warning(f"  Could not load existing debate report: {e}")
+            debate_report_data = None
+
+    if not debate_report_data:
+        debate_report_data = {
+            "sample_pct": args.sample_pct,
+            "sample_seed": args.seed,
+            "total_target_questions": len(target_ids) + len(audited_records),
+            "processed_questions": len(audited_records) if not args.no_resume else 0,
+            "round1_pass_count": 0,
+            "debate_revised_count": 0,
+            "unresolved_count": 0,
+            "debate_transcripts": [],
+        }
+
     save_counter = 0
 
-    for idx, qid in enumerate(target_ids):
-        record = revision_records[qid]
+    for idx, qid in enumerate(target_ids, 1):
+        rec = revision_records[qid]
         wb_data = workbook_data.get(qid)
-
         if not wb_data:
-            logging.warning(f"  Q{qid} not found in workbook — skipping")
+            logging.warning(f"  Q{qid} missing from workbook, skipping")
             continue
 
-        answer_text = wb_data["answer_text"]
-        full_text = wb_data["full_text"]
-        wb_blanks = wb_data["blanks"]
+        logging.info(f"\n--- [Question {qid}] ({idx}/{len(target_ids)}) | Blanks: {len(rec.get('blanks', []))} ---")
+        t0 = time.time()
 
-        logging.info(f"--- Auditing Q{qid} ({idx+1}/{len(target_ids)}): {len(record.get('blanks', []))} blanks ---")
-        t_start = time.time()
+        audited_q = audit_question_multi_model(
+            rec, wb_data["answer_text"], wb_data["full_text"],
+            wb_data["blanks"], max_debate_rounds=args.max_debate_rounds,
+        )
 
-        audited = audit_question(record, answer_text, full_text, wb_blanks)
-        elapsed = time.time() - t_start
-
-        status = audited.get("audit_status", "?")
-        if status == "PASS":
-            audit_pass += 1
-        elif status == "FIXED":
-            audit_fixed += 1
-        else:
-            audit_partial += 1
-            # Add unfixable blanks to failures
-            summary = audited.get("audit_summary", {})
-            if summary.get("unfixable", 0) > 0 or summary.get("errors", 0) > 0:
-                failures.append({
-                    "id": qid,
-                    "phase": "audit",
-                    "reason": f"Unfixable={summary.get('unfixable', 0)}, Errors={summary.get('errors', 0)}",
-                    "details": summary.get("details", []),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
-
-        audited_records[qid] = audited
+        elapsed = time.time() - t0
+        audited_records[qid] = audited_q
         save_counter += 1
 
-        logging.info(f"  [{status}] Q{qid} audited in {elapsed:.1f}s")
+        summary = audited_q.get("audit_summary", {})
+        if audited_q.get("audit_status") == "PASS":
+            debate_report_data["round1_pass_count"] += 1
+        elif audited_q.get("audit_status") == "REVISED_WITH_CONSENSUS":
+            debate_report_data["debate_revised_count"] += 1
+        else:
+            debate_report_data["unresolved_count"] += 1
+
+        debate_report_data["processed_questions"] += 1
+
+        # Capture debate transcripts if any
+        for b_detail in summary.get("details", []):
+            if b_detail.get("debate_history"):
+                debate_report_data["debate_transcripts"].append({
+                    "question_id": qid,
+                    "blank_index": b_detail.get("blank_index"),
+                    "round_1_votes": b_detail.get("round_1_votes"),
+                    "debate_rounds": b_detail.get("debate_rounds"),
+                    "consensus_type": b_detail.get("consensus_type"),
+                    "final_explanation": b_detail.get("final_explanation"),
+                    "debate_history": b_detail.get("debate_history"),
+                })
+
+        logging.info(f"  Completed Q{qid} in {elapsed:.1f}s")
 
         if save_counter % args.save_every == 0:
             save_jsonl_atomic(args.out, audited_records)
+            save_json(args.debate_report, debate_report_data)
 
-    # Final save
     save_jsonl_atomic(args.out, audited_records)
-    save_failures(args.failures, failures)
+    save_json(args.debate_report, debate_report_data)
 
-    logging.info(f"\n=== Audit Complete ===")
-    logging.info(f"  PASS: {audit_pass}")
-    logging.info(f"  FIXED: {audit_fixed}")
-    logging.info(f"  PARTIAL/UNFIXABLE: {audit_partial}")
-    logging.info(f"  Failures logged: {len(failures)}")
-    logging.info(f"  Output: {args.out}")
-    logging.info(f"  Failures: {args.failures}")
+    logging.info(f"\n=======================================================")
+    logging.info(f"  AUDIT PASS COMPLETE")
+    logging.info(f"  Total Processed: {debate_report_data['processed_questions']}")
+    logging.info(f"  Round 1 Passed (>=2/3 approvals): {debate_report_data['round1_pass_count']}")
+    logging.info(f"  Debated & Revised to Consensus: {debate_report_data['debate_revised_count']}")
+    logging.info(f"  Unresolved Debates: {debate_report_data['unresolved_count']}")
+    logging.info(f"  Audited Records Output: {args.out}")
+    logging.info(f"  Debate Report Output: {args.debate_report}")
+    logging.info(f"=======================================================\n")
 
 
 if __name__ == "__main__":

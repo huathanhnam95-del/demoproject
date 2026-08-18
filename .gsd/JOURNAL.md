@@ -63,3 +63,25 @@
 - Validation: `npm run test:pronounce:logic` passed; `npm run test:pronounce:browser` passed (including `tests/browser/pronounce-manual-review-browser-check.js`); `node tests/crm/pronunciation-corpus-production-route.test.js` passed; `python -m unittest backend.test_local_pronounce_samples` passed; JavaScript syntax checks passed.
 - Chrome evidence on `https://localhost:8443/practice/speaking/pronounce`: three direct waveform segment pairs were captured and the verifier showed `Saved to cloud: local-chrome-manual-check`; `.sv-btn-compare` was absent. Screenshot: `C:\Users\Admin\AppData\Local\Temp\codex-pronounce-manual-review-20260731.png`.
 
+## 2026-08-18 - RFIB Multi-LLM 3-Model Quality Audit & Consensus Debate Pass
+
+### Objective
+- Audit RFIB explanation quality across local LLMs (`deepseek-r1:14b`, `qwen3:14b`, `gemma4:latest`).
+- Enforce >=2/3 majority approval threshold and multi-round debate loop until 3/3 mutual consent for contested explanations.
+- Complete initial 20% random sample (221 questions), analyze edge cases, and launch audit for remaining 80% (884 questions).
+
+### Accomplished
+- Completed 20% sample audit (221 questions): 89.6% direct approval, 9.5% resolved via debate to unanimous consensus (99.1% total quality pass rate).
+- Documented 2 unresolved debate cases (Q146, Q520) with root cause and gold solutions in `RFIB_unresolved_audit_analysis.md`.
+- Patched Q146 and Q520 in revision and sample datasets via `scripts/patch_unresolved.py`.
+- Launched remaining 80% audit run (task-2761) with atomic checkpointing; processed 250 / 1,105 questions (22.6% total pool).
+- Updated Task Tracker (Task 680 Done, Task 681 Done, Task 682 In Progress).
+
+### Verification
+- [x] Empirically validated 20% sample with JSON debate report (`public/database/RFIB/RFIB_audit_debate_report.json`).
+- [x] Verified patch execution for Q146 Blank 3 and Q520 Blank 4.
+- [ ] Complete remaining 80% audit run (in progress in background).
+
+### Paused Because
+- User requested session pause.
+

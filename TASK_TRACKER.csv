@@ -1461,3 +1461,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 673,2026-08-16,Live browser check and screenshot evidence collection for CRM Books BGM upload and audio player,Done,2026-08-16
 674,2026-08-16,Audit fullscreen book view: fix duplicate CSS rule and add font scale persistence,Done,2026-08-16
 675,2026-08-16,Deploy Release V1.8.73 with Book Reader BGM upload rules font persistence and changelog,Done,2026-08-16
+676,2026-08-16,CRM header UI cleanup - spacing and Ollama badge and Soon badge styling,Done,2026-08-16
+677,2026-08-16,Fix Mind Map scrolling to zoom only centered on cursor without moving position,Done,2026-08-16
+678,2026-08-16,Check if release segmentation study and worktrees folders are still needed,Done,2026-08-16
+679,2026-08-16,Mind Map Visual Upgrade — 7 upgrades (entrance animations + flowing connections + branch highlighting + vibrant central node + color-tinted cards + ripple effects + ambient background),Done,2026-08-16
+680,2026-08-16,Multi-LLM 3-model audit consensus with 20 percent random sampling and debate loop for RFIB explanations,Done,2026-08-18
+681,2026-08-18,Document unresolved RFIB audit debate questions with issues purpose and proposed solutions in Markdown,Done,2026-08-18
+682,2026-08-18,Run Multi-LLM 3-model quality audit consensus and debate loop for remaining 80 percent RFIB explanations,In Progress,
+683,2026-08-18,Fix entrance-test buttons invisible (white-on-white) by adding missing design-tokens.css,Done,2026-08-18

@@ -27,6 +27,14 @@
 - Unless a specific output path is needed, allow the script to write its default timestamped `council_output_*.txt` file and matching `.telemetry.json` file in the repo root.
 - Use the council output as advisory support for the task, then continue with a concise synthesis and the next implementation or review step.
 
+## Kokoro TTS Local Engine
+
+- **Location & Port**: `C:\Cursor AI\Kokoro-FastAPI`, runs on `http://127.0.0.1:8880`.
+- **Startup**: Run `.\Kokoro-FastAPI\start-cpu.ps1` (or `.\Kokoro-FastAPI\start-gpu.ps1`), or start automatically via `scripts/kokoro/generate_speech_coach_audio.js`.
+- **Environment**: Python virtualenv at `Kokoro-FastAPI/.venv` (Python 3.11/3.12 managed via `uv sync`).
+- **Dependencies & Espeak**: Uses bundled `espeakng_loader` in `.venv/Lib/site-packages/espeakng_loader` with `PHONEMIZER_ESPEAK_LIBRARY` and `ESPEAK_DATA_PATH`.
+- **Models & Voices**: Weights are in `Kokoro-FastAPI/api/src/models/v1_0/kokoro-v1_0.pth` (backed up in HuggingFace cache) and 68 voice profiles in `Kokoro-FastAPI/api/src/voices/v1_0/`.
+
 ## Developing New Practice Modes
 
 When implementing a new practice mode (e.g., in PTE Practice or English Practice), always complete the following checklist:

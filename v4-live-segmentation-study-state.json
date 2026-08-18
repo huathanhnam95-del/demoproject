@@ -1,0 +1,278 @@
+{
+  "url": "https://betterenglishlearning.com/crm-admin.html#pronunciation-samples",
+  "title": "CRM Admin - Student & Course Management",
+  "bundle": [
+    "https://betterenglishlearning.com/crm-admin.js?v=20260816-v1.8.73",
+    "https://betterenglishlearning.com/js/crm/segmentation-study.js?v=20260816-v1.8.73"
+  ],
+  "operator": {
+    "id": "segmentation-study-operator",
+    "text": "",
+    "disabled": false,
+    "selected": null,
+    "value": "",
+    "checked": false,
+    "placeholder": "Enter your name",
+    "aria": null
+  },
+  "progress": "100 available\n0 reserved\n0 completed\n0 uncertain\n0 failed",
+  "statuses": [
+    {
+      "id": "segmentation-study-identity-status",
+      "text": "Enter your name to join.",
+      "disabled": false,
+      "selected": null,
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-status",
+      "text": "Study queue refreshed.",
+      "disabled": false,
+      "selected": null,
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-record-status",
+      "text": "No recording yet.",
+      "disabled": false,
+      "selected": null,
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-analysis-status",
+      "text": "Analysis is required before review.",
+      "disabled": false,
+      "selected": null,
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-summary",
+      "text": "",
+      "disabled": false,
+      "selected": null,
+      "placeholder": null,
+      "aria": null
+    }
+  ],
+  "queue": [],
+  "buttons": [
+    {
+      "id": null,
+      "text": "Record & review",
+      "disabled": false,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": null,
+      "text": "Previous samples",
+      "disabled": false,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-claim",
+      "text": "Claim next word",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-release",
+      "text": "Skip / release word",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-refresh",
+      "text": "Refresh",
+      "disabled": false,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-record",
+      "text": "Record",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-stop",
+      "text": "Stop",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-redo",
+      "text": "Redo",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-analyze",
+      "text": "Analyze V2/V3/V4",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-v2",
+      "text": "V2",
+      "disabled": false,
+      "selected": "true",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-v3",
+      "text": "V3",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-v4",
+      "text": "V4",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-manual",
+      "text": "Manual review",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-manual-undo",
+      "text": "Undo",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-manual-clear",
+      "text": "Clear",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-save",
+      "text": "Save sample",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-next",
+      "text": "Next word",
+      "disabled": true,
+      "selected": null,
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    }
+  ],
+  "tabs": [
+    {
+      "id": "segmentation-study-tab-v2",
+      "text": "V2",
+      "disabled": false,
+      "selected": "true",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-v3",
+      "text": "V3",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-v4",
+      "text": "V4",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": "segmentation-study-tab-manual",
+      "text": "Manual review",
+      "disabled": false,
+      "selected": "false",
+      "value": "",
+      "placeholder": null,
+      "aria": null
+    }
+  ],
+  "manualPanel": "Claim or open a sample first.\n                  Keyboard: use ←/→ for 5 ms steps; hold Shift for 1 ms fine steps. Focus the timeline first.\n                  No manual segments marked yet.\n                  \n                    Undo\n                    Clear\n                     Certain\n                     Unsure\n                    0 of 0 segments · 0 boundaries",
+  "certainty": [
+    {
+      "id": "segmentation-study-manual-certainty",
+      "text": "",
+      "disabled": false,
+      "selected": null,
+      "value": "certain",
+      "checked": false,
+      "placeholder": null,
+      "aria": null
+    },
+    {
+      "id": null,
+      "text": "",
+      "disabled": false,
+      "selected": null,
+      "value": "uncertain",
+      "checked": false,
+      "placeholder": null,
+      "aria": null
+    }
+  ]
+}

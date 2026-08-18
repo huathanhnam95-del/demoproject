@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.73</div>
+  <div id="version-indicator" class="version-indicator">V1.8.74</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1956,159 +1956,165 @@
       <!-- Pronunciation Analyzer Component -->
       <div id="mode-pronounce" class="mode-panel" style="display: none;">
         <div id="pronunciation-analyzer-container" class="pa-container">
-          <div class="pa-header">
-            <div class="pa-title">Stress & Pitch Analyzer</div>
-            <div class="pa-controls">
-              <button id="pa-record-btn" class="pa-btn pa-btn-record">Record</button>
-              <button id="pa-stop-btn" class="pa-btn pa-btn-stop" disabled>Stop</button>
-              <div id="pa-status" class="pa-status">Idle</div>
-            </div>
+
+          <div class="pa-sub-tabs" role="tablist">
+            <button class="pa-sub-tab active" role="tab" data-pa-tab="practice" aria-selected="true" id="pa-tab-practice">Practice</button>
+            <button class="pa-sub-tab" role="tab" data-pa-tab="analysis" aria-selected="false" id="pa-tab-analysis">Analysis</button>
+            <button class="pa-sub-tab" role="tab" data-pa-tab="feedback" aria-selected="false" id="pa-tab-feedback">Feedback</button>
           </div>
 
-          <div class="pa-input-section">
-            <div class="pa-word-input-container">
-              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph" style="flex: 1;">
-                <button id="pa-search-btn" class="pa-btn pa-search-btn" title="Search word">
-                  🔍 Search
-                </button>
+          <div class="pa-tab-panel active" id="pa-panel-practice" role="tabpanel">
+            <div class="pa-header">
+              <div class="pa-title">Stress & Pitch Analyzer</div>
+              <div class="pa-controls">
+                <button id="pa-record-btn" class="pa-btn pa-btn-record">Record</button>
+                <button id="pa-stop-btn" class="pa-btn pa-btn-stop" disabled>Stop</button>
+                <div id="pa-status" class="pa-status">Idle</div>
               </div>
+            </div>
 
-              <!-- Word Form Selector (hidden by default) -->
-              <div id="pa-word-forms" class="pa-word-forms hidden"
-                style="margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
-              <div id="pa-reference-status" class="pa-reference-status" aria-live="polite"></div>
-              <div class="pa-merged-info-box">
-                <div id="pa-word-info" class="pa-word-info">
-                  <div class="pa-ipa-summary">
-                    <div class="pa-ipa-label-val">
-                      <span class="pa-info-label">American IPA</span>
-                      <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊtəˌɡræf/</span>
+            <div class="pa-input-section">
+              <div class="pa-word-input-container">
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                  <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph" style="flex: 1;">
+                  <button id="pa-search-btn" class="pa-btn pa-search-btn" title="Search word">
+                    🔍 Search
+                  </button>
+                </div>
+
+                <div id="pa-word-forms" class="pa-word-forms hidden"
+                  style="margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
+                <div id="pa-reference-status" class="pa-reference-status" aria-live="polite"></div>
+                <div class="pa-merged-info-box">
+                  <div id="pa-word-info" class="pa-word-info">
+                    <div class="pa-ipa-summary">
+                      <div class="pa-ipa-label-val">
+                        <span class="pa-info-label">American IPA</span>
+                        <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊtəˌɡræf/</span>
+                      </div>
+                      <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
+                        <button id="pa-play-native-btn" class="pa-btn-play-native" type="button" title="Listen to native speaker">
+                          🔊 Listen
+                        </button>
+                        <span id="pa-audio-source-label" class="pa-audio-source-label"></span>
+                        <audio id="pa-native-audio" preload="none"></audio>
+                      </div>
                     </div>
-                    <!-- Native Audio Player -->
-                    <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
-                      <button id="pa-play-native-btn" class="pa-btn-play-native" type="button" title="Listen to native speaker">
-                        🔊 Listen
-                      </button>
-                      <span id="pa-audio-source-label" class="pa-audio-source-label"></span>
-                      <audio id="pa-native-audio" preload="none"></audio>
-                    </div>
-                  </div>
-                  <div class="pa-pattern-summary" aria-labelledby="pa-pattern-heading">
-                    <span id="pa-pattern-heading" class="pa-info-label">Stress pattern</span>
-                    <div class="pa-pattern-facts" aria-hidden="true">
-                      <span class="pa-pattern-fact pa-pattern-fact--count">
-                        <strong id="pa-syllable-count">3 syllables</strong>
+                    <div class="pa-pattern-summary" aria-labelledby="pa-pattern-heading">
+                      <span id="pa-pattern-heading" class="pa-info-label">Stress pattern</span>
+                      <div class="pa-pattern-facts" aria-hidden="true">
+                        <span class="pa-pattern-fact pa-pattern-fact--count">
+                          <strong id="pa-syllable-count">3 syllables</strong>
+                        </span>
+                        <span id="pa-primary-stress-fact" class="pa-pattern-fact pa-pattern-fact--primary">
+                          <span class="pa-pattern-fact-label">Primary stress</span>
+                          <strong id="pa-primary-stress">PHO</strong>
+                        </span>
+                        <span id="pa-secondary-stress-fact" class="pa-pattern-fact pa-pattern-fact--secondary">
+                          <span class="pa-pattern-fact-label">Secondary</span>
+                          <strong id="pa-secondary-stress">GRAPH</strong>
+                        </span>
+                      </div>
+                      <div id="pa-syllable-strip" class="pa-syllable-strip" aria-hidden="true"></div>
+                      <span id="pa-pattern-display" class="pa-sr-only">
+                        3 syllables. Primary stress on PHO, syllable 1. Secondary stress on GRAPH, syllable 3.
                       </span>
-                      <span id="pa-primary-stress-fact" class="pa-pattern-fact pa-pattern-fact--primary">
-                        <span class="pa-pattern-fact-label">Primary stress</span>
-                        <strong id="pa-primary-stress">PHO</strong>
-                      </span>
-                      <span id="pa-secondary-stress-fact" class="pa-pattern-fact pa-pattern-fact--secondary">
-                        <span class="pa-pattern-fact-label">Secondary</span>
-                        <strong id="pa-secondary-stress">GRAPH</strong>
-                      </span>
-                    </div>
-                    <div id="pa-syllable-strip" class="pa-syllable-strip" aria-hidden="true"></div>
-                    <span id="pa-pattern-display" class="pa-sr-only">
-                      3 syllables. Primary stress on PHO, syllable 1. Secondary stress on GRAPH, syllable 3.
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Loading Placeholder -->
-              <div id="pa-loading-placeholder" class="pa-loading-container" style="display: none;">
-                <div class="pa-spinner" style="display: block; margin: 0;"></div>
-                <div class="pa-loading-text">Loading data...</div>
-              </div>
-            </div>
-          </div>
-
-          <div id="pa-spinner" class="pa-spinner" style="display: none;"></div>
-
-          <div id="pa-results-summary" class="pa-results">
-            Record and speak a word to analyze stress.
-          </div>
-
-          <!-- Review layout: single-column for learners; when the admin
-               comparison is active a sticky bottom bar keeps the judgment
-               controls and save button in view while the reviewer scrolls. -->
-          <div id="pa-review-layout" class="pa-review-layout">
-            <div class="pa-review-main">
-              <!-- Admin-only V2/V3 comparison. The normal learner result remains
-                   above; this section is revealed only after the admin gate. -->
-              <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
-                <div class="pa-version-comparison-header">
-                  <div>
-                    <p class="pa-version-eyebrow">Admin comparison</p>
-                    <h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3>
-                    <p class="pa-version-description">Both engines analyzed the same recording. Inspect the boundaries, then save your judgment.</p>
-                  </div>
-                  <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
-                </div>
-
-                <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
-                  <article id="pa-version-v2" class="pa-version-column" aria-labelledby="pa-version-v2-title"></article>
-                  <article id="pa-version-v3" class="pa-version-column" aria-labelledby="pa-version-v3-title"></article>
-                </div>
-              </section>
-
-              <div id="pa-charts-container" class="pa-charts-grid">
-                <div class="pa-chart-card">
-                  <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
-                    <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
-                      <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
-                      <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
                     </div>
                   </div>
-                  <canvas id="pa-pitch-chart"></canvas>
                 </div>
-                <div class="pa-chart-card">
-                  <div class="pa-chart-title">Syllable Duration Comparison</div>
-                  <canvas id="pa-stress-chart"></canvas>
+
+                <div id="pa-loading-placeholder" class="pa-loading-container" style="display: none;">
+                  <div class="pa-spinner" style="display: block; margin: 0;"></div>
+                  <div class="pa-loading-text">Loading data...</div>
                 </div>
               </div>
-
-              <!-- Syllable Verification (Waveform) -->
-              <div id="syllable-verifier-container"></div>
             </div>
 
-            <div id="pa-version-review-bar" class="pa-version-review-bar" hidden aria-label="Comparison controls">
-              <fieldset id="pa-version-judgment" class="pa-version-judgment">
-                <legend>Which version is more accurate?</legend>
-                <div class="pa-version-judgment-options">
-                  <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
-                  <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
-                  <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
-                  <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
-                </div>
-              </fieldset>
-              <div class="pa-version-save-row">
-                <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
-                <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
-              </div>
-              <details id="pa-version-technical-details" class="pa-version-technical-details">
-                <summary>Technical details</summary>
-                <pre id="pa-version-technical-content"></pre>
-              </details>
+            <div id="pa-spinner" class="pa-spinner" style="display: none;"></div>
+
+            <div id="pa-results-summary" class="pa-results">
+              Record and speak a word to analyze stress.
             </div>
           </div>
 
-          <!-- Detailed Feedback Section -->
-          <div id="pa-feedback-section" class="pa-feedback-section" style="display: none;">
-            <div class="pa-feedback-header">
-              <h3>🔍 Detailed Analysis</h3>
-              <div id="pa-syllable-tabs" class="pa-syllable-tabs">
-                <!-- Tabs will be injected here -->
+          <div class="pa-tab-panel" id="pa-panel-analysis" role="tabpanel">
+            <div id="pa-analysis-empty" class="pa-feedback-empty">
+              Record a word to see pitch, duration, and waveform analysis here.
+            </div>
+            <div id="pa-review-layout" class="pa-review-layout">
+              <div class="pa-review-main">
+                <section id="pa-version-comparison" class="pa-version-comparison" hidden aria-labelledby="pa-version-comparison-title">
+                  <div class="pa-version-comparison-header">
+                    <div>
+                      <p class="pa-version-eyebrow">Admin comparison</p>
+                      <h3 id="pa-version-comparison-title">Which analysis matches the recording?</h3>
+                      <p class="pa-version-description">Both engines analyzed the same recording. Inspect the boundaries, then save your judgment.</p>
+                    </div>
+                    <span id="pa-version-comparison-state" class="pa-version-state" role="status">Ready for review</span>
+                  </div>
+
+                  <div id="pa-version-columns" class="pa-version-columns" role="group" aria-label="Pronunciation engine comparison">
+                    <article id="pa-version-v2" class="pa-version-column" aria-labelledby="pa-version-v2-title"></article>
+                    <article id="pa-version-v3" class="pa-version-column" aria-labelledby="pa-version-v3-title"></article>
+                  </div>
+                </section>
+
+                <div id="pa-charts-container" class="pa-charts-grid">
+                  <div class="pa-chart-card">
+                    <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
+                      <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
+                        <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
+                        <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+                      </div>
+                    </div>
+                    <canvas id="pa-pitch-chart"></canvas>
+                  </div>
+                  <div class="pa-chart-card">
+                    <div class="pa-chart-title">Syllable Duration Comparison</div>
+                    <canvas id="pa-stress-chart"></canvas>
+                  </div>
+                </div>
+
+                <div id="syllable-verifier-container"></div>
+              </div>
+
+              <div id="pa-version-review-bar" class="pa-version-review-bar" hidden aria-label="Comparison controls">
+                <fieldset id="pa-version-judgment" class="pa-version-judgment">
+                  <legend>Which version is more accurate?</legend>
+                  <div class="pa-version-judgment-options">
+                    <label><input type="radio" name="pa-version-judgment" value="v2"> V2 is more accurate</label>
+                    <label><input type="radio" name="pa-version-judgment" value="v3"> V3 is more accurate</label>
+                    <label><input type="radio" name="pa-version-judgment" value="tie"> They are about the same</label>
+                    <label><input type="radio" name="pa-version-judgment" value="neither"> Neither is accurate</label>
+                  </div>
+                </fieldset>
+                <div class="pa-version-save-row">
+                  <button id="pa-version-save" type="button" class="pa-btn pa-version-save" disabled>Save comparison</button>
+                  <span id="pa-version-save-status" class="pa-version-save-status" role="status" aria-live="polite"></span>
+                </div>
+                <details id="pa-version-technical-details" class="pa-version-technical-details">
+                  <summary>Technical details</summary>
+                  <pre id="pa-version-technical-content"></pre>
+                </details>
               </div>
             </div>
+          </div>
 
-            <div id="pa-feedback-content" class="pa-feedback-content">
-              <!-- Feedback content will be injected here -->
+          <div class="pa-tab-panel" id="pa-panel-feedback" role="tabpanel">
+            <div id="pa-feedback-empty" class="pa-feedback-empty">
+              Record a word to see detailed syllable-by-syllable feedback here.
+            </div>
+            <div id="pa-feedback-section" class="pa-feedback-section" style="display: none;">
+              <div class="pa-feedback-header">
+                <h3>Detailed Analysis</h3>
+                <div id="pa-syllable-tabs" class="pa-syllable-tabs"></div>
+              </div>
+
+              <div id="pa-feedback-content" class="pa-feedback-content"></div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -6036,7 +6042,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.73"></script>
+  <script src="/read-aloud-mode.js?v=1.8.74"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

@@ -16,17 +16,18 @@ For each durable package, update `project_progress.md` at most twice: once to ac
 
 ## Specialist roles
 
-- `explorer`: read-only investigation of bounded code, tools, libraries, applications, or configuration.
-- `executor_luna`: default implementation worker.
-- `executor_sol`: exceptional fallback for difficult cross-cutting work that cannot be narrowed; never use more than one at a time.
-- `tester`: independent focused testing and failure analysis.
-- `doc-writer`: verified durable documentation, excluding the two main-agent-owned status files.
+- `researcher`: read-only repository and official-documentation investigation.
+- `browser_debugger`: read-only Chrome DevTools MCP reproduction and UI evidence; it never edits application code.
+- `coder`: default implementation and test worker.
+- `reviewer`: read-only actual-diff review using Terra when stronger reasoning is warranted.
+- Existing `explorer`, `tester`, and `doc-writer` profiles remain available for narrower specialist work when they fit better than the primary team.
+- Never spawn a Sol subagent. Do not use the legacy `executor_sol` role as a Sol worker; Sol is reserved for the main/root lead.
 
 Use a proportionate worker count. Every spawn must use `fork_turns="none"`. A first task capsule must be self-contained and no more than 400 words, with: task ID, outcome, ownership, acceptance criteria, source paths, validation, protected areas, and return format. Include only necessary documents, source/test interfaces, expected edit surface, and protected scope.
 
 Workers may inspect adjacent dependencies only to diagnose a blocker. They must report evidence and proposed scope changes, then wait for the main agent to amend ownership. Subagents must not edit Git state, `project_progress.md`, or `latest_session_work.md`.
 
-Start with `executor_luna` for implementation. Add the tester after the executor's smallest relevant self-check unless parallel test research is clearly independent. Delegate documentation only after verification. Split work only across genuinely independent modules or files.
+Use `researcher` and/or `browser_debugger` for bounded investigation when evidence is needed. Send an authorized plan to `coder`, then have `reviewer` inspect the actual diff. Return valid findings to the same `coder`; use `browser_debugger` for relevant UI verification. Delegate documentation only after verification. Split work only across genuinely independent modules or files. The main/root lead makes the final decision.
 
 Follow-ups should normally be no more than 120 words and contain only package ID, iteration, changed state, new evidence, affected criterion, and next action. Worker events are `proof`, `defect`, `blocker`, `replacement/takeover`, and `final`; intent-only updates are not evidence.
 
@@ -40,10 +41,10 @@ Use waits of about 60 seconds and rely on events instead of frequent polling. St
 
 ## Execution and verification
 
-1. Executor implements a coherent increment and runs the smallest relevant check.
-2. Executor repairs scoped production failures and reruns until validation passes or a genuine blocker is evidenced.
-3. Tester adds or updates deterministic coverage, runs the focused gate, then the required broader regression.
-4. Tester fixes only test, fixture, mock, or test-data defects; production defects return to the executor.
+1. `coder` implements a coherent increment and runs the smallest relevant check.
+2. `reviewer` inspects the actual diff and returns only validated, actionable findings.
+3. `coder` repairs valid scoped findings and reruns focused and required broader checks.
+4. `browser_debugger` verifies relevant UI behavior and captures screenshots, console, and network evidence without editing application code.
 5. Repeat only in response to new evidence; never weaken validation or claim unrun checks passed.
 
 The main agent should not rerun checks already evidenced by the responsible role unless later changes, conflicting evidence, or integration risk invalidate them. Keep changes within approved plan boundaries and avoid unrelated refactors, silent error suppression, and unplanned public API or schema changes.

@@ -1,0 +1,172 @@
+- region [ref=e2491] [box=32,27748,850,954]:
+  - generic [ref=e2492] [box=32,27768,850,103]:
+    - generic [ref=e2493] [box=32,27768,548,52]:
+      - heading "Segmentation Study" [level=3] [ref=e2494] [box=32,27768,548,24]
+      - paragraph [ref=e2495] [box=32,27798,548,22]: Record one clear word, compare V2/V3/V4, then mark the shared syllable boundaries.
+    - generic [ref=e2496] [box=32,27829,407,41]:
+      - generic [ref=e2497] [box=32,27842,59,15]: Your name
+      - textbox "Your name" [ref=e2498] [box=99,27829,180,41]:
+        - /placeholder: Enter your name
+      - status [ref=e2499] [box=287,27839,152,22]: Enter your name to join.
+  - navigation "Segmentation study mode" [ref=e2500] [box=32,27888,850,36]:
+    - button "Record & review" [ref=e2501] [cursor=pointer] [box=32,27888,130,36]
+    - button "Previous samples" [ref=e2502] [cursor=pointer] [box=168,27888,139,36]
+  - generic "Segmentation study progress" [ref=e2503] [box=32,27936,850,43]:
+    - generic [ref=e2504] [box=32,27946,86,23]:
+      - strong [ref=e2505] [box=32,27946,31,23]: "100"
+      - text: available
+    - generic [ref=e2506] [box=134,27946,65,23]:
+      - strong [ref=e2507] [box=134,27946,12,23]: "0"
+      - text: reserved
+    - generic [ref=e2508] [box=215,27946,76,23]:
+      - strong [ref=e2509] [box=215,27946,12,23]: "0"
+      - text: completed
+    - generic [ref=e2510] [box=307,27946,69,23]:
+      - strong [ref=e2511] [box=307,27946,12,23]: "0"
+      - text: uncertain
+    - generic [ref=e2512] [box=392,27946,47,23]:
+      - strong [ref=e2513] [box=392,27946,12,23]: "0"
+      - text: failed
+  - generic [ref=e2514] [box=32,27993,850,32]:
+    - button "Claim next word" [disabled] [ref=e2515] [box=32,27993,130,32]
+    - button "Skip / release word" [disabled] [ref=e2516] [cursor=pointer] [box=172,27993,146,32]
+    - button "Refresh" [ref=e2517] [cursor=pointer] [box=327,27993,79,32]
+    - status [ref=e2518] [box=416,27998,147,22]: Study queue refreshed.
+  - generic [ref=e2519] [box=32,28039,850,663]:
+    - generic [ref=e2520] [box=32,28039,280,663]:
+      - heading "Study queue" [level=4] [ref=e2521] [box=32,28039,280,20]
+      - paragraph [ref=e2522] [box=32,28065,280,65]: The shared queue reserves one word at a time. Previous samples are shown after you choose that mode.
+      - list "Segmentation study words" [ref=e2523] [box=32,28142,280,560]:
+        - listitem [ref=e2524] [box=58,28142,254,32]: able · 2 syllables · available
+        - listitem [ref=e2525] [box=58,28174,254,32]: about · 2 syllables · available
+        - listitem [ref=e2526] [box=58,28206,254,32]: above · 2 syllables · available
+        - listitem [ref=e2527] [box=58,28238,254,32]: abroad · 2 syllables · available
+        - listitem [ref=e2528] [box=58,28270,254,32]: absence · 2 syllables · available
+        - listitem [ref=e2529] [box=58,28302,254,32]: absent · 2 syllables · available
+        - listitem [ref=e2530] [box=58,28334,254,32]: absorb · 2 syllables · available
+        - listitem [ref=e2531] [box=58,28366,254,32]: absurd · 2 syllables · available
+        - listitem [ref=e2532] [box=58,28398,254,32]: access · 2 syllables · available
+        - listitem [ref=e2533] [box=58,28430,254,32]: account · 2 syllables · available
+        - listitem [ref=e2534] [box=58,28462,254,32]: accurate · 2 syllables · available
+        - listitem [ref=e2535] [box=58,28494,254,32]: accuse · 2 syllables · available
+        - listitem [ref=e2536] [box=58,28526,254,32]: accused · 2 syllables · available
+        - listitem [ref=e2537] [box=58,28558,254,32]: acquire · 2 syllables · available
+        - listitem [ref=e2538] [box=58,28590,254,32]: acre · 2 syllables · available
+        - listitem [ref=e2539] [box=58,28622,254,32]: admire · 2 syllables · available
+        - listitem [ref=e2540] [box=58,28654,254,32]: admit · 2 syllables · available
+        - listitem [ref=e2541] [box=58,28686,254,32]: almost · 2 syllables · available
+        - listitem [ref=e2542] [box=58,28718,254,32]: amazed · 2 syllables · available
+        - listitem [ref=e2543] [box=58,28750,254,32]: amend · 2 syllables · available
+        - listitem [ref=e2544] [box=58,28782,254,32]: arise · 2 syllables · available
+        - listitem [ref=e2545] [box=58,28814,254,32]: arrange · 2 syllables · available
+        - listitem [ref=e2546] [box=58,28846,254,32]: array · 2 syllables · available
+        - listitem [ref=e2547] [box=58,28878,254,32]: arrest · 2 syllables · available
+        - listitem [ref=e2548] [box=58,28910,254,32]: arrive · 2 syllables · available
+        - listitem [ref=e2549] [box=58,28942,254,32]: abolish · 3 syllables · available
+        - listitem [ref=e2550] [box=58,28974,254,32]: abortion · 3 syllables · available
+        - listitem [ref=e2551] [box=58,29006,254,32]: absolute · 3 syllables · available
+        - listitem [ref=e2552] [box=58,29038,254,32]: accident · 3 syllables · available
+        - listitem [ref=e2553] [box=58,29070,254,32]: accomplish · 3 syllables · available
+        - listitem [ref=e2554] [box=58,29102,254,32]: accuracy · 3 syllables · available
+        - listitem [ref=e2555] [box=58,29134,254,32]: acknowledge · 3 syllables · available
+        - listitem [ref=e2556] [box=58,29166,254,32]: activate · 3 syllables · available
+        - listitem [ref=e2557] [box=58,29198,254,32]: adjustment · 3 syllables · available
+        - listitem [ref=e2558] [box=58,29230,254,32]: agreement · 3 syllables · available
+        - listitem [ref=e2559] [box=58,29262,254,32]: alignment · 3 syllables · available
+        - listitem [ref=e2560] [box=58,29294,254,32]: allocate · 3 syllables · available
+        - listitem [ref=e2561] [box=58,29326,254,32]: analyst · 3 syllables · available
+        - listitem [ref=e2562] [box=58,29358,254,32]: apartment · 3 syllables · available
+        - listitem [ref=e2563] [box=58,29390,254,32]: appointment · 3 syllables · available
+        - listitem [ref=e2564] [box=58,29422,254,32]: arena · 3 syllables · available
+        - listitem [ref=e2565] [box=58,29454,254,32]: arrangement · 3 syllables · available
+        - listitem [ref=e2566] [box=58,29486,254,32]: arrival · 3 syllables · available
+        - listitem [ref=e2567] [box=58,29518,254,32]: audio · 3 syllables · available
+        - listitem [ref=e2568] [box=58,29550,254,32]: authorize · 3 syllables · available
+        - listitem [ref=e2569] [box=58,29582,254,32]: cigarette · 3 syllables · available
+        - listitem [ref=e2570] [box=58,29614,254,32]: correction · 3 syllables · available
+        - listitem [ref=e2571] [box=58,29646,254,32]: correctly · 3 syllables · available
+        - listitem [ref=e2572] [box=58,29678,254,32]: generate · 3 syllables · available
+        - listitem [ref=e2573] [box=58,29710,254,32]: summarize · 3 syllables · available
+        - listitem [ref=e2574] [box=58,29742,254,32]: accomplishment · 4 syllables · available
+        - listitem [ref=e2575] [box=58,29774,254,32]: agriculture · 4 syllables · available
+        - listitem [ref=e2576] [box=58,29806,254,32]: analogy · 4 syllables · available
+        - listitem [ref=e2577] [box=58,29838,254,32]: appreciate · 4 syllables · available
+        - listitem [ref=e2578] [box=58,29870,254,32]: biography · 4 syllables · available
+        - listitem [ref=e2579] [box=58,29902,254,32]: biology · 4 syllables · available
+        - listitem [ref=e2580] [box=58,29934,254,32]: characterize · 4 syllables · available
+        - listitem [ref=e2581] [box=58,29966,254,32]: coincidence · 4 syllables · available
+        - listitem [ref=e2582] [box=58,29998,254,32]: collaborate · 4 syllables · available
+        - listitem [ref=e2583] [box=58,30030,254,32]: combination · 4 syllables · available
+        - listitem [ref=e2584] [box=58,30062,254,32]: commentary · 4 syllables · available
+        - listitem [ref=e2585] [box=58,30094,254,32]: communicate · 4 syllables · available
+        - listitem [ref=e2586] [box=58,30126,254,32]: congressional · 4 syllables · available
+        - listitem [ref=e2587] [box=58,30158,254,32]: corporation · 4 syllables · available
+        - listitem [ref=e2588] [box=58,30190,254,32]: declaration · 4 syllables · available
+        - listitem [ref=e2589] [box=58,30222,254,32]: democratic · 4 syllables · available
+        - listitem [ref=e2590] [box=58,30254,254,32]: deteriorate · 4 syllables · available
+        - listitem [ref=e2591] [box=58,30286,254,32]: diplomatic · 4 syllables · available
+        - listitem [ref=e2592] [box=58,30318,254,32]: disappointment · 4 syllables · available
+        - listitem [ref=e2593] [box=58,30350,254,32]: generation · 4 syllables · available
+        - listitem [ref=e2594] [box=58,30382,254,32]: immediately · 4 syllables · available
+        - listitem [ref=e2595] [box=58,30414,254,32]: initiate · 4 syllables · available
+        - listitem [ref=e2596] [box=58,30446,254,32]: original · 4 syllables · available
+        - listitem [ref=e2597] [box=58,30478,254,32]: originate · 4 syllables · available
+        - listitem [ref=e2598] [box=58,30510,254,32]: parameter · 4 syllables · available
+        - listitem [ref=e2599] [box=58,30542,254,32]: accommodation · 5 syllables · available
+        - listitem [ref=e2600] [box=58,30574,254,32]: administration · 5 syllables · available
+        - listitem [ref=e2601] [box=58,30606,254,32]: administrative · 5 syllables · available
+        - listitem [ref=e2602] [box=58,30638,254,32]: administrator · 5 syllables · available
+        - listitem [ref=e2603] [box=58,30670,254,32]: appreciation · 5 syllables · available
+        - listitem [ref=e2604] [box=58,30702,254,32]: approximately · 5 syllables · available
+        - listitem [ref=e2605] [box=58,30734,254,32]: characteristic · 5 syllables · available
+        - listitem [ref=e2606] [box=58,30766,254,32]: collaboration · 5 syllables · available
+        - listitem [ref=e2607] [box=58,30798,254,32]: communication · 5 syllables · available
+        - listitem [ref=e2608] [box=58,30830,254,32]: consideration · 5 syllables · available
+        - listitem [ref=e2609] [box=58,30862,254,32]: constitutional · 5 syllables · available
+        - listitem [ref=e2610] [box=58,30894,254,32]: contemporary · 5 syllables · available
+        - listitem [ref=e2611] [box=58,30926,254,32]: curiosity · 5 syllables · available
+        - listitem [ref=e2612] [box=58,30958,254,32]: experimental · 5 syllables · available
+        - listitem [ref=e2613] [box=58,30990,254,32]: ideology · 5 syllables · available
+        - listitem [ref=e2614] [box=58,31022,254,32]: imaginary · 5 syllables · available
+        - listitem [ref=e2615] [box=58,31054,254,32]: inability · 5 syllables · available
+        - listitem [ref=e2616] [box=58,31086,254,32]: inevitably · 5 syllables · available
+        - listitem [ref=e2617] [box=58,31118,254,32]: negotiation · 5 syllables · available
+        - listitem [ref=e2618] [box=58,31150,254,32]: operational · 5 syllables · available
+        - listitem [ref=e2619] [box=58,31182,254,32]: personality · 5 syllables · available
+        - listitem [ref=e2620] [box=58,31214,254,32]: sexuality · 5 syllables · available
+        - listitem [ref=e2621] [box=58,31246,254,32]: significantly · 5 syllables · available
+        - listitem [ref=e2622] [box=58,31278,254,32]: technological · 5 syllables · available
+        - listitem [ref=e2623] [box=58,31310,254,32]: temporarily · 5 syllables · available
+    - generic [ref=e2624] [box=334,28039,548,589]:
+      - generic [ref=e2625] [box=334,28039,548,64]:
+        - generic [ref=e2626] [box=334,28039,307,64]:
+          - text: Step 1 · Claim a word
+          - heading "No word claimed" [level=4] [ref=e2627] [box=334,28062,307,20]
+          - paragraph [ref=e2628] [box=334,28088,307,15]: The selected word and IPA will appear here.
+        - generic [ref=e2629] [box=797,28039,85,23]: Not reserved
+      - generic [ref=e2630] [box=334,28103,548,32]:
+        - button "Record" [disabled] [ref=e2631] [box=334,28103,75,32]
+        - button "Stop" [disabled] [ref=e2632] [cursor=pointer] [box=419,28103,60,32]
+        - button "Redo" [disabled] [ref=e2633] [cursor=pointer] [box=489,28103,63,32]
+        - generic [ref=e2634] [box=561,28104,145,30]:
+          - text: Playback speed
+          - combobox "Playback speed" [ref=e2635] [box=651,28104,56,30]:
+            - option "0.5×" [box=0,0,0,0]
+            - option "0.75×" [box=0,0,0,0]
+            - option "1×" [selected] [box=0,0,0,0]
+            - option "1.25×" [box=0,0,0,0]
+        - status [ref=e2636] [box=717,28108,110,22]: No recording yet.
+      - generic [ref=e2637] [box=334,28135,548,32]:
+        - button "Analyze V2/V3/V4" [disabled] [ref=e2638] [cursor=pointer] [box=334,28135,144,32]
+        - status [ref=e2639] [box=488,28140,216,22]: Analysis is required before review.
+      - tablist "Automatic and manual boundaries" [ref=e2640] [box=334,28185,548,36]:
+        - tab "V2" [selected] [ref=e2641] [cursor=pointer] [box=334,28185,42,36]
+        - tab "V3" [ref=e2642] [cursor=pointer] [box=382,28185,42,36]
+        - tab "V4" [ref=e2643] [cursor=pointer] [box=431,28185,42,36]
+        - tab "Manual review" [ref=e2644] [cursor=pointer] [box=479,28185,117,36]
+      - generic "Aligned waveform and spectrogram" [ref=e2645] [box=334,28235,548,266]: Record or load a sample to see its waveform and spectrogram.
+      - tabpanel "V2" [ref=e2651] [box=334,28500,548,52]
+      - status [ref=e2652] [box=334,28560,548,24]
+      - generic [ref=e2653] [box=334,28584,548,44]:
+        - button "Save sample" [disabled] [ref=e2654] [box=670,28596,108,32]
+        - button "Next word" [disabled] [ref=e2655] [cursor=pointer] [box=788,28596,94,32]

@@ -8,6 +8,10 @@ const rules = fs.readFileSync('firestore.rules', 'utf8');
 assert.match(header, /notification-center-toggle/);
 assert.match(header, /notification-center-panel/);
 assert.match(center, /user_notifications/);
+assert.match(
+  center,
+  /const notificationsQuery\s*=\s*query\(\s*collection\([^)]*['"]user_notifications['"]\)\s*,\s*where\(\s*['"]uid['"]\s*,\s*['"]==['"]\s*,\s*user\.uid\s*\)\s*,\s*orderBy\(\s*['"]createdAt['"]\s*,\s*['"]desc['"]\s*\)/
+);
 assert.match(center, /isRead/);
 assert.match(header, /Mark all read/);
 assert.match(rules, /match \/user_notifications\/{notificationId}/);

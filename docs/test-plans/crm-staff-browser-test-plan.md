@@ -1,7 +1,7 @@
 # CRM Staff + Class Management Browser Test Plan (Chrome / Playwright)
 
 This plan verifies the CRM admin staff surface and the class-management modal after the production-only error fixes:
-- No automatic `http://localhost:11434` Ollama probe on production-like loads
+- No automatic `http://localhost:11434` Ollama probe on production-like loads; use the authenticated Essay AI worker status endpoint instead
 - No automatic `sync-from-prod` dev-tools fetches outside local runs
 - Teacher list loads from `GET /api/admin/teachers`
 - Teacher creation works from the Staff page
@@ -34,7 +34,8 @@ This plan verifies the CRM admin staff surface and the class-management modal af
   - `https://betterenglishlearning.com/crm-admin.html#staff`
 - Expected:
   - The Staff panel loads.
-  - The Ollama badge shows `Offline` without a localhost CORS error.
+  - The Ollama badge shows `Online (worker)` without a localhost CORS error.
+  - Refreshing the badge re-checks `GET /api/admin/essay-ai/status`.
   - The console does not show `GET /api/admin/sync-from-prod/... 404`.
   - The teacher table shows at least one teacher row.
 
@@ -57,4 +58,3 @@ This plan verifies the CRM admin staff surface and the class-management modal af
   - The teacher search dropdown shows teacher names from `GET /api/admin/teachers`.
   - Selecting a teacher updates the hidden teacher UID field.
   - Saving the classroom refreshes the class list without console errors.
-

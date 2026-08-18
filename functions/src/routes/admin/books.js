@@ -2,11 +2,14 @@ const crypto = require('crypto');
 const {
     CRM_BOOKS,
     CRM_BOOK_INGEST_JOBS,
-    CRM_RECYCLE_BIN
+    CRM_RECYCLE_BIN,
+    CRM_BOOK_LINKS,
+    CRM_BOOK_COLLECTIONS,
+    CRM_BOOK_SHARES
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
-const { generateChapterStudyNotes, generateBookMindMap } = require('../../crm/book-summary-service');
+const { generateChapterStudyNotes, generateBookMindMap, expandMindMapNode, compileResearch } = require('../../crm/book-summary-service');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
 const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
@@ -1065,6 +1068,231 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { audioId }, 'Audio track deleted.');
         } catch (error) {
             return sendError(res, 500, 'DELETE_AUDIO_ERROR', 'Failed to delete audio track.', error?.message || error);
+        }
+    });
+
+    // ─── Mind Map: AI Node Expansion ───
+    router.post('/books/:bookId/mind-map/expand', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const { bookId } = req.params;
+            const nodeTitle = String(req.body?.nodeTitle || '').trim();
+            const nodeSummary = String(req.body?.nodeSummary || '').trim();
+
+            if (!nodeTitle) {
+                return sendError(res, 400, 'MISSING_TITLE', 'nodeTitle is required.');
+            }
+
+            const usage = await getUsageSummary(db);
+            if (usage && usage.isOverBudget && !usage.overageApproved) {
+                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
+            }
+
+            const result = await expandMindMapNode(db, bookId, nodeTitle, nodeSummary);
+
+            await writeAuditLog?.({
+                action: 'book.mind_map_expand',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { nodeTitle, subtopicCount: result.subtopics.length }
+            }, { user: req.user });
+
+            return sendSuccess(res, result, 'Node expanded successfully.');
+        } catch (error) {
+            if (error.code === 'not-found') {
+                return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            }
+            return sendError(res, 500, 'EXPAND_NODE_ERROR', 'Failed to expand node.', error?.message || error);
+        }
+    });
+
+    // ─── Research Compilation ───
+    router.post('/books/:bookId/compile', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const { bookId } = req.params;
+            const bookTitle = String(req.body?.bookTitle || '').trim();
+            const sources = req.body?.sources || {};
+
+            const usage = await getUsageSummary(db);
+            if (usage && usage.isOverBudget && !usage.overageApproved) {
+                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
+            }
+
+            const result = await compileResearch(db, bookId, bookTitle, sources);
+
+            await writeAuditLog?.({
+                action: 'book.compile_research',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { bookTitle }
+            }, { user: req.user });
+
+            return sendSuccess(res, result, 'Research compiled successfully.');
+        } catch (error) {
+            if (error.code === 'not-found') {
+                return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            }
+            return sendError(res, 500, 'COMPILE_ERROR', 'Failed to compile research.', error?.message || error);
+        }
+    });
+
+    // ─── Cross-Book Links (Knowledge Graph) ───
+    router.get('/book-links', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const snap = await db.collection(CRM_BOOK_LINKS).orderBy('createdAt', 'desc').limit(500).get();
+            const links = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return sendSuccess(res, { links });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_LINKS_ERROR', 'Failed to list book links.', error?.message || error);
+        }
+    });
+
+    router.post('/book-links', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const sourceBookId = cleanStr(req.body?.sourceBookId);
+            const sourceNodeId = cleanStr(req.body?.sourceNodeId);
+            const sourceTitle = cleanStr(req.body?.sourceTitle);
+            const targetBookId = cleanStr(req.body?.targetBookId);
+            const targetNodeId = cleanStr(req.body?.targetNodeId);
+            const targetTitle = cleanStr(req.body?.targetTitle);
+            const label = cleanStr(req.body?.label, 'related');
+
+            if (!sourceBookId || !targetBookId) {
+                return sendError(res, 400, 'MISSING_FIELDS', 'sourceBookId and targetBookId are required.');
+            }
+            if (sourceBookId === targetBookId) {
+                return sendError(res, 400, 'SELF_LINK', 'Cannot link a book to itself.');
+            }
+
+            const linkDoc = {
+                sourceBookId, sourceNodeId, sourceTitle,
+                targetBookId, targetNodeId, targetTitle,
+                label,
+                createdBy: req.user?.uid || '',
+                createdAt: serverTimestamp()
+            };
+            const ref = await db.collection(CRM_BOOK_LINKS).add(linkDoc);
+            return sendSuccess(res, { id: ref.id, ...linkDoc }, 'Link created.');
+        } catch (error) {
+            return sendError(res, 500, 'CREATE_LINK_ERROR', 'Failed to create link.', error?.message || error);
+        }
+    });
+
+    router.delete('/book-links/:linkId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const linkId = cleanStr(req.params.linkId);
+            if (!linkId) return sendError(res, 400, 'MISSING_ID', 'Link ID is required.');
+            const snap = await db.collection(CRM_BOOK_LINKS).doc(linkId).get();
+            if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Link not found.');
+            await db.collection(CRM_BOOK_LINKS).doc(linkId).delete();
+            return sendSuccess(res, { linkId }, 'Link deleted.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_LINK_ERROR', 'Failed to delete link.', error?.message || error);
+        }
+    });
+
+    // ─── Shareable Mind Map Links ───
+    router.post('/books/:bookId/mind-map/share', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const { bookId } = req.params;
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            if (!bookSnap.exists) return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+
+            const token = crypto.randomBytes(24).toString('hex');
+            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+            const mindMapSnap = await db.collection(CRM_BOOKS).doc(bookId).collection('artifacts').doc('mind_map').get();
+            const mindMapData = mindMapSnap.exists ? mindMapSnap.data() : null;
+
+            const shareDoc = {
+                bookId,
+                bookTitle: bookSnap.data().title || '',
+                token,
+                expiresAt,
+                mindMapSnapshot: mindMapData,
+                createdBy: req.user?.uid || '',
+                createdAt: serverTimestamp()
+            };
+            await db.collection(CRM_BOOK_SHARES).doc(token).set(shareDoc);
+
+            return sendSuccess(res, { token, expiresAt: expiresAt.toISOString(), shareUrl: `/shared-mindmap.html?token=${token}` }, 'Share link created.');
+        } catch (error) {
+            return sendError(res, 500, 'SHARE_ERROR', 'Failed to create share link.', error?.message || error);
+        }
+    });
+
+    router.get('/shared/mind-map/:token', async (req, res) => {
+        try {
+            const shareSnap = await db.collection(CRM_BOOK_SHARES).doc(req.params.token).get();
+            if (!shareSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Share link not found or expired.');
+            const data = shareSnap.data();
+            if (data.expiresAt && new Date(data.expiresAt.toDate?.() || data.expiresAt) < new Date()) {
+                return sendError(res, 410, 'EXPIRED', 'This share link has expired.');
+            }
+            return sendSuccess(res, {
+                bookTitle: data.bookTitle || '',
+                mindMap: data.mindMapSnapshot || null
+            });
+        } catch (error) {
+            return sendError(res, 500, 'SHARED_READ_ERROR', 'Failed to load shared mind map.', error?.message || error);
+        }
+    });
+
+    // ─── Shared Book Collections ───
+    router.get('/book-collections', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const snap = await db.collection(CRM_BOOK_COLLECTIONS).orderBy('createdAt', 'desc').limit(100).get();
+            const collections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return sendSuccess(res, { collections });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_COLLECTIONS_ERROR', 'Failed to list collections.', error?.message || error);
+        }
+    });
+
+    router.post('/book-collections', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const name = cleanStr(req.body?.name);
+            const description = cleanStr(req.body?.description);
+            const bookIds = Array.isArray(req.body?.bookIds) ? req.body.bookIds : [];
+            if (!name) return sendError(res, 400, 'MISSING_NAME', 'Collection name is required.');
+
+            const colDoc = {
+                name, description, bookIds,
+                createdBy: req.user?.uid || '',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+            const ref = await db.collection(CRM_BOOK_COLLECTIONS).add(colDoc);
+            return sendSuccess(res, { id: ref.id, ...colDoc }, 'Collection created.');
+        } catch (error) {
+            return sendError(res, 500, 'CREATE_COLLECTION_ERROR', 'Failed to create collection.', error?.message || error);
+        }
+    });
+
+    router.patch('/book-collections/:collectionId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const updates = {};
+            if (req.body?.name !== undefined) updates.name = cleanStr(req.body.name);
+            if (req.body?.description !== undefined) updates.description = cleanStr(req.body.description);
+            if (Array.isArray(req.body?.bookIds)) updates.bookIds = req.body.bookIds;
+            updates.updatedAt = serverTimestamp();
+
+            await db.collection(CRM_BOOK_COLLECTIONS).doc(req.params.collectionId).update(updates);
+            return sendSuccess(res, { collectionId: req.params.collectionId }, 'Collection updated.');
+        } catch (error) {
+            return sendError(res, 500, 'UPDATE_COLLECTION_ERROR', 'Failed to update collection.', error?.message || error);
+        }
+    });
+
+    router.delete('/book-collections/:collectionId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const collectionId = cleanStr(req.params.collectionId);
+            if (!collectionId) return sendError(res, 400, 'MISSING_ID', 'Collection ID is required.');
+            const snap = await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).get();
+            if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Collection not found.');
+            await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).delete();
+            return sendSuccess(res, { collectionId }, 'Collection deleted.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_COLLECTION_ERROR', 'Failed to delete collection.', error?.message || error);
         }
     });
 

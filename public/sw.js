@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v21';
+const CACHE_VERSION = 'bel-offline-v22';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -17,8 +17,7 @@ const SHELL_URLS = [
   '/arpabet-ipa-map.js',
   '/phonetics.js',
   '/oxford-american-ipa.json',
-  '/ipa-dict.json',
-  '/cmudict.json'
+  '/ipa-dict.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -100,6 +99,9 @@ self.addEventListener('fetch', (event) => {
           if (normalizedPath.startsWith('/landing')) {
             const landingCachedPage = await caches.match('/landing/index.html');
             if (landingCachedPage) return landingCachedPage;
+          } else {
+            const appShell = await caches.match('/index.html');
+            if (appShell) return appShell;
           }
           const offlinePage = await caches.match('/offline.html');
           if (offlinePage) return offlinePage;

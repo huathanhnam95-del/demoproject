@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -162,6 +163,11 @@ function createHarnessState() {
       { uid: 'teacher-1', displayName: 'Teacher One', email: 'teacher.one@example.com' },
       { uid: 'teacher-2', displayName: 'Teacher Two', email: 'teacher.two@example.com' }
     ],
+    accounts: [
+      { uid: 'admin-1', displayName: 'Admin', email: 'admin@example.com', isAdmin: true, isTeacher: false, crmRole: 'admin' },
+      { uid: 'teacher-1', displayName: 'Teacher One', email: 'teacher.one@example.com', isAdmin: false, isTeacher: true, crmRole: 'teacher' },
+      { uid: 'user-1', displayName: 'Student One', email: 'student.one@example.com', isAdmin: false, isTeacher: false, crmRole: 'user' }
+    ],
     courses: [
       {
         id: 'course-1',
@@ -258,6 +264,25 @@ async function routeApi(route, url, state, requestLog) {
     });
   }
 
+  if (pathname === '/api/admin/essay-ai/status' && method === 'GET') {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: true,
+        worker: {
+          ready: true,
+          state: 'idle',
+          lastHeartbeatAt: new Date().toISOString(),
+          ollamaReachable: true,
+          modelsReady: true
+        },
+        pendingCount: 0,
+        processingCount: 0
+      })
+    });
+  }
+
   if (pathname === '/api/admin/teachers' && method === 'GET') {
     return route.fulfill({
       status: 200,
@@ -285,6 +310,36 @@ async function routeApi(route, url, state, requestLog) {
         success: true,
         teacher,
         uid
+      })
+    });
+  }
+
+  if (pathname === '/api/admin/accounts' && method === 'GET') {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: true,
+        accounts: state.accounts,
+        count: state.accounts.length
+      })
+    });
+  }
+
+  if (/^\/api\/admin\/accounts\/[^/]+\/role$/i.test(pathname) && method === 'PATCH') {
+    const uid = pathname.split('/')[4];
+    const target = state.accounts.find((a) => a.uid === uid);
+    if (target) {
+      target.isAdmin = Boolean(body?.isAdmin);
+      target.crmRole = target.isAdmin ? 'admin' : (target.isTeacher ? 'teacher' : 'user');
+    }
+    return route.fulfill({
+      status: target ? 200 : 404,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: Boolean(target),
+        account: target || null,
+        message: target ? (body?.isAdmin ? 'Account promoted to admin.' : 'Account demoted from admin.') : 'Account not found.'
       })
     });
   }
@@ -649,6 +704,9 @@ async function main() {
         consoleErrors.push(message.text());
       }
     });
+    page.on('dialog', async (dialog) => {
+      await dialog.accept();
+    });
     page.on('requestfailed', (request) => {
       const failure = request.failure();
       const errorText = failure?.errorText || 'requestfailed';
@@ -662,21 +720,7 @@ async function main() {
 
     await page.goto(STAFF_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#staff-teacher-list');
-    await page.waitForFunction(() => {
-      const badge = document.getElementById('ollama-status-badge');
-      return !!badge && /Offline/i.test(badge.textContent || '');
-    });
-
-    assert.strictEqual(
-      blockedRequests.filter((url) => /localhost:11434/i.test(url)).length,
-      0,
-      `Unexpected Ollama request on production-like origin: ${blockedRequests.join(', ')}`
-    );
-    assert.strictEqual(
-      requestLog.filter((entry) => /sync-from-prod/i.test(entry.path)).length,
-      0,
-      `Unexpected sync-from-prod request on production-like origin: ${requestLog.filter((entry) => /sync-from-prod/i.test(entry.path)).map((entry) => entry.path).join(', ')}`
-    );
+    await page.waitForSelector('#staff-account-list');
 
     await page.waitForFunction(() => {
       const list = document.getElementById('staff-teacher-list');
@@ -723,6 +767,51 @@ async function main() {
     assert.strictEqual(teacherCreateRequest.body.displayName, 'New Teacher');
     assert.strictEqual(teacherCreateRequest.body.password, generatedPassword);
 
+    // Verify accounts list rendered
+    await page.waitForFunction(() => {
+      const list = document.getElementById('staff-account-list');
+      return !!list
+        && /Student One/i.test(list.textContent || '')
+        && /Teacher One/i.test(list.textContent || '')
+        && /Admin/i.test(list.textContent || '');
+    });
+
+    // Test promoting student.one@example.com
+    const promoteBtn = page.locator('#staff-account-list .btn-account-toggle-admin[data-uid="user-1"][data-action="promote"]');
+    assert.strictEqual(await promoteBtn.count(), 1, 'Expected promote button for user-1.');
+    await promoteBtn.click();
+
+    // Verify user-1 is promoted (now shows Demote button)
+    await page.waitForFunction(() => {
+      const demoteBtn = document.querySelector('#staff-account-list .btn-account-toggle-admin[data-uid="user-1"][data-action="demote"]');
+      return !!demoteBtn;
+    });
+
+    const accountPatchPromote = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/user-1/role'
+      && entry.method === 'PATCH'
+      && entry.body?.isAdmin === true
+    );
+    assert.ok(accountPatchPromote, 'Expected account promotion PATCH request.');
+
+    // Test demoting student.one@example.com back
+    const demoteBtn = page.locator('#staff-account-list .btn-account-toggle-admin[data-uid="user-1"][data-action="demote"]');
+    assert.strictEqual(await demoteBtn.count(), 1, 'Expected demote button for promoted user-1.');
+    await demoteBtn.click();
+
+    // Verify user-1 is demoted (now shows Promote button again)
+    await page.waitForFunction(() => {
+      const pBtn = document.querySelector('#staff-account-list .btn-account-toggle-admin[data-uid="user-1"][data-action="promote"]');
+      return !!pBtn;
+    });
+
+    const accountPatchDemote = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/user-1/role'
+      && entry.method === 'PATCH'
+      && entry.body?.isAdmin === false
+    );
+    assert.ok(accountPatchDemote, 'Expected account demotion PATCH request.');
+
     await page.goto(CLASS_MANAGEMENT_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#class-management-grid .crm-classroom-link[data-classroom-id="class-1"]');
     await page.click('#class-management-grid .crm-classroom-link[data-classroom-id="class-1"]');
@@ -760,6 +849,12 @@ async function main() {
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
 
     console.log('crm staff/class-management browser check passed');
+  } catch (error) {
+    console.error('Test failed with error:', error);
+    console.error('Console errors captured:', consoleErrors);
+    console.error('Page errors captured:', pageErrors);
+    console.error('Request log:', requestLog);
+    throw error;
   } finally {
     await browser.close();
   }

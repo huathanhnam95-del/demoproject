@@ -1,0 +1,10 @@
+{
+  "sample_pct": 0.2,
+  "sample_seed": 42,
+  "total_target_questions": 1,
+  "processed_questions": 1,
+  "round1_pass_count": 1,
+  "debate_revised_count": 0,
+  "unresolved_count": 0,
+  "debate_transcripts": []
+}

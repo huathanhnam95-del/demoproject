@@ -1,3 +1,20 @@
+## [V1.8.74] - 2026-08-19
+
+### Added & Enhanced
+- **CRM Account Manager System (Staff Workspace)**:
+  - Added full administrative user management directory inside the CRM Staff panel (`public/crm-admin.html` and `public/js/crm/staff-workspace.js`).
+  - Added admin-only `GET /api/admin/accounts` endpoint querying all users from Firestore with alphabetical sorting and role detection (`admin`, `teacher`, `user`).
+  - Added admin-only `PATCH /api/admin/accounts/:uid/role` endpoint enabling secure promotion and demotion of admin privileges.
+  - Implemented automatic Firebase Auth custom user claims synchronization (`auth.setCustomUserClaims`) upon role modification so security rules and authentication tokens remain tightly coupled.
+  - Implemented bootstrap admin account protection refusing demotion attempts against hardcoded bootstrap admin addresses (`huathanhnam95@gmail.com` and `ADMIN_EMAIL`).
+  - Implemented self-demotion prevention guard blocking administrators from accidentally removing their own admin access.
+  - Added comprehensive audit logging (`account.promote` and `account.demote`) recorded to `crmAuditLogs`.
+  - Added responsive UI table with color-coded role badges (**Admin**, **Teacher**, **User**), confirmation modals, toast alerts, double-click debouncing, and XSS/quote-safe attribute handling.
+- **Automated Verification & Unit Testing**:
+  - Added comprehensive backend unit test suite (`tests/crm/accounts-role-management.test.js`) verifying listing, sorting, promotion, demotion, custom claims sync, self-demotion rejection, bootstrap protection, and 400/404 error responses.
+  - Updated CRM router contract test (`tests/crm/admin-router-contract.test.js`) to assert `/accounts` and `/accounts/:uid/role`.
+  - Updated E2E Playwright browser testing suite (`tests/browser/crm-staff-browser-check.js`) verifying live account table rendering and interactive promote/demote button flows.
+
 ## [V1.8.73] - 2026-08-16
 
 ### Added & Enhanced

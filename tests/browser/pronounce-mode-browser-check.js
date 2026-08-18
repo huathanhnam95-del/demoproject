@@ -1014,6 +1014,19 @@ async function run() {
       await page.locator('#pa-stress-chart').evaluate((node) => node.closest('.pa-chart-card').hidden),
       false
     );
+    const durationCanvasAfterSearch = await page.locator('#pa-stress-chart').evaluate((canvas) => ({
+      width: canvas.width,
+      height: canvas.height,
+      clientWidth: canvas.clientWidth,
+      clientHeight: canvas.clientHeight
+    }));
+    assert.ok(
+      durationCanvasAfterSearch.width > 0
+        && durationCanvasAfterSearch.height > 0
+        && durationCanvasAfterSearch.clientWidth > 0
+        && durationCanvasAfterSearch.clientHeight > 0,
+      `duration chart must render after search/clear/redraw; got ${JSON.stringify(durationCanvasAfterSearch)}`
+    );
 
     await page.fill('#pa-word-input', 'tunnel');
     await page.click('#pa-search-btn');

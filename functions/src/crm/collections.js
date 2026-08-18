@@ -24,6 +24,9 @@ const CRM_RECYCLE_BIN = 'crmRecycleBin';
 const CRM_BOOKS = 'crmBooks';
 const CRM_BOOK_INGEST_JOBS = 'crmBookIngestJobs';
 const CRM_BOOK_USAGE = 'crmBookUsage';
+const CRM_BOOK_LINKS = 'crmBookLinks';
+const CRM_BOOK_COLLECTIONS = 'crmBookCollections';
+const CRM_BOOK_SHARES = 'crmBookShares';
 const ENTRANCE_TESTS = 'entranceTests';
 const ENTRANCE_TEST_LINK_RECOVERY = 'entranceTestLinkRecovery';
 
@@ -59,6 +62,9 @@ module.exports = {
     CRM_BOOKS,
     CRM_BOOK_INGEST_JOBS,
     CRM_BOOK_USAGE,
+    CRM_BOOK_LINKS,
+    CRM_BOOK_COLLECTIONS,
+    CRM_BOOK_SHARES,
     ENTRANCE_TESTS,
     ENTRANCE_TEST_LINK_RECOVERY,
     CLASSROOM_MODULES,

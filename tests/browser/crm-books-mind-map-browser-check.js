@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -26,11 +27,17 @@ const SAMPLE_NOTES = [
         id: 'note_2',
         text: 'Teachers should prioritize high functional load vowel and consonant errors over low functional load contrasts in classroom instruction.',
         savedAt: Date.now() - 7200000
+    },
+    {
+        id: 'fs_shared',
+        text: 'A Firestore-backed note can be resolved through its fs_ compatibility ID.',
+        savedAt: Date.now() - 10800000
     }
 ];
 
 const MOCK_MIND_MAP = {
     bookId: 'book-1',
+    citationSchemaVersion: 1,
     centralTopic: 'Mind Map: Functional Load in Pronunciation',
     summary: 'Synthesis of high functional load sound contrasts and classroom teaching priorities.',
     noteCount: 2,
@@ -46,6 +53,11 @@ const MOCK_MIND_MAP = {
                     title: 'Functional Load Definition',
                     summary: 'Measure of contrastive work between phoneme pairs.',
                     noteIds: ['note_1'],
+                    evidenceStatus: 'verified',
+                    citations: [{
+                        noteId: 'note_1',
+                        quote: 'Functional load measures the contrastive work done by two phonemes.'
+                    }],
                     fullText: SAMPLE_NOTES[0].text
                 }
             ]
@@ -61,12 +73,59 @@ const MOCK_MIND_MAP = {
                     title: 'Teaching Priorities',
                     summary: 'Prioritize high FL sound errors over low FL contrasts.',
                     noteIds: ['note_2'],
+                    evidenceStatus: 'verified',
+                    citations: [{
+                        noteId: 'note_2',
+                        quote: 'Teachers should prioritize high functional load vowel and consonant errors over low functional load contrasts in classroom instruction.'
+                    }],
                     fullText: SAMPLE_NOTES[1].text
+                },
+                {
+                    id: 'sub_2_2',
+                    title: 'Shared Teaching Evidence',
+                    summary: 'The same source passage may support a related thought.',
+                    noteIds: ['note_2'],
+                    evidenceStatus: 'verified',
+                    citations: [{
+                        noteId: 'note_2',
+                        quote: 'Teachers should prioritize high functional load vowel and consonant errors over low functional load contrasts in classroom instruction.'
+                    }],
+                    fullText: SAMPLE_NOTES[1].text
+                },
+                {
+                    id: 'sub_2_3',
+                    title: 'Unverified Thought',
+                    summary: 'No source passage was found for this thought.',
+                    noteIds: ['note_2'],
+                    evidenceStatus: 'insufficient',
+                    citations: [],
+                    fullText: 'Generated explanation without a verified passage.'
+                },
+                {
+                    id: 'sub_2_4',
+                    title: 'Firestore Compatibility',
+                    summary: 'A source may be stored with an fs_ local ID.',
+                    noteIds: ['shared'],
+                    evidenceStatus: 'verified',
+                    citations: [{
+                        noteId: 'shared',
+                        quote: 'A Firestore-backed note can be resolved through its fs_ compatibility ID.'
+                    }],
+                    fullText: SAMPLE_NOTES[2].text
                 }
             ]
         }
     ]
 };
+
+const LEGACY_MIND_MAP = JSON.parse(JSON.stringify(MOCK_MIND_MAP));
+delete LEGACY_MIND_MAP.citationSchemaVersion;
+LEGACY_MIND_MAP.categories.forEach(category => {
+    category.subtopics.forEach(subtopic => {
+        delete subtopic.evidenceStatus;
+        delete subtopic.citations;
+    });
+});
 
 function installMemoryLocalStorage() {
     const data = new Map();
@@ -119,6 +178,10 @@ async function main() {
                 <button id="crm-mindmap-zoom-in" class="crm-btn crm-btn-secondary crm-btn-sm" title="Zoom In">+</button>
                 <button id="crm-mindmap-zoom-out" class="crm-btn crm-btn-secondary crm-btn-sm" title="Zoom Out">-</button>
                 <button id="crm-mindmap-zoom-reset" class="crm-btn crm-btn-secondary crm-btn-sm" title="Fit to View">Fit View</button>
+                <div id="crm-mindmap-map-selector">
+                  <button id="crm-mindmap-map-btn" type="button"><span id="crm-mindmap-map-name">Default Map</span></button>
+                  <div id="crm-mindmap-map-dropdown" style="display:none;"></div>
+                </div>
                 <button id="crm-mindmap-close-btn" class="crm-btn crm-btn-close" aria-label="Close Mind Map">&times;</button>
               </div>
             </div>
@@ -140,6 +203,10 @@ async function main() {
                   <h4>Full Saved Note</h4>
                   <div id="crm-mindmap-inspector-fulltext" class="crm-mindmap-inspector-fulltext"></div>
                 </div>
+                <div class="crm-mindmap-inspector-section">
+                  <h4>Source Reference</h4>
+                  <div id="crm-mindmap-inspector-sources" class="crm-mindmap-inspector-sources"></div>
+                </div>
               </aside>
             </div>
           </div>
@@ -150,8 +217,31 @@ async function main() {
         await page.addScriptTag({ path: path.join(ROOT, 'public', 'js', 'crm', 'books-workspace.js') });
 
         // Seed notes and API mock
-        await page.evaluate(async ({ book, notes, mockMap }) => {
+        await page.evaluate(async ({ book, notes, mockMap, legacyMap }) => {
             window.localStorage.setItem(`crm_books_notes_${book.bookId}`, JSON.stringify(notes));
+            window.localStorage.setItem(`crm_books_maps_${book.bookId}`, JSON.stringify({
+                default: { name: 'Default Map' },
+                map_custom: { name: 'Legacy Custom', noteIds: ['note_2'] }
+                ,map_fail: { name: 'Failed Legacy', noteIds: ['note_1'] }
+            }));
+            window.localStorage.setItem(`crm_books_mapstate_${book.bookId}_map_custom`, JSON.stringify({
+                data: legacyMap,
+                positions: { sub_2_1: { x: 44, y: 55 } },
+                userNodes: [{ id: 'user_custom', title: 'Keep this node', text: 'Keep this note', x: 90, y: 110 }],
+                userEdits: { sub_2_1: { title: 'Keep edited title', notes: 'Keep this annotation' } },
+                customConnections: [{ id: 'conn_custom', from: 'sub_2_1', to: 'user_custom' }]
+            }));
+            window.localStorage.setItem(`crm_books_mapstate_${book.bookId}_map_fail`, JSON.stringify({
+                data: legacyMap,
+                positions: { sub_1_1: { x: 12, y: 13 } },
+                userNodes: [],
+                userEdits: {},
+                customConnections: []
+            }));
+            const mindMapPostCalls = [];
+            const mindMapPatchCalls = [];
+            window.__mindMapPostCalls = mindMapPostCalls;
+            window.__mindMapPatchCalls = mindMapPatchCalls;
 
             const request = async (requestPath, options = {}) => {
                 const method = options.method || 'GET';
@@ -164,7 +254,16 @@ async function main() {
                     return { notes };
                 }
                 if (requestPath === `/api/admin/books/${book.bookId}/mind-map` && method === 'POST') {
-                    return { mindMap: mockMap };
+                    const body = options.body ? JSON.parse(options.body) : {};
+                    mindMapPostCalls.push(body);
+                    if (body.force && Array.isArray(body.noteIds) && body.noteIds.includes('note_1')) {
+                        throw new Error('simulated citation upgrade outage');
+                    }
+                    return { mindMap: mindMapPostCalls.length === 1 ? legacyMap : mockMap };
+                }
+                if (requestPath === `/api/admin/books/${book.bookId}/mind-map` && method === 'PATCH') {
+                    mindMapPatchCalls.push(options.body ? JSON.parse(options.body) : {});
+                    return { ok: true };
                 }
                 return { ok: true };
             };
@@ -177,7 +276,7 @@ async function main() {
             });
             await window.__crmBooksController.init();
             await window.__crmBooksController.selectBook(book.bookId);
-        }, { book: BOOK, notes: SAMPLE_NOTES, mockMap: MOCK_MIND_MAP });
+        }, { book: BOOK, notes: SAMPLE_NOTES, mockMap: MOCK_MIND_MAP, legacyMap: LEGACY_MIND_MAP });
 
         // Click book item in sources list to ensure active state
         await page.waitForSelector('.crm-books-list-item');
@@ -197,6 +296,53 @@ async function main() {
         await page.waitForSelector('#crm-books-mindmap-modal[style*="display: flex"]', { timeout: 10000 });
         const modalTitle = await page.textContent('#crm-mindmap-title');
         assert.ok(modalTitle.includes('Functional Load'), 'Mind Map modal title should show central topic');
+        const mindMapPostCalls = await page.evaluate(() => window.__mindMapPostCalls);
+        assert.strictEqual(mindMapPostCalls.length, 2, 'A legacy map should trigger one automatic citation upgrade request.');
+        assert.strictEqual(mindMapPostCalls[1].force, true, 'The legacy citation upgrade must use the existing force regeneration request.');
+        await page.waitForTimeout(100);
+        const defaultPatchCount = await page.evaluate(() => window.__mindMapPatchCalls.length);
+
+        // Switch to a legacy custom map and verify selected notes plus local edits survive its one-time upgrade.
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Legacy Custom' }).click();
+        await page.waitForTimeout(150);
+        const customPostCalls = await page.evaluate(() => window.__mindMapPostCalls);
+        assert.strictEqual(customPostCalls.length, 3, 'A legacy custom map should trigger one upgrade request.');
+        assert.deepStrictEqual(customPostCalls[2].noteIds, ['note_2'], 'Custom upgrades must retain the map-selected note IDs.');
+        const customState = await page.evaluate(({ bookId }) => JSON.parse(window.localStorage.getItem(`crm_books_mapstate_${bookId}_map_custom`)), { bookId: BOOK.bookId });
+        assert.strictEqual(customState.data.citationSchemaVersion, 1, 'Custom map upgrade should persist citation schema version locally.');
+        assert.deepStrictEqual(customState.positions.sub_2_1, { x: 44, y: 55 }, 'Custom map node positions should survive upgrade.');
+        assert.strictEqual(customState.userNodes[0].title, 'Keep this node', 'Custom user nodes should survive upgrade.');
+        assert.strictEqual(customState.userEdits.sub_2_1.title, 'Keep edited title', 'Custom annotations should survive upgrade.');
+        assert.strictEqual(customState.customConnections[0].id, 'conn_custom', 'Custom connections should survive upgrade.');
+        const customPatchCount = await page.evaluate(() => window.__mindMapPatchCalls.length);
+        assert.strictEqual(customPatchCount, defaultPatchCount, 'Custom-map upgrades must not patch the default Firestore artifact.');
+
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Default Map' }).click();
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Legacy Custom' }).click();
+        await page.waitForTimeout(100);
+        const reopenPostCalls = await page.evaluate(() => window.__mindMapPostCalls.length);
+        assert.strictEqual(reopenPostCalls, 3, 'Reopening an upgraded custom map must not trigger another AI request.');
+
+        // A failed custom upgrade retains the legacy map and does not loop on reopen in this session.
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Failed Legacy' }).click();
+        await page.waitForTimeout(150);
+        const failedUpgradeCalls = await page.evaluate(() => window.__mindMapPostCalls.length);
+        assert.strictEqual(failedUpgradeCalls, 4, 'A failed legacy upgrade should make one bounded request.');
+        const failedState = await page.evaluate(({ bookId }) => JSON.parse(window.localStorage.getItem(`crm_books_mapstate_${bookId}_map_fail`)), { bookId: BOOK.bookId });
+        assert.ok(!failedState.data.citationSchemaVersion, 'Failed upgrade must retain the legacy visual structure.');
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Default Map' }).click();
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Failed Legacy' }).click();
+        await page.waitForTimeout(100);
+        assert.strictEqual(await page.evaluate(() => window.__mindMapPostCalls.length), 4, 'Failed upgrades must not loop when reopened in the same session.');
+        await page.click('#crm-mindmap-map-btn');
+        await page.locator('.crm-mindmap-map-option', { hasText: 'Default Map' }).click();
+        await page.waitForTimeout(100);
 
         // Verify Mind Map Nodes rendered
         await page.waitForSelector('.crm-mindmap-node.central');
@@ -220,7 +366,67 @@ async function main() {
         assert.strictEqual(inspectorTitle, 'Functional Load Definition', 'Inspector drawer should show correct node title');
         assert.ok(inspectorFullText.includes('contrastive work done by two phonemes'), 'Inspector drawer should show full note text');
 
+        const firstCitation = await page.textContent('.crm-source-ref-citation');
+        assert.strictEqual(
+            firstCitation.trim(),
+            '“Functional load measures the contrastive work done by two phonemes.”',
+            'The source reference must show the exact passage supporting the selected thought block.'
+        );
+
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_1"]');
+        const secondCitation = await page.textContent('.crm-source-ref-citation');
+        assert.strictEqual(
+            secondCitation.trim(),
+            '“Teachers should prioritize high functional load vowel and consonant errors over low functional load contrasts in classroom instruction.”',
+            'Different thought blocks must show their own supporting citation instead of repeated source content.'
+        );
+
+        const notesBeforeDeletion = await page.evaluate(({ bookId }) => window.localStorage.getItem(`crm_books_notes_${bookId}`), { bookId: BOOK.bookId });
+        await page.evaluate(({ bookId }) => {
+            const notes = JSON.parse(window.localStorage.getItem(`crm_books_notes_${bookId}`));
+            window.localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(notes.filter(note => note.id !== 'note_2' && note.id !== 'fs_note_2')));
+        }, { bookId: BOOK.bookId });
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_1"]');
+        assert.match(await page.textContent('#crm-mindmap-inspector-sources'), /Insufficient evidence/i, 'Deleted referenced notes must become insufficient evidence.');
+        assert.strictEqual(await page.locator('.crm-mindmap-source-ref').count(), 0, 'Deleted referenced notes must not expose a reader button.');
+        await page.evaluate(({ bookId, notes }) => window.localStorage.setItem(`crm_books_notes_${bookId}`, notes), { bookId: BOOK.bookId, notes: notesBeforeDeletion });
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_1"]');
+
         await page.screenshot({ path: INSPECTOR_SCREENSHOT_PATH });
+
+        await page.click('.crm-mindmap-source-ref');
+        await page.waitForSelector('#crm-mindmap-reader-overlay[style*="display: flex"]');
+        const citedPassage = await page.textContent('.crm-mindmap-reader-citation');
+        const sourceNoteBody = await page.textContent('.crm-mindmap-reader-body');
+        assert.ok(citedPassage.includes('Teachers should prioritize high functional load'), 'The source reader must identify the cited passage.');
+        assert.ok(sourceNoteBody.includes('classroom instruction'), 'The source reader must retain access to the complete saved note.');
+
+        await page.click('.crm-mindmap-reader-close');
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_2"]');
+        assert.strictEqual(
+            (await page.locator('.crm-source-ref-citation').count()),
+            1,
+            'A valid quotation may be reused by another thought block.'
+        );
+
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_4"]');
+        assert.strictEqual(
+            (await page.locator('.crm-source-ref-citation').count()),
+            1,
+            'Citations using a Firestore ID must resolve local fs_ notes.'
+        );
+
+        await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_3"]');
+        assert.match(
+            await page.textContent('#crm-mindmap-inspector-sources'),
+            /Insufficient evidence/i,
+            'Unverified blocks must show an explicit insufficient-evidence state.'
+        );
+        assert.strictEqual(
+            await page.locator('.crm-mindmap-source-ref').count(),
+            0,
+            'Insufficient blocks must not expose a whole-note source fallback.'
+        );
 
         assert.deepStrictEqual(pageErrors, [], `Unexpected page errors: ${pageErrors.join('; ')}`);
         console.log('CRM Books Mind Map browser check passed successfully!');

@@ -19,6 +19,7 @@ const JSON_GENERATION_CONFIG = {
     responseMimeType: 'application/json',
     temperature: 0.2
 };
+const MIND_MAP_CITATION_SCHEMA_VERSION = 1;
 
 function getModels() {
     const primary = normalizeScalar(process.env.CRM_BOOKS_GEMINI_MODEL) || DEFAULT_MODEL;
@@ -330,9 +331,10 @@ ${notesText}
 INSTRUCTIONS:
 1. Synthesize all notes into a high-level central concept.
 2. Group the notes into 3 to 6 major categories / themes. Choose distinct color hex codes for each category (e.g. #4f46e5, #059669, #d97706, #dc2626, #7c3aed, #0891b2).
-3. Inside each category, break down into logical subtopics / note blocks. Each subtopic should reference the relevant noteId(s) from the provided notes, provide a clear concise title, a 1-2 sentence summary, and the full representative note text.
+3. Inside each category, break down into logical subtopics / thought blocks. Each subtopic should reference the relevant noteId(s), provide a clear concise title, a 1-2 sentence summary, and a short supporting explanation.
 4. Ensure every note is organized into at least one relevant theme.
 5. IMPORTANT: Use the exact note ID strings (e.g. "note_1723537890123_abc" or "fs_abc123") from the [Note #X | ID: xxx] headers above, not invented IDs. Every subtopic MUST have a non-empty "noteIds" array containing at least one real note ID.
+6. Every subtopic MUST include one or more passage-level citations that directly support its summary. Each citation must contain the real note ID and an exact, verbatim quote copied from that note. Use the shortest complete sentence or 1-3 sentence passage that provides sufficient evidence. Do not cite the entire note and do not paraphrase inside "quote".
 
 Return a JSON object with this exact structure:
 {
@@ -349,12 +351,176 @@ Return a JSON object with this exact structure:
           "title": "Subtopic/Concept Title",
           "summary": "Brief summary of key insight",
           "noteIds": ["note_123"],
-          "fullText": "Full note text or combined note content"
+          "citations": [
+            {
+              "noteId": "note_123",
+              "quote": "Exact verbatim passage from that note supporting this summary"
+            }
+          ],
+          "fullText": "Short explanation of how the cited passage supports the summary"
         }
       ]
     }
   ]
 }`;
+}
+
+function normalizeMindMapCitationText(value) {
+    return String(value ?? '')
+        .normalize('NFKC')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2013\u2014]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function normalizeMindMapCategories(categories, notes) {
+    const noteMap = new Map((Array.isArray(notes) ? notes : [])
+        .filter(note => note?.id)
+        .map(note => [String(note.id), note]));
+
+    return (Array.isArray(categories) ? categories : []).map(category => ({
+        ...category,
+        subtopics: (Array.isArray(category?.subtopics) ? category.subtopics : []).map(subtopic => {
+            const noteIds = [];
+            const seenNoteIds = new Set();
+            (Array.isArray(subtopic?.noteIds) ? subtopic.noteIds : []).forEach(rawId => {
+                const noteId = String(rawId || '');
+                if (!noteMap.has(noteId) || seenNoteIds.has(noteId)) return;
+                seenNoteIds.add(noteId);
+                noteIds.push(noteId);
+            });
+
+            const citations = [];
+            const seenCitations = new Set();
+            (Array.isArray(subtopic?.citations) ? subtopic.citations : []).forEach(citation => {
+                const noteId = String(citation?.noteId || '');
+                const quote = String(citation?.quote || '').trim();
+                const normalizedQuote = normalizeMindMapCitationText(quote);
+                const normalizedSource = normalizeMindMapCitationText(noteMap.get(noteId)?.text);
+                if (!noteMap.has(noteId) || !normalizedQuote || !normalizedSource.includes(normalizedQuote)) return;
+
+                const citationKey = `${noteId}\n${normalizedQuote}`;
+                if (seenCitations.has(citationKey)) return;
+                seenCitations.add(citationKey);
+                citations.push({ noteId, quote });
+
+                if (!seenNoteIds.has(noteId)) {
+                    seenNoteIds.add(noteId);
+                    noteIds.push(noteId);
+                }
+            });
+
+            return {
+                ...subtopic,
+                noteIds,
+                citations,
+                evidenceStatus: citations.length > 0 ? 'verified' : 'insufficient'
+            };
+        })
+    }));
+}
+
+function collectMindMapCitationGaps(categories) {
+    const gaps = [];
+    (Array.isArray(categories) ? categories : []).forEach(category => {
+        (Array.isArray(category?.subtopics) ? category.subtopics : []).forEach(subtopic => {
+            if (subtopic?.evidenceStatus === 'verified' && Array.isArray(subtopic.citations) && subtopic.citations.length > 0) return;
+            gaps.push({
+                subtopicId: String(subtopic?.id || ''),
+                title: String(subtopic?.title || ''),
+                summary: String(subtopic?.summary || ''),
+                noteIds: Array.isArray(subtopic?.noteIds) ? subtopic.noteIds : []
+            });
+        });
+    });
+    return gaps.filter(gap => gap.subtopicId);
+}
+
+function buildMindMapCitationRepairPrompt(gaps, notes) {
+    const safeGaps = Array.isArray(gaps) ? gaps : [];
+    const safeNotes = Array.isArray(notes) ? notes : [];
+    const requestedNoteIds = new Set(safeGaps.flatMap(gap => Array.isArray(gap?.noteIds) ? gap.noteIds.map(String) : []));
+    const includesUnscopedGap = safeGaps.some(gap => !Array.isArray(gap?.noteIds) || gap.noteIds.length === 0);
+    const relevantNotes = includesUnscopedGap
+        ? safeNotes
+        : safeNotes.filter(note => requestedNoteIds.has(String(note?.id || '')));
+    const gapText = safeGaps.map(gap =>
+        `[Subtopic ID: ${gap.subtopicId}]\nTitle: ${gap.title}\nSummary: ${gap.summary}\nAllowed note IDs: ${(gap.noteIds || []).join(', ') || 'Choose from the supplied notes.'}`
+    ).join('\n\n');
+    const notesText = relevantNotes.map(note =>
+        `[Note ID: ${note.id}]\n${note.text || ''}`
+    ).join('\n\n---\n\n');
+
+    return `You are repairing source citations for an existing mind map.
+
+For each listed subtopic, return one or more exact, verbatim source passages that directly support its existing summary. Do not change the subtopic title, summary, IDs, or structure. Do not paraphrase. If no passage supports a summary, return an empty citations array for that subtopic.
+
+SUBTOPICS NEEDING EVIDENCE:
+${gapText}
+
+SOURCE NOTES:
+${notesText}
+
+Return JSON with this exact structure:
+{
+  "citations": [
+    {
+      "subtopicId": "sub_1_1",
+      "citations": [
+        { "noteId": "real-note-id", "quote": "Exact, verbatim quote from that note" }
+      ]
+    }
+  ]
+}`;
+}
+
+function mergeMindMapCitationRepairs(categories, repairJson, notes) {
+    const repairMap = new Map();
+    (Array.isArray(repairJson?.citations) ? repairJson.citations : []).forEach(entry => {
+        const subtopicId = String(entry?.subtopicId || '');
+        if (subtopicId) repairMap.set(subtopicId, Array.isArray(entry?.citations) ? entry.citations : []);
+    });
+
+    const merged = (Array.isArray(categories) ? categories : []).map(category => ({
+        ...category,
+        subtopics: (Array.isArray(category?.subtopics) ? category.subtopics : []).map(subtopic => {
+            if (!repairMap.has(String(subtopic?.id || ''))) return subtopic;
+            return { ...subtopic, citations: repairMap.get(String(subtopic.id)) };
+        })
+    }));
+    return normalizeMindMapCategories(merged, notes);
+}
+
+async function repairMindMapCitations({ categories, notes, models, generate = generateWithFallback }) {
+    const initialGaps = collectMindMapCitationGaps(categories);
+    if (initialGaps.length === 0) {
+        return { categories, attempted: false, repairedCount: 0, insufficientCount: 0, usage: null };
+    }
+
+    try {
+        const result = await generate(models, buildMindMapCitationRepairPrompt(initialGaps, notes));
+        const repairedCategories = mergeMindMapCitationRepairs(categories, result?.json, notes);
+        const remainingGaps = collectMindMapCitationGaps(repairedCategories);
+        return {
+            categories: repairedCategories,
+            attempted: true,
+            repairedCount: initialGaps.length - remainingGaps.length,
+            insufficientCount: remainingGaps.length,
+            usage: result?.usage || null
+        };
+    } catch (error) {
+        console.warn('[book-summary] Mind-map citation repair failed:', error?.message || String(error));
+        return {
+            categories,
+            attempted: true,
+            repairedCount: 0,
+            insufficientCount: initialGaps.length,
+            usage: null
+        };
+    }
 }
 
 async function generateBookMindMap(db, bookId, force = false, noteIds = null) {
@@ -394,12 +560,35 @@ async function generateBookMindMap(db, bookId, force = false, noteIds = null) {
     recordUsage(db, { type: 'mind_map', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
         .catch(err => console.error('[book-summary] Usage tracking failed for mind map:', err?.message));
 
+    const initialCategories = normalizeMindMapCategories(json.categories, notes);
+    const citationRepair = await repairMindMapCitations({
+        categories: initialCategories,
+        notes,
+        models
+    });
+
+    if (citationRepair.usage) {
+        recordUsage(db, {
+            type: 'mind_map_citation_repair',
+            inputTokens: citationRepair.usage.inputTokens || 0,
+            outputTokens: citationRepair.usage.outputTokens || 0
+        }).catch(err => console.error('[book-summary] Usage tracking failed for citation repair:', err?.message));
+    }
+
+    console.info('[book-summary] Mind-map citation validation', {
+        initialGapCount: collectMindMapCitationGaps(initialCategories).length,
+        repairAttempted: citationRepair.attempted,
+        repairedCount: citationRepair.repairedCount,
+        insufficientCount: citationRepair.insufficientCount
+    });
+
     const mindMap = {
         bookId,
         bookTitle: bookData.title || '',
         centralTopic: json.centralTopic || `Mind Map: ${bookData.title || 'Book Notes'}`,
         summary: json.summary || '',
-        categories: Array.isArray(json.categories) ? json.categories : [],
+        citationSchemaVersion: MIND_MAP_CITATION_SCHEMA_VERSION,
+        categories: citationRepair.categories,
         noteCount: notes.length,
         model,
         generatedAt: new Date()
@@ -414,6 +603,107 @@ async function generateBookMindMap(db, bookId, force = false, noteIds = null) {
     return mindMap;
 }
 
+function buildNodeExpandPrompt(nodeTitle, nodeSummary, contextChunks) {
+    const context = contextChunks.map(c => {
+        const pageLabel = c.pageStart === c.pageEnd ? `[page ${c.pageStart}]` : `[pages ${c.pageStart}-${c.pageEnd}]`;
+        return `${pageLabel}\n${c.text}`;
+    }).join('\n\n');
+
+    return `You are a knowledge assistant analyzing a book. A mind map node titled "${nodeTitle}" has this summary: "${nodeSummary || 'No summary provided'}".
+
+Using ONLY the book excerpts below, generate 3-5 child subtopics that expand on this node. Each subtopic must be grounded in the source material.
+
+Book excerpts:
+${context}
+
+Return JSON:
+{
+  "subtopics": [
+    {
+      "title": "short title",
+      "summary": "1-2 sentence summary grounded in the book",
+      "pageRef": "page number or range where this is discussed"
+    }
+  ]
+}`;
+}
+
+async function expandMindMapNode(db, bookId, nodeTitle, nodeSummary) {
+    const { retrieveTopChunks } = require('./book-retrieval');
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    if (!bookSnap.exists) throw Object.assign(new Error('Book not found'), { code: 'not-found' });
+    const bookData = bookSnap.data();
+
+    const chunks = await retrieveTopChunks(db, bookId, `${nodeTitle} ${nodeSummary || ''}`, { bookTitle: bookData.title });
+    const models = getModels();
+    const prompt = buildNodeExpandPrompt(nodeTitle, nodeSummary, chunks);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'mind_map_expand', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed:', err?.message));
+
+    const subtopics = Array.isArray(json.subtopics) ? json.subtopics : [];
+    return {
+        subtopics: subtopics.map(s => ({
+            title: String(s.title || ''),
+            summary: String(s.summary || ''),
+            pageRef: String(s.pageRef || '')
+        })),
+        model
+    };
+}
+
+function buildCompilePrompt(bookTitle, sources) {
+    let context = '';
+    if (sources.notes && sources.notes.length > 0) {
+        context += '## User Notes\n' + sources.notes.join('\n\n---\n\n') + '\n\n';
+    }
+    if (sources.highlights && sources.highlights.length > 0) {
+        context += '## Highlighted Passages\n' + sources.highlights.map(h =>
+            `- [Page ${h.page}] "${h.text}"`
+        ).join('\n') + '\n\n';
+    }
+    if (sources.mindMapBranches && sources.mindMapBranches.length > 0) {
+        context += '## Mind Map Branches\n' + sources.mindMapBranches.join('\n\n') + '\n\n';
+    }
+    if (sources.chatMessages && sources.chatMessages.length > 0) {
+        context += '## Chat Conversation\n' + sources.chatMessages.join('\n') + '\n\n';
+    }
+
+    return `You are a research assistant. Synthesize the following user-collected materials from the book "${bookTitle}" into a well-structured Markdown research document.
+
+Requirements:
+- Create a coherent document with clear sections and headings
+- Weave together notes, highlights, mind map insights, and chat Q&A into a unified narrative
+- Preserve key quotes and page references
+- Add a brief executive summary at the top
+- Use proper Markdown formatting (headers, lists, blockquotes for citations)
+- Do NOT invent information — only use what is provided
+
+User materials:
+${context}
+
+Return the complete Markdown document as a JSON object:
+{ "markdown": "# Research: Book Title\\n\\n..." }`;
+}
+
+async function compileResearch(db, bookId, bookTitle, sources) {
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    if (!bookSnap.exists) throw Object.assign(new Error('Book not found'), { code: 'not-found' });
+
+    const models = getModels();
+    const prompt = buildCompilePrompt(bookTitle || bookSnap.data().title || 'Untitled', sources);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'compile', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed:', err?.message));
+
+    return {
+        markdown: String(json.markdown || json.document || ''),
+        model
+    };
+}
+
 module.exports = {
     groupChunksIntoSections,
     summarizeSection,
@@ -424,8 +714,18 @@ module.exports = {
     buildReducePrompt,
     buildStudyNotesPrompt,
     buildMindMapPrompt,
+    normalizeMindMapCategories,
+    collectMindMapCitationGaps,
+    buildMindMapCitationRepairPrompt,
+    mergeMindMapCitationRepairs,
+    repairMindMapCitations,
+    MIND_MAP_CITATION_SCHEMA_VERSION,
     extractUsage,
     generateWithFallback,
+    expandMindMapNode,
+    buildNodeExpandPrompt,
+    compileResearch,
+    buildCompilePrompt,
     SECTION_TARGET_CHARS,
     DEFAULT_MODEL,
     FALLBACK_MODEL

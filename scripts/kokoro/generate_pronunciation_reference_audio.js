@@ -70,10 +70,28 @@ async function kokoroReady() {
 function startKokoro(logFile) {
   const python = path.join(KOKORO_ROOT, '.venv', 'Scripts', 'python.exe');
   if (!fs.existsSync(python)) throw new Error(`Kokoro Python runtime not found: ${python}`);
+  const bundledEspeak = [
+    path.join(KOKORO_ROOT, '.venv', 'Lib', 'site-packages', 'espeakng_loader', 'espeak-ng.dll'),
+    path.join(KOKORO_ROOT, '.venv', 'Lib', 'site-packages', 'espeakng_loader', 'libespeak-ng.dll')
+  ].find((candidate) => fs.existsSync(candidate));
+  const espeakData = path.join(KOKORO_ROOT, '.venv', 'Lib', 'site-packages', 'espeakng_loader', 'espeak-ng-data');
   const log = fs.openSync(logFile, 'a');
   return spawn(python, ['-m', 'uvicorn', 'api.src.main:app', '--host', '127.0.0.1', '--port', '8880'], {
     cwd: KOKORO_ROOT,
-    env: { ...process.env, PYTHONUTF8: '1', PYTHONUNBUFFERED: '1', PROJECT_ROOT: KOKORO_ROOT, USE_GPU: 'false', USE_ONNX: 'false', PYTHONPATH: `${KOKORO_ROOT};${path.join(KOKORO_ROOT, 'api')}`, MODEL_DIR: 'src/models', VOICES_DIR: 'src/voices/v1_0' },
+    env: {
+      ...process.env,
+      PHONEMIZER_ESPEAK_LIBRARY: process.env.PHONEMIZER_ESPEAK_LIBRARY || bundledEspeak || 'C:\\Program Files\\eSpeak NG\\libespeak-ng.dll',
+      ESPEAK_DATA_PATH: process.env.ESPEAK_DATA_PATH || (fs.existsSync(espeakData) ? espeakData : undefined),
+      PYTHONUTF8: '1',
+      PYTHONUNBUFFERED: '1',
+      PROJECT_ROOT: KOKORO_ROOT,
+      USE_GPU: 'false',
+      USE_ONNX: 'false',
+      PYTHONPATH: `${KOKORO_ROOT};${path.join(KOKORO_ROOT, 'api')}`,
+      MODEL_DIR: 'src/models',
+      VOICES_DIR: 'src/voices/v1_0',
+      WEB_PLAYER_PATH: path.join(KOKORO_ROOT, 'web')
+    },
     windowsHide: true,
     stdio: ['ignore', log, log]
   });

@@ -29,9 +29,24 @@ function hasIndex(collectionGroup, fields) {
   );
 }
 
+function hasExactIndex(collectionGroup, fields) {
+  return (indexes.indexes || []).some((index) =>
+    index.collectionGroup === collectionGroup
+    && index.queryScope === 'COLLECTION'
+    && JSON.stringify(index.fields) === JSON.stringify(fields)
+  );
+}
+
 assert.ok(hasIndex('essay_ai_queue', ['status', 'submittedAt']), 'essay_ai_queue status/submittedAt index is required');
 assert.ok(hasIndex('essay_ai_queue', ['status', 'leaseExpiresAt']), 'essay_ai_queue status/leaseExpiresAt index is required');
 assert.ok(hasIndex('user_notifications', ['uid', 'isRead', 'createdAt']), 'user_notifications owner/unread/createdAt index is required');
+assert.ok(
+  hasExactIndex('user_notifications', [
+    { fieldPath: 'uid', order: 'ASCENDING' },
+    { fieldPath: 'createdAt', order: 'DESCENDING' }
+  ]),
+  'user_notifications uid ASC/createdAt DESC index used by notification-center query is required'
+);
 assert.ok(hasIndex('crm_system_alerts', ['status', 'createdAt']), 'crm_system_alerts status/createdAt index is required');
 assert.ok(hasIndex('essay_ai_backfill_jobs', ['status', 'createdAt']), 'backfill job status/createdAt index is required');
 assert.ok(hasIndex('essay_ai_backfill_jobs', ['status', 'leaseExpiresAt']), 'backfill job status/leaseExpiresAt index is required');

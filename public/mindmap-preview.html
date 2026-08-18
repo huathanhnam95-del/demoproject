@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mind Map Visual Preview</title>
+<link rel="stylesheet" href="crm-admin.css">
+<style>
+  body { margin: 0; overflow: hidden; }
+  .crm-books-mindmap-modal { display: flex !important; }
+</style>
+</head>
+<body>
+<div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" role="dialog">
+  <div class="crm-mindmap-header">
+    <div class="crm-mindmap-header-left">
+      <h2 class="crm-mindmap-title">Teaching Pronunciation with Confidence</h2>
+      <span class="crm-mindmap-subtitle">Mind Map · 5 categories · 14 topics</span>
+    </div>
+    <div class="crm-mindmap-header-actions">
+      <button class="crm-btn-secondary crm-btn-accent">⚡ Regenerate</button>
+      <div class="crm-mindmap-header-divider"></div>
+      <div class="crm-mindmap-zoom-group">
+        <button class="crm-btn-secondary" id="zoom-in">+</button>
+        <button class="crm-btn-secondary" id="zoom-reset">⊙</button>
+        <button class="crm-btn-secondary" id="zoom-out">−</button>
+      </div>
+      <div class="crm-mindmap-header-divider"></div>
+      <button class="crm-btn-secondary" id="toggle-dark">🌙 Dark</button>
+    </div>
+  </div>
+  <div class="crm-mindmap-body">
+    <div id="crm-mindmap-viewport" class="crm-mindmap-viewport">
+      <svg id="crm-mindmap-svg" class="crm-mindmap-svg" width="3000" height="2000"></svg>
+      <div id="crm-mindmap-canvas" class="crm-mindmap-canvas"></div>
+    </div>
+  </div>
+</div>
+<script>
+const cx = 1500, cy = 1000, centralW = 340;
+const cats = [
+  { title: 'Pronunciation Patterns', color: '#EC4899', subs: [
+    { t: 'Stress Placement', s: 'Word-level and sentence-level stress patterns in connected speech.' },
+    { t: 'Intonation Curves', s: 'Rising and falling pitch contours across utterance types.' },
+    { t: 'Connected Speech', s: 'Linking, elision, and assimilation in natural fluency.' }
+  ]},
+  { title: 'Assessment Methods', color: '#10B981', subs: [
+    { t: 'Rubric Design', s: 'Criterion-referenced scales for oral proficiency evaluation.' },
+    { t: 'Peer Evaluation', s: 'Structured peer feedback protocols for classroom practice.' },
+    { t: 'Self-Assessment Tools', s: 'Reflective checklists for independent learner development.' }
+  ]},
+  { title: 'Learner Strategies', color: '#F59E0B', subs: [
+    { t: 'Shadowing Technique', s: 'Real-time oral mimicry for prosodic pattern acquisition.' },
+    { t: 'Minimal Pairs', s: 'Contrastive phoneme drills targeting perception gaps.' },
+    { t: 'Recording Practice', s: 'Self-recording for acoustic comparison and self-correction.' }
+  ]},
+  { title: 'Classroom Activities', color: '#8B5CF6', subs: [
+    { t: 'Role Play Scenarios', s: 'Contextualized speaking tasks for pragmatic competence.' },
+    { t: 'Reading Aloud Tasks', s: 'Prepared oral reading with prosodic target annotations.' }
+  ]},
+  { title: 'Technology Integration', color: '#3B82F6', subs: [
+    { t: 'Speech Recognition', s: 'ASR-based pronunciation scoring and error detection.' },
+    { t: 'Visual Feedback', s: 'Waveform and spectrogram displays for articulatory awareness.' },
+    { t: 'AI Tutoring', s: 'Adaptive pronunciation coaching with real-time feedback loops.' }
+  ]}
+];
+
+const canvas = document.getElementById('crm-mindmap-canvas');
+const svg = document.getElementById('crm-mindmap-svg');
+let html = '';
+let pathsHtml = '';
+
+// Central node
+html += `<div class="crm-mindmap-node central mm-entering" data-node-id="central" style="left:${cx-centralW/2}px;top:${cy-45}px;width:${centralW}px;animation-delay:0ms"><div class="crm-mindmap-node-title">Teaching Pronunciation</div></div>`;
+
+cats.forEach((c, ci) => {
+  const a = (ci * 2 * Math.PI / cats.length) - Math.PI / 2;
+  const catX = cx + 480 * Math.cos(a);
+  const catY = cy + 480 * Math.sin(a);
+  const isDark = document.querySelector('.books-dark');
+  const tint1 = isDark ? '0A' : '08';
+  const tint2 = isDark ? '05' : '03';
+
+  html += `<div class="crm-mindmap-node category mm-entering" data-node-id="cat_${ci}" style="left:${catX-100}px;top:${catY-25}px;width:200px;--node-color:${c.color};background:linear-gradient(135deg,${c.color}${tint1},${c.color}${tint2});animation-delay:${80+ci*50}ms"><div class="crm-mindmap-node-title">${c.title}</div></div>`;
+
+  // SVG path: central -> category
+  const dx = catX - cx, dy = catY - cy;
+  const qx = cx + dx*0.5 - dy*0.08, qy = cy + dy*0.5 + dx*0.08;
+  pathsHtml += `<path d="M ${cx} ${cy} Q ${qx} ${qy} ${catX} ${catY}" stroke="${c.color}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.4" />`;
+
+  const arcSpan = Math.min(0.35 * c.subs.length, Math.PI * 0.6);
+  c.subs.forEach((sub, si) => {
+    const sa = a + (c.subs.length > 1 ? (-arcSpan/2 + si * (arcSpan / (c.subs.length - 1))) : 0);
+    const sx = catX + 300 * Math.cos(sa);
+    const sy = catY + 300 * Math.sin(sa);
+
+    html += `<div class="crm-mindmap-node subtopic mm-entering" data-node-id="sub_${ci}_${si}" style="left:${sx-110}px;top:${sy-40}px;width:220px;--node-color:${c.color};background:linear-gradient(135deg,${c.color}06,${c.color}02);animation-delay:${200+ci*60+si*40}ms"><div class="crm-mindmap-node-title">${sub.t}</div><div class="crm-mindmap-node-summary">${sub.s}</div></div>`;
+
+    // SVG path: category -> subtopic
+    const sdx = sx - catX, sdy = sy - catY;
+    const sqx = catX + sdx*0.5 - sdy*0.06, sqy = catY + sdy*0.5 + sdx*0.06;
+    pathsHtml += `<path d="M ${catX} ${catY} Q ${sqx} ${sqy} ${sx} ${sy}" stroke="${c.color}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.35" />`;
+  });
+});
+
+canvas.innerHTML = html;
+svg.innerHTML = pathsHtml;
+
+// Animate SVG path draw-in
+svg.querySelectorAll('path').forEach(p => {
+  const len = p.getTotalLength();
+  p.style.setProperty('--path-length', len);
+  p.style.strokeDasharray = len;
+  p.style.strokeDashoffset = len;
+});
+
+// Auto-fit
+const vp = document.getElementById('crm-mindmap-viewport');
+const vw = vp.clientWidth, vh = vp.clientHeight;
+const zoom = Math.min((vw - 80) / 2800, (vh - 80) / 2000, 0.9);
+const panX = (vw / 2) - (cx * zoom);
+const panY = (vh / 2) - (cy * zoom);
+canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+svg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+
+// Branch highlighting
+canvas.querySelectorAll('.crm-mindmap-node').forEach(node => {
+  node.addEventListener('mouseenter', () => {
+    const nid = node.dataset.nodeId;
+    const related = new Set([nid, 'central']);
+    cats.forEach((c, ci) => {
+      const catId = 'cat_' + ci;
+      const subIds = c.subs.map((_, si) => 'sub_' + ci + '_' + si);
+      if (catId === nid || subIds.includes(nid)) {
+        related.add(catId);
+        subIds.forEach(s => related.add(s));
+      }
+    });
+    canvas.classList.add('mm-branch-highlight');
+    canvas.querySelectorAll('.crm-mindmap-node').forEach(n => {
+      n.classList.toggle('mm-branch-active', related.has(n.dataset.nodeId));
+    });
+  });
+  node.addEventListener('mouseleave', () => {
+    canvas.classList.remove('mm-branch-highlight');
+    canvas.querySelectorAll('.mm-branch-active').forEach(n => n.classList.remove('mm-branch-active'));
+  });
+});
+
+// Dark mode toggle
+document.getElementById('toggle-dark').addEventListener('click', () => {
+  const modal = document.getElementById('crm-books-mindmap-modal');
+  modal.classList.toggle('books-dark');
+  const btn = document.getElementById('toggle-dark');
+  btn.textContent = modal.classList.contains('books-dark') ? '☀️ Light' : '🌙 Dark';
+});
+
+// Zoom controls
+let currentZoom = zoom;
+let currentPanX = panX;
+let currentPanY = panY;
+function applyTransform() {
+  canvas.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentZoom})`;
+  svg.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentZoom})`;
+}
+document.getElementById('zoom-in').addEventListener('click', () => { currentZoom = Math.min(currentZoom * 1.2, 2); applyTransform(); });
+document.getElementById('zoom-out').addEventListener('click', () => { currentZoom = Math.max(currentZoom / 1.2, 0.2); applyTransform(); });
+document.getElementById('zoom-reset').addEventListener('click', () => { currentZoom = zoom; currentPanX = panX; currentPanY = panY; applyTransform(); });
+
+// Pan
+let isPanning = false, startX, startY;
+vp.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.crm-mindmap-node')) return;
+  isPanning = true; startX = e.clientX - currentPanX; startY = e.clientY - currentPanY;
+  vp.classList.add('is-panning');
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isPanning) return;
+  currentPanX = e.clientX - startX; currentPanY = e.clientY - startY;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => { isPanning = false; vp.classList.remove('is-panning'); });
+
+// Ripple on click
+canvas.querySelectorAll('.crm-mindmap-node').forEach(node => {
+  node.addEventListener('click', (e) => {
+    const rect = node.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'crm-mindmap-ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+    node.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+  });
+});
+</script>
+</body>
+</html>

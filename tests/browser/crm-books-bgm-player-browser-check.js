@@ -67,6 +67,12 @@ async function signInOnPage(page, credentials) {
             return gate && getComputedStyle(gate).display === 'none';
         }, null, { timeout: 45000 });
         await page.waitForSelector('.crm-books-workspace', { timeout: 30000 });
+        await page.waitForSelector('.crm-books-list-item[data-book-id]', { timeout: 30000 });
+        const bookItem = (await page.$(`.crm-books-list-item[data-book-id="${BOOK_ID}"]`)) || (await page.$('.crm-books-list-item'));
+        if (bookItem) {
+            await bookItem.click();
+            console.log('  ✓ Book selected from list.');
+        }
         await page.waitForSelector('.crm-books-explorer-header', { timeout: 30000 });
         console.log('  ✓ Books workspace loaded.');
 

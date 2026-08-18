@@ -141,6 +141,15 @@ export class PronunciationApp {
         this.versionComparisonBar = document.getElementById('pa-version-review-bar');
         this.versionComparisonColumns = document.getElementById('pa-version-columns');
 
+        // Sub-tab navigation
+        this.subTabs = document.querySelectorAll('.pa-sub-tab');
+        this.subPanels = {
+            practice: document.getElementById('pa-panel-practice'),
+            analysis: document.getElementById('pa-panel-analysis'),
+            feedback: document.getElementById('pa-panel-feedback')
+        };
+        this._activeSubTab = 'practice';
+
         // Native audio element
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
         this.nativeAudio = document.getElementById('pa-native-audio');
@@ -194,6 +203,38 @@ export class PronunciationApp {
         this.praatAPI.warmV3();
     }
 
+    switchSubTab(tabName) {
+        if (!this.subPanels[tabName]) return;
+        this._activeSubTab = tabName;
+        this.subTabs.forEach(btn => {
+            const isTarget = btn.getAttribute('data-pa-tab') === tabName;
+            btn.classList.toggle('active', isTarget);
+            btn.setAttribute('aria-selected', String(isTarget));
+            if (isTarget) {
+                const dot = btn.querySelector('.pa-tab-dot');
+                if (dot) dot.remove();
+            }
+        });
+        Object.entries(this.subPanels).forEach(([name, panel]) => {
+            if (panel) panel.classList.toggle('active', name === tabName);
+        });
+    }
+
+    notifySubTab(tabName) {
+        if (this._activeSubTab === tabName) return;
+        const btn = document.getElementById(`pa-tab-${tabName}`);
+        if (btn && !btn.querySelector('.pa-tab-dot')) {
+            btn.insertAdjacentHTML('beforeend', '<span class="pa-tab-dot"></span>');
+        }
+    }
+
+    clearSubTabDots() {
+        this.subTabs.forEach(btn => {
+            const dot = btn.querySelector('.pa-tab-dot');
+            if (dot) dot.remove();
+        });
+    }
+
     async checkPraatBackend() {
         try {
             const isAvailable = await this.praatAPI.checkHealth();
@@ -213,6 +254,13 @@ export class PronunciationApp {
     initEventListeners() {
         this.recordBtn.addEventListener('click', () => this.startRecording());
         this.stopBtn.addEventListener('click', () => this.stopRecording());
+
+        this.subTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const name = tab.getAttribute('data-pa-tab');
+                if (name) this.switchSubTab(name);
+            });
+        });
 
         // Tab Switching Logic
         const pronounceTab = document.getElementById('tab-pronounce');
@@ -852,6 +900,9 @@ export class PronunciationApp {
         if (!word) return;
         this.currentLookupWord = word;
 
+        this.switchSubTab('practice');
+        this.clearSubTabDots();
+
         // Selecting a word is the strongest signal that a recording is coming.
         this.warmV3Recognizer();
 
@@ -953,6 +1004,10 @@ export class PronunciationApp {
         if (this.chartsContainer) this.chartsContainer.classList.add('hidden');
         if (this.feedbackSection) this.feedbackSection.style.display = 'none';
         if (this.resultsSummary) this.resultsSummary.innerHTML = '';
+        const analysisEmpty = document.getElementById('pa-analysis-empty');
+        if (analysisEmpty) analysisEmpty.style.display = '';
+        const feedbackEmpty = document.getElementById('pa-feedback-empty');
+        if (feedbackEmpty) feedbackEmpty.style.display = '';
         this.recordBtn.disabled = true;
         this.stopBtn.disabled = true;
     }
@@ -1282,9 +1337,9 @@ export class PronunciationApp {
         }
 
         this.chartsContainer?.classList.remove('hidden');
+        const analysisEmpty = document.getElementById('pa-analysis-empty');
+        if (analysisEmpty) analysisEmpty.style.display = 'none';
 
-        // Pitch contour: learner (Praat contours aligned to the engine's spans)
-        // against the native reference.
         this.visualizer.drawComparisonPitchContour(
             analysis,
             this.currentWordRef?.referenceAnalysis,
@@ -1310,6 +1365,7 @@ export class PronunciationApp {
         if (audioBlob) {
             this.showSyllableVerifier(audioBlob, drawn ? playbackSpans : []);
         }
+        if (drawn) this.switchSubTab('analysis');
     }
 
     _finishAnalysis(statusText = 'Idle') {

@@ -1469,3 +1469,212 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 681,2026-08-18,Document unresolved RFIB audit debate questions with issues purpose and proposed solutions in Markdown,Done,2026-08-18
 682,2026-08-18,Run Multi-LLM 3-model quality audit consensus and debate loop for remaining 80 percent RFIB explanations,In Progress,
 683,2026-08-18,Fix entrance-test buttons invisible (white-on-white) by adding missing design-tokens.css,Done,2026-08-18
+503,2026-07-30,Explain automatic multi-chat message splitting for BEL assistant,Done,2026-07-30
+504,2026-07-30,Provide step-by-step instructions for Dialogflow CX multi-message splitting,Done,2026-07-30
+505,2026-07-30,Audit BEL assistant connection architecture and provide precise Dialogflow CX configuration instructions,Done,2026-07-30
+506,2026-07-30,Provide exact UI click instructions for Conversational Agents Playbooks UI,Done,2026-07-30
+507,2026-07-30,Provide prompt instructions to auto-detect user language and skip language preference question,Done,2026-07-30
+508,2026-07-30,Locate model token parameters in CX Agent Studio Playbooks UI,Done,2026-07-30
+509,2026-07-30,Provide exact instructions to change output token limit and save in Playbook settings,Done,2026-07-30
+510,2026-07-30,Explain solutions for clearing active chat session and reviewing past chat history,Done,2026-07-30
+511,2026-07-30,Review app services affected by Gemini Enterprise Agent Platform deprecation notice,Done,2026-07-30
+512,2026-07-30,Migrate Gemini models to 3.1 across offline pipelines and scripts,Done,2026-07-30
+513,2026-07-30,Add persistent localStorage and New Chat action button for BEL Assistant in index.html,Done,2026-07-30
+514,2026-07-30,Build RFIB post-pipeline quality audit system with auto-fix and retry,Done,2026-07-30
+515,2026-07-30,Reduce size of BEL Assistant chat trigger widget to 1/3,Done,2026-07-30
+516,2026-07-30,Adjust BEL Assistant chat bubble 2.5x larger and teacher avatar to 70 percent,Done,2026-07-30
+517,2026-07-30,Fix RFIB support panel visibility and audio controls positioning,Done,2026-07-30
+518,2026-07-30,Import Gemini and Codex skills rules and workflows to Claude,Done,2026-07-30
+
+519,2026-07-30,UI review of Speaking and Reading modes - identify weak points and improvements,Done,2026-07-30
+
+520,2026-07-30,Audit pronunciation V3 enhancement work - gap review and functionality verification,Done,2026-07-30
+521,2026-07-30,Unify Reading mode design language into read-mode-base.css and apply official PTE names,Done,2026-07-30
+522,2026-07-31,Reduce BEL Assistant chat bubble and teacher avatar to 50 percent of original size,Done,2026-07-31
+
+521,2026-07-30,Fix pronunciation V3 review findings - google-auth pin health validation recognizer outage retries shadow telemetry,Done,2026-07-30
+522,2026-07-31,Review debug and refactor Reading mode design layer - fix mobile stacking regression and cascade guard,Done,2026-07-31
+
+524,2026-07-31,Pronounce V3 count-only segmentation release - disabled stress mode count-only training and chart/playback flow,Done,2026-07-31
+523,2026-07-31,Fix remaining Reading UI issues - ROP keyboard access WCAG accent contrast card a11y and RFIB action bar,Done,2026-07-31
+525,2026-07-31,Make phoneme benchmark evidence honest - record waived composition gates and surface via readyz,Done,2026-07-31
+526,2026-07-31,Make BEL Assistant chat bubble 2x larger while keeping avatar at 50 percent,Done,2026-07-31
+527,2026-07-31,Verify all app dictionaries use latest IPA enhancement and audit IPA style accuracy,Done,2026-07-31
+524,2026-07-31,Fix ROP touch drag with pointer events and repair stray div breaking Watch mode side-by-side layout,Done,2026-07-31
+528,2026-07-31,Repository cleanup and main branch merge with production deployment,Done,2026-07-31
+529,2026-07-31,Audit and verify pronounce retry + segmentation status report claims and propose next steps,Done,2026-07-31
+531,2026-07-31,Migrate learner IPA to true Oxford American notation and fix 7 dictionary defects,Done,2026-07-31
+530,2026-07-31,Harden admin bootstrap (remove placeholder email + require email_verified) and add split-guard + IPA segmentation convention tests,Done,2026-07-31
+531,2026-07-31,Deploy admin bootstrap security fix and IPA segmentation convention to production with Kokoro accuracy A/B verification,Done,2026-07-31
+532,2026-07-31,Redeploy Praat API Cloud Run service to fix schema v9/v10 mismatch breaking production word lookups,Done,2026-07-31
+533,2026-08-01,Fix Reading UI a11y bugs - DD keyboard-accessible blank slots (button+label) RMCSA radiogroup arrow-key pattern RMCMA checkbox semantics; verified all 5 modes end-to-end,Done,2026-08-01
+534,2026-08-01,Pagination for question pickers random toggle navigation and skill indicator,Done,2026-08-01
+535,2026-08-01,Remove Active badge box from practice skill card buttons,Done,2026-08-01
+536,2026-08-01,Fix final-span trailing-silence overshoot in pronunciation segmentation + admin bootstrap live smoke check + archive legacy orthographic samples,Done,2026-08-01
+537,2026-08-01,Speaking modes full UI browser audit + unification repair plan,Done,2026-08-01
+538,2026-08-02,Verify Speaking modes UI unification fixes via browser audit,Done,2026-08-02
+539,2026-08-02,Fix stepper spacing/box-sizing and Read Aloud timer baseline in Speaking controller,Done,2026-08-02
+540,2026-08-02,Unify Speaking difficulty/status/length filters as shared segmented pills (G1),Done,2026-08-02
+541,2026-08-02,Audit difficulty categorization across all Speaking modes against PTE baseline + input materials,Done,2026-08-02
+541,2026-08-02,Clear Speaking UI residues: empty control wrapper dead space + tutorial pill scope + stale practice-modes expectations,Done,2026-08-02
+542,2026-08-03,Diagnose V3 phoneme-recognizer unavailability on local + production Pronounce comparison,Done,2026-08-03
+543,2026-08-03,Write V3 recognizer root-cause report + no-cost remediation plan,Done,2026-08-03
+544,2026-08-03,Write no-cost implementation plan for V3 recognizer cold-start remediation,Done,2026-08-03
+545,2026-08-03,Implement V3 recognizer no-cost remediation Phases 1-6 (timeouts, transport reasons, warm-up, eager load, CPU torch pin, launcher),Done,2026-08-03
+546,2026-08-03,Deploy V3 no-cost cold-start fix to production (praat-api + phoneme-recognizer),Done,2026-08-03
+547,2026-08-03,Add Cloud Scheduler keep-alive ping for V3 recognizer (06:00-23:59 ICT) + issues log doc,Done,2026-08-03
+548,2026-08-03,Address V3 keep-alive review findings (traffic pinning + wall-clock launcher + corrected cost claims),Done,2026-08-03
+549,2026-08-03,Address second V3 keep-alive review round (Phase R release plan + measurable keep-alive gate + cost scenarios),Done,2026-08-03
+550,2026-08-03,Sync cold-start plan doc with review corrections (forbid --to-latest; add missing praat-api timeout task; drop $0 claims),Done,2026-08-03
+551,2026-08-04,Comparison review UI: draw learner prosody/duration charts in V2-V3 comparison mode and freeze boundary toggle + judgment in a sticky left rail,Done,2026-08-04
+552,2026-08-04,Fix V3 0% confidence: read recognize-v2 alignment confidence instead of legacy v1 keys and stop emitting phantom all-deletion edit scripts,Done,2026-08-04
+551,2026-08-04,Execute Phase R release (commit 18b65ed4) + production browser E2E verification,Done,2026-08-04
+553,2026-08-04,Fix V3 rateability contract drift (dead degraded gate for recognize-v2 and dead best-effort for v1) and make the acoustic count disagreement reason self-explanatory,Done,2026-08-04
+552,2026-08-04,Retrofit skipped Phase R1/R2 (verifier repair + release entrypoint + contract tests) and bake GIT_SHA into praat-api image,Done,2026-08-04
+554,2026-08-04,Update stale INDEPENDENT_COUNT_DISAGREEMENT fixture and wire 3 unrun pronunciation-analyzer test files into test:pronounce:logic,Done,2026-08-04
+555,2026-08-04,Add end-to-end chart+rail assertions to pronounce version-comparison browser check and sync the harness markup with index.html,Done,2026-08-04
+553,2026-08-04,Write V3 release status and next-steps report,Done,2026-08-04
+556,2026-08-04,Write session report for comparison review UI fixes and V3 recognizer contract drift,Done,2026-08-04
+557,2026-08-04,Update V3 pronunciation release status report with audit findings,Done,2026-08-04
+558,2026-08-04,Fix Pronunciation V3 audit findings and harden browser/contract tests,Done,2026-08-04
+559,2026-08-04,Review verify and push all changes to production,Done,2026-08-04
+554,2026-08-04,Verify V1.8.45 UI changes and live V3 deployment (tests, browser E2E, drift, provenance),Done,2026-08-04
+560,2026-08-04,Repair Read Aloud practice UI: nav order toggle, live stepper across speaking modes, composable guide modes, settings sheet cleanup,Done,2026-08-04
+561,2026-08-04,Restore Speech Coach results linking overlay (regressed in V1.8.28 family gate),Done,2026-08-04
+562,2026-08-04,"Six practice UI repairs: RFIB easy-reading after Check, D&D hint popover explanations, D&D random toggle, speaking Random ON/OFF toggle, stepper reaching Results on failed scoring, composable guide-layer styling",Done,2026-08-04
+563,2026-08-04,"Apply Reading modes UI/UX design system and v7 navigation parity to Writing modes (SWT + Write Essay)",Done,2026-08-04
+564,2026-08-06,"CRM Books: NotebookLM-style PDF library with AI summary + grounded chat (Phase 1: Shell & CRUD)",Done,2026-08-06
+565,2026-08-06,"CRM Books Phase 2: Extract & chunk — unpdf integration, book-pdf-extractor, book-chunker, book-ingest-service queue worker, crmBookIngestRunner, frontend progress with weighted stages",Done,2026-08-06
+566,2026-08-06,"CRM Books Phase 3: Embeddings & vector index — book-embeddings.js with L2 normalization, embed stage in ingest worker, book-retrieval.js with native+bruteforce strategies, vector index config",Done,2026-08-06
+567,2026-08-06,"CRM Books Phase 4: Summary — book-summary-service.js with map-reduce, summarize stage in ingest worker, complete-job flow setting book to ready",Done,2026-08-06
+568,2026-08-06,"CRM Books Phase 5: Chat & verification — book-chat-service.js with RAG-grounded chat, POST messages route with quota, chat UI with staged indicator and auto-thread creation",Done,2026-08-06
+569,2026-08-06,Code review of CRM book upload and AI summary function,Done,2026-08-06
+570,2026-08-06,"CRM Books: Fix 7 review bugs — XSS escaping, page 0 falsy, race condition guard, detached DOM, upload debounce, CSS flex truncation",Done,2026-08-06
+571,2026-08-06,Review all recent work and prepare deployment plan and release package,Done,2026-08-06
+572,2026-08-06,Deploy V1.8.46 release to production,Done,2026-08-06
+573,2026-08-06,Auto-extract title/author from PDF filename + fix 500 error on POST /api/admin/books,Done,2026-08-06
+574,2026-08-06,"CRM Books: Production E2E verification — fix embedQuery title param, VectorValue bruteforce check, create Firestore vector index, verify upload+summary+chat with real 315-page PDF",Done,2026-08-06
+575,2026-08-06,CRM Books: NotebookLM-inspired UI/UX redesign for book summarize feature,Done,2026-08-06
+576,2026-08-06,"CRM Books: Review debug and refactor — fix 7 bugs + 4 CSS issues + 4 refactors (error object handling, citation tooltip anchoring, dead code removal, SVG icon extraction, inline style cleanup)",Done,2026-08-06
+577,2026-08-06,"CRM Books UI overhaul: text overflow fix, Lora font, pages viewer, dark mode, cost tracking ($10/mo budget with admin approval), citation flicker fix, route ordering fix",Done,2026-08-06
+578,2026-08-06,Deploy V1.8.47 release to production - CRM Books UI Overhaul and Cost Tracking,Done,2026-08-06
+579,2026-08-06,Fix CRM Books Pages tab data unwrapping bug (res.data vs res),Done,2026-08-06
+580,2026-08-06,Save question along with answer when saving CRM Books chat notes,Done,2026-08-06
+581,2026-08-06,Check and correct all IPA transcriptions in review_lesson_6_sounds.docx per Oxford rules,Done,2026-08-06
+582,2026-08-06,Deploy V1.8.50 release to production - CRM Books chat Q&A note saving and unit test fixes,Done,2026-08-06
+583,2026-08-07,Investigate and fix issue where pronunciation sample recording is marked as unrateable audio,Done,2026-08-07
+584,2026-08-07,Fix pronunciation sample filter mismatch when selecting a word in the list to preserve filter-locked version,Done,2026-08-07
+585,2026-08-07,Deploy V1.8.51 release to production - CRM Pronunciation samples V2 adapter and filter locking fixes,Done,2026-08-07
+593,2026-08-07,"CRM Books: Two summary modes (whole book vs each chapter) with citation shortcuts in outline",Done,2026-08-07
+586,2026-08-07,Auto-select first word in filtered list when sample filter or search term changes in CRM Admin,Done,2026-08-07
+587,2026-08-07,Investigate why prod is showing V1.8.47 and update static version references and deploy build,Done,2026-08-07
+588,2026-08-07,Run browser test against live production URL to verify newest V1.8.52 deployment,Done,2026-08-07
+589,2026-08-07,Refactor pronunciation comparison UI - remove rail and boundary toggle and add sticky bottom judgment bar,Done,2026-08-07
+590,2026-08-07,Fix CRM Books cost tracker always showing $0 — extractUsage reading wrong response path,Done,2026-08-07
+591,2026-08-08,Fix pronunciation analyzer showing wrong stress in learner IPA for heteronyms (perfect adj vs verb),Done,2026-08-08
+592,2026-08-08,Add pitch contour smoothing to remove octave jumps and noise from prosody chart,Done,2026-08-08
+594,2026-08-08,Check and correct all IPA transcriptions in student_handout_ae_a_sounds.docx per Oxford rules,Done,2026-08-08
+595,2026-08-08,Release V1.8.56 - deploy CRM lead modal workflow and pronunciation fixes to production,Done,2026-08-08
+596,2026-08-08,Run browser test to verify live production V1.8.56 release deployment,Done,2026-08-08
+597,2026-08-09,Fix V3 CTC syllable boundary vowel truncation by distributing blank frames,Done,2026-08-09
+598,2026-08-09,Sound changes click-to-reveal tooltip + linking arc misalignment fix,Done,2026-08-09
+599,2026-08-10,Fix disconnected pitch line (spanGaps) and vowel duration truncation (backend gap-splitting + frontend measurement boundaries),Done,2026-08-10
+600,2026-08-09,Fix Speech Coach layout collisions - stacked card headers and overflow handling,Done,2026-08-09
+601,2026-08-10,Review and deploy V1.8.57 release to production,Done,2026-08-10
+602,2026-08-10,CRM Enquiry: remove Templates/Automations sections and refactor Source field (move below Zalo; blank default + required; add Zalo+Personal option),Done,2026-08-10
+603,2026-08-10,Fix Speech Coach: re-render analysis when mode toggled in RESULTS state,Done,2026-08-10
+604,2026-08-10,Fix Speech Coach: word-click audio playback and word-to-audio alignment for hyphenated reference text,Done,2026-08-10
+605,2026-08-10,Review harden and release all V1.8.59 uncommitted changes to production,Done,2026-08-10
+606,2026-08-10,Fix picker bar gradient bleed — make ra-v7-picker-bar background fully opaque across all modes,Done,2026-08-10
+607,2026-08-10,Add cloud debug save button for pronunciation analyzer on production,Done,2026-08-10
+608,2026-08-10,Research and propose vowel cutoff fix for V3 forced-alignment boundaries,In Progress,
+609,2026-08-11,Fix RFIB missing answer when unchosen and enhance answer visibility,Done,2026-08-11
+610,2026-08-11,Lock RFIB audio behind Check button with blurred overlay,Done,2026-08-11
+611,2026-08-11,Fix question number in URL across all practice modes,Done,2026-08-11
+612,2026-08-11,Fix Repeat Sentence 3-step indicator status reset on Next question,Done,2026-08-11
+613,2026-08-11,CRM Books workflow enhancement exploration - chapter splitting and comprehensive note generation prompt,Done,2026-08-11
+614,2026-08-11,CRM Books Study Module - fix 5 audit findings (chunk fallback / list rendering / button state / regeneration / Firestore notes),Done,2026-08-11
+615,2026-08-11,MCMA/MCSA explanation panels - redesign as DD/RFIB-style cards with resize handles and font size controls,Done,2026-08-11
+616,2026-08-11,SWT layout change from side-by-side split to stacked (source text on top - compose below),Done,2026-08-11
+617,2026-08-11,Review and push all current changes to production,Done,2026-08-11
+618,2026-08-11,Check and correct all IPA transcriptions in student_handout_long_o_sounds.docx per Oxford rules,Done,2026-08-11
+619,2026-08-11,Fix CRM Books note deletion bug and align study notes modal with book theme,Done,2026-08-11
+620,2026-08-11,CRM Books note section - Create Mind Map function,Done,2026-08-11
+621,2026-08-11,CRM Books Notes tab - collapsible accordion with rendered markdown,Done,2026-08-11
+622,2026-08-11,Verify and ensure all web app dictionaries use Oxford style IPA transcription,Done,2026-08-11
+623,2026-08-12,Deploy V1.8.61 release to production,Done,2026-08-12
+624,2026-08-12,Write Muse Glimmer research findings and proposal to markdown file,Done,2026-08-12
+625,2026-08-12,Check system specs and evaluate Muse Glimmer hardware compatibility,Done,2026-08-12
+626,2026-08-12,Evaluate simultaneous local model execution hardware capacity,Done,2026-08-12
+627,2026-08-12,Fix CRM full screen width display at 100 percent scale,Done,2026-08-12
+628,2026-08-12,Fix CRM Books Mind Map UI layout - SVG alignment and node positioning,Done,2026-08-12
+629,2026-08-12,Fix transparent modal background in CRM Books study notes modal,Done,2026-08-12
+630,2026-08-12,Review debug and refactor CRM Books study notes modal and overlay styles,Done,2026-08-12
+631,2026-08-12,Interactive Mind Map overhaul - light theme + drag-and-drop + user nodes + notes + PATCH API,Done,2026-08-12
+632,2026-08-12,Pronunciation analyzer: fix V3 reason codes + duration chart mismatch + V2/V3 toggle in syllable verifier,Done,2026-08-12
+633,2026-08-12,Deploy release V1.8.64 to production and run browser verification,Done,2026-08-12
+634,2026-08-12,Investigate disabled Essay AI scoring trigger button in CRM Admin,Done,2026-08-12
+635,2026-08-12,Check Essay AI status endpoint and local batch worker state,Done,2026-08-12
+636,2026-08-12,Explain queue workflow vs CRM admin backfill scan to user,Done,2026-08-12
+637,2026-08-12,Add source choice modal for Download source button with select all option,Done,2026-08-12
+638,2026-08-12,Fix notifications index query + auto-update AI score results + enable Previous Attempts on Essay results panel,Done,2026-08-12
+639,2026-08-12,Review debug and refactor CRM Books Download Source modal and execute browser test,Done,2026-08-12
+640,2026-08-12,Research NVIDIA Nemotron and perform technical comparison with Muse Glimmer,Done,2026-08-12
+641,2026-08-12,Make Previous Attempts button visible before writing start screen and on results view for Essay mode,Done,2026-08-12
+642,2026-08-12,Evaluate Muse Glimmer vs Nemotron 3.5 Lightning for project recommendation,Done,2026-08-12
+643,2026-08-12,Compile manual reviews into single directory structure with per-review subfolders,Done,2026-08-12
+644,2026-08-12,Create interactive visual comparison page for manual review vs v2/v3 segmentation,Done,2026-08-12
+645,2026-08-12,Generate self-contained offline visual HTML presentation per manual review subfolder,Done,2026-08-12
+646,2026-08-12,Add click-to-play audio slice playback for V2 V3 and Manual Review syllable zones,Done,2026-08-12
+632,2026-08-13,Fix dark mode invisible heading text in CRM Books study notes modal,Done,2026-08-13
+647,2026-08-13,Implement V4 confidence-weighted acoustic hybrid partition convention for pronunciation segmentation,Done,2026-08-13
+648,2026-08-13,Books Mind Map UI/UX optimization and enhancement plan for team R&D workflow,Done,2026-08-13
+649,2026-08-13,Books Mind Map: fix 5 runtime bugs + dark mode + implement Outline View + Minimap + Zoom-to-Node + Multi-Map,Done,2026-08-13
+650,2026-08-13,Fix mind map walkthrough gaps: outline bidirectional sync + note subset selection UI + map switching data reload,Done,2026-08-13
+651,2026-08-13,Mind Map: Fix source notes display + full UI redesign (Whimsical/MindMeister-inspired),Done,2026-08-13
+652,2026-08-14,Deploy UI enhancements and fixes across CRM Books Mindmap Essay Scoring and Notification Center,Done,2026-08-14
+653,2026-08-14,Deploy entrance test UI bug fix to production and verify test completed result links via browser testing,Done,2026-08-14
+654,2026-08-14,Mind Map: Source note reader modal + slim reference cards + draggable anchor points for connections,Done,2026-08-14
+655,2026-08-14,Check and clean up current worktree,Done,2026-08-14
+656,2026-08-14,UI/UX Overhaul handoff plan + edge case audit for Practice page,Done,2026-08-14
+657,2026-08-14,Practice Page UI/UX Overhaul implementation (green palette + hero card + progress + a11y),Done,2026-08-14
+658,2026-08-14,Fix 3 UI overhaul bugs: broken layout/colors + retention forecast leak + missing PTE toggle,Done,2026-08-14
+659,2026-08-14,Migrate Pronounce mode AI feedback from AI Studio to Vertex AI using Gemini 3 Flash,Done,2026-08-14
+660,2026-08-14,Complete Practice UI overhaul audit fixes and E2E browser verification,Done,2026-08-14
+661,2026-08-14,Revert Practice UI overhaul changes back to original UI state,Done,2026-08-14
+662,2026-08-15,Fix CRM Books page reader losing paragraph formatting from PDF text extraction,Done,2026-08-15
+663,2026-08-15,Deploy V1.8.68 release to production with CRM Books page reader PDF paragraph formatting fix,Done,2026-08-15
+664,2026-08-15,Color theme optimization (white/green/yellow/blue) across design-tokens + style.css + site-header + crm-admin.css,Done,2026-08-15
+665,2026-08-15,Fullscreen book reader mockup design and implementation verification,Done,2026-08-15
+666,2026-08-15,Check and correct all IPA transcriptions in student_handout_e_ae_sounds.docx per Oxford rules,Done,2026-08-15
+667,2026-08-15,Implement client-side English dictionary word segmentation to fix glued PDF text in CRM Books,Done,2026-08-15
+668,2026-08-15,Fix book font size slider and implement dynamic virtual page pagination eliminating scrollbars,Done,2026-08-15
+669,2026-08-15,Implement 8 immersive background themes for Book Reader full-page view with left-side theme panel,Done,2026-08-15
+670,2026-08-15,Implement Admin MP3 BGM upload for Books and full-page Book Reader audio player with controls,Done,2026-08-15
+671,2026-08-15,Make BGM upload button prominently visible in Book header Pages toolbar and Add Book modal,Done,2026-08-15
+672,2026-08-15,Fix reversed text on page flip by implementing dual-faced 3D leaf animation and slow down flip timing to 0.85s,Done,2026-08-15
+673,2026-08-16,Live browser check and screenshot evidence collection for CRM Books BGM upload and audio player,Done,2026-08-16
+674,2026-08-16,Audit fullscreen book view: fix duplicate CSS rule and add font scale persistence,Done,2026-08-16
+675,2026-08-16,Deploy Release V1.8.73 with Book Reader BGM upload rules font persistence and changelog,Done,2026-08-16
+676,2026-08-16,CRM header UI cleanup - spacing and Ollama badge and Soon badge styling,Done,2026-08-16
+677,2026-08-16,Fix Mind Map scrolling to zoom only centered on cursor without moving position,Done,2026-08-16
+678,2026-08-16,Check if release segmentation study and worktrees folders are still needed,Done,2026-08-16
+679,2026-08-16,Mind Map Visual Upgrade — 7 upgrades (entrance animations + flowing connections + branch highlighting + vibrant central node + color-tinted cards + ripple effects + ambient background),Done,2026-08-16
+680,2026-08-18,Multi-LLM 3-model audit consensus with 20 percent random sampling and debate loop for RFIB explanations,Done,2026-08-18
+681,2026-08-18,Document unresolved RFIB audit debate questions with issues purpose and proposed solutions in Markdown,Done,2026-08-18
+682,2026-08-18,Run Multi-LLM 3-model quality audit consensus and debate loop for remaining 80 percent RFIB explanations,In Progress,
+683,2026-08-18,Fix entrance-test buttons invisible (white-on-white) by adding missing design-tokens.css,Done,2026-08-18
+684,2026-08-18,Mind Map & Books Workspace 12-Feature Upgrade — Phase 1: Physics Layout + AI Expansion + Comments/Reactions + Voting,Done,2026-08-18
+685,2026-08-18,Mind Map & Books Workspace 12-Feature Upgrade — Phase 2: Text Highlighting + Reading Progress + Bookmarks,Done,2026-08-18
+686,2026-08-18,Reinstall Kokoro AI and audit rules and notes for missing Kokoro documentation,Done,2026-08-18
+687,2026-08-18,Mind Map & Books Workspace 12-Feature Upgrade — Phase 3: Split View + Research Compilation,Done,2026-08-18
+688,2026-08-18,Mind Map & Books Workspace 12-Feature Upgrade — Phase 4: Knowledge Graph + Shareable Links + Shared Collections,Done,2026-08-18
+689,2026-08-18,Update 12-Feature Handoff Document with Phases 3 & 4 completion details,Done,2026-08-18
+690,2026-08-18,Explain syllable boundary division in better,Done,2026-08-18
+691,2026-08-18,Check and correct all IPA transcriptions in review_lesson_all_vowels.docx per Oxford rules,Done,2026-08-18
+690,2026-08-18,Review debug and refactor 12-feature upgrade: 7 bugs fixed,Done,2026-08-18
+692,2026-08-18,Fix 4 mind map UX bugs: flickering connectors + delete + dblclick + anchor drag,Done,2026-08-18
+693,2026-08-19,Account Manager System for CRM - list accounts and promote or demote admin roles,Done,2026-08-19
+694,2026-08-19,Pronunciation Analyzer page redesign - split into Practice/Analysis/Feedback sub-tabs,Done,2026-08-19
+695,2026-08-19,Review audit and debug Account Manager System and related CRM components,Done,2026-08-19
+696,2026-08-19,Deploy Release V1.8.74 with Account Manager System for CRM and push to production,In Progress,

@@ -158,6 +158,7 @@ const crmRouter = createCrmRouter({
     getStorageBucket,
     serverTimestamp: () => FieldValue.serverTimestamp(),
     resolveAdminStatus,
+    getBootstrapAdminEmails,
     identity: {
         generateClassCode,
         lookupUserByEmail,

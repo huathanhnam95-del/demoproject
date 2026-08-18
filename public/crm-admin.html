@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260816-v1.8.73">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260819-v1.8.74">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260816-v1.8.73&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260816-v1.8.73&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260819-v1.8.74&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260819-v1.8.74&bgm=v2" />
 </head>
 
 <body>
@@ -72,10 +72,9 @@
 
       <div class="crm-header-right">
         <div class="crm-header-actions">
-          <span id="ollama-status-badge" class="ollama-status-badge offline" title="Ollama model status">Ollama:
+          <span id="ollama-status-badge" class="ollama-status-badge offline" title="Ollama local endpoint or worker status">Ollama:
             Checking…</span>
-          <button id="btn-ollama-refresh" class="crm-icon-btn" type="button" title="Refresh Ollama status"
-            style="padding:2px 6px;font-size:12px;">&#x21bb;</button>
+          <button id="btn-ollama-refresh" class="crm-icon-btn crm-ollama-refresh-btn" type="button" title="Refresh Ollama status">&#x21bb;</button>
           <button class="crm-icon-btn" title="Notifications">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path
@@ -1031,6 +1030,20 @@
                 </div>
               </div>
             </section>
+
+            <section class="crm-workspace-card" style="margin-top: 16px;">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Accounts</h3>
+                  <p class="crm-muted">Manage admin access for all users.</p>
+                </div>
+              </div>
+              <div style="padding: 18px;">
+                <div id="staff-account-list" class="crm-table-container">
+                  <div class="crm-muted">Loading accounts...</div>
+                </div>
+              </div>
+            </section>
           </div>
           <div class="crm-side-col">
             <section class="crm-workspace-card">
@@ -1153,6 +1166,11 @@
             <div class="crm-books-search-wrap">
               <input type="text" class="crm-books-search" placeholder="Search books..." />
             </div>
+            <div class="crm-books-source-actions">
+              <button class="crm-books-kg-open-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Knowledge Graph">🔗 Knowledge Graph</button>
+              <button class="crm-books-new-collection-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Create Collection">📂 New Collection</button>
+            </div>
+            <div class="crm-books-collection-filter-area"></div>
             <ul class="crm-books-list">
               <li class="crm-books-empty-item">No books yet. Add a source to get started.</li>
             </ul>
@@ -2579,54 +2597,54 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260816-v1.8.73"></script>
-  <script src="js/classroom-api.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/utils.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/state.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/dom.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/courses.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/students.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/student-360.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/classrooms.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/leads.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/activities.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/enrollments.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/attendance.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/finance-workflow.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/finance.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/communications.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/staff-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/student-finance.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/live-delivery.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/classroom-modal.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/student-modal.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/course-modal.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/lead-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/communications-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/books-workspace.js?v=20260816-v1.8.73&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/dashboard.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/governance.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/index.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/devtools-access.js?v=20260816-v1.8.73&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260816-v1.8.73"></script>
-  <script src="arpabet-ipa-map.js?v=20260816-v1.8.73"></script>
-  <script src="phonetics.js?v=20260816-v1.8.73"></script>
+  <script src="js/auth-session-guard.js?v=20260819-v1.8.74"></script>
+  <script src="js/classroom-api.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/utils.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/state.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/dom.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/courses.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/students.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/student-360.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/classrooms.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/leads.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/activities.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/enrollments.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/attendance.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/finance-workflow.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/finance.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/communications.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/staff-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/student-finance.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/live-delivery.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/classroom-modal.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/student-modal.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/course-modal.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/lead-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/communications-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/books-workspace.js?v=20260819-v1.8.74&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/dashboard.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/governance.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/index.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/devtools-access.js?v=20260819-v1.8.74&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260819-v1.8.74"></script>
+  <script src="arpabet-ipa-map.js?v=20260819-v1.8.74"></script>
+  <script src="phonetics.js?v=20260819-v1.8.74"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
-  <script src="crm-admin.js?v=20260816-v1.8.73"></script>
-  <script src="js/crm/segmentation-study.js?v=20260816-v1.8.73" defer></script>
+  <script src="crm-admin.js?v=20260819-v1.8.74"></script>
+  <script src="js/crm/segmentation-study.js?v=20260819-v1.8.74" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
@@ -2670,6 +2688,18 @@
           </button>
         </div>
         <div class="crm-mindmap-header-divider"></div>
+        <button id="crm-mindmap-physics-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Physics Layout">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="2.5"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(0 8 8)"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(120 8 8)"/></svg>
+          Physics
+        </button>
+        <button id="crm-mindmap-heatmap-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Vote Heatmap">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="10" width="3" height="4" rx="0.5"/><rect x="6.5" y="6" width="3" height="8" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
+          Heatmap
+        </button>
+        <button id="crm-mindmap-share-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Share Mind Map">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="4" cy="8" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><line x1="5.7" y1="7" x2="10.3" y2="5"/><line x1="5.7" y1="9" x2="10.3" y2="11"/></svg>
+          Share
+        </button>
         <button id="crm-mindmap-outline-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Outline View">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="5" y1="4" x2="14" y2="4"/><line x1="5" y1="8" x2="14" y2="8"/><line x1="5" y1="12" x2="14" y2="12"/><circle cx="2.5" cy="4" r="0.8" fill="currentColor"/><circle cx="2.5" cy="8" r="0.8" fill="currentColor"/><circle cx="2.5" cy="12" r="0.8" fill="currentColor"/></svg>
           Outline
@@ -2720,6 +2750,7 @@
         <button class="crm-mindmap-context-item" data-action="edit-title">✏️ Edit Title</button>
         <button class="crm-mindmap-context-item" data-action="add-child">➕ Add Child</button>
         <button class="crm-mindmap-context-item" data-action="add-note">📝 Add Note</button>
+        <button class="crm-mindmap-context-item" data-action="expand-ai">🤖 Expand with AI</button>
         <div class="crm-mindmap-context-divider"></div>
         <div class="crm-mindmap-color-swatches" data-action="change-color">
           <div class="crm-mindmap-color-swatch" data-color="#3B82F6" style="background:#3B82F6" title="Blue"></div>
@@ -2766,6 +2797,25 @@
         <div class="crm-mindmap-inspector-section">
           <h4>Your Notes</h4>
           <textarea id="crm-mindmap-inspector-notes" class="crm-mindmap-inspector-notes" placeholder="Add your thoughts, annotations, or comments about this concept..." rows="5"></textarea>
+        </div>
+        <hr class="crm-mindmap-divider" />
+        <div class="crm-mindmap-inspector-section">
+          <h4>Votes</h4>
+          <div id="crm-mindmap-inspector-votes" class="crm-mindmap-votes-bar"></div>
+        </div>
+        <hr class="crm-mindmap-divider" />
+        <div class="crm-mindmap-inspector-section">
+          <h4>Reactions</h4>
+          <div id="crm-mindmap-inspector-reactions" class="crm-mindmap-reactions-bar"></div>
+        </div>
+        <hr class="crm-mindmap-divider" />
+        <div class="crm-mindmap-inspector-section">
+          <h4>Comments</h4>
+          <div id="crm-mindmap-inspector-comments" class="crm-mindmap-comments-thread"></div>
+          <div class="crm-mindmap-comment-compose">
+            <textarea id="crm-mindmap-comment-input" class="crm-mindmap-inspector-notes" placeholder="Add a comment..." rows="2"></textarea>
+            <button id="crm-mindmap-comment-send" class="crm-btn crm-btn-primary crm-btn-sm" style="margin-top:6px;align-self:flex-end;">Post</button>
+          </div>
         </div>
       </aside>
       <!-- Version History Panel -->

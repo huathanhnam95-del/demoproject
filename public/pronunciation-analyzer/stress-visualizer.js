@@ -392,6 +392,20 @@ class StressVisualizer {
                 }
             }
         });
+
+        // Reference charts are drawn while the results grid may still be
+        // hidden during a word change. Chart.js measures a hidden parent as
+        // 0x0 and does not always observe the subsequent class removal, so
+        // give the chart one visible layout pass before measuring it again.
+        const chart = this.stressChart;
+        const resizeAfterLayout = () => {
+            if (this.stressChart === chart) chart.resize();
+        };
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(resizeAfterLayout);
+        } else {
+            setTimeout(resizeAfterLayout, 0);
+        }
     }
 
     drawDurationChartLegacy(nativeSyllables, userSyllables) {
@@ -1162,7 +1176,14 @@ class StressVisualizer {
     toggleFeedbackSection(show) {
         const section = document.getElementById('pa-feedback-section');
         if (section) section.style.display = show ? 'block' : 'none';
-        if (!show) {
+        const feedbackEmpty = document.getElementById('pa-feedback-empty');
+        if (feedbackEmpty) feedbackEmpty.style.display = show ? 'none' : '';
+        if (show) {
+            const feedbackTab = document.getElementById('pa-tab-feedback');
+            if (feedbackTab && !feedbackTab.querySelector('.pa-tab-dot')) {
+                feedbackTab.insertAdjacentHTML('beforeend', '<span class="pa-tab-dot"></span>');
+            }
+        } else {
             const content = document.getElementById('pa-feedback-content');
             if (content) content.innerHTML = '';
             const tabs = document.getElementById('pa-syllable-tabs');

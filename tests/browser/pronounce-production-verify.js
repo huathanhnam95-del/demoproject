@@ -71,17 +71,22 @@ async function fetchText(url) {
     'app.js on production is missing getSyllableIpaSegments()'
   );
   assert.ok(
-    appSrc.includes("segmentationConvention: 'ipa-phonological'"),
+    /segmentationConvention\s*:\s*(['"])ipa-phonological-contiguous-v1\1/.test(appSrc),
     'app.js on production is not tagging saved samples with the IPA convention'
   );
   console.log('    app.js: IPA segmentation convention present');
 
   const verifierSrc = await fetchText(`${BASE}/pronunciation-analyzer/syllable-verifier.js`);
   assert.ok(
-    verifierSrc.includes('Use IPA boundaries, not spelling.'),
-    'syllable-verifier.js on production is missing the IPA annotation instruction'
+    /manualConvention\s*=\s*(['"])ipa-phonological-contiguous-v1\1/.test(verifierSrc),
+    'syllable-verifier.js on production is missing the contiguous IPA manual convention'
   );
-  console.log('    syllable-verifier.js: IPA annotation instruction present');
+  assert.ok(
+    verifierSrc.includes('const boundaryLabel = previousTarget && nextTarget')
+      && verifierSrc.includes('between /${previousTarget}/ and /${nextTarget}/'),
+    'syllable-verifier.js on production is missing IPA boundary labeling behavior'
+  );
+  console.log('    syllable-verifier.js: contiguous IPA convention and boundary labeling present');
 
   console.log('[2] Checking admin API fails closed without a token...');
   const adminResponse = await request(`${BASE}/api/admin/status`);

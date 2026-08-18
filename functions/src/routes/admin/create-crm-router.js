@@ -113,6 +113,28 @@ function buildStatusResolver(deps) {
     });
 }
 
+function resolveBootstrapAdminEmails(deps) {
+    if (typeof deps?.getBootstrapAdminEmails === 'function') {
+        const emails = deps.getBootstrapAdminEmails();
+        if (emails instanceof Set) return emails;
+        if (Array.isArray(emails)) {
+            return new Set(emails.map((e) => String(e || '').trim().toLowerCase()).filter(Boolean));
+        }
+    }
+
+    if (deps?.bootstrapAdminEmails) {
+        if (deps.bootstrapAdminEmails instanceof Set) return deps.bootstrapAdminEmails;
+        if (Array.isArray(deps.bootstrapAdminEmails)) {
+            return new Set(deps.bootstrapAdminEmails.map((e) => String(e || '').trim().toLowerCase()).filter(Boolean));
+        }
+    }
+
+    return new Set([
+        'huathanhnam95@gmail.com',
+        String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+    ].filter(Boolean));
+}
+
 function ensureDependencies(deps) {
     for (const key of ['db', 'authMiddleware']) {
         if (!Object.prototype.hasOwnProperty.call(deps, key)) {
@@ -399,6 +421,140 @@ module.exports = function createCrmRouter(rawDeps) {
             }, 'Teacher created.');
         } catch (error) {
             return sendError(res, 500, 'CREATE_TEACHER_ERROR', 'Failed to create teacher account.', error?.message || error);
+        }
+    });
+
+    // --- Account management (admin only) ---
+    router.get('/accounts', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const snap = await deps.db.collection(USERS).get();
+            const accounts = [];
+
+            snap.forEach((doc) => {
+                const d = doc.data() || {};
+                const uid = String(doc.id || '').trim();
+                if (!uid) return;
+
+                const isAdmin = Boolean(d.isAdmin);
+                const isTeacher = Boolean(d.isTeacher || d.crmRole === 'teacher');
+                const crmRole = d.crmRole || (isAdmin ? 'admin' : (isTeacher ? 'teacher' : 'user'));
+
+                accounts.push({
+                    uid,
+                    email: d.email || '',
+                    displayName: d.displayName || d.name || '',
+                    isAdmin,
+                    isTeacher,
+                    crmRole
+                });
+            });
+
+            accounts.sort((a, b) => {
+                const nameA = (a.displayName || a.email || a.uid || '').toLowerCase();
+                const nameB = (b.displayName || b.email || b.uid || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            return sendSuccess(res, { accounts, count: accounts.length });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_ACCOUNTS_ERROR', 'Failed to list accounts.', error?.message || error);
+        }
+    });
+
+    router.patch('/accounts/:uid/role', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const targetUid = String(req.params.uid || '').trim();
+            if (!targetUid) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing target UID.');
+            }
+
+            if (typeof req.body?.isAdmin !== 'boolean') {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'isAdmin must be a boolean.');
+            }
+
+            const isAdmin = req.body.isAdmin;
+            const targetRef = deps.db.collection(USERS).doc(targetUid);
+            const targetSnap = await targetRef.get();
+
+            if (!targetSnap.exists) {
+                return sendError(res, 404, 'ACCOUNT_NOT_FOUND', 'User account not found.');
+            }
+
+            const targetData = targetSnap.data() || {};
+            let targetEmail = String(targetData.email || '').trim().toLowerCase();
+
+            const auth = resolveAuthClient(deps);
+            let freshAuthUser = null;
+            if (auth) {
+                try {
+                    freshAuthUser = await auth.getUser(targetUid);
+                    if (!targetEmail && freshAuthUser?.email) {
+                        targetEmail = String(freshAuthUser.email).trim().toLowerCase();
+                    }
+                } catch (getUserError) {
+                    console.warn('[CRM Admin] Could not fetch auth user record for target:', getUserError?.message || getUserError);
+                }
+            }
+
+            const bootstrapAdminEmails = resolveBootstrapAdminEmails(deps);
+            if (!isAdmin && bootstrapAdminEmails.has(targetEmail)) {
+                return sendError(res, 403, 'BOOTSTRAP_ADMIN_PROTECTED', 'Cannot demote a bootstrap admin account.');
+            }
+
+            if (!isAdmin && req.user?.uid === targetUid) {
+                return sendError(res, 403, 'SELF_DEMOTION_FORBIDDEN', 'Cannot demote your own admin account.');
+            }
+
+            const updatePayload = {
+                isAdmin,
+                adminUpdatedAt: new Date().toISOString(),
+                adminUpdatedBy: req.user?.uid || null
+            };
+
+            if (isAdmin) {
+                if (!targetData.crmRole || targetData.crmRole === 'user') {
+                    updatePayload.crmRole = 'admin';
+                }
+            } else {
+                if (targetData.crmRole === 'admin') {
+                    updatePayload.crmRole = targetData.isTeacher ? 'teacher' : 'user';
+                }
+            }
+
+            await targetRef.set(updatePayload, { merge: true });
+
+            if (auth) {
+                try {
+                    const fresh = freshAuthUser || await auth.getUser(targetUid);
+                    const existingClaims = fresh?.customClaims && typeof fresh.customClaims === 'object'
+                        ? fresh.customClaims
+                        : {};
+                    await auth.setCustomUserClaims(targetUid, { ...existingClaims, isAdmin });
+                } catch (claimError) {
+                    console.warn('[CRM Admin] Failed to sync custom user claims for account:', claimError?.message || claimError);
+                }
+            }
+
+            await writeAuditLog({
+                action: isAdmin ? 'account.promote' : 'account.demote',
+                entityType: 'user',
+                entityId: targetUid,
+                metadata: {
+                    email: targetEmail || targetData.email || null,
+                    displayName: targetData.displayName || null,
+                    isAdmin
+                }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                account: {
+                    uid: targetUid,
+                    email: targetEmail || targetData.email || '',
+                    isAdmin
+                }
+            }, isAdmin ? 'Account promoted to admin.' : 'Account demoted from admin.');
+        } catch (error) {
+            return sendError(res, 500, 'UPDATE_ACCOUNT_ROLE_ERROR', 'Failed to update account role.', error?.message || error);
         }
     });
 

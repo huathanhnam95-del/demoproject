@@ -668,6 +668,7 @@
     elements.btnStaffCreateTeacher = document.getElementById('btn-staff-create-teacher');
     elements.staffCreateTeacherError = document.getElementById('staff-create-teacher-error');
     elements.staffTeacherList = document.getElementById('staff-teacher-list');
+    elements.staffAccountList = document.getElementById('staff-account-list');
 
     elements.btnRefreshAgentSources = document.getElementById('btn-refresh-agent-sources');
     elements.inputAgentSourceName = document.getElementById('agent-source-name');
@@ -1524,7 +1525,8 @@
         elements,
         showToast,
         apiFetchJson,
-        escapeHtml
+        escapeHtml,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || null
       })
       : null;
     if (staffWorkspaceController && typeof staffWorkspaceController.init === 'function') {

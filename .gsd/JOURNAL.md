@@ -74,13 +74,15 @@
 - Completed 20% sample audit (221 questions): 89.6% direct approval, 9.5% resolved via debate to unanimous consensus (99.1% total quality pass rate).
 - Documented 2 unresolved debate cases (Q146, Q520) with root cause and gold solutions in `RFIB_unresolved_audit_analysis.md`.
 - Patched Q146 and Q520 in revision and sample datasets via `scripts/patch_unresolved.py`.
-- Launched remaining 80% audit run (task-2761) with atomic checkpointing; processed 250 / 1,105 questions (22.6% total pool).
+- Resumed full remaining 80% audit run (task-2859); reached **297 / 1,105 questions (26.9% total pool)** with atomic per-question saving.
+- Provided deep linguistic analysis for Heavy NP Shift (Q146) and Catenative Verbs (Q520).
 - Updated Task Tracker (Task 680 Done, Task 681 Done, Task 682 In Progress).
 
 ### Verification
 - [x] Empirically validated 20% sample with JSON debate report (`public/database/RFIB/RFIB_audit_debate_report.json`).
-- [x] Verified patch execution for Q146 Blank 3 and Q520 Blank 4.
-- [ ] Complete remaining 80% audit run (in progress in background).
+- [x] Verified patch execution for Q146 Blank 3 and Q520 Blank 4 across all database files.
+- [x] Verified 297 audited records in `public/database/RFIB/RFIB_audited_full.jsonl`.
+- [ ] Complete remaining 73.1% of audit run (808 questions remaining).
 
 ### Paused Because
 - User requested session pause.

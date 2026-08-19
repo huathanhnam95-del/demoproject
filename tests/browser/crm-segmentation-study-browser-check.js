@@ -106,6 +106,9 @@ async function main() {
     await page.goto(`${BASE_ORIGIN}/crm-admin.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'visible' });
     await page.click('#nav-pronunciation-samples-container button');
+    if (await page.locator('#pv-tab-study').count() > 0) {
+      await page.click('#pv-tab-study');
+    }
     await page.waitForSelector('#segmentation-study-workspace', { state: 'visible' });
     assert.strictEqual(await page.locator('#segmentation-study-time-ruler').count(), 1, 'The shared timeline must include a WaveSurfer Timeline plugin container.');
     await page.fill('#segmentation-study-operator', 'Team reviewer');

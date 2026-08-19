@@ -296,6 +296,9 @@ async function main() {
 
     // 3. Click the sidebar nav button to navigate to the pronunciation-samples panel
     await page.click('#nav-pronunciation-samples-container button');
+    if (await page.locator('#pv-tab-samples').count() > 0) {
+      await page.click('#pv-tab-samples');
+    }
 
     await page.waitForSelector('#corpus-saved-samples .crm-stack-item', { state: 'visible', timeout: 5000 });
     const savedSamplesText = await page.textContent('#corpus-saved-samples');
@@ -319,6 +322,9 @@ async function main() {
     assert.ok(!requestLog.some((r) => r.path === '/analyze/v2'), 'CRM re-analysis must not fall back to V2.');
     
     // 4. Select target word 'photograph'
+    if (await page.locator('#pv-tab-record').count() > 0) {
+      await page.click('#pv-tab-record');
+    }
     await page.waitForSelector('.corpus-word-btn[data-word="photograph"]', { state: 'visible' });
     await page.locator('#corpus-sample-filter').selectOption('all');
     const photographButton = page.locator('.corpus-word-btn[data-word="photograph"]');

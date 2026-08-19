@@ -6255,7 +6255,9 @@ window.CrmBooksWorkspace = (function () {
         function saveHighlights(bookId, highlights) {
             try {
                 localStorage.setItem(getHighlightStorageKey(bookId), JSON.stringify(highlights));
-            } catch (_) {}
+            } catch (_) {
+                // ignore storage error
+            }
         }
 
         function addHighlight(bookId, pageNum, text, color) {
@@ -6347,7 +6349,9 @@ window.CrmBooksWorkspace = (function () {
         function saveProgress(bookId, progress) {
             try {
                 localStorage.setItem(getProgressStorageKey(bookId), JSON.stringify(progress));
-            } catch (_) {}
+            } catch (_) {
+                // ignore storage error
+            }
         }
 
         function markPageRead(bookId, pageNum) {
@@ -6399,7 +6403,9 @@ window.CrmBooksWorkspace = (function () {
         function saveBookmarks() {
             try {
                 localStorage.setItem('crm_books_bookmarks', JSON.stringify(bookmarks));
-            } catch (_) {}
+            } catch (_) {
+                // ignore storage error
+            }
         }
 
         function addBookmark(bookId, pageNum, label, color) {

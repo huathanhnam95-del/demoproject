@@ -7141,6 +7141,25 @@
     }
   });
 
+  // Pronunciation Verification sub-tab switching (runs independently of admin init)
+  (function initPvSubTabs() {
+    const pvSubTabs = document.querySelectorAll('.pv-sub-tab');
+    const pvTabPanels = document.querySelectorAll('.pv-tab-panel');
+    pvSubTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.pvTab;
+        pvSubTabs.forEach((t) => {
+          const isMatch = t.dataset.pvTab === target;
+          t.classList.toggle('is-active', isMatch);
+          t.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        });
+        pvTabPanels.forEach((p) => {
+          p.classList.toggle('is-active', p.dataset.pvPanel === target);
+        });
+      });
+    });
+  })();
+
   function initCorpusTool() {
     let wordBtns = Array.from(document.querySelectorAll('.corpus-word-btn'));
     const wordList = document.getElementById('corpus-word-list');

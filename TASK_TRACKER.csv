@@ -1678,3 +1678,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 694,2026-08-19,Pronunciation Analyzer page redesign - split into Practice/Analysis/Feedback sub-tabs,Done,2026-08-19
 695,2026-08-19,Review audit and debug Account Manager System and related CRM components,Done,2026-08-19
 696,2026-08-19,Deploy Release V1.8.74 with Account Manager System for CRM and push to production,Done,2026-08-19
+697,2026-08-19,Clean up repository maintenance items - prune stale worktrees remove untracked test images and delete merged branches,Done,2026-08-19
+698,2026-08-19,Redesign CRM pronunciation samples page with sub-tab layout (Record Queue Samples Study),Done,2026-08-19
+699,2026-08-19,Audit CRM Account Manager implementation and fix missing crm-btn-sm CSS class,Done,2026-08-19
+700,2026-08-19,Deploy Release V1.8.75 with CRM Pronunciation Verification sub-tab architecture and test hardening,Done,2026-08-19

@@ -1,3 +1,24 @@
+## [V1.8.75] - 2026-08-19
+
+### Added & Enhanced
+- **CRM Pronunciation Verification Sub-Tab Architecture**:
+  - Reorganized the Pronunciation Samples tool inside CRM Admin (`public/crm-admin.html` and `public/crm-admin.css`) into a responsive 4-sub-tab workflow:
+    - **Record**: Real-time attempt capture, rapid-stream hands-free VAD, Oxford 5000 word selection, and deidentified audio logging.
+    - **Queue**: Reference audio variant review queue for missing, conflicting, or unrateable dictionary audio replacements.
+    - **Samples**: Cloud-stored deidentified recordings list with audio playback and V3 re-analysis triggers.
+    - **Study**: Interactive segmentation study workspace with multi-version alignment and WaveSurfer timeline inspection.
+  - Added standalone client-side sub-tab switcher (`initPvSubTabs`) with ARIA accessibility roles and persistence.
+- **CRM Admin UI Polish & Design System Alignment**:
+  - Added missing `.crm-btn-sm` button sizing utility across CRM styles.
+  - Improved layout flow, spacing, action bar positioning, and responsive container constraints.
+
+### Fixed & Hardened
+- **ESLint & Code Hygiene**:
+  - Resolved `no-empty` lint errors in `public/js/crm/books-workspace.js` storage and bookmark handlers.
+- **Automated Verification Suites**:
+  - Updated E2E browser tests (`tests/browser/crm-pronunciation-samples-browser-check.js` and `tests/browser/crm-segmentation-study-browser-check.js`) to support sub-tab navigation.
+  - Verified 100% test pass across `npm run verify:crm` and all logic suites.
+
 ## [V1.8.74] - 2026-08-19
 
 ### Added & Enhanced

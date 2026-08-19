@@ -1,3 +1,14 @@
+## [V1.8.76] - 2026-08-19
+
+### Fixed & Enhanced
+- **CRM Admin Cloud Functions & Account Manager Deployment**:
+  - Deployed backend Cloud Functions `api` (`us-central1`) and scheduled runners to production, activating the `/api/admin/accounts` and `/api/admin/accounts/:uid/role` endpoints.
+  - Verified live endpoint access returns `200 OK` for authenticated administrators on both `betterenglishlearning.com` and `listening-tasks-3ae34.web.app`.
+  - Added ESLint disable directives for clean compilation and linting across Cloud Functions.
+- **CRM Admin Header Nav Overflow & Responsive Menu**:
+  - Consolidated auxiliary navigation items (Settings, Chatbots, Dev Tools, Pronunciation Samples) into a streamlined **More ▾** dropdown menu to eliminate horizontal header overflow.
+  - Polished Pronunciation Verification responsive page header, layout borders, and action button alignment across desktop and mobile viewports.
+
 ## [V1.8.75] - 2026-08-19
 
 ### Added & Enhanced

@@ -291,10 +291,17 @@ async function main() {
     // 1. Load the main CRM Admin page
     await page.goto(`${BASE_ORIGIN}/crm-admin.html`, { waitUntil: 'domcontentloaded' });
     
-    // 2. Wait for the Pronunciation Samples sidebar nav to become visible (capability confirmed)
-    await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'visible' });
+    // 2. Wait for the Pronunciation Samples sidebar nav to become active (capability confirmed)
+    await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'attached' });
+    await page.waitForFunction(() => {
+      const el = document.getElementById('nav-pronunciation-samples-container');
+      return el && el.style.display !== 'none';
+    });
 
-    // 3. Click the sidebar nav button to navigate to the pronunciation-samples panel
+    // 3. Click the nav button (hovering More dropdown if nested) to navigate to the pronunciation-samples panel
+    if (await page.locator('.crm-nav-more-dropdown').count() > 0) {
+      await page.hover('.crm-nav-more-dropdown');
+    }
     await page.click('#nav-pronunciation-samples-container button');
     if (await page.locator('#pv-tab-samples').count() > 0) {
       await page.click('#pv-tab-samples');

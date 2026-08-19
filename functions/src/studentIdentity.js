@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const { db, getAuth } = require('./utils/firebase_admin_init');
 const { FieldValue } = require('firebase-admin/firestore');
 const { enqueuePracticeAccessJob } = require('./crm/practice-access-service');

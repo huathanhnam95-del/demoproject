@@ -104,7 +104,14 @@ async function main() {
     page.on('pageerror', (error) => pageErrors.push(error.message));
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
     await page.goto(`${BASE_ORIGIN}/crm-admin.html`, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'visible' });
+    await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'attached' });
+    await page.waitForFunction(() => {
+      const el = document.getElementById('nav-pronunciation-samples-container');
+      return el && el.style.display !== 'none';
+    });
+    if (await page.locator('.crm-nav-more-dropdown').count() > 0) {
+      await page.hover('.crm-nav-more-dropdown');
+    }
     await page.click('#nav-pronunciation-samples-container button');
     if (await page.locator('#pv-tab-study').count() > 0) {
       await page.click('#pv-tab-study');

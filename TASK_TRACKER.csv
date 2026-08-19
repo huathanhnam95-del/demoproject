@@ -1682,3 +1682,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 698,2026-08-19,Redesign CRM pronunciation samples page with sub-tab layout (Record Queue Samples Study),Done,2026-08-19
 699,2026-08-19,Audit CRM Account Manager implementation and fix missing crm-btn-sm CSS class,Done,2026-08-19
 700,2026-08-19,Deploy Release V1.8.75 with CRM Pronunciation Verification sub-tab architecture and test hardening,Done,2026-08-19
+701,2026-08-19,Fix api/admin/accounts 404 error in CRM Account Manager,Done,2026-08-19
+702,2026-08-19,Deploy Firebase Cloud Functions to production and verify api/admin/accounts endpoint,Done,2026-08-19
+703,2026-08-19,Verify CRM Admin login and Account Manager flow with admin account in browser,Done,2026-08-19
+704,2026-08-19,CRM header nav overflow fix and pronunciation samples page UI redesign,Done,2026-08-19
+705,2026-08-19,Deploy Release V1.8.76 with CRM header nav overflow dropdown fix and live Cloud Functions account manager,Done,2026-08-19

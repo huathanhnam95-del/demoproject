@@ -1689,5 +1689,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 705,2026-08-19,Deploy Release V1.8.76 with CRM header nav overflow dropdown fix and live Cloud Functions account manager,Done,2026-08-19
 706,2026-08-20,Deploy Release V1.8.77 to production with CRM header and mind map UI updates,Done,2026-08-20
 707,2026-08-20,Fix 429 rate limit error on api/config in CRM initialization,Done,2026-08-20
+708,2026-08-20,Merge Study-v2 waveform repair and deploy V1.8.79 to production,Done,2026-08-20
+
 
 

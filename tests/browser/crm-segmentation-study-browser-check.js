@@ -269,6 +269,8 @@ async function main() {
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'A direct V4 mismatch must keep Save disabled.');
     await page.click('#segmentation-study-analyze');
     await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
+    assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /pronunciation-partition-variants-v2/, 'V4 must visibly identify the authoritative partition schema.');
+    assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /partitionVariants\.v4/, 'V4 must visibly identify its authoritative provenance source.');
     await page.check('#segmentation-study-playback-confirmed');
     await page.click('[data-study-version="v3"]');
     await page.click('[data-study-version="v2"]');

@@ -715,6 +715,26 @@
     elements.tabs = Array.from(tabContainer.querySelectorAll('[data-study-version]'));
   }
 
+  function v4Provenance() {
+    const partition = state.comparison?.v3?.analysis?.partitionVariants;
+    const directWrapper = state.comparison?.v4;
+    const direct = directWrapper?.analysis || directWrapper;
+    if (!partition || !Array.isArray(partition.v4) || !direct) return null;
+    const sourceValues = [direct.source, direct.provenance?.source, directWrapper.source, directWrapper.provenance?.source].filter(Boolean);
+    const schemaValues = [direct.schemaVersion, direct.schema_version, direct.partitionSchemaVersion, direct.partition_schema_version,
+      direct.provenance?.schemaVersion, direct.provenance?.schema_version, directWrapper.schemaVersion, directWrapper.schema_version,
+      directWrapper.partitionSchemaVersion, directWrapper.partition_schema_version, directWrapper.provenance?.schemaVersion, directWrapper.provenance?.schema_version].filter(Boolean);
+    const variantValues = [direct.variant, direct.provenance?.variant, directWrapper.variant, directWrapper.provenance?.variant].filter(Boolean);
+    const allMatch = (values, expected) => values.length > 0 && values.every((value) => value === expected);
+    const analysisVersion = partition.v4AnalysisVersion || partition.v4_analysis_version;
+    if (partition.schemaVersion !== 'pronunciation-partition-variants-v2'
+      || !analysisVersion
+      || !allMatch(sourceValues, 'partitionVariants.v4')
+      || !allMatch(schemaValues, partition.schemaVersion)
+      || !allMatch(variantValues, 'v4')) return null;
+    return { source: sourceValues[0], schemaVersion: partition.schemaVersion, variant: variantValues[0], analysisVersion };
+  }
+
   function renderPanel(version) {
     const panel = elements.panels[version];
     if (!panel) return;
@@ -733,9 +753,20 @@
     const spans = analysisSpans(version);
     const analysis = analysisForVersion(version) || {};
     if (!spans.length) { panel.textContent = `${version.toUpperCase()} is unavailable for this recording.`; return; }
+    const provenance = version === 'v4' ? v4Provenance() : null;
+    if (version === 'v4' && !provenance) {
+      panel.textContent = 'V4 is unavailable: authoritative partition provenance is missing.';
+      return;
+    }
     const line = document.createElement('div');
     line.textContent = `${version.toUpperCase()} · ${spans.length} syllables · ${analysis.analysisVersion || analysis.analysis_version || 'analysis revision unavailable'}`;
     panel.appendChild(line);
+    if (provenance) {
+      const provenanceLine = document.createElement('div');
+      provenanceLine.className = 'crm-muted segmentation-study-v4-provenance';
+      provenanceLine.textContent = `V4 provenance · source ${provenance.source} · schema ${provenance.schemaVersion} · variant ${provenance.variant} · analysis ${provenance.analysisVersion}`;
+      panel.appendChild(provenanceLine);
+    }
     const labels = document.createElement('ol');
     labels.className = 'segmentation-study-ipa-labels';
     const syllables = Array.isArray(state.task?.referenceSyllableIpa) ? state.task.referenceSyllableIpa : [];

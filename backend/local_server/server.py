@@ -2883,11 +2883,54 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
     receive more acoustic correction; high-confidence syllables are untouched.
     Raw CTC and measurement intervals remain unchanged.
     """
-    empty_result = {'changed': False, 'corrections': []}
+    empty_result = {'changed': False, 'corrections': [], 'diagnostics': []}
     if not isinstance(spans, list) or len(spans) < 1:
         return empty_result
+
+    def _validated_confidence(value):
+        """Return a finite confidence in [0, 1], or None for unusable data."""
+        if value is None or isinstance(value, (bool, str, bytes)):
+            return None
+        try:
+            confidence = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not np.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+            return None
+        return confidence
+
+    def _none_confidence_diagnostic(index, raw_confidence):
+        reason = 'missing confidence' if raw_confidence is None else 'invalid confidence'
+        return {
+            'index': index,
+            'correction_type': 'none',
+            'confidence': 0.0,
+            'blend_weight': 0.0,
+            'shift_ms': 0.0,
+            'reason': reason,
+            'boundary': None,
+            'old': None,
+            'new': None,
+            'signed_shift': 0.0,
+            'signed_shift_ms': 0.0,
+            'mutation': False,
+        }
+
+    def _unavailable_acoustic_result():
+        """Retain explicit confidence diagnostics when acoustic data is absent."""
+        return {
+            'changed': False,
+            'corrections': [
+                _none_confidence_diagnostic(index, span.get('confidence'))
+                for index, span in enumerate(spans)
+                if isinstance(span, dict)
+                and _validated_confidence(span.get('confidence')) is None
+            ],
+            'diagnostics': [],
+        }
+
     if not isinstance(intensity, dict):
-        return empty_result
+        return _unavailable_acoustic_result()
 
     i_times = intensity.get('times')
     i_values = intensity.get('values')
@@ -2896,7 +2939,7 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
         or not isinstance(i_values, list)
         or len(i_times) != len(i_values)
     ):
-        return empty_result
+        return _unavailable_acoustic_result()
     contour = []
     for t, v in zip(i_times, i_values):
         try:
@@ -2907,7 +2950,8 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
         if np.isfinite(tf) and np.isfinite(vf):
             contour.append((tf, vf))
     if not contour:
-        return empty_result
+        return _unavailable_acoustic_result()
+    contour.sort(key=lambda item: item[0])
 
     pitch_contour = []
     if isinstance(pitch, dict):
@@ -2927,10 +2971,6 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
                 vf = None
             if np.isfinite(tf):
                 pitch_contour.append((tf, vf))
-
-    has_confidence = any(s.get('confidence') is not None for s in spans)
-    if not has_confidence:
-        return empty_result
 
     CONFIDENCE_HIGH = 0.55
     CONFIDENCE_LOW = 0.20
@@ -2998,11 +3038,15 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
     def _find_intensity_onset(boundary, search_window, rise_db):
         window_start = boundary - search_window
         window = [(t, v) for t, v in contour if window_start <= t <= boundary]
-        if len(window) < 2:
+        if len(window) < 3:
             return None
-        min_val = min(v for _, v in window)
-        for t, v in window:
-            if v >= min_val + rise_db:
+        valley_index = min(range(len(window)), key=lambda index: window[index][1])
+        valley_time, valley_value = window[valley_index]
+        # An onset is a rise *after* the intensity valley.  Looking for the
+        # first frame above the window minimum can select a pre-valley frame
+        # and shift a boundary into the preceding syllable.
+        for t, v in window[valley_index + 1:]:
+            if t > valley_time and v >= valley_value + rise_db:
                 return t
         return None
 
@@ -3033,39 +3077,48 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
     n = len(spans)
     changed = False
     corrections = []
+    mutation_diagnostics = []
 
     for i in range(n):
         span = spans[i]
+        correction_count_before = len(corrections)
         raw_confidence = span.get('confidence')
-        if raw_confidence is None:
-            corrections.append({
-                'index': i, 'correction_type': 'none',
-                'confidence': 0.0, 'blend_weight': 0.0,
-                'shift_ms': 0.0, 'reason': 'no confidence data',
-            })
+        confidence = _validated_confidence(raw_confidence)
+        if confidence is None:
+            corrections.append(_none_confidence_diagnostic(i, raw_confidence))
             continue
-        confidence = float(raw_confidence)
         w = _blend_weight(confidence, i, n)
 
-        correction = {
-            'index': i,
-            'correction_type': 'none',
-            'confidence': round(confidence, 4),
-            'blend_weight': round(w, 4),
-            'shift_ms': 0.0,
-            'reason': 'high confidence, no correction needed' if w == 0 else '',
-        }
-
-        if w == 0:
-            corrections.append(correction)
-            continue
+        def append_correction(boundary, side, old_value, new_value, correction_type, reason):
+            """Record exactly one diagnostic for one changed boundary."""
+            signed_shift = new_value - old_value
+            signed_shift_ms = round(signed_shift * 1000, 1)
+            diagnostic = {
+                # Legacy diagnostic keys retained for existing consumers.
+                'index': i,
+                'correction_type': correction_type,
+                'confidence': round(confidence, 4),
+                'blend_weight': round(w, 4),
+                'shift_ms': signed_shift_ms,
+                'reason': reason,
+                # V4 boundary mutation provenance.
+                'boundary': boundary,
+                'side': side,
+                'old': round(old_value, 6),
+                'new': round(new_value, 6),
+                'old_boundary': round(old_value, 6),
+                'new_boundary': round(new_value, 6),
+                'signed_shift': round(signed_shift, 6),
+                'signed_shift_ms': signed_shift_ms,
+                'mutation': True,
+            }
+            corrections.append(diagnostic)
+            mutation_diagnostics.append(diagnostic)
 
         current_part_start = _number(span, 'partition_start_time', 'partitionStartTime')
         current_part_end = _number(span, 'partition_end_time', 'partitionEndTime')
 
         if current_part_start is None or current_part_end is None:
-            correction['reason'] = 'missing partition boundaries'
-            corrections.append(correction)
             continue
 
         # --- Onset correction (syllables after the first) ---
@@ -3080,26 +3133,40 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
                 praat_start = _number(praat_anchor, 'startTime', 'start_time', 'start')
                 if praat_start is not None and praat_start < current_part_start:
                     if acoustic_onset is not None:
-                        acoustic_onset = min(acoustic_onset, praat_start)
-                    else:
-                        acoustic_onset = praat_start
+                        # Keep the acoustic candidate post-valley.  A Praat
+                        # anchor before the valley is not evidence for an
+                        # onset shift into the preceding syllable.
+                        acoustic_onset = max(acoustic_onset, praat_start)
 
             if acoustic_onset is not None and acoustic_onset < current_part_start:
                 raw_shift = current_part_start - acoustic_onset
                 capped_shift = min(raw_shift, MAX_ONSET_SHIFT)
                 blended_shift = w * capped_shift
                 corrected = current_part_start - blended_shift
-                lower_bound = (prev_nucleus_centre + 0.001) if prev_nucleus_centre is not None else 0.0
-                corrected = max(corrected, lower_bound)
+                previous_partition_start = _number(
+                    prev_span, 'partition_start_time', 'partitionStartTime',
+                )
+                lower_bound = max(
+                    value + 0.001
+                    for value in (
+                        previous_partition_start if previous_partition_start is not None else 0.0,
+                        prev_nucleus_centre if prev_nucleus_centre is not None else 0.0,
+                    )
+                )
+                upper_bound = current_part_end - 0.001
+                if upper_bound <= lower_bound:
+                    corrected = current_part_start
+                else:
+                    corrected = min(upper_bound, max(lower_bound, corrected))
                 actual_shift = current_part_start - corrected
                 if actual_shift > 0.001:
+                    old_boundary = current_part_start
                     corrected = round(corrected, 6)
                     span['partition_start_time'] = corrected
                     prev_span['partition_end_time'] = corrected
-                    correction['correction_type'] = 'onset'
-                    correction['shift_ms'] = round(-actual_shift * 1000, 1)
-                    correction['reason'] = (
-                        f'onset corrected by {correction["shift_ms"]}ms (w={w:.2f})'
+                    append_correction(
+                        'partition_start_time', 'start', old_boundary, corrected, 'onset',
+                        f'onset corrected by {-actual_shift * 1000:.1f}ms (w={w:.2f})',
                     )
                     changed = True
 
@@ -3128,18 +3195,18 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
                 upper_bound = total_duration - 0.005 if total_duration > 0 else current_part_end
                 corrected = min(current_part_end + blended_extension, upper_bound)
                 actual_extension = corrected - current_part_end
-                if actual_extension > 0.001:
+                if actual_extension > 0.001 and corrected > current_part_start + 0.001:
+                    old_boundary = current_part_end
                     corrected = round(corrected, 6)
                     span['partition_end_time'] = corrected
-                    correction['correction_type'] = 'final_extension'
-                    correction['shift_ms'] = round(actual_extension * 1000, 1)
-                    correction['reason'] = (
-                        f'final syllable extended by {correction["shift_ms"]}ms (w={w:.2f})'
+                    append_correction(
+                        'partition_end_time', 'end', old_boundary, corrected, 'final_extension',
+                        f'final syllable extended by {actual_extension * 1000:.1f}ms (w={w:.2f})',
                     )
                     changed = True
 
         # --- Interior boundary correction (when Praat anchors available for both sides) ---
-        if 0 < i < n - 1 and correction['correction_type'] == 'none':
+        if 0 < i < n - 1:
             praat_curr = praat_anchors[i]
             praat_next = praat_anchors[i + 1]
             if praat_curr is not None and praat_next is not None:
@@ -3150,32 +3217,72 @@ def _refine_partition_boundaries_with_confidence_weighted_acoustic(
                     current_boundary = _number(span, 'partition_end_time', 'partitionEndTime')
                     if current_boundary is not None and abs(acoustic_midpoint - current_boundary) > 0.005:
                         next_span = spans[i + 1]
-                        next_confidence = float(next_span.get('confidence') or 0.0)
-                        next_w = _blend_weight(next_confidence, i + 1, n)
+                        next_confidence = _validated_confidence(next_span.get('confidence'))
+                        next_w = (
+                            _blend_weight(next_confidence, i + 1, n)
+                            if next_confidence is not None else 0.0
+                        )
                         effective_w = max(w, next_w)
                         if effective_w > 0:
                             shift = effective_w * (acoustic_midpoint - current_boundary)
                             corrected = current_boundary + shift
                             curr_nc = _nucleus_centre(span)
                             next_nc = _nucleus_centre(next_span)
+                            current_partition_start = _number(
+                                span, 'partition_start_time', 'partitionStartTime',
+                            )
+                            next_partition_end = _number(
+                                next_span, 'partition_end_time', 'partitionEndTime',
+                            )
+                            lower_bound = (current_partition_start + 0.001) if current_partition_start is not None else None
+                            upper_bound = (next_partition_end - 0.001) if next_partition_end is not None else None
                             if curr_nc is not None and next_nc is not None:
                                 lower, upper = sorted((curr_nc, next_nc))
-                                corrected = min(upper, max(lower + 0.001, corrected))
+                                lower_bound = max(
+                                    lower_bound if lower_bound is not None else lower + 0.001,
+                                    lower + 0.001,
+                                )
+                                upper_bound = min(
+                                    upper_bound if upper_bound is not None else upper,
+                                    upper,
+                                )
+                            if lower_bound is not None and upper_bound is not None:
+                                if upper_bound <= lower_bound:
+                                    continue
+                                corrected = min(upper_bound, max(lower_bound, corrected))
                             actual_shift = corrected - current_boundary
                             if abs(actual_shift) > 0.001:
+                                old_boundary = current_boundary
                                 corrected = round(corrected, 6)
                                 span['partition_end_time'] = corrected
                                 next_span['partition_start_time'] = corrected
-                                correction['correction_type'] = 'interior'
-                                correction['shift_ms'] = round(actual_shift * 1000, 1)
-                                correction['reason'] = (
-                                    f'interior boundary shifted by {correction["shift_ms"]}ms (w={effective_w:.2f})'
+                                append_correction(
+                                    'partition_end_time', 'end', old_boundary, corrected, 'interior',
+                                    f'interior boundary shifted by {actual_shift * 1000:.1f}ms (w={effective_w:.2f})',
                                 )
                                 changed = True
 
-        corrections.append(correction)
+        if len(corrections) == correction_count_before:
+            corrections.append({
+                'index': i,
+                'correction_type': 'none',
+                'confidence': round(confidence, 4),
+                'blend_weight': round(w, 4),
+                'shift_ms': 0.0,
+                'reason': 'no correction needed' if w > 0 else 'high confidence, no correction needed',
+                'boundary': None,
+                'old': None,
+                'new': None,
+                'signed_shift': 0.0,
+                'signed_shift_ms': 0.0,
+                'mutation': False,
+            })
 
-    return {'changed': changed, 'corrections': corrections}
+    return {
+        'changed': changed,
+        'corrections': corrections,
+        'diagnostics': mutation_diagnostics,
+    }
 
 
 def _build_v3_active_response(
@@ -3360,10 +3467,14 @@ def _build_v3_active_response(
             float(praat_result.get('duration') or 0),
         )
         partition_variants = {
-            'schemaVersion': 'pronunciation-partition-variants-v1',
+            'schemaVersion': 'pronunciation-partition-variants-v2',
             'v3': v3_partition_snapshot,
             'v4': _snapshot_partition_spans(v4_candidate_spans),
-            'v4Diagnostics': v4_result.get('corrections', []) if isinstance(v4_result, dict) else []
+            'v4AnalysisVersion': 'pronunciation-analysis-v4',
+            'v4Diagnostics': (
+                v4_result.get('diagnostics', v4_result.get('corrections', []))
+                if isinstance(v4_result, dict) else []
+            )
         }
     if fricative_onset_refined:
         partition_convention = 'ctc-interspan-acoustic-hybrid-contiguous-v3'
@@ -3436,6 +3547,212 @@ def _build_v3_active_response(
     if partition_variants is not None:
         response['partitionVariants'] = partition_variants
     return response
+
+
+def _build_v2_comparison_envelope(v2_result, expected_syllables):
+    """Build the comparison V2 view without rewriting its raw acoustic spans.
+
+    V2's native acoustic nuclei can leave inter-nucleus gaps.  The study UI
+    needs a contiguous timeline, so this comparison-only envelope adds a
+    midpoint partition as ``observed_syllables`` while retaining the original
+    ``observed.syllables`` and an explicit raw-span provenance record.
+    """
+    unavailable = {
+        'status': 'unavailable',
+        'reason': 'ANALYSIS_FAILED',
+        'analysis': None,
+    }
+    if not isinstance(v2_result, dict):
+        return unavailable
+    if v2_result.get('analysisVersion') != 'pronunciation-analysis-v2':
+        return {
+            **unavailable,
+            'reason': 'ANALYSIS_INVALID',
+        }
+    observed = v2_result.get('observed')
+    raw_spans = observed.get('syllables') if isinstance(observed, dict) else None
+    if not isinstance(raw_spans, list) or not raw_spans:
+        return {
+            **unavailable,
+            'reason': 'ANALYSIS_SPANS_UNAVAILABLE',
+        }
+    if not isinstance(expected_syllables, int) or len(raw_spans) != expected_syllables:
+        return {
+            **unavailable,
+            'reason': 'ANALYSIS_SYLLABLE_COUNT_MISMATCH',
+        }
+
+    parsed_spans = []
+    for span in raw_spans:
+        if not isinstance(span, dict):
+            return {
+                **unavailable,
+                'reason': 'ANALYSIS_SPANS_INVALID',
+            }
+        try:
+            start = float(span.get('startTime', span.get('start_time', span.get('start'))))
+            end = float(span.get('endTime', span.get('end_time', span.get('end'))))
+        except (TypeError, ValueError):
+            return {
+                **unavailable,
+                'reason': 'ANALYSIS_SPANS_INVALID',
+            }
+        if not np.isfinite(start) or not np.isfinite(end) or end <= start:
+            return {
+                **unavailable,
+                'reason': 'ANALYSIS_SPANS_INVALID',
+            }
+        parsed_spans.append((start, end))
+
+    boundaries = [parsed_spans[0][0]]
+    for index in range(len(parsed_spans) - 1):
+        previous_start, previous_end = parsed_spans[index]
+        next_start, next_end = parsed_spans[index + 1]
+        candidate = (previous_end + next_start) / 2.0
+        # Clamp to the already established left edge and the next raw end so
+        # overlaps/gaps cannot create a non-monotonic or zero-width partition.
+        candidate = min(next_end, max(boundaries[-1], candidate))
+        if candidate <= boundaries[-1] or candidate >= next_end:
+            return {
+                **unavailable,
+                'reason': 'ANALYSIS_SPANS_NONCONTIGUOUS',
+            }
+        boundaries.append(candidate)
+    boundaries.append(parsed_spans[-1][1])
+
+    raw_snapshot = [dict(span) for span in raw_spans]
+    contiguous_spans = []
+    for index, span in enumerate(raw_spans):
+        contiguous = dict(span)
+        contiguous['index'] = index
+        contiguous['startTime'] = round(boundaries[index], 6)
+        contiguous['endTime'] = round(boundaries[index + 1], 6)
+        contiguous['duration'] = round(boundaries[index + 1] - boundaries[index], 6)
+        contiguous['source'] = 'comparison-v2-partition'
+        contiguous_spans.append(contiguous)
+
+    analysis = dict(v2_result)
+    analysis['observed_syllables'] = contiguous_spans
+    analysis['syllable_count'] = len(contiguous_spans)
+    analysis['partition_convention'] = 'acoustic-interspan-midpoint-contiguous-v1'
+    analysis['provenance'] = {
+        'source': 'observed.syllables',
+        'variant': 'v2',
+        'derivedSource': 'comparison.v2.midpoint-partition',
+        'rawSpans': raw_snapshot,
+    }
+    return {
+        'status': 'complete',
+        'reason': None,
+        'analysis': analysis,
+    }
+
+
+def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
+    """Expose the comparison-only V4 partition as an independent envelope.
+
+    V4 is a boundary refinement of the V3 partition, not a third analyzer.  It
+    is therefore complete only when the V3 response carries the versioned V4
+    partition with the exact count and contiguous spans required by the study.
+    Invalid or missing partition data stays explicitly unavailable instead of
+    being represented as a plausible V4 analysis.
+    """
+    unavailable = {
+        'status': 'unavailable',
+        'reason': 'PARTITION_VARIANT_V4_UNAVAILABLE',
+        'analysis': None,
+    }
+    if not isinstance(v3_envelope, dict):
+        return {
+            **unavailable,
+            'reason': 'V3_ANALYSIS_UNAVAILABLE',
+        }
+    v3_analysis = v3_envelope.get('analysis')
+    if (
+        isinstance(v3_analysis, dict)
+        and v3_analysis.get('analysisVersion') != 'pronunciation-analysis-v3'
+    ):
+        return {
+            **unavailable,
+            'reason': 'ANALYSIS_INVALID',
+        }
+    if v3_envelope.get('status') != 'complete':
+        return {
+            **unavailable,
+            'reason': (
+                'ANALYSIS_INVALID'
+                if v3_envelope.get('reason') == 'ANALYSIS_INVALID'
+                else 'V3_ANALYSIS_UNAVAILABLE'
+            ),
+        }
+    if not isinstance(v3_analysis, dict):
+        return unavailable
+    partition_variants = v3_analysis.get('partitionVariants')
+    if not isinstance(partition_variants, dict):
+        return unavailable
+    partition_schema = partition_variants.get('schemaVersion')
+    if partition_schema != 'pronunciation-partition-variants-v2':
+        return unavailable
+    spans = partition_variants.get('v4')
+    if not isinstance(spans, list) or not spans:
+        return unavailable
+    if not isinstance(expected_syllables, int) or len(spans) != expected_syllables:
+        return unavailable
+
+    normalized_spans = []
+    previous_end = None
+    for index, span in enumerate(spans):
+        if not isinstance(span, dict):
+            return unavailable
+        try:
+            start = float(span.get('startTime', span.get('start_time', span.get('start'))))
+            end = float(span.get('endTime', span.get('end_time', span.get('end'))))
+        except (TypeError, ValueError):
+            return unavailable
+        if not np.isfinite(start) or not np.isfinite(end) or start < 0 or end <= start:
+            return unavailable
+        if previous_end is not None and abs(start - previous_end) > 0.000001:
+            return unavailable
+        normalized = dict(span)
+        normalized['index'] = index
+        normalized['startTime'] = round(start, 6)
+        normalized['endTime'] = round(end, 6)
+        normalized['duration'] = round(end - start, 6)
+        normalized_spans.append(normalized)
+        previous_end = end
+
+    v4_diagnostics = partition_variants.get('v4Diagnostics')
+    if not isinstance(v4_diagnostics, list):
+        v4_diagnostics = []
+    # Keep the diagnostic list immutable from the caller's perspective and
+    # expose it under both the V4-specific and generic comparison names.
+    diagnostics = [dict(item) if isinstance(item, dict) else item for item in v4_diagnostics]
+    analysis = {
+        'analysisVersion': 'pronunciation-analysis-v4',
+        'mode': 'comparison',
+        'engine': 'ctc-praat-v4',
+        'source': 'partitionVariants.v4',
+        'provenance': {
+            'source': 'partitionVariants.v4',
+            'variant': 'v4',
+            'schemaVersion': partition_schema,
+            'parentAnalysisVersion': v3_analysis.get('analysisVersion'),
+        },
+        'partitionSchemaVersion': partition_schema,
+        'observed_syllables': normalized_spans,
+        'spans': normalized_spans,
+        'syllable_count': len(normalized_spans),
+        'total_duration': v3_analysis.get('total_duration', v3_analysis.get('duration')),
+        'sample_rate': v3_analysis.get('sample_rate', v3_analysis.get('sampleRate')),
+        'partition_convention': v3_analysis.get('partition_convention'),
+        'diagnostics': diagnostics,
+        'v4Diagnostics': diagnostics,
+    }
+    return {
+        'status': 'complete',
+        'reason': None,
+        'analysis': analysis,
+    }
 
 
 def _recognizer_syllable_count(phoneme_result):
@@ -4215,7 +4532,7 @@ def warm_v3():
 
 @app.route('/analyze/compare', methods=['POST'])
 def analyze_comparison():
-    """Return independent V2 and V3 analyses for one comparison recording."""
+    """Return V2/V3 analyses plus the comparison-only V4 partition envelope."""
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided', 'code': 'AUDIO_REQUIRED'}), 400
 
@@ -4258,11 +4575,7 @@ def analyze_comparison():
                 native=False,
                 reference_ipa=reference_ipa,
             )
-            v2_envelope = {
-                'status': 'available',
-                'reason': None,
-                'analysis': v2_result,
-            }
+            v2_envelope = _build_v2_comparison_envelope(v2_result, expected_syllables)
         except Exception as error:
             print(f'Comparison V2 analysis error: {error}')
 
@@ -4281,7 +4594,19 @@ def analyze_comparison():
                 expected_syllables=expected_syllables,
                 include_partition_variants=True,
             )
-            if v3_reason:
+            if not isinstance(v3_result, dict):
+                v3_envelope = {
+                    'status': 'unavailable',
+                    'reason': 'ANALYSIS_INVALID',
+                    'analysis': v3_result,
+                }
+            elif v3_result.get('analysisVersion') != 'pronunciation-analysis-v3':
+                v3_envelope = {
+                    'status': 'unavailable',
+                    'reason': 'ANALYSIS_INVALID',
+                    'analysis': v3_result,
+                }
+            elif v3_reason:
                 v3_envelope = {
                     'status': 'unavailable',
                     'reason': v3_reason,
@@ -4289,19 +4614,25 @@ def analyze_comparison():
                 }
             else:
                 v3_envelope = {
-                    'status': 'available',
+                    'status': 'complete',
                     'reason': None,
                     'analysis': v3_result,
                 }
         except Exception as error:
             print(f'Comparison V3 analysis error: {error}')
 
-        any_available = v2_envelope['status'] == 'available' or v3_envelope['status'] == 'available'
-        both_available = v2_envelope['status'] == 'available' and v3_envelope['status'] == 'available'
+        v4_envelope = _build_v4_comparison_envelope(v3_envelope, expected_syllables)
+        complete_versions = (
+            v2_envelope['status'] == 'complete',
+            v3_envelope['status'] == 'complete',
+            v4_envelope['status'] == 'complete',
+        )
+        any_complete = any(complete_versions)
+        all_complete = all(complete_versions)
         body = {
-            'schemaVersion': 'pronunciation-comparison-v1',
+            'schemaVersion': 'pronunciation-comparison-v2',
             'mode': 'comparison',
-            'status': 'complete' if both_available else ('partial_failure' if any_available else 'unavailable'),
+            'status': 'complete' if all_complete else ('partial_failure' if any_complete else 'unavailable'),
             'comparisonId': comparison_id,
             'context': {
                 'targetWord': target_word,
@@ -4312,15 +4643,17 @@ def analyze_comparison():
                 'requestReferenceId': request_reference_id,
             },
             'revisions': {
-                'comparisonSchema': 'pronunciation-comparison-v1',
+                'comparisonSchema': 'pronunciation-comparison-v2',
                 'v2': 'pronunciation-analysis-v2',
                 'v3': (v3_envelope.get('analysis') or {}).get('analysisVersion') or 'pronunciation-analysis-v3',
+                'v4': (v4_envelope.get('analysis') or {}).get('analysisVersion') or 'pronunciation-analysis-v4',
                 'v3Model': ((v3_envelope.get('analysis') or {}).get('verification') or {}).get('model_revision'),
             },
             'v2': v2_envelope,
             'v3': v3_envelope,
+            'v4': v4_envelope,
         }
-        return jsonify(body), (200 if any_available else 503)
+        return jsonify(body), (200 if any_complete else 503)
     finally:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)

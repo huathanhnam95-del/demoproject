@@ -1,0 +1,3864 @@
+{
+  "studyId": "segmentation-study-v2",
+  "version": "2.0.0",
+  "createdAt": "2026-08-13T00:00:00Z",
+  "selection": {
+    "wordList": "The_Oxford_5000.csv",
+    "ipaPrimary": "public/oxford-american-ipa.json",
+    "ipaFallback": "public/ipa-dict.json",
+    "seed": 20260813,
+    "rules": "same 100 words as study-v1; one frozen en-US 2-5 syllable IPA label per word; heuristic labels prohibited",
+    "referencePolicy": "explicit frozen en-US referenceSyllableIpa labels only"
+  },
+  "splitCounts": {
+    "development": {
+      "2": 18,
+      "3": 18,
+      "4": 17,
+      "5": 17
+    },
+    "holdout": {
+      "2": 7,
+      "3": 7,
+      "4": 8,
+      "5": 8
+    }
+  },
+  "entries": [
+    {
+      "taskId": "segmentation-study-v2-0001",
+      "order": 1,
+      "targetWord": "able",
+      "referenceIpa": "/ˈeɪbəl/",
+      "referenceSyllableIpa": [
+        "ˈeɪ",
+        "bəl"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈeɪ,bəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈeɪ,bəl].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0002",
+      "order": 2,
+      "targetWord": "about",
+      "referenceIpa": "/əˈbaʊt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbaʊt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbaʊt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbaʊt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0003",
+      "order": 3,
+      "targetWord": "above",
+      "referenceIpa": "/əˈbəv/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbəv"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbəv]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbəv].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0004",
+      "order": 4,
+      "targetWord": "abroad",
+      "referenceIpa": "/əˈbrɔd/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbrɔd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈbrɔd]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈbrɔd].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0005",
+      "order": 5,
+      "targetWord": "absence",
+      "referenceIpa": "/ˈæbsəns/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "səns"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,səns]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,səns].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0006",
+      "order": 6,
+      "targetWord": "absent",
+      "referenceIpa": "/ˈæbsənt/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "sənt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,sənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,sənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0007",
+      "order": 7,
+      "targetWord": "absorb",
+      "referenceIpa": "/əbˈzɔrb/",
+      "referenceSyllableIpa": [
+        "əb",
+        "ˈzɔrb"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əb,ˈzɔrb]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əb,ˈzɔrb].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0008",
+      "order": 8,
+      "targetWord": "absurd",
+      "referenceIpa": "/əbˈsɝd/",
+      "referenceSyllableIpa": [
+        "əb",
+        "ˈsɝd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əb,ˈsɝd]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əb,ˈsɝd].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0009",
+      "order": 9,
+      "targetWord": "access",
+      "referenceIpa": "/ˈækˌsɛs/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "ˌsɛs"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,ˌsɛs]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,ˌsɛs].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0010",
+      "order": 10,
+      "targetWord": "account",
+      "referenceIpa": "/əˈkaʊnt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkaʊnt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈkaʊnt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈkaʊnt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0011",
+      "order": 11,
+      "targetWord": "accurate",
+      "referenceIpa": "/ˈækjɝət/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "jɝət"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˈækjɝət/ as two en-US syllables; rhotic /ɝ/ is not split into a separate hiatus nucleus."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˈækjɝət/ as two en-US syllables; rhotic /ɝ/ is not split into a separate hiatus nucleus.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0012",
+      "order": 12,
+      "targetWord": "accuse",
+      "referenceIpa": "/əkˈjuz/",
+      "referenceSyllableIpa": [
+        "ək",
+        "ˈjuz"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /əkˈjuz/ en-US variant; /j/ belongs to the stressed /ju/ onset rather than the first syllable."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /əkˈjuz/ en-US variant; /j/ belongs to the stressed /ju/ onset rather than the first syllable.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0013",
+      "order": 13,
+      "targetWord": "accused",
+      "referenceIpa": "/əkˈjuzd/",
+      "referenceSyllableIpa": [
+        "ək",
+        "ˈjuzd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /əkˈjuzd/ en-US variant; /j/ belongs to the stressed /ju/ onset and final /d/ stays coda material."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /əkˈjuzd/ en-US variant; /j/ belongs to the stressed /ju/ onset and final /d/ stays coda material.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0014",
+      "order": 14,
+      "targetWord": "acquire",
+      "referenceIpa": "/əˈkwaɪɝ/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkwaɪɝ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkwaɪɝ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkwaɪɝ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0015",
+      "order": 15,
+      "targetWord": "acre",
+      "referenceIpa": "/ˈeɪkɝ/",
+      "referenceSyllableIpa": [
+        "ˈeɪ",
+        "kɝ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈeɪ,kɝ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈeɪ,kɝ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0016",
+      "order": 16,
+      "targetWord": "admire",
+      "referenceIpa": "/ædˈmaɪr/",
+      "referenceSyllableIpa": [
+        "æd",
+        "ˈmaɪr"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [æd,ˈmaɪr]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [æd,ˈmaɪr].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0017",
+      "order": 17,
+      "targetWord": "admit",
+      "referenceIpa": "/ədˈmɪt/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪt"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əd,ˈmɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [əd,ˈmɪt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0018",
+      "order": 18,
+      "targetWord": "almost",
+      "referenceIpa": "/ˈɔlˌmoʊst/",
+      "referenceSyllableIpa": [
+        "ˈɔl",
+        "ˌmoʊst"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "liquid_glide->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɔl,ˌmoʊst]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɔl,ˌmoʊst].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0019",
+      "order": 19,
+      "targetWord": "amazed",
+      "referenceIpa": "/əˈmeɪzd/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈmeɪzd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈmeɪzd]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈmeɪzd].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0020",
+      "order": 20,
+      "targetWord": "amend",
+      "referenceIpa": "/əˈmɛnd/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈmɛnd"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈmɛnd]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈmɛnd].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0021",
+      "order": 21,
+      "targetWord": "arise",
+      "referenceIpa": "/ɝˈaɪz/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪz"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪz]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪz].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0022",
+      "order": 22,
+      "targetWord": "arrange",
+      "referenceIpa": "/ɝˈeɪndʒ/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪndʒ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪndʒ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪndʒ].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0023",
+      "order": 23,
+      "targetWord": "array",
+      "referenceIpa": "/ɝˈeɪ/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪ"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪ].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0024",
+      "order": 24,
+      "targetWord": "arrest",
+      "referenceIpa": "/ɝˈɛst/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɛst"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈɛst]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈɛst].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0025",
+      "order": 25,
+      "targetWord": "arrive",
+      "referenceIpa": "/ɝˈaɪv/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪv"
+      ],
+      "targetSyllableCount": 2,
+      "expectedObservedCount": 2,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪv]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪv].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0026",
+      "order": 26,
+      "targetWord": "abolish",
+      "referenceIpa": "/əˈbɑlɪʃ/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbɑ",
+        "lɪʃ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbɑ,lɪʃ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbɑ,lɪʃ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0027",
+      "order": 27,
+      "targetWord": "abortion",
+      "referenceIpa": "/əˈbɔrʃən/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈbɔr",
+        "ʃən"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "liquid_glide->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbɔr,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈbɔr,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0028",
+      "order": 28,
+      "targetWord": "absolute",
+      "referenceIpa": "/ˈæbsəˌlut/",
+      "referenceSyllableIpa": [
+        "ˈæb",
+        "sə",
+        "ˌlut"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,sə,ˌlut]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæb,sə,ˌlut].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0029",
+      "order": 29,
+      "targetWord": "accident",
+      "referenceIpa": "/ˈæksədənt/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "sə",
+        "dənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,sə,dənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,sə,dənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0030",
+      "order": 30,
+      "targetWord": "accomplish",
+      "referenceIpa": "/əˈkɑmplɪʃ/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkɑm",
+        "plɪʃ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "nasal->stop"
+      ],
+      "transitionFamilies": [
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkɑm,plɪʃ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkɑm,plɪʃ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0031",
+      "order": 31,
+      "targetWord": "accuracy",
+      "referenceIpa": "/ˈækjɝəsi/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "jɝə",
+        "si"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˈækjɝəsi/ as three en-US syllables; the rhotic /ɝə/ sequence is one nucleus before final /si/."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˈækjɝəsi/ as three en-US syllables; the rhotic /ɝə/ sequence is one nucleus before final /si/.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0032",
+      "order": 32,
+      "targetWord": "acknowledge",
+      "referenceIpa": "/ækˈnɑlɪdʒ/",
+      "referenceSyllableIpa": [
+        "æk",
+        "ˈnɑ",
+        "lɪdʒ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [æk,ˈnɑ,lɪdʒ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [æk,ˈnɑ,lɪdʒ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0033",
+      "order": 33,
+      "targetWord": "activate",
+      "referenceIpa": "/ˈæktəˌveɪt/",
+      "referenceSyllableIpa": [
+        "ˈæk",
+        "tə",
+        "ˌveɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,tə,ˌveɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæk,tə,ˌveɪt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0034",
+      "order": 34,
+      "targetWord": "adjustment",
+      "referenceIpa": "/əˈdʒəstmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈdʒəst",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->affricate",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈdʒəst,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈdʒəst,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0035",
+      "order": 35,
+      "targetWord": "agreement",
+      "referenceIpa": "/əˈɡrimənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈɡri",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈɡri,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈɡri,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0036",
+      "order": 36,
+      "targetWord": "alignment",
+      "referenceIpa": "/əˈlaɪnmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈlaɪn",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "nasal->nasal"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈlaɪn,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈlaɪn,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0037",
+      "order": 37,
+      "targetWord": "allocate",
+      "referenceIpa": "/ˈæləˌkeɪt/",
+      "referenceSyllableIpa": [
+        "ˈæ",
+        "lə",
+        "ˌkeɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæ,lə,ˌkeɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæ,lə,ˌkeɪt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0038",
+      "order": 38,
+      "targetWord": "analyst",
+      "referenceIpa": "/ˈænəlɪst/",
+      "referenceSyllableIpa": [
+        "ˈæ",
+        "nə",
+        "lɪst"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæ,nə,lɪst]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈæ,nə,lɪst].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0039",
+      "order": 39,
+      "targetWord": "apartment",
+      "referenceIpa": "/əˈpɑrtmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈpɑrt",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈpɑrt,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈpɑrt,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0040",
+      "order": 40,
+      "targetWord": "appointment",
+      "referenceIpa": "/əˈpɔɪntmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈpɔɪnt",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈpɔɪnt,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˈpɔɪnt,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0041",
+      "order": 41,
+      "targetWord": "arena",
+      "referenceIpa": "/ɝˈinə/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈi",
+        "nə"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈi,nə]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈi,nə].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0042",
+      "order": 42,
+      "targetWord": "arrangement",
+      "referenceIpa": "/ɝˈeɪndʒmənt/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈeɪndʒ",
+        "mənt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "affricate->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪndʒ,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈeɪndʒ,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0043",
+      "order": 43,
+      "targetWord": "arrival",
+      "referenceIpa": "/ɝˈaɪvəl/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈaɪ",
+        "vəl"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪ,vəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ɝ,ˈaɪ,vəl].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0044",
+      "order": 44,
+      "targetWord": "audio",
+      "referenceIpa": "/ˈɑdiˌoʊ/",
+      "referenceSyllableIpa": [
+        "ˈɑ",
+        "di",
+        "ˌoʊ"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɑ,di,ˌoʊ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɑ,di,ˌoʊ].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0045",
+      "order": 45,
+      "targetWord": "authorize",
+      "referenceIpa": "/ˈɔθɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈɔ",
+        "θɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɔ,θɝ,ˌaɪz]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈɔ,θɝ,ˌaɪz].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0046",
+      "order": 46,
+      "targetWord": "cigarette",
+      "referenceIpa": "/ˌsɪɡɝˈɛt/",
+      "referenceSyllableIpa": [
+        "ˌsɪ",
+        "ɡɝ",
+        "ˈɛt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌsɪ,ɡɝ,ˈɛt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌsɪ,ɡɝ,ˈɛt].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0047",
+      "order": 47,
+      "targetWord": "correction",
+      "referenceIpa": "/kɝˈɛkʃən/",
+      "referenceSyllableIpa": [
+        "kɝ",
+        "ˈɛk",
+        "ʃən"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kɝ,ˈɛk,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kɝ,ˈɛk,ʃən].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0048",
+      "order": 48,
+      "targetWord": "correctly",
+      "referenceIpa": "/kɝˈɛktli/",
+      "referenceSyllableIpa": [
+        "kɝ",
+        "ˈɛkt",
+        "li"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kɝ,ˈɛkt,li]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kɝ,ˈɛkt,li].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0049",
+      "order": 49,
+      "targetWord": "generate",
+      "referenceIpa": "/ˈdʒɛnɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "ˈdʒɛ",
+        "nɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈdʒɛ,nɝ,ˌeɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈdʒɛ,nɝ,ˌeɪt].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0050",
+      "order": 50,
+      "targetWord": "summarize",
+      "referenceIpa": "/ˈsəmɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈsə",
+        "mɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 3,
+      "expectedObservedCount": 3,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈsə,mɝ,ˌaɪz]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈsə,mɝ,ˌaɪz].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0051",
+      "order": 51,
+      "targetWord": "accomplishment",
+      "referenceIpa": "/əˈkɑmplɪʃmənt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈkɑm",
+        "plɪʃ",
+        "mənt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "nasal->stop",
+        "fricative->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkɑm,plɪʃ,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈkɑm,plɪʃ,mənt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0052",
+      "order": 52,
+      "targetWord": "agriculture",
+      "referenceIpa": "/ˈæɡrɪˌkəltʃɝ/",
+      "referenceSyllableIpa": [
+        "ˈæɡ",
+        "rɪ",
+        "ˌkəl",
+        "tʃɝ"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->stop",
+        "liquid_glide->affricate"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 /ɡr/ onset and /tʃ/ affricate boundary; frozen en-US final /tʃɝ/ is one syllable."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 /ɡr/ onset and /tʃ/ affricate boundary; frozen en-US final /tʃɝ/ is one syllable.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0053",
+      "order": 53,
+      "targetWord": "analogy",
+      "referenceIpa": "/əˈnælədʒi/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈnæ",
+        "lə",
+        "dʒi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->liquid_glide",
+        "vowel->affricate"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈnæ,lə,dʒi]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈnæ,lə,dʒi].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0054",
+      "order": 54,
+      "targetWord": "appreciate",
+      "referenceIpa": "/əˈpriʃiˌeɪt/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈpri",
+        "ʃi",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈpri,ʃi,ˌeɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈpri,ʃi,ˌeɪt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0055",
+      "order": 55,
+      "targetWord": "biography",
+      "referenceIpa": "/baɪˈɑɡrəfi/",
+      "referenceSyllableIpa": [
+        "baɪ",
+        "ˈɑɡ",
+        "rə",
+        "fi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "stop->liquid_glide",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /baɪˈɑɡrəfi/ en-US variant; the unstressed /rə/ nucleus is separate from /ˈɑɡ/."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /baɪˈɑɡrəfi/ en-US variant; the unstressed /rə/ nucleus is separate from /ˈɑɡ/.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0056",
+      "order": 56,
+      "targetWord": "biology",
+      "referenceIpa": "/baɪˈɑlədʒi/",
+      "referenceSyllableIpa": [
+        "baɪ",
+        "ˈɑ",
+        "lə",
+        "dʒi"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->affricate"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [baɪ,ˈɑ,lə,dʒi]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [baɪ,ˈɑ,lə,dʒi].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0057",
+      "order": 57,
+      "targetWord": "characterize",
+      "referenceIpa": "/ˈkɛrəktɝˌaɪz/",
+      "referenceSyllableIpa": [
+        "ˈkɛ",
+        "rək",
+        "tɝ",
+        "ˌaɪz"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "stop->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈkɛ,rək,tɝ,ˌaɪz]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈkɛ,rək,tɝ,ˌaɪz].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0058",
+      "order": 58,
+      "targetWord": "coincidence",
+      "referenceIpa": "/koʊˈɪnsɪdəns/",
+      "referenceSyllableIpa": [
+        "koʊ",
+        "ˈɪn",
+        "sɪ",
+        "dəns"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "nasal->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [koʊ,ˈɪn,sɪ,dəns]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [koʊ,ˈɪn,sɪ,dəns].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0059",
+      "order": 59,
+      "targetWord": "collaborate",
+      "referenceIpa": "/kəˈlæbɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "kə",
+        "ˈlæ",
+        "bɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kə,ˈlæ,bɝ,ˌeɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kə,ˈlæ,bɝ,ˌeɪt].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0060",
+      "order": 60,
+      "targetWord": "combination",
+      "referenceIpa": "/ˌkɑmbəˈneɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌkɑm",
+        "bə",
+        "ˈneɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "vowel->nasal",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkɑm,bə,ˈneɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkɑm,bə,ˈneɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0061",
+      "order": 61,
+      "targetWord": "commentary",
+      "referenceIpa": "/ˈkɑmənˌtɛri/",
+      "referenceSyllableIpa": [
+        "ˈkɑ",
+        "mən",
+        "ˌtɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "nasal->stop",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈkɑ,mən,ˌtɛ,ri]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˈkɑ,mən,ˌtɛ,ri].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0062",
+      "order": 62,
+      "targetWord": "communicate",
+      "referenceIpa": "/kəmˈjunəˌkeɪt/",
+      "referenceSyllableIpa": [
+        "kəm",
+        "ˈju",
+        "nə",
+        "ˌkeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /kəmˈjunəˌkeɪt/ en-US variant; /ju/ is the stressed second syllable and /keɪt/ is final."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /kəmˈjunəˌkeɪt/ en-US variant; /ju/ is the stressed second syllable and /keɪt/ is final.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0063",
+      "order": 63,
+      "targetWord": "congressional",
+      "referenceIpa": "/kənˈɡrɛʃənəl/",
+      "referenceSyllableIpa": [
+        "kən",
+        "ˈɡrɛ",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [kən,ˈɡrɛ,ʃə,nəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [kən,ˈɡrɛ,ʃə,nəl].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0064",
+      "order": 64,
+      "targetWord": "corporation",
+      "referenceIpa": "/ˌkɔrpɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌkɔr",
+        "pɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "liquid_glide->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkɔr,pɝ,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkɔr,pɝ,ˈeɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0065",
+      "order": 65,
+      "targetWord": "declaration",
+      "referenceIpa": "/ˌdɛklɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌdɛk",
+        "lɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌdɛklɝˈeɪʃən/ en-US variant; /lɝ/ and /ˈeɪ/ are separate nuclei across the rhotic sequence."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌdɛklɝˈeɪʃən/ en-US variant; /lɝ/ and /ˈeɪ/ are separate nuclei across the rhotic sequence.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0066",
+      "order": 66,
+      "targetWord": "democratic",
+      "referenceIpa": "/ˌdɛməˈkrætɪk/",
+      "referenceSyllableIpa": [
+        "ˌdɛ",
+        "mə",
+        "ˈkræ",
+        "tɪk"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌdɛ,mə,ˈkræ,tɪk]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌdɛ,mə,ˈkræ,tɪk].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0067",
+      "order": 67,
+      "targetWord": "deteriorate",
+      "referenceIpa": "/dɪˈtɪriɝˌeɪt/",
+      "referenceSyllableIpa": [
+        "dɪ",
+        "ˈtɪ",
+        "riɝ",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->liquid_glide",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /dɪˈtɪriɝˌeɪt/ as four en-US syllables; the rhotic /iɝ/ sequence is not promoted to a separate hiatus syllable."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /dɪˈtɪriɝˌeɪt/ as four en-US syllables; the rhotic /iɝ/ sequence is not promoted to a separate hiatus syllable.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0068",
+      "order": 68,
+      "targetWord": "diplomatic",
+      "referenceIpa": "/ˌdɪpləˈmætɪk/",
+      "referenceSyllableIpa": [
+        "ˌdɪp",
+        "lə",
+        "ˈmæ",
+        "tɪk"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌdɪpləˈmætɪk/ en-US variant; /pl/ is onset/coda context and /ˈmæ/ remains the stressed third syllable."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌdɪpləˈmætɪk/ en-US variant; /pl/ is onset/coda context and /ˈmæ/ remains the stressed third syllable.",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0069",
+      "order": 69,
+      "targetWord": "disappointment",
+      "referenceIpa": "/ˌdɪsəˈpɔɪntmənt/",
+      "referenceSyllableIpa": [
+        "ˌdɪ",
+        "sə",
+        "ˈpɔɪnt",
+        "mənt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌdɪ,sə,ˈpɔɪnt,mənt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌdɪ,sə,ˈpɔɪnt,mənt].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0070",
+      "order": 70,
+      "targetWord": "generation",
+      "referenceIpa": "/ˌdʒɛnɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ˌdʒɛ",
+        "nɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌdʒɛ,nɝ,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌdʒɛ,nɝ,ˈeɪ,ʃən].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0071",
+      "order": 71,
+      "targetWord": "immediately",
+      "referenceIpa": "/ˌɪˈmiˌdiətli/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈmi",
+        "ˌdiət",
+        "li"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌɪˈmiˌdiətli/ as four en-US syllables; reduced /iə/ remains one nucleus rather than an extra hiatus syllable."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌɪˈmiˌdiətli/ as four en-US syllables; reduced /iə/ remains one nucleus rather than an extra hiatus syllable.",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0072",
+      "order": 72,
+      "targetWord": "initiate",
+      "referenceIpa": "/ˌɪˈnɪʃiˌeɪt/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈnɪ",
+        "ʃi",
+        "ˌeɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->vowel"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɪ,ˈnɪ,ʃi,ˌeɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɪ,ˈnɪ,ʃi,ˌeɪt].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0073",
+      "order": 73,
+      "targetWord": "original",
+      "referenceIpa": "/ɝˈɪdʒənəl/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɪ",
+        "dʒə",
+        "nəl"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->affricate",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɝ,ˈɪ,dʒə,nəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɝ,ˈɪ,dʒə,nəl].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0074",
+      "order": 74,
+      "targetWord": "originate",
+      "referenceIpa": "/ɝˈɪdʒəˌneɪt/",
+      "referenceSyllableIpa": [
+        "ɝ",
+        "ˈɪ",
+        "dʒə",
+        "ˌneɪt"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->affricate",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɝ,ˈɪ,dʒə,ˌneɪt]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɝ,ˈɪ,dʒə,ˌneɪt].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0075",
+      "order": 75,
+      "targetWord": "parameter",
+      "referenceIpa": "/pɝˈæmətɝ/",
+      "referenceSyllableIpa": [
+        "pɝ",
+        "ˈæ",
+        "mə",
+        "tɝ"
+      ],
+      "targetSyllableCount": 4,
+      "expectedObservedCount": 4,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->vowel",
+        "vowel->nasal",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "nasal",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [pɝ,ˈæ,mə,tɝ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [pɝ,ˈæ,mə,tɝ].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0076",
+      "order": 76,
+      "targetWord": "accommodation",
+      "referenceIpa": "/əˌkɑməˈdeɪʃən/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˌkɑ",
+        "mə",
+        "ˈdeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˌkɑ,mə,ˈdeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ə,ˌkɑ,mə,ˈdeɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0077",
+      "order": 77,
+      "targetWord": "administration",
+      "referenceIpa": "/ædˌmɪnɪˈstreɪʃən/",
+      "referenceSyllableIpa": [
+        "æd",
+        "ˌmɪ",
+        "nɪ",
+        "ˈstreɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [æd,ˌmɪ,nɪ,ˈstreɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [æd,ˌmɪ,nɪ,ˈstreɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0078",
+      "order": 78,
+      "targetWord": "administrative",
+      "referenceIpa": "/ədˈmɪnəˌstreɪtɪv/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪ",
+        "nə",
+        "ˌstreɪ",
+        "tɪv"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [əd,ˈmɪ,nə,ˌstreɪ,tɪv]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [əd,ˈmɪ,nə,ˌstreɪ,tɪv].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0079",
+      "order": 79,
+      "targetWord": "administrator",
+      "referenceIpa": "/ədˈmɪnəˌstreɪtɝ/",
+      "referenceSyllableIpa": [
+        "əd",
+        "ˈmɪ",
+        "nə",
+        "ˌstreɪ",
+        "tɝ"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [əd,ˈmɪ,nə,ˌstreɪ,tɝ]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [əd,ˈmɪ,nə,ˌstreɪ,tɝ].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0080",
+      "order": 80,
+      "targetWord": "appreciation",
+      "referenceIpa": "/əˌpriʃiˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˌpri",
+        "ʃi",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˌpri,ʃi,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˌpri,ʃi,ˈeɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0081",
+      "order": 81,
+      "targetWord": "approximately",
+      "referenceIpa": "/əˈprɑksəmətli/",
+      "referenceSyllableIpa": [
+        "ə",
+        "ˈprɑk",
+        "sə",
+        "mət",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "stop->fricative",
+        "vowel->nasal",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈprɑk,sə,mət,li]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ə,ˈprɑk,sə,mət,li].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0082",
+      "order": 82,
+      "targetWord": "characteristic",
+      "referenceIpa": "/ˌkɛrəktɝˈɪstɪk/",
+      "referenceSyllableIpa": [
+        "ˌkɛ",
+        "rək",
+        "tɝ",
+        "ˈɪs",
+        "tɪk"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "stop->stop",
+        "vowel->vowel",
+        "fricative->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌkɛrəktɝˈɪstɪk/ en-US variant; rhotic /ɝ/ and final /ɪstɪk/ boundaries are explicit."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌkɛrəktɝˈɪstɪk/ en-US variant; rhotic /ɝ/ and final /ɪstɪk/ boundaries are explicit.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0083",
+      "order": 83,
+      "targetWord": "collaboration",
+      "referenceIpa": "/kəˌlæbɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "kə",
+        "ˌlæ",
+        "bɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kə,ˌlæ,bɝ,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kə,ˌlæ,bɝ,ˈeɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0084",
+      "order": 84,
+      "targetWord": "communication",
+      "referenceIpa": "/kəmˌjunəˈkeɪʃən/",
+      "referenceSyllableIpa": [
+        "kəm",
+        "ˌju",
+        "nə",
+        "ˈkeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->liquid_glide",
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /kəmˌjunəˈkeɪʃən/ en-US variant; stress and the final /ʃən/ syllable are preserved."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /kəmˌjunəˈkeɪʃən/ en-US variant; stress and the final /ʃən/ syllable are preserved.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0085",
+      "order": 85,
+      "targetWord": "consideration",
+      "referenceIpa": "/kənˌsɪdɝˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "kən",
+        "ˌsɪ",
+        "dɝ",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->fricative",
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kən,ˌsɪ,dɝ,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kən,ˌsɪ,dɝ,ˈeɪ,ʃən].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0086",
+      "order": 86,
+      "targetWord": "constitutional",
+      "referenceIpa": "/ˌkɑnstəˈtuʃənəl/",
+      "referenceSyllableIpa": [
+        "ˌkɑns",
+        "tə",
+        "ˈtu",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "fricative->stop",
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌkɑnstəˈtuʃənəl/ with /ns|t/; the legal coda/onset exception avoids maximal /n|st/ while preserving five syllables."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌkɑnstəˈtuʃənəl/ with /ns|t/; the legal coda/onset exception avoids maximal /n|st/ while preserving five syllables.",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0087",
+      "order": 87,
+      "targetWord": "contemporary",
+      "referenceIpa": "/kənˈtɛmpɝˌɛri/",
+      "referenceSyllableIpa": [
+        "kən",
+        "ˈtɛm",
+        "pɝ",
+        "ˌɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "nasal->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kən,ˈtɛm,pɝ,ˌɛ,ri]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [kən,ˈtɛm,pɝ,ˌɛ,ri].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0088",
+      "order": 88,
+      "targetWord": "curiosity",
+      "referenceIpa": "/ˌkjʊriˈɑsəti/",
+      "referenceSyllableIpa": [
+        "ˌkjʊ",
+        "ri",
+        "ˈɑ",
+        "sə",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->liquid_glide",
+        "vowel->vowel",
+        "vowel->fricative",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkjʊ,ri,ˈɑ,sə,ti]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌkjʊ,ri,ˈɑ,sə,ti].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0089",
+      "order": 89,
+      "targetWord": "experimental",
+      "referenceIpa": "/ɪkˌspɛrɪˈmɛntəl/",
+      "referenceSyllableIpa": [
+        "ɪk",
+        "ˌspɛ",
+        "rɪ",
+        "ˈmɛn",
+        "təl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->liquid_glide",
+        "vowel->nasal",
+        "nasal->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɪk,ˌspɛ,rɪ,ˈmɛn,təl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ɪk,ˌspɛ,rɪ,ˈmɛn,təl].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0090",
+      "order": 90,
+      "targetWord": "ideology",
+      "referenceIpa": "/ˌaɪdiˈɑlədʒi/",
+      "referenceSyllableIpa": [
+        "ˌaɪ",
+        "di",
+        "ˈɑ",
+        "lə",
+        "dʒi"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->affricate"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌaɪ,di,ˈɑ,lə,dʒi]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌaɪ,di,ˈɑ,lə,dʒi].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0091",
+      "order": 91,
+      "targetWord": "imaginary",
+      "referenceIpa": "/ˌɪˈmædʒəˌnɛri/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈmæ",
+        "dʒə",
+        "ˌnɛ",
+        "ri"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->affricate",
+        "vowel->nasal",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌɪ,ˈmæ,dʒə,ˌnɛ,ri]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌɪ,ˈmæ,dʒə,ˌnɛ,ri].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0092",
+      "order": 92,
+      "targetWord": "inability",
+      "referenceIpa": "/ˌɪnəˈbɪlɪti/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "nə",
+        "ˈbɪ",
+        "lɪ",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->stop",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɪ,nə,ˈbɪ,lɪ,ti]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɪ,nə,ˈbɪ,lɪ,ti].",
+      "split": "development"
+    },
+    {
+      "taskId": "segmentation-study-v2-0093",
+      "order": 93,
+      "targetWord": "inevitably",
+      "referenceIpa": "/ˌɪˈnɛvətəbli/",
+      "referenceSyllableIpa": [
+        "ˌɪ",
+        "ˈnɛ",
+        "və",
+        "təb",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->nasal",
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Retained /ˌɪˈnɛvətəbli/ en-US variant; reduced /ə/ nuclei and final /bli/ remain distinct syllables."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Retained /ˌɪˈnɛvətəbli/ en-US variant; reduced /ə/ nuclei and final /bli/ remain distinct syllables.",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0094",
+      "order": 94,
+      "targetWord": "negotiation",
+      "referenceIpa": "/nɪˌɡoʊʃiˈeɪʃən/",
+      "referenceSyllableIpa": [
+        "nɪ",
+        "ˌɡoʊ",
+        "ʃi",
+        "ˈeɪ",
+        "ʃən"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->fricative",
+        "vowel->vowel",
+        "vowel->fricative"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [nɪ,ˌɡoʊ,ʃi,ˈeɪ,ʃən]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [nɪ,ˌɡoʊ,ʃi,ˈeɪ,ʃən].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0095",
+      "order": 95,
+      "targetWord": "operational",
+      "referenceIpa": "/ˌɑpɝˈeɪʃənəl/",
+      "referenceSyllableIpa": [
+        "ˌɑ",
+        "pɝ",
+        "ˈeɪ",
+        "ʃə",
+        "nəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->stop",
+        "vowel->vowel",
+        "vowel->fricative",
+        "vowel->nasal"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "nasal",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɑ,pɝ,ˈeɪ,ʃə,nəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌɑ,pɝ,ˈeɪ,ʃə,nəl].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0096",
+      "order": 96,
+      "targetWord": "personality",
+      "referenceIpa": "/ˌpɝsəˈnælɪti/",
+      "referenceSyllableIpa": [
+        "ˌpɝ",
+        "sə",
+        "ˈnæ",
+        "lɪ",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "vowel->fricative",
+        "vowel->nasal",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌpɝ,sə,ˈnæ,lɪ,ti]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌpɝ,sə,ˈnæ,lɪ,ti].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0097",
+      "order": 97,
+      "targetWord": "sexuality",
+      "referenceIpa": "/ˌsɛkʃuˈæləti/",
+      "referenceSyllableIpa": [
+        "ˌsɛk",
+        "ʃu",
+        "ˈæ",
+        "lə",
+        "ti"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->fricative",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌsɛk,ʃu,ˈæ,lə,ti]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌsɛk,ʃu,ˈæ,lə,ti].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0098",
+      "order": 98,
+      "targetWord": "significantly",
+      "referenceIpa": "/sɪɡˈnɪfɪkəntli/",
+      "referenceSyllableIpa": [
+        "sɪɡ",
+        "ˈnɪ",
+        "fɪ",
+        "kənt",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->fricative",
+        "vowel->stop",
+        "stop->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [sɪɡ,ˈnɪ,fɪ,kənt,li]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [sɪɡ,ˈnɪ,fɪ,kənt,li].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0099",
+      "order": 99,
+      "targetWord": "technological",
+      "referenceIpa": "/ˌtɛknəˈlɑdʒɪkəl/",
+      "referenceSyllableIpa": [
+        "ˌtɛk",
+        "nə",
+        "ˈlɑ",
+        "dʒɪ",
+        "kəl"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "stop->nasal",
+        "vowel->liquid_glide",
+        "vowel->affricate",
+        "vowel->stop"
+      ],
+      "transitionFamilies": [
+        "fricative_affricate",
+        "liquid_glide",
+        "nasal",
+        "stop"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌtɛk,nə,ˈlɑ,dʒɪ,kəl]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Corrected v1 syllable boundary; frozen en-US label is [ˌtɛk,nə,ˈlɑ,dʒɪ,kəl].",
+      "split": "holdout"
+    },
+    {
+      "taskId": "segmentation-study-v2-0100",
+      "order": 100,
+      "targetWord": "temporarily",
+      "referenceIpa": "/ˌtɛmpɝˈɛrəli/",
+      "referenceSyllableIpa": [
+        "ˌtɛm",
+        "pɝ",
+        "ˈɛ",
+        "rə",
+        "li"
+      ],
+      "targetSyllableCount": 5,
+      "expectedObservedCount": 5,
+      "ipaSource": "ipa-dict",
+      "transitionTypes": [
+        "nasal->stop",
+        "vowel->vowel",
+        "vowel->liquid_glide",
+        "vowel->liquid_glide"
+      ],
+      "transitionFamilies": [
+        "liquid_glide",
+        "stop",
+        "vowel"
+      ],
+      "category": "clean",
+      "speakerCohort": "segmentation-study-v2",
+      "referenceDialect": "en-US",
+      "dialect": "en-US",
+      "referenceSource": "ipa-dict",
+      "referenceProvenance": {
+        "dialect": "en-US",
+        "source": "ipa-dict",
+        "method": "explicit-reviewed-en-US-v1",
+        "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌtɛm,pɝ,ˈɛ,rə,li]."
+      },
+      "referenceLabelProvenance": "explicit-reviewed-en-US-v1",
+      "labelProvenance": "explicit-reviewed-en-US-v1",
+      "exceptionRationale": "Reviewed en-US source variant retained as frozen v2 label [ˌtɛm,pɝ,ˈɛ,rə,li].",
+      "split": "holdout"
+    }
+  ],
+  "manifestSha256": "4db7d2c260fd5be5ac8e050f0cb31dfde2368cdba43453172bfeca4a352adfce"
+}

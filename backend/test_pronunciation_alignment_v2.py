@@ -1344,7 +1344,7 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
         )
         variants = response.get("partitionVariants")
         self.assertIsInstance(variants, dict)
-        self.assertEqual(variants.get("schemaVersion"), "pronunciation-partition-variants-v1")
+        self.assertEqual(variants.get("schemaVersion"), "pronunciation-partition-variants-v2")
         self.assertEqual(len(variants.get("v3") or []), 3)
         self.assertEqual(len(variants.get("v4") or []), 3)
         self.assertEqual(response["observed_syllables"][0]["partitionStartTime"], variants["v3"][0]["startTime"])

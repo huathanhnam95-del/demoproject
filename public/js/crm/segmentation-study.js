@@ -1,8 +1,13 @@
 (function () {
   'use strict';
 
-  const STUDY_VERSION = 'study-v1';
-  const STUDY_API_VERSION = 'v1';
+  const VERSION_REGISTRY = Object.freeze({
+    v1: Object.freeze({ publicVersion: 'v1', internalVersion: 'study-v1', writable: false }),
+    v2: Object.freeze({ publicVersion: 'v2', internalVersion: 'study-v2', studyId: 'segmentation-study-v2', writable: true })
+  });
+  const ACTIVE_STUDY = VERSION_REGISTRY.v2;
+  const CAPTURE_CONSTRAINTS_REQUESTED = Object.freeze({ echoCancellation: false, noiseSuppression: false, autoGainControl: false });
+  const REFERENCE_LABEL_PROVENANCE = 'explicit-reviewed-en-US-v1';
   const OPERATOR_KEY = 'bel.segmentation-study.operator-name';
   const SESSION_KEY = 'bel.segmentation-study.session-id';
   const CLAIM_HEARTBEAT_MS = 2 * 60 * 1000;
@@ -17,6 +22,11 @@
     tasks: [],
     previousSamples: [],
     progress: {},
+    studyVersion: ACTIVE_STUDY.internalVersion,
+    studyId: ACTIVE_STUDY.studyId,
+    manifestVersion: '',
+    manifestSha256: '',
+    dialect: 'en-US',
     task: null,
     audioBlob: null,
     audioUrl: null,
@@ -25,12 +35,18 @@
     manualSegments: [],
     selectedBoundaryIndex: -1,
     activeVersion: 'v2',
+    exposureTaskId: '',
     recording: false,
     stream: null,
     audioContext: null,
     sourceNode: null,
     processor: null,
     rawChunks: [],
+    captureSettings: null,
+    captureConstraintsRequested: CAPTURE_CONSTRAINTS_REQUESTED,
+    captureEligibility: false,
+    playbackConfirmed: false,
+    versionExposureLog: [],
     heartbeatId: null,
     waveSurfer: null,
     regions: null,
@@ -38,6 +54,7 @@
     timeline: null,
     manualReviewSaved: false,
     analysisFailed: false,
+    visualizationReady: false,
     playTimer: null
   };
 
@@ -73,6 +90,8 @@
       audio: byId('segmentation-study-audio'),
       playbackSpeed: byId('segmentation-study-playback-speed'),
       recordStatus: byId('segmentation-study-record-status'),
+      captureStatus: byId('segmentation-study-capture-status'),
+      playbackConfirmed: byId('segmentation-study-playback-confirmed'),
       analyze: byId('segmentation-study-analyze'),
       analysisStatus: byId('segmentation-study-analysis-status'),
       tabs: Array.from(document.querySelectorAll('[data-study-version]')),
@@ -141,7 +160,7 @@
 
   function studyApiPath(suffix = '') {
     const normalizedSuffix = String(suffix || '').replace(/^\/+/, '');
-    const base = `/api/admin/dev/segmentation-study/${STUDY_API_VERSION}`;
+    const base = `/api/admin/dev/segmentation-study/${ACTIVE_STUDY.publicVersion}`;
     return normalizedSuffix ? `${base}/${normalizedSuffix}` : base;
   }
 
@@ -157,6 +176,34 @@
     elements.analysisStatus.dataset.tone = tone;
   }
 
+  function waveformUnavailableMessage() {
+    return state.comparison
+      ? 'Waveform unavailable; audio and analysis are retained. Retry waveform or re-record.'
+      : 'Waveform unavailable; audio is saved. Retry waveform or re-record.';
+  }
+
+  function markVisualizationUnavailable(message = waveformUnavailableMessage()) {
+    state.visualizationReady = false;
+    if (elements.timelineEmpty) {
+      elements.timelineEmpty.hidden = false;
+      elements.timelineEmpty.textContent = message;
+    }
+    setStatus(message, 'warning');
+  }
+
+  function renderedCanvasReady(container) {
+    const canvas = container?.querySelector('canvas');
+    if (!canvas) return false;
+    const rect = canvas.getBoundingClientRect();
+    return Number(canvas.width) > 0 && Number(canvas.height) > 0 && rect.width > 0 && rect.height > 0;
+  }
+
+  function visualizationSurfacesReady() {
+    return Number(state.waveSurfer?.getDuration?.()) > 0
+      && renderedCanvasReady(elements.waveform)
+      && renderedCanvasReady(elements.spectrogram);
+  }
+
   function normalizeTask(task) {
     if (!task || typeof task !== 'object') return null;
     return {
@@ -166,12 +213,155 @@
       referenceIpa: String(task.referenceIpa || task.ipa || '').trim(),
       referenceSyllableIpa: Array.isArray(task.referenceSyllableIpa) ? task.referenceSyllableIpa : [],
       targetSyllableCount: Number(task.targetSyllableCount || task.syllableCount || 0),
+      automaticVersionOrder: Array.isArray(task.automaticVersionOrder) ? task.automaticVersionOrder.filter((version) => ['v2', 'v3', 'v4'].includes(version)) : [],
       mode: task.mode || state.mode
     };
   }
 
+  function automaticVersionOrder(task = state.task) {
+    const order = Array.isArray(task?.automaticVersionOrder)
+      ? task.automaticVersionOrder.filter((version) => ['v2', 'v3', 'v4'].includes(version))
+      : [];
+    return order.length === 3 && new Set(order).size === 3 ? order : ['v2', 'v3', 'v4'];
+  }
+
+  function nextAutomaticExposureVersion() {
+    const order = automaticVersionOrder();
+    const viewed = new Set(state.versionExposureLog.map((entry) => entry.version));
+    return order.find((version) => !viewed.has(version)) || null;
+  }
+
+  function versionExposureProofReady() {
+    const order = Array.isArray(state.task?.automaticVersionOrder) ? state.task.automaticVersionOrder : [];
+    const automaticOrder = String(state.task?.automaticOrder || '');
+    const log = state.versionExposureLog;
+    if (order.length !== 3 || new Set(order).size !== 3 || order.some((version) => !['v2', 'v3', 'v4'].includes(version))
+      || !/^[a-f0-9]{64}$/.test(automaticOrder) || !Array.isArray(log) || log.length !== 3) return false;
+    return log.every((entry, index) => entry?.version === order[index]
+      && entry.automaticOrder === automaticOrder
+      && Number.isFinite(Date.parse(String(entry.viewedAt || ''))));
+  }
+
+  function exposureRequirementMessage() {
+    const nextVersion = nextAutomaticExposureVersion();
+    return nextVersion
+      ? `Next required automatic view: ${nextVersion.toUpperCase()}.`
+      : 'Complete the ordered automatic exposure review before saving.';
+  }
+
+  const CAPTURE_SETTING_IDS = new Set(['deviceid', 'groupid', 'device_id', 'group_id']);
+
+  function sanitizeCaptureSettings(settings) {
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return null;
+    const clean = {};
+    Object.entries(settings).forEach(([key, value]) => {
+      const normalized = String(key).trim();
+      if (!normalized || CAPTURE_SETTING_IDS.has(normalized.toLowerCase())) return;
+      if (typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value)) || typeof value === 'string') clean[normalized] = value;
+    });
+    return clean;
+  }
+
+  function captureSettingsReady() {
+    return state.captureEligibility === true
+      && state.captureSettings?.echoCancellation === false
+      && state.captureSettings?.noiseSuppression === false
+      && state.captureSettings?.autoGainControl === false;
+  }
+
+  function spansForComparison(version) {
+    const comparison = state.comparison;
+    if (!comparison) return [];
+    if (version === 'v2') return analysisSpans('v2');
+    if (version === 'v3') {
+      const partition = comparison.v3?.analysis?.partitionVariants?.v3;
+      return Array.isArray(partition) ? partition : analysisSpans('v3');
+    }
+    const partition = comparison.v3?.analysis?.partitionVariants?.v4;
+    if (Array.isArray(partition)) return partition;
+    const direct = comparison.v4?.analysis?.observed_syllables || comparison.v4?.analysis?.observed?.syllables;
+    return Array.isArray(direct) ? direct : [];
+  }
+
+  function collectEditOperations(value, operations = [], seen = new Set()) {
+    if (!value || typeof value !== 'object' || seen.has(value)) return operations;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      value.forEach((item) => collectEditOperations(item, operations, seen));
+      return operations;
+    }
+    Object.entries(value).forEach(([key, child]) => {
+      if ((key === 'edit_operations' || key === 'editOperations') && Array.isArray(child)) operations.push(...child);
+      collectEditOperations(child, operations, seen);
+    });
+    return operations;
+  }
+
+  function hasSubstitutionEvidence(value, seen = new Set()) {
+    if (!value || typeof value !== 'object' || seen.has(value)) return false;
+    seen.add(value);
+    if (Array.isArray(value)) return value.some((item) => hasSubstitutionEvidence(item, seen));
+    return Object.entries(value).some(([key, child]) => {
+      const normalizedKey = key.toLowerCase().replace(/[_-]/g, '');
+      if ((normalizedKey === 'op' || normalizedKey === 'operation') && String(child || '').toLowerCase() === 'substitution') return true;
+      if (normalizedKey === 'substitution' || normalizedKey === 'substitutionused') {
+        if (child === true || String(child || '').toLowerCase() === 'substitution') return true;
+      }
+      return hasSubstitutionEvidence(child, seen);
+    });
+  }
+
+  function authoritativeV4MatchesDirect() {
+    const partitionVariants = state.comparison?.v3?.analysis?.partitionVariants;
+    if (!partitionVariants || !Array.isArray(partitionVariants.v4)) return false;
+    if (state.comparison?.v4 == null) return true;
+    const directWrapper = state.comparison.v4;
+    const direct = directWrapper?.analysis || directWrapper;
+    const authoritativeSpans = partitionVariants.v4;
+    const directSpans = direct?.observed_syllables || direct?.observed?.syllables || direct?.syllables;
+    if (!Array.isArray(directSpans) || directSpans.length !== authoritativeSpans.length) return false;
+    if (directSpans.some((span, index) => spanStart(span) !== spanStart(authoritativeSpans[index]) || spanEnd(span) !== spanEnd(authoritativeSpans[index]))) return false;
+    const authoritativeVersion = partitionVariants.v4AnalysisVersion || partitionVariants.v4_analysis_version;
+    const directVersions = [direct.analysisVersion, direct.analysis_version, directWrapper.analysisVersion, directWrapper.analysis_version].filter(Boolean);
+    const directSources = [direct.source, direct.provenance?.source, directWrapper.source, directWrapper.provenance?.source].filter(Boolean);
+    const directSchemas = [direct.schemaVersion, direct.schema_version, direct.partitionSchemaVersion, direct.partition_schema_version,
+      direct.provenance?.schemaVersion, direct.provenance?.schema_version, directWrapper.schemaVersion, directWrapper.schema_version,
+      directWrapper.partitionSchemaVersion, directWrapper.partition_schema_version, directWrapper.provenance?.schemaVersion, directWrapper.provenance?.schema_version].filter(Boolean);
+    const directVariants = [direct.variant, direct.provenance?.variant, directWrapper.variant, directWrapper.provenance?.variant].filter(Boolean);
+    const allMatch = (values, expected) => values.length > 0 && values.every((value) => value === expected);
+    return allMatch(directVersions, authoritativeVersion)
+      && allMatch(directSources, 'partitionVariants.v4')
+      && allMatch(directSchemas, partitionVariants.schemaVersion)
+      && allMatch(directVariants, 'v4');
+  }
+
+  function completeComparisonReady() {
+    const expected = Number(state.task?.targetSyllableCount || 0);
+    if (!state.comparison || state.comparison.status !== 'complete') return false;
+    if (state.comparison.schemaVersion !== 'pronunciation-comparison-v2' || !state.comparison.comparisonId || expected <= 0) return false;
+    if (state.comparison.v3?.analysis?.partitionVariants?.schemaVersion !== 'pronunciation-partition-variants-v2') return false;
+    if (!authoritativeV4MatchesDirect()) return false;
+    const editOperations = collectEditOperations(state.comparison);
+    if (editOperations.some((item) => String(item?.op || item?.operation || '').toLowerCase() === 'substitution') || hasSubstitutionEvidence(state.comparison)) return false;
+    const analysisVersions = [];
+    return ['v2', 'v3', 'v4'].every((version) => {
+      if (!state.comparison[version] || state.comparison[version].status !== 'complete') return false;
+      const spans = spansForComparison(version);
+      const analysis = analysisForVersion(version) || {};
+      const contiguous = spans.every((span, index) => index === 0 || Math.abs(spanStart(span) - spanEnd(spans[index - 1])) <= 0.000001);
+      const analysisVersion = analysis.analysisVersion || analysis.analysis_version;
+      if (analysisVersion) analysisVersions.push(analysisVersion);
+      return spans.length === expected && contiguous && Boolean(analysisVersion);
+    }) && new Set(analysisVersions).size === 3;
+  }
+
   function normalizePayload(payload) {
     const data = payload?.data || payload || {};
+    state.studyVersion = String(data.studyVersion || ACTIVE_STUDY.internalVersion);
+    state.studyId = String(data.studyId || ACTIVE_STUDY.studyId);
+    state.manifestVersion = String(data.manifestVersion || state.manifestVersion || '');
+    state.manifestSha256 = String(data.manifestSha256 || state.manifestSha256 || '');
+    state.dialect = String(data.dialect || state.dialect || 'en-US');
     state.manifest = Array.isArray(data.manifest) ? data.manifest : state.manifest;
     state.tasks = (Array.isArray(data.tasks) ? data.tasks : []).map(normalizeTask).filter(Boolean);
     state.previousSamples = (Array.isArray(data.previousSamples) ? data.previousSamples : []).map((sample) => ({
@@ -227,17 +417,27 @@
   function updateButtons() {
     const hasTask = Boolean(state.task?.taskId);
     const hasAudio = Boolean(state.audioBlob);
-    const hasAnalysis = Boolean(state.comparison);
+    const hasAnalysis = completeComparisonReady();
+    const exposureReady = versionExposureProofReady();
     const completeManual = state.manualSegments.length === Number(state.task?.targetSyllableCount || 0);
     const certainty = elements?.certainty?.()?.value || '';
-    const canSave = hasTask && hasAudio && (state.mode === 'previous' || hasAnalysis || state.analysisFailed) && completeManual && Boolean(certainty) && !state.manualReviewSaved;
+    const playbackConfirmed = Boolean(elements?.playbackConfirmed?.checked || state.playbackConfirmed);
+    const canSave = hasTask && hasAudio && state.visualizationReady && hasAnalysis && exposureReady && captureSettingsReady() && completeManual && playbackConfirmed && Boolean(certainty) && !state.manualReviewSaved;
     if (elements.claim) elements.claim.disabled = !state.operatorName || hasTask || state.mode === 'previous';
     if (elements.release) elements.release.disabled = !hasTask || state.mode === 'previous';
     if (elements.record) elements.record.disabled = !hasTask || state.mode === 'previous' || state.recording;
     if (elements.stop) elements.stop.disabled = !state.recording;
     if (elements.redo) elements.redo.disabled = !hasAudio || state.recording;
     if (elements.analyze) elements.analyze.disabled = !hasAudio || state.recording;
-    if (elements.save) elements.save.disabled = !canSave;
+    if (elements.save) {
+      elements.save.disabled = !canSave;
+      const exposureMessage = hasTask && hasAudio && hasAnalysis && !exposureReady ? exposureRequirementMessage() : '';
+      elements.save.title = exposureMessage;
+      elements.save.setAttribute('aria-label', exposureMessage ? `Save sample (${exposureMessage})` : 'Save sample');
+      if (hasTask && hasAudio && hasAnalysis && !state.visualizationReady) setStatus(waveformUnavailableMessage(), 'warning');
+      else if (exposureMessage) setStatus(exposureMessage, 'warning');
+      else if (hasTask && hasAudio && hasAnalysis && elements.status?.textContent?.startsWith('Next required automatic view:')) setStatus('All automatic versions viewed. Complete the manual review to save.', 'success');
+    }
     if (elements.next) elements.next.disabled = !state.manualReviewSaved;
     if (elements.manualUndo) elements.manualUndo.disabled = !state.manualBoundaries.length;
     if (elements.manualClear) elements.manualClear.disabled = !state.manualBoundaries.length;
@@ -255,6 +455,11 @@
     state.audioUrl = null;
     state.comparison = null;
     state.analysisFailed = false;
+    state.captureSettings = null;
+    state.versionExposureLog = [];
+    state.exposureTaskId = '';
+    state.playbackConfirmed = false;
+    state.visualizationReady = false;
     state.manualBoundaries = [];
     state.manualSegments = [];
     state.selectedBoundaryIndex = -1;
@@ -264,8 +469,13 @@
     if (elements.word) elements.word.textContent = 'No word claimed';
     if (elements.reference) elements.reference.textContent = 'The selected word and IPA will appear here.';
     if (elements.claimStatus) elements.claimStatus.textContent = 'Not reserved';
+    if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
+    if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
     if (elements.summary) elements.summary.textContent = '';
-    if (elements.timelineEmpty) elements.timelineEmpty.hidden = false;
+    if (elements.timelineEmpty) {
+      elements.timelineEmpty.hidden = false;
+      elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.';
+    }
     clearRegions();
     updateManualUi();
   }
@@ -273,6 +483,13 @@
   function renderTask() {
     const task = state.task;
     if (!task) { resetTaskState(); updateButtons(); return; }
+    const order = automaticVersionOrder(task);
+    if (state.exposureTaskId !== task.taskId) {
+      state.exposureTaskId = task.taskId;
+      state.versionExposureLog = [];
+    }
+    applyAutomaticVersionOrder(order);
+    selectVersion(order[0], { recordExposure: false });
     if (elements.word) elements.word.textContent = task.targetWord || 'Unnamed word';
     if (elements.reference) elements.reference.textContent = `${task.referenceIpa || 'IPA unavailable'} · ${task.targetSyllableCount || '?'} syllables`;
     if (elements.claimStatus) elements.claimStatus.textContent = state.mode === 'previous' ? 'Previous sample' : (task.status || 'Reserved').replaceAll('_', ' ');
@@ -381,13 +598,34 @@
     if (!state.task || state.mode === 'previous' || state.recording) return;
     try {
       cleanupRecording();
+      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      state.audioUrl = null;
       state.audioBlob = null;
       state.comparison = null;
       state.analysisFailed = false;
+      state.captureSettings = null;
+      state.captureEligibility = false;
+      state.versionExposureLog = [];
+      state.activeVersion = automaticVersionOrder(state.task)[0];
+      state.visualizationReady = false;
+      state.playbackConfirmed = false;
       state.manualBoundaries = [];
       state.manualSegments = [];
       state.manualReviewSaved = false;
-      state.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      clearCertainty();
+      if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
+      if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
+      state.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const track = state.stream.getAudioTracks?.()[0] || state.stream.getTracks?.()[0];
+      state.captureSettings = sanitizeCaptureSettings(track?.getSettings?.());
+      state.captureEligibility = state.captureSettings?.echoCancellation === false
+        && state.captureSettings?.noiseSuppression === false
+        && state.captureSettings?.autoGainControl === false;
+      if (elements.captureStatus) {
+        elements.captureStatus.textContent = captureSettingsReady()
+          ? 'Raw capture settings verified (AEC, noise suppression, and auto gain control off).'
+          : 'Capture settings unavailable or enabled; Save is blocked.';
+      }
       state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       state.sourceNode = state.audioContext.createMediaStreamSource(state.stream);
       state.processor = state.audioContext.createScriptProcessor(4096, 1, 1);
@@ -413,19 +651,25 @@
     state.audioUrl = URL.createObjectURL(state.audioBlob);
     if (elements.audio) { elements.audio.src = state.audioUrl; elements.audio.hidden = false; }
     if (elements.recordStatus) elements.recordStatus.textContent = `Recording ready (${(state.audioBlob.size / 1024).toFixed(0)} KB).`;
-    if (elements.timelineEmpty) elements.timelineEmpty.hidden = false;
-    await loadWaveform(state.audioUrl);
+    if (elements.timelineEmpty) {
+      elements.timelineEmpty.hidden = false;
+      elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.';
+    }
+    await loadWaveform(state.audioBlob);
     updateButtons();
   }
 
   async function redoRecording() {
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-    state.audioBlob = null; state.audioUrl = null; state.comparison = null; state.analysisFailed = false; state.manualBoundaries = []; state.manualSegments = []; state.selectedBoundaryIndex = -1; state.manualReviewSaved = false;
+    state.audioBlob = null; state.audioUrl = null; state.comparison = null; state.analysisFailed = false; state.captureSettings = null; state.captureEligibility = false; state.playbackConfirmed = false; state.versionExposureLog = []; state.activeVersion = automaticVersionOrder(state.task)[0]; state.manualBoundaries = []; state.manualSegments = []; state.selectedBoundaryIndex = -1; state.manualReviewSaved = false; state.visualizationReady = false;
     clearCertainty();
     if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
     clearRegions();
     setAnalysisStatus('Analysis is required before review.');
     if (elements.recordStatus) elements.recordStatus.textContent = 'No recording yet.';
+    if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
+    if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
+    if (elements.timelineEmpty) { elements.timelineEmpty.hidden = false; elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.'; }
     updateManualUi(); updateButtons();
   }
 
@@ -444,9 +688,31 @@
   }
 
   function analysisForVersion(version) {
+    if (version === 'v4') {
+      const v3 = state.comparison?.v3?.analysis || null;
+      const variant = v3?.partitionVariants?.v4;
+      const v4AnalysisVersion = v3?.partitionVariants?.v4AnalysisVersion || v3?.partitionVariants?.v4_analysis_version;
+      if (!v3 || !Array.isArray(variant) || !v4AnalysisVersion) return null;
+      return {
+        ...v3,
+        analysisVersion: v4AnalysisVersion,
+        observed_syllables: variant
+      };
+    }
     const direct = state.comparison?.[version]?.analysis;
     if (direct) return direct;
-    return version === 'v4' ? (state.comparison?.v3?.analysis || null) : null;
+    return null;
+  }
+
+  function applyAutomaticVersionOrder(order) {
+    const versions = automaticVersionOrder({ automaticVersionOrder: order });
+    const tabContainer = elements.tabs[0]?.parentElement;
+    if (!tabContainer) return;
+    versions.concat('manual').forEach((version) => {
+      const tab = elements.tabs.find((item) => item.dataset.studyVersion === version);
+      if (tab) tabContainer.appendChild(tab);
+    });
+    elements.tabs = Array.from(tabContainer.querySelectorAll('[data-study-version]'));
   }
 
   function renderPanel(version) {
@@ -579,7 +845,26 @@
     if (finalize) drawRegions('manual');
   }
 
-  function selectVersion(version) {
+  function selectVersion(version, options = {}) {
+    let exposureChanged = false;
+    if (options.recordExposure !== false && ['v2', 'v3', 'v4'].includes(version) && state.task?.taskId) {
+      const alreadyViewed = state.versionExposureLog.some((entry) => entry.version === version);
+      if (!alreadyViewed) {
+        const expectedVersion = nextAutomaticExposureVersion();
+        if (version !== expectedVersion) {
+          setStatus(`View ${expectedVersion?.toUpperCase() || 'the remaining automatic version'} before ${version.toUpperCase()} to preserve ordered exposure evidence.`, 'error');
+          return false;
+        }
+        if (state.comparison) {
+          state.versionExposureLog.push({
+            version,
+            automaticOrder: state.task.automaticOrder || null,
+            viewedAt: new Date().toISOString()
+          });
+          exposureChanged = true;
+        }
+      }
+    }
     state.activeVersion = version;
     elements.tabs.forEach((tab) => {
       const active = tab.dataset.studyVersion === version;
@@ -591,14 +876,22 @@
     renderPanel(version);
     drawRegions(version);
     if (elements.manualInstructions) elements.manualInstructions.hidden = version !== 'manual';
+    if (exposureChanged) updateButtons();
   }
 
-  async function loadWaveform(url) {
+  async function loadWaveform(blob) {
+    state.visualizationReady = false;
+    if (elements.timelineEmpty) {
+      elements.timelineEmpty.hidden = false;
+      elements.timelineEmpty.textContent = 'Loading waveform…';
+    }
     if (!elements.waveform || !window.WaveSurfer) {
-      if (elements.timelineEmpty) elements.timelineEmpty.textContent = 'Waveform library unavailable; audio is still saved for review.';
-      return;
+      markVisualizationUnavailable();
+      updateButtons();
+      return false;
     }
     try {
+      if (!(blob instanceof Blob)) throw new TypeError('Waveform visualization requires the original audio Blob.');
       if (state.waveSurfer) state.waveSurfer.destroy();
       elements.waveform.replaceChildren();
       elements.spectrogram?.replaceChildren();
@@ -618,17 +911,32 @@
         }));
       }
       state.waveSurfer.on('ready', () => {
+        if (!visualizationSurfacesReady()) {
+          markVisualizationUnavailable();
+          updateButtons();
+          return;
+        }
+        state.visualizationReady = true;
         if (elements.timelineEmpty) elements.timelineEmpty.hidden = true;
         selectVersion(state.activeVersion);
+        updateButtons();
       });
       state.waveSurfer.on('interaction', (time) => {
         if (state.activeVersion === 'manual') addManualBoundary(Number(time));
       });
       state.waveSurfer.on('region-updated', (region) => syncManualFromRegion(region));
       state.waveSurfer.on('region-update-end', (region) => syncManualFromRegion(region, true));
-      state.waveSurfer.on('error', (error) => setStatus(`Waveform failed: ${error?.message || error}`, 'error'));
-      await state.waveSurfer.load(url);
-    } catch (error) { setStatus(`Waveform failed: ${error.message}`, 'error'); }
+      state.waveSurfer.on('error', () => {
+        markVisualizationUnavailable();
+        updateButtons();
+      });
+      await state.waveSurfer.loadBlob(blob);
+      return state.visualizationReady;
+    } catch (error) {
+      markVisualizationUnavailable();
+      updateButtons();
+      return false;
+    }
   }
 
   function addManualBoundary(rawTime) {
@@ -706,10 +1014,12 @@
         referenceIpa: state.task.referenceIpa,
         referenceSyllables: state.task.referenceSyllableIpa
       });
+      if (!completeComparisonReady()) throw new Error('The analyzer did not return complete V2/V3/V4 data with the expected syllable counts and provenance.');
       setAnalysisStatus('V2, V3, and V4 data loaded. Automatic boundaries remain visible for comparison.', 'success');
       ['v2', 'v3', 'v4'].forEach(renderPanel);
       selectVersion(state.activeVersion);
       updateButtons();
+      if (!state.visualizationReady) setStatus(waveformUnavailableMessage(), 'warning');
     } catch (error) {
       state.comparison = null;
       state.analysisFailed = true;
@@ -719,11 +1029,41 @@
   }
 
   function manualMetadata() {
+    const first = state.manualSegments[0];
+    const last = state.manualSegments.at(-1);
+    const variantProvenance = Object.fromEntries(['v2', 'v3', 'v4'].map((version) => {
+      const analysis = analysisForVersion(version) || {};
+      const schemaVersion = version === 'v2'
+        ? state.comparison?.schemaVersion
+        : state.comparison?.v3?.analysis?.partitionVariants?.schemaVersion;
+      return [version, {
+        schemaVersion,
+        variant: version,
+        analysisVersion: analysis.analysisVersion || analysis.analysis_version || '',
+        source: version === 'v2' ? 'comparison.v2' : `partitionVariants.${version}`
+      }];
+    }));
     return {
       manualSegments: state.manualSegments,
       manualSegmentationConvention: 'ipa-phonological-contiguous-v1',
       certainty: elements.certainty?.()?.value || 'uncertain',
       automaticBoundariesVisible: true,
+      annotationProtocol: 'automatic-visible-assisted-v1',
+      playbackConfirmed: Boolean(elements.playbackConfirmed?.checked || state.playbackConfirmed),
+      captureSettings: sanitizeCaptureSettings(state.captureSettings),
+      getSettings: sanitizeCaptureSettings(state.captureSettings),
+      captureConstraintsRequested: CAPTURE_CONSTRAINTS_REQUESTED,
+      captureEligibility: captureSettingsReady(),
+      wordBounds: first && last ? { startTime: first.startTime, endTime: last.endTime } : null,
+      manifestVersion: state.manifestVersion,
+      manifestSha256: state.manifestSha256,
+      automaticOrder: state.task?.automaticOrder || null,
+      automaticVersionOrder: state.task?.automaticVersionOrder || [],
+      dialect: state.task?.dialect || state.dialect || 'en-US',
+      referenceLabelProvenance: REFERENCE_LABEL_PROVENANCE,
+      variantProvenance,
+      exposureLog: Array.isArray(state.task?.exposureLog) ? state.task.exposureLog : [],
+      versionExposureLog: state.versionExposureLog,
       reviewStatus: elements.certainty?.()?.value === 'uncertain' ? 'uncertain' : 'complete',
       reviewerName: state.operatorName,
       reviewerSessionId: state.sessionId
@@ -731,7 +1071,11 @@
   }
 
   async function save() {
-    if (!state.task || !state.audioBlob || !state.manualSegments.length) return;
+    if (!state.task || !state.audioBlob || !state.manualSegments.length || !state.visualizationReady || !completeComparisonReady() || !versionExposureProofReady() || !captureSettingsReady() || !(elements.playbackConfirmed?.checked || state.playbackConfirmed)) {
+      setStatus(!state.visualizationReady ? waveformUnavailableMessage() : (!versionExposureProofReady() ? exposureRequirementMessage() : 'Save requires playback confirmation, verified raw capture settings, and complete V2/V3/V4 analysis.'), 'error');
+      updateButtons();
+      return;
+    }
     const review = manualMetadata();
     try {
       elements.save.disabled = true;
@@ -744,7 +1088,8 @@
         const formData = new FormData();
         formData.append('audio', state.audioBlob, `${state.task.taskId}.wav`);
         formData.append('metadata', JSON.stringify({
-          studyVersion: STUDY_VERSION,
+          studyVersion: state.studyVersion || ACTIVE_STUDY.internalVersion,
+          studyId: state.studyId || ACTIVE_STUDY.studyId,
           taskId: state.task.taskId,
           sessionId: state.sessionId,
           operatorName: state.operatorName,
@@ -754,10 +1099,10 @@
           targetSyllableCount: state.task.targetSyllableCount,
           expectedObservedCount: state.task.targetSyllableCount,
           category: 'clean',
-          speakerCohort: 'segmentation-study-v1',
-          analysisStatus: state.comparison ? 'complete' : 'analysis_failed',
+          speakerCohort: state.task.speakerCohort || `${ACTIVE_STUDY.internalVersion}-clean`,
+          analysisStatus: 'complete',
           comparison: state.comparison,
-          analysisRevision: state.comparison?.v3?.analysis?.analysisVersion || state.comparison?.v2?.analysis?.analysisVersion || 'segmentation-study-v1',
+          analysisRevision: state.comparison?.v3?.analysis?.analysisVersion || state.comparison?.v2?.analysis?.analysisVersion || 'comparison-analysis-v2',
           rawCtcSpans: state.comparison?.v3?.analysis?.rawCtcSpans || state.comparison?.v3?.analysis?.observed_syllables || null,
           measurementSpans: state.comparison?.v3?.analysis?.measurementSpans || null,
           v2: state.comparison?.v2?.analysis || null,
@@ -766,7 +1111,7 @@
           automaticBoundariesVisible: true,
           ...review,
           manualSegments: state.manualSegments,
-          needsManualReview: false
+          needsManualReview: review.certainty === 'uncertain'
         }));
         await apiFetch(studyApiPath(`tasks/${encodeURIComponent(state.task.taskId)}/complete`), { method: 'POST', body: formData });
       }
@@ -796,7 +1141,7 @@
       state.audioBlob = await response.blob();
       state.audioUrl = URL.createObjectURL(state.audioBlob);
       if (elements.audio) { elements.audio.src = state.audioUrl; elements.audio.hidden = false; }
-      await loadWaveform(state.audioUrl);
+      await loadWaveform(state.audioBlob);
       if (Array.isArray(sample.manualSegments) && sample.manualSegments.length) {
         state.manualSegments = sample.manualSegments.map((segment, index) => ({ ...segment, index }));
         state.manualBoundaries = [state.manualSegments[0].startTime, ...state.manualSegments.map((segment) => segment.endTime)];
@@ -828,11 +1173,12 @@
     elements.analyze.addEventListener('click', analyze);
     elements.save.addEventListener('click', save);
     elements.next.addEventListener('click', async () => { state.task = null; resetTaskState(); state.mode = 'record'; await refresh(); });
-    elements.tabs.forEach((tab, index) => {
+    elements.tabs.forEach((tab) => {
       tab.addEventListener('click', () => selectVersion(tab.dataset.studyVersion || 'v2'));
       tab.addEventListener('keydown', (event) => {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
+        const index = elements.tabs.indexOf(tab);
         const nextIndex = event.key === 'Home' ? 0
           : (event.key === 'End' ? elements.tabs.length - 1
             : (index + (event.key === 'ArrowLeft' ? -1 : 1) + elements.tabs.length) % elements.tabs.length);
@@ -851,6 +1197,7 @@
       }
     });
     document.querySelectorAll('input[name="segmentation-study-certainty"]').forEach((input) => input.addEventListener('change', updateButtons));
+    elements.playbackConfirmed?.addEventListener('change', () => { state.playbackConfirmed = elements.playbackConfirmed.checked; updateButtons(); });
     window.addEventListener('pagehide', () => { stopHeartbeat(); cleanupRecording(); state.waveSurfer?.destroy?.(); });
   }
 

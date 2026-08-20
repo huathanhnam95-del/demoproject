@@ -735,10 +735,55 @@ class PronunciationV3ApiTest(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
         body = response.get_json()
-        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v1')
+        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v2')
         self.assertEqual(body['mode'], 'comparison')
-        self.assertEqual(body['v2']['status'], 'available')
-        self.assertEqual(body['v3']['status'], 'available')
+        self.assertEqual(body['status'], 'complete')
+        self.assertEqual(body['v2']['status'], 'complete')
+        self.assertEqual(body['v3']['status'], 'complete')
+        self.assertEqual(body['v4']['status'], 'complete')
+        self.assertEqual(body['v2']['analysis']['analysisVersion'], 'pronunciation-analysis-v2')
+        v2_analysis = body['v2']['analysis']
+        v2_spans = v2_analysis['observed_syllables']
+        self.assertEqual(len(v2_spans), 2)
+        self.assertAlmostEqual(v2_spans[0]['endTime'], 0.325)
+        self.assertAlmostEqual(v2_spans[1]['startTime'], 0.325)
+        self.assertAlmostEqual(v2_spans[0]['endTime'], v2_spans[1]['startTime'])
+        self.assertEqual(
+            [(span['startTime'], span['endTime']) for span in v2_analysis['provenance']['rawSpans']],
+            [(0.10, 0.30), (0.35, 0.55)],
+        )
+        self.assertEqual(v2_analysis['provenance']['source'], 'observed.syllables')
+        self.assertEqual(body['v3']['analysis']['analysisVersion'], 'pronunciation-analysis-v3')
+        v3_variants = body['v3']['analysis']['partitionVariants']
+        self.assertEqual(v3_variants['schemaVersion'], 'pronunciation-partition-variants-v2')
+        self.assertEqual(v3_variants['v4AnalysisVersion'], 'pronunciation-analysis-v4')
+        v4_analysis = body['v4']['analysis']
+        self.assertEqual(v4_analysis['analysisVersion'], 'pronunciation-analysis-v4')
+        self.assertEqual(v4_analysis['source'], 'partitionVariants.v4')
+        self.assertEqual(v4_analysis['provenance']['source'], 'partitionVariants.v4')
+        self.assertEqual(v4_analysis['provenance']['variant'], 'v4')
+        self.assertEqual(
+            v4_analysis['provenance']['schemaVersion'],
+            'pronunciation-partition-variants-v2',
+        )
+        v4_spans = v4_analysis['observed_syllables']
+        self.assertEqual(v4_spans, v3_variants['v4'])
+        self.assertEqual(
+            v4_analysis['analysisVersion'],
+            v3_variants['v4AnalysisVersion'],
+        )
+        self.assertEqual(
+            v4_analysis['provenance']['schemaVersion'],
+            v3_variants['schemaVersion'],
+        )
+        self.assertEqual(v4_analysis['diagnostics'], v3_variants['v4Diagnostics'])
+        self.assertEqual(len(v4_spans), 2)
+        self.assertEqual(v4_analysis['syllable_count'], 2)
+        for index, span in enumerate(v4_spans):
+            self.assertLess(span['startTime'], span['endTime'])
+            if index:
+                self.assertAlmostEqual(v4_spans[index - 1]['endTime'], span['startTime'])
+        self.assertEqual(v4_analysis['spans'], v4_spans)
         self.assertEqual(body['context']['targetWord'], 'actual')
         self.assertEqual(body['context']['referenceSyllableIpa'], ["hɛ", "loʊ"])
         self.assertEqual(run_v3.call_args.kwargs['reference_syllables'], ["hɛ", "loʊ"])
@@ -761,8 +806,10 @@ class PronunciationV3ApiTest(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
         body = response.get_json()
-        self.assertEqual(body['v2']['status'], 'available')
+        self.assertEqual(body['status'], 'partial_failure')
+        self.assertEqual(body['v2']['status'], 'complete')
         self.assertEqual(body['v3']['status'], 'unavailable')
+        self.assertEqual(body['v4']['status'], 'unavailable')
         self.assertEqual(body['v3']['reason'], 'MODEL_INFERENCE_FAILED')
 
     def test_compare_missing_recognizer_config_has_stable_reason(self):
@@ -780,6 +827,7 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.get_json()
         self.assertEqual(body['v3']['status'], 'unavailable')
+        self.assertEqual(body['v4']['status'], 'unavailable')
         self.assertEqual(body['v3']['reason'], 'RECOGNIZER_CONFIG_MISSING')
         self.assertNotEqual(body['v3']['reason'], 'MODEL_INFERENCE_FAILED')
 
@@ -812,7 +860,89 @@ class PronunciationV3ApiTest(unittest.TestCase):
         body = response.get_json()
         self.assertEqual(body['v2']['status'], 'unavailable')
         self.assertEqual(body['v2']['reason'], 'ANALYSIS_FAILED')
-        self.assertEqual(body['v3']['status'], 'available')
+        self.assertEqual(body['status'], 'partial_failure')
+        self.assertEqual(body['v3']['status'], 'complete')
+        self.assertEqual(body['v4']['status'], 'complete')
+
+    def test_compare_missing_v4_partition_is_partial_and_fail_closed(self):
+        v3_without_v4 = {
+            'analysisVersion': 'pronunciation-analysis-v3',
+            'observed_syllables': [
+                {'startTime': 0.1, 'endTime': 0.3},
+                {'startTime': 0.3, 'endTime': 0.55},
+            ],
+            'syllable_count': 2,
+            'partitionVariants': {
+                'schemaVersion': 'pronunciation-partition-variants-v2',
+                'v3': [
+                    {'index': 0, 'startTime': 0.1, 'endTime': 0.3},
+                    {'index': 1, 'startTime': 0.3, 'endTime': 0.55},
+                ],
+                'v4': [],
+                'v4Diagnostics': [],
+            },
+        }
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()), \
+             patch.object(
+                 server,
+                 '_build_v3_active_result_from_pipeline',
+                 return_value=(v3_without_v4, None),
+             ):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v2')
+        self.assertEqual(body['status'], 'partial_failure')
+        self.assertEqual(body['v2']['status'], 'complete')
+        self.assertEqual(body['v3']['status'], 'complete')
+        self.assertEqual(body['v4']['status'], 'unavailable')
+        self.assertEqual(body['v4']['reason'], 'PARTITION_VARIANT_V4_UNAVAILABLE')
+        self.assertIsNone(body['v4']['analysis'])
+
+    def test_compare_misversioned_v3_fails_closed_even_with_valid_v4(self):
+        misversioned_v3 = {
+            'analysisVersion': 'pronunciation-analysis-v2',
+            'syllable_count': 2,
+            'partitionVariants': {
+                'schemaVersion': 'pronunciation-partition-variants-v2',
+                'v3': [
+                    {'index': 0, 'startTime': 0.1, 'endTime': 0.3},
+                    {'index': 1, 'startTime': 0.3, 'endTime': 0.55},
+                ],
+                'v4': [
+                    {'index': 0, 'startTime': 0.1, 'endTime': 0.31},
+                    {'index': 1, 'startTime': 0.31, 'endTime': 0.55},
+                ],
+                'v4AnalysisVersion': 'pronunciation-analysis-v4',
+                'v4Diagnostics': [],
+            },
+        }
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=self._comparison_v3_pipeline()), \
+             patch.object(
+                 server,
+                 '_build_v3_active_result_from_pipeline',
+                 return_value=(misversioned_v3, None),
+             ):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['status'], 'partial_failure')
+        self.assertEqual(body['v2']['status'], 'complete')
+        self.assertEqual(body['v3']['status'], 'unavailable')
+        self.assertEqual(body['v3']['reason'], 'ANALYSIS_INVALID')
+        self.assertEqual(body['v4']['status'], 'unavailable')
+        self.assertEqual(body['v4']['reason'], 'ANALYSIS_INVALID')
+        self.assertIsNone(body['v4']['analysis'])
 
     def test_compare_returns_503_when_both_engines_are_unavailable(self):
         with patch.object(server, 'analyze_audio_v2', side_effect=RuntimeError('Praat failed')), \
@@ -832,10 +962,11 @@ class PronunciationV3ApiTest(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 503)
         body = response.get_json()
-        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v1')
+        self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v2')
         self.assertEqual(body['status'], 'unavailable')
         self.assertEqual(body['v2']['status'], 'unavailable')
         self.assertEqual(body['v3']['status'], 'unavailable')
+        self.assertEqual(body['v4']['status'], 'unavailable')
 
     def test_compare_validates_reference_and_expected_count(self):
         invalid_reference = self._valid_comparison_form()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline reanalysis for the segmentation-study-v1 corpus.
+"""Offline reanalysis for the segmentation-study-v2 corpus.
 
 This module is deliberately independent of the learner-facing pronunciation
 service.  It provides a small, deterministic experiment runner that can be
@@ -13,8 +13,8 @@ Typical usage::
 
     python scripts/audit/segmentation_spectrogram_reanalysis.py \
         --samples-dir test-results/pronounce-local-samples \
-        --manifest scripts/data/segmentation-study-v1.json \
-        --output-dir test-results/segmentation-study-v1
+        --manifest scripts/data/segmentation-study-v2.json \
+        --output-dir test-results/segmentation-study-v2
 
 The command exits successfully even when the gate report is ``fail``.  A
 failed gate is an experiment result, not a process error, and the candidate
@@ -30,6 +30,7 @@ import json
 import math
 import re
 import wave
+import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,8 +40,16 @@ from typing import Any, Iterable, Mapping, Sequence
 import numpy as np
 
 
-STUDY_ID = "segmentation-study-v1"
-MANIFEST_VERSION = "1.0.0"
+STUDY_ID = "segmentation-study-v2"
+MANIFEST_VERSION = "2.0.0"
+CANONICAL_EXPORT_SCHEMA_VERSION = "segmentation-study-export-v2"
+STUDY_COHORT = "segmentation-study-v2"
+FROZEN_REFERENCE_PROVENANCE = "explicit-reviewed-en-US-v1"
+VARIANT_SCHEMA_VERSIONS = {
+    "v2": "pronunciation-comparison-v2",
+    "v3": "pronunciation-partition-variants-v2",
+    "v4": "pronunciation-partition-variants-v2",
+}
 DEFAULT_SEED = 20260813
 DEFAULT_BOOTSTRAP_RESAMPLES = 10_000
 DEFAULT_FRAME_MS = 25.0
@@ -50,6 +59,57 @@ DEFAULT_N_MELS = 40
 DEFAULT_FMAX_HZ = 8_000.0
 DEFAULT_SEARCH_MS = 80.0
 DEFAULT_TARGET_SAMPLE_RATE = 16_000
+
+# The v2 reference labels are an auditable, frozen contract.  These entries
+# correct the deterministic splitter's onset/coda choices without changing
+# the source IPA variant or the 100-word cohort.  Keep this table explicit so
+# a future manifest rebuild cannot silently reintroduce v1 labels.
+FROZEN_REFERENCE_SYLLABLES: dict[str, tuple[str, ...]] = {
+    "abroad": ("ə", "ˈbrɔd"),
+    "acquire": ("ə", "ˈkwaɪɝ"),
+    "accomplish": ("ə", "ˈkɑm", "plɪʃ"),
+    "adjustment": ("ə", "ˈdʒəst", "mənt"),
+    "agreement": ("ə", "ˈɡri", "mənt"),
+    "accomplishment": ("ə", "ˈkɑm", "plɪʃ", "mənt"),
+    "agriculture": ("ˈæɡ", "rɪ", "ˌkəl", "tʃɝ"),
+    "analogy": ("ə", "ˈnæ", "lə", "dʒi"),
+    "appreciate": ("ə", "ˈpri", "ʃi", "ˌeɪt"),
+    "biology": ("baɪ", "ˈɑ", "lə", "dʒi"),
+    "congressional": ("kən", "ˈɡrɛ", "ʃə", "nəl"),
+    "democratic": ("ˌdɛ", "mə", "ˈkræ", "tɪk"),
+    "original": ("ɝ", "ˈɪ", "dʒə", "nəl"),
+    "originate": ("ɝ", "ˈɪ", "dʒə", "ˌneɪt"),
+    "administration": ("æd", "ˌmɪ", "nɪ", "ˈstreɪ", "ʃən"),
+    "administrative": ("əd", "ˈmɪ", "nə", "ˌstreɪ", "tɪv"),
+    "administrator": ("əd", "ˈmɪ", "nə", "ˌstreɪ", "tɝ"),
+    "appreciation": ("ə", "ˌpri", "ʃi", "ˈeɪ", "ʃən"),
+    "approximately": ("ə", "ˈprɑk", "sə", "mət", "li"),
+    "experimental": ("ɪk", "ˌspɛ", "rɪ", "ˈmɛn", "təl"),
+    "ideology": ("ˌaɪ", "di", "ˈɑ", "lə", "dʒi"),
+    "imaginary": ("ˌɪ", "ˈmæ", "dʒə", "ˌnɛ", "ri"),
+    "technological": ("ˌtɛk", "nə", "ˈlɑ", "dʒɪ", "kəl"),
+}
+
+# These words keep the selected source variant but require a reasoned note
+# because stress placement, reduced vowels, /g/, or adjacent nuclei can make
+# automated syllable splitting look plausible while remaining ambiguous.
+FROZEN_REFERENCE_RATIONALES: dict[str, str] = {
+    "accurate": "Retained /ˈækjɝət/ as two en-US syllables; rhotic /ɝ/ is not split into a separate hiatus nucleus.",
+    "accuracy": "Retained /ˈækjɝəsi/ as three en-US syllables; the rhotic /ɝə/ sequence is one nucleus before final /si/.",
+    "deteriorate": "Retained /dɪˈtɪriɝˌeɪt/ as four en-US syllables; the rhotic /iɝ/ sequence is not promoted to a separate hiatus syllable.",
+    "immediately": "Retained /ˌɪˈmiˌdiətli/ as four en-US syllables; reduced /iə/ remains one nucleus rather than an extra hiatus syllable.",
+    "accuse": "Retained /əkˈjuz/ en-US variant; /j/ belongs to the stressed /ju/ onset rather than the first syllable.",
+    "accused": "Retained /əkˈjuzd/ en-US variant; /j/ belongs to the stressed /ju/ onset and final /d/ stays coda material.",
+    "agriculture": "Corrected v1 /ɡr/ onset and /tʃ/ affricate boundary; frozen en-US final /tʃɝ/ is one syllable.",
+    "biography": "Retained /baɪˈɑɡrəfi/ en-US variant; the unstressed /rə/ nucleus is separate from /ˈɑɡ/.",
+    "characteristic": "Retained /ˌkɛrəktɝˈɪstɪk/ en-US variant; rhotic /ɝ/ and final /ɪstɪk/ boundaries are explicit.",
+    "communicate": "Retained /kəmˈjunəˌkeɪt/ en-US variant; /ju/ is the stressed second syllable and /keɪt/ is final.",
+    "communication": "Retained /kəmˌjunəˈkeɪʃən/ en-US variant; stress and the final /ʃən/ syllable are preserved.",
+    "declaration": "Retained /ˌdɛklɝˈeɪʃən/ en-US variant; /lɝ/ and /ˈeɪ/ are separate nuclei across the rhotic sequence.",
+    "diplomatic": "Retained /ˌdɪpləˈmætɪk/ en-US variant; /pl/ is onset/coda context and /ˈmæ/ remains the stressed third syllable.",
+    "inevitably": "Retained /ˌɪˈnɛvətəbli/ en-US variant; reduced /ə/ nuclei and final /bli/ remain distinct syllables.",
+    "constitutional": "Retained /ˌkɑnstəˈtuʃənəl/ with /ns|t/; the legal coda/onset exception avoids maximal /n|st/ while preserving five syllables.",
+}
 
 _VOWELS = frozenset(
     "iɪeɛæaɑɒɔoʊuʌəɝɚɜɞɐɨɵyøœɯɤɶʉ"
@@ -106,6 +166,12 @@ HISTORICAL_REGRESSION_IDS = frozenset(
         "recording-manual-review-20260812104521996-9b669377",
     }
 )
+# The source WAVs are not present in either checkout, so the six authoritative
+# SHA-256 values are intentionally unavailable.  Keep an explicit registry so
+# arbitrary hashes attached to matching IDs can never unlock promotion.
+HISTORICAL_REGRESSION_EXPECTED_HASHES: dict[str, str | None] = {
+    sample_id: None for sample_id in HISTORICAL_REGRESSION_IDS
+}
 
 
 def _json_hash(value: Any) -> str:
@@ -499,14 +565,14 @@ def _load_ipa_entries(path: Path) -> dict[str, list[str]]:
     return {str(key).lower(): [str(item) for item in value] for key, value in data.items() if isinstance(value, list)}
 
 
-def build_study_manifest(
+def _build_heuristic_manifest_for_historical_compatibility(
     oxford_csv: str | Path,
     ipa_json: str | Path,
     *,
     oxford_override_json: str | Path | None = None,
     seed: int = DEFAULT_SEED,
 ) -> dict[str, Any]:
-    """Build the fixed 100-word manifest from local Oxford/IPA sources."""
+    """Legacy diagnostic builder; never use its output as the v2 primary manifest."""
 
     del seed  # Selection is lexical plus deterministic rarity balancing.
     ipa_entries = _load_ipa_entries(Path(ipa_json))
@@ -524,31 +590,70 @@ def build_study_manifest(
                 continue
             seen_words.add(raw_word)
             reference_ipa, syllables = selected
+            frozen_syllables = FROZEN_REFERENCE_SYLLABLES.get(raw_word)
+            if frozen_syllables is not None:
+                syllables = list(frozen_syllables)
             transitions = [boundary_transition(left, right) for left, right in zip(syllables, syllables[1:])]
             families = sorted({transition["family"] for transition in transitions})
             words.append((raw_word, reference_ipa, syllables, "oxford-american-ipa" if raw_word in override_entries else "ipa-dict", ",".join(families)))
 
     selected_entries: list[dict[str, Any]] = []
     target_by_count = {2: 25, 3: 25, 4: 25, 5: 25}
+    # v2 deliberately keeps the v1 cohort and order.  Re-running the family
+    # balancing heuristic after a corrected label can otherwise replace a
+    # word whose source splitter count changed, silently changing the study.
+    frozen_cohort: dict[int, list[str]] = defaultdict(list)
+    frozen_cohort_path = Path(__file__).resolve().parents[1] / "data" / "segmentation-study-v1.json"
+    if frozen_cohort_path.exists():
+        try:
+            frozen_document = json.loads(frozen_cohort_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            frozen_document = {}
+        for frozen_entry in frozen_document.get("entries", []) if isinstance(frozen_document, Mapping) else []:
+            if not isinstance(frozen_entry, Mapping):
+                continue
+            frozen_count = frozen_entry.get("targetSyllableCount")
+            frozen_word = str(frozen_entry.get("targetWord") or "").lower()
+            if frozen_count in target_by_count and frozen_word:
+                frozen_cohort[int(frozen_count)].append(frozen_word)
+    use_frozen_cohort = all(len(frozen_cohort[count]) == target_by_count[count] for count in target_by_count)
+    by_word = {item[0]: item for item in words}
     for syllable_count in range(2, 6):
-        candidates = [item for item in words if len(item[2]) == syllable_count]
-        if len(candidates) < target_by_count[syllable_count]:
-            raise ValueError(f"Only {len(candidates)} {syllable_count}-syllable candidates; need 25")
-        chosen: list[tuple[str, str, list[str], str, str]] = []
-        family_counts: Counter[str] = Counter()
-        remaining = list(sorted(candidates, key=lambda item: item[0]))
-        while remaining and len(chosen) < target_by_count[syllable_count]:
-            remaining.sort(
-                key=lambda item: (
-                    -sum(1.0 / (1.0 + family_counts[family]) for family in item[4].split(",") if family),
-                    item[0],
+        if use_frozen_cohort:
+            missing = [word for word in frozen_cohort[syllable_count] if word not in by_word]
+            if missing:
+                raise ValueError(f"The frozen v1 cohort is missing source words: {', '.join(missing)}")
+            chosen = [by_word[word] for word in frozen_cohort[syllable_count]]
+        else:
+            candidates = [item for item in words if len(item[2]) == syllable_count]
+            if len(candidates) < target_by_count[syllable_count]:
+                raise ValueError(f"Only {len(candidates)} {syllable_count}-syllable candidates; need 25")
+            chosen = []
+            family_counts: Counter[str] = Counter()
+            remaining = list(sorted(candidates, key=lambda item: item[0]))
+            while remaining and len(chosen) < target_by_count[syllable_count]:
+                remaining.sort(
+                    key=lambda item: (
+                        -sum(1.0 / (1.0 + family_counts[family]) for family in item[4].split(",") if family),
+                        item[0],
+                    )
                 )
-            )
-            picked = remaining.pop(0)
-            chosen.append(picked)
-            family_counts.update(family for family in picked[4].split(",") if family)
-        for order, (word, reference_ipa, syllables, ipa_source, _) in enumerate(sorted(chosen), start=1):
+                picked = remaining.pop(0)
+                chosen.append(picked)
+                family_counts.update(family for family in picked[4].split(",") if family)
+            chosen.sort()
+        for order, (word, reference_ipa, syllables, ipa_source, _) in enumerate(chosen, start=1):
+            if len(syllables) != syllable_count:
+                raise ValueError(f"Frozen v2 label count for {word} is {len(syllables)}; expected {syllable_count}.")
             transitions = [boundary_transition(left, right) for left, right in zip(syllables, syllables[1:])]
+            if word in FROZEN_REFERENCE_RATIONALES:
+                exception_rationale = FROZEN_REFERENCE_RATIONALES[word]
+            elif word in FROZEN_REFERENCE_SYLLABLES:
+                label = ",".join(syllables)
+                exception_rationale = f"Corrected v1 syllable boundary; frozen en-US label is [{label}]."
+            else:
+                label = ",".join(syllables)
+                exception_rationale = f"Reviewed en-US source variant retained as frozen v2 label [{label}]."
             selected_entries.append(
                 {
                     "taskId": f"{STUDY_ID}-{len(selected_entries) + 1:04d}",
@@ -562,8 +667,19 @@ def build_study_manifest(
                     "transitionTypes": [transition["label"] for transition in transitions],
                     "transitionFamilies": sorted({transition["family"] for transition in transitions}),
                     "category": "clean",
-                    "speakerCohort": "segmentation-study-v1",
-                    "labelProvenance": "deterministic-transform",
+                    "speakerCohort": STUDY_COHORT,
+                    "referenceDialect": "en-US",
+                    "dialect": "en-US",
+                    "referenceSource": ipa_source,
+                    "referenceProvenance": {
+                        "dialect": "en-US",
+                        "source": ipa_source,
+                        "method": FROZEN_REFERENCE_PROVENANCE,
+                        "exceptionRationale": exception_rationale,
+                    },
+                    "referenceLabelProvenance": FROZEN_REFERENCE_PROVENANCE,
+                    "labelProvenance": FROZEN_REFERENCE_PROVENANCE,
+                    "exceptionRationale": exception_rationale,
                 }
             )
 
@@ -582,7 +698,8 @@ def build_study_manifest(
             "ipaPrimary": "public/oxford-american-ipa.json",
             "ipaFallback": "public/ipa-dict.json",
             "seed": DEFAULT_SEED,
-            "rules": "alphabetic words with one deterministic 2-5 syllable IPA variant",
+            "rules": "same 100 words as study-v1; one frozen en-US 2-5 syllable IPA label per word; heuristic labels prohibited",
+            "referencePolicy": "explicit frozen en-US referenceSyllableIpa labels only",
         },
         "splitCounts": {
             "development": {"2": 18, "3": 18, "4": 17, "5": 17},
@@ -591,6 +708,25 @@ def build_study_manifest(
         "entries": selected_entries,
     }
     manifest["manifestSha256"] = _json_hash(manifest)
+    return manifest
+
+
+def build_study_manifest(
+    oxford_csv: str | Path | None = None,
+    ipa_json: str | Path | None = None,
+    *,
+    oxford_override_json: str | Path | None = None,
+    seed: int = DEFAULT_SEED,
+) -> dict[str, Any]:
+    """Return the checked-in explicit v2 manifest; never synthesize labels."""
+
+    del oxford_csv, ipa_json, oxford_override_json, seed
+    checked_in = Path(__file__).resolve().parents[2] / "scripts" / "data" / "segmentation-study-v2.json"
+    try:
+        manifest = json.loads(checked_in.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("The checked-in explicit v2 manifest is required; heuristic synthesis is disabled.") from error
+    _validate_manifest_identity(manifest)
     return manifest
 
 
@@ -667,18 +803,397 @@ def _extract_manual_segments(document: Mapping[str, Any]) -> list[dict[str, floa
     return []
 
 
-def load_labeled_samples(source: str | Path) -> list[dict[str, Any]]:
-    """Load CRM/history JSON exports into the reanalysis sample contract."""
+def _canonical_manifest(manifest: Mapping[str, Any] | None) -> Mapping[str, Any]:
+    if isinstance(manifest, Mapping):
+        return manifest
+    default_path = Path(__file__).resolve().parents[2] / "scripts" / "data" / "segmentation-study-v2.json"
+    if not default_path.exists():
+        raise ValueError("The study-v2 manifest is required for canonical export validation.")
+    try:
+        loaded = json.loads(default_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("The study-v2 manifest is unreadable.") from error
+    if not isinstance(loaded, Mapping):
+        raise ValueError("The study-v2 manifest must be an object.")
+    return loaded
+
+
+def _validate_manifest_identity(manifest: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    if manifest.get("studyId") != STUDY_ID or manifest.get("version") != MANIFEST_VERSION:
+        raise ValueError("Canonical export requires the immutable study-v2 manifest.")
+    entries = manifest.get("entries")
+    if not isinstance(entries, list) or len(entries) != 100:
+        raise ValueError("The study-v2 manifest must contain exactly 100 entries.")
+    expected_hash = manifest.get("manifestSha256")
+    actual_hash = _json_hash({key: value for key, value in manifest.items() if key != "manifestSha256"})
+    if not isinstance(expected_hash, str) or expected_hash != actual_hash:
+        raise ValueError("The study-v2 manifest checksum does not match its content.")
+    result: dict[str, Mapping[str, Any]] = {}
+    count_totals: Counter[int] = Counter()
+    split_totals: Counter[tuple[str, int]] = Counter()
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            raise ValueError("The study-v2 manifest contains a malformed entry.")
+        task_id = str(entry.get("taskId") or "")
+        word = str(entry.get("targetWord") or "").lower()
+        count = entry.get("targetSyllableCount")
+        labels = entry.get("referenceSyllableIpa")
+        if not re.fullmatch(r"segmentation-study-v2-\d{4}", task_id) or not word:
+            raise ValueError("The study-v2 manifest contains an invalid task identity.")
+        if not isinstance(count, int) or count not in {2, 3, 4, 5} or not isinstance(labels, list) or len(labels) != count:
+            raise ValueError(f"The frozen reference labels for {word or task_id} are incomplete.")
+        if not all(isinstance(label, str) and label.strip() for label in labels):
+            raise ValueError(f"The frozen reference labels for {word} must be non-empty strings.")
+        reference_ipa = _clean_ipa(str(entry.get("referenceIpa") or ""))
+        reconstructed = "".join(_clean_ipa(label) for label in labels)
+        if not reference_ipa or reconstructed != reference_ipa:
+            raise ValueError(f"The frozen reference labels for {word} do not reconstruct referenceIpa.")
+        source_stress = "".join(symbol for symbol in reference_ipa if symbol in _STRESS)
+        label_stress = "".join(symbol for label in labels for symbol in _clean_ipa(label) if symbol in _STRESS)
+        if source_stress != label_stress or any(any(mark in _clean_ipa(label)[1:] for mark in _STRESS) for label in labels):
+            raise ValueError(f"The frozen reference stress markers for {word} are not syllable-initial and source-aligned.")
+        for boundary in range(1, len(reconstructed)):
+            if reconstructed[boundary - 1 : boundary + 1] in _AFFRICATES:
+                left = _clean_ipa(labels[0])
+                consumed = 0
+                for label in labels:
+                    consumed += len(_clean_ipa(label))
+                    if consumed == boundary:
+                        raise ValueError(f"The frozen reference labels for {word} split an affricate across syllables.")
+                    if consumed > boundary:
+                        break
+        deterministic = split_ipa_syllables(reference_ipa)
+        if labels != deterministic:
+            rationale = str(entry.get("exceptionRationale") or "").lower()
+            if word not in FROZEN_REFERENCE_SYLLABLES or "correct" not in rationale:
+                raise ValueError(f"The non-maximal-onset label exception for {word} lacks an explicit rationale.")
+        count_totals[count] += 1
+        split_totals[(str(entry.get("split") or ""), count)] += 1
+        if entry.get("referenceDialect") != "en-US" or entry.get("dialect") != "en-US":
+            raise ValueError(f"The frozen reference labels for {word} must declare en-US.")
+        provenance = str(entry.get("labelProvenance") or "").lower()
+        if not provenance or "heuristic" in provenance or provenance in {"deterministic-transform", "ipa-splitter"}:
+            raise ValueError(f"The primary manifest cannot use heuristic labels for {word}.")
+        reference_provenance = entry.get("referenceProvenance")
+        if not isinstance(reference_provenance, Mapping) or reference_provenance.get("dialect") != "en-US" or reference_provenance.get("method") != FROZEN_REFERENCE_PROVENANCE or entry.get("referenceLabelProvenance") != FROZEN_REFERENCE_PROVENANCE or not str(entry.get("exceptionRationale") or "").strip():
+            raise ValueError(f"The frozen reference provenance for {word} is incomplete.")
+        if task_id in result or f"word:{word}" in result:
+            raise ValueError("The study-v2 manifest contains duplicate task or word identities.")
+        result[task_id] = entry
+        result[f"word:{word}"] = entry
+    if count_totals != Counter({2: 25, 3: 25, 4: 25, 5: 25}):
+        raise ValueError("The study-v2 manifest must contain exactly 25 entries for each syllable count.")
+    if {int(entry.get("targetSyllableCount")) for entry in entries} != {2, 3, 4, 5}:
+        raise ValueError("The study-v2 manifest must cover 2-, 3-, 4-, and 5-syllable words.")
+    if sum(entry.get("split") == "development" for entry in entries) != 70 or sum(entry.get("split") == "holdout" for entry in entries) != 30:
+        raise ValueError("The study-v2 manifest must have a 70/30 development/holdout split.")
+    expected_split_counts = {("development", 2): 18, ("development", 3): 18, ("development", 4): 17, ("development", 5): 17, ("holdout", 2): 7, ("holdout", 3): 7, ("holdout", 4): 8, ("holdout", 5): 8}
+    if split_totals != Counter(expected_split_counts):
+        raise ValueError("The study-v2 manifest split does not match the frozen 70/30 per-count allocation.")
+    return result
+
+
+def _canonical_spans(value: Any, field: str, expected_count: int) -> list[dict[str, float | int]]:
+    if isinstance(value, Mapping):
+        value = value.get("spans") or value.get("observed_syllables") or value.get("syllables")
+    if not isinstance(value, list) or len(value) != expected_count:
+        raise ValueError(f"Canonical export requires top-level {field}.")
+    spans: list[dict[str, float | int]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            raise ValueError(f"Canonical export {field} contains a malformed span at index {index}.")
+        start = _as_float(item.get("startTime", item.get("start_time", item.get("start"))))
+        end = _as_float(item.get("endTime", item.get("end_time", item.get("end"))))
+        if start is None or end is None or start < 0 or end <= start:
+            raise ValueError(f"Canonical export {field} must contain positive finite spans.")
+        if spans and abs(start - float(spans[-1]["endTime"])) > 0.000001:
+            raise ValueError(f"Canonical export {field} must be ordered and contiguous.")
+        spans.append(_segment(start, end, index))
+    return spans
+
+
+def _automatic_order(manifest_sha256: str, task_id: str) -> str:
+    """Derive the immutable automatic-exposure token for one task."""
+
+    return hashlib.sha256(f"{manifest_sha256}{task_id}".encode("utf-8")).hexdigest()
+
+
+def _automatic_version_order(manifest_sha256: str, task_id: str) -> list[str]:
+    """Derive the deterministic V2/V3/V4 exposure order from the token."""
+
+    digest = _automatic_order(manifest_sha256, task_id)
+    keyed = [(digest[index * 16:(index + 1) * 16], version) for index, version in enumerate(("v2", "v3", "v4"))]
+    return [version for _, version in sorted(keyed)]
+
+
+def _valid_assisted_exposure(
+    value: Any,
+    *,
+    automatic_order: str,
+    automatic_version_order: Sequence[str],
+) -> bool:
+    if not isinstance(value, list) or len(value) != 3:
+        return False
+    seen: set[str] = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            return False
+        raw_version = item.get("version")
+        raw_order = item.get("automaticOrder") if item.get("automaticOrder") is not None else item.get("automatic_order")
+        raw_viewed_at = item.get("viewedAt") if item.get("viewedAt") is not None else item.get("viewed_at")
+        version = raw_version.strip().lower() if isinstance(raw_version, str) else ""
+        supplied_order = raw_order.strip() if isinstance(raw_order, str) else ""
+        viewed_at = raw_viewed_at.strip() if isinstance(raw_viewed_at, str) else ""
+        if (
+            version != automatic_version_order[index]
+            or version in seen
+            or supplied_order != automatic_order
+            or not re.fullmatch(r"[0-9a-f]{64}", supplied_order)
+            or not viewed_at
+        ):
+            return False
+        try:
+            parsed = datetime.fromisoformat(viewed_at.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return False
+        if not isinstance(parsed, datetime):
+            return False
+        seen.add(version)
+    return seen == set(automatic_version_order) == {"v2", "v3", "v4"}
+
+
+def _canonical_hash(sample: Mapping[str, Any]) -> str:
+    source_hash = str(sample.get("sourceHash") or "").strip().lower()
+    audio_hash = str(sample.get("audioSha256") or "").strip().lower()
+    if source_hash and audio_hash and source_hash != audio_hash:
+        raise ValueError("Canonical export sourceHash and audioSha256 must match.")
+    value = source_hash or audio_hash
+    if not re.fullmatch(r"[0-9a-f]{64}", value):
+        raise ValueError("Canonical export samples require a valid sourceHash SHA-256.")
+    return value
+
+
+def _canonical_sample(sample: Mapping[str, Any], entries: Mapping[str, Mapping[str, Any]], manifest_sha256: str) -> dict[str, Any]:
+    task_id = str(sample.get("taskId") or "")
+    entry = entries.get(task_id)
+    if entry is None:
+        raise ValueError(f"Canonical export contains an unknown taskId: {task_id or '<missing>'}.")
+    if str(sample.get("targetWord") or "").lower() != str(entry.get("targetWord") or "").lower():
+        raise ValueError(f"Canonical export task {task_id} does not match its manifest word.")
+    if sample.get("speakerCohort") != STUDY_COHORT:
+        raise ValueError(f"Canonical export task {task_id} is outside the exact study-v2 cohort.")
+    if sample.get("certainty") != "certain":
+        raise ValueError(f"Canonical export task {task_id} is not promotion-eligible certainty=certain.")
+    if sample.get("promotionEligible") is not True:
+        raise ValueError(f"Canonical export task {task_id} must explicitly declare promotionEligible=true.")
+    expected_automatic_order = _automatic_order(manifest_sha256, task_id)
+    expected_automatic_version_order = _automatic_version_order(manifest_sha256, task_id)
+    if sample.get("automaticOrder") != expected_automatic_order or sample.get("automaticVersionOrder") != expected_automatic_version_order:
+        raise ValueError(f"Canonical export task {task_id} has an invalid deterministic automatic exposure proof.")
+    expected_count = int(entry["targetSyllableCount"])
+    reference_syllables = sample.get("referenceSyllableIpa")
+    if reference_syllables != entry.get("referenceSyllableIpa"):
+        raise ValueError(f"Canonical export task {task_id} must use the frozen reference labels.")
+    if sample.get("referenceIpa") != entry.get("referenceIpa"):
+        raise ValueError(f"Canonical export task {task_id} must use the frozen reference IPA.")
+    if sample.get("targetSyllableCount") != expected_count or sample.get("expectedObservedCount") != expected_count:
+        raise ValueError(f"Canonical export task {task_id} has a mismatched frozen syllable count.")
+    if sample.get("split") != entry.get("split"):
+        raise ValueError(f"Canonical export task {task_id} is missing its exact manifest split.")
+    reference_provenance = sample.get("referenceProvenance")
+    expected_provenance = entry.get("referenceProvenance")
+    if (
+        not isinstance(reference_provenance, Mapping)
+        or not reference_provenance
+        or reference_provenance.get("dialect") != "en-US"
+        or reference_provenance.get("method") != FROZEN_REFERENCE_PROVENANCE
+        or reference_provenance != expected_provenance
+        or sample.get("referenceLabelProvenance") != FROZEN_REFERENCE_PROVENANCE
+    ):
+        raise ValueError(f"Canonical export task {task_id} requires reference provenance.")
+    versions = sample.get("versions")
+    if not isinstance(versions, Mapping):
+        raise ValueError(f"Canonical export task {task_id} must include versions.v2/v3/v4.")
+    normalized_versions: dict[str, list[dict[str, float | int]]] = {}
+    variant_provenance = sample.get("variantProvenance")
+    if not isinstance(variant_provenance, Mapping):
+        raise ValueError(f"Canonical export task {task_id} requires variant provenance for V2/V3/V4.")
+    if not str(sample.get("analysisRevision") or "").strip():
+        raise ValueError(f"Canonical export task {task_id} requires analysisRevision.")
+    version_provenance: dict[str, tuple[str, str, str]] = {}
+    for version in ("v2", "v3", "v4"):
+        if version not in versions:
+            raise ValueError(f"Canonical export task {task_id} is missing genuine versions.{version}.")
+        version_data = versions[version]
+        supplied = variant_provenance.get(version)
+        if not isinstance(version_data, Mapping) or not isinstance(supplied, Mapping):
+            raise ValueError(f"Canonical export task {task_id} has incomplete {version} provenance.")
+        analysis_version = str(version_data.get("analysisVersion") or "").strip()
+        source = str(version_data.get("source") or "").strip()
+        schema = str(version_data.get("schemaVersion") or supplied.get("schemaVersion") or "").strip()
+        variant_id = str(version_data.get("variantId") or version_data.get("variant") or supplied.get("variantId") or supplied.get("variant") or "").strip()
+        if not analysis_version or not source or not schema or variant_id != version or schema != VARIANT_SCHEMA_VERSIONS[version]:
+            raise ValueError(f"Canonical export task {task_id} requires analysisVersion/source/schema for {version}.")
+        if (
+            str(supplied.get("analysisVersion") or "").strip() != analysis_version
+            or str(supplied.get("source") or "").strip() != source
+            or str(supplied.get("schemaVersion") or "").strip() != schema
+            or str(supplied.get("variantId") or supplied.get("variant") or "").strip() != version
+        ):
+            raise ValueError(f"Canonical export task {task_id} has mismatched {version} provenance.")
+        version_provenance[version] = (analysis_version, source, schema)
+        normalized_versions[version] = _canonical_spans(versions[version], f"versions.{version}", expected_count)
+    if len({version for version in version_provenance}) != 3 or len({item[0] for item in version_provenance.values()}) != 3 or len({item[1] for item in version_provenance.values()}) != 3:
+        raise ValueError(f"Canonical export task {task_id} cannot alias V2/V3/V4 provenance.")
+    manual = _canonical_spans(sample.get("manualSpans"), "manualSpans", expected_count)
+    capture = sample.get("captureMetadata") or sample.get("captureSettings")
+    if not isinstance(capture, Mapping) or not capture or sample.get("captureEligibility") not in {True, "eligible"}:
+        raise ValueError(f"Canonical export task {task_id} requires eligible capture metadata.")
+    if any(capture.get(key) is not False for key in ("echoCancellation", "noiseSuppression", "autoGainControl")):
+        raise ValueError(f"Canonical export task {task_id} requires all raw capture settings explicitly false.")
+    if not any(capture.get(key) for key in ("captureId", "capturedAt", "sessionId")):
+        raise ValueError(f"Canonical export task {task_id} requires capture identity metadata.")
+    if sample.get("annotationProtocol") != "automatic-visible-assisted-v1":
+        raise ValueError(f"Canonical export task {task_id} requires the exact assisted annotation protocol.")
+    assisted = sample.get("assistedMetadata")
+    if (
+        not isinstance(assisted, Mapping)
+        or assisted.get("assisted") is not True
+        or assisted.get("annotationProtocol") != "automatic-visible-assisted-v1"
+        or not _valid_assisted_exposure(
+            assisted.get("exposureLog"),
+            automatic_order=expected_automatic_order,
+            automatic_version_order=expected_automatic_version_order,
+        )
+    ):
+        raise ValueError(f"Canonical export task {task_id} requires explicit assisted metadata and V2/V3/V4 exposure.")
+    for flag in ("substituted", "substitution", "substitutionUsed", "fallback", "fallbackUsed", "attrited", "repaired", "repairUsed"):
+        if sample.get(flag) not in (None, False, ""):
+            raise ValueError(f"Canonical export task {task_id} contains forbidden {flag} metadata.")
+    historical = sample.get("historicalCompatibility")
+    if historical is not None and (not isinstance(historical, Mapping) or historical.get("promotionEligible") is not False):
+        raise ValueError(f"Historical compatibility for task {task_id} must be explicit and non-promotable.")
+    sample_id = str(sample.get("sampleId") or sample.get("id") or "").strip()
+    if not sample_id:
+        raise ValueError(f"Canonical export task {task_id} requires a genuine sampleId.")
+    audio_hash = _canonical_hash(sample)
+    return {
+        "id": sample_id,
+        "taskId": task_id,
+        "word": str(entry["targetWord"]),
+        "audioSha256": audio_hash,
+        "sourceHash": audio_hash,
+        "referenceIpa": sample.get("referenceIpa") or entry.get("referenceIpa") or "",
+        "referenceProvenance": dict(reference_provenance),
+        "referenceLabelProvenance": FROZEN_REFERENCE_PROVENANCE,
+        "referenceSyllableIpa": [str(item) for item in reference_syllables],
+        "targetSyllableCount": expected_count,
+        "expectedObservedCount": expected_count,
+        "manualSegments": manual,
+        "versions": normalized_versions,
+        "split": entry.get("split"),
+        "speakerCohort": STUDY_COHORT,
+        "automaticOrder": expected_automatic_order,
+        "automaticVersionOrder": expected_automatic_version_order,
+        "certainty": sample.get("certainty") or "certain",
+        "captureEligibility": sample.get("captureEligibility"),
+        "captureMetadata": dict(capture),
+        "annotationProtocol": "automatic-visible-assisted-v1",
+        "assistedMetadata": dict(assisted),
+        "analysisRevision": str(sample.get("analysisRevision")),
+        "variantProvenance": {version: {"variantId": version, "variant": version, "analysisVersion": values[0], "source": values[1], "schemaVersion": values[2]} for version, values in version_provenance.items()},
+        "historicalCompatibility": dict(historical) if isinstance(historical, Mapping) else None,
+        "historical": bool(isinstance(historical, Mapping)),
+        "promotionEligible": sample.get("promotionEligible") is True and not isinstance(historical, Mapping),
+        "_canonicalExportV2": True,
+    }
+
+
+def load_canonical_export_v2(source: Mapping[str, Any] | str | Path, *, manifest: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Load the route's canonical export without dropping or repairing records."""
+
+    if isinstance(source, (str, Path)):
+        try:
+            document = json.loads(Path(source).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("Canonical export is unreadable JSON.") from error
+    else:
+        document = source
+    if not isinstance(document, Mapping) or document.get("schemaVersion") != CANONICAL_EXPORT_SCHEMA_VERSION:
+        raise ValueError("Expected a segmentation-study-export-v2 canonical export.")
+    if document.get("studyVersion") not in {STUDY_ID, "study-v2"} or document.get("manifestVersion") != MANIFEST_VERSION:
+        raise ValueError("Canonical export identity does not match study-v2.")
+    checked_manifest = _canonical_manifest(manifest)
+    entries = _validate_manifest_identity(checked_manifest)
+    if document.get("manifestSha256") != checked_manifest.get("manifestSha256"):
+        raise ValueError("Canonical export manifestSha256 does not match the checked-in manifest.")
+    samples = document.get("samples")
+    if not isinstance(samples, list) or len(samples) != 100:
+        raise ValueError("Canonical export must contain exactly 100 samples; refusing silent attrition.")
+    manifest_sha256 = str(checked_manifest["manifestSha256"])
+    loaded = [_canonical_sample(sample, entries, manifest_sha256) for sample in samples if isinstance(sample, Mapping)]
+    if len(loaded) != len(samples):
+        raise ValueError("Canonical export contains a malformed sample record.")
+    task_ids = [sample["taskId"] for sample in loaded]
+    expected_task_ids = [str(entry["taskId"]) for entry in checked_manifest["entries"]]
+    if len(set(task_ids)) != 100 or set(task_ids) != set(expected_task_ids):
+        raise ValueError("Canonical export does not have exact study-v2 cohort coverage.")
+    sample_ids = [sample["id"] for sample in loaded]
+    audio_hashes = [sample["audioSha256"] for sample in loaded]
+    if len(set(sample_ids)) != 100 or len(set(audio_hashes)) != 100:
+        raise ValueError("Canonical export contains duplicate sample IDs or audio hashes.")
+    return loaded
+
+
+def load_labeled_samples(
+    source: str | Path,
+    *,
+    manifest: Mapping[str, Any] | None = None,
+    compatibility: str = "canonical",
+    allow_historical_compatibility: bool = False,
+) -> list[dict[str, Any]]:
+    """Load only canonical v2 exports unless historical compatibility is explicit."""
+
+    mode = "historical" if allow_historical_compatibility else str(compatibility or "canonical").strip().lower()
+    if mode not in {"canonical", "historical"}:
+        raise ValueError("compatibility must be canonical or historical.")
 
     path = Path(source)
+    parsed_documents: list[tuple[Path, Any]] = []
+    if path.is_file():
+        try:
+            header = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("Sample export is unreadable JSON.") from error
+        if isinstance(header, Mapping) and (header.get("schemaVersion") == CANONICAL_EXPORT_SCHEMA_VERSION or header.get("studyVersion") in {STUDY_ID, "study-v2"}):
+            return load_canonical_export_v2(header, manifest=manifest)
+        if mode != "historical":
+            raise ValueError("Primary reanalysis requires a canonical segmentation-study-export-v2 export; use compatibility=historical explicitly for legacy data.")
+        parsed_documents.append((path, header))
+    elif not path.is_dir():
+        raise ValueError(f"Sample export path does not exist: {path}")
     paths = sorted(path.glob("*.json")) if path.is_dir() else [path]
     samples: list[dict[str, Any]] = []
     seen_audio: set[str] = set()
-    for json_path in paths:
-        try:
-            document = json.loads(json_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
+    if path.is_dir():
+        if not paths and mode != "historical":
+            raise ValueError("Primary reanalysis requires a canonical export JSON file.")
+        for json_path in paths:
+            try:
+                document = json.loads(json_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                if mode == "canonical":
+                    raise ValueError(f"Sample export is unreadable JSON: {json_path}") from error
+                continue
+            if isinstance(document, Mapping) and (document.get("schemaVersion") == CANONICAL_EXPORT_SCHEMA_VERSION or document.get("studyVersion") in {STUDY_ID, "study-v2"}):
+                return load_canonical_export_v2(document, manifest=manifest)
+            parsed_documents.append((json_path, document))
+    for json_path, document in parsed_documents:
+        if isinstance(document, Mapping) and (
+            document.get("schemaVersion") == CANONICAL_EXPORT_SCHEMA_VERSION
+            or document.get("studyVersion") in {STUDY_ID, "study-v2"}
+        ):
+            return load_canonical_export_v2(document, manifest=manifest)
         if isinstance(document, list):
             documents = document
         else:
@@ -733,29 +1248,38 @@ def load_labeled_samples(source: str | Path) -> list[dict[str, Any]]:
                 "split": item.get("split"),
             }
             samples.append(sample)
+    if mode == "historical":
+        for sample in samples:
+            sample["historicalCompatibility"] = {"sourceVersion": "study-v1", "promotionEligible": False}
+            sample["historical"] = True
+            sample["promotionEligible"] = False
+            sample["split"] = None
     return samples
 
 
 def select_historical_regression_set(samples: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    """Return the six named historical recordings without tuning leakage."""
+    """Return only the exact six historical records with verified source hashes.
+
+    A word-based fallback is deliberately forbidden: a renamed or substituted
+    recording must make the historical gate unavailable rather than silently
+    changing the regression set.
+    """
 
     by_id = {str(sample.get("id")): dict(sample) for sample in samples}
     selected = [by_id[sample_id] for sample_id in sorted(HISTORICAL_REGRESSION_IDS) if sample_id in by_id]
-    if len(selected) == len(HISTORICAL_REGRESSION_IDS):
-        return selected
-
-    # Permit a renamed CRM export while retaining the same semantic set:
-    # five photograph recordings and one recording recording.
-    photographs = sorted(
-        (dict(sample) for sample in samples if str(sample.get("word", "")).lower() == "photograph"),
-        key=lambda sample: str(sample.get("id")),
-    )
-    recordings = sorted(
-        (dict(sample) for sample in samples if str(sample.get("word", "")).lower() == "recording"),
-        key=lambda sample: str(sample.get("id")),
-    )
-    fallback = photographs[:5] + recordings[:1]
-    return fallback if len(fallback) == 6 else []
+    if len(selected) != len(HISTORICAL_REGRESSION_IDS):
+        return []
+    hashes = [str(sample.get("sourceHash") or sample.get("audioSha256") or "").strip().lower() for sample in selected]
+    expected_hashes = [HISTORICAL_REGRESSION_EXPECTED_HASHES.get(sample_id) for sample_id in sorted(HISTORICAL_REGRESSION_IDS)]
+    if any(expected_hash is None for expected_hash in expected_hashes):
+        return []
+    if any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes) or len(set(hashes)) != len(hashes) or hashes != expected_hashes:
+        return []
+    for sample, source_hash in zip(selected, hashes):
+        sample["sourceHash"] = source_hash
+        sample["historicalRegressionLocked"] = True
+        sample["promotionEligible"] = False
+    return selected
 
 
 def _minmax(values: np.ndarray) -> np.ndarray:
@@ -828,6 +1352,10 @@ def generate_candidates(
     if config:
         options.update(config)
     versions = sample.get("versions") if isinstance(sample.get("versions"), Mapping) else {}
+    if sample.get("_canonicalExportV2"):
+        missing = [version for version in ("v2", "v3", "v4") if not isinstance(versions.get(version), Sequence) or isinstance(versions.get(version), (str, bytes, bytearray))]
+        if missing:
+            raise ValueError(f"Canonical study-v2 sample is missing genuine version payloads: {', '.join(missing)}")
     v3 = contiguous_boundaries(versions.get("v3") or []) if isinstance(versions, Mapping) else []
     v4 = contiguous_boundaries(versions.get("v4") or []) if isinstance(versions, Mapping) else []
     v2 = contiguous_boundaries(versions.get("v2") or []) if isinstance(versions, Mapping) else []
@@ -837,11 +1365,11 @@ def generate_candidates(
         # would leak the ground truth into the candidate and make a missing
         # replay look perfect.
         return {"v2": [], "v3": [], "v4": [], "naiveSpectral": [], "contextAware": []}
-    if not v2:
+    if not v2 and not sample.get("_canonicalExportV2"):
         v2 = list(base)
-    if not v3:
+    if not v3 and not sample.get("_canonicalExportV2"):
         v3 = list(base)
-    if not v4:
+    if not v4 and not sample.get("_canonicalExportV2"):
         v4 = list(v3)
     naive = list(v3)
     context = list(v3)
@@ -1104,6 +1632,21 @@ def evaluate_gates(
     checks["recordingDoesNotRegress"] = not recording_regressions
     if recording_regressions:
         reasons.append("recording sample regresses against V4")
+    promotion_gate = report.get("promotionGate") if isinstance(report.get("promotionGate"), Mapping) else {}
+    checks["assistedReviewPromotionGate"] = promotion_gate.get("eligible") is True
+    if not checks["assistedReviewPromotionGate"]:
+        reasons.append("assisted-review promotion gate is unavailable or not proven")
+    checks["developmentConfigFrozen"] = bool(report.get("developmentConfigHash")) and report.get("developmentConfigHash") == report.get("holdoutConfigHash")
+    if not checks["developmentConfigFrozen"]:
+        reasons.append("development configuration hash is not frozen for holdout evaluation")
+    evaluation = report.get("evaluation") if isinstance(report.get("evaluation"), Mapping) else {}
+    evaluation_mode = report.get("evaluationMode") or evaluation.get("holdoutMode") or "authoritative-first"
+    checks["authoritativeHoldoutEvaluation"] = evaluation_mode == "authoritative-first"
+    if not checks["authoritativeHoldoutEvaluation"]:
+        reasons.append("exploratory reruns are explicitly non-promotable")
+    checks["historicalRegressionAvailable"] = report.get("historicalRegressionAvailable") is True
+    if not checks["historicalRegressionAvailable"]:
+        reasons.append("locked six-recording historical regression set is unavailable")
     checks["all"] = all(checks.values()) if checks else False
     return {"status": "pass" if checks["all"] else "fail", "checks": checks, "reasons": reasons}
 
@@ -1287,8 +1830,12 @@ def run_reanalysis(
     bootstrap_resamples: int = DEFAULT_BOOTSTRAP_RESAMPLES,
     seed: int = DEFAULT_SEED,
     feature_config: Mapping[str, Any] | None = None,
+    evaluation_mode: str = "authoritative-first",
 ) -> dict[str, Any]:
     """Run the complete offline experiment and return a JSON-safe report."""
+
+    if evaluation_mode not in {"authoritative-first", "exploratory"}:
+        raise ValueError("evaluation_mode must be authoritative-first or exploratory")
 
     manifest_by_word = {
         str(entry.get("targetWord")): entry
@@ -1301,6 +1848,8 @@ def run_reanalysis(
         entry = manifest_by_word.get(str(sample.get("word")))
         historical_marker = bool(
             sample.get("historical")
+            or sample.get("historicalCompatibility")
+            or sample.get("promotionEligible") is False
             or sample.get("set") == "historical"
             or sample.get("source") in {"previous", "historical", "pronounce-mode-local"}
             or "manual-review" in str(sample.get("id", "")).lower()
@@ -1323,6 +1872,17 @@ def run_reanalysis(
         tuning = tune_context_parameters(development_inputs)
     selected_config = tuning["selected"]
     configuration_hash = _json_hash({"featureConfig": selected_config, "candidate": "contextAware"})
+    locked_historical = select_historical_regression_set(assigned_inputs)
+    historical_regression_available = len(locked_historical) == len(HISTORICAL_REGRESSION_IDS)
+    assisted_review_eligible = bool(assigned_inputs) and all(
+        sample.get("certainty") == "certain"
+        and sample.get("annotationProtocol") == "automatic-visible-assisted-v1"
+        and isinstance(sample.get("assistedMetadata"), Mapping)
+        and sample.get("assistedMetadata", {}).get("assisted") is True
+        and sample.get("promotionEligible", True) is not False
+        for sample in assigned_inputs
+        if sample.get("split") in {"development", "holdout"}
+    )
     prepared = _prepare_samples(assigned_inputs, selected_config)
     for sample, assigned in zip(prepared, assigned_inputs):
         sample["split"] = assigned.get("split")
@@ -1342,12 +1902,22 @@ def run_reanalysis(
         baseline: bootstrap_improvement_interval(holdout, "contextAware", baseline, resamples=bootstrap_resamples, seed=seed)
         for baseline in ("v3", "v4")
     }
+    authoritative_first = evaluation_mode == "authoritative-first"
     report: dict[str, Any] = {
         "studyId": STUDY_ID,
         "reportVersion": "1.0.0",
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "evaluationMode": evaluation_mode,
+        "authoritativeHoldout": authoritative_first,
+        "holdoutArtifactPolicy": "immutable-first-authoritative; reruns require explicit exploratory mode" if authoritative_first else "exploratory-rerun; never eligible for promotion",
         "featureConfig": dict(selected_config),
         "configurationHash": configuration_hash,
+        "developmentConfigHash": configuration_hash,
+        "holdoutConfigHash": configuration_hash,
+        "evaluation": {"holdoutMode": evaluation_mode, "exploratoryReruns": "must retain this frozen developmentConfigHash", "authoritativeFirst": authoritative_first},
+        "anchoringBiasDisclosure": "Automatic V2/V3/V4 boundaries were visible during assisted manual review; manual labels are therefore not independent of the shown baselines.",
+        "promotionGate": {"name": "assisted-review promotion gate", "eligible": assisted_review_eligible and authoritative_first, "reason": "requires authoritative-first mode, certain canonical samples, exact assisted protocol, and non-promotable historical exclusions"},
+        "historicalRegressionAvailable": historical_regression_available,
         "tuning": tuning,
         "sampleCounts": {"all": len(prepared), "benchmark": len(benchmark_samples), "uncertain": len(uncertain), "development": len(development), "holdout": len(holdout), "historical": len(historical)},
         "summaries": benchmark_summaries,
@@ -1369,6 +1939,7 @@ def run_reanalysis(
             "split": sample.get("split") or "historical",
             "certainty": sample.get("certainty") or "certain",
             "excludedFromPrimary": not is_primary_benchmark_sample(sample) or sample.get("split") not in {"development", "holdout"},
+            "promotionEligible": bool(sample.get("promotionEligible", True)) and not bool(sample.get("historicalCompatibility")),
             "transitionTypes": sample.get("transitionTypes", []),
             "candidates": sample.get("candidates", {}),
         }
@@ -1466,53 +2037,114 @@ def write_outputs(report: Mapping[str, Any], output_dir: str | Path) -> dict[str
 
     directory = Path(output_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    stem = f"{STUDY_ID}-{report.get('configurationHash', 'report')[:12]}"
+    evaluation = report.get("evaluation") if isinstance(report.get("evaluation"), Mapping) else {}
+    evaluation_mode = str(report.get("evaluationMode") or evaluation.get("holdoutMode") or "authoritative-first")
+    if evaluation_mode not in {"authoritative-first", "exploratory"}:
+        raise ValueError("report evaluationMode must be authoritative-first or exploratory")
+    authoritative_marker = directory / f"{STUDY_ID}-authoritative-first.marker.json"
+    if evaluation_mode == "authoritative-first" and authoritative_marker.exists():
+        raise FileExistsError(
+            "The authoritative-first holdout marker already exists; rerun with evaluation_mode='exploratory'."
+        )
+    base_stem = f"{STUDY_ID}-{report.get('configurationHash', 'report')[:12]}"
+    if evaluation_mode == "authoritative-first":
+        stem = base_stem
+        planned_paths = [directory / f"{stem}.json", directory / f"{stem}.csv", directory / f"{stem}.md"]
+        if any(path.exists() for path in planned_paths):
+            raise FileExistsError(
+                "The authoritative-first holdout artifacts already exist; rerun with evaluation_mode='exploratory'."
+            )
+    else:
+        nonce = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')}-{uuid.uuid4().hex[:8]}"
+        stem = f"{base_stem}-exploratory-{nonce}"
     json_path = directory / f"{stem}.json"
     csv_path = directory / f"{stem}.csv"
     markdown_path = directory / f"{stem}.md"
-    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    rows = _flatten_report_rows(report)
-    with csv_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(
-            handle,
-            fieldnames=[
-                "sampleId", "word", "split", "rowType", "candidate", "transitionType", "boundaryIndex",
-                "edgeCount", "maeMs", "medianMs", "p90Ms", "maxMs", "within40Pct",
-                "actualMs", "manualMs", "errorMs", "absErrorMs", "selectedCorrection",
-            ],
-            extrasaction="ignore",
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-    lines = [
+    written_paths: list[Path] = []
+    marker_created = False
+    try:
+        json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        written_paths.append(json_path)
+        rows = _flatten_report_rows(report)
+        with csv_path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=[
+                    "sampleId", "word", "split", "rowType", "candidate", "transitionType", "boundaryIndex",
+                    "edgeCount", "maeMs", "medianMs", "p90Ms", "maxMs", "within40Pct",
+                    "actualMs", "manualMs", "errorMs", "absErrorMs", "selectedCorrection",
+                ],
+                extrasaction="ignore",
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+        written_paths.append(csv_path)
+        lines = [
         f"# {STUDY_ID} reanalysis",
+        "",
+        f"Evaluation mode: **{evaluation_mode}**",
+        f"Holdout artifact policy: {report.get('holdoutArtifactPolicy', '')}",
         "",
         f"Status: **{(report.get('gates') or {}).get('status', 'pending')}**",
         f"Configuration hash: `{report.get('configurationHash', '')}`",
+        f"Assisted-review promotion gate: **{str((report.get('promotionGate') or {}).get('eligible', False)).upper()}**",
+        f"Historical regression set available: **{str(report.get('historicalRegressionAvailable', False)).upper()}**",
+        f"Anchoring-bias disclosure: {report.get('anchoringBiasDisclosure', '')}",
         "",
         "## Aggregate metrics",
         "",
         "| Candidate | Samples | Edges | MAE (ms) | Median (ms) | P90 (ms) | Within 40 ms |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
-    for name, summary in (report.get("summaries") or {}).items():
-        lines.append(f"| {name} | {summary.get('sampleCount', 0)} | {summary.get('edgeCount', 0)} | {summary.get('maeMs', 0)} | {summary.get('medianMs', 0)} | {summary.get('p90Ms', 0)} | {summary.get('within40Pct', 0)}% |")
-    lines.extend(["", "## Boundary contexts", "", "| Candidate | Context | Edges | MAE (ms) | Within 40 ms |", "| --- | --- | ---: | ---: | ---: |"])
-    for candidate, contexts in (report.get("boundaryContexts") or {}).items():
-        for context, summary in contexts.items():
-            lines.append(f"| {candidate} | {context} | {summary.get('edgeCount', 0)} | {summary.get('maeMs', 0)} | {summary.get('within40Pct', 0)}% |")
-    lines.extend(["", "## Gates", ""])
-    for name, passed in ((report.get("gates") or {}).get("checks") or {}).items():
-        lines.append(f"- {'PASS' if passed else 'FAIL'}: {name}")
-    reasons = (report.get("gates") or {}).get("reasons") or []
-    if reasons:
-        lines.extend(["", "Reasons:"])
-        lines.extend(f"- {reason}" for reason in reasons)
-    lines.extend(["", "## Bootstrap", ""])
-    for baseline, value in (report.get("bootstrap") or {}).items():
-        lines.append(f"- Context-aware improvement vs {baseline}: {value.get('lowerMs', 0)} to {value.get('upperMs', 0)} ms (median {value.get('medianMs', 0)} ms)")
-    markdown_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"json": json_path, "csv": csv_path, "markdown": markdown_path}
+        for name, summary in (report.get("summaries") or {}).items():
+            lines.append(f"| {name} | {summary.get('sampleCount', 0)} | {summary.get('edgeCount', 0)} | {summary.get('maeMs', 0)} | {summary.get('medianMs', 0)} | {summary.get('p90Ms', 0)} | {summary.get('within40Pct', 0)}% |")
+        lines.extend(["", "## Boundary contexts", "", "| Candidate | Context | Edges | MAE (ms) | Within 40 ms |", "| --- | --- | ---: | ---: | ---: |"])
+        for candidate, contexts in (report.get("boundaryContexts") or {}).items():
+            for context, summary in contexts.items():
+                lines.append(f"| {candidate} | {context} | {summary.get('edgeCount', 0)} | {summary.get('maeMs', 0)} | {summary.get('within40Pct', 0)}% |")
+        lines.extend(["", "## Gates", ""])
+        for name, passed in ((report.get("gates") or {}).get("checks") or {}).items():
+            lines.append(f"- {'PASS' if passed else 'FAIL'}: {name}")
+        reasons = (report.get("gates") or {}).get("reasons") or []
+        if reasons:
+            lines.extend(["", "Reasons:"])
+            lines.extend(f"- {reason}" for reason in reasons)
+        lines.extend(["", "## Bootstrap", ""])
+        for baseline, value in (report.get("bootstrap") or {}).items():
+            lines.append(f"- Context-aware improvement vs {baseline}: {value.get('lowerMs', 0)} to {value.get('upperMs', 0)} ms (median {value.get('medianMs', 0)} ms)")
+        markdown_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        written_paths.append(markdown_path)
+        if evaluation_mode == "authoritative-first":
+            marker_payload = {
+                "studyId": STUDY_ID,
+                "evaluationMode": "authoritative-first",
+                "configurationHash": report.get("configurationHash"),
+                "json": json_path.name,
+                "csv": csv_path.name,
+                "markdown": markdown_path.name,
+            }
+            try:
+                with authoritative_marker.open("x", encoding="utf-8") as handle:
+                    json.dump(marker_payload, handle, ensure_ascii=False, indent=2)
+                    handle.write("\n")
+                marker_created = True
+            except FileExistsError as error:
+                raise FileExistsError(
+                    "The authoritative-first holdout marker already exists; rerun with evaluation_mode='exploratory'."
+                ) from error
+        return {"json": json_path, "csv": csv_path, "markdown": markdown_path}
+    except Exception:
+        for path in written_paths:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+        if marker_created:
+            try:
+                authoritative_marker.unlink()
+            except FileNotFoundError:
+                pass
+        raise
 
 
 def _default_paths() -> tuple[Path, Path, Path]:
@@ -1520,36 +2152,54 @@ def _default_paths() -> tuple[Path, Path, Path]:
     return root / "public" / "The_Oxford_5000.csv", root / "public" / "ipa-dict.json", root / "public" / "oxford-american-ipa.json"
 
 
+def copy_explicit_v2_manifest(destination: str | Path | None = None) -> dict[str, Any]:
+    """Copy/validate the checked-in reviewed v2 manifest without synthesis."""
+
+    checked_in = Path(__file__).resolve().parents[2] / "scripts" / "data" / "segmentation-study-v2.json"
+    try:
+        payload = checked_in.read_bytes()
+        manifest = json.loads(payload.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("The checked-in explicit v2 manifest is unreadable.") from error
+    _validate_manifest_identity(manifest)
+    if destination is not None:
+        target = Path(destination)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+    return manifest
+
+
 def _cli() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples-dir", type=Path, help="Directory of CRM/history JSON samples")
     parser.add_argument("--samples-json", type=Path, help="JSON export containing labeled samples")
-    parser.add_argument("--manifest", type=Path, default=Path("scripts/data/segmentation-study-v1.json"))
+    parser.add_argument("--manifest", type=Path, default=Path("scripts/data/segmentation-study-v2.json"))
     parser.add_argument("--generate-manifest", action="store_true", help="Generate the fixed 100-word manifest before analysis")
-    parser.add_argument("--output-dir", type=Path, default=Path("test-results/segmentation-study-v1"))
+    parser.add_argument("--compatibility", choices=("canonical", "historical"), default="canonical", help="Require canonical v2 export, or explicitly replay non-promotable historical JSON")
+    parser.add_argument("--output-dir", type=Path, default=Path("test-results/segmentation-study-v2"))
     parser.add_argument("--bootstrap-resamples", type=int, default=DEFAULT_BOOTSTRAP_RESAMPLES)
+    parser.add_argument("--evaluation-mode", choices=("authoritative-first", "exploratory"), default="authoritative-first", help="Persist the immutable first holdout report or an explicitly non-promotable exploratory rerun")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
-    if args.generate_manifest or not args.manifest.exists():
-        oxford_csv, ipa_json, override_json = _default_paths()
-        manifest = build_study_manifest(oxford_csv, ipa_json, oxford_override_json=override_json)
-        args.manifest.parent.mkdir(parents=True, exist_ok=True)
-        args.manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if args.generate_manifest:
+        manifest = copy_explicit_v2_manifest(args.manifest)
+    elif not args.manifest.exists():
+        parser.error("The checked-in v2 manifest is required; use --generate-manifest only for the explicit v2 path.")
     else:
         manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     source = args.samples_json or args.samples_dir
     if not source:
         parser.error("one of --samples-dir or --samples-json is required")
-    samples = load_labeled_samples(source)
+    samples = load_labeled_samples(source, manifest=manifest, compatibility=args.compatibility)
     # The local replay corpus contains older labelled recordings in addition
     # to the six paired samples named in the accuracy note. Keep that named
     # six-recording set as the historical regression slice; new CRM labels
     # remain split by the checked-in manifest and are not filtered here.
     if samples and not any(sample.get("split") for sample in samples):
-        selected_history = select_historical_regression_set(samples)
+        selected_history = select_historical_regression_set(samples) if args.compatibility == "historical" else []
         if selected_history:
             samples = selected_history
-    report = run_reanalysis(samples, manifest=manifest, bootstrap_resamples=args.bootstrap_resamples)
+    report = run_reanalysis(samples, manifest=manifest, bootstrap_resamples=args.bootstrap_resamples, evaluation_mode=args.evaluation_mode)
     paths = write_outputs(report, args.output_dir)
     print(json.dumps({"status": report["gates"]["status"], "sampleCounts": report["sampleCounts"], "outputs": {key: str(value) for key, value in paths.items()}}, ensure_ascii=False))
     return 0

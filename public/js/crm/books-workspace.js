@@ -2213,6 +2213,7 @@ window.CrmBooksWorkspace = (function () {
         let mindMapUserNodes = [];
         let mindMapUserEdits = {};
         let mindMapCustomConnections = [];
+        let mindMapHiddenConnections = [];
         let mindMapDirty = false;
         let mindMapNodeDrag = null;
         let mindMapDragRafId = null;
@@ -2239,7 +2240,8 @@ window.CrmBooksWorkspace = (function () {
                 positions: mindMapPositions,
                 userNodes: mindMapUserNodes,
                 userEdits: mindMapUserEdits,
-                customConnections: mindMapCustomConnections
+                customConnections: mindMapCustomConnections,
+                hiddenConnections: mindMapHiddenConnections
             };
             try {
                 localStorage.setItem(`crm_books_mapstate_${bookId}_${mapId}`, JSON.stringify(state));
@@ -2270,6 +2272,7 @@ window.CrmBooksWorkspace = (function () {
                 mindMapUserNodes = Array.isArray(saved.userNodes) ? saved.userNodes : [];
                 mindMapUserEdits = saved.userEdits || {};
                 mindMapCustomConnections = Array.isArray(saved.customConnections) ? saved.customConnections : [];
+                mindMapHiddenConnections = Array.isArray(saved.hiddenConnections) ? saved.hiddenConnections : [];
                 mindMapDirty = false;
 
                 const titleEl = docQs('#crm-mindmap-title');
@@ -2952,6 +2955,25 @@ window.CrmBooksWorkspace = (function () {
             return { x: left + w / 2, y: top + h / 2 };
         }
 
+        function buildBezier(fromNode, toNode, fromSideHint, toSideHint) {
+            const fromSide = fromSideHint || findClosestAnchor(fromNode, getNodeCenter(toNode));
+            const toSide = toSideHint || findClosestAnchor(toNode, getNodeCenter(fromNode));
+            const fp = getAnchorPoint(fromNode, fromSide);
+            const tp = getAnchorPoint(toNode, toSide);
+            const dist = Math.hypot(tp.x - fp.x, tp.y - fp.y);
+            const offset = Math.min(dist * 0.35, 120);
+            let c1x = fp.x, c1y = fp.y, c2x = tp.x, c2y = tp.y;
+            if (fromSide === 'right') c1x += offset;
+            else if (fromSide === 'left') c1x -= offset;
+            else if (fromSide === 'top') c1y -= offset;
+            else if (fromSide === 'bottom') c1y += offset;
+            if (toSide === 'right') c2x += offset;
+            else if (toSide === 'left') c2x -= offset;
+            else if (toSide === 'top') c2y -= offset;
+            else if (toSide === 'bottom') c2y += offset;
+            return { fp, tp, c1x, c1y, c2x, c2y, d: `M ${fp.x} ${fp.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${tp.x} ${tp.y}` };
+        }
+
         function rebuildSVGPaths() {
             const svg = docQs('#crm-mindmap-svg');
             const canvas = docQs('#crm-mindmap-canvas');
@@ -2964,46 +2986,45 @@ window.CrmBooksWorkspace = (function () {
             let pathsHtml = '';
             const centralNode = nodeMap['central'];
             if (!centralNode) { svg.innerHTML = ''; return; }
-            const centralCenter = getNodeCenter(centralNode);
+            const hiddenSet = new Set(mindMapHiddenConnections || []);
 
             const categories = currentMindMapData?.categories || [];
             categories.forEach((cat, cIdx) => {
                 const catId = cat.id || `cat_${cIdx}`;
                 const catNode = nodeMap[catId];
                 if (!catNode) return;
-                const catCenter = getNodeCenter(catNode);
                 const catColor = mindMapUserEdits[catId]?.color || cat.color || '#4f46e5';
-
-                const dx = catCenter.x - centralCenter.x;
-                const dy = catCenter.y - centralCenter.y;
-                const qx = centralCenter.x + dx * 0.5 - dy * 0.08;
-                const qy = centralCenter.y + dy * 0.5 + dx * 0.08;
-                pathsHtml += `<path d="M ${centralCenter.x} ${centralCenter.y} Q ${qx} ${qy} ${catCenter.x} ${catCenter.y}" stroke="${catColor}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.4" />`;
+                const connId = `struct_central_${catId}`;
+                if (!hiddenSet.has(connId)) {
+                    const b = buildBezier(centralNode, catNode);
+                    pathsHtml += `<path d="${b.d}" stroke="${catColor}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.4" />`;
+                    pathsHtml += `<path class="crm-mindmap-conn-hitarea" data-conn-id="${connId}" data-conn-type="structural" d="${b.d}" stroke="transparent" stroke-width="14" fill="none" />`;
+                }
 
                 const subtopics = cat.subtopics || [];
                 subtopics.forEach((sub, sIdx) => {
                     const subId = sub.id || `sub_${cIdx}_${sIdx}`;
                     const subNode = nodeMap[subId];
                     if (!subNode) return;
-                    const subCenter = getNodeCenter(subNode);
-                    const sdx = subCenter.x - catCenter.x;
-                    const sdy = subCenter.y - catCenter.y;
-                    const sqx = catCenter.x + sdx * 0.5 - sdy * 0.06;
-                    const sqy = catCenter.y + sdy * 0.5 + sdx * 0.06;
-                    pathsHtml += `<path d="M ${catCenter.x} ${catCenter.y} Q ${sqx} ${sqy} ${subCenter.x} ${subCenter.y}" stroke="${catColor}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.35" />`;
+                    const subConnId = `struct_${catId}_${subId}`;
+                    if (!hiddenSet.has(subConnId)) {
+                        const sb = buildBezier(catNode, subNode);
+                        pathsHtml += `<path d="${sb.d}" stroke="${catColor}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.35" />`;
+                        pathsHtml += `<path class="crm-mindmap-conn-hitarea" data-conn-id="${subConnId}" data-conn-type="structural" d="${sb.d}" stroke="transparent" stroke-width="14" fill="none" />`;
+                    }
                 });
             });
 
             mindMapUserNodes.forEach(un => {
                 if (un.parentId) {
+                    const userConnId = `user_${un.parentId}_${un.id}`;
+                    if (hiddenSet.has(userConnId)) return;
                     const parentNode = nodeMap[un.parentId];
                     const childNode = nodeMap[un.id];
                     if (parentNode && childNode) {
-                        const pc = getNodeCenter(parentNode);
-                        const cc = getNodeCenter(childNode);
-                        const mqx = (pc.x + cc.x) / 2;
-                        const mqy = (pc.y + cc.y) / 2;
-                        pathsHtml += `<path d="M ${pc.x} ${pc.y} Q ${mqx} ${mqy} ${cc.x} ${cc.y}" stroke="${un.color || '#F59E0B'}" stroke-width="1.5" stroke-dasharray="5,4" fill="none" opacity="0.4" />`;
+                        const b = buildBezier(parentNode, childNode);
+                        pathsHtml += `<path d="${b.d}" stroke="${un.color || '#F59E0B'}" stroke-width="1.5" stroke-dasharray="5,4" fill="none" opacity="0.4" />`;
+                        pathsHtml += `<path class="crm-mindmap-conn-hitarea" data-conn-id="${userConnId}" data-conn-type="user" d="${b.d}" stroke="transparent" stroke-width="14" fill="none" />`;
                     }
                 }
             });
@@ -3012,47 +3033,20 @@ window.CrmBooksWorkspace = (function () {
                 const fromNode = nodeMap[conn.from];
                 const toNode = nodeMap[conn.to];
                 if (!fromNode || !toNode) return;
-                const fromSide = conn.fromAnchor || findClosestAnchor(fromNode, getNodeCenter(toNode));
-                const toSide = conn.toAnchor || findClosestAnchor(toNode, getNodeCenter(fromNode));
-                const fp = getAnchorPoint(fromNode, fromSide);
-                const tp = getAnchorPoint(toNode, toSide);
-                const dx = tp.x - fp.x;
-                const dy = tp.y - fp.y;
-                const dist = Math.hypot(dx, dy);
-                const offset = Math.min(dist * 0.35, 120);
-                let c1x = fp.x, c1y = fp.y, c2x = tp.x, c2y = tp.y;
-                if (fromSide === 'right') c1x += offset;
-                else if (fromSide === 'left') c1x -= offset;
-                else if (fromSide === 'top') c1y -= offset;
-                else if (fromSide === 'bottom') c1y += offset;
-                if (toSide === 'right') c2x += offset;
-                else if (toSide === 'left') c2x -= offset;
-                else if (toSide === 'top') c2y -= offset;
-                else if (toSide === 'bottom') c2y += offset;
+                const b = buildBezier(fromNode, toNode, conn.fromAnchor, conn.toAnchor);
                 const color = conn.color || '#6366F1';
-                pathsHtml += `<path class="crm-mindmap-custom-conn" data-conn-id="${conn.id}" d="M ${fp.x} ${fp.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${tp.x} ${tp.y}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.65" />`;
+                pathsHtml += `<path class="crm-mindmap-custom-conn" data-conn-id="${conn.id}" d="${b.d}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.65" />`;
                 const arrowSize = 7;
-                const angle = Math.atan2(tp.y - c2y, tp.x - c2x);
-                const a1x = tp.x - arrowSize * Math.cos(angle - 0.4);
-                const a1y = tp.y - arrowSize * Math.sin(angle - 0.4);
-                const a2x = tp.x - arrowSize * Math.cos(angle + 0.4);
-                const a2y = tp.y - arrowSize * Math.sin(angle + 0.4);
-                pathsHtml += `<polygon points="${tp.x},${tp.y} ${a1x},${a1y} ${a2x},${a2y}" fill="${color}" opacity="0.65" />`;
-                pathsHtml += `<path class="crm-mindmap-conn-hitarea" data-conn-id="${conn.id}" d="M ${fp.x} ${fp.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${tp.x} ${tp.y}" stroke="transparent" stroke-width="14" fill="none" style="cursor:pointer;" />`;
+                const angle = Math.atan2(b.tp.y - b.c2y, b.tp.x - b.c2x);
+                const a1x = b.tp.x - arrowSize * Math.cos(angle - 0.4);
+                const a1y = b.tp.y - arrowSize * Math.sin(angle - 0.4);
+                const a2x = b.tp.x - arrowSize * Math.cos(angle + 0.4);
+                const a2y = b.tp.y - arrowSize * Math.sin(angle + 0.4);
+                pathsHtml += `<polygon points="${b.tp.x},${b.tp.y} ${a1x},${a1y} ${a2x},${a2y}" fill="${color}" opacity="0.65" />`;
+                pathsHtml += `<path class="crm-mindmap-conn-hitarea" data-conn-id="${conn.id}" data-conn-type="custom" d="${b.d}" stroke="transparent" stroke-width="14" fill="none" />`;
             });
 
-            const isFirstRender = !svg.dataset.pathsSettled;
             svg.innerHTML = pathsHtml;
-
-            if (isFirstRender) {
-                svg.querySelectorAll('path:not(.crm-mindmap-conn-hitarea)').forEach(path => {
-                    const len = path.getTotalLength();
-                    path.style.setProperty('--path-length', len);
-                    path.style.strokeDasharray = len;
-                    path.style.strokeDashoffset = len;
-                });
-                svg.dataset.pathsSettled = '1';
-            }
         }
 
         // === Branch Highlighting ===
@@ -3147,7 +3141,8 @@ window.CrmBooksWorkspace = (function () {
                     positions: mindMapPositions,
                     userNodes: mindMapUserNodes,
                     userEdits: mindMapUserEdits,
-                    customConnections: mindMapCustomConnections
+                    customConnections: mindMapCustomConnections,
+                    hiddenConnections: mindMapHiddenConnections
                 });
                 mindMapDirty = false;
                 updateSaveStatus('saved');
@@ -3724,26 +3719,35 @@ window.CrmBooksWorkspace = (function () {
             hideConnectionContextMenu();
         }
 
-        function showConnectionContextMenu(clientX, clientY, connId) {
+        function showConnectionContextMenu(clientX, clientY, connId, connType) {
             hideContextMenu();
             let menu = docQs('#crm-mindmap-conn-context');
             if (!menu) {
                 menu = document.createElement('div');
                 menu.id = 'crm-mindmap-conn-context';
                 menu.className = 'crm-mindmap-conn-context';
-                menu.innerHTML = '<button class="crm-mindmap-conn-ctx-btn" data-action="delete">🗑️ Remove connection</button>';
                 const viewport = docQs('#crm-mindmap-viewport');
                 if (viewport) viewport.appendChild(menu);
                 menu.addEventListener('click', (e) => {
                     const action = e.target.closest('[data-action]')?.dataset.action;
-                    if (action === 'delete') {
-                        const id = menu.dataset.connId;
-                        if (id) removeCustomConnection(id);
+                    const id = menu.dataset.connId;
+                    const type = menu.dataset.connType;
+                    if (action === 'delete' && id) {
+                        if (type === 'custom') {
+                            removeCustomConnection(id);
+                        } else {
+                            if (!mindMapHiddenConnections) mindMapHiddenConnections = [];
+                            mindMapHiddenConnections.push(id);
+                            rebuildSVGPaths();
+                            scheduleMindMapAutoSave?.();
+                        }
                     }
                     hideConnectionContextMenu();
                 });
             }
+            menu.innerHTML = `<button class="crm-mindmap-conn-ctx-btn" data-action="delete">${connType === 'custom' ? '🗑️ Remove connection' : '👁️ Hide connection'}</button>`;
             menu.dataset.connId = connId;
+            menu.dataset.connType = connType || 'structural';
             menu.style.left = clientX + 'px';
             menu.style.top = clientY + 'px';
             menu.style.display = 'block';
@@ -4753,7 +4757,8 @@ window.CrmBooksWorkspace = (function () {
                     e.preventDefault();
                     e.stopPropagation();
                     const connId = hitArea.dataset.connId;
-                    if (connId) showConnectionContextMenu(e.clientX, e.clientY, connId);
+                    const connType = hitArea.dataset.connType || 'custom';
+                    if (connId) showConnectionContextMenu(e.clientX, e.clientY, connId, connType);
                     return;
                 }
                 const node = e.target.closest('.crm-mindmap-node');
@@ -4866,6 +4871,7 @@ window.CrmBooksWorkspace = (function () {
                                 mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
                                 mindMapUserEdits = res.mindMap.userEdits || {};
                                 mindMapCustomConnections = Array.isArray(res.mindMap.customConnections) ? res.mindMap.customConnections : [];
+                                mindMapHiddenConnections = Array.isArray(res.mindMap.hiddenConnections) ? res.mindMap.hiddenConnections : [];
                                 mindMapDirty = false;
                                 renderMindMapNodes(currentMindMapData);
                                 panel.style.display = 'none';
@@ -5099,6 +5105,7 @@ window.CrmBooksWorkspace = (function () {
                     mindMapUserNodes = Array.isArray(res.mindMap.userNodes) ? res.mindMap.userNodes : [];
                     mindMapUserEdits = res.mindMap.userEdits || {};
                     mindMapCustomConnections = Array.isArray(res.mindMap.customConnections) ? res.mindMap.customConnections : [];
+                    mindMapHiddenConnections = Array.isArray(res.mindMap.hiddenConnections) ? res.mindMap.hiddenConnections : [];
                     mindMapDirty = false;
                 }
 

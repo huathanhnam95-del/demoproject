@@ -1687,3 +1687,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 703,2026-08-19,Verify CRM Admin login and Account Manager flow with admin account in browser,Done,2026-08-19
 704,2026-08-19,CRM header nav overflow fix and pronunciation samples page UI redesign,Done,2026-08-19
 705,2026-08-19,Deploy Release V1.8.76 with CRM header nav overflow dropdown fix and live Cloud Functions account manager,Done,2026-08-19
+706,2026-08-20,Deploy Release V1.8.77 to production with CRM header and mind map UI updates,Done,2026-08-20
+

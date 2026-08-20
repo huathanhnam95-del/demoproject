@@ -252,11 +252,13 @@ module.exports = function registerBookRoutes(router, deps) {
             const bookId = cleanStr(req.params.bookId);
             if (!bookId) return sendError(res, 400, 'INVALID_PARAMS', 'Missing book ID.');
 
-            const { positions, userNodes, userEdits } = req.body || {};
+            const { positions, userNodes, userEdits, customConnections, hiddenConnections } = req.body || {};
             const update = {};
             if (positions && typeof positions === 'object') update.positions = positions;
             if (Array.isArray(userNodes)) update.userNodes = userNodes;
             if (userEdits && typeof userEdits === 'object') update.userEdits = userEdits;
+            if (Array.isArray(customConnections)) update.customConnections = customConnections;
+            if (Array.isArray(hiddenConnections)) update.hiddenConnections = hiddenConnections;
 
             if (Object.keys(update).length === 0) {
                 return sendError(res, 400, 'INVALID_PARAMS', 'No valid fields to update.');

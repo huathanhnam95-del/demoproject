@@ -7141,6 +7141,23 @@
     }
   });
 
+  // Nav dropdown click-to-toggle (supplements CSS hover)
+  (function initNavDropdowns() {
+    document.querySelectorAll('.crm-nav-dropdown').forEach((dropdown) => {
+      const trigger = dropdown.querySelector('.crm-nav-item');
+      if (!trigger) return;
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = dropdown.classList.contains('is-open');
+        document.querySelectorAll('.crm-nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
+        if (!wasOpen) dropdown.classList.add('is-open');
+      });
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.crm-nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
+    });
+  })();
+
   // Pronunciation Verification sub-tab switching (runs independently of admin init)
   (function initPvSubTabs() {
     const pvSubTabs = document.querySelectorAll('.pv-sub-tab');

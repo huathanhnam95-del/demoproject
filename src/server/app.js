@@ -128,7 +128,7 @@ function createRateLimiter({ windowMs, max, code, message }) {
 function createApp(options = {}) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..');
   const logger = options.logger || require('../utils/logger');
-  const routes = options.routes || {
+  const defaultRoutes = {
     transcriptRoutes: require('../routes/transcript'),
     dictionaryRoutes: require('../routes/dictionary'),
     aiProxyRoutes: require('../routes/ai-proxy'),
@@ -141,6 +141,8 @@ function createApp(options = {}) {
     pronunciationAiRoutes: require('../routes/pronunciation-ai'),
     readAloudRoutes: require('../routes/read-aloud')
   };
+  const routes = { ...defaultRoutes, ...(options.routes || {}) };
+
   const firebase = options.firebase || require('../utils/firebase');
   const circuitBreaker = options.circuitBreaker || require('../middleware/circuit-breaker');
 
@@ -274,9 +276,12 @@ function createApp(options = {}) {
     next();
   };
 
-  app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.pronunciationTestRoutes);
-  app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
-  app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.readAloudRoutes);
+  app.use('/api/read-aloud/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
+  app.use('/api/pronunciation-test/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
+  app.use('/api/pronunciation-test/vowel-hint', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
+  if (routes.pronunciationTestRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationTestRoutes);
+  if (routes.pronunciationAiRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
+  if (routes.readAloudRoutes) app.use('/api', optionalAuthUserMiddleware, routes.readAloudRoutes);
 
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');

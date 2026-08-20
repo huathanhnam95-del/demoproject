@@ -1690,6 +1690,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 706,2026-08-20,Deploy Release V1.8.77 to production with CRM header and mind map UI updates,Done,2026-08-20
 707,2026-08-20,Fix 429 rate limit error on api/config in CRM initialization,Done,2026-08-20
 708,2026-08-20,Merge Study-v2 waveform repair and deploy V1.8.79 to production,Done,2026-08-20
+709,2026-08-20,Compare PTE and IELTS essay prompts for resemblance statistics,Done,2026-08-20
+710,2026-08-20,Investigate and explain mermaid diagram availability in chat and artifacts,Done,2026-08-20
+711,2026-08-20,Create PTE 453 Cleaned Prompts Topics and Task Types Excel file,Done,2026-08-20
+712,2026-08-20,Deploy Release V1.8.80 with PTE 453 Cleaned Prompts and Topics dataset to production,Done,2026-08-20
+
 
 
 

@@ -1702,6 +1702,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 718,2026-08-21,Review debug and refactor PTE Write Essay filter system and UI components,Done,2026-08-21
 719,2026-08-21,Review debug and refactor mind map code - fix 7 bugs from code review,Done,2026-08-21
 720,2026-08-21,Deploy Release V1.8.81 with CRM Header Refactor and Write Essay Topic Filters to production,Done,2026-08-21
+721,2026-08-21,Fix Write Essay UI bugs - hide prompt card during practice and add filter settings button to picker bar,Done,2026-08-21
+722,2026-08-21,Fix SPC controller sticky header in Read Aloud mode - change overflow-x hidden to clip,Done,2026-08-21
+723,2026-08-21,Modernize mastery progress tracker UI - replace boxy progress bar with stepped milestone design,Done,2026-08-21
+724,2026-08-21,Deploy Release V1.8.82 with Stepped Progress Tracker and Sticky Header fixes to production,Done,2026-08-21
 
 
 

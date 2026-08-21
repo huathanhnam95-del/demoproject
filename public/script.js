@@ -3067,14 +3067,12 @@
    */
   function updateProgressBarUI(questionId, mode, progressData) {
     const progressBar = document.getElementById(`progress-bar-${mode}`);
-    const progressFill = document.getElementById(`progress-bar-fill-${mode}`);
     const progressTarget = document.getElementById(`progress-target-${mode}`);
     const progressTierBadge = document.getElementById(`progress-tier-${mode}`);
     const resetBtn = document.getElementById(`reset-progress-${mode}-btn`);
 
     if (!progressBar) return;
 
-    // Show progress bar for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     progressBar.style.display = isLoggedIn ? 'block' : 'none';
 
@@ -3083,35 +3081,71 @@
     const perfectCount = progressData?.perfectCount || 0;
     const hasAttempted = progressData?.hasAttempted || false;
     const state = calculateState(hasAttempted, perfectCount);
-    const percentage = getProgressPercentage(perfectCount);
 
-    // Update progress fill
-    if (progressFill) {
-      progressFill.style.width = `${percentage}%`;
-      progressFill.className = `progress-bar-fill state-${state}`;
-    }
+    const steps = progressBar.querySelectorAll('.progress-step');
+    const connectors = progressBar.querySelectorAll('.progress-connector');
+    const tierThresholds = [3, 6, 9];
 
-    // Update target label with progress description
+    steps.forEach((step, i) => {
+      const threshold = tierThresholds[i];
+      const dot = step.querySelector('.progress-step-dot');
+      step.classList.remove('reached', 'active');
+      if (dot) dot.removeAttribute('data-sub');
+
+      if (perfectCount >= threshold) {
+        step.classList.add('reached');
+      } else {
+        const rangeStart = i === 0 ? 0 : tierThresholds[i - 1];
+        if (perfectCount > rangeStart || (i === 0 && hasAttempted)) {
+          step.classList.add('active');
+          if (dot) dot.setAttribute('data-sub', `${perfectCount % 3}/3`);
+        }
+      }
+    });
+
+    const connectorRanges = [
+      { start: 0, end: 3, cls: 'tier-completed' },
+      { start: 3, end: 6, cls: 'tier-consolidated' }
+    ];
+
+    connectors.forEach((conn, i) => {
+      const fill = conn.querySelector('.progress-connector-fill');
+      if (!fill) return;
+      const range = connectorRanges[i];
+      if (!range) return;
+
+      fill.className = 'progress-connector-fill';
+
+      if (perfectCount >= range.end) {
+        fill.style.width = '100%';
+        fill.classList.add(range.cls);
+      } else if (perfectCount > range.start) {
+        const pct = Math.round(((perfectCount - range.start) / (range.end - range.start)) * 100);
+        fill.style.width = `${pct}%`;
+        fill.classList.add(range.cls);
+      } else {
+        fill.style.width = '0%';
+      }
+    });
+
     if (progressTarget) {
       progressTarget.textContent = getProgressDescription(hasAttempted, perfectCount);
     }
 
-    // Update state badge
     if (progressTierBadge) {
       const stateLabels = {
         'not-started': 'Not Started',
-        'in-progress': `In Progress (${perfectCount}/3)`,
-        'completed': `✓ Completed (${perfectCount} total)`,
-        'consolidated': `✓✓ Consolidated (${perfectCount} total)`,
-        'mastered': `★ Mastered (${perfectCount} total)`
+        'in-progress': 'In Progress',
+        'completed': 'Completed',
+        'consolidated': 'Consolidated',
+        'mastered': '★ Mastered'
       };
       progressTierBadge.textContent = stateLabels[state] || 'Not Started';
       progressTierBadge.className = `progress-tier-badge state-${state}`;
     }
 
-    // Show/hide reset button (show if any progress or attempts)
     if (resetBtn) {
-      resetBtn.style.display = (perfectCount > 0 || hasAttempted) ? 'inline-block' : 'none';
+      resetBtn.style.display = (perfectCount > 0 || hasAttempted) ? 'inline-flex' : 'none';
     }
   }
 

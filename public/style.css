@@ -2945,7 +2945,7 @@ h1 {
   display: block !important;
   opacity: 1 !important;
   animation: fadeIn 0.4s ease-out;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -6037,96 +6037,159 @@ textarea:focus {
    Progress Bar (Question Header)
    ============================================ */
 
+/* ── Stepped Mastery Tracker ─────────────────────────────── */
+
 .progress-bar-container {
   margin: 6px 0;
-  padding: 8px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 6px 0;
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
-.progress-bar-track {
-  height: 8px;
-  background: #94a3b8;
-  /* Darker track */
-  border-radius: 4px;
-  overflow: hidden;
+.progress-steps {
+  display: flex;
+  align-items: flex-start;
+  max-width: 360px;
 }
 
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
-  border-radius: 4px;
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  z-index: 1;
+}
+
+.progress-step-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid var(--border-light, #e5e7eb);
+  background: var(--bg-card, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.35s ease;
+  position: relative;
+  font-size: 0;
+}
+
+.progress-step.reached .progress-step-dot {
+  border-color: transparent;
+}
+
+.progress-step.reached[data-tier="completed"] .progress-step-dot {
+  background: #f59e0b;
+}
+
+.progress-step.reached[data-tier="consolidated"] .progress-step-dot {
+  background: var(--primary, #3b82f6);
+}
+
+.progress-step.reached[data-tier="mastered"] .progress-step-dot {
+  background: var(--success, #22c55e);
+}
+
+.progress-step.reached .progress-step-dot::after {
+  content: '✓';
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.progress-step.active .progress-step-dot {
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.progress-step.active .progress-step-dot::after {
+  content: attr(data-sub);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--primary, #3b82f6);
+  line-height: 1;
+}
+
+.progress-step-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-muted, #9ca3af);
+  margin-top: 4px;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.progress-step.reached .progress-step-label {
+  color: var(--text-secondary, #6b7280);
+}
+
+.progress-step.reached[data-tier="mastered"] .progress-step-label {
+  color: var(--success, #22c55e);
+  font-weight: 600;
+}
+
+.progress-step.active .progress-step-label {
+  color: var(--primary, #3b82f6);
+  font-weight: 600;
+}
+
+.progress-connector {
+  flex: 1;
+  height: 3px;
+  background: var(--border-light, #e5e7eb);
+  border-radius: 2px;
+  margin-top: 9px;
+  position: relative;
+  min-width: 16px;
+}
+
+.progress-connector-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  border-radius: 2px;
   transition: width 0.4s ease, background 0.3s ease;
 }
 
-.progress-bar-fill.state-not-started {
-  background: #e5e7eb;
+.progress-connector-fill.tier-completed {
+  background: #f59e0b;
 }
 
-.progress-bar-fill.state-in-progress {
-  background: linear-gradient(90deg, #a78bfa, #7c3aed);
+.progress-connector-fill.tier-consolidated {
+  background: var(--primary, #3b82f6);
 }
 
-.progress-bar-fill.state-completed,
-.progress-bar-fill.tier-completed {
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+.progress-connector-fill.tier-mastered {
+  background: var(--success, #22c55e);
 }
 
-.progress-bar-fill.state-consolidated,
-.progress-bar-fill.tier-consolidated {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+.spc-slot-advanced-setting:has(.progress-bar-container) {
+  flex: 1 1 auto;
 }
 
-.progress-bar-fill.state-mastered,
-.progress-bar-fill.tier-mastered {
-  background: linear-gradient(90deg, #4ade80, #22c55e);
-}
-
-.progress-bar-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 4px;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.progress-label {
-  flex: 1;
-  text-align: center;
-}
-
-.progress-label:first-child {
-  text-align: left;
-}
-
-.progress-label:last-child {
-  text-align: right;
-}
-
-.progress-target {
-  font-weight: 600;
-  color: var(--primary);
-}
+/* ── Tier Info Row ───────────────────────────────────────── */
 
 .progress-tier-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .progress-tier-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill, 500px);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .progress-tier-badge.tier-none,
 .progress-tier-badge.state-not-started {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--bg-input, #f3f4f6);
+  color: var(--text-muted, #6b7280);
 }
 
 .progress-tier-badge.state-in-progress {
@@ -6152,20 +6215,40 @@ textarea:focus {
   color: #166534;
 }
 
-.reset-progress-btn {
-  padding: 4px 10px;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  color: #dc2626;
+.progress-target-text {
   font-size: 0.75rem;
+  color: var(--text-muted, #9ca3af);
+  margin-left: auto;
+}
+
+.reset-progress-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.72rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .reset-progress-btn:hover {
-  background: #fecaca;
-  border-color: #f87171;
+  border-color: var(--danger, #dc2626);
+  color: var(--danger, #dc2626);
+  background: var(--danger-light, #fee2e2);
+}
+
+@media (max-width: 360px) {
+  .progress-step-label {
+    display: none;
+  }
+
+  .progress-step {
+    width: 40px;
+  }
 }
 
 /* ============================================
@@ -18882,7 +18965,7 @@ body.readingjourney-active #readingjourney-root {
 
 /* Read Aloud mode — overflow containment */
 #mode-read-aloud {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -18890,7 +18973,7 @@ body.readingjourney-active #readingjourney-root {
 #mode-read-aloud .read-aloud-container {
   max-width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #mode-read-aloud .ra-prompt-box {

@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.81</div>
+  <div id="version-indicator" class="version-indicator">V1.8.82</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2127,19 +2127,31 @@
 
           <!-- Progress Bar UI (logged-in users only) -->
           <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-type" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-type" class="progress-label progress-target" data-step="3">Completed</span>
+            <div class="progress-steps">
+              <div class="progress-step" data-tier="completed">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Completed</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="consolidated">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Consolidated</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="mastered">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Mastered</span>
+              </div>
             </div>
             <div class="progress-tier-info">
               <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
+              <span id="progress-target-type" class="progress-target-text"></span>
+              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;"
+                aria-label="Reset progress">↺ Reset</button>
             </div>
           </div>
 
@@ -2411,19 +2423,31 @@
 
           <!-- Progress Bar UI (logged-in users only) -->
           <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-speak" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-speak" class="progress-label progress-target" data-step="3">Completed</span>
+            <div class="progress-steps">
+              <div class="progress-step" data-tier="completed">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Completed</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="consolidated">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Consolidated</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="mastered">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Mastered</span>
+              </div>
             </div>
             <div class="progress-tier-info">
               <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
+              <span id="progress-target-speak" class="progress-target-text"></span>
+              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;"
+                aria-label="Reset progress">↺ Reset</button>
             </div>
           </div>
 
@@ -6068,7 +6092,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.81"></script>
+  <script src="/read-aloud-mode.js?v=1.8.82"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

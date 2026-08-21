@@ -85,6 +85,7 @@ function main() {
         ['node', ['tests/crm/books-download-route.test.js']],
         ['node', ['tests/crm/books-workspace.test.js']],
         ['node', ['tests/crm/books-ui-layout.test.js']],
+        ['node', ['tests/browser/crm-nav-dropdown-browser-check.js']],
         ['node', ['tests/browser/crm-books-ui-browser-check.js']],
         ['node', ['tests/browser/crm-books-mind-map-browser-check.js']],
         ['node', ['tests/browser/mindmap-wheel-zoom-check.js']],

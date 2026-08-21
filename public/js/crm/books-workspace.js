@@ -2223,7 +2223,11 @@ window.CrmBooksWorkspace = (function () {
         let mindMapActiveMapId = 'default';
         let mindMapAvailableMaps = {};
         let mindMapAnchorDrag = null;
+        let mindMapResizeDrag = null;
         const mindMapCitationUpgradeAttempts = new Set();
+        let mindMapUndoStack = [];
+        let mindMapRedoStack = [];
+        const UNDO_MAX = 50;
 
         function isLegacyMindMapData(data) {
             return !!data && data.citationSchemaVersion !== 1;
@@ -3120,6 +3124,70 @@ window.CrmBooksWorkspace = (function () {
             else { el.textContent = ''; }
         }
 
+        function mmCaptureState() {
+            return JSON.stringify({
+                positions: mindMapPositions,
+                userNodes: mindMapUserNodes,
+                userEdits: mindMapUserEdits,
+                customConnections: mindMapCustomConnections,
+                hiddenConnections: mindMapHiddenConnections
+            });
+        }
+
+        function mmPushUndo() {
+            const snap = mmCaptureState();
+            if (mindMapUndoStack.length && mindMapUndoStack[mindMapUndoStack.length - 1] === snap) return;
+            mindMapUndoStack.push(snap);
+            if (mindMapUndoStack.length > UNDO_MAX) mindMapUndoStack.shift();
+            mindMapRedoStack = [];
+            mmUpdateUndoButtons();
+        }
+
+        function mmRestoreState(json) {
+            const s = JSON.parse(json);
+            mindMapPositions = s.positions || {};
+            mindMapUserNodes = Array.isArray(s.userNodes) ? s.userNodes : [];
+            mindMapUserEdits = s.userEdits || {};
+            mindMapCustomConnections = Array.isArray(s.customConnections) ? s.customConnections : [];
+            mindMapHiddenConnections = Array.isArray(s.hiddenConnections) ? s.hiddenConnections : [];
+            renderMindMapNodes(currentMindMapData, true);
+            scheduleMindMapAutoSave();
+        }
+
+        function mmUndo() {
+            if (!mindMapUndoStack.length) return;
+            mindMapRedoStack.push(mmCaptureState());
+            mmRestoreState(mindMapUndoStack.pop());
+            mmUpdateUndoButtons();
+        }
+
+        function mmRedo() {
+            if (!mindMapRedoStack.length) return;
+            mindMapUndoStack.push(mmCaptureState());
+            mmRestoreState(mindMapRedoStack.pop());
+            mmUpdateUndoButtons();
+        }
+
+        function mmUpdateUndoButtons() {
+            const undo = docQs('#crm-mindmap-undo-btn');
+            const redo = docQs('#crm-mindmap-redo-btn');
+            if (undo) undo.disabled = !mindMapUndoStack.length;
+            if (redo) redo.disabled = !mindMapRedoStack.length;
+        }
+
+        function changeNodeShape(nodeId, shape) {
+            if (!mindMapUserEdits[nodeId]) mindMapUserEdits[nodeId] = {};
+            mindMapUserEdits[nodeId].shape = shape === 'default' ? undefined : shape;
+            const canvas = docQs('#crm-mindmap-canvas');
+            const node = canvas?.querySelector(`[data-node-id="${nodeId}"]`);
+            if (node) {
+                node.classList.remove('shape-rounded', 'shape-pill', 'shape-circle');
+                if (shape && shape !== 'default') node.classList.add(`shape-${shape}`);
+            }
+            rebuildSVGPaths();
+            scheduleMindMapAutoSave();
+        }
+
         function scheduleMindMapAutoSave() {
             mindMapDirty = true;
             updateSaveStatus('unsaved');
@@ -3199,6 +3267,7 @@ window.CrmBooksWorkspace = (function () {
             const exists = mindMapCustomConnections.some(c =>
                 (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId));
             if (exists || fromId === toId) return;
+            mmPushUndo();
             mindMapCustomConnections.push({
                 id: 'conn_' + Date.now(),
                 from: fromId,
@@ -3212,9 +3281,23 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function removeCustomConnection(connId) {
+            mmPushUndo();
             mindMapCustomConnections = mindMapCustomConnections.filter(c => c.id !== connId);
             rebuildSVGPaths();
             scheduleMindMapAutoSave();
+        }
+
+        function getShapeClass(nodeId) {
+            const shape = mindMapUserEdits[nodeId]?.shape;
+            return shape ? ` shape-${shape}` : '';
+        }
+
+        function getNodeWidth(nodeId, defaultW) {
+            return mindMapUserEdits[nodeId]?.width || defaultW;
+        }
+
+        function getResizeHandleHtml() {
+            return '<div class="crm-mindmap-resize-handle"></div>';
         }
 
         function renderMindMapNodes(data, preserveTransform = false) {
@@ -3247,7 +3330,7 @@ window.CrmBooksWorkspace = (function () {
                 centralTop = mindMapPositions['central'].y;
             }
 
-            canvasHtml += `<div class="crm-mindmap-node central" data-node-id="central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; max-width:${centralW}px;"><div class="crm-mindmap-node-title">${escapeHtml(mindMapUserEdits['central']?.title || centralTitle)}</div>${getAnchorHtml()}</div>`;
+            canvasHtml += `<div class="crm-mindmap-node central${getShapeClass('central')}" data-node-id="central" style="left:${centralLeft}px; top:${centralTop}px; width:${centralW}px; max-width:${centralW}px;"><div class="crm-mindmap-node-title">${escapeHtml(mindMapUserEdits['central']?.title || centralTitle)}</div>${getAnchorHtml()}${getResizeHandleHtml()}</div>`;
             minX = Math.min(minX, centralLeft); minY = Math.min(minY, centralTop);
             maxX = Math.max(maxX, centralLeft + centralW); maxY = Math.max(maxY, centralTop + centralEstH);
 
@@ -3283,12 +3366,13 @@ window.CrmBooksWorkspace = (function () {
                 const isDark = document.querySelector('.crm-books-mindmap-modal')?.classList.contains('books-dark');
                 const catTintOpacity = isDark ? '0A' : '08';
                 const catTintOpacity2 = isDark ? '05' : '03';
-                canvasHtml += `<div class="crm-mindmap-node category" data-node-id="${escapeHtml(catId)}" data-cat-id="${escapeHtml(catId)}" data-title="${escapeHtml(catTitle)}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catW}px; --node-color:${catColor}; background: linear-gradient(135deg, ${catColor}${catTintOpacity}, ${catColor}${catTintOpacity2});">` +
+                const catNodeW = getNodeWidth(catId, catW);
+                canvasHtml += `<div class="crm-mindmap-node category${getShapeClass(catId)}" data-node-id="${escapeHtml(catId)}" data-cat-id="${escapeHtml(catId)}" data-title="${escapeHtml(catTitle)}" data-summary="${escapeHtml(cat.summary || '')}" data-fulltext="${escapeHtml(cat.summary || cat.title || '')}" style="left:${catLeft}px; top:${catTop}px; width:${catNodeW}px; --node-color:${catColor}; background: linear-gradient(135deg, ${catColor}${catTintOpacity}, ${catColor}${catTintOpacity2});">` +
                     collapseBtnHtml + collapseBadgeHtml +
                     `<div class="crm-mindmap-node-title">${escapeHtml(catTitle)}</div>` +
                     getTagsHtml(catId) +
                     getVoteBadgeHtml(catId) + getReactionBadgeHtml(catId) + getCommentBadgeHtml(catId) +
-                    getAnchorHtml() +
+                    getAnchorHtml() + getResizeHandleHtml() +
                     `</div>`;
 
                 const numSubs = subtopics.length;
@@ -3320,12 +3404,13 @@ window.CrmBooksWorkspace = (function () {
                         const subTitle = mindMapUserEdits[subId]?.title || sub.title || 'Subtopic';
                         const subTintOpacity = isDark ? '08' : '06';
                         const subTintOpacity2 = isDark ? '04' : '02';
-                        canvasHtml += `<div class="crm-mindmap-node subtopic" data-node-id="${escapeHtml(subId)}" data-sub-id="${escapeHtml(subId)}" data-cat-title="${escapeHtml(catTitle)}" data-cat-color="${subColor}" data-title="${escapeHtml(subTitle)}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subW}px; --node-color:${subColor}; background: linear-gradient(135deg, ${subColor}${subTintOpacity}, ${subColor}${subTintOpacity2});">` +
+                        const subNodeW = getNodeWidth(subId, subW);
+                        canvasHtml += `<div class="crm-mindmap-node subtopic${getShapeClass(subId)}" data-node-id="${escapeHtml(subId)}" data-sub-id="${escapeHtml(subId)}" data-cat-title="${escapeHtml(catTitle)}" data-cat-color="${subColor}" data-title="${escapeHtml(subTitle)}" data-summary="${escapeHtml(sub.summary || '')}" data-fulltext="${escapeHtml(sub.fullText || '')}" style="left:${subLeft}px; top:${subTop}px; width:${subNodeW}px; --node-color:${subColor}; background: linear-gradient(135deg, ${subColor}${subTintOpacity}, ${subColor}${subTintOpacity2});">` +
                             `<div class="crm-mindmap-node-title">${escapeHtml(subTitle)}</div>` +
                             `<div class="crm-mindmap-node-summary">${escapeHtml(sub.summary || '')}</div>` +
                             getTagsHtml(subId) +
                             getVoteBadgeHtml(subId) + getReactionBadgeHtml(subId) + getCommentBadgeHtml(subId) +
-                            getAnchorHtml() +
+                            getAnchorHtml() + getResizeHandleHtml() +
                             `</div>`;
                     });
                 }
@@ -3340,13 +3425,14 @@ window.CrmBooksWorkspace = (function () {
                 minX = Math.min(minX, unLeft); minY = Math.min(minY, unTop);
                 maxX = Math.max(maxX, unLeft + unW); maxY = Math.max(maxY, unTop + unEstH);
 
-                canvasHtml += `<div class="crm-mindmap-node user-node" data-node-id="${escapeHtml(un.id)}" data-title="${escapeHtml(un.title || '')}" data-summary="${escapeHtml(un.text || '')}" data-fulltext="${escapeHtml(un.text || '')}" data-cat-title="Your Note" data-cat-color="${unColor}" style="left:${unLeft}px; top:${unTop}px; width:${unW}px; --node-color:${unColor};">` +
+                const unNodeW = getNodeWidth(un.id, unW);
+                canvasHtml += `<div class="crm-mindmap-node user-node${getShapeClass(un.id)}" data-node-id="${escapeHtml(un.id)}" data-title="${escapeHtml(un.title || '')}" data-summary="${escapeHtml(un.text || '')}" data-fulltext="${escapeHtml(un.text || '')}" data-cat-title="Your Note" data-cat-color="${unColor}" style="left:${unLeft}px; top:${unTop}px; width:${unNodeW}px; --node-color:${unColor};">` +
                     `<div class="crm-mindmap-node-title">${escapeHtml(un.title || 'New thought')}</div>` +
                     (un.text ? `<div class="crm-mindmap-node-summary">${escapeHtml(un.text)}</div>` : '') +
                     getTagsHtml(un.id) +
                     getVoteBadgeHtml(un.id) + getReactionBadgeHtml(un.id) + getCommentBadgeHtml(un.id) +
                     getBadgeHtml(un.createdBy) +
-                    getAnchorHtml() +
+                    getAnchorHtml() + getResizeHandleHtml() +
                     `</div>`;
             });
 
@@ -3596,6 +3682,7 @@ window.CrmBooksWorkspace = (function () {
             const titleEl = node.querySelector('.crm-mindmap-node-title');
             if (!titleEl) return;
 
+            mmPushUndo();
             titleEl.contentEditable = 'true';
             titleEl.focus();
             const range = document.createRange();
@@ -3633,6 +3720,7 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function addUserNode(canvasX, canvasY, parentId) {
+            mmPushUndo();
             const id = 'user_' + Date.now();
             const createdBy = getActiveTeamMember().id;
             const newNode = { id, title: 'New thought', text: '', color: '#F59E0B', x: canvasX, y: canvasY, parentId: parentId || null, createdBy };
@@ -3640,9 +3728,10 @@ window.CrmBooksWorkspace = (function () {
 
             const canvas = docQs('#crm-mindmap-canvas');
             if (canvas) {
-                const nodeHtml = `<div class="crm-mindmap-node user-node" data-node-id="${escapeHtml(id)}" data-title="New thought" data-summary="" data-fulltext="" data-cat-title="Your Note" data-cat-color="#F59E0B" style="left:${canvasX}px; top:${canvasY}px; width:200px; --node-color:#F59E0B;">` +
+                const nodeHtml = `<div class="crm-mindmap-node user-node${getShapeClass(id)}" data-node-id="${escapeHtml(id)}" data-title="New thought" data-summary="" data-fulltext="" data-cat-title="Your Note" data-cat-color="#F59E0B" style="left:${canvasX}px; top:${canvasY}px; width:200px; --node-color:#F59E0B;">` +
                     `<div class="crm-mindmap-node-title">New thought</div>` +
                     getAnchorHtml() +
+                    getResizeHandleHtml() +
                     `</div>`;
                 canvas.insertAdjacentHTML('beforeend', nodeHtml);
                 const newNodeEl = canvas.querySelector(`[data-node-id="${newNode.id}"]`);
@@ -3657,6 +3746,7 @@ window.CrmBooksWorkspace = (function () {
         function deleteUserNode(nodeId) {
             const idx = mindMapUserNodes.findIndex(u => u.id === nodeId);
             if (idx === -1) return;
+            mmPushUndo();
             mindMapUserNodes.splice(idx, 1);
             mindMapCustomConnections = mindMapCustomConnections.filter(c => c.from !== nodeId && c.to !== nodeId);
             delete mindMapPositions[nodeId];
@@ -3670,6 +3760,7 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function changeNodeColor(nodeId, color) {
+            mmPushUndo();
             const canvas = docQs('#crm-mindmap-canvas');
             const node = canvas?.querySelector(`[data-node-id="${nodeId}"]`);
             if (node) {
@@ -3707,6 +3798,12 @@ window.CrmBooksWorkspace = (function () {
                 }
             });
 
+            const currentShape = mindMapUserEdits[nodeId]?.shape || 'default';
+            const shapeBtns = menu.querySelectorAll('.crm-mindmap-shape-option');
+            shapeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.shape === currentShape);
+            });
+
             menu.style.left = clientX + 'px';
             menu.style.top = clientY + 'px';
             menu.style.display = 'block';
@@ -3736,6 +3833,7 @@ window.CrmBooksWorkspace = (function () {
                         if (type === 'custom') {
                             removeCustomConnection(id);
                         } else {
+                            mmPushUndo();
                             if (!mindMapHiddenConnections) mindMapHiddenConnections = [];
                             mindMapHiddenConnections.push(id);
                             rebuildSVGPaths();
@@ -4394,6 +4492,24 @@ window.CrmBooksWorkspace = (function () {
                 }
                 if (e.target.closest('#crm-mindmap-inspector') || e.target.closest('.crm-mindmap-toolbar')) return;
 
+                const resizeHandle = e.target.closest('.crm-mindmap-resize-handle');
+                if (resizeHandle && e.button === 0) {
+                    const node = resizeHandle.closest('.crm-mindmap-node');
+                    const nodeId = getNodeId(node);
+                    if (!nodeId) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mmPushUndo();
+                    mindMapResizeDrag = {
+                        nodeId,
+                        nodeEl: node,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        origWidth: node.offsetWidth
+                    };
+                    return;
+                }
+
                 const anchor = e.target.closest('.crm-mindmap-anchor');
                 if (anchor && e.button === 0) {
                     const node = anchor.closest('.crm-mindmap-node');
@@ -4461,6 +4577,16 @@ window.CrmBooksWorkspace = (function () {
             });
 
             window.addEventListener('mousemove', (e) => {
+                if (mindMapResizeDrag) {
+                    const rd = mindMapResizeDrag;
+                    const dx = (e.clientX - rd.startX) / mindMapZoom;
+                    const newWidth = Math.max(100, rd.origWidth + dx);
+                    rd.nodeEl.style.width = newWidth + 'px';
+                    if (mindMapDragRafId) cancelAnimationFrame(mindMapDragRafId);
+                    mindMapDragRafId = requestAnimationFrame(() => rebuildSVGPaths());
+                    return;
+                }
+
                 if (mindMapAnchorDrag) {
                     const ad = mindMapAnchorDrag;
                     const canvasX = (e.clientX - ad.vpLeft - mindMapPanX) / mindMapZoom;
@@ -4503,6 +4629,7 @@ window.CrmBooksWorkspace = (function () {
                     if (!mindMapNodeDrag.active && dist < 6) return;
 
                     if (!mindMapNodeDrag.active) {
+                        mmPushUndo();
                         mindMapNodeDrag.active = true;
                         mindMapNodeDrag.nodeEl.classList.add('is-dragging');
                         if (physicsEnabled) {
@@ -4536,6 +4663,17 @@ window.CrmBooksWorkspace = (function () {
             });
 
             window.addEventListener('mouseup', (e) => {
+                if (mindMapResizeDrag) {
+                    const rd = mindMapResizeDrag;
+                    mindMapResizeDrag = null;
+                    const newWidth = rd.nodeEl.offsetWidth;
+                    if (!mindMapUserEdits[rd.nodeId]) mindMapUserEdits[rd.nodeId] = {};
+                    mindMapUserEdits[rd.nodeId].width = newWidth;
+                    rebuildSVGPaths();
+                    scheduleMindMapAutoSave();
+                    return;
+                }
+
                 if (mindMapAnchorDrag) {
                     const ad = mindMapAnchorDrag;
                     mindMapAnchorDrag = null;
@@ -4743,6 +4881,16 @@ window.CrmBooksWorkspace = (function () {
                 }
             });
 
+            docQs('#crm-mindmap-undo-btn')?.addEventListener('click', mmUndo);
+            docQs('#crm-mindmap-redo-btn')?.addEventListener('click', mmRedo);
+
+            window.addEventListener('keydown', (e) => {
+                const modal = docQs('#crm-books-mindmap-modal');
+                if (!modal || modal.style.display === 'none') return;
+                if (e.ctrlKey && e.key === 'z' && !e.shiftKey) { e.preventDefault(); mmUndo(); }
+                if (e.ctrlKey && (e.key === 'Z' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); mmRedo(); }
+            });
+
             addNodeBtn?.addEventListener('click', () => {
                 const vp = docQs('#crm-mindmap-viewport');
                 if (!vp) return;
@@ -4774,6 +4922,13 @@ window.CrmBooksWorkspace = (function () {
                 const swatch = e.target.closest('.crm-mindmap-color-swatch');
                 if (swatch && mindMapContextNodeId) {
                     changeNodeColor(mindMapContextNodeId, swatch.dataset.color);
+                    hideContextMenu();
+                    return;
+                }
+                const shapeBtn = e.target.closest('.crm-mindmap-shape-option');
+                if (shapeBtn && mindMapContextNodeId) {
+                    mmPushUndo();
+                    changeNodeShape(mindMapContextNodeId, shapeBtn.dataset.shape);
                     hideContextMenu();
                     return;
                 }
@@ -5108,6 +5263,10 @@ window.CrmBooksWorkspace = (function () {
                     mindMapHiddenConnections = Array.isArray(res.mindMap.hiddenConnections) ? res.mindMap.hiddenConnections : [];
                     mindMapDirty = false;
                 }
+
+                mindMapUndoStack = [];
+                mindMapRedoStack = [];
+                mmUpdateUndoButtons();
 
                 if (titleEl) titleEl.textContent = `🧠 ${currentMindMapData.centralTopic || 'Mind Map'}`;
                 if (subtitleEl) subtitleEl.textContent = `${currentMindMapData.categories?.length || 0} categories • ${currentMindMapData.noteCount || 0} notes synthesized`;

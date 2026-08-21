@@ -207,7 +207,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.80</div>
+  <div id="version-indicator" class="version-indicator">V1.8.81</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4521,6 +4521,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
               <button id="essay-random-toggle-btn" class="random-toggle-btn" type="button" title="Toggle Random Question Mode" aria-pressed="false">🎲 Random: OFF</button>
+              <button id="essay-filter-settings-btn" class="random-toggle-btn" type="button" title="Open filters">⚙️ Filters</button>
             </div>
           </div>
         </div>
@@ -4538,6 +4539,27 @@
             <div id="essay-v7-panel-jump" role="tabpanel">
               <label class="ra-v7-sr-only" for="essay-v7-jump-search">Search</label>
               <input id="essay-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search prompts…">
+              
+              <!-- Write Essay Type & Topic Filters -->
+              <div class="essay-filter-toolbar" id="essay-filter-toolbar">
+                <div class="essay-filter-group">
+                  <label for="essay-filter-type" class="essay-filter-label">Type:</label>
+                  <select id="essay-filter-type" class="essay-filter-select" aria-label="Filter by essay task type">
+                    <option value="all">All Types</option>
+                  </select>
+                </div>
+                <div class="essay-filter-group">
+                  <label for="essay-filter-topic" class="essay-filter-label">Topic:</label>
+                  <select id="essay-filter-topic" class="essay-filter-select" aria-label="Filter by topic domain">
+                    <option value="all">All Topics</option>
+                  </select>
+                </div>
+                <div class="essay-filter-meta">
+                  <span id="essay-filter-counter" class="essay-filter-counter" aria-live="polite">Loading prompts…</span>
+                  <button id="essay-filter-reset" class="essay-filter-reset-btn" type="button" style="display: none;" title="Reset all filters" aria-label="Clear active filters">Clear</button>
+                </div>
+              </div>
+
               <div class="ra-v7-section-title">Prompts</div>
               <div id="essay-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Prompts"></div>
             </div>
@@ -4562,7 +4584,10 @@
           <span id="current-question-id-essay" hidden></span>
 
           <div class="essay-prompt-card">
-            <div class="essay-card-header"><span class="essay-kicker">Essay prompt</span></div>
+            <div class="essay-card-header">
+              <span class="essay-kicker">Essay prompt</span>
+              <div id="essay-prompt-meta-badges" class="essay-prompt-meta-badges"></div>
+            </div>
             <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
               <p>Prompt will appear here...</p>
             </div>
@@ -4577,6 +4602,7 @@
             <div id="essay-step-write" class="essay-compose-card" style="display: none;">
               <div class="essay-card-header">
                 <span class="essay-kicker">Your essay</span>
+                <div id="essay-write-meta-badges" class="essay-prompt-meta-badges"></div>
                 <div id="essay-timer" class="essay-timer">20:00</div>
               </div>
               <div id="essay-prompt-display" class="essay-prompt-display">
@@ -6042,7 +6068,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.80"></script>
+  <script src="/read-aloud-mode.js?v=1.8.81"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

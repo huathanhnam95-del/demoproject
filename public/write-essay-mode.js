@@ -51,6 +51,63 @@
     let pickerOpen = false;
     let pickerPage = 1;
 
+    // Filter state
+    let selectedTypeFilter = 'all';
+    let selectedTopicFilter = 'all';
+    let searchQuery = '';
+
+    // Standardized task type metadata mappings
+    const TASK_TYPE_LABELS = Object.freeze({
+        'all': 'All Types',
+        'To what extent do you agree or disagree': 'Agree / Disagree',
+        'Do the advantages outweigh the disadvantages': 'Advantages & Disadvantages',
+        'causes-problems-solutions': 'Causes & Solutions',
+        'Discuss both views and give your opinions': 'Discuss Both Views',
+        'Is it a positive or negative development': 'Positive or Negative',
+        'others': 'Direct Questions / Others'
+    });
+
+    const TASK_TYPE_SHORT = Object.freeze({
+        'To what extent do you agree or disagree': 'Agree / Disagree',
+        'Do the advantages outweigh the disadvantages': 'Advantages & Disadvantages',
+        'causes-problems-solutions': 'Causes & Solutions',
+        'Discuss both views and give your opinions': 'Discuss Both Views',
+        'Is it a positive or negative development': 'Positive or Negative',
+        'others': 'Direct Questions'
+    });
+
+    function getTaskTypeShort(type) {
+        return TASK_TYPE_SHORT[type] || type || 'General Essay';
+    }
+
+    function getTaskTypeLabel(type) {
+        return TASK_TYPE_LABELS[type] || type || 'General Essay';
+    }
+
+    function buildTopicBadgesHtml(entry, { isPreview = false } = {}) {
+        if (!entry) return '';
+        const primTopic = entry.verifiedPrimaryTopic || 'Education';
+        const secTopics = [entry.verifiedSecondaryTopic1, entry.verifiedSecondaryTopic2].filter(Boolean);
+        const rawType = entry.standardizedTaskType || 'others';
+        const typeLabel = getTaskTypeShort(rawType);
+
+        if (isPreview) {
+            const secHtml = secTopics.map(st => `<span class="essay-topic-badge essay-topic-badge-subtle" title="Secondary Topic Domain: ${escapeHtml(st)}">🔖 ${escapeHtml(st)}</span>`).join('');
+            return `
+                <span class="essay-topic-badge" title="Primary Topic Domain: ${escapeHtml(primTopic)}">📚 ${escapeHtml(primTopic)}</span>
+                ${secHtml}
+                <span class="essay-type-badge" title="Academic Essay Task Type: ${escapeHtml(typeLabel)}">✍️ ${escapeHtml(typeLabel)}</span>
+            `;
+        }
+
+        const secHtml = secTopics.map(st => `<span class="essay-v7-item-sec-topic" title="Secondary Topic: ${escapeHtml(st)}">🔖 ${escapeHtml(st)}</span>`).join('');
+        return `
+            <span class="essay-v7-item-topic" title="Primary Topic: ${escapeHtml(primTopic)}">📚 ${escapeHtml(primTopic)}</span>
+            ${secHtml}
+            <span class="essay-v7-item-type" title="Task Type: ${escapeHtml(typeLabel)}">✍️ ${escapeHtml(typeLabel)}</span>
+        `;
+    }
+
     // DOM Elements
     const el = {};
 
@@ -86,10 +143,11 @@
         if (el.stepResults) el.stepResults.style.display = 'none';
         if (el.essayInput) { el.essayInput.value = ''; el.essayInput.readOnly = false; }
         if (el.startBtn) el.startBtn.style.display = '';
+        if (el.promptCard) el.promptCard.style.display = '';
         const toggleBtn = document.getElementById('essay-history-toggle');
         if (toggleBtn) toggleBtn.style.display = '';
 
-        if (el.questionPill) el.questionPill.disabled = filteredEntries.length === 0;
+        if (el.questionPill) el.questionPill.disabled = entries.length === 0;
         updateNavigationUI();
         if (el.resultBox) el.resultBox.innerHTML = '';
         if (el.resultsContainer) el.resultsContainer.innerHTML = '';
@@ -114,6 +172,7 @@
         el.nextBtn = document.getElementById('essay-v7-next-btn');
         el.questionPill = document.getElementById('essay-v7-question-pill');
         el.randomToggleBtn = document.getElementById('essay-random-toggle-btn');
+        el.filterSettingsBtn = document.getElementById('essay-filter-settings-btn');
         el.backdrop = document.getElementById('essay-v7-backdrop');
         el.sheet = document.getElementById('essay-v7-sheet');
         el.sheetClose = document.getElementById('essay-v7-sheet-close');
@@ -121,12 +180,22 @@
         el.jumpList = document.getElementById('essay-v7-jump-list');
         el.startBtn = document.getElementById('start-essay-btn');
         el.promptPreview = document.getElementById('essay-prompt-preview');
+        el.promptCard = el.promptPreview ? el.promptPreview.closest('.essay-prompt-card') : null;
+        el.promptMetaBadges = document.getElementById('essay-prompt-meta-badges');
+
+        // Filters
+        el.filterToolbar = document.getElementById('essay-filter-toolbar');
+        el.filterType = document.getElementById('essay-filter-type');
+        el.filterTopic = document.getElementById('essay-filter-topic');
+        el.filterCounter = document.getElementById('essay-filter-counter');
+        el.filterResetBtn = document.getElementById('essay-filter-reset');
 
         // Practice area
         el.practiceArea = document.getElementById('essay-practice-area');
 
         // Step 1: Write
         el.stepWrite = document.getElementById('essay-step-write');
+        el.writeMetaBadges = document.getElementById('essay-write-meta-badges');
         el.promptDisplay = document.getElementById('essay-prompt-display');
         el.essayInput = document.getElementById('essay-input');
         el.wordCountDisplay = document.getElementById('essay-word-count');
@@ -158,7 +227,30 @@
         }
         if (el.backdrop) el.backdrop.addEventListener('click', closePicker);
         if (el.sheetClose) el.sheetClose.addEventListener('click', closePicker);
-        if (el.jumpSearch) el.jumpSearch.addEventListener('input', (e) => renderJumpList(e.target.value));
+        if (el.jumpSearch) {
+            el.jumpSearch.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                applyFilter({ preserveSelection: true });
+                renderJumpList(searchQuery, 1);
+            });
+        }
+        if (el.filterType) {
+            el.filterType.addEventListener('change', (e) => {
+                selectedTypeFilter = e.target.value;
+                applyFilter();
+                renderJumpList(searchQuery, 1);
+            });
+        }
+        if (el.filterTopic) {
+            el.filterTopic.addEventListener('change', (e) => {
+                selectedTopicFilter = e.target.value;
+                applyFilter();
+                renderJumpList(searchQuery, 1);
+            });
+        }
+        if (el.filterResetBtn) {
+            el.filterResetBtn.addEventListener('click', resetFilters);
+        }
         if (el.jumpList) {
             el.jumpList.addEventListener('click', (e) => {
                 const item = e.target.closest('[data-index]');
@@ -175,6 +267,12 @@
                 navHistory = [];
                 updateRandomToggleUI();
                 updateNavigationUI();
+            });
+        }
+        if (el.filterSettingsBtn) {
+            el.filterSettingsBtn.addEventListener('click', () => {
+                if (!pickerOpen) openPicker();
+                if (el.filterType) el.filterType.focus();
             });
         }
         document.addEventListener('keydown', (e) => {
@@ -210,7 +308,11 @@
                     title: String(item.title || '').trim(),
                     prompt: String(item.prompt || '').trim(),
                     targetVocabulary: item.targetVocabulary || null,
-                    sampleResponses: item.sampleResponses || null
+                    sampleResponses: item.sampleResponses || null,
+                    verifiedPrimaryTopic: item.verifiedPrimaryTopic || 'Education',
+                    verifiedSecondaryTopic1: item.verifiedSecondaryTopic1 || null,
+                    verifiedSecondaryTopic2: item.verifiedSecondaryTopic2 || null,
+                    standardizedTaskType: item.standardizedTaskType || 'To what extent do you agree or disagree'
                 })).filter(e => e.id.length > 0 && e.prompt.length > 0);
 
                 entries.sort((a, b) => {
@@ -218,6 +320,7 @@
                     return (isNaN(ia) || isNaN(ib)) ? a.id.localeCompare(b.id) : ia - ib;
                 });
 
+                populateFilterOptions();
                 applyFilter();
                 hasLoadedEntries = true;
                 applyPendingRouteQuestion();
@@ -232,26 +335,122 @@
         try { await pendingLoad; } finally { if (loadEntriesPromise === pendingLoad) loadEntriesPromise = null; }
     }
 
+    function populateFilterOptions() {
+        if (!el.filterType || !el.filterTopic) return;
+
+        const typeCounts = {};
+        const topicCounts = {};
+
+        entries.forEach(e => {
+            const t = e.standardizedTaskType || 'others';
+            typeCounts[t] = (typeCounts[t] || 0) + 1;
+
+            const uniqueTopics = new Set([
+                e.verifiedPrimaryTopic,
+                e.verifiedSecondaryTopic1,
+                e.verifiedSecondaryTopic2
+            ].filter(Boolean));
+            uniqueTopics.forEach(top => {
+                topicCounts[top] = (topicCounts[top] || 0) + 1;
+            });
+        });
+
+        const sortedTypes = Object.keys(TASK_TYPE_LABELS).filter(k => k !== 'all' && typeCounts[k]);
+        let typeHtml = `<option value="all">All Types (${entries.length})</option>`;
+        sortedTypes.forEach(k => {
+            const count = typeCounts[k] || 0;
+            const label = getTaskTypeLabel(k);
+            typeHtml += `<option value="${escapeHtml(k)}">${escapeHtml(label)} (${count})</option>`;
+        });
+        el.filterType.innerHTML = typeHtml;
+        el.filterType.value = selectedTypeFilter;
+
+        const sortedTopics = Object.keys(topicCounts).sort((a, b) => (topicCounts[b] || 0) - (topicCounts[a] || 0));
+        let topicHtml = `<option value="all">All Topics (${entries.length})</option>`;
+        sortedTopics.forEach(t => {
+            const count = topicCounts[t] || 0;
+            topicHtml += `<option value="${escapeHtml(t)}">${escapeHtml(t)} (${count})</option>`;
+        });
+        el.filterTopic.innerHTML = topicHtml;
+        el.filterTopic.value = selectedTopicFilter;
+    }
+
     /* ──────────────────────────── FILTERS & NAV ──────────────────── */
 
-    function applyFilter() {
-        filteredEntries = [...entries];
+    function applyFilter({ preserveSelection = false } = {}) {
+        filteredEntries = entries.filter((entry) => {
+            if (selectedTypeFilter !== 'all' && entry.standardizedTaskType !== selectedTypeFilter) {
+                return false;
+            }
+            if (selectedTopicFilter !== 'all') {
+                const matchPrim = entry.verifiedPrimaryTopic === selectedTopicFilter;
+                const matchSec1 = entry.verifiedSecondaryTopic1 === selectedTopicFilter;
+                const matchSec2 = entry.verifiedSecondaryTopic2 === selectedTopicFilter;
+                if (!matchPrim && !matchSec1 && !matchSec2) return false;
+            }
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase().trim();
+                const matchId = String(entry.id).toLowerCase().includes(q);
+                const matchTitle = String(entry.title || '').toLowerCase().includes(q);
+                const matchPrompt = String(entry.prompt || '').toLowerCase().includes(q);
+                const matchTopics = [entry.verifiedPrimaryTopic, entry.verifiedSecondaryTopic1, entry.verifiedSecondaryTopic2]
+                    .some(t => t && t.toLowerCase().includes(q));
+                const matchType = String(entry.standardizedTaskType || '').toLowerCase().includes(q);
+                if (!matchId && !matchTitle && !matchPrompt && !matchTopics && !matchType) return false;
+            }
+            return true;
+        });
+
+        updateFilterMetaUI();
+
         if (filteredEntries.length === 0) {
             handleEmptyState();
         } else {
             if (el.startBtn) el.startBtn.disabled = false;
             if (el.questionPill) el.questionPill.disabled = false;
-            const routeQuestionId = pendingRouteQuestionId || getCurrentRouteQuestionId();
-            const routeIndex = routeQuestionId
-                ? filteredEntries.findIndex((e) => String(e.id) === String(routeQuestionId))
-                : -1;
-            currentEntryIndex = routeIndex >= 0 ? routeIndex : 0;
+
+            let targetIndex = 0;
+            if (preserveSelection && currentEntry) {
+                const existingIdx = filteredEntries.findIndex(e => String(e.id) === String(currentEntry.id));
+                if (existingIdx >= 0) targetIndex = existingIdx;
+            } else {
+                const routeQuestionId = pendingRouteQuestionId || getCurrentRouteQuestionId();
+                const routeIndex = routeQuestionId
+                    ? filteredEntries.findIndex((e) => String(e.id) === String(routeQuestionId))
+                    : -1;
+                targetIndex = routeIndex >= 0 ? routeIndex : 0;
+            }
+            currentEntryIndex = targetIndex;
             selectEntry(currentEntryIndex, { updateRoute: true });
         }
     }
 
+    function updateFilterMetaUI() {
+        if (el.filterCounter) {
+            el.filterCounter.textContent = `${filteredEntries.length} of ${entries.length} prompts`;
+        }
+        const hasActive = selectedTypeFilter !== 'all' || selectedTopicFilter !== 'all' || Boolean(searchQuery);
+        if (el.filterResetBtn) {
+            el.filterResetBtn.style.display = hasActive ? '' : 'none';
+        }
+        if (el.filterSettingsBtn) {
+            el.filterSettingsBtn.textContent = hasActive ? '⚙️ Filters ●' : '⚙️ Filters';
+        }
+    }
+
+    function resetFilters() {
+        selectedTypeFilter = 'all';
+        selectedTopicFilter = 'all';
+        searchQuery = '';
+        if (el.filterType) el.filterType.value = 'all';
+        if (el.filterTopic) el.filterTopic.value = 'all';
+        if (el.jumpSearch) el.jumpSearch.value = '';
+        applyFilter({ preserveSelection: true });
+        renderJumpList('', 1);
+    }
+
     function handleEmptyState() {
-        setPickerLabel('No prompts available', { disabled: true });
+        setPickerLabel('No prompts match filters', { disabled: true });
         if (el.currentQuestionId) el.currentQuestionId.textContent = '-';
         if (el.startBtn) el.startBtn.disabled = true;
         currentEntry = null;
@@ -293,15 +492,15 @@
     }
 
     function openPicker() {
-        if (!el.sheet || !el.backdrop || filteredEntries.length === 0) return;
+        if (!el.sheet || !el.backdrop || entries.length === 0) return;
         pickerOpen = true;
         el.backdrop.classList.add('is-visible');
         el.backdrop.setAttribute('aria-hidden', 'false');
         el.sheet.classList.add('is-open');
         el.sheet.setAttribute('aria-hidden', 'false');
         if (el.questionPill) el.questionPill.setAttribute('aria-expanded', 'true');
-        renderJumpList();
-        if (el.jumpSearch) { el.jumpSearch.value = ''; el.jumpSearch.focus(); }
+        renderJumpList(searchQuery);
+        if (el.jumpSearch) { el.jumpSearch.value = searchQuery; el.jumpSearch.focus(); }
     }
 
     function closePicker() {
@@ -316,14 +515,8 @@
 
     function renderJumpList(filter = '', page = null) {
         if (!el.jumpList) return;
-        const cleanFilter = String(filter || '').toLowerCase().trim();
 
-        const filtered = filteredEntries
-            .map((entry, idx) => ({ entry, idx }))
-            .filter(({ entry }) => !cleanFilter
-                || String(entry.id).toLowerCase().includes(cleanFilter)
-                || String(entry.title || '').toLowerCase().includes(cleanFilter));
-
+        const filtered = filteredEntries.map((entry, idx) => ({ entry, idx }));
         const totalPages = Math.max(1, Math.ceil(filtered.length / PICKER_PAGE_SIZE));
 
         if (page === null || page === undefined) {
@@ -342,8 +535,15 @@
         const itemsHtml = pagedItems.map(({ entry, idx }) => {
             const isActive = idx === currentEntryIndex;
             return `<button class="ra-v7-list-item${isActive ? ' is-active' : ''}" type="button" data-index="${idx}" role="option" ${isActive ? 'aria-selected="true"' : ''}>
-                <span class="ra-v7-item-id">#${escapeHtml(entry.id)}</span>
-                <span class="ra-v7-item-title">${escapeHtml(entry.title || 'Essay Prompt')}</span>
+                <div style="display: flex; flex-direction: column; width: 100%; text-align: left; gap: 2px;">
+                    <div style="display: flex; align-items: baseline; gap: 6px;">
+                        <span class="ra-v7-item-id">#${escapeHtml(entry.id)}</span>
+                        <span class="ra-v7-item-title">${escapeHtml(entry.title || 'Essay Prompt')}</span>
+                    </div>
+                    <div class="essay-v7-item-badges">
+                        ${buildTopicBadgesHtml(entry, { isPreview: false })}
+                    </div>
+                </div>
             </button>`;
         }).join('');
 
@@ -470,10 +670,20 @@
         if (!prompt) {
             el.promptPreview.innerHTML = '<p>Prompt will appear here...</p>';
             el.promptPreview.style.display = 'block';
+            if (el.promptMetaBadges) el.promptMetaBadges.innerHTML = '';
+            if (el.writeMetaBadges) el.writeMetaBadges.innerHTML = '';
             return;
         }
         el.promptPreview.innerHTML = `<div class="essay-prompt-text">${escapeHtml(prompt)}</div>`;
-        el.promptPreview.style.display = isPracticeActive() ? 'none' : 'block';
+        el.promptPreview.style.display = 'block';
+
+        const badgesHtml = buildTopicBadgesHtml(currentEntry, { isPreview: true });
+        if (el.promptMetaBadges) {
+            el.promptMetaBadges.innerHTML = badgesHtml;
+        }
+        if (el.writeMetaBadges) {
+            el.writeMetaBadges.innerHTML = badgesHtml;
+        }
     }
 
     /* ──────────────────────────── PRACTICE FLOW ──────────────────── */
@@ -483,7 +693,7 @@
         el.practiceArea.style.display = 'block';
         el.stepWrite.style.display = 'block';
         el.stepResults.style.display = 'none';
-        if (el.promptPreview) el.promptPreview.style.display = 'none';
+        if (el.promptCard) el.promptCard.style.display = 'none';
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';
@@ -494,10 +704,12 @@
 
         // Navigation buttons are not disabled; navigation is instead gated by a confirmation dialog in event handlers.
 
-
-        // Show prompt
+        // Show prompt & badges
         if (el.promptDisplay) {
             el.promptDisplay.innerHTML = `<div class="essay-prompt-text">${escapeHtml(currentEntry.prompt)}</div>`;
+        }
+        if (el.writeMetaBadges) {
+            el.writeMetaBadges.innerHTML = buildTopicBadgesHtml(currentEntry, { isPreview: true });
         }
 
         // Clear input

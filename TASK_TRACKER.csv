@@ -1694,8 +1694,14 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 710,2026-08-20,Investigate and explain mermaid diagram availability in chat and artifacts,Done,2026-08-20
 711,2026-08-20,Create PTE 453 Cleaned Prompts Topics and Task Types Excel file,Done,2026-08-20
 712,2026-08-20,Deploy Release V1.8.80 with PTE 453 Cleaned Prompts and Topics dataset to production,Done,2026-08-20
-713,2026-08-20,Run 3 local LLMs multi-model consensus and debate audit on PTE essay topics,In Progress,
+713,2026-08-20,Run 3 local LLMs multi-model consensus and debate audit on PTE essay topics,Done,2026-08-20
 714,2026-08-20,Verify production version V1.8.80 via Playwright browser check,Done,2026-08-20
+715,2026-08-20,Redesign CRM header nav tab styling - remove boxy highlight and fix underline indicator,Done,2026-08-20
+716,2026-08-20,Implement Type and Topic filters for PTE Write Essay mode,Done,2026-08-20
+717,2026-08-20,Fix connector clicking + add undo/redo + node resize/shape for mind map,Done,2026-08-20
+718,2026-08-21,Review debug and refactor PTE Write Essay filter system and UI components,Done,2026-08-21
+719,2026-08-21,Review debug and refactor mind map code - fix 7 bugs from code review,Done,2026-08-21
+720,2026-08-21,Deploy Release V1.8.81 with CRM Header Refactor and Write Essay Topic Filters to production,Done,2026-08-21
 
 
 

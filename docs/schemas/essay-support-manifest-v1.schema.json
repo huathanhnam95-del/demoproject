@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bel.test/schemas/essay-support-manifest-v1.json",
+  "title": "EssaySupportManifestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contentVersion", "generatedAt", "questions"],
+  "properties": {
+    "schemaVersion": { "const": "EssaySupportManifestV1" },
+    "contentVersion": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "questions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "sha256", "levels", "status"],
+        "properties": {
+          "url": { "type": "string", "pattern": "^/database/Write Essay/support/" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "levels": { "const": ["a2_b1", "b2", "c1"] },
+          "status": { "const": "PUBLISHED" }
+        }
+      }
+    }
+  }
+}

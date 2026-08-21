@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bel.test/schemas/essay-support-pack-v1.json",
+  "title": "EssaySupportPackV1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "questionId", "prompt", "source", "common", "levels", "audit"],
+  "properties": {
+    "schemaVersion": { "const": "EssaySupportPackV1" },
+    "questionId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "prompt": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["promptSha256"],
+      "properties": { "promptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+    },
+    "common": {
+      "type": "object",
+      "required": ["promptSegments", "requirements", "angles", "promptTraps", "faq"],
+      "properties": {
+        "promptSegments": { "type": "array" },
+        "requirements": { "type": "array" },
+        "angles": { "type": "array" },
+        "promptTraps": { "type": "array" },
+        "faq": { "type": "array" }
+      }
+    },
+    "levels": {
+      "type": "object",
+      "required": ["a2_b1", "b2", "c1"],
+      "properties": {
+        "a2_b1": { "$ref": "#/$defs/level" },
+        "b2": { "$ref": "#/$defs/level" },
+        "c1": { "$ref": "#/$defs/level" }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["PASSED_UNCONTESTED", "PASSED_MAJORITY", "REVISED_WITH_UNANIMOUS_CONSENSUS"] }
+      }
+    }
+  },
+  "$defs": {
+    "level": {
+      "type": "object",
+      "required": ["cefrEvidence", "coreTargets", "languageKit", "plans", "scaffolds"],
+      "properties": {
+        "cefrEvidence": { "type": "string", "minLength": 1 },
+        "coreTargets": { "type": "array", "maxItems": 6 },
+        "languageKit": {
+          "type": "object",
+          "required": ["vocabulary", "grammar", "cohesion"],
+          "properties": { "vocabulary": { "type": "array" }, "collocations": { "type": "array" }, "grammar": { "type": "array" }, "cohesion": { "type": "array" } }
+        },
+        "plans": { "type": "array" },
+        "scaffolds": { "type": "object" }
+      }
+    }
+  }
+}

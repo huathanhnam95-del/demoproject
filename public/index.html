@@ -4591,6 +4591,30 @@
             <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
               <p>Prompt will appear here...</p>
             </div>
+            <div class="essay-practice-choice" id="essay-practice-choice" aria-label="Choose essay practice">
+              <span class="essay-practice-choice-label">Practice mode</span>
+              <label class="essay-practice-choice-option">
+                <input type="radio" name="essay-practice-kind" value="exam" checked>
+                <span>Exam Practice <small>20-minute countdown</small></span>
+              </label>
+              <label class="essay-practice-choice-option">
+                <input type="radio" name="essay-practice-kind" value="guided">
+                <span>Guided Practice <small>support + count-up timer</small></span>
+              </label>
+              <div id="essay-guided-preferences" class="essay-guided-preferences" hidden>
+                <label for="essay-guided-level">Support level</label>
+                <select id="essay-guided-level" aria-label="Guided support level">
+                  <option value="a2_b1">A2–B1</option>
+                  <option value="b2" selected>B2</option>
+                  <option value="c1">C1</option>
+                </select>
+                <label for="essay-guided-language">Support language</label>
+                <select id="essay-guided-language" aria-label="Guided support language">
+                  <option value="en" selected>English</option>
+                  <option value="vi">Tiếng Việt</option>
+                </select>
+              </div>
+            </div>
             <div class="controls">
               <button id="start-essay-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
             </div>
@@ -4598,8 +4622,33 @@
 
           <!-- Practice Area (hidden until Start clicked) -->
           <div id="essay-practice-area" style="display: none;">
-            <!-- Step 1: Write -->
-            <div id="essay-step-write" class="essay-compose-card" style="display: none;">
+            <div id="essay-guided-workspace" class="essay-guided-workspace">
+              <aside id="essay-guided-rail" class="essay-guided-rail" hidden aria-label="Guided essay support">
+                <div class="essay-guided-rail-header">
+                  <div>
+                    <span class="essay-kicker">Guided support</span>
+                    <strong id="essay-guided-rail-title">Understand the prompt</strong>
+                  </div>
+                  <button id="essay-guided-language-toggle" class="essay-guided-language-toggle" type="button" aria-label="Switch support language">VI</button>
+                  <button id="essay-guided-mobile-toggle" class="essay-guided-mobile-toggle" type="button" aria-expanded="true">Collapse</button>
+                </div>
+                <div id="essay-guided-unavailable" class="essay-guided-unavailable" hidden role="status" aria-live="polite"></div>
+                <nav id="essay-guided-nav" class="essay-guided-nav" aria-label="Support steps">
+                  <button type="button" data-guided-section="understand" class="is-active">1. Understand the prompt</button>
+                  <button type="button" data-guided-section="direction">2. Choose a direction</button>
+                  <button type="button" data-guided-section="language">3. Language kit</button>
+                  <button type="button" data-guided-section="plan">4. Make a plan</button>
+                  <button type="button" data-guided-section="further">5. Further Support</button>
+                  <button type="button" data-guided-section="faq">6. FAQ</button>
+                </nav>
+                <div id="essay-guided-content" class="essay-guided-content"></div>
+                <div id="essay-guided-checklist" class="essay-guided-checklist" hidden></div>
+                <div id="essay-guided-recycle" class="essay-guided-recycle" hidden></div>
+                <button id="essay-request-guided-btn" class="essay-request-guided-btn" type="button" hidden>Need guided help?</button>
+              </aside>
+
+              <!-- Step 1: Write -->
+              <div id="essay-step-write" class="essay-compose-card" style="display: none;">
               <div class="essay-card-header">
                 <span class="essay-kicker">Your essay</span>
                 <div id="essay-write-meta-badges" class="essay-prompt-meta-badges"></div>
@@ -4615,6 +4664,7 @@
                   <span id="essay-word-count" class="essay-word-count essay-wc-bad">0 words</span>
                   <button id="essay-submit-btn" class="modern-btn modern-btn--check" type="button">Submit Essay</button>
                 </div>
+              </div>
               </div>
             </div>
 
@@ -6072,7 +6122,8 @@
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
-  <script src="/write-essay-mode.js?v=20260812_dual_ai_scoring"></script>
+  <script src="/js/write-essay-support.js?v=20260821_guided_support"></script>
+  <script src="/write-essay-mode.js?v=20260821_guided_support"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

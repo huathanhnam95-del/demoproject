@@ -41,6 +41,16 @@
     // Timer state
     let essayTimerId = null;
     let essaySecondsLeft = MAX_ESSAY_TIME_SECONDS;
+    let essayElapsedSeconds = 0;
+    let practiceKind = 'exam';
+    let guidedLevel = 'b2';
+    let guidedLanguage = 'en';
+    let guidedPack = null;
+    let guidedSection = 'understand';
+    let guidedHintDepth = 1;
+    let guidedSelectedVariantId = null;
+    let guidedSelectedTargetIds = [];
+    let guidedPackRequestId = 0;
 
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
@@ -129,6 +139,7 @@
 
     function reset() {
         stopTimer();
+        if (window.WriteEssaySupport?.abortPackLoad) window.WriteEssaySupport.abortPackLoad();
         isSubmitting = false;
         isAiScoring = false;
         activeFeedbackRequestId = 0;
@@ -138,11 +149,19 @@
         lastBasicFeedbackSectionsHtml = '';
         lastArchiveAttemptId = null;
         lastArchiveSavePromise = null;
+        essayElapsedSeconds = 0;
+        guidedPack = null;
+        guidedSection = 'understand';
+        guidedHintDepth = 1;
+        guidedSelectedVariantId = null;
+        guidedSelectedTargetIds = [];
+        guidedPackRequestId += 1;
         if (el.practiceArea) el.practiceArea.style.display = 'none';
         if (el.stepWrite) el.stepWrite.style.display = 'none';
         if (el.stepResults) el.stepResults.style.display = 'none';
         if (el.essayInput) { el.essayInput.value = ''; el.essayInput.readOnly = false; }
         if (el.startBtn) el.startBtn.style.display = '';
+        if (el.practiceChoice) el.practiceChoice.style.display = '';
         if (el.promptCard) el.promptCard.style.display = '';
         const toggleBtn = document.getElementById('essay-history-toggle');
         if (toggleBtn) toggleBtn.style.display = '';
@@ -157,6 +176,11 @@
         if (el.localAiScoreBtn) { el.localAiScoreBtn.disabled = false; el.localAiScoreBtn.textContent = 'Queue local AI scoring'; }
         if (el.aiScoreStatus) { el.aiScoreStatus.style.display = 'none'; el.aiScoreStatus.textContent = ''; }
         if (el.localAiScoreStatus) { el.localAiScoreStatus.style.display = 'none'; el.localAiScoreStatus.textContent = ''; }
+        if (el.guidedRail) el.guidedRail.hidden = true;
+        if (el.guidedChecklist) { el.guidedChecklist.hidden = true; el.guidedChecklist.innerHTML = ''; }
+        if (el.guidedRecycle) { el.guidedRecycle.hidden = true; el.guidedRecycle.innerHTML = ''; }
+        if (el.guidedUnavailable) { el.guidedUnavailable.hidden = true; el.guidedUnavailable.innerHTML = ''; }
+        updatePracticeChoiceUI();
         renderPromptPreview();
         updateWordCount();
     }
@@ -182,6 +206,10 @@
         el.promptPreview = document.getElementById('essay-prompt-preview');
         el.promptCard = el.promptPreview ? el.promptPreview.closest('.essay-prompt-card') : null;
         el.promptMetaBadges = document.getElementById('essay-prompt-meta-badges');
+        el.practiceChoice = document.getElementById('essay-practice-choice');
+        el.guidedPreferences = document.getElementById('essay-guided-preferences');
+        el.guidedLevel = document.getElementById('essay-guided-level');
+        el.guidedLanguage = document.getElementById('essay-guided-language');
 
         // Filters
         el.filterToolbar = document.getElementById('essay-filter-toolbar');
@@ -192,6 +220,17 @@
 
         // Practice area
         el.practiceArea = document.getElementById('essay-practice-area');
+        el.guidedWorkspace = document.getElementById('essay-guided-workspace');
+        el.guidedRail = document.getElementById('essay-guided-rail');
+        el.guidedRailTitle = document.getElementById('essay-guided-rail-title');
+        el.guidedLanguageToggle = document.getElementById('essay-guided-language-toggle');
+        el.guidedMobileToggle = document.getElementById('essay-guided-mobile-toggle');
+        el.guidedUnavailable = document.getElementById('essay-guided-unavailable');
+        el.guidedNav = document.getElementById('essay-guided-nav');
+        el.guidedContent = document.getElementById('essay-guided-content');
+        el.guidedChecklist = document.getElementById('essay-guided-checklist');
+        el.guidedRecycle = document.getElementById('essay-guided-recycle');
+        el.requestGuidedBtn = document.getElementById('essay-request-guided-btn');
 
         // Step 1: Write
         el.stepWrite = document.getElementById('essay-step-write');
@@ -287,6 +326,264 @@
         if (el.retryBtn) el.retryBtn.addEventListener('click', retryPractice);
         if (el.aiScoreBtn) el.aiScoreBtn.addEventListener('click', submitToGeminiScoring);
         if (el.localAiScoreBtn) el.localAiScoreBtn.addEventListener('click', submitToLocalAiScoring);
+        document.querySelectorAll('input[name="essay-practice-kind"]').forEach(input => {
+            input.addEventListener('change', () => {
+                practiceKind = input.checked ? input.value : practiceKind;
+                updatePracticeChoiceUI();
+            });
+        });
+        if (el.guidedLevel) el.guidedLevel.addEventListener('change', () => {
+            guidedLevel = el.guidedLevel.value;
+            persistGuidedPreferences();
+        });
+        if (el.guidedLanguage) el.guidedLanguage.addEventListener('change', () => {
+            guidedLanguage = el.guidedLanguage.value;
+            persistGuidedPreferences();
+        });
+        if (el.guidedLanguageToggle) el.guidedLanguageToggle.addEventListener('click', toggleGuidedLanguage);
+        if (el.guidedMobileToggle) el.guidedMobileToggle.addEventListener('click', toggleGuidedMobileRail);
+        if (el.guidedNav) el.guidedNav.addEventListener('click', onGuidedSectionChosen);
+        if (el.guidedContent) el.guidedContent.addEventListener('click', onGuidedContentAction);
+        if (el.guidedChecklist) el.guidedChecklist.addEventListener('change', updateGuidedChecklistState);
+        if (el.requestGuidedBtn) el.requestGuidedBtn.addEventListener('click', requestGuidedHelpMidAttempt);
+        restoreGuidedPreferences();
+    }
+
+    function restoreGuidedPreferences() {
+        const prefs = window.WriteEssaySupport?.readPreferences?.() || {};
+        const profile = window.currentUserProfile || null;
+        guidedLevel = window.WriteEssaySupport?.resolveSupportLevel?.({
+            profile,
+            onboardingLevel: prefs.onboardingLevel || profile?.englishLevel,
+            manualOverride: prefs.level,
+        }) || prefs.level || 'b2';
+        guidedLanguage = prefs.language === 'vi' ? 'vi' : 'en';
+        if (el.guidedLevel) el.guidedLevel.value = guidedLevel;
+        if (el.guidedLanguage) el.guidedLanguage.value = guidedLanguage;
+        updatePracticeChoiceUI();
+    }
+
+    function persistGuidedPreferences() {
+        window.WriteEssaySupport?.writePreferences?.({ level: guidedLevel, language: guidedLanguage });
+    }
+
+    function updatePracticeChoiceUI() {
+        const guided = practiceKind === 'guided';
+        if (el.guidedPreferences) el.guidedPreferences.hidden = !guided;
+        if (el.practiceChoice) el.practiceChoice.dataset.mode = practiceKind;
+        const selected = document.querySelector(`input[name="essay-practice-kind"][value="${practiceKind}"]`);
+        if (selected) selected.checked = true;
+    }
+
+    function getGuidedLevelData() {
+        return guidedPack?.levels?.[guidedLevel] || null;
+    }
+
+    function bilingual(item, enKey = 'en', viKey = 'vi') {
+        if (!item) return '';
+        return String(item[guidedLanguage === 'vi' ? viKey : enKey] || item[enKey] || item[viKey] || '').trim();
+    }
+
+    function guidedText(en, vi) {
+        return guidedLanguage === 'vi' ? (vi || en) : (en || vi);
+    }
+
+    function toggleGuidedLanguage() {
+        guidedLanguage = guidedLanguage === 'en' ? 'vi' : 'en';
+        if (el.guidedLanguage) el.guidedLanguage.value = guidedLanguage;
+        persistGuidedPreferences();
+        renderGuidedSupport();
+    }
+
+    function toggleGuidedMobileRail() {
+        if (!el.guidedRail || !el.guidedMobileToggle) return;
+        const collapsed = el.guidedRail.classList.toggle('is-collapsed');
+        el.guidedMobileToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        el.guidedMobileToggle.textContent = collapsed ? guidedText('Expand', 'Mở rộng') : guidedText('Collapse', 'Thu gọn');
+    }
+
+    function onGuidedSectionChosen(event) {
+        const button = event.target.closest('[data-guided-section]');
+        if (!button || !guidedPack) return;
+        guidedSection = button.dataset.guidedSection || 'understand';
+        renderGuidedSupport();
+    }
+
+    function onGuidedContentAction(event) {
+        const target = event.target.closest('[data-guided-action]');
+        if (!target) return;
+        const action = target.dataset.guidedAction;
+        if (action === 'retry-pack') {
+            loadGuidedPack({ force: true });
+        } else if (action === 'select-variant') {
+            guidedSelectedVariantId = target.dataset.variantId || null;
+            renderGuidedSupport();
+        } else if (action === 'reveal-hint') {
+            guidedHintDepth = Math.max(guidedHintDepth, Number(target.dataset.depth) || 1);
+            renderGuidedSupport();
+        } else if (action === 'target') {
+            const id = target.dataset.targetId;
+            if (id && !guidedSelectedTargetIds.includes(id) && guidedSelectedTargetIds.length < 6) guidedSelectedTargetIds.push(id);
+            target.classList.toggle('is-selected', guidedSelectedTargetIds.includes(id));
+        } else if (action === 'tutor') {
+            const handoff = guidedPack?.common?.tutorHandoff;
+            if (handoff) {
+                const context = bilingual(handoff, 'contextEn', 'contextVi')
+                    .replace('{questionId}', String(currentEntry?.id || ''));
+                postTeacherAdviceToChat(`${context}\n\nPrompt: ${currentEntry?.prompt || ''}\nSelected direction: ${guidedSelectedVariantId || 'not selected'}\nSelected target IDs: ${guidedSelectedTargetIds.join(', ') || 'none'}`);
+            }
+        }
+    }
+
+    function renderGuidedUnavailable(message) {
+        if (!el.guidedUnavailable) return;
+        el.guidedUnavailable.hidden = false;
+        el.guidedUnavailable.innerHTML = `<p>${escapeHtml(message || guidedText('Guided support is temporarily unavailable.', 'Hỗ trợ Guided hiện tạm thời không khả dụng.'))}</p><button type="button" data-guided-action="retry-pack">${guidedText('Retry', 'Thử lại')}</button>`;
+        if (el.guidedContent) el.guidedContent.innerHTML = '';
+    }
+
+    async function loadGuidedPack({ force = false } = {}) {
+        if (practiceKind !== 'guided' || !currentEntry || !window.WriteEssaySupport?.loadPack) return null;
+        const requestId = ++guidedPackRequestId;
+        guidedPack = null;
+        if (el.guidedUnavailable) { el.guidedUnavailable.hidden = true; el.guidedUnavailable.innerHTML = ''; }
+        renderGuidedSupport();
+        try {
+            const pack = await window.WriteEssaySupport.loadPack(currentEntry.id, { force });
+            if (requestId !== guidedPackRequestId || !currentEntry) return null;
+            guidedPack = pack;
+            guidedSelectedVariantId = getGuidedLevelData()?.plans?.[0]?.variantId || null;
+            guidedSelectedTargetIds = [];
+            const levelData = getGuidedLevelData();
+            guidedSelectedTargetIds = (levelData?.coreTargets || []).slice(0, 2).map(target => String(target.id));
+            renderGuidedSupport();
+            return pack;
+        } catch (error) {
+            if (error?.name === 'AbortError') return null;
+            if (requestId !== guidedPackRequestId) return null;
+            renderGuidedUnavailable(error?.message);
+            return null;
+        }
+    }
+
+    function renderGuidedSupport() {
+        if (!el.guidedRail) return;
+        el.guidedRail.hidden = practiceKind !== 'guided';
+        if (practiceKind !== 'guided') return;
+        if (el.guidedRailTitle) el.guidedRailTitle.textContent = guidedText('Guided support', 'Hỗ trợ Guided');
+        if (el.guidedLanguageToggle) el.guidedLanguageToggle.textContent = guidedLanguage === 'en' ? 'VI' : 'EN';
+        el.guidedNav?.querySelectorAll('[data-guided-section]').forEach(button => button.classList.toggle('is-active', button.dataset.guidedSection === guidedSection));
+        if (!guidedPack) {
+            if (el.guidedContent) el.guidedContent.innerHTML = `<p class="essay-guided-loading">${guidedText('Loading prompt-specific support…', 'Đang tải hỗ trợ riêng cho đề…')}</p>`;
+            return;
+        }
+        const levelData = getGuidedLevelData();
+        if (!levelData) { renderGuidedUnavailable(guidedText('This support level is unavailable.', 'Mức hỗ trợ này không khả dụng.')); return; }
+        const section = guidedSection;
+        let html = '';
+        if (section === 'understand') html = renderGuidedUnderstand();
+        if (section === 'direction') html = renderGuidedDirection(levelData);
+        if (section === 'language') html = renderGuidedLanguage(levelData);
+        if (section === 'plan') html = renderGuidedPlan(levelData);
+        if (section === 'further') html = renderGuidedFurther(levelData);
+        if (section === 'faq') html = renderGuidedFaq();
+        if (el.guidedContent) el.guidedContent.innerHTML = html;
+        renderGuidedChecklist();
+        renderGuidedRecycle(levelData);
+    }
+
+    function renderGuidedUnderstand() {
+        const common = guidedPack.common || {};
+        const segments = (common.promptSegments || []).map(segment => `<li><strong>${escapeHtml(segment.role || guidedText('Prompt part', 'Phần đề'))}:</strong> ${escapeHtml(segment.text)}</li>`).join('');
+        const reqs = (common.requirements || []).map(item => `<li><span class="essay-guided-check">✓</span>${escapeHtml(bilingual(item))}</li>`).join('');
+        const traps = (common.promptTraps || []).map(item => `<li>${escapeHtml(bilingual(item))}</li>`).join('');
+        const angles = (common.angles || []).slice(0, 3).map(item => `<li>${escapeHtml(bilingual(item))}</li>`).join('');
+        return `<section class="essay-guided-section"><h3>${guidedText('Break down the prompt', 'Phân tích đề')}</h3><p class="essay-guided-prompt">${escapeHtml(guidedPack.prompt)}</p><h4>${guidedText('Prompt parts', 'Các phần của đề')}</h4><ul>${segments}</ul><h4>${guidedText('You must answer', 'Bạn phải trả lời')}</h4><ul>${reqs}</ul><h4>${guidedText('Prompt traps', 'Bẫy của đề')}</h4><ul>${traps}</ul><h4>${guidedText('Possible angles', 'Các hướng triển khai')}</h4><ul>${angles}</ul></section>`;
+    }
+
+    function renderGuidedDirection(levelData) {
+        const plans = levelData.plans || [];
+        const items = plans.map(plan => `<button type="button" class="essay-guided-choice${guidedSelectedVariantId === plan.variantId ? ' is-selected' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}"><strong>${escapeHtml(plan.label || plan.variantId)}</strong><span>${escapeHtml(plan.stance || '')}</span><small>${escapeHtml(plan.point1 || '')}</small><small>${escapeHtml(plan.point2 || '')}</small></button>`).join('');
+        return `<section class="essay-guided-section"><h3>${guidedText('Choose a direction', 'Chọn hướng triển khai')}</h3><p>${guidedText('Pick one approved sample stance and keep it consistent.', 'Chọn một lập trường từ bài mẫu được duyệt và giữ nhất quán.')}</p><div class="essay-guided-choice-list">${items}</div></section>`;
+    }
+
+    function renderGuidedLanguage(levelData) {
+        const kit = levelData.languageKit || {};
+        const vocab = (kit.vocabulary || []).map(item => `<button type="button" class="essay-guided-target" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" aria-pressed="${guidedSelectedTargetIds.includes(item.term) ? 'true' : 'false'}"><strong>${escapeHtml(item.term)}</strong><span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span></button>`).join('');
+        const collocations = (kit.collocations || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.term)}</strong><span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span></div>`).join('');
+        const grammar = (kit.grammar || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.en || '')}</strong><span>${escapeHtml(bilingual(item))}</span></div>`).join('');
+        const cohesion = (kit.cohesion || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.term || '')}</strong><span>${escapeHtml(bilingual(item))}</span></div>`).join('');
+        return `<section class="essay-guided-section"><h3>${guidedText('Language kit', 'Bộ ngôn ngữ')}</h3><p>${guidedText('Choose up to six targets. Terms stay in English; explanations can switch language.', 'Chọn tối đa sáu mục tiêu. Từ vựng giữ bằng tiếng Anh; phần giải thích có thể đổi ngôn ngữ.')}</p><h4>${guidedText('Core vocabulary', 'Từ vựng cốt lõi')}</h4><div class="essay-guided-target-grid">${vocab}</div><h4>${guidedText('Official collocations', 'Cụm từ chính thức')}</h4>${collocations}<h4>${guidedText('Grammar', 'Ngữ pháp')}</h4>${grammar}<h4>${guidedText('Cohesion', 'Liên kết')}</h4>${cohesion}</section>`;
+    }
+
+    function renderGuidedPlan(levelData) {
+        const plan = (levelData.plans || []).find(item => item.variantId === guidedSelectedVariantId) || levelData.plans?.[0];
+        if (!plan) return `<p>${guidedText('Choose a direction first.', 'Hãy chọn hướng triển khai trước.')}</p>`;
+        return `<section class="essay-guided-section"><h3>${guidedText('Make a plan', 'Lập dàn ý')}</h3><div class="essay-guided-plan"><p><strong>${guidedText('Thesis frame', 'Khung luận đề')}:</strong> ${escapeHtml(plan.thesisFrame)}</p><p><strong>${guidedText('Body 1', 'Thân bài 1')}:</strong> ${escapeHtml(plan.point1)}</p><p><strong>${guidedText('Body 2', 'Thân bài 2')}:</strong> ${escapeHtml(plan.point2)}</p><p class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}</p></div></section>`;
+    }
+
+    function renderGuidedFurther(levelData) {
+        const variantId = guidedSelectedVariantId || levelData.plans?.[0]?.variantId || 'default';
+        const sentences = levelData.scaffolds?.[variantId] || [];
+        const html = sentences.map(sentence => {
+            const model = guidedHintDepth >= 3 && sentence.modelSentence ? `<div class="essay-guided-model"><strong>${guidedText('Optional model sentence', 'Câu mẫu tùy chọn')}:</strong> ${escapeHtml(sentence.modelSentence)}</div>` : '';
+            const frame = guidedHintDepth >= 2 ? `<div class="essay-guided-frame"><strong>${guidedText('Fillable frame', 'Khung điền')}:</strong> ${escapeHtml(sentence.frame)}</div>` : '';
+            const reveal = guidedHintDepth < 3 ? `<button type="button" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show fillable frame' : 'Show optional model sentence', guidedHintDepth === 1 ? 'Hiện khung điền' : 'Hiện câu mẫu tùy chọn')}</button>` : '';
+            return `<article class="essay-guided-sentence"><div class="essay-guided-sentence-meta">${escapeHtml(sentence.paragraph)} · ${escapeHtml(sentence.purpose)}</div><p>${guidedText('Purpose:', 'Mục đích:')} ${escapeHtml(sentence.purpose)}</p><p>${guidedText('Idea cue:', 'Gợi ý ý:')} ${escapeHtml(sentence.ideaCue)}</p>${frame}${model}<div class="essay-guided-sentence-actions">${reveal}<button type="button" data-guided-action="target" data-target-id="${escapeHtml(sentence.sentenceId)}">${guidedText('Use as a target', 'Chọn làm mục tiêu')}</button></div></article>`;
+        }).join('');
+        return `<section class="essay-guided-section"><h3>${guidedText('Further Support', 'Hỗ trợ thêm')}</h3><p>${guidedText('Reveal one layer at a time: purpose → idea cue → fillable frame → optional model sentence. Copy frames if useful; nothing is inserted into your essay automatically.', 'Mở từng lớp: mục đích → gợi ý ý → khung điền → câu mẫu tùy chọn. Bạn có thể sao chép khung; hệ thống không tự chèn câu vào bài.')}</p>${html || `<p>${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}</section>`;
+    }
+
+    function renderGuidedFaq() {
+        const faq = guidedPack.common?.faq || [];
+        return `<section class="essay-guided-section"><h3>FAQ</h3>${faq.map(item => `<details><summary>${escapeHtml(guidedText(item.questionEn, item.questionVi))}</summary><p>${escapeHtml(guidedText(item.answerEn, item.answerVi))}</p></details>`).join('')}<button type="button" class="essay-request-guided-btn" data-guided-action="tutor">${guidedText('Ask AI Tutor about this prompt', 'Hỏi AI Tutor về đề này')}</button></section>`;
+    }
+
+    function renderGuidedChecklist() {
+        if (!el.guidedChecklist) return;
+        const requirements = guidedPack.common?.requirements || [];
+        const checks = [...requirements.map(item => bilingual(item)), guidedText('My stance is consistent.', 'Quan điểm của tôi nhất quán.'), guidedText('Each body paragraph has a purpose and example.', 'Mỗi đoạn thân bài có mục đích và ví dụ.'), guidedText('I used my selected language targets accurately.', 'Tôi đã dùng đúng các mục tiêu ngôn ngữ đã chọn.')];
+        el.guidedChecklist.hidden = false;
+        el.guidedChecklist.innerHTML = `<h4>${guidedText('Before you submit', 'Trước khi nộp bài')}</h4>${checks.map((label, index) => `<label><input type="checkbox" data-guided-check="${index}"> <span>${escapeHtml(label)}</span></label>`).join('')}<small>${guidedText('Tick every item to confirm your plan.', 'Đánh dấu mọi mục để xác nhận dàn ý.')}</small>`;
+    }
+
+    function updateGuidedChecklistState() {
+        if (!el.guidedChecklist) return;
+        el.guidedChecklist.classList.toggle('is-complete', isGuidedChecklistComplete());
+    }
+
+    function isGuidedChecklistComplete() {
+        if (practiceKind !== 'guided' || !el.guidedChecklist) return true;
+        const checks = [...el.guidedChecklist.querySelectorAll('[data-guided-check]')];
+        return checks.length > 0 && checks.every(check => check.checked);
+    }
+
+    function renderGuidedRecycle(levelData) {
+        if (!el.guidedRecycle || !window.WriteEssaySupport?.getRecycledTargetIds) return;
+        const currentIds = (levelData?.coreTargets || []).map(item => String(item.id));
+        const ids = window.WriteEssaySupport.getRecycledTargetIds({ exclude: currentIds, limit: 2 });
+        el.guidedRecycle.hidden = ids.length === 0;
+        el.guidedRecycle.innerHTML = ids.length ? `<strong>${guidedText('Recycle from your last Guided lesson', 'Ôn lại từ bài Guided trước')}</strong><span>${ids.map(escapeHtml).join(' · ')}</span>` : '';
+    }
+
+    async function requestGuidedHelpMidAttempt() {
+        if (practiceKind === 'guided' || !isPracticeActive()) return;
+        const accepted = await window.showCustomConfirm?.(
+            'Switch to Guided Practice?',
+            'This attempt will be permanently marked Guided and will keep the time already used.',
+            true
+        );
+        if (!accepted) return;
+        const elapsed = Math.max(0, MAX_ESSAY_TIME_SECONDS - essaySecondsLeft);
+        practiceKind = 'guided';
+        essayElapsedSeconds = elapsed;
+        persistGuidedPreferences();
+        updatePracticeChoiceUI();
+        if (el.guidedRail) el.guidedRail.hidden = false;
+        if (el.guidedNav) el.guidedNav.hidden = false;
+        if (el.requestGuidedBtn) el.requestGuidedBtn.hidden = true;
+        await loadGuidedPack();
+        startTimer();
     }
 
     /* ──────────────────────────── DATA LOADING ───────────────────── */
@@ -688,8 +985,14 @@
 
     /* ──────────────────────────── PRACTICE FLOW ──────────────────── */
 
-    function startPractice() {
+    async function startPractice() {
         if (!currentEntry) { alert('Please select a question first'); return; }
+        practiceKind = document.querySelector('input[name="essay-practice-kind"]:checked')?.value || practiceKind || 'exam';
+        if (practiceKind === 'guided') {
+            guidedLevel = el.guidedLevel?.value || guidedLevel || 'b2';
+            guidedLanguage = el.guidedLanguage?.value === 'vi' ? 'vi' : 'en';
+            persistGuidedPreferences();
+        }
         el.practiceArea.style.display = 'block';
         el.stepWrite.style.display = 'block';
         el.stepResults.style.display = 'none';
@@ -697,6 +1000,7 @@
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';
+        if (el.practiceChoice) el.practiceChoice.style.display = 'none';
         const toggleBtn = document.getElementById('essay-history-toggle');
         const historyContainer = document.getElementById('essay-history-container');
         if (toggleBtn) toggleBtn.style.display = 'none';
@@ -717,9 +1021,24 @@
         updateWordCount();
 
         // Start timer
+        essayElapsedSeconds = 0;
         essaySecondsLeft = MAX_ESSAY_TIME_SECONDS;
         updateTimerDisplay();
         startTimer();
+
+        if (practiceKind === 'guided') {
+            if (el.guidedRail) el.guidedRail.hidden = false;
+            if (el.guidedNav) el.guidedNav.hidden = false;
+            if (el.requestGuidedBtn) el.requestGuidedBtn.hidden = true;
+            guidedSection = 'understand';
+            renderGuidedSupport();
+            await loadGuidedPack();
+        } else {
+            if (el.guidedRail) el.guidedRail.hidden = false;
+            if (el.guidedNav) el.guidedNav.hidden = true;
+            if (el.requestGuidedBtn) el.requestGuidedBtn.hidden = false;
+            if (el.guidedContent) el.guidedContent.innerHTML = `<p>${guidedText('Exam Practice keeps the 20-minute countdown. Ask for Guided help only if you want this attempt permanently marked assisted.', 'Exam Practice giữ đồng hồ đếm ngược 20 phút. Chỉ yêu cầu Guided nếu bạn muốn bài này được đánh dấu là có hỗ trợ.')}</p>`;
+        }
 
         // Focus textarea
         if (el.essayInput) el.essayInput.focus();
@@ -758,9 +1077,13 @@
     function startTimer() {
         stopTimer();
         essayTimerId = setInterval(() => {
-            essaySecondsLeft--;
+            if (practiceKind === 'guided') {
+                essayElapsedSeconds++;
+            } else {
+                essaySecondsLeft--;
+            }
             updateTimerDisplay();
-            if (essaySecondsLeft <= 0) {
+            if (practiceKind !== 'guided' && essaySecondsLeft <= 0) {
                 stopTimer();
                 submitEssay(); // Auto-submit when time runs out
             }
@@ -773,10 +1096,11 @@
 
     function updateTimerDisplay() {
         if (!el.timerDisplay) return;
-        const m = Math.floor(Math.max(0, essaySecondsLeft) / 60);
-        const s = Math.max(0, essaySecondsLeft) % 60;
-        el.timerDisplay.textContent = `${m}:${String(s).padStart(2, '0')}`;
-        if (essaySecondsLeft <= 120) {
+        const seconds = practiceKind === 'guided' ? essayElapsedSeconds : essaySecondsLeft;
+        const m = Math.floor(Math.max(0, seconds) / 60);
+        const s = Math.max(0, seconds) % 60;
+        el.timerDisplay.textContent = `${practiceKind === 'guided' ? 'Guided · ' : ''}${m}:${String(s).padStart(2, '0')}`;
+        if (practiceKind !== 'guided' && essaySecondsLeft <= 120) {
             el.timerDisplay.classList.add('essay-timer-warning');
         } else {
             el.timerDisplay.classList.remove('essay-timer-warning');
@@ -840,6 +1164,11 @@
             startTimer(); // Resume timer
             return;
         }
+        if (!isGuidedChecklistComplete()) {
+            alert(guidedText('Please complete the pre-submission checklist first.', 'Vui lòng hoàn thành bảng kiểm trước khi nộp bài.'));
+            startTimer();
+            return;
+        }
 
         isSubmitting = true;
         const requestId = ++activeFeedbackRequestId;
@@ -886,13 +1215,24 @@
         el.stepResults.style.display = 'block';
         renderScoreLine(formResult);
         displayFeedbackOnly({ feedbackHtml });
+        const guidanceSnapshot = buildGuidanceSnapshot();
         rememberArchiveSave(window.PTEAttemptArchive?.saveTextAttempt?.('essay', currentEntry, text, {
             wordCount: lastSubmittedEssayWordCount,
             form: formResult,
+            guidance: guidanceSnapshot,
             languageTool: langTool?.ok ? {
                 matchCount: Array.isArray(langTool.data?.matches) ? langTool.data.matches.length : 0
             } : { unavailable: true }
         }, { scoringSource: 'client-basic' }));
+
+        if (practiceKind === 'guided' && window.WriteEssaySupport?.recordGuidedUsage) {
+            window.WriteEssaySupport.recordGuidedUsage({
+                questionId: currentEntry?.id,
+                targetIds: guidedSelectedTargetIds,
+                level: guidedLevel,
+                language: guidedLanguage,
+            });
+        }
 
         // Restore UI state
         if (el.submitBtn) {
@@ -903,6 +1243,30 @@
         isSubmitting = false;
 
         updateAiScoreButtonState();
+    }
+
+    function buildGuidanceSnapshot() {
+        if (practiceKind !== 'guided') return { practiceKind: 'exam' };
+        const levelData = getGuidedLevelData();
+        const sections = {};
+        el.guidedContent?.querySelectorAll?.('.essay-guided-section').forEach(section => {
+            const heading = section.querySelector('h3')?.textContent?.trim();
+            if (heading) sections[heading] = (section.textContent || '').split(/\s+/).filter(Boolean).length;
+        });
+        return {
+            practiceKind: 'guided',
+            level: guidedLevel,
+            language: guidedLanguage,
+            maximumRevealedHintDepth: Math.min(3, Math.max(1, guidedHintDepth)),
+            sectionCounts: sections,
+            recycledTargetIds: window.WriteEssaySupport?.getRecycledTargetIds?.({ limit: 2 }) || [],
+            selectedTargetIds: [...new Set(guidedSelectedTargetIds)].slice(0, 6),
+            supportSchemaVersion: guidedPack?.schemaVersion || 'EssaySupportPackV1',
+            supportContentVersion: 'v1',
+            assisted: true,
+            elapsedSeconds: practiceKind === 'guided' ? essayElapsedSeconds : Math.max(0, MAX_ESSAY_TIME_SECONDS - essaySecondsLeft),
+            levelCoreTargetCount: Math.min(6, levelData?.coreTargets?.length || 0),
+        };
     }
 
     function displayFeedbackOnly({ feedbackHtml }) {

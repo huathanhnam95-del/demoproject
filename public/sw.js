@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v22';
+const CACHE_VERSION = 'bel-offline-v23-guided-essay';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -10,7 +10,8 @@ const SHELL_URLS = [
   '/offline.html',
   '/style.css?v=20260508_practice_router_fix',
   '/script.js?v=20260802_browser_cache_fix',
-  '/write-essay-mode.js?v=20260509_write_essay_feedback_ai_scoring',
+  '/js/write-essay-support.js?v=20260821_guided_support',
+  '/write-essay-mode.js?v=20260821_guided_support',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',
@@ -52,12 +53,49 @@ function isFreshAssetRequest(requestUrl) {
   return requestUrl.searchParams.has('v') || pathname.endsWith('.js') || pathname.endsWith('.css');
 }
 
+function isEssaySupportRequest(requestUrl) {
+  return (requestUrl.pathname || '').startsWith('/database/Write Essay/support/v1/');
+}
+
+function supportManifestStrategy(request) {
+  return caches.open(RUNTIME_CACHE).then(async (cache) => {
+    try {
+      const response = await fetch(request);
+      if (response && response.ok) await cache.put(request, response.clone());
+      return response;
+    } catch (_) {
+      const cached = await cache.match(request);
+      return cached || new Response('Guided support unavailable', { status: 503, statusText: 'Offline' });
+    }
+  });
+}
+
+function supportPackStrategy(request) {
+  return caches.open(RUNTIME_CACHE).then(async (cache) => {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    try {
+      const response = await fetch(request);
+      if (response && response.ok) await cache.put(request, response.clone());
+      return response;
+    } catch (_) {
+      return new Response('Guided support unavailable', { status: 503, statusText: 'Offline' });
+    }
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   if (!isSameOrigin(request.url)) return;
 
   const requestUrl = new URL(request.url);
+  if (isEssaySupportRequest(requestUrl)) {
+    event.respondWith(requestUrl.pathname.endsWith('/manifest.json')
+      ? supportManifestStrategy(request)
+      : supportPackStrategy(request));
+    return;
+  }
   if (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname.startsWith('/database/')) {
     return;
   }

@@ -65,6 +65,12 @@ function buildTaskDocument(entry, timestamp = new Date(), manifest = null) {
   };
 }
 
+function isAlreadyExistsError(error) {
+  const code = error?.code;
+  const normalized = String(code ?? '').toUpperCase().replace(/-/g, '_');
+  return code === 6 || normalized === '6' || normalized === 'ALREADY_EXISTS';
+}
+
 async function applySeed(manifest, { db, timestamp = new Date() } = {}) {
   if (!db) throw new Error('An ADC-backed Firestore db is required for --apply.');
   let created = 0;
@@ -76,8 +82,13 @@ async function applySeed(manifest, { db, timestamp = new Date() } = {}) {
       existing += 1;
       continue;
     }
-    await ref.create(buildTaskDocument(entry, timestamp, manifest));
-    created += 1;
+    try {
+      await ref.create(buildTaskDocument(entry, timestamp, manifest));
+      created += 1;
+    } catch (error) {
+      if (!isAlreadyExistsError(error)) throw error;
+      existing += 1;
+    }
   }
   return { created, existing, deleted: 0 };
 }
@@ -96,6 +107,13 @@ async function dryRunSeed(manifest, { db } = {}) {
   return { creates, existing, deleted: 0, writes: 0 };
 }
 
+function getFirestoreDb({ db, firebaseAdmin } = {}) {
+  if (db) return db;
+  const admin = firebaseAdmin || require('firebase-admin');
+  if (!admin.apps.length) admin.initializeApp({ credential: admin.credential.applicationDefault() });
+  return admin.firestore();
+}
+
 function summary(manifest, mode) {
   return {
     mode,
@@ -112,16 +130,12 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
   const args = parseArgs(argv);
   const studyVersion = args['study-version'] || 'v2';
   const manifest = readManifest(args.manifest, studyVersion);
+  const db = getFirestoreDb(dependencies);
   if (!args.apply) {
-    const result = { ...summary(manifest, 'dry-run'), ...(await dryRunSeed(manifest, { db: dependencies.db })) };
+    const result = { ...summary(manifest, 'dry-run'), ...(await dryRunSeed(manifest, { db })) };
     console.log(JSON.stringify(result, null, 2));
     return result;
   }
-  const db = dependencies.db || (() => {
-    const admin = require('firebase-admin');
-    if (!admin.apps.length) admin.initializeApp({ credential: admin.credential.applicationDefault() });
-    return admin.firestore();
-  })();
   const result = { ...summary(manifest, 'apply'), ...(await applySeed(manifest, { db })) };
   console.log(JSON.stringify(result, null, 2));
   return result;
@@ -129,4 +143,4 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
 
 if (require.main === module) main().catch((error) => { console.error(error.stack || error.message || error); process.exitCode = 1; });
 
-module.exports = { TASK_COLLECTION, applySeed, buildTaskDocument, dryRunSeed, main, parseArgs, readManifest, summary };
+module.exports = { TASK_COLLECTION, applySeed, buildTaskDocument, dryRunSeed, getFirestoreDb, main, parseArgs, readManifest, summary };

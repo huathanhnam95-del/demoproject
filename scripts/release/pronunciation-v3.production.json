@@ -47,8 +47,8 @@
         "PHONEME_SERVICE_URL": "https://phoneme-recognizer-oq3kyypf4q-uc.a.run.app",
         "PHONEME_SERVICE_AUTH": "google"
       },
-      "rollbackRevision": "praat-api-00040-gr4",
-      "currentRevision": "praat-api-00057-fiv"
+      "rollbackRevision": "praat-api-00064-coh",
+      "currentRevision": "praat-api-00066-ruy"
     }
   },
   "scheduler": {

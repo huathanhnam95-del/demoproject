@@ -11,7 +11,7 @@ const {
   invokeHandlers,
   createReq
 } = require('./route-test-helpers');
-const { automaticOrderFor, automaticVersionOrderFor } = require('../../functions/src/routes/admin/segmentation-study');
+const { automaticOrderFor, automaticVersionOrderFor, requireAutomaticJudgment } = require('../../functions/src/routes/admin/segmentation-study');
 
 const MANIFEST_SHA256 = 'a'.repeat(64);
 const MANIFEST_VERSION = '2.0.0';
@@ -239,6 +239,12 @@ function strictMetadata(overrides = {}) {
     playbackConfirmed: true,
     exposureLog: [{ event: 'client-replacement-must-not-persist' }],
     versionExposureLog: automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001').map((version, index) => ({ version, automaticOrder: automaticOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001'), viewedAt: `2026-08-19T00:00:0${index}.000Z` })),
+    automaticJudgment: {
+      schemaVersion: 'segmentation-study-automatic-judgment-v1',
+      selectedVersions: ['v2', 'v3'],
+      none: false,
+      judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+    },
     captureConstraintsRequested: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     captureEligibility: true,
     ...overrides
@@ -819,12 +825,26 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(completeRes._json.data.sample.variantProvenance.v4.variant, 'v4');
   assert.strictEqual(completeRes._json.data.sample.versions.v4.source, 'partitionVariants.v4');
   assert.strictEqual(completeRes._json.data.sample.variantProvenance.v4.source, 'partitionVariants.v4');
+  assert.deepStrictEqual(completeRes._json.data.sample.automaticSegments, [
+    { index: 0, startTime: 0.13, endTime: 0.33, duration: 0.2 },
+    { index: 1, startTime: 0.33, endTime: 0.63, duration: 0.3 },
+    { index: 2, startTime: 0.63, endTime: 0.93, duration: 0.3 },
+    { index: 3, startTime: 0.93, endTime: 1.23, duration: 0.3 }
+  ], 'Persisted automaticSegments must remain the authoritative V4 partition spans.');
   assert.strictEqual(completeRes._json.data.sample.versions.v2.analysisVersion, 'pronunciation-analysis-v2');
   assert.strictEqual(completeRes._json.data.sample.versions.v4.analysisVersion, 'pronunciation-analysis-v4');
   assert.ok(Array.isArray(completeRes._json.data.sample.exposureLog));
   assert.strictEqual(completeRes._json.data.sample.exposureLog[0].event, 'automatic-boundaries-exposed');
   assert.strictEqual(completeRes._json.data.sample.versionExposureLog.length, 3);
+  assert.deepStrictEqual(completeRes._json.data.sample.automaticJudgment, {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1',
+    selectedVersions: ['v2', 'v3'],
+    none: false,
+    judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  }, 'The versioned automatic judgment must persist on the sample.');
   const completedSampleId = completeRes._json.data.sampleId;
+  const initialReview = Array.from(db.docs.entries()).find(([key]) => key.startsWith(`pronunciationCorpusSamples/${completedSampleId}/manualReviews/`))?.[1];
+  assert.deepStrictEqual(initialReview?.automaticJudgment, completeRes._json.data.sample.automaticJudgment, 'The immutable review must retain the automatic judgment.');
   assert.ok(db.docs.has(`pronunciationCorpusSamples/${completedSampleId}`));
   assert.ok(Array.from(db.docs.keys()).some((key) => key.startsWith(`pronunciationCorpusSamples/${completedSampleId}/manualReviews/`)), 'Initial study completion must persist an immutable manual review.');
   assert.strictEqual(db.docs.get(ordinaryReservationEntries[0][0]).status, 'released', 'Completion must clear the deterministic reservation lock.');
@@ -988,6 +1008,99 @@ function strictMetadata(overrides = {}) {
   await completeHandlers[completeHandlers.length - 1](noPlaybackReq, noPlaybackRes);
   assert.strictEqual(noPlaybackRes._status, 400, 'Reviewer playback confirmation must be explicit.');
 
+  const missingAutomaticJudgmentMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  delete missingAutomaticJudgmentMetadata.automaticJudgment;
+  const missingAutomaticJudgmentReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(missingAutomaticJudgmentMetadata) }
+  });
+  missingAutomaticJudgmentReq.file = { buffer: makeWavBuffer(10) };
+  const missingAutomaticJudgmentRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](missingAutomaticJudgmentReq, missingAutomaticJudgmentRes);
+  assert.strictEqual(missingAutomaticJudgmentRes._status, 400, 'Completion must require an automatic judgment after exposure.');
+  assert.strictEqual(missingAutomaticJudgmentRes._json.error, 'AUTOMATIC_JUDGMENT_REQUIRED');
+
+  const conflictingAutomaticJudgmentMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  conflictingAutomaticJudgmentMetadata.automaticJudgment = {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1', selectedVersions: ['v2'], none: true, judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  };
+  const conflictingAutomaticJudgmentReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(conflictingAutomaticJudgmentMetadata) }
+  });
+  conflictingAutomaticJudgmentReq.file = { buffer: makeWavBuffer(11) };
+  const conflictingAutomaticJudgmentRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](conflictingAutomaticJudgmentReq, conflictingAutomaticJudgmentRes);
+  assert.strictEqual(conflictingAutomaticJudgmentRes._status, 400, 'None must be exclusive with selected automatic versions.');
+  assert.strictEqual(conflictingAutomaticJudgmentRes._json.error, 'AUTOMATIC_JUDGMENT_INVALID');
+
+  const validNoneJudgment = {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1',
+    selectedVersions: [],
+    none: true,
+    judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  };
+  assert.deepStrictEqual(
+    requireAutomaticJudgment(validNoneJudgment, JSON.parse(uncertainCompleteReq.body.metadata).versionExposureLog),
+    validNoneJudgment,
+    'An exclusive None judgment must be accepted after exposure.'
+  );
+  const judgmentAdversarialCases = [
+    {
+      label: 'duplicate versions',
+      judgment: { ...validNoneJudgment, selectedVersions: ['v2', 'v2'], none: false },
+      message: 'Duplicate automatic versions must be rejected.'
+    },
+    {
+      label: 'malformed timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: 'not-a-timestamp' },
+      message: 'Malformed judgment timestamps must be rejected.'
+    },
+    {
+      label: 'non-after timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: '2026-08-19T00:00:10.000Z' },
+      message: 'Judgment timestamps at or before exposure must be rejected.'
+    }
+  ];
+  for (const testCase of judgmentAdversarialCases) {
+    assert.throws(
+      () => requireAutomaticJudgment(testCase.judgment, JSON.parse(uncertainCompleteReq.body.metadata).versionExposureLog),
+      (error) => error?.code === 'AUTOMATIC_JUDGMENT_INVALID',
+      testCase.message
+    );
+  }
+
+  const routeJudgmentAdversarialCases = [
+    {
+      label: 'duplicate versions',
+      judgment: { ...validNoneJudgment, selectedVersions: ['v2', 'v2'], none: false },
+      fillByte: 12
+    },
+    {
+      label: 'malformed timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: 'not-a-timestamp' },
+      fillByte: 13
+    },
+    {
+      label: 'non-after timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: '2026-08-19T00:00:10.000Z' },
+      fillByte: 14
+    }
+  ];
+  for (const testCase of routeJudgmentAdversarialCases) {
+    const routeMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+    routeMetadata.automaticJudgment = testCase.judgment;
+    const routeReq = createReq({
+      params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+      body: { metadata: JSON.stringify(routeMetadata) }
+    });
+    routeReq.file = { buffer: makeWavBuffer(testCase.fillByte) };
+    const routeRes = buildRes();
+    await completeHandlers[completeHandlers.length - 1](routeReq, routeRes);
+    assert.strictEqual(routeRes._status, 400, `${testCase.label} automatic judgment must be rejected by the completion route.`);
+    assert.strictEqual(routeRes._json.error, 'AUTOMATIC_JUDGMENT_INVALID');
+  }
+
   const uncertainAutomaticVersionOrder = automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0002');
   const exposureLogNegativeCases = [
     { label: 'one-entry', log: [{ version: uncertainAutomaticVersionOrder[0], automaticOrder: automaticOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0002'), viewedAt: '2026-08-19T00:00:10.000Z' }] },
@@ -1010,9 +1123,15 @@ function strictMetadata(overrides = {}) {
   const duplicateAudioRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](uncertainCompleteReq, duplicateAudioRes);
   assert.strictEqual(duplicateAudioRes._status, 409, 'A WAV already assigned to another study task must be rejected by SHA-256.');
-  uncertainCompleteReq.file = { buffer: makeWavBuffer(1) };
+  const validNoneMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  validNoneMetadata.automaticJudgment = validNoneJudgment;
+  const validNoneReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(validNoneMetadata) }
+  });
+  validNoneReq.file = { buffer: makeWavBuffer(1) };
   const uncertainCompleteRes = buildRes();
-  await completeHandlers[completeHandlers.length - 1](uncertainCompleteReq, uncertainCompleteRes);
+  await completeHandlers[completeHandlers.length - 1](validNoneReq, uncertainCompleteRes);
   assert.strictEqual(uncertainCompleteRes._status, 200, uncertainCompleteRes._json?.message);
   assert.strictEqual(uncertainCompleteRes._json.data.sample.needsManualReview, true, 'Uncertain study labels must remain excluded from the primary benchmark.');
   assert.strictEqual(uncertainCompleteRes._json.data.sample.reviewReason, 'operator_uncertain');
@@ -1037,6 +1156,9 @@ function strictMetadata(overrides = {}) {
   assert.ok(exportRes._json.data.samples.every((item) => typeof item.promotionEligible === 'boolean'));
   assert.ok(exportRes._json.data.samples.every((item) => item.captureEligibility === true));
   assert.ok(exportRes._json.data.samples.every((item) => item.assistedEvidence?.assisted === true));
+  assert.ok(exportRes._json.data.samples.every((item) => item.automaticJudgment?.schemaVersion === 'segmentation-study-automatic-judgment-v1'), 'Canonical export must include the versioned automatic judgment.');
+  assert.ok(exportRes._json.data.samples.some((item) => Array.isArray(item.automaticJudgment?.selectedVersions) && item.automaticJudgment.none === false), 'Canonical export must preserve the selected automatic tie subset.');
+  assert.ok(exportRes._json.data.samples.some((item) => Array.isArray(item.automaticJudgment?.selectedVersions) && item.automaticJudgment.selectedVersions.length === 0 && item.automaticJudgment.none === true), 'Canonical export must preserve an exclusive None judgment.');
   const certainExport = exportRes._json.data.samples.find((item) => item.sampleId === completedSampleId);
   assert.ok(certainExport, 'Certain completed sample must remain visible in export.');
   assert.strictEqual(certainExport.promotionEligible, true, 'A certain sample is promotion eligible only with complete exposure and capture proof.');

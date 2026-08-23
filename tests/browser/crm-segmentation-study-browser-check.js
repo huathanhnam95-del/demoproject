@@ -43,7 +43,7 @@ function firebaseStub() {
 function waveSurferStub() {
   return `(function(){
     class Regions { constructor(){this.items=[];this.isRegionsPlugin=true;} addRegion(item){this.items.push(item);return item;} clearRegions(){this.items=[];} getRegions(){return this.items;} }
-    class Spectrogram { constructor(options){this.container=options?.container;this.isSpectrogramPlugin=true;} render(){const canvas=document.createElement('canvas');canvas.width=Math.max(640,this.container?.clientWidth||640);canvas.height=128;canvas.style.width='100%';canvas.style.height='128px';this.container?.appendChild(canvas);} }
+    class Spectrogram { constructor(options){this.container=options?.container;this.isSpectrogramPlugin=true;} render(){const render=()=>{const canvas=document.createElement('canvas');canvas.width=Math.max(640,this.container?.clientWidth||640);canvas.height=128;canvas.style.width='100%';canvas.style.height='128px';if(window.__studyUseShadowFixture){const root=this.container.shadowRoot||this.container.attachShadow({mode:'open'});root.replaceChildren(canvas);}else this.container?.appendChild(canvas);};if(window.__studyUseShadowFixture)setTimeout(render,35);else render();} }
     class FakeWave { constructor(options){this.options=options;this.handlers={};this.duration=0;const c=typeof options.container==='string'?document.querySelector(options.container):options.container;this.container=c;c?.addEventListener('click',(event)=>{const rect=c.getBoundingClientRect();const t=rect.width?Math.max(0.02,Math.min(0.98,(event.clientX-rect.left)/rect.width)):0.2;this.handlers.interaction?.forEach((cb)=>cb(t));});}
       static create(options){return new FakeWave(options);} registerPlugin(plugin){if(plugin?.isRegionsPlugin)this.__regionPlugin=plugin;if(plugin?.isSpectrogramPlugin)this.__spectrogramPlugin=plugin;return plugin;} on(event,cb){(this.handlers[event] ||= []).push(cb);return()=>{};}
       emit(event,payload){this.handlers[event]?.forEach((cb)=>cb(payload));}
@@ -70,10 +70,14 @@ function waveSurferStub() {
         canvas.height = 96;
         canvas.style.width = '100%';
         canvas.style.height = '96px';
-        this.container?.appendChild(canvas);
+        if(window.__studyUseShadowFixture){const root=this.container.shadowRoot||this.container.attachShadow({mode:'open'});root.replaceChildren(canvas);}else this.container?.appendChild(canvas);
         this.__spectrogramPlugin?.render?.();
         this.emit('ready');
       }
+      setTime(time){(this.__setTimeCalls ||= []).push(Number(time));this.__currentTime=Number(time);}
+      setPlaybackRate(rate){this.__playbackRate=Number(rate);}
+      play(){this.__playCalls=(this.__playCalls||0)+1;return Promise.resolve();}
+      pause(){this.__pauseCalls=(this.__pauseCalls||0)+1;return Promise.resolve();}
       getDuration(){return this.duration;} destroy(){} }
     window.WaveSurfer={create:(options)=>{const wave=new FakeWave(options);window.__lastStudyWave=wave;return wave;},RegionsPlugin:{create:()=>new Regions()},TimelinePlugin:{create:()=>({})},SpectrogramPlugin:{create:(options)=>new Spectrogram(options)}};
   })();`;
@@ -104,6 +108,21 @@ async function main() {
         });
         return stream;
       };
+    });
+    await context.addInitScript(() => {
+      window.addEventListener('DOMContentLoaded', () => {
+        const audio = document.getElementById('segmentation-study-audio');
+        if (!audio) return;
+        let currentTime = 0;
+        let paused = true;
+        window.__studyNativeCurrentTimeWrites = 0;
+        Object.defineProperty(audio, 'currentTime', { configurable: true, get: () => currentTime, set: (value) => { window.__studyNativeCurrentTimeWrites += 1; currentTime = Number(value) || 0; } });
+        Object.defineProperty(audio, 'duration', { configurable: true, get: () => 1 });
+        Object.defineProperty(audio, 'paused', { configurable: true, get: () => paused });
+        audio.play = async () => { paused = false; window.__studyNativePlayCalls = (window.__studyNativePlayCalls || 0) + 1; audio.dispatchEvent(new Event('play')); };
+        audio.pause = () => { paused = true; window.__studyNativePauseCalls = (window.__studyNativePauseCalls || 0) + 1; audio.dispatchEvent(new Event('pause')); };
+        window.__studyEmitNativeTimeupdate = (time) => { currentTime = Number(time) || 0; audio.dispatchEvent(new Event('timeupdate')); };
+      });
     });
     let completed = false;
     let claimedTaskId = null;
@@ -249,6 +268,7 @@ async function main() {
     await page.waitForFunction(() => /waveform/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
     assert.match(await page.locator('#segmentation-study-status').textContent(), /waveform unavailable/i, 'Waveform failure must provide a retryable unavailable status.');
     assert.ok(await page.locator('#segmentation-study-audio').getAttribute('src'), 'Waveform failure must preserve the native audio object URL.');
+    assert.strictEqual(await page.locator('#segmentation-study-retry-visualization').isVisible(), true, 'Visualization failure must offer a retry control.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), false, 'The empty state must remain visible when visualization is unavailable.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled before waveform readiness.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'WaveSurfer must not use legacy URL loading.');
@@ -263,11 +283,28 @@ async function main() {
     assert.match(await page.locator('#segmentation-study-status').textContent(), /audio and analysis are retained.*re-record/i, 'Visualization failure must retain textual analysis with a retry/re-record status.');
     assert.match(await page.locator('#segmentation-study-panel-v2').textContent(), /pronunciation-analysis-v2/, 'Textual V2 analysis must remain available when visualization fails.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled while waveform visualization is unavailable.');
+    await page.click('#segmentation-study-retry-visualization');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-timeline-empty')?.hidden === true, null, { timeout: 5000 });
+    assert.strictEqual(await page.locator('#segmentation-study-retry-visualization').isHidden(), true, 'A successful visualization retry must hide the retry control.');
+    await page.evaluate(() => { window.__staleStudyWave = window.__lastStudyWave; });
+    await page.click('#segmentation-study-play-pause');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
+    const pauseCallsBeforeRedo = await page.evaluate(() => window.__studyNativePauseCalls || 0);
+    await page.click('#segmentation-study-redo');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.getAttribute('src') === null && document.querySelector('#segmentation-study-audio')?.hidden === true, null, { timeout: 5000 });
+    await page.evaluate(() => setTimeout(() => {
+      window.__staleStudyWave?.emit('ready');
+      window.__staleStudyWave?.emit('error', new Error('stale visualization error'));
+    }, 25));
+    await page.waitForTimeout(75);
+    assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), false, 'Delayed ready/error events from a replaced visualization must not resurrect stale surfaces.');
+    assert.ok(await page.evaluate((before) => (window.__studyNativePauseCalls || 0) > before, pauseCallsBeforeRedo), 'Redo must stop native playback before clearing the recording.');
     await page.click('[data-study-version="manual"]');
     await page.check('#segmentation-study-manual-certainty');
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 1, 'Recording A must allow a certainty choice before replacement.');
     await page.check('#segmentation-study-playback-confirmed');
     assert.strictEqual(await page.locator('#segmentation-study-playback-confirmed').isChecked(), true);
+    await page.evaluate(() => { window.__studyUseShadowFixture = true; });
     await page.click('#segmentation-study-record');
     await page.waitForFunction(() => /Recording/i.test(document.querySelector('#segmentation-study-record-status')?.textContent || ''), null, { timeout: 5000 });
     assert.strictEqual(await page.locator('#segmentation-study-playback-confirmed').isChecked(), false, 'A direct replacement recording must require fresh playback confirmation.');
@@ -276,17 +313,42 @@ async function main() {
     assert.strictEqual(await page.locator('#segmentation-study-audio').isHidden(), true, 'A direct replacement recording must hide the prior native audio player.');
     await page.click('#segmentation-study-stop');
     await page.waitForFunction(() => {
+      const findCanvas = (root) => {
+        if (!root) return null;
+        const direct = root.querySelector?.('canvas');
+        if (direct) return direct;
+        const shadowCanvas = findCanvas(root.shadowRoot);
+        if (shadowCanvas) return shadowCanvas;
+        for (const element of root.querySelectorAll?.('*') || []) {
+          const nested = findCanvas(element.shadowRoot);
+          if (nested) return nested;
+        }
+        return null;
+      };
       const wave = window.__lastStudyWave;
-      const waveformCanvas = document.querySelector('#segmentation-study-waveform canvas');
-      const spectrogramCanvas = document.querySelector('#segmentation-study-spectrogram canvas');
+      const waveformCanvas = findCanvas(document.querySelector('#segmentation-study-waveform'));
+      const spectrogramCanvas = findCanvas(document.querySelector('#segmentation-study-spectrogram'));
       return Number(wave?.getDuration?.()) > 0
         && Number(waveformCanvas?.width) > 0 && Number(waveformCanvas?.height) > 0
-        && Number(spectrogramCanvas?.width) > 0 && Number(spectrogramCanvas?.height) > 0;
+        && Number(spectrogramCanvas?.width) > 0 && Number(spectrogramCanvas?.height) > 0
+        && document.querySelector('#segmentation-study-timeline-empty')?.hidden === true;
     }, null, { timeout: 5000 });
     const waveformDimensions = await page.evaluate(() => {
+      const findCanvas = (root) => {
+        if (!root) return null;
+        const direct = root.querySelector?.('canvas');
+        if (direct) return direct;
+        const shadowCanvas = findCanvas(root.shadowRoot);
+        if (shadowCanvas) return shadowCanvas;
+        for (const element of root.querySelectorAll?.('*') || []) {
+          const nested = findCanvas(element.shadowRoot);
+          if (nested) return nested;
+        }
+        return null;
+      };
       const wave = window.__lastStudyWave;
-      const waveformCanvas = document.querySelector('#segmentation-study-waveform canvas');
-      const spectrogramCanvas = document.querySelector('#segmentation-study-spectrogram canvas');
+      const waveformCanvas = findCanvas(document.querySelector('#segmentation-study-waveform'));
+      const spectrogramCanvas = findCanvas(document.querySelector('#segmentation-study-spectrogram'));
       const waveformRect = waveformCanvas?.getBoundingClientRect();
       const spectrogramRect = spectrogramCanvas?.getBoundingClientRect();
       return {
@@ -300,7 +362,72 @@ async function main() {
     assert.ok(waveformDimensions.spectrogram.width > 0 && waveformDimensions.spectrogram.height > 0 && waveformDimensions.spectrogram.renderedWidth > 0 && waveformDimensions.spectrogram.renderedHeight > 0, 'Ready spectrogram canvas must have positive intrinsic and rendered dimensions.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), true, 'The empty state must be hidden after a real waveform ready event.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'The production path must never call legacy WaveSurfer.load(url).');
-    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 2 && window.__studyWaveSurferBlobLoads.every((blob) => blob instanceof Blob && blob.size > 0)), 'Each recording must pass its original Blob to WaveSurfer.loadBlob.');
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 3 && window.__studyWaveSurferBlobLoads.every((blob) => blob instanceof Blob && blob.size > 0)), 'Each recording and visualization retry must pass an original Blob to WaveSurfer.loadBlob.');
+    await page.click('#segmentation-study-play-pause');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
+    const releaseWaveformSurface = await page.locator('#segmentation-study-waveform').boundingBox();
+    const releaseSpectrogramSurface = await page.locator('#segmentation-study-spectrogram').boundingBox();
+    await page.click('#segmentation-study-set-a');
+    await page.mouse.click(releaseWaveformSurface.x + releaseWaveformSurface.width * 0.25, releaseWaveformSurface.y + 30);
+    await page.click('#segmentation-study-set-b');
+    await page.mouse.click(releaseSpectrogramSurface.x + releaseSpectrogramSurface.width * 0.75, releaseSpectrogramSurface.y + 30);
+    await page.click('#segmentation-study-play-ab');
+    await page.waitForTimeout(75);
+    const timerCallsBeforeRelease = await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0);
+    const pauseCallsBeforeRelease = await page.evaluate(() => window.__studyNativePauseCalls || 0);
+    await page.click('#segmentation-study-release');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'No word claimed', null, { timeout: 5000 });
+    assert.ok(await page.evaluate((before) => (window.__studyNativePauseCalls || 0) > before, pauseCallsBeforeRelease), 'Release must stop native playback before clearing the current task.');
+    assert.strictEqual(await page.locator('#segmentation-study-audio').getAttribute('src'), null, 'Release must clear the native audio source.');
+    const timerCallsAfterRelease = await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0);
+    await page.waitForTimeout(100);
+    assert.strictEqual(await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0), timerCallsAfterRelease, `Release must clear the A-B interval before replacing visualization state (before=${timerCallsBeforeRelease}, after=${timerCallsAfterRelease}).`);
+    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-0001"]');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'photograph', null, { timeout: 5000 });
+    await page.click('#segmentation-study-record');
+    await page.waitForFunction(() => /Recording/i.test(document.querySelector('#segmentation-study-record-status')?.textContent || ''), null, { timeout: 5000 });
+    await page.click('#segmentation-study-stop');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-timeline-empty')?.hidden === true && Number(window.__lastStudyWave?.getDuration?.()) > 0, null, { timeout: 5000 });
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 4), 'A released task must be re-recordable with a fresh Blob visualization.');
+    const nativeTimeWritesBeforePassiveUpdate = await page.evaluate(() => window.__studyNativeCurrentTimeWrites || 0);
+    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.42));
+    await page.waitForFunction(() => /0\.420s/.test(document.querySelector('#segmentation-study-current-time')?.textContent || ''), null, { timeout: 5000 });
+    assert.strictEqual(await page.evaluate(() => window.__studyNativeCurrentTimeWrites || 0), nativeTimeWritesBeforePassiveUpdate, 'Passive native audio timeupdate must not write back to audio.currentTime.');
+    const waveformSurface = await page.locator('#segmentation-study-waveform').boundingBox();
+    const spectrogramSurface = await page.locator('#segmentation-study-spectrogram').boundingBox();
+    assert.ok(waveformSurface && spectrogramSurface, 'Both timeline surfaces must be clickable.');
+    const playCountsBeforeTimelineClick = await page.evaluate(() => ({ native: window.__studyNativePlayCalls || 0, wave: window.__lastStudyWave?.__playCalls || 0 }));
+    await page.mouse.click(waveformSurface.x + waveformSurface.width * 0.35, waveformSurface.y + 30);
+    await page.waitForFunction(() => (window.__lastStudyWave?.__setTimeCalls || []).length > 0, null, { timeout: 5000 });
+    await page.mouse.click(spectrogramSurface.x + spectrogramSurface.width * 0.68, spectrogramSurface.y + 30);
+    await page.waitForFunction((before) => (window.__studyNativePlayCalls || 0) >= before.native + 2 && (window.__lastStudyWave?.__playCalls || 0) === before.wave, playCountsBeforeTimelineClick, { timeout: 5000 });
+    assert.ok((await page.evaluate(() => window.__studyNativePlayCalls || 0)) > playCountsBeforeTimelineClick.native, 'Waveform/spectrogram inspection must immediately play native audio.');
+    const nativeTimeBeforeIndependentWaveClock = await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0);
+    const wavePlayCountAfterTimelineClick = await page.evaluate(() => window.__lastStudyWave?.__playCalls || 0);
+    await page.evaluate(() => window.__lastStudyWave?.emit('timeupdate', 0.91));
+    assert.strictEqual(await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0), nativeTimeBeforeIndependentWaveClock, 'An independently advancing WaveSurfer clock must not feed back into native audio time.');
+    assert.strictEqual(await page.evaluate(() => window.__lastStudyWave?.__playCalls || 0), wavePlayCountAfterTimelineClick, 'WaveSurfer must never start an independent audible playback engine.');
+    assert.match(await page.locator('#segmentation-study-current-time').textContent(), /\d+\.\d+s/, `Timeline inspection must expose the current time (got ${await page.locator('#segmentation-study-current-time').textContent()}).`);
+    await page.click('#segmentation-study-set-a');
+    await page.mouse.click(waveformSurface.x + waveformSurface.width * 0.25, waveformSurface.y + 30);
+    await page.click('#segmentation-study-set-b');
+    await page.mouse.click(spectrogramSurface.x + spectrogramSurface.width * 0.75, spectrogramSurface.y + 30);
+    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isVisible(), true, 'Set A must expose a visible session-local marker.');
+    assert.strictEqual(await page.locator('#segmentation-study-marker-b').isVisible(), true, 'Set B must expose a visible session-local marker.');
+    await page.click('#segmentation-study-play-ab');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
+    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.75));
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === true, null, { timeout: 5000 });
+    assert.ok(Math.abs((await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0)) - 0.75) < 0.01, 'Play A-B must stop at B when looping is off.');
+    await page.click('#segmentation-study-loop-ab');
+    assert.strictEqual(await page.locator('#segmentation-study-loop-ab').getAttribute('aria-pressed'), 'true', 'Loop A-B must be toggleable.');
+    await page.click('#segmentation-study-play-ab');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
+    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.75));
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false && (document.querySelector('#segmentation-study-audio')?.currentTime || 0) < 0.35, null, { timeout: 5000 });
+    assert.ok(Math.abs((await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0)) - 0.25) < 0.02, 'Loop A-B must wrap to A and remain playing when B is reached.');
+    await page.click('#segmentation-study-clear-ab');
+    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isHidden(), true, 'Clear must remove A/B markers.');
     await page.waitForFunction(() => !document.querySelector('#segmentation-study-analyze')?.disabled, null, { timeout: 30000 });
     await page.click('#segmentation-study-analyze');
     await page.waitForFunction(() => /failed/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
@@ -317,8 +444,15 @@ async function main() {
     await page.click('[data-study-version="v3"]');
     await page.click('[data-study-version="v4"]');
     assert.match(await page.locator('#segmentation-study-status').textContent(), /All automatic versions viewed/, 'The UI must clear the exposure prerequisite after the final automatic view.');
+    assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled until an automatic judgment is recorded.');
+    assert.strictEqual(await page.locator('.segmentation-study-judgment-label').textContent(), 'Best automatic version(s) (ties allowed)', 'Automatic judgment must explicitly permit ties.');
+    assert.strictEqual((await page.locator('#segmentation-study-automatic-judgment-none').locator('..').textContent()).trim(), 'None acceptable', 'Automatic judgment must label the exclusive None option clearly.');
+    await page.check('#segmentation-study-automatic-judgment-v2');
+    await page.check('#segmentation-study-automatic-judgment-v3');
+    assert.strictEqual(await page.locator('#segmentation-study-automatic-judgment-none').isChecked(), false, 'A tied automatic subset must remain exclusive of None.');
     assert.ok(await page.locator('#segmentation-study-panel-v2 .segmentation-study-playback button').count() >= 2, 'Whole-word and syllable playback controls should be visible.');
     await page.selectOption('#segmentation-study-playback-speed', '0.75');
+    assert.deepStrictEqual(await page.evaluate(() => ({ native: document.querySelector('#segmentation-study-audio')?.playbackRate, wave: window.__lastStudyWave?.__playbackRate })), { native: 0.75, wave: 0.75 }, 'Playback speed must remain synchronized across native audio and WaveSurfer.');
     for (const tab of ['v2', 'v3', 'v4', 'manual']) await page.click(`[data-study-version="${tab}"]`);
     await page.locator('#segmentation-study-tab-manual').focus();
     await page.keyboard.press('ArrowLeft');
@@ -328,6 +462,7 @@ async function main() {
     const waveform = page.locator('#segmentation-study-waveform');
     const box = await waveform.boundingBox();
     assert.ok(box && box.width > 100, 'Aligned waveform should render for the review.');
+    const nativePlayCountBeforeManualClicks = await page.evaluate(() => window.__studyNativePlayCalls || 0);
     for (const ratio of [0.08, 0.35, 0.68, 0.92]) await page.mouse.click(box.x + box.width * ratio, box.y + 40);
     try {
       await page.waitForFunction(() => /3 of 3 segments/.test(document.querySelector('#segmentation-study-manual-count')?.textContent || ''), null, { timeout: 5000 });
@@ -341,6 +476,12 @@ async function main() {
       })));
       throw error;
     }
+    assert.strictEqual(await page.evaluate(() => window.__studyNativePlayCalls || 0), nativePlayCountBeforeManualClicks, 'Manual review clicks must remain boundary-only unless Set A/B is armed.');
+    const manualCountBeforeArmedMarker = await page.locator('#segmentation-study-manual-count').textContent();
+    await page.click('#segmentation-study-set-a');
+    await page.mouse.click(box.x + box.width * 0.22, box.y + 40);
+    assert.strictEqual(await page.locator('#segmentation-study-manual-count').textContent(), manualCountBeforeArmedMarker, 'An armed Set A click must not create a manual boundary.');
+    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isVisible(), true, 'An armed Set A click must set the A marker.');
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 0, 'Certainty must require an explicit reviewer choice.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled until certainty is chosen.');
     const snappedBoundary = await page.evaluate(() => {
@@ -374,6 +515,10 @@ async function main() {
       throw error;
     }
     await page.mouse.click(box.x + box.width * 0.92, box.y + 40);
+    await page.evaluate(() => { const audio = document.querySelector('#segmentation-study-audio'); if (audio && !audio.paused) audio.pause(); });
+    await page.click('#segmentation-study-play-pause');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
+    const pauseCallsBeforeSaveNext = await page.evaluate(() => window.__studyNativePauseCalls || 0);
     await page.click('#segmentation-study-save');
     try {
       await page.waitForFunction(() => /saved/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
@@ -391,10 +536,15 @@ async function main() {
     assert.ok(submittedMetadata, 'Completion must submit parseable metadata in the multipart request.');
     assert.deepStrictEqual(submittedMetadata.automaticVersionOrder, ['v3', 'v2', 'v4']);
     assert.deepStrictEqual(submittedMetadata.versionExposureLog.map((entry) => entry.version), ['v3', 'v2', 'v4']);
+    assert.deepStrictEqual(submittedMetadata.automaticJudgment.selectedVersions, ['v2', 'v3']);
+    assert.strictEqual(submittedMetadata.automaticJudgment.none, false);
+    assert.strictEqual(submittedMetadata.automaticJudgment.schemaVersion, 'segmentation-study-automatic-judgment-v1');
     assert.strictEqual(new Set(submittedMetadata.versionExposureLog.map((entry) => entry.version)).size, 3, 'Revisited automatic tabs must not duplicate exposure entries.');
     assert.ok(submittedMetadata.versionExposureLog.every((entry) => entry.automaticOrder === 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' && Number.isFinite(Date.parse(entry.viewedAt))));
     assert.ok(requests.some((item) => item.path.endsWith('/tasks/segmentation-study-v2-0001/complete') && item.method === 'POST'));
     await page.click('#segmentation-study-next');
+    const pauseCallsAfterNext = await page.evaluate(() => window.__studyNativePauseCalls || 0);
+    assert.ok(pauseCallsAfterNext > pauseCallsBeforeSaveNext, `Play followed by Next must stop native playback during task reset (before=${pauseCallsBeforeSaveNext}, after=${pauseCallsAfterNext}).`);
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 0, 'The next task must require a new certainty choice.');
     await page.click('[data-study-mode="previous"]');
     await page.waitForSelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-previous-0001"]', { state: 'visible' });
@@ -402,7 +552,7 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'previous' && /^blob:/.test(document.querySelector('#segmentation-study-audio')?.getAttribute('src') || ''), null, { timeout: 30000 });
     await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
     assert.match(await page.locator('#segmentation-study-audio').getAttribute('src') || '', /^blob:/, 'Previously saved samples must retain a native audio object URL.');
-    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 3 && window.__studyWaveSurferBlobLoads[2] instanceof Blob && window.__studyWaveSurferBlobLoads[2].size > 0), 'Previously saved sample audio must reach WaveSurfer.loadBlob as a Blob.');
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 5 && window.__studyWaveSurferBlobLoads[4] instanceof Blob && window.__studyWaveSurferBlobLoads[4].size > 0), 'Previously saved sample audio must reach WaveSurfer.loadBlob as a Blob.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), true, 'Previously saved samples must hide the empty state after waveform and spectrogram readiness.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'Previously saved samples must not use legacy URL loading.');
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);

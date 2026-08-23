@@ -8,9 +8,12 @@
   const ACTIVE_STUDY = VERSION_REGISTRY.v2;
   const CAPTURE_CONSTRAINTS_REQUESTED = Object.freeze({ echoCancellation: false, noiseSuppression: false, autoGainControl: false });
   const REFERENCE_LABEL_PROVENANCE = 'explicit-reviewed-en-US-v1';
+  const AUTOMATIC_JUDGMENT_SCHEMA_VERSION = 'segmentation-study-automatic-judgment-v1';
   const OPERATOR_KEY = 'bel.segmentation-study.operator-name';
   const SESSION_KEY = 'bel.segmentation-study.session-id';
   const CLAIM_HEARTBEAT_MS = 2 * 60 * 1000;
+  const VISUALIZATION_READY_TIMEOUT_MS = 3000;
+  const VISUALIZATION_POLL_MS = 25;
 
   let initialized = false;
   let elements = null;
@@ -55,7 +58,16 @@
     manualReviewSaved: false,
     analysisFailed: false,
     visualizationReady: false,
-    playTimer: null
+    playTimer: null,
+    currentTime: 0,
+    pointA: null,
+    pointB: null,
+    abArm: null,
+    loopAB: false,
+    automaticJudgmentJudgedAt: null,
+    lastWaveInteractionAt: 0,
+    lastWaveInteractionTime: null,
+    visualizationAttemptId: 0
   };
 
   function byId(id) {
@@ -100,6 +112,20 @@
       timelineRuler: byId('segmentation-study-time-ruler'),
       timeline: byId('segmentation-study-timeline'),
       timelineEmpty: byId('segmentation-study-timeline-empty'),
+      currentTime: byId('segmentation-study-current-time'),
+      playPause: byId('segmentation-study-play-pause'),
+      setA: byId('segmentation-study-set-a'),
+      setB: byId('segmentation-study-set-b'),
+      playAB: byId('segmentation-study-play-ab'),
+      loopAB: byId('segmentation-study-loop-ab'),
+      clearAB: byId('segmentation-study-clear-ab'),
+      retryVisualization: byId('segmentation-study-retry-visualization'),
+      markerCurrent: byId('segmentation-study-marker-current'),
+      markerA: byId('segmentation-study-marker-a'),
+      markerB: byId('segmentation-study-marker-b'),
+      judgmentStatus: byId('segmentation-study-judgment-status'),
+      automaticJudgment: () => Array.from(document.querySelectorAll('[data-automatic-judgment-version]:checked')),
+      automaticJudgmentNone: byId('segmentation-study-automatic-judgment-none'),
       panels: {
         v2: byId('segmentation-study-panel-v2'),
         v3: byId('segmentation-study-panel-v3'),
@@ -176,6 +202,18 @@
     elements.analysisStatus.dataset.tone = tone;
   }
 
+  function findRenderedCanvases(root, canvases = []) {
+    if (!root) return canvases;
+    const directCanvases = root.querySelectorAll?.('canvas') || [];
+    directCanvases.forEach((canvas) => canvases.push(canvas));
+    const descendants = root.querySelectorAll?.('*') || [];
+    descendants.forEach((element) => {
+      if (element.shadowRoot) findRenderedCanvases(element.shadowRoot, canvases);
+    });
+    if (root.shadowRoot) findRenderedCanvases(root.shadowRoot, canvases);
+    return canvases;
+  }
+
   function waveformUnavailableMessage() {
     return state.comparison
       ? 'Waveform unavailable; audio and analysis are retained. Retry waveform or re-record.'
@@ -188,20 +226,37 @@
       elements.timelineEmpty.hidden = false;
       elements.timelineEmpty.textContent = message;
     }
+    if (elements.retryVisualization) {
+      elements.retryVisualization.hidden = !state.audioBlob;
+      elements.retryVisualization.disabled = !state.audioBlob;
+    }
     setStatus(message, 'warning');
+    updateTimelineUi();
   }
 
   function renderedCanvasReady(container) {
-    const canvas = container?.querySelector('canvas');
-    if (!canvas) return false;
-    const rect = canvas.getBoundingClientRect();
-    return Number(canvas.width) > 0 && Number(canvas.height) > 0 && rect.width > 0 && rect.height > 0;
+    return findRenderedCanvases(container).some((canvas) => {
+      const rect = canvas.getBoundingClientRect();
+      return Number(canvas.width) > 0 && Number(canvas.height) > 0 && rect.width > 0 && rect.height > 0;
+    });
   }
 
   function visualizationSurfacesReady() {
     return Number(state.waveSurfer?.getDuration?.()) > 0
       && renderedCanvasReady(elements.waveform)
       && renderedCanvasReady(elements.spectrogram);
+  }
+
+  function waitForVisualizationSurfaces(timeoutMs = VISUALIZATION_READY_TIMEOUT_MS) {
+    const startedAt = Date.now();
+    return new Promise((resolve) => {
+      const check = () => {
+        if (visualizationSurfacesReady()) { resolve(true); return; }
+        if (Date.now() - startedAt >= timeoutMs) { resolve(false); return; }
+        setTimeout(check, VISUALIZATION_POLL_MS);
+      };
+      check();
+    });
   }
 
   function normalizeTask(task) {
@@ -429,15 +484,216 @@
     });
   }
 
+  function clearAutomaticJudgmentInputs() {
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => { input.checked = false; });
+    if (elements?.judgmentStatus) elements.judgmentStatus.textContent = 'Review all automatic versions before choosing.';
+  }
+
+  function automaticJudgmentSelection() {
+    const selectedVersions = elements?.automaticJudgment?.().map((input) => input.dataset.automaticJudgmentVersion).filter((version) => ['v2', 'v3', 'v4'].includes(version)) || [];
+    const none = Boolean(elements?.automaticJudgmentNone?.checked);
+    if (!selectedVersions.length && !none) return null;
+    if (none) return { selectedVersions: [], none: true };
+    return { selectedVersions: Array.from(new Set(selectedVersions)).sort(), none: false };
+  }
+
+  function automaticJudgmentReady() {
+    const selection = automaticJudgmentSelection();
+    return Boolean(versionExposureProofReady() && selection && (selection.none || selection.selectedVersions.length > 0));
+  }
+
+  function automaticJudgmentMetadata() {
+    const selection = automaticJudgmentSelection();
+    if (!versionExposureProofReady() || !selection) return null;
+    if (!state.automaticJudgmentJudgedAt) state.automaticJudgmentJudgedAt = new Date().toISOString();
+    return {
+      schemaVersion: AUTOMATIC_JUDGMENT_SCHEMA_VERSION,
+      selectedVersions: selection.selectedVersions,
+      none: selection.none,
+      judgedAfterExposureAt: state.automaticJudgmentJudgedAt
+    };
+  }
+
+  function updateJudgmentUi() {
+    const exposureReady = versionExposureProofReady();
+    const selection = automaticJudgmentSelection();
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => {
+      input.disabled = !exposureReady || !state.comparison;
+    });
+    if (elements?.judgmentStatus) {
+      elements.judgmentStatus.textContent = exposureReady
+        ? (selection ? 'Automatic judgment recorded for this session.' : 'Choose the best automatic version(s), or None acceptable.')
+        : 'Review all automatic versions before choosing.';
+    }
+  }
+
+  function formatTimelineTime(value) {
+    return `${Math.max(0, Number(value) || 0).toFixed(3)}s`;
+  }
+
+  function timelineDuration() {
+    return Number(state.waveSurfer?.getDuration?.() || elements.audio?.duration || 0);
+  }
+
+  function updateMarker(marker, time, duration) {
+    if (!marker) return;
+    const valid = Number.isFinite(time) && duration > 0 && time >= 0 && time <= duration;
+    marker.hidden = !valid;
+    if (valid) marker.style.left = `${Math.max(0, Math.min(100, (time / duration) * 100))}%`;
+  }
+
+  function updateTimelineUi() {
+    const duration = timelineDuration();
+    const hasAudio = Boolean(state.audioBlob && state.visualizationReady && duration > 0);
+    if (elements.currentTime) elements.currentTime.textContent = formatTimelineTime(state.currentTime);
+    updateMarker(elements.markerCurrent, state.currentTime, duration);
+    updateMarker(elements.markerA, state.pointA, duration);
+    updateMarker(elements.markerB, state.pointB, duration);
+    if (elements.playPause) {
+      elements.playPause.disabled = !hasAudio;
+      elements.playPause.textContent = elements.audio && !elements.audio.paused ? 'Pause' : 'Play';
+    }
+    if (elements.setA) elements.setA.disabled = !hasAudio;
+    if (elements.setB) elements.setB.disabled = !hasAudio;
+    if (elements.setA) elements.setA.setAttribute('aria-pressed', String(state.abArm === 'a'));
+    if (elements.setB) elements.setB.setAttribute('aria-pressed', String(state.abArm === 'b'));
+    const hasRange = hasAudio && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && state.pointB > state.pointA;
+    if (elements.playAB) elements.playAB.disabled = !hasRange;
+    if (elements.loopAB) {
+      elements.loopAB.disabled = !hasRange;
+      elements.loopAB.setAttribute('aria-pressed', String(state.loopAB));
+    }
+    if (elements.clearAB) elements.clearAB.disabled = !hasAudio || (!Number.isFinite(state.pointA) && !Number.isFinite(state.pointB));
+    if (elements.retryVisualization) {
+      elements.retryVisualization.hidden = state.visualizationReady || !state.audioBlob;
+      elements.retryVisualization.disabled = !state.audioBlob;
+    }
+  }
+
+  function observeNativeTime(time) {
+    const duration = timelineDuration();
+    const next = Math.max(0, Math.min(duration || Number(time) || 0, Number(time) || 0));
+    state.currentTime = Number(next.toFixed(6));
+    try { state.waveSurfer?.setTime?.(state.currentTime); } catch (_) { /* ignore */ }
+    updateTimelineUi();
+    return state.currentTime;
+  }
+
+  function seekTimelineTime(time) {
+    const next = observeNativeTime(time);
+    if (elements.audio && Number.isFinite(next)) {
+      try { elements.audio.currentTime = next; } catch (_) { /* ignore */ }
+    }
+    return next;
+  }
+
+  function playNativeAudio() {
+    const audio = elements.audio;
+    if (!audio?.src) return;
+    const playbackRate = Number(elements.playbackSpeed?.value || 1);
+    audio.playbackRate = playbackRate;
+    try { state.waveSurfer?.setPlaybackRate?.(playbackRate); } catch (_) { /* native audio remains authoritative */ }
+    const nativePlay = audio.play?.();
+    if (nativePlay?.catch) nativePlay.catch(() => setStatus('Playback is unavailable for this recording.', 'error'));
+    updateTimelineUi();
+  }
+
+  function stopPlayback() {
+    try { elements.audio?.pause?.(); } catch (_) { /* ignore */ }
+    if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
+  }
+
+  function pauseNativeAudio() {
+    stopPlayback();
+    updateTimelineUi();
+  }
+
+  function setTimelinePoint(point, time = state.currentTime) {
+    const duration = timelineDuration();
+    const value = Math.max(0, Math.min(duration || Number(time) || 0, Number(time) || 0));
+    state[point] = Number(value.toFixed(6));
+    state.abArm = null;
+    updateTimelineUi();
+    return state[point];
+  }
+
+  function armTimelinePoint(point) {
+    if (!state.audioBlob || !timelineDuration()) return;
+    setTimelinePoint(point === 'a' ? 'pointA' : 'pointB', state.currentTime);
+    state.abArm = state.abArm === point ? null : point;
+    setStatus(`Click the timeline to set ${point.toUpperCase()}.`);
+    updateTimelineUi();
+  }
+
+  function handleTimelineInteraction(rawTime, source = 'waveform') {
+    const duration = timelineDuration();
+    const time = Math.max(0, Math.min(duration || Number(rawTime) || 0, Number(rawTime) || 0));
+    if (state.abArm) {
+      const arm = state.abArm;
+      setTimelinePoint(arm === 'a' ? 'pointA' : 'pointB', time);
+      setStatus(`${arm === 'a' ? 'A' : 'B'} marker set at ${formatTimelineTime(time)}.`);
+      return;
+    }
+    if (state.activeVersion === 'manual') {
+      addManualBoundary(time);
+      return;
+    }
+    state.lastWaveInteractionTime = time;
+    state.lastWaveInteractionAt = Date.now();
+    seekTimelineTime(time);
+    playNativeAudio();
+    if (source === 'spectrogram') setStatus(`Playing from ${formatTimelineTime(time)}.`);
+  }
+
+  function timelinePointFromEvent(event, surface) {
+    const rect = surface?.getBoundingClientRect?.();
+    const duration = timelineDuration();
+    if (!rect || !rect.width || !duration) return 0;
+    return ((Number(event.clientX) - rect.left) / rect.width) * duration;
+  }
+
+  function playPause() {
+    if (!state.audioBlob || !elements.audio?.src) return;
+    if (elements.audio.paused) {
+      if (state.currentTime >= timelineDuration() - 0.001) seekTimelineTime(0);
+      playNativeAudio();
+    } else pauseNativeAudio();
+  }
+
+  function playAB() {
+    if (!Number.isFinite(state.pointA) || !Number.isFinite(state.pointB) || state.pointB <= state.pointA) return;
+    if (state.playTimer) clearInterval(state.playTimer);
+    seekTimelineTime(state.pointA);
+    playNativeAudio();
+    state.playTimer = setInterval(() => {
+      const current = Number(elements.audio?.currentTime || state.currentTime || 0);
+      observeNativeTime(current);
+      if (current >= state.pointB - 0.005) {
+        if (state.loopAB) seekTimelineTime(state.pointA);
+        else pauseNativeAudio();
+      }
+    }, 25);
+  }
+
+  function clearAB() {
+    if (state.playTimer) pauseNativeAudio();
+    state.pointA = null;
+    state.pointB = null;
+    state.abArm = null;
+    state.loopAB = false;
+    updateTimelineUi();
+  }
+
   function updateButtons() {
     const hasTask = Boolean(state.task?.taskId);
     const hasAudio = Boolean(state.audioBlob);
     const hasAnalysis = completeComparisonReady();
     const exposureReady = versionExposureProofReady();
+    const judgmentReady = state.mode === 'previous' || automaticJudgmentReady();
     const completeManual = state.manualSegments.length === Number(state.task?.targetSyllableCount || 0);
     const certainty = elements?.certainty?.()?.value || '';
     const playbackConfirmed = Boolean(elements?.playbackConfirmed?.checked || state.playbackConfirmed);
-    const canSave = hasTask && hasAudio && state.visualizationReady && hasAnalysis && exposureReady && captureSettingsReady() && completeManual && playbackConfirmed && Boolean(certainty) && !state.manualReviewSaved;
+    const canSave = hasTask && hasAudio && state.visualizationReady && hasAnalysis && exposureReady && judgmentReady && captureSettingsReady() && completeManual && playbackConfirmed && Boolean(certainty) && !state.manualReviewSaved;
     if (elements.claim) elements.claim.disabled = !state.operatorName || hasTask || state.mode === 'previous';
     if (elements.release) elements.release.disabled = !hasTask || state.mode === 'previous';
     if (elements.record) elements.record.disabled = !hasTask || state.mode === 'previous' || state.recording;
@@ -451,11 +707,14 @@
       elements.save.setAttribute('aria-label', exposureMessage ? `Save sample (${exposureMessage})` : 'Save sample');
       if (hasTask && hasAudio && hasAnalysis && !state.visualizationReady) setStatus(waveformUnavailableMessage(), 'warning');
       else if (exposureMessage) setStatus(exposureMessage, 'warning');
+      else if (hasTask && hasAudio && hasAnalysis && exposureReady && !judgmentReady) setStatus('All automatic versions viewed. Choose the best automatic version(s), or None acceptable, before saving.', 'warning');
       else if (hasTask && hasAudio && hasAnalysis && elements.status?.textContent?.startsWith('Next required automatic view:')) setStatus('All automatic versions viewed. Complete the manual review to save.', 'success');
     }
     if (elements.next) elements.next.disabled = !state.manualReviewSaved;
     if (elements.manualUndo) elements.manualUndo.disabled = !state.manualBoundaries.length;
     if (elements.manualClear) elements.manualClear.disabled = !state.manualBoundaries.length;
+    updateJudgmentUi();
+    updateTimelineUi();
   }
 
   function clearCertainty() {
@@ -463,6 +722,8 @@
   }
 
   function resetTaskState() {
+    stopPlayback();
+    destroyVisualization();
     stopHeartbeat();
     cleanupRecording();
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
@@ -479,6 +740,14 @@
     state.manualSegments = [];
     state.selectedBoundaryIndex = -1;
     state.manualReviewSaved = false;
+    state.currentTime = 0;
+    state.pointA = null;
+    state.pointB = null;
+    state.abArm = null;
+    state.loopAB = false;
+    state.automaticJudgmentJudgedAt = null;
+    state.lastWaveInteractionAt = 0;
+    state.lastWaveInteractionTime = null;
     clearCertainty();
     if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
     if (elements.word) elements.word.textContent = 'No word claimed';
@@ -492,6 +761,8 @@
       elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.';
     }
     clearRegions();
+    clearAutomaticJudgmentInputs();
+    updateTimelineUi();
     updateManualUi();
   }
 
@@ -615,6 +886,8 @@
   async function startRecording() {
     if (!state.task || state.mode === 'previous' || state.recording) return;
     try {
+      stopPlayback();
+      destroyVisualization();
       cleanupRecording();
       if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
       state.audioUrl = null;
@@ -630,6 +903,13 @@
       state.manualBoundaries = [];
       state.manualSegments = [];
       state.manualReviewSaved = false;
+      state.currentTime = 0;
+      state.pointA = null;
+      state.pointB = null;
+      state.abArm = null;
+      state.loopAB = false;
+      state.automaticJudgmentJudgedAt = null;
+      clearAutomaticJudgmentInputs();
       clearCertainty();
       if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
       if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
@@ -678,8 +958,11 @@
   }
 
   async function redoRecording() {
+    stopPlayback();
+    destroyVisualization();
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-    state.audioBlob = null; state.audioUrl = null; state.comparison = null; state.analysisFailed = false; state.captureSettings = null; state.captureEligibility = false; state.playbackConfirmed = false; state.versionExposureLog = []; state.activeVersion = automaticVersionOrder(state.task)[0]; state.manualBoundaries = []; state.manualSegments = []; state.selectedBoundaryIndex = -1; state.manualReviewSaved = false; state.visualizationReady = false;
+    state.audioBlob = null; state.audioUrl = null; state.comparison = null; state.analysisFailed = false; state.captureSettings = null; state.captureEligibility = false; state.playbackConfirmed = false; state.versionExposureLog = []; state.activeVersion = automaticVersionOrder(state.task)[0]; state.manualBoundaries = []; state.manualSegments = []; state.selectedBoundaryIndex = -1; state.manualReviewSaved = false; state.visualizationReady = false; state.currentTime = 0; state.pointA = null; state.pointB = null; state.abArm = null; state.loopAB = false; state.automaticJudgmentJudgedAt = null;
+    clearAutomaticJudgmentInputs();
     clearCertainty();
     if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
     clearRegions();
@@ -688,7 +971,7 @@
     if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
     if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
     if (elements.timelineEmpty) { elements.timelineEmpty.hidden = false; elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.'; }
-    updateManualUi(); updateButtons();
+    updateManualUi(); updateTimelineUi(); updateButtons();
   }
 
   function spanStart(span) { return Number(span?.startTime ?? span?.start_time ?? span?.start); }
@@ -827,21 +1110,37 @@
     const audio = elements.audio;
     if (!audio?.src || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
     if (state.playTimer) clearInterval(state.playTimer);
-    audio.playbackRate = Number(elements.playbackSpeed?.value || 1);
-    audio.currentTime = Math.max(0, start);
+    seekTimelineTime(Math.max(0, start));
     const stopAt = Math.max(start, end);
     state.playTimer = setInterval(() => {
-      if (audio.currentTime >= stopAt - 0.01) {
-        audio.pause();
-        clearInterval(state.playTimer);
-        state.playTimer = null;
+      const current = Number(audio.currentTime || state.currentTime || 0);
+      observeNativeTime(current);
+      if (current >= stopAt - 0.01) {
+        if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && Math.abs(start - state.pointA) < 0.001 && Math.abs(end - state.pointB) < 0.001) {
+          seekTimelineTime(state.pointA);
+        } else {
+          pauseNativeAudio();
+        }
       }
     }, 25);
-    audio.play().catch(() => setStatus('Playback is unavailable for this recording.', 'error'));
+    playNativeAudio();
   }
 
   function clearRegions() {
     try { state.regions?.clearRegions?.(); } catch (_) { /* ignore */ }
+  }
+
+  function destroyVisualization() {
+    state.visualizationAttemptId += 1;
+    const wave = state.waveSurfer;
+    state.waveSurfer = null;
+    state.regions = null;
+    state.spectrogram = null;
+    state.timeline = null;
+    try { wave?.destroy?.(); } catch (_) { /* ignore stale WaveSurfer instances */ }
+    elements.waveform?.replaceChildren();
+    elements.spectrogram?.replaceChildren();
+    elements.timelineRuler?.replaceChildren();
   }
 
   function drawRegions(version) {
@@ -929,11 +1228,15 @@
   }
 
   async function loadWaveform(blob) {
+    destroyVisualization();
+    const attemptId = state.visualizationAttemptId;
+    const isCurrentAttempt = () => state.visualizationAttemptId === attemptId;
     state.visualizationReady = false;
     if (elements.timelineEmpty) {
       elements.timelineEmpty.hidden = false;
       elements.timelineEmpty.textContent = 'Loading waveform…';
     }
+    if (elements.retryVisualization) elements.retryVisualization.hidden = true;
     if (!elements.waveform || !window.WaveSurfer) {
       markVisualizationUnavailable();
       updateButtons();
@@ -941,11 +1244,11 @@
     }
     try {
       if (!(blob instanceof Blob)) throw new TypeError('Waveform visualization requires the original audio Blob.');
-      if (state.waveSurfer) state.waveSurfer.destroy();
       elements.waveform.replaceChildren();
       elements.spectrogram?.replaceChildren();
       const plugins = [];
       state.waveSurfer = WaveSurfer.create({ container: elements.waveform, waveColor: '#64748b', progressColor: '#2563eb', height: 96, normalize: true, plugins });
+      const waveSurfer = state.waveSurfer;
       const RegionsPlugin = WaveSurfer.RegionsPlugin || WaveSurfer.Regions;
       const TimelinePlugin = WaveSurfer.TimelinePlugin || WaveSurfer.Timeline;
       const SpectrogramPlugin = WaveSurfer.SpectrogramPlugin || WaveSurfer.Spectrogram;
@@ -959,29 +1262,69 @@
           container: elements.spectrogram, labels: true, height: 128, fftSamples: 512, scale: 'mel', windowFunc: 'hann', frequencyMax: 8000
         }));
       }
-      state.waveSurfer.on('ready', () => {
-        if (!visualizationSurfacesReady()) {
+      let readySettled = false;
+      let visualizationAttemptActive = true;
+      let resolveReady;
+      const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
+      const settleReady = (ready) => {
+        if (readySettled) return;
+        readySettled = true;
+        resolveReady(Boolean(ready));
+      };
+      state.waveSurfer.on('ready', async () => {
+        if (!visualizationAttemptActive || !isCurrentAttempt()) return;
+        const ready = await waitForVisualizationSurfaces();
+        if (!visualizationAttemptActive || !isCurrentAttempt()) return;
+        if (!ready) {
           markVisualizationUnavailable();
+          settleReady(false);
           updateButtons();
           return;
         }
         state.visualizationReady = true;
         if (elements.timelineEmpty) elements.timelineEmpty.hidden = true;
+        if (elements.retryVisualization) elements.retryVisualization.hidden = true;
         selectVersion(state.activeVersion);
+        updateTimelineUi();
         updateButtons();
+        settleReady(true);
       });
       state.waveSurfer.on('interaction', (time) => {
-        if (state.activeVersion === 'manual') addManualBoundary(Number(time));
+        if (!isCurrentAttempt()) return;
+        state.lastWaveInteractionTime = Number(time);
+        state.lastWaveInteractionAt = Date.now();
+        handleTimelineInteraction(Number(time), 'waveform');
       });
-      state.waveSurfer.on('region-updated', (region) => syncManualFromRegion(region));
-      state.waveSurfer.on('region-update-end', (region) => syncManualFromRegion(region, true));
+      state.waveSurfer.on('region-updated', (region) => { if (isCurrentAttempt()) syncManualFromRegion(region); });
+      state.waveSurfer.on('region-update-end', (region) => { if (isCurrentAttempt()) syncManualFromRegion(region, true); });
       state.waveSurfer.on('error', () => {
+        if (!isCurrentAttempt()) return;
+        visualizationAttemptActive = false;
         markVisualizationUnavailable();
+        settleReady(false);
         updateButtons();
       });
-      await state.waveSurfer.loadBlob(blob);
-      return state.visualizationReady;
+      const loadError = { value: null };
+      const loadPromise = Promise.resolve().then(() => waveSurfer.loadBlob(blob)).catch((error) => { loadError.value = error; return null; });
+      const loadTimeout = new Promise((resolve) => setTimeout(() => resolve('timeout'), VISUALIZATION_READY_TIMEOUT_MS));
+      const loadResult = await Promise.race([loadPromise.then(() => 'loaded'), loadTimeout]);
+      if (!isCurrentAttempt()) return false;
+      if (loadResult === 'timeout' || loadError.value) {
+        visualizationAttemptActive = false;
+        markVisualizationUnavailable();
+        settleReady(false);
+        updateButtons();
+        return false;
+      }
+      const ready = await Promise.race([readyPromise, new Promise((resolve) => setTimeout(() => resolve(false), VISUALIZATION_READY_TIMEOUT_MS))]);
+      if (!isCurrentAttempt()) return false;
+      if (!ready) {
+        visualizationAttemptActive = false;
+        markVisualizationUnavailable();
+      }
+      return Boolean(ready && state.visualizationReady);
     } catch (error) {
+      if (!isCurrentAttempt()) return false;
       markVisualizationUnavailable();
       updateButtons();
       return false;
@@ -1113,6 +1456,7 @@
       variantProvenance,
       exposureLog: Array.isArray(state.task?.exposureLog) ? state.task.exposureLog : [],
       versionExposureLog: state.versionExposureLog,
+      automaticJudgment: automaticJudgmentMetadata(),
       reviewStatus: elements.certainty?.()?.value === 'uncertain' ? 'uncertain' : 'complete',
       reviewerName: state.operatorName,
       reviewerSessionId: state.sessionId
@@ -1120,8 +1464,9 @@
   }
 
   async function save() {
-    if (!state.task || !state.audioBlob || !state.manualSegments.length || !state.visualizationReady || !completeComparisonReady() || !versionExposureProofReady() || !captureSettingsReady() || !(elements.playbackConfirmed?.checked || state.playbackConfirmed)) {
-      setStatus(!state.visualizationReady ? waveformUnavailableMessage() : (!versionExposureProofReady() ? exposureRequirementMessage() : 'Save requires playback confirmation, verified raw capture settings, and complete V2/V3/V4 analysis.'), 'error');
+    const judgmentReady = state.mode === 'previous' || automaticJudgmentReady();
+    if (!state.task || !state.audioBlob || !state.manualSegments.length || !state.visualizationReady || !completeComparisonReady() || !versionExposureProofReady() || !judgmentReady || !captureSettingsReady() || !(elements.playbackConfirmed?.checked || state.playbackConfirmed)) {
+      setStatus(!state.visualizationReady ? waveformUnavailableMessage() : (!versionExposureProofReady() ? exposureRequirementMessage() : (!judgmentReady ? 'Choose the best automatic version(s), or None acceptable, before saving.' : 'Save requires playback confirmation, verified raw capture settings, and complete V2/V3/V4 analysis.')), 'error');
       updateButtons();
       return;
     }
@@ -1221,6 +1566,42 @@
     elements.redo.addEventListener('click', redoRecording);
     elements.analyze.addEventListener('click', analyze);
     elements.save.addEventListener('click', save);
+    elements.retryVisualization?.addEventListener('click', async () => {
+      if (!state.audioBlob) return;
+      setStatus('Retrying waveform and spectrogram visualization…');
+      await loadWaveform(state.audioBlob);
+      if (state.visualizationReady) setStatus('Waveform and spectrogram visualization restored.', 'success');
+    });
+    elements.playPause?.addEventListener('click', playPause);
+    elements.setA?.addEventListener('click', () => armTimelinePoint('a'));
+    elements.setB?.addEventListener('click', () => armTimelinePoint('b'));
+    elements.playAB?.addEventListener('click', playAB);
+    elements.loopAB?.addEventListener('click', () => { state.loopAB = !state.loopAB; updateTimelineUi(); });
+    elements.clearAB?.addEventListener('click', clearAB);
+    elements.playbackSpeed?.addEventListener('change', () => {
+      const playbackRate = Number(elements.playbackSpeed.value || 1);
+      if (elements.audio) elements.audio.playbackRate = playbackRate;
+      try { state.waveSurfer?.setPlaybackRate?.(playbackRate); } catch (_) { /* native audio remains authoritative */ }
+    });
+    elements.waveform?.addEventListener('click', (event) => {
+      const time = timelinePointFromEvent(event, elements.waveform);
+      if (Date.now() - state.lastWaveInteractionAt < 50 && Math.abs(time - Number(state.lastWaveInteractionTime || 0)) < 0.02) return;
+      handleTimelineInteraction(time, 'waveform');
+    });
+    elements.spectrogram?.addEventListener('click', (event) => handleTimelineInteraction(timelinePointFromEvent(event, elements.spectrogram), 'spectrogram'));
+    elements.audio?.addEventListener('timeupdate', () => {
+      observeNativeTime(Number(elements.audio.currentTime || 0));
+      if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && Number(elements.audio.currentTime) >= state.pointB - 0.005) {
+        seekTimelineTime(state.pointA);
+        playNativeAudio();
+      }
+    });
+    elements.audio?.addEventListener('play', updateTimelineUi);
+    elements.audio?.addEventListener('pause', updateTimelineUi);
+    elements.audio?.addEventListener('ended', () => {
+      if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB)) playAB();
+      else updateTimelineUi();
+    });
     elements.next.addEventListener('click', async () => { state.task = null; resetTaskState(); state.mode = 'record'; await refresh(); });
     elements.tabs.forEach((tab) => {
       tab.addEventListener('click', () => selectVersion(tab.dataset.studyVersion || 'v2'));
@@ -1246,8 +1627,18 @@
       }
     });
     document.querySelectorAll('input[name="segmentation-study-certainty"]').forEach((input) => input.addEventListener('change', updateButtons));
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => input.addEventListener('change', () => {
+      if (input.dataset.automaticJudgmentNone === 'true' && input.checked) {
+        document.querySelectorAll('[data-automatic-judgment-version]').forEach((item) => { item.checked = false; });
+      } else if (input.dataset.automaticJudgmentVersion && input.checked && elements.automaticJudgmentNone) {
+        elements.automaticJudgmentNone.checked = false;
+      }
+      if (!versionExposureProofReady()) input.checked = false;
+      else state.automaticJudgmentJudgedAt = new Date().toISOString();
+      updateButtons();
+    }));
     elements.playbackConfirmed?.addEventListener('change', () => { state.playbackConfirmed = elements.playbackConfirmed.checked; updateButtons(); });
-    window.addEventListener('pagehide', () => { stopHeartbeat(); cleanupRecording(); state.waveSurfer?.destroy?.(); });
+    window.addEventListener('pagehide', () => { stopPlayback(); destroyVisualization(); stopHeartbeat(); cleanupRecording(); });
   }
 
   async function init() {

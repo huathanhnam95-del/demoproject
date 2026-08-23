@@ -33,6 +33,7 @@ const CLAIM_MINUTES = 10;
 const MAX_MANIFEST_ENTRIES = 1000;
 const CAPTURE_CONSTRAINTS_REQUESTED = Object.freeze({ echoCancellation: false, noiseSuppression: false, autoGainControl: false });
 const REFERENCE_LABEL_PROVENANCE = 'explicit-reviewed-en-US-v1';
+const AUTOMATIC_JUDGMENT_SCHEMA_VERSION = 'segmentation-study-automatic-judgment-v1';
 
 function cleanString(value, maxLength = 200) {
   return String(value == null ? '' : value).trim().slice(0, maxLength);
@@ -525,6 +526,38 @@ function requireVersionExposureLog(value, task) {
   });
 }
 
+function requireAutomaticJudgment(value, versionExposureLog) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw Object.assign(new Error('A versioned automatic judgment is required after all automatic versions are exposed.'), { status: 400, code: 'AUTOMATIC_JUDGMENT_REQUIRED' });
+  }
+  if (cleanString(value.schemaVersion, 120) !== AUTOMATIC_JUDGMENT_SCHEMA_VERSION) {
+    throw Object.assign(new Error(`automaticJudgment.schemaVersion must be ${AUTOMATIC_JUDGMENT_SCHEMA_VERSION}.`), { status: 400, code: 'AUTOMATIC_JUDGMENT_INVALID' });
+  }
+  const selectedVersions = Array.isArray(value.selectedVersions)
+    ? value.selectedVersions.map((version) => cleanString(version, 20).toLowerCase())
+    : [];
+  const uniqueVersions = Array.from(new Set(selectedVersions)).sort((left, right) => ['v2', 'v3', 'v4'].indexOf(left) - ['v2', 'v3', 'v4'].indexOf(right));
+  const none = value.none === true;
+  if (selectedVersions.some((version) => !['v2', 'v3', 'v4'].includes(version))
+    || uniqueVersions.length !== selectedVersions.length
+    || (none && selectedVersions.length)
+    || (!none && selectedVersions.length === 0)) {
+    throw Object.assign(new Error('automaticJudgment must select one or more of V2, V3, and V4, or exclusively select None.'), { status: 400, code: 'AUTOMATIC_JUDGMENT_INVALID' });
+  }
+  const judgedAfterExposureAt = cleanString(value.judgedAfterExposureAt || value.judgedAt, 80);
+  const judgedMillis = Date.parse(judgedAfterExposureAt);
+  const latestExposureMillis = Math.max(...(Array.isArray(versionExposureLog) ? versionExposureLog.map((entry) => Date.parse(entry.viewedAt) || 0) : [0]));
+  if (!judgedAfterExposureAt || !Number.isFinite(judgedMillis) || judgedMillis <= latestExposureMillis) {
+    throw Object.assign(new Error('automaticJudgment must include a judgedAfterExposureAt timestamp after the final automatic exposure.'), { status: 400, code: 'AUTOMATIC_JUDGMENT_INVALID' });
+  }
+  return {
+    schemaVersion: AUTOMATIC_JUDGMENT_SCHEMA_VERSION,
+    selectedVersions: uniqueVersions,
+    none,
+    judgedAfterExposureAt
+  };
+}
+
 function mergeVersionExposureLogs(existing, incoming) {
   const merged = [];
   const seen = new Set();
@@ -808,6 +841,7 @@ function registerSegmentationStudyRoutes(router, deps) {
           manualSegments: sample.manualSegments || activeReview?.manualSegments || [],
           referenceLabelProvenance: sample.referenceLabelProvenance || task.referenceLabelProvenance || null,
           annotationProtocol: sample.annotationProtocol || activeReview?.annotationProtocol || null,
+          automaticJudgment: sample.automaticJudgment || activeReview?.automaticJudgment || null,
           promotionEligible: sample.certainty === 'certain' && sample.needsManualReview !== true
             && exposureProofComplete && sample.captureEligibility === true,
           versionExposureComplete: sample.versionExposureComplete === true,
@@ -1093,6 +1127,7 @@ function registerSegmentationStudyRoutes(router, deps) {
       if (!claimIsActive(task) || !ownerMatches(task, identity.operatorName, identity.sessionId)) return sendError(res, 409, 'CLAIM_EXPIRED', 'This task reservation has expired or belongs to another operator.');
       if (task.studyVersion !== registry.internalVersion) return sendError(res, 400, 'VALIDATION_ERROR', 'Task studyVersion does not match the active registry version.');
       const incomingVersionExposureLog = requireVersionExposureLog(metadata.versionExposureLog, task);
+      const automaticJudgment = requireAutomaticJudgment(metadata.automaticJudgment, incomingVersionExposureLog);
       const versionExposureLog = mergeVersionExposureLogs(task.versionExposureLog, incomingVersionExposureLog);
       const authoritativeExposureLog = Array.isArray(task.exposureLog) ? task.exposureLog : [];
       if (cleanString(metadata.targetWord, 120).toLowerCase() !== cleanString(task.targetWord, 120).toLowerCase()) return sendError(res, 400, 'VALIDATION_ERROR', 'targetWord does not match the claimed task.');
@@ -1179,7 +1214,8 @@ function registerSegmentationStudyRoutes(router, deps) {
           wordStartTime: wordBounds.startTime,
           wordEndTime: wordBounds.endTime,
           playbackConfirmed: true,
-          variantProvenance: safeJson(variantProvenance)
+          variantProvenance: safeJson(variantProvenance),
+          automaticJudgment
         }
       });
       const sampleRecord = {
@@ -1211,6 +1247,7 @@ function registerSegmentationStudyRoutes(router, deps) {
         analysis: safeJson(metadata.comparison || metadata.analysis),
         versions: safeJson(comparisonResult.versions),
         variantProvenance: safeJson(variantProvenance),
+        automaticJudgment,
         partitionVariants: safeJson({ v2: comparisonResult.versions.v2.spans, v3: comparisonResult.versions.v3.spans, v4: comparisonResult.versions.v4.spans }),
         rawCtcSpans: safeJson(metadata.rawCtcSpans || metadata.ctcSpans || metadata.comparison?.v3?.analysis?.observed_syllables || null),
         measurementSpans: safeJson(metadata.measurementSpans || metadata.comparison?.v3?.analysis?.measurementSpans || null),
@@ -1338,3 +1375,5 @@ module.exports.claimIsActive = claimIsActive;
 module.exports.automaticOrderFor = automaticOrderFor;
 module.exports.automaticVersionOrderFor = automaticVersionOrderFor;
 module.exports.sanitizeCaptureSettings = sanitizeCaptureSettings;
+module.exports.requireAutomaticJudgment = requireAutomaticJudgment;
+module.exports.AUTOMATIC_JUDGMENT_SCHEMA_VERSION = AUTOMATIC_JUDGMENT_SCHEMA_VERSION;

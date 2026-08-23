@@ -3048,6 +3048,53 @@ body {
 .segmentation-study-waveform { min-height: 96px; }
 .segmentation-study-spectrogram { min-height: 128px; }
 .segmentation-study-time-ruler { min-height: 20px; width: 100%; }
+.segmentation-study-judgment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+.segmentation-study-judgment-label { font-weight: 600; color: #475569; }
+.segmentation-study-judgment label { display: inline-flex; align-items: center; gap: 4px; }
+.segmentation-study-timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+}
+.segmentation-study-current-time {
+  min-width: 58px;
+  margin-right: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  color: #334155;
+}
+.segmentation-study-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 2px;
+  pointer-events: none;
+}
+.segmentation-study-marker span {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+.segmentation-study-marker-current { background: #0f172a; opacity: .65; }
+.segmentation-study-marker-a { background: #16a34a; }
+.segmentation-study-marker-a span { background: #16a34a; }
+.segmentation-study-marker-b { background: #dc2626; }
+.segmentation-study-marker-b span { background: #dc2626; }
 .segmentation-study-speed {
   display: inline-flex;
   align-items: center;

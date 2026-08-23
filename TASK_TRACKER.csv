@@ -1706,6 +1706,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 722,2026-08-21,Fix SPC controller sticky header in Read Aloud mode - change overflow-x hidden to clip,Done,2026-08-21
 723,2026-08-21,Modernize mastery progress tracker UI - replace boxy progress bar with stepped milestone design,Done,2026-08-21
 724,2026-08-21,Deploy Release V1.8.82 with Stepped Progress Tracker and Sticky Header fixes to production,Done,2026-08-21
+725,2026-08-23,Deploy Release V1.8.83 with CRM Pronunciation Sample Study V2 Automatic Judgment and Production Hardening,Done,2026-08-23
 
 
 

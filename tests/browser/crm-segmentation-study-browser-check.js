@@ -209,7 +209,7 @@ async function main() {
     assert.strictEqual(legacyBlobFetchBlocked, true, 'The page CSP must block legacy fetch(blob:) loading.');
     await page.fill('#segmentation-study-operator', 'Team reviewer');
     await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]');
-    await page.waitForFunction(() => /holdout remains sequential/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
+    await page.waitForFunction(() => /holdout locked until development configuration is frozen/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
     assert.strictEqual(claimBodies.length, 0, 'Clicking an available holdout item must not send an explicit claim.');
     assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]').textContent(), 'holdout · 2 syllables · available');
     await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]');

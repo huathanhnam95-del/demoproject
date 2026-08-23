@@ -412,7 +412,7 @@
       li.addEventListener('click', () => {
         if (state.mode === 'previous') return openPreviousSample(item);
         if (!state.task?.taskId && state.operatorName && item.status === 'available' && item.split === 'holdout') {
-          setStatus('Holdout remains sequential; use Claim next word.');
+          setStatus('Holdout locked until development configuration is frozen.');
           return;
         }
         if (!state.task?.taskId && state.operatorName && item.status === 'available' && !elements.claim?.disabled) return claimNext(item.taskId);

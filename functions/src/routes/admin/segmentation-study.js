@@ -862,6 +862,7 @@ function registerSegmentationStudyRoutes(router, deps) {
           if (!snapshot.exists) return;
           const task = snapshot.data() || {};
           if (!claimIsActive(task) || !ownerMatches(task, identity.operatorName, identity.sessionId)) return;
+          requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, snapshot.id);
           const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
           if (reservationIsActive(lock) && lock.taskId !== snapshot.id) {
             throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
@@ -924,6 +925,8 @@ function registerSegmentationStudyRoutes(router, deps) {
         .map((doc) => ({ doc, task: doc.data() || {} }))
         .sort((left, right) => Number(left.task.order || 0) - Number(right.task.order || 0));
 
+      let holdoutLocked = false;
+      let hasValidDevelopmentCandidate = false;
       for (const candidate of candidates) {
         const ref = candidate.doc.ref || db.collection(TASK_COLLECTION).doc(candidate.doc.id);
         let claimed = null;
@@ -931,12 +934,18 @@ function registerSegmentationStudyRoutes(router, deps) {
           const [snapshot, lockSnapshot] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
           if (!snapshot.exists) return;
           const task = snapshot.data() || {};
+          let manifestEntry;
           try {
-            requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, snapshot.id, true);
+            manifestEntry = requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, snapshot.id, true);
           } catch (error) {
             if (error?.code === 'MANIFEST_MISMATCH') return;
             throw error;
           }
+          if (manifestEntry.split === 'holdout' || task.split === 'holdout') {
+            holdoutLocked = true;
+            return;
+          }
+          hasValidDevelopmentCandidate = true;
           const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
           if (reservationIsActive(lock) && lock.taskId !== snapshot.id) return;
           if (task.status === 'completed') return;
@@ -954,6 +963,9 @@ function registerSegmentationStudyRoutes(router, deps) {
           claimed = built.claimed;
         });
         if (claimed) return sendSuccess(res, { task: claimed, claim: claimed }, 'Segmentation study task reserved.');
+      }
+      if (holdoutLocked && !hasValidDevelopmentCandidate) {
+        return sendError(res, 409, 'HOLDOUT_LOCKED', 'Holdout tasks remain locked until development configuration is frozen.');
       }
       return sendError(res, 409, 'NO_TASK_AVAILABLE', 'No segmentation study word is currently available.');
     } catch (error) {

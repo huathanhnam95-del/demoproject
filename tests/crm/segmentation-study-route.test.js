@@ -104,7 +104,7 @@ const manifest = [
   {
     taskId: 'segmentation-study-v2-0002',
     order: 1,
-    split: 'holdout',
+    split: 'development',
     targetWord: 'camera',
     referenceIpa: '/ˈkæmərə/',
     referenceSyllableIpa: ['kæ', 'mə', 'rə'],
@@ -444,6 +444,46 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(expiredTargetRes._status, 200, 'An expired explicit claim may be reclaimed.');
   assert.strictEqual(expiredTargetRes._json.data.task.taskId, 'segmentation-study-v2-expired');
 
+  const resumeManifest = [
+    { taskId: 'segmentation-study-v2-resume-holdout', order: 0, split: 'holdout', targetWord: 'resumeholdout', referenceIpa: '/ˈriːzuːm hoʊldaʊt/', referenceSyllableIpa: ['riː', 'zuːm'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-resume-development', order: 1, split: 'development', targetWord: 'resumedevelopment', referenceIpa: '/ˈriːzuːm dɪˈvɛləpmənt/', referenceSyllableIpa: ['riː', 'zuːm'], targetSyllableCount: 2 }
+  ];
+  resumeManifest.manifestVersion = MANIFEST_VERSION;
+  resumeManifest.manifestSha256 = '3'.repeat(64);
+  resumeManifest.dialect = 'en-US';
+  const resumeIdentity = { operatorName: 'Resume reviewer', sessionId: 'resume-session-001' };
+  const holdoutResumeDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout': {
+      ...resumeManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { ...resumeIdentity }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    }
+  });
+  const holdoutResumeBefore = JSON.parse(JSON.stringify(holdoutResumeDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout')));
+  const holdoutResumeRouter = makeRouter({ db: holdoutResumeDb, bucket: makeBucket(), manifest: resumeManifest });
+  const holdoutResumeRes = buildRes();
+  await invokeHandlers(getRouteHandlers(holdoutResumeRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: resumeIdentity
+  }), holdoutResumeRes);
+  assert.strictEqual(holdoutResumeRes._status, 409, 'A self-owned active holdout resume must fail closed.');
+  assert.strictEqual(holdoutResumeRes._json.error, 'HOLDOUT_LOCKED');
+  assert.deepStrictEqual(holdoutResumeDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout'), holdoutResumeBefore, 'Rejecting an active holdout resume must not mutate the task.');
+  assert.strictEqual(Array.from(holdoutResumeDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'Rejecting an active holdout resume must not create or backfill a reservation lock.');
+
+  const developmentResumeDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-development': {
+      ...resumeManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { ...resumeIdentity }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    }
+  });
+  const developmentResumeRouter = makeRouter({ db: developmentResumeDb, bucket: makeBucket(), manifest: resumeManifest });
+  const developmentResumeRes = buildRes();
+  await invokeHandlers(getRouteHandlers(developmentResumeRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: resumeIdentity
+  }), developmentResumeRes);
+  assert.strictEqual(developmentResumeRes._status, 200, 'A self-owned active development claim must remain resumable.');
+  assert.strictEqual(developmentResumeRes._json.data.task.taskId, 'segmentation-study-v2-resume-development');
+  assert.strictEqual(Array.from(developmentResumeDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 1, 'Development resume must retain reservation repair behavior.');
+
   const raceManifest = [
     { taskId: 'segmentation-study-v2-race-a', order: 0, split: 'development', targetWord: 'racea', referenceIpa: '/ˈreɪsə/', referenceSyllableIpa: ['reɪ', 'sə'], targetSyllableCount: 2 },
     { taskId: 'segmentation-study-v2-race-b', order: 1, split: 'development', targetWord: 'raceb', referenceIpa: '/ˈreɪsb/', referenceSyllableIpa: ['reɪ', 'sb'], targetSyllableCount: 2 }
@@ -515,6 +555,49 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(new Set(mixedRaceSuccessIds).size, 1, 'Exact-vs-ordinary concurrency must not produce two different claimed tasks.');
   const mixedRaceActiveTasks = Array.from(mixedRaceDb.docs.values()).filter((task) => task.studyVersion === ACTIVE_STUDY_VERSION && task.status === 'reserved' && task.claim?.operatorName === mixedRaceIdentity.operatorName);
   assert.strictEqual(mixedRaceActiveTasks.length, 1, 'Exact-vs-ordinary concurrency must leave at most one active task for an operator.');
+
+  const interleavedManifest = [
+    { taskId: 'segmentation-study-v2-interleaved-holdout', order: 0, split: 'holdout', targetWord: 'interleavedholdout', referenceIpa: '/ˈɪntəliːvd hoʊldaʊt/', referenceSyllableIpa: ['ɪn', 'tə', 'liːvd', 'hoʊl', 'daʊt'], targetSyllableCount: 5 },
+    { taskId: 'segmentation-study-v2-interleaved-development', order: 1, split: 'development', targetWord: 'interleaveddevelopment', referenceIpa: '/ˈɪntəliːvd dɪˈvɛləpmənt/', referenceSyllableIpa: ['ɪn', 'tə', 'liːvd', 'dɪ', 'vɛl'], targetSyllableCount: 5 }
+  ];
+  interleavedManifest.manifestVersion = MANIFEST_VERSION;
+  interleavedManifest.manifestSha256 = '1'.repeat(64);
+  interleavedManifest.dialect = 'en-US';
+  const interleavedDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-holdout': { ...interleavedManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-development': { ...interleavedManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  });
+  const interleavedRouter = makeRouter({ db: interleavedDb, bucket: makeBucket(), manifest: interleavedManifest });
+  const interleavedClaimRes = buildRes();
+  await invokeHandlers(getRouteHandlers(interleavedRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: { operatorName: 'Interleaved reviewer', sessionId: 'interleaved-session-001' }
+  }), interleavedClaimRes);
+  assert.strictEqual(interleavedClaimRes._status, 200, 'Ordinary claims must continue past an interleaved holdout.');
+  assert.strictEqual(interleavedClaimRes._json.data.task.taskId, 'segmentation-study-v2-interleaved-development', 'Ordinary claims must select development before holdout.');
+  assert.strictEqual(interleavedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-holdout').status, 'available', 'Interleaved holdouts must remain untouched.');
+  assert.strictEqual(Array.from(interleavedDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 1, 'Interleaved holdouts must not receive a reservation lock.');
+
+  const holdoutOnlyManifest = [
+    { taskId: 'segmentation-study-v2-holdout-only-a', order: 0, split: 'holdout', targetWord: 'holdoutonlya', referenceIpa: '/ˈhoʊldaʊt ə/', referenceSyllableIpa: ['hoʊl', 'daʊt'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-holdout-only-b', order: 1, split: 'holdout', targetWord: 'holdoutonlyb', referenceIpa: '/ˈhoʊldaʊt biː/', referenceSyllableIpa: ['hoʊl', 'daʊt'], targetSyllableCount: 2 }
+  ];
+  holdoutOnlyManifest.manifestVersion = MANIFEST_VERSION;
+  holdoutOnlyManifest.manifestSha256 = '2'.repeat(64);
+  holdoutOnlyManifest.dialect = 'en-US';
+  const holdoutOnlyDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-a': { ...holdoutOnlyManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-b': { ...holdoutOnlyManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  });
+  const holdoutOnlyRouter = makeRouter({ db: holdoutOnlyDb, bucket: makeBucket(), manifest: holdoutOnlyManifest });
+  const holdoutOnlyClaimRes = buildRes();
+  await invokeHandlers(getRouteHandlers(holdoutOnlyRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: { operatorName: 'Holdout reviewer', sessionId: 'holdout-session-001' }
+  }), holdoutOnlyClaimRes);
+  assert.strictEqual(holdoutOnlyClaimRes._status, 409, 'An ordinary claim with only holdouts remaining must fail closed.');
+  assert.strictEqual(holdoutOnlyClaimRes._json.error, 'HOLDOUT_LOCKED');
+  assert.strictEqual(holdoutOnlyDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-a').status, 'available', 'HOLDOUT_LOCKED must not mutate the first holdout.');
+  assert.strictEqual(holdoutOnlyDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-b').status, 'available', 'HOLDOUT_LOCKED must not mutate later holdouts.');
+  assert.strictEqual(Array.from(holdoutOnlyDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'HOLDOUT_LOCKED must not create a reservation lock.');
 
   const ordinaryManifest = [
     { taskId: 'segmentation-study-v2-ordinary-mismatched', order: 1, split: 'development', targetWord: 'mismatch', referenceIpa: '/mɪsˈmætʃ/', referenceSyllableIpa: ['mɪs', 'mætʃ'], targetSyllableCount: 2 },

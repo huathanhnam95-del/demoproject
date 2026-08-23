@@ -1,6 +1,6 @@
 # Read Aloud Connected Speech Coverage
 
-- Generated at: 2026-08-23T05:03:16.441Z
+- Generated at: 2026-08-23T05:07:52.186Z
 - Index version: 1
 - Source workbook SHA-256: 7701b5cef9e04bfbec64809cfbb58c96f5c1a3074f6bd2da16b07d27623c0651
 - Audio manifest SHA-256: ec476d023fdb9225de6420712974f21433ceee9808d58e2890c62352aeb1ae9f

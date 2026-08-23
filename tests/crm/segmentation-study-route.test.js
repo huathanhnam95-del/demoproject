@@ -14,6 +14,7 @@ const { automaticOrderFor, automaticVersionOrderFor } = require('../../functions
 
 const MANIFEST_SHA256 = 'a'.repeat(64);
 const MANIFEST_VERSION = '2.0.0';
+const BUNDLED_MANIFEST_SHA256 = '4db7d2c260fd5be5ac8e050f0cb31dfde2368cdba43453172bfeca4a352adfce';
 const ACTIVE_STUDY_VERSION = 'study-v2';
 
 function makeWavBuffer(fillByte = 0) {
@@ -50,7 +51,7 @@ function makeBucket() {
   };
 }
 
-function makeRouter({ db, bucket, manifest }) {
+function makeRouter({ db, bucket, manifest, useInjectedManifest = true }) {
   return createCrmRouter({
     db,
     admin: {},
@@ -63,10 +64,7 @@ function makeRouter({ db, bucket, manifest }) {
     sendError: (res, status, error, message) => res.status(status).json({ success: false, error, message }),
     getStorageBucket: async () => bucket,
     serverTimestamp: () => new Date('2026-08-13T00:00:00.000Z'),
-    studyManifests: {
-      v1: legacyManifest,
-      v2: manifest
-    },
+    ...(useInjectedManifest ? { studyManifests: { v1: legacyManifest, v2: manifest } } : {}),
     identity: {
       generateClassCode: async () => 'ABC123',
       lookupUserByEmail: async () => ({ uid: 'u1' }),
@@ -238,6 +236,14 @@ function strictMetadata(overrides = {}) {
   await invokeHandlers(unseededListHandlers, createReq({ params: { studyVersion: 'v2' } }), unseededListRes);
   assert.strictEqual(unseededListRes._status, 200);
   assert.strictEqual(Array.from(unseededDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyTasks/')).length, 0, 'Read APIs must not seed or overwrite shared task state; deployment seeding is explicit.');
+
+  const bundledRouter = makeRouter({ db: createFakeDb(), bucket: makeBucket(), useInjectedManifest: false });
+  const bundledListHandlers = getRouteHandlers(bundledRouter, '/dev/segmentation-study/:studyVersion', 'get');
+  const bundledListRes = buildRes();
+  await invokeHandlers(bundledListHandlers, createReq({ params: { studyVersion: 'v2' } }), bundledListRes);
+  assert.strictEqual(bundledListRes._status, 200);
+  assert.strictEqual(bundledListRes._json.data.manifestVersion, MANIFEST_VERSION, 'Bundled fallback must preserve manifest version metadata.');
+  assert.strictEqual(bundledListRes._json.data.manifestSha256, BUNDLED_MANIFEST_SHA256, 'Bundled fallback must preserve the frozen manifest hash.');
 
   const listHandlers = getRouteHandlers(router, '/dev/segmentation-study/:studyVersion', 'get');
   const listRes = buildRes();

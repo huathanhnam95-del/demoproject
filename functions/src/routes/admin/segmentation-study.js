@@ -179,7 +179,12 @@ function resolveStudyManifest(deps, version = PUBLIC_STUDY_VERSION) {
       // The legacy corpus manifest can contain repeated recordings of the same
       // word. Keep the first deterministic entry for each word and cap the
       // study at the requested 100 entries when a study manifest is absent.
-      return manifest.filter((entry) => entry.targetSyllableCount >= 2 && entry.targetSyllableCount <= 5).slice(0, 100);
+      const filteredManifest = manifest.filter((entry) => entry.targetSyllableCount >= 2 && entry.targetSyllableCount <= 5).slice(0, 100);
+      return attachManifestMetadata(filteredManifest, {
+        manifestVersion: manifest.manifestVersion,
+        manifestSha256: manifest.manifestSha256,
+        dialect: manifest.dialect
+      });
     }
   }
   throw new Error(`The fixed ${registry.internalVersion} manifest is unavailable. Run the study manifest sync before starting or deploying Functions.`);

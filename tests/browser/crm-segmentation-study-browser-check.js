@@ -81,6 +81,7 @@ function waveSurferStub() {
 
 async function main() {
   const requests = [];
+  const claimBodies = [];
   const pageErrors = [];
   const consoleErrors = [];
   const browser = await chromium.launch({
@@ -105,6 +106,7 @@ async function main() {
       };
     });
     let completed = false;
+    let claimedTaskId = null;
     let analysisAttempts = 0;
     let submittedMetadata = null;
     await context.route('**/*', async (route) => {
@@ -117,16 +119,40 @@ async function main() {
           if (url.pathname === '/api/config') return json({ config: { apiKey: 'mock', authDomain: 'mock', projectId: 'mock', storageBucket: 'mock', messagingSenderId: 'mock', appId: 'mock' } });
           if (url.pathname === '/api/admin/status') return json({ isAdmin: true, uid: 'admin-1', email: 'admin@example.com', bootstrapped: true });
           if (url.pathname === '/api/admin/dev/segmentation-study/v2' && method === 'GET') {
+            const task = (taskId, targetWord, targetSyllableCount, status = 'available', split = 'development') => ({ taskId, targetWord, referenceIpa: `/${targetWord}/`, referenceSyllableIpa: Array.from({ length: targetSyllableCount }, (_, index) => `${targetWord}-${index + 1}`), targetSyllableCount, status, split, dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' });
+            const queueTasks = [
+              task('segmentation-study-v2-able', 'able', 2),
+              task('segmentation-study-v2-about', 'about', 2),
+              task('segmentation-study-v2-above', 'above', 2),
+              task('segmentation-study-v2-abroad', 'abroad', 2),
+              task('segmentation-study-v2-holdout', 'holdout', 2, 'available', 'holdout'),
+              task('segmentation-study-v2-0001', 'photograph', 3, completed ? 'completed' : (claimedTaskId === 'segmentation-study-v2-0001' ? 'reserved' : 'available'))
+            ];
+            if (claimedTaskId && claimedTaskId !== 'segmentation-study-v2-0001') {
+              const claimed = queueTasks.find((item) => item.taskId === claimedTaskId);
+              if (claimed) claimed.status = 'reserved';
+            }
             return json({ data: {
               studyVersion: 'study-v2', studyId: 'segmentation-study-v2', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dialect: 'en-US',
-              manifest: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
-              tasks: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: completed ? 'completed' : 'available', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
-              progress: { available: completed ? 0 : 1, reserved: 0, completed: completed ? 1 : 0, uncertain: 0, failed: 0 },
+              manifest: queueTasks.map(({ status, split, ...entry }) => entry),
+              tasks: queueTasks,
+              progress: { available: queueTasks.filter((item) => item.status === 'available').length, reserved: queueTasks.filter((item) => item.status === 'reserved').length, completed: completed ? 1 : 0, uncertain: 0, failed: 0 },
+              currentClaim: claimedTaskId && !completed ? queueTasks.find((item) => item.taskId === claimedTaskId) : null,
               previousSamples: [{ taskId: 'segmentation-study-v2-previous-0001', targetWord: 'previous', referenceIpa: '/ˈpriː.vi.əs/', referenceSyllableIpa: ['priː', 'vi', 'əs'], targetSyllableCount: 3, status: 'completed', manualSegments: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] }]
             }});
           }
-          if (url.pathname.endsWith('/claim-next') && method === 'POST') return json({ task: { taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: 'reserved', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', automaticOrder: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', automaticVersionOrder: ['v3', 'v2', 'v4'], exposureLog: [] } });
-          if (/\/segmentation-study\/study-v2\/tasks\/segmentation-study-v2-0001\/(heartbeat|release)$/.test(url.pathname)) return json({ ok: true });
+          if (url.pathname.endsWith('/claim-next') && method === 'POST') {
+            const body = JSON.parse(route.request().postData() || '{}');
+            claimBodies.push(body);
+            claimedTaskId = body.taskId || 'segmentation-study-v2-0001';
+            const targetWord = claimedTaskId === 'segmentation-study-v2-abroad' ? 'abroad' : 'photograph';
+            const targetSyllableCount = claimedTaskId === 'segmentation-study-v2-abroad' ? 2 : 3;
+            return json({ task: { taskId: claimedTaskId, targetWord, referenceIpa: `/${targetWord}/`, referenceSyllableIpa: Array.from({ length: targetSyllableCount }, (_, index) => `${targetWord}-${index + 1}`), targetSyllableCount, status: 'reserved', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', automaticOrder: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', automaticVersionOrder: ['v3', 'v2', 'v4'], exposureLog: [] } });
+          }
+          if (/\/segmentation-study\/v2\/tasks\/[^/]+\/(heartbeat|release)$/.test(url.pathname)) {
+            if (url.pathname.endsWith('/release')) claimedTaskId = null;
+            return json({ ok: true });
+          }
           if (url.pathname.endsWith('/tasks/segmentation-study-v2-0001/complete') && method === 'POST') {
             const postData = route.request().postData() || '';
             const metadataStart = postData.indexOf('name="metadata"\r\n\r\n');
@@ -182,6 +208,18 @@ async function main() {
     });
     assert.strictEqual(legacyBlobFetchBlocked, true, 'The page CSP must block legacy fetch(blob:) loading.');
     await page.fill('#segmentation-study-operator', 'Team reviewer');
+    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]');
+    await page.waitForFunction(() => /holdout remains sequential/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
+    assert.strictEqual(claimBodies.length, 0, 'Clicking an available holdout item must not send an explicit claim.');
+    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]').textContent(), 'holdout · 2 syllables · available');
+    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'abroad', null, { timeout: 5000 });
+    assert.deepStrictEqual(claimBodies[0]?.taskId, 'segmentation-study-v2-abroad', 'Clicking an available queue item must claim that exact task.');
+    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]').textContent(), 'abroad · 2 syllables · reserved');
+    await page.click('#segmentation-study-release');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'No word claimed', null, { timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]')?.textContent.includes('available'), null, { timeout: 5000 });
+    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]').textContent(), 'abroad · 2 syllables · available', 'Release must return the clicked word to a clean available queue.');
     await page.click('#segmentation-study-claim');
     try {
       await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'photograph', null, { timeout: 5000 });

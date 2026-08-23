@@ -13,6 +13,7 @@ const {
 } = require('./pronunciation-corpus');
 
 const TASK_COLLECTION = 'pronunciationSegmentationStudyTasks';
+const RESERVATION_COLLECTION = 'pronunciationSegmentationStudyReservations';
 const CORPUS_COLLECTION = 'pronunciationCorpusSamples';
 const AUDIO_HASH_COLLECTION = 'pronunciationSegmentationStudyAudioHashes';
 const STUDY_VERSION = 'study-v2';
@@ -200,6 +201,14 @@ function claimIsActive(task, now = Date.now()) {
 
 function ownerMatches(task, operatorName, sessionId) {
   return task?.claim?.operatorName === operatorName && task?.claim?.sessionId === sessionId;
+}
+
+function reservationDocId(studyVersion, operatorName, sessionId) {
+  return sha256(`${studyVersion}\n${operatorName}\n${sessionId}`);
+}
+
+function reservationIsActive(reservation, now = Date.now()) {
+  return reservation?.status === 'reserved' && timestampMillis(reservation.claimExpiresAt) > now;
 }
 
 function normalizeIdentity(body) {
@@ -631,6 +640,66 @@ function registerSegmentationStudyRoutes(router, deps) {
     }
   }
 
+  function reservationRef(registry, identity) {
+    return db.collection(RESERVATION_COLLECTION).doc(reservationDocId(registry.internalVersion, identity.operatorName, identity.sessionId));
+  }
+
+  function reservationPatch(registry, identity, taskId, claimExpiresAt, status = 'reserved') {
+    return {
+      studyVersion: registry.internalVersion,
+      studyId: registry.studyId,
+      taskId: status === 'reserved' ? taskId : null,
+      operatorName: identity.operatorName,
+      sessionId: identity.sessionId,
+      status,
+      claimExpiresAt: status === 'reserved' ? claimExpiresAt : null,
+      updatedAt: serverTimestamp()
+    };
+  }
+
+  function requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, taskId, allowHoldout = false) {
+    const entry = manifest.find((item) => item.taskId === taskId);
+    if (!entry || (task.manifestVersion && task.manifestVersion !== manifestVersion) || (task.manifestSha256 && task.manifestSha256 !== manifestSha256)) {
+      throw Object.assign(new Error('The requested task does not belong to the active immutable segmentation manifest.'), { status: 409, code: 'MANIFEST_MISMATCH' });
+    }
+    if (!allowHoldout && (entry.split === 'holdout' || task.split === 'holdout')) {
+      throw Object.assign(new Error('Holdout tasks remain sequential and cannot be explicitly claimed.'), { status: 409, code: 'HOLDOUT_LOCKED' });
+    }
+    return entry;
+  }
+
+  function buildClaim(task, snapshot, registry, manifest, manifestVersion, manifestSha256, identity) {
+    const now = Date.now();
+    const next = {
+      status: 'reserved',
+      studyVersion: registry.internalVersion,
+      studyId: registry.studyId,
+      manifestVersion,
+      manifestSha256,
+      dialect: manifest.dialect || 'en-US',
+      automaticOrder: automaticOrderFor(manifestSha256, snapshot.id),
+      automaticVersionOrder: automaticVersionOrderFor(manifestSha256, snapshot.id),
+      exposureLog: Array.isArray(task.exposureLog) ? task.exposureLog : [],
+      claim: { operatorName: identity.operatorName, sessionId: identity.sessionId, claimedAt: new Date(now) },
+      claimExpiresAt: claimExpiry(now),
+      updatedAt: serverTimestamp()
+    };
+    next.exposureLog = next.exposureLog.concat({
+      event: 'automatic-boundaries-exposed',
+      studyVersion: registry.internalVersion,
+      taskId: snapshot.id,
+      automaticOrder: next.automaticOrder,
+      versions: next.automaticVersionOrder,
+      automaticBoundariesVisible: true,
+      exposedAt: new Date(now)
+    });
+    return {
+      next,
+      claimed: serializeTask({ id: snapshot.id, data: () => ({ ...task, ...next }) }),
+      reservation: reservationPatch(registry, identity, snapshot.id, next.claimExpiresAt)
+    };
+  }
+
   async function readTasks(registry) {
     const snapshot = await db.collection(TASK_COLLECTION)
       .where('studyVersion', '==', registry.internalVersion)
@@ -775,9 +844,75 @@ function registerSegmentationStudyRoutes(router, deps) {
       const manifest = await getManifest(registry);
       const manifestVersion = manifest.manifestVersion || registry.manifestVersion;
       const manifestSha256 = manifest.manifestSha256 || sha256(JSON.stringify(canonicalJson(manifest)));
+      const rawTaskId = req.body?.taskId;
+      const requestedTaskId = rawTaskId == null ? null : cleanString(rawTaskId, 128);
+      if (rawTaskId != null && (typeof rawTaskId !== 'string' || !TASK_ID_RE.test(requestedTaskId))) {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid taskId.');
+      }
       const existingTasks = await readTasks(registry);
       const existing = existingTasks.find((task) => claimIsActive(task) && ownerMatches(task, identity.operatorName, identity.sessionId));
-      if (existing) return sendSuccess(res, { task: existing, claim: existing }, 'Existing segmentation study claim resumed.');
+      const lockRef = reservationRef(registry, identity);
+      if (existing && !requestedTaskId) {
+        let resumed = null;
+        await db.runTransaction(async (tx) => {
+          const [snapshot, lockSnapshot] = await Promise.all([
+            tx.get(db.collection(TASK_COLLECTION).doc(existing.taskId)),
+            tx.get(lockRef)
+          ]);
+          if (!snapshot.exists) return;
+          const task = snapshot.data() || {};
+          if (!claimIsActive(task) || !ownerMatches(task, identity.operatorName, identity.sessionId)) return;
+          const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+          if (reservationIsActive(lock) && lock.taskId !== snapshot.id) {
+            throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
+          }
+          if (!reservationIsActive(lock) || lock.taskId !== snapshot.id) {
+            tx.set(lockRef, reservationPatch(registry, identity, snapshot.id, task.claimExpiresAt), { merge: true });
+          }
+          resumed = serializeTask(snapshot);
+        });
+        if (resumed) return sendSuccess(res, { task: resumed, claim: resumed }, 'Existing segmentation study claim resumed.');
+      }
+
+      if (requestedTaskId) {
+        const ref = db.collection(TASK_COLLECTION).doc(requestedTaskId);
+        let claimed = null;
+        let resumed = false;
+        await db.runTransaction(async (tx) => {
+          const [snapshot, lockSnapshot] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
+          if (!snapshot.exists) throw Object.assign(new Error('Segmentation study task not found.'), { status: 404, code: 'TASK_NOT_FOUND' });
+          const task = snapshot.data() || {};
+          requireTaskVersion(task, registry);
+          requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, requestedTaskId);
+          if (task.status === 'completed') throw Object.assign(new Error('This segmentation study task has already been completed.'), { status: 409, code: 'TASK_COMPLETED' });
+          if (existing && existing.taskId !== requestedTaskId) {
+            throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
+          }
+          const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+          if (reservationIsActive(lock) && lock.taskId !== requestedTaskId) {
+            throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
+          }
+          if (claimIsActive(task)) {
+            if (ownerMatches(task, identity.operatorName, identity.sessionId)) {
+              claimed = serializeTask(snapshot);
+              resumed = true;
+              if (!reservationIsActive(lock) || lock.taskId !== requestedTaskId) {
+                tx.set(lockRef, reservationPatch(registry, identity, requestedTaskId, task.claimExpiresAt), { merge: true });
+              }
+              return;
+            }
+            throw Object.assign(new Error('This task reservation belongs to another operator.'), { status: 409, code: 'CLAIM_CONFLICT' });
+          }
+          if (!['available', 'reserved'].includes(task.status)) {
+            throw Object.assign(new Error('This segmentation study task is not available.'), { status: 409, code: 'TASK_UNAVAILABLE' });
+          }
+          const built = buildClaim(task, snapshot, registry, manifest, manifestVersion, manifestSha256, identity);
+          tx.set(ref, built.next, { merge: true });
+          tx.set(lockRef, built.reservation, { merge: true });
+          claimed = built.claimed;
+        });
+        return sendSuccess(res, { task: claimed, claim: claimed }, resumed ? 'Existing segmentation study claim resumed.' : 'Segmentation study task reserved.');
+      }
 
       const candidateSnapshots = await db.collection(TASK_COLLECTION)
         .where('studyVersion', '==', registry.internalVersion)
@@ -793,37 +928,30 @@ function registerSegmentationStudyRoutes(router, deps) {
         const ref = candidate.doc.ref || db.collection(TASK_COLLECTION).doc(candidate.doc.id);
         let claimed = null;
         await db.runTransaction(async (tx) => {
-          const snapshot = await tx.get(ref);
+          const [snapshot, lockSnapshot] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
           if (!snapshot.exists) return;
           const task = snapshot.data() || {};
+          try {
+            requireCurrentManifestTask(manifest, manifestVersion, manifestSha256, task, snapshot.id, true);
+          } catch (error) {
+            if (error?.code === 'MANIFEST_MISMATCH') return;
+            throw error;
+          }
+          const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+          if (reservationIsActive(lock) && lock.taskId !== snapshot.id) return;
           if (task.status === 'completed') return;
-          if (claimIsActive(task) && !ownerMatches(task, identity.operatorName, identity.sessionId)) return;
-          const now = Date.now();
-          const next = {
-            status: 'reserved',
-            studyVersion: registry.internalVersion,
-            studyId: registry.studyId,
-            manifestVersion,
-            manifestSha256,
-            dialect: manifest.dialect || 'en-US',
-            automaticOrder: automaticOrderFor(manifestSha256, snapshot.id),
-            automaticVersionOrder: automaticVersionOrderFor(manifestSha256, snapshot.id),
-            exposureLog: Array.isArray(task.exposureLog) ? task.exposureLog : [],
-            claim: { operatorName: identity.operatorName, sessionId: identity.sessionId, claimedAt: new Date(now) },
-            claimExpiresAt: claimExpiry(now),
-            updatedAt: serverTimestamp()
-          };
-          next.exposureLog = next.exposureLog.concat({
-            event: 'automatic-boundaries-exposed',
-            studyVersion: registry.internalVersion,
-            taskId: snapshot.id,
-            automaticOrder: next.automaticOrder,
-            versions: next.automaticVersionOrder,
-            automaticBoundariesVisible: true,
-            exposedAt: new Date(now)
-          });
-          tx.set(ref, next, { merge: true });
-          claimed = serializeTask({ id: snapshot.id, data: () => ({ ...task, ...next }) });
+          if (claimIsActive(task)) {
+            if (!ownerMatches(task, identity.operatorName, identity.sessionId)) return;
+            claimed = serializeTask(snapshot);
+            if (!reservationIsActive(lock) || lock.taskId !== snapshot.id) {
+              tx.set(lockRef, reservationPatch(registry, identity, snapshot.id, task.claimExpiresAt), { merge: true });
+            }
+            return;
+          }
+          const built = buildClaim(task, snapshot, registry, manifest, manifestVersion, manifestSha256, identity);
+          tx.set(ref, built.next, { merge: true });
+          tx.set(lockRef, built.reservation, { merge: true });
+          claimed = built.claimed;
         });
         if (claimed) return sendSuccess(res, { task: claimed, claim: claimed }, 'Segmentation study task reserved.');
       }
@@ -842,17 +970,23 @@ function registerSegmentationStudyRoutes(router, deps) {
       const taskId = cleanString(req.params.taskId, 128);
       if (!TASK_ID_RE.test(taskId)) return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid taskId.');
       const ref = db.collection(TASK_COLLECTION).doc(taskId);
+      const lockRef = reservationRef(registry, identity);
       let result = null;
       await db.runTransaction(async (tx) => {
-        const snapshot = await tx.get(ref);
+        const [snapshot, lockSnapshot] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
         if (!snapshot.exists) throw Object.assign(new Error('Segmentation study task not found.'), { status: 404, code: 'TASK_NOT_FOUND' });
         const task = snapshot.data() || {};
         requireTaskVersion(task, registry);
         if (!claimIsActive(task) || !ownerMatches(task, identity.operatorName, identity.sessionId)) {
           throw Object.assign(new Error('This task reservation has expired or belongs to another operator.'), { status: 409, code: 'CLAIM_EXPIRED' });
         }
+        const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+        if (reservationIsActive(lock) && lock.taskId !== snapshot.id) {
+          throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
+        }
         const next = { claimExpiresAt: claimExpiry(), updatedAt: serverTimestamp() };
         tx.set(ref, next, { merge: true });
+        tx.set(lockRef, reservationPatch(registry, identity, snapshot.id, next.claimExpiresAt), { merge: true });
         result = serializeTask({ id: snapshot.id, data: () => ({ ...task, ...next }) });
       });
       return sendSuccess(res, { task: result, claim: result }, 'Segmentation study reservation extended.');
@@ -869,15 +1003,20 @@ function registerSegmentationStudyRoutes(router, deps) {
       const taskId = cleanString(req.params.taskId, 128);
       if (!TASK_ID_RE.test(taskId)) return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid taskId.');
       const ref = db.collection(TASK_COLLECTION).doc(taskId);
+      const lockRef = reservationRef(registry, identity);
       let released = null;
       await db.runTransaction(async (tx) => {
-        const snapshot = await tx.get(ref);
+        const [snapshot, lockSnapshot] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
         if (!snapshot.exists) throw Object.assign(new Error('Segmentation study task not found.'), { status: 404, code: 'TASK_NOT_FOUND' });
         const task = snapshot.data() || {};
         requireTaskVersion(task, registry);
         if (task.status === 'completed') throw Object.assign(new Error('Completed tasks cannot be released.'), { status: 409, code: 'TASK_COMPLETED' });
         if (!ownerMatches(task, identity.operatorName, identity.sessionId)) {
           throw Object.assign(new Error('This task reservation belongs to another operator.'), { status: 409, code: 'CLAIM_CONFLICT' });
+        }
+        const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+        if (reservationIsActive(lock) && lock.taskId !== snapshot.id) {
+          throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
         }
         const next = {
           status: 'available',
@@ -886,6 +1025,7 @@ function registerSegmentationStudyRoutes(router, deps) {
           updatedAt: serverTimestamp()
         };
         tx.set(ref, next, { merge: true });
+        tx.set(lockRef, reservationPatch(registry, identity, snapshot.id, null, 'released'), { merge: true });
         released = serializeTask({ id: snapshot.id, data: () => ({ ...task, ...next }) });
       });
       return sendSuccess(res, { task: released }, 'Segmentation study task released.');
@@ -927,6 +1067,7 @@ function registerSegmentationStudyRoutes(router, deps) {
       const sourceHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
       const requestFingerprint = completionFingerprint(sourceHash, metadata);
       const taskRef = db.collection(TASK_COLLECTION).doc(taskId);
+      const lockRef = reservationRef(registry, identity);
       const taskSnapshot = await taskRef.get();
       if (!taskSnapshot.exists) return sendError(res, 404, 'TASK_NOT_FOUND', 'Segmentation study task not found.');
       const task = taskSnapshot.data() || {};
@@ -1091,10 +1232,11 @@ function registerSegmentationStudyRoutes(router, deps) {
       const audioHashRef = db.collection(AUDIO_HASH_COLLECTION).doc(sourceHash);
       let resultTask = null;
       await db.runTransaction(async (tx) => {
-        const [currentSnapshot, existingReviewSnapshot, existingAudioHashSnapshot] = await Promise.all([
+        const [currentSnapshot, existingReviewSnapshot, existingAudioHashSnapshot, lockSnapshot] = await Promise.all([
           tx.get(taskRef),
           tx.get(reviewRef),
-          tx.get(audioHashRef)
+          tx.get(audioHashRef),
+          tx.get(lockRef)
         ]);
         if (!currentSnapshot.exists) throw Object.assign(new Error('Segmentation study task not found.'), { status: 404, code: 'TASK_NOT_FOUND' });
         const currentTask = currentSnapshot.data() || {};
@@ -1105,6 +1247,10 @@ function registerSegmentationStudyRoutes(router, deps) {
         }
         if (!claimIsActive(currentTask) || !ownerMatches(currentTask, identity.operatorName, identity.sessionId)) {
           throw Object.assign(new Error('This task reservation has expired or belongs to another operator.'), { status: 409, code: 'CLAIM_EXPIRED' });
+        }
+        const lock = lockSnapshot.exists ? (lockSnapshot.data() || {}) : null;
+        if (reservationIsActive(lock) && lock.taskId !== currentSnapshot.id) {
+          throw Object.assign(new Error('This operator already has an active segmentation study reservation.'), { status: 409, code: 'CLAIM_CONFLICT' });
         }
         if (existingReviewSnapshot.exists) {
           throw Object.assign(new Error('This manual review already exists for the claimed sample.'), { status: 409, code: 'REVIEW_CONFLICT' });
@@ -1146,6 +1292,7 @@ function registerSegmentationStudyRoutes(router, deps) {
           updatedAt: now
         };
         tx.set(taskRef, taskPatch, { merge: true });
+        tx.set(lockRef, reservationPatch(registry, identity, taskId, null, 'released'), { merge: true });
         resultTask = serializeTask({ id: currentSnapshot.id, data: () => ({ ...currentTask, ...taskPatch }) });
       });
       transactionCommitted = true;

@@ -404,11 +404,26 @@
     items.forEach((item) => {
       const li = document.createElement('li');
       li.dataset.taskId = String(item.taskId || '');
-      const status = String(item.status || item.reviewStatus || 'available').replaceAll('_', ' ');
+      const currentTask = state.mode !== 'previous' && state.task?.taskId && state.task.taskId === item.taskId;
+      const status = String(currentTask ? 'reserved' : (item.status || item.reviewStatus || 'available')).replaceAll('_', ' ');
       li.textContent = `${item.targetWord || 'Unnamed'} · ${item.targetSyllableCount || '?'} syllables · ${status}`;
       if (state.task?.taskId && state.task.taskId === item.taskId) li.classList.add('is-current');
       li.tabIndex = 0;
-      li.addEventListener('click', () => state.mode === 'previous' ? openPreviousSample(item) : setStatus('Use Claim next word to reserve a study task.'));
+      li.addEventListener('click', () => {
+        if (state.mode === 'previous') return openPreviousSample(item);
+        if (!state.task?.taskId && state.operatorName && item.status === 'available' && item.split === 'holdout') {
+          setStatus('Holdout remains sequential; use Claim next word.');
+          return;
+        }
+        if (!state.task?.taskId && state.operatorName && item.status === 'available' && !elements.claim?.disabled) return claimNext(item.taskId);
+        if (!state.task?.taskId && !state.operatorName) {
+          setStatus('Enter your name before claiming a word.', 'error');
+          elements.operator?.focus();
+          return;
+        }
+        if (item.status === 'completed') setStatus('Completed study tasks cannot be claimed.');
+        else if (state.task?.taskId) setStatus('Release the current word before claiming another task.');
+      });
       li.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); li.click(); } });
       elements.queue.appendChild(li);
     });
@@ -511,14 +526,17 @@
     }
   }
 
-  async function claimNext() {
+  async function claimNext(taskId = '') {
     if (!state.operatorName) { setStatus('Enter your name before claiming a word.', 'error'); elements.operator?.focus(); return; }
     try {
       elements.claim.disabled = true;
+      const body = { operatorName: state.operatorName, sessionId: state.sessionId };
+      const requestedTaskId = String(taskId || '').trim();
+      if (requestedTaskId) body.taskId = requestedTaskId;
       const payload = await apiFetch(studyApiPath('claim-next'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operatorName: state.operatorName, sessionId: state.sessionId })
+        body: JSON.stringify(body)
       });
       resetTaskState();
       state.task = normalizeTask(payload.task || payload.claim || payload);
@@ -1195,7 +1213,7 @@
       await refresh();
       if (state.mode === 'previous') setStatus('Choose a previous sample from the queue.');
     }));
-    elements.claim.addEventListener('click', claimNext);
+    elements.claim.addEventListener('click', () => claimNext());
     elements.release.addEventListener('click', releaseTask);
     elements.refresh.addEventListener('click', refresh);
     elements.record.addEventListener('click', startRecording);

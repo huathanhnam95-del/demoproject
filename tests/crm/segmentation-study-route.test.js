@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
@@ -71,6 +72,22 @@ function makeRouter({ db, bucket, manifest, useInjectedManifest = true }) {
       forceLinkProfile: async () => ({ success: true })
     }
   });
+}
+
+function serializeTransactions(db) {
+  let transactionTail = Promise.resolve();
+  return {
+    ...db,
+    runTransaction(callback) {
+      const result = transactionTail.then(() => db.runTransaction(callback));
+      transactionTail = result.catch(() => {});
+      return result;
+    }
+  };
+}
+
+function reservationDocIdForTest(studyVersion, operatorName, sessionId) {
+  return crypto.createHash('sha256').update(`${studyVersion}\n${operatorName}\n${sessionId}`).digest('hex');
 }
 
 const manifest = [
@@ -229,6 +246,356 @@ function strictMetadata(overrides = {}) {
 }
 
 (async () => {
+  const targetedManifest = [
+    {
+      taskId: 'segmentation-study-v2-abroad',
+      order: 0,
+      split: 'development',
+      targetWord: 'abroad',
+      referenceIpa: '/əˈbrɔːd/',
+      referenceSyllableIpa: ['ə', 'brɔːd'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-expired',
+      order: 1,
+      split: 'development',
+      targetWord: 'expired',
+      referenceIpa: '/ɪkˈspaɪəd/',
+      referenceSyllableIpa: ['ɪk', 'spaɪəd'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-other-owner',
+      order: 2,
+      split: 'development',
+      targetWord: 'other',
+      referenceIpa: '/ˈʌðə/',
+      referenceSyllableIpa: ['ʌ', 'ðə'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-completed',
+      order: 3,
+      split: 'holdout',
+      targetWord: 'completed',
+      referenceIpa: '/kəmˈpliːtɪd/',
+      referenceSyllableIpa: ['kəm', 'pliː', 'tɪd'],
+      targetSyllableCount: 3
+    },
+    {
+      taskId: 'segmentation-study-v2-holdout-available',
+      order: 4,
+      split: 'holdout',
+      targetWord: 'holdout',
+      referenceIpa: '/ˈhoʊldaʊt/',
+      referenceSyllableIpa: ['hoʊl', 'daʊt'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-completed-development',
+      order: 5,
+      split: 'development',
+      targetWord: 'finished',
+      referenceIpa: '/ˈfɪnɪʃt/',
+      referenceSyllableIpa: ['fɪn', 'ɪʃt'],
+      targetSyllableCount: 2
+    }
+  ];
+  targetedManifest.manifestVersion = MANIFEST_VERSION;
+  targetedManifest.manifestSha256 = 'c'.repeat(64);
+  targetedManifest.dialect = 'en-US';
+  const targetedDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad': {
+      ...targetedManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-expired': {
+      ...targetedManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { operatorName: 'Previous reviewer', sessionId: 'previous-session-001' }, claimExpiresAt: new Date('2020-01-01T00:00:00.000Z')
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-other-owner': {
+      ...targetedManifest[2], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { operatorName: 'Other reviewer', sessionId: 'other-session-001' }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-completed': {
+      ...targetedManifest[3], studyVersion: ACTIVE_STUDY_VERSION, status: 'completed', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-available': {
+      ...targetedManifest[4], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-orphan': {
+      taskId: 'segmentation-study-v2-orphan', order: 5, split: 'development', targetWord: 'orphan',
+      referenceIpa: '/ˈɔːrfən/', referenceSyllableIpa: ['ɔːr', 'fən'], targetSyllableCount: 2,
+      studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-completed-development': {
+      ...targetedManifest[5], studyVersion: ACTIVE_STUDY_VERSION, status: 'completed', claim: null, claimExpiresAt: null
+    }
+  });
+  const targetedRouter = makeRouter({ db: targetedDb, bucket: makeBucket(), manifest: targetedManifest });
+  const targetedClaimHandlers = getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const targetedIdentity = { operatorName: 'Pilot reviewer', sessionId: 'pilot-session-001' };
+
+  const invalidTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'INVALID TASK ID' }
+  }), invalidTargetRes);
+  assert.strictEqual(invalidTargetRes._status, 400, 'An explicit claim taskId must be validated.');
+  assert.strictEqual(invalidTargetRes._json.error, 'VALIDATION_ERROR');
+
+  const unknownTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-missing' }
+  }), unknownTargetRes);
+  assert.strictEqual(unknownTargetRes._status, 404, 'An unknown explicit taskId must fail closed.');
+  assert.strictEqual(unknownTargetRes._json.error, 'TASK_NOT_FOUND');
+
+  const completedTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-completed' }
+  }), completedTargetRes);
+  assert.strictEqual(completedTargetRes._status, 409, 'A completed explicit taskId must fail closed.');
+  assert.strictEqual(completedTargetRes._json.error, 'HOLDOUT_LOCKED');
+
+  const completedDevelopmentRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-completed-development' }
+  }), completedDevelopmentRes);
+  assert.strictEqual(completedDevelopmentRes._status, 409, 'A completed development task must remain non-claimable.');
+  assert.strictEqual(completedDevelopmentRes._json.error, 'TASK_COMPLETED');
+
+  const otherOwnerTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-other-owner' }
+  }), otherOwnerTargetRes);
+  assert.strictEqual(otherOwnerTargetRes._status, 409, 'An actively owned explicit taskId must fail closed.');
+  assert.strictEqual(otherOwnerTargetRes._json.error, 'CLAIM_CONFLICT');
+
+  const holdoutTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-holdout-available' }
+  }), holdoutTargetRes);
+  assert.strictEqual(holdoutTargetRes._status, 409, 'Explicit holdout claims must fail closed.');
+  assert.strictEqual(holdoutTargetRes._json.error, 'HOLDOUT_LOCKED');
+  const holdoutAfterReject = targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-available');
+  assert.strictEqual(holdoutAfterReject.status, 'available', 'Rejecting an explicit holdout claim must not mutate the task.');
+  assert.strictEqual(holdoutAfterReject.claim, null);
+  assert.strictEqual(Array.from(targetedDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'Rejecting an explicit holdout claim must not create a reservation lock.');
+
+  const orphanTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-orphan' }
+  }), orphanTargetRes);
+  assert.strictEqual(orphanTargetRes._status, 409, 'Explicit claims must reference the current immutable manifest.');
+  assert.strictEqual(orphanTargetRes._json.error, 'MANIFEST_MISMATCH');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-orphan').status, 'available');
+
+  const exactTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-abroad' }
+  }), exactTargetRes);
+  assert.strictEqual(exactTargetRes._status, 200);
+  assert.strictEqual(exactTargetRes._json.data.task.taskId, 'segmentation-study-v2-abroad', 'An explicit claim must reserve the requested task, not the first task.');
+  assert.strictEqual(exactTargetRes._json.data.task.status, 'reserved');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad').claim.operatorName, targetedIdentity.operatorName);
+
+  const unknownWhileActiveRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-missing-active' }
+  }), unknownWhileActiveRes);
+  assert.strictEqual(unknownWhileActiveRes._status, 404, 'An unknown explicit taskId must remain 404 even when the operator has another active claim.');
+
+  const idempotentTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-abroad' }
+  }), idempotentTargetRes);
+  assert.strictEqual(idempotentTargetRes._status, 200, 'The same owner must be able to resume an explicit active claim.');
+  assert.strictEqual(idempotentTargetRes._json.data.task.taskId, 'segmentation-study-v2-abroad');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad').exposureLog.length, 1, 'Resuming a claim must not append a second exposure event.');
+
+  const releaseTargetHandlers = getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/release', 'post');
+  const releasedTargetRes = buildRes();
+  await invokeHandlers(releaseTargetHandlers, createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-abroad' },
+    body: targetedIdentity
+  }), releasedTargetRes);
+  assert.strictEqual(releasedTargetRes._status, 200);
+  const releasedTargetListRes = buildRes();
+  await invokeHandlers(getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion', 'get'), createReq({ params: { studyVersion: 'v2' } }), releasedTargetListRes);
+  const releasedTarget = releasedTargetListRes._json.data.tasks.find((task) => task.taskId === 'segmentation-study-v2-abroad');
+  assert.strictEqual(releasedTarget.status, 'available', 'Releasing an exact claim must return that task to the clean available queue.');
+  assert.strictEqual(releasedTarget.claim, null);
+
+  const expiredTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-expired' }
+  }), expiredTargetRes);
+  assert.strictEqual(expiredTargetRes._status, 200, 'An expired explicit claim may be reclaimed.');
+  assert.strictEqual(expiredTargetRes._json.data.task.taskId, 'segmentation-study-v2-expired');
+
+  const raceManifest = [
+    { taskId: 'segmentation-study-v2-race-a', order: 0, split: 'development', targetWord: 'racea', referenceIpa: '/ˈreɪsə/', referenceSyllableIpa: ['reɪ', 'sə'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-race-b', order: 1, split: 'development', targetWord: 'raceb', referenceIpa: '/ˈreɪsb/', referenceSyllableIpa: ['reɪ', 'sb'], targetSyllableCount: 2 }
+  ];
+  raceManifest.manifestVersion = MANIFEST_VERSION;
+  raceManifest.manifestSha256 = 'd'.repeat(64);
+  raceManifest.dialect = 'en-US';
+  const raceDb = serializeTransactions(createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-race-a': { ...raceManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-race-b': { ...raceManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  }));
+  const raceRouter = makeRouter({ db: raceDb, bucket: makeBucket(), manifest: raceManifest });
+  const raceClaimHandlers = getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const raceIdentity = { operatorName: 'Concurrent reviewer', sessionId: 'concurrent-session-001' };
+  const raceResponses = await Promise.all(['segmentation-study-v2-race-a', 'segmentation-study-v2-race-b'].map(async (taskId) => {
+    const response = buildRes();
+    await invokeHandlers(raceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: { ...raceIdentity, taskId } }), response);
+    return response;
+  }));
+  assert.strictEqual(raceResponses.filter((response) => response._status === 200).length, 1, 'Concurrent exact claims for one operator must have one winner.');
+  assert.strictEqual(raceResponses.filter((response) => response._status === 409 && response._json.error === 'CLAIM_CONFLICT').length, 1, 'The losing concurrent exact claim must fail with CLAIM_CONFLICT.');
+  const raceReservations = Array.from(raceDb.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(raceReservations.length, 1, 'Concurrent exact claims must use one deterministic reservation record.');
+  assert.strictEqual(raceReservations[0][1].status, 'reserved');
+  const raceWinner = raceResponses.find((response) => response._status === 200)._json.data.task.taskId;
+  const raceHeartbeatRes = buildRes();
+  await invokeHandlers(getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/heartbeat', 'post'), createReq({
+    params: { studyVersion: 'v2', taskId: raceWinner }, body: raceIdentity
+  }), raceHeartbeatRes);
+  assert.strictEqual(raceHeartbeatRes._status, 200);
+  const heartbeatReservation = raceReservations[0][1];
+  assert.strictEqual(heartbeatReservation.taskId, raceWinner, 'Heartbeat must keep the deterministic reservation tied to the task.');
+  const raceReleaseRes = buildRes();
+  await invokeHandlers(getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/release', 'post'), createReq({
+    params: { studyVersion: 'v2', taskId: raceWinner }, body: raceIdentity
+  }), raceReleaseRes);
+  assert.strictEqual(raceReleaseRes._status, 200);
+  assert.strictEqual(raceDb.docs.get(raceReservations[0][0]).status, 'released', 'Release must clear the deterministic reservation record.');
+  assert.strictEqual(raceDb.docs.get(raceReservations[0][0]).taskId, null);
+
+  const mixedRaceManifest = [
+    { taskId: 'segmentation-study-v2-mixed-a', order: 0, split: 'development', targetWord: 'mixeda', referenceIpa: '/ˈmɪkst eɪ/', referenceSyllableIpa: ['mɪkst', 'eɪ'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-mixed-b', order: 1, split: 'development', targetWord: 'mixedb', referenceIpa: '/ˈmɪkst biː/', referenceSyllableIpa: ['mɪkst', 'biː'], targetSyllableCount: 2 }
+  ];
+  mixedRaceManifest.manifestVersion = MANIFEST_VERSION;
+  mixedRaceManifest.manifestSha256 = 'e'.repeat(64);
+  mixedRaceManifest.dialect = 'en-US';
+  const mixedRaceDb = serializeTransactions(createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-mixed-a': { ...mixedRaceManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-mixed-b': { ...mixedRaceManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  }));
+  const mixedRaceRouter = makeRouter({ db: mixedRaceDb, bucket: makeBucket(), manifest: mixedRaceManifest });
+  const mixedRaceClaimHandlers = getRouteHandlers(mixedRaceRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const mixedRaceIdentity = { operatorName: 'Mixed concurrent reviewer', sessionId: 'mixed-concurrent-session-001' };
+  const mixedRaceResponses = await Promise.all([
+    (async () => {
+      const response = buildRes();
+      await invokeHandlers(mixedRaceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: { ...mixedRaceIdentity, taskId: 'segmentation-study-v2-mixed-b' } }), response);
+      return response;
+    })(),
+    (async () => {
+      const response = buildRes();
+      await invokeHandlers(mixedRaceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: mixedRaceIdentity }), response);
+      return response;
+    })()
+  ]);
+  const mixedRaceSuccessIds = mixedRaceResponses.filter((response) => response._status === 200).map((response) => response._json.data.task.taskId);
+  assert.ok(mixedRaceSuccessIds.length >= 1, 'Exact-vs-ordinary concurrency must leave one successful reservation response.');
+  assert.strictEqual(new Set(mixedRaceSuccessIds).size, 1, 'Exact-vs-ordinary concurrency must not produce two different claimed tasks.');
+  const mixedRaceActiveTasks = Array.from(mixedRaceDb.docs.values()).filter((task) => task.studyVersion === ACTIVE_STUDY_VERSION && task.status === 'reserved' && task.claim?.operatorName === mixedRaceIdentity.operatorName);
+  assert.strictEqual(mixedRaceActiveTasks.length, 1, 'Exact-vs-ordinary concurrency must leave at most one active task for an operator.');
+
+  const ordinaryManifest = [
+    { taskId: 'segmentation-study-v2-ordinary-mismatched', order: 1, split: 'development', targetWord: 'mismatch', referenceIpa: '/mɪsˈmætʃ/', referenceSyllableIpa: ['mɪs', 'mætʃ'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-ordinary-valid', order: 2, split: 'development', targetWord: 'valid', referenceIpa: '/ˈvælɪd/', referenceSyllableIpa: ['væ', 'lɪd'], targetSyllableCount: 2 }
+  ];
+  ordinaryManifest.manifestVersion = MANIFEST_VERSION;
+  ordinaryManifest.manifestSha256 = 'e'.repeat(64);
+  ordinaryManifest.dialect = 'en-US';
+  const ordinaryDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-orphan': {
+      taskId: 'segmentation-study-v2-ordinary-orphan', order: 0, split: 'development', targetWord: 'orphan',
+      referenceIpa: '/ˈɔːrfən/', referenceSyllableIpa: ['ɔːr', 'fən'], targetSyllableCount: 2,
+      studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-mismatched': {
+      ...ordinaryManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: 'f'.repeat(64),
+      status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-valid': {
+      ...ordinaryManifest[1], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: ordinaryManifest.manifestSha256,
+      status: 'available', claim: null, claimExpiresAt: null
+    }
+  });
+  const ordinaryRouter = makeRouter({ db: ordinaryDb, bucket: makeBucket(), manifest: ordinaryManifest });
+  const ordinaryClaimHandlers = getRouteHandlers(ordinaryRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const ordinaryIdentity = { operatorName: 'Sequential reviewer', sessionId: 'sequential-session-001' };
+  const ordinaryClaimRes = buildRes();
+  await invokeHandlers(ordinaryClaimHandlers, createReq({
+    params: { studyVersion: 'v2' }, body: ordinaryIdentity
+  }), ordinaryClaimRes);
+  assert.strictEqual(ordinaryClaimRes._status, 200, 'Ordinary claim must continue after stale or orphaned candidates.');
+  assert.strictEqual(ordinaryClaimRes._json.data.task.taskId, 'segmentation-study-v2-ordinary-valid', 'Ordinary claim must select the next current-manifest task.');
+  assert.strictEqual(ordinaryDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-orphan').status, 'available', 'An orphan ordinary candidate must not be claimed.');
+  assert.strictEqual(ordinaryDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-mismatched').status, 'available', 'A hash-mismatched ordinary candidate must not be claimed.');
+  const staleOrdinaryReservationEntries = Array.from(ordinaryDb.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(staleOrdinaryReservationEntries.length, 1, 'Skipped ordinary candidates must not create reservation records.');
+  assert.strictEqual(staleOrdinaryReservationEntries[0][1].taskId, 'segmentation-study-v2-ordinary-valid');
+
+  const lockManifest = [
+    { taskId: 'segmentation-study-v2-lock-valid', order: 0, split: 'development', targetWord: 'lock', referenceIpa: '/ˈlɒkɪŋ/', referenceSyllableIpa: ['lɒ', 'kɪŋ'], targetSyllableCount: 2 }
+  ];
+  lockManifest.manifestVersion = MANIFEST_VERSION;
+  lockManifest.manifestSha256 = 'b'.repeat(64);
+  lockManifest.dialect = 'en-US';
+  const lockIdentity = { operatorName: 'Lock reviewer', sessionId: 'lock-session-001' };
+  const lockDocKey = `pronunciationSegmentationStudyReservations/${reservationDocIdForTest(ACTIVE_STUDY_VERSION, lockIdentity.operatorName, lockIdentity.sessionId)}`;
+  const lockDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid': {
+      ...lockManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: lockManifest.manifestSha256,
+      status: 'available', claim: null, claimExpiresAt: null
+    },
+    [lockDocKey]: {
+      studyVersion: ACTIVE_STUDY_VERSION, studyId: 'segmentation-study-v2', taskId: 'segmentation-study-v2-expired-lock',
+      operatorName: lockIdentity.operatorName, sessionId: lockIdentity.sessionId, status: 'reserved',
+      claimExpiresAt: new Date('2020-01-01T00:00:00.000Z'), updatedAt: new Date('2020-01-01T00:00:00.000Z')
+    }
+  });
+  const lockRouter = makeRouter({ db: lockDb, bucket: makeBucket(), manifest: lockManifest });
+  const lockClaimHandlers = getRouteHandlers(lockRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const expiredLockRes = buildRes();
+  await invokeHandlers(lockClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: lockIdentity }), expiredLockRes);
+  assert.strictEqual(expiredLockRes._status, 200, 'An expired reservation lock must be replaceable by an ordinary claim.');
+  assert.strictEqual(expiredLockRes._json.data.task.taskId, 'segmentation-study-v2-lock-valid');
+  assert.strictEqual(lockDb.docs.get(lockDocKey).taskId, 'segmentation-study-v2-lock-valid');
+  assert.strictEqual(lockDb.docs.get(lockDocKey).status, 'reserved');
+
+  lockDb.docs.set('pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid', {
+    ...lockManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: lockManifest.manifestSha256,
+    status: 'available', claim: null, claimExpiresAt: null
+  });
+  lockDb.docs.set(lockDocKey, {
+    studyVersion: ACTIVE_STUDY_VERSION, studyId: 'segmentation-study-v2', taskId: 'segmentation-study-v2-other-lock',
+    operatorName: lockIdentity.operatorName, sessionId: lockIdentity.sessionId, status: 'reserved',
+    claimExpiresAt: new Date('2099-01-01T00:00:00.000Z'), updatedAt: new Date('2099-01-01T00:00:00.000Z')
+  });
+  const activeLockRes = buildRes();
+  await invokeHandlers(lockClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: lockIdentity }), activeLockRes);
+  assert.strictEqual(activeLockRes._status, 409, 'An active reservation lock for another task must block an ordinary claim.');
+  assert.strictEqual(activeLockRes._json.error, 'NO_TASK_AVAILABLE');
+  assert.strictEqual(lockDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid').status, 'available', 'An active reservation conflict must not mutate the candidate task.');
+
   const unseededDb = createFakeDb();
   const unseededRouter = makeRouter({ db: unseededDb, bucket: makeBucket(), manifest });
   const unseededListHandlers = getRouteHandlers(unseededRouter, '/dev/segmentation-study/:studyVersion', 'get');
@@ -284,6 +651,10 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(claimRes._json.data.task.automaticOrder.length, 64);
   assert.deepStrictEqual(claimRes._json.data.task.automaticVersionOrder.slice().sort(), ['v2', 'v3', 'v4']);
   assert.deepStrictEqual(claimRes._json.data.task.automaticVersionOrder, automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001'));
+  const ordinaryReservationEntries = Array.from(db.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(ordinaryReservationEntries.length, 1, 'Claim next must create the deterministic reservation lock.');
+  assert.strictEqual(ordinaryReservationEntries[0][1].taskId, 'segmentation-study-v2-0001');
+  assert.strictEqual(ordinaryReservationEntries[0][1].status, 'reserved');
   const heartbeatHandlers = getRouteHandlers(router, '/dev/segmentation-study/:studyVersion/tasks/:taskId/heartbeat', 'post');
 
   const mismatchedTaskId = 'segmentation-study-v1-mismatch';
@@ -373,6 +744,8 @@ function strictMetadata(overrides = {}) {
   const completedSampleId = completeRes._json.data.sampleId;
   assert.ok(db.docs.has(`pronunciationCorpusSamples/${completedSampleId}`));
   assert.ok(Array.from(db.docs.keys()).some((key) => key.startsWith(`pronunciationCorpusSamples/${completedSampleId}/manualReviews/`)), 'Initial study completion must persist an immutable manual review.');
+  assert.strictEqual(db.docs.get(ordinaryReservationEntries[0][0]).status, 'released', 'Completion must clear the deterministic reservation lock.');
+  assert.strictEqual(db.docs.get(ordinaryReservationEntries[0][0]).taskId, null);
 
   const idempotentRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](completeReq, idempotentRes);

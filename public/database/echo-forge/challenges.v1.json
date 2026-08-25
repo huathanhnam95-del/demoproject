@@ -1,8 +1,8 @@
 {
   "schemaVersion": "echo-forge-challenge-catalog-v1",
-  "contentVersion": "2026.08.23.v1",
+  "contentVersion": "2026.08.25.v2",
   "locale": "en-US",
-  "sourceSha256": "64865c5c6c9005f602c02d492e83063abc9eff14eac4f262fa9886efb10082be",
+  "sourceSha256": "0191870edd334cb5bcad8516ec89e7a0e251499de433f2c37c49b1d3d038bcb0",
   "levelPolicies": {
     "A1": {
       "allowedSupportPresets": [
@@ -54,7 +54,7 @@
     {
       "challengeId": "ef-a1-azure-word-001",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "greetings",
@@ -81,17 +81,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4449bd6f82e680077405e155a10a9e2f10e75361334db2ccc8e45da0a74f3c1d"
+      "contentHash": "f55d55883e0c3477df2941f4bd3f82d02f412b291f51aa3d3420b271ef4f59c4"
     },
     {
       "challengeId": "ef-a1-azure-word-002",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "people and home",
@@ -105,7 +105,7 @@
         "focus": "first-syllable stress"
       },
       "resource": {
-        "definition": "the people related to you",
+        "definition": "people who are related to you or belong to your family",
         "example": "My family eats dinner together."
       },
       "audio": {
@@ -118,17 +118,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "72183cbe88c39281fb673cf7637e3fcc6a7dc12c77a17af98b3c14615f04e648"
+      "contentHash": "46d8476ee0fa69a05c17178e08ba92e5df0e05f202cd2ae07cb82522e18813b1"
     },
     {
       "challengeId": "ef-a1-azure-word-003",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "daily needs",
@@ -139,7 +139,7 @@
         "pos": "noun",
         "ipa": "/ˈwɔtər/",
         "variantId": "ef-en-us-water-v1",
-        "focus": "American medial flap"
+        "focus": "broad /t/; a common American flap may appear in natural speech"
       },
       "resource": {
         "definition": "the clear liquid people drink",
@@ -155,17 +155,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "15021a79a3ab5613496393a8367d0a4ff2f6182f9e0f5935edfdfb087dc59343"
+      "contentHash": "a72f7e199e2b3e1a348a1853f84f3cb8e2277dd57a9b71a94bb101736e3b1d27"
     },
     {
       "challengeId": "ef-a1-azure-word-004",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "learning",
@@ -192,17 +192,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "c698104ee3efb995f5750ff4ad3d0cca2d778dc9b92f5c2f472687b0178eada9"
+      "contentHash": "bee542fc9f7e5a1ccb2a9dc87d16add2d0ff94cb599050125d0d8cf93f512709"
     },
     {
       "challengeId": "ef-a1-azure-word-005",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "daily routine",
@@ -229,17 +229,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "643b63ffe3f5d3c1d70f817c98ced6325dd0dfbfa32589ef0b200e972a7672e8"
+      "contentHash": "759397c87565eaf3769a3519a3d9b436805cedfb01ef79c8c05bbfcb85ac0e4b"
     },
     {
       "challengeId": "ef-a1-azure-word-006",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "feelings",
@@ -266,17 +266,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azureWords:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "284bf4310f0187ac4f0fa6598adf4ad8f63c879fb077f2531a30acc1d8020d49"
+      "contentHash": "44ced06b9df5c67a44bd2ebb234bfcc9dff12ecdda96282b6b90a5d9f8707ea9"
     },
     {
       "challengeId": "ef-a1-v3-word-001",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "food",
@@ -305,17 +305,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:v3Words:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "98d694c4330c04dcb41643fb6b6313c9cb98b7c68bb8412d61144a3b184b416c"
+      "contentHash": "857d95e8548a1d92f4fc93da5dbc7b08fab72578fdf5eb7e2a361780ce5fe50e"
     },
     {
       "challengeId": "ef-a1-v3-word-002",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "food",
@@ -344,17 +344,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:v3Words:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "e2dab4444f4d8423188beff889fd6fb296653b905ad039495168c9e129f95029"
+      "contentHash": "a0f003a66e401133ee9e9e38d68fc84a83825e055c5acd19597118f0633b7ad0"
     },
     {
       "challengeId": "ef-a1-v3-word-003",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "learning",
@@ -383,17 +383,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:v3Words:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "bedea4f4223555156858ad9d7780f4cd8f71e817ba6866e9849c7d6c5ce6ae2f"
+      "contentHash": "fddf4d0dcd4f15dca6d7ffb2f9d1968e3c5395b005e100f1fb12364ae8fea34e"
     },
     {
       "challengeId": "ef-a1-v3-word-004",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "communication",
@@ -422,17 +422,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:v3Words:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "ce78d8f60858deb1cdf463948a5c461ecfe87ba794b414d190124cf6e6ea9591"
+      "contentHash": "da96e44384364a5a60ea4fd99afe21f53c48568c473f771432ff6bce752c7d46"
     },
     {
       "challengeId": "ef-a1-azure-phrase-001",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "greetings",
@@ -459,17 +459,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azurePhrases:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "0a51797029594e4cc1aac1d593054b2713aee8ccfdc717dc9958aaede5222081"
+      "contentHash": "04c9d5703dee2a977dcf9d3f2d2503350507791e9fbaec3108ca13eafad32f26"
     },
     {
       "challengeId": "ef-a1-azure-phrase-002",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "politeness",
@@ -496,17 +496,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azurePhrases:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "1728a863e6d3185715e368755dfedeb36d41715d2d18178fbebdd364c1cfb0c0"
+      "contentHash": "2f1e4126df515882b211cd4464d7b216d67a7c4fece7ebf40517681028f10515"
     },
     {
       "challengeId": "ef-a1-azure-phrase-003",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "introductions",
@@ -533,17 +533,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azurePhrases:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "8170e85dfd3f8da7d3cbf6781ccfc193b217c28f9dfcaddfc9afc328e2c09b73"
+      "contentHash": "eefe74e18af2059455e8f96a778401869b752d981317f492a7998f34775c4c4e"
     },
     {
       "challengeId": "ef-a1-azure-phrase-004",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "interests",
@@ -570,17 +570,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:azurePhrases:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "df7e158a4b867076b546db701984ab50e7b0177347dd2a61e3e6d89e69ce0681"
+      "contentHash": "80d5f6d150b4a0c7ca9ba6ce89df1575bf720df9f4221e209b3e47eaecc9e473"
     },
     {
       "challengeId": "ef-a1-listening-001",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "travel",
@@ -607,10 +607,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "001-answer",
@@ -638,12 +638,12 @@
           }
         ]
       },
-      "contentHash": "968b197294b93deebeff11f3290251725e526698e5f4f54520f55ba41bdde6d7"
+      "contentHash": "eba409fab83051e9b952b53b8ece86b123ca4fbb5e994848bf0096dd2a154f1f"
     },
     {
       "challengeId": "ef-a1-listening-002",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "animals",
@@ -670,10 +670,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "002-answer",
@@ -701,12 +701,12 @@
           }
         ]
       },
-      "contentHash": "6a556efae9a76fc8f1c6360cd091aa7769dea0607bd63a6df932c84008c7b6f3"
+      "contentHash": "e8a4757ab5d2b637f47ae0faec8434fc871abb5c894df12e5dc4f341cd14d807"
     },
     {
       "challengeId": "ef-a1-listening-003",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "classroom",
@@ -733,10 +733,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "003-answer",
@@ -764,12 +764,12 @@
           }
         ]
       },
-      "contentHash": "243d31b873fdbbf9cbe57d8c4324690486efe4df5484695676d1e2bbadad07b7"
+      "contentHash": "6aa240e7033fbd500e3ef831fd4066125036a34f8bd423b1f1cc10224f7f617f"
     },
     {
       "challengeId": "ef-a1-listening-004",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "food",
@@ -796,10 +796,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "004-answer",
@@ -827,12 +827,12 @@
           }
         ]
       },
-      "contentHash": "86bc9e629b007f45e3a98bf87570b7dc804b05e4724a95e72e5f21b77c876005"
+      "contentHash": "e87e3faa7a716a1f9853a87208c02395522d67c9165b6b39b67f00de6fd9053d"
     },
     {
       "challengeId": "ef-a1-listening-005",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "clothing",
@@ -859,10 +859,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "005-answer",
@@ -890,12 +890,12 @@
           }
         ]
       },
-      "contentHash": "6b645e86d51696e68edb4d512f68caf1c12ea3c88df1e7e3ecc03eaa0d574a2f"
+      "contentHash": "26eb305c8aa6b5f517d1b91de25ac281c88ecc2074fe147eb745c840652d7653"
     },
     {
       "challengeId": "ef-a1-listening-006",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A1",
       "locale": "en-US",
       "topic": "numbers",
@@ -922,10 +922,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A1:listening:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "006-answer",
@@ -953,12 +953,12 @@
           }
         ]
       },
-      "contentHash": "8ab42b3b3bfa021b4f0258b07656cb29ae24b65c549269f6d03340caf0d92927"
+      "contentHash": "eafc109dd69305922951ce70c5ea1b807349c2a3c1c58bbd4bced9a5929b20c2"
     },
     {
       "challengeId": "ef-a2-azure-word-001",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -972,7 +972,7 @@
         "focus": "compound stress"
       },
       "resource": {
-        "definition": "a place where airplanes arrive",
+        "definition": "a place where airplanes arrive and depart",
         "example": "We arrived at the airport early."
       },
       "audio": {
@@ -985,17 +985,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "fcf7f3b1cf719bc719050a3fe929e3bb19a9488aebd14509b2a06eb79907d61b"
+      "contentHash": "c85ed2134965c3d82216222098fa4e5857f18b6b81c2615759d0b5aaa9b468fc"
     },
     {
       "challengeId": "ef-a2-azure-word-002",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -1022,17 +1022,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "500657b6b25f9aff0f632cb1320c2342f8635d639d6c3d67a49ba669a39bba09"
+      "contentHash": "aa660f8f3f3b5ac9e80bef970495f9402b6afd7b18df991ea7658a07f0a239e5"
     },
     {
       "challengeId": "ef-a2-azure-word-003",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "time",
@@ -1059,17 +1059,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "33f3cdda62130acb74512f49d48a66424d8263d963b9b475f7f187a0fd798d83"
+      "contentHash": "2a45467bed58fd25f9e9cb998cedefae145ed1ef6483c01268a36809827f621c"
     },
     {
       "challengeId": "ef-a2-azure-word-004",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "daily life",
@@ -1096,17 +1096,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "e5e5a4922981c4da65f11cd8fef5c6476870b2e8cc9cc34974f76a321ba35445"
+      "contentHash": "6fb6cb3cc82f242e8c4632324ef5ad82425b344b129e2e461302d0712972acbc"
     },
     {
       "challengeId": "ef-a2-azure-word-005",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "health",
@@ -1133,17 +1133,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "019bb0cb31b99e2e8637de1ec69a16980a1c25503746adf3e78599ed6f434f97"
+      "contentHash": "04a00315874c1af5078320d833b0a4ef4792cd49988e7076ab268a8d63dc8b6a"
     },
     {
       "challengeId": "ef-a2-azure-word-006",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "home",
@@ -1170,17 +1170,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azureWords:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "9bbe729e95caa6ea9c0e12c4f3e38369465768a15aa397afdcf346592c939603"
+      "contentHash": "b78dac0dee2a01cd971058ace5564ca15777e841185083d6c615b7b945d5237f"
     },
     {
       "challengeId": "ef-a2-v3-word-001",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -1209,17 +1209,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:v3Words:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "ccf5a2292d89779792a3b453ea93d03e62ca50d09fe97ad0a1bb7e32f734468b"
+      "contentHash": "ff93e2110a51ad4b3bc9cf91b32687c31cc38df85d9aeb7a05cbd4dc233a08d8"
     },
     {
       "challengeId": "ef-a2-v3-word-002",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "time",
@@ -1248,17 +1248,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:v3Words:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "dfea6d1daf88f684cc07f391727ea8bb9dd41a1c09361f2b35a13513ef9a0930"
+      "contentHash": "3320b581ba4760615febf594ef15ec43f76da663f42a3bc31ca4f8ffeb628532"
     },
     {
       "challengeId": "ef-a2-v3-word-003",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "shopping",
@@ -1287,17 +1287,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:v3Words:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "ca14eee14cdaeb2fbdd940fb37986c4b4d860c721cf42d6e98ba7fc8dc60776a"
+      "contentHash": "27500917b1a07cf672dc0da9a52694cd8cb1a31b882e01a4ed456234966c4f3c"
     },
     {
       "challengeId": "ef-a2-v3-word-004",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "home",
@@ -1313,7 +1313,7 @@
         "primaryStressIndex": 1
       },
       "resource": {
-        "definition": "rooms in a larger building",
+        "definition": "a set of rooms for living in a building",
         "example": "They rent an apartment."
       },
       "audio": {
@@ -1326,17 +1326,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:v3Words:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "347f516e0e0d828f634d64f9fa184cf5ee9c0f7acef1b65168a26c5e5e9dbc9b"
+      "contentHash": "4f24ebdf6c4277553d6110e582f531c238f4f97ada8a59c712529da8a233af93"
     },
     {
       "challengeId": "ef-a2-azure-phrase-001",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "directions",
@@ -1363,17 +1363,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azurePhrases:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "c41c023dd7975d5d16e0188047f99bdc2b60e1446cf380db5162c6e3c7824fb8"
+      "contentHash": "6c23a37672a2e43e7ef0e6b2c0569786648b8626fb5be89bfeb2e880bec706f8"
     },
     {
       "challengeId": "ef-a2-azure-phrase-002",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -1400,17 +1400,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azurePhrases:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "700c70bc69b72d055e4f396ab7ed30048abca8a7cb131b2402a112ed9bcde9ae"
+      "contentHash": "0530769ee2c5f0627e6eb12f7a69ac8a488123a2fd7c94e62bf81c6e1456ca9d"
     },
     {
       "challengeId": "ef-a2-azure-phrase-003",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "plans",
@@ -1437,17 +1437,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azurePhrases:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "0d34142503b416c9c10f9087685605b32ebf4cf697ee63fed3234e88c77a3b32"
+      "contentHash": "dfd3d16af3af694f63c4759140c3dc09fdb55dd9a3ed93c17db8d2e13fe335f8"
     },
     {
       "challengeId": "ef-a2-azure-phrase-004",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "requests",
@@ -1456,9 +1456,9 @@
       "text": "could you help me",
       "pronunciation": {
         "pos": "phrase",
-        "ipa": "/kʊd ju hɛlp mi/",
+        "ipa": "/kʊdʒu hɛlp mi/",
         "variantId": "ef-en-us-could-you-help-me-v1",
-        "focus": "connected /d j/"
+        "focus": "connected /dʒ/ in could you"
       },
       "resource": {
         "definition": "a polite request for help",
@@ -1474,17 +1474,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:azurePhrases:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "542407f848749586cd6e883f4ddb9ac715b7277f1f98553257a8cb063fbfb82e"
+      "contentHash": "a7c8e6b0046bd0ee380b51673a9fe2892ad0c9c55ef1105d9cf1a2697c09eef1"
     },
     {
       "challengeId": "ef-a2-listening-001",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -1511,10 +1511,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "001-answer",
@@ -1542,12 +1542,12 @@
           }
         ]
       },
-      "contentHash": "db98eab15ac6a6eea65aac4232a4f6c480ef36c976cb96368d3f300a71d82488"
+      "contentHash": "a2a98e74c48f9faf788cc0fe27c81a67b725ab790eb46a065e790827cdf0cd09"
     },
     {
       "challengeId": "ef-a2-listening-002",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "numbers",
@@ -1574,10 +1574,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "002-answer",
@@ -1605,12 +1605,12 @@
           }
         ]
       },
-      "contentHash": "7009168a746c241204c8b300aaa2dd0dc2cd7dd8c979f6d50f88b35aa1b783ac"
+      "contentHash": "caa020050d1dd5224ed4165b16988adf23006881e3fa237d1cc82ee466fd07ca"
     },
     {
       "challengeId": "ef-a2-listening-003",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "routine",
@@ -1621,7 +1621,7 @@
         "pos": "verb",
         "ipa": "/wɔk/",
         "variantId": "ef-en-us-walk-v1",
-        "focus": "silent letter and /ɔ/"
+        "focus": "open back vowel /ɔ/ and final /k/"
       },
       "resource": {
         "definition": "to move on foot",
@@ -1637,10 +1637,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "003-answer",
@@ -1668,12 +1668,12 @@
           }
         ]
       },
-      "contentHash": "4cdb73d81021e350cae8b2aadf75f7a35a9bec3b44a3b6cf1ee7fc942a7020cd"
+      "contentHash": "8cf891c317fc478bda50b4792cdc756ed94415186fe9a6a471315a5dbed04758"
     },
     {
       "challengeId": "ef-a2-listening-004",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "shopping",
@@ -1700,10 +1700,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "004-answer",
@@ -1731,12 +1731,12 @@
           }
         ]
       },
-      "contentHash": "2181f2e1ee378075087c1e495da198238cb8a99977368805d00b6f05ed423c5e"
+      "contentHash": "668fb0028ad6cdd2b3d73cee51f0d64d12d701cca634c7c3d028dc5207804f02"
     },
     {
       "challengeId": "ef-a2-listening-005",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "travel",
@@ -1763,10 +1763,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "005-answer",
@@ -1794,12 +1794,12 @@
           }
         ]
       },
-      "contentHash": "c4c712e09dd55b0c81ca71ed62da505c09193249571bbe8e08ee5155fccbde00"
+      "contentHash": "8797ceaf3c4558ad5448d98364a14e05554601a786a9b025c7c36e9194e83552"
     },
     {
       "challengeId": "ef-a2-listening-006",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "A2",
       "locale": "en-US",
       "topic": "places",
@@ -1826,10 +1826,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:A2:listening:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "006-answer",
@@ -1857,12 +1857,12 @@
           }
         ]
       },
-      "contentHash": "e9bb845526953c987dab1b10c70da3d0685309848f84b50b5f7f06137ab4ae3a"
+      "contentHash": "adde1d193062b53b445549efd49f9408dd73ba98c3cc362ba0c6ad9b9d2f46d2"
     },
     {
       "challengeId": "ef-b1-azure-word-001",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "work",
@@ -1889,17 +1889,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4fa70691fd575c678d058efbbe13eeea318941e426d410f2c7756b261dca66de"
+      "contentHash": "0db07b10ada7b6aed994b1086296c6c4d49d09c96479e06f3566b1f8e0197d75"
     },
     {
       "challengeId": "ef-b1-azure-word-002",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "work and study",
@@ -1926,17 +1926,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "3064ad0c8287fce362adb484b024a69d47c0c27b0427a9a429a7b4d28f9e7e24"
+      "contentHash": "71e9d3b06105663356e2c48c252e5a86512c4e3a4a86cddfa5d5526692da5fdb"
     },
     {
       "challengeId": "ef-b1-azure-word-003",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "learning",
@@ -1963,17 +1963,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "7925a180a72b32a170c47491edea7d84317f75cafdfaced3099402b9ea8855b6"
+      "contentHash": "ec8e73a5cff42ed33310c753566c01c49303b58beab6c4caba0ce22497e1b514"
     },
     {
       "challengeId": "ef-b1-azure-word-004",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "discussion",
@@ -2000,17 +2000,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "92b75ff89d657244a1629b979951d4b22a78ef6cf8efdd3e289e7303d7e9e6a6"
+      "contentHash": "22edbf4aee88f14f013be905ecde066f6d3d66da2dbef7272cdf21018818207b"
     },
     {
       "challengeId": "ef-b1-azure-word-005",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "society",
@@ -2037,17 +2037,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "23f4fc2a33e82a335518fceee848a155908ac7f82d103ec86ca6f4fbcb75020e"
+      "contentHash": "a5cab6ef8e21c135f2432f99131be101c09a4f648f1d4c0c1adcb708d6688053"
     },
     {
       "challengeId": "ef-b1-azure-word-006",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "work",
@@ -2074,17 +2074,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azureWords:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "8cc51e5967e264a8f634e24e0bb3e509ca47a616e3e77819a7640367707f74c6"
+      "contentHash": "0359232497a1ed1da6077d6d875747927e08335a3930d8bd0e19ca4095e6723c"
     },
     {
       "challengeId": "ef-b1-v3-word-001",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "learning",
@@ -2113,17 +2113,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:v3Words:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "7afb8e7407945fd9684b5cc44472786b6549914a6cdb74da066a0e4b65c81fe7"
+      "contentHash": "6783461ed8ba332f3f0bd1b5d9fef5682d5ebe3da641e2e28cfdd5578c0ac7ff"
     },
     {
       "challengeId": "ef-b1-v3-word-002",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "work",
@@ -2140,7 +2140,7 @@
       },
       "resource": {
         "definition": "a favorable chance",
-        "example": "This course is an opportunity."
+        "example": "This course is an opportunity to learn new skills."
       },
       "audio": {
         "assetId": "ef-audio-b1-v3-word-002",
@@ -2152,17 +2152,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:v3Words:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "9c257aabc1800fcdbb30341a36f91685fdc74169357e3e997bebc18a930d46b7"
+      "contentHash": "f9ed0a9a31479ca9a442f2de9705eb092452d2276280e5c1d17413d3aabede74"
     },
     {
       "challengeId": "ef-b1-v3-word-003",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "achievement",
@@ -2191,17 +2191,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:v3Words:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "1011bf23cc8f22ff1bf4d7e3c15aeb9e17000fbe60b91ba3c5de40724a78a20d"
+      "contentHash": "8056af0f858f981fe547ff2b438d5f87fe481c8ee09ff99a1ff7b29009df4dd1"
     },
     {
       "challengeId": "ef-b1-v3-word-004",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "society",
@@ -2230,17 +2230,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:v3Words:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "e40a13675bfbf1fa2f5ed538c227a141bbe4344bf46d79defa7b8b0f82e4302f"
+      "contentHash": "b23f792dd2cb75131c95299776abf6a8f3fb3cfc76dee189639226eefeab6d86"
     },
     {
       "challengeId": "ef-b1-azure-phrase-001",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "work",
@@ -2267,17 +2267,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azurePhrases:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "b8a0aaa317e5b8d6e1ee58413b3a728e8324a938f6b6067cd97440203dd7a883"
+      "contentHash": "94afbac9c893e5ded7f383d95c5cd646c068ab13a097952a731cbbaabb6db38e"
     },
     {
       "challengeId": "ef-b1-azure-phrase-002",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "discussion",
@@ -2304,17 +2304,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azurePhrases:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "8662b1a6864955fae28f2882d34f63ddf0a88c1093a5d07d55a5b96af0a3ba62"
+      "contentHash": "24910554141fdeeee3ec79422132d9e5fc06e40188aa781212b4832f71ec5686"
     },
     {
       "challengeId": "ef-b1-azure-phrase-003",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "collaboration",
@@ -2323,7 +2323,7 @@
       "text": "work as a team",
       "pronunciation": {
         "pos": "phrase",
-        "ipa": "/wɝk æz ə tim/",
+        "ipa": "/wɝk əz ə tim/",
         "variantId": "ef-en-us-work-as-a-team-v1",
         "focus": "connected weak forms"
       },
@@ -2341,17 +2341,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azurePhrases:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "3951c388c4e1ee41666dae513f2049de50e08f65faa32f24b64b5ef246a7ff2d"
+      "contentHash": "39aafe9b18eea7d590b2984d3e7ffd3cfa247e16ff4fd27a89ad1ec4c82fc694"
     },
     {
       "challengeId": "ef-b1-azure-phrase-004",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "problem solving",
@@ -2378,17 +2378,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:azurePhrases:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "d74fd618d9f9f849d1752d63e569fd0940acdd37cf9fd63673d86d5e5d032038"
+      "contentHash": "e4c49b44ffdc83e13f45ef66169c8c19df8f46d636a864a0ef41d92d1cb584c8"
     },
     {
       "challengeId": "ef-b1-listening-001",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "cause and result",
@@ -2415,10 +2415,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "001-answer",
@@ -2434,7 +2434,7 @@
           },
           {
             "optionId": "001-decoy-1",
-            "text": "effect"
+            "text": "afford"
           },
           {
             "optionId": "001-decoy-2",
@@ -2446,12 +2446,12 @@
           }
         ]
       },
-      "contentHash": "fb8918e2fc5464de74aafc245e0a1b38654df37a086fe7543830801b0af86c09"
+      "contentHash": "4df895132b9130b099653062bc7a92664ff3f91af86c092de982d36ce1a4f309"
     },
     {
       "challengeId": "ef-b1-listening-002",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "communication",
@@ -2478,10 +2478,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "002-answer",
@@ -2509,12 +2509,12 @@
           }
         ]
       },
-      "contentHash": "92e2109600a2cbdf66f349026965f235e299820a8064f9ec9fb50bbec0e1a3e6"
+      "contentHash": "460e28027102d88ebafc0d133d17164d7309649bc96ad85e4f31605b272518cc"
     },
     {
       "challengeId": "ef-b1-listening-003",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "geography",
@@ -2541,10 +2541,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "003-answer",
@@ -2572,12 +2572,12 @@
           }
         ]
       },
-      "contentHash": "1f1c3bf2f823337118243e79e509c567e67ecfe9ccda82bdd5d1d18863c4396e"
+      "contentHash": "446f1243127e715908512e52d0e30139ad1bd9f37d3b373b7be36769ae60e644"
     },
     {
       "challengeId": "ef-b1-listening-004",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "decisions",
@@ -2604,10 +2604,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "004-answer",
@@ -2635,12 +2635,12 @@
           }
         ]
       },
-      "contentHash": "7244de472ef43109a9fd3937861d43adec84bcb91ced6c616ba3fc77e48a2f56"
+      "contentHash": "9905801ad5d334bad93d38306d117627df496f7405ecba18be06709ede5be82b"
     },
     {
       "challengeId": "ef-b1-listening-005",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "degree",
@@ -2651,7 +2651,7 @@
         "pos": "adverb",
         "ipa": "/kwaɪt/",
         "variantId": "ef-en-us-quite-v1",
-        "focus": "final /t/"
+        "focus": "one-syllable /kwaɪt/ versus nearby vowel patterns"
       },
       "resource": {
         "definition": "to a noticeable degree",
@@ -2667,10 +2667,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "005-answer",
@@ -2698,12 +2698,12 @@
           }
         ]
       },
-      "contentHash": "2031c6524d780789a6325a71dcaaa31700a7e12b4a906ab0d78955f05712d565"
+      "contentHash": "3784a8729a684d15ab252e67bf5e93889d6308ee92aa96a9cc48a96d08e9104a"
     },
     {
       "challengeId": "ef-b1-listening-006",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B1",
       "locale": "en-US",
       "topic": "daily events",
@@ -2730,10 +2730,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B1:listening:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "006-answer",
@@ -2761,12 +2761,12 @@
           }
         ]
       },
-      "contentHash": "0fcc8b5964e3dd35689961edf81c770bae188c31591026bca7d7838cfa33a7d8"
+      "contentHash": "39e741ca13a238ba9029217e9f97603b3011b86b8ecc1fe2373bf8d8730966b5"
     },
     {
       "challengeId": "ef-b2-azure-word-001",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "environment",
@@ -2793,17 +2793,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "3ae9b14038442dd2569e21934c82b37528dbb3d8e824cedeb0cb47f0001baad6"
+      "contentHash": "acd042c64763925aec05fd6b019e18acd6da841fe8f73891658ae07080306370"
     },
     {
       "challengeId": "ef-b2-azure-word-002",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "professional life",
@@ -2817,7 +2817,7 @@
         "focus": "primary and secondary stress"
       },
       "resource": {
-        "definition": "to discuss to reach agreement",
+        "definition": "to discuss something in order to reach agreement",
         "example": "They will negotiate the contract."
       },
       "audio": {
@@ -2830,17 +2830,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "16b9c69c3cdbb159b0fc978ae15d60b88c62b3fbaeed42bd86851c47110c93a0"
+      "contentHash": "29d823c5b15b099b022852b91ba4427f0dc93afb1bcfbdc3e1e716e678d461e9"
     },
     {
       "challengeId": "ef-b2-azure-word-003",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "ideas",
@@ -2867,17 +2867,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "f254d7a8a5d3bde34778655c8b108d063b6aeda3ff505ae86856a5f52f90d0a0"
+      "contentHash": "dae08be39123493771d53b641523bec918c5b4ab361f794b6b5e5f85742543df"
     },
     {
       "challengeId": "ef-b2-azure-word-004",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "cause and result",
@@ -2904,17 +2904,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "dfe958f539e56d9612c14ffd41be54a01c6bfa98e8a0c78e95ad3584bea01d45"
+      "contentHash": "074de80728cc287c5fe162e7e57f10b51c1f57ac83620a50c32efaeca69d80b7"
     },
     {
       "challengeId": "ef-b2-azure-word-005",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "technology",
@@ -2941,17 +2941,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "5de3a80b7ea4da2a42e7570a19fff47c64bbac3846bc4fcda26f378c73d9c024"
+      "contentHash": "fe9d422f3a199f2a9f6bf6b594bdea0547bae64ebb4425942ab3f92c5349ae61"
     },
     {
       "challengeId": "ef-b2-azure-word-006",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "argumentation",
@@ -2978,17 +2978,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azureWords:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "392f72bd435376de10b4bbc90b951b5844011c867909727bd37f08a0cf8a3012"
+      "contentHash": "20fb615779adbaa266fa276b12eeb3e7d94138516515b42e10c50c31f6fe993f"
     },
     {
       "challengeId": "ef-b2-v3-word-001",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "public debate",
@@ -3017,17 +3017,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:v3Words:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4cf817eaf513f91bb043b2e648ae7d899f79a821d6731184c575dc06f3586856"
+      "contentHash": "08a274505cbf1082b1656b1b1f92e8fa3a4f8fae5105ec68988252c0f2badded"
     },
     {
       "challengeId": "ef-b2-v3-word-002",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "research",
@@ -3056,17 +3056,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:v3Words:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "cf293d7635a85ac80037def67f9aeb28d47246ef1320cefc9333062155a2e751"
+      "contentHash": "15ac9239703b7258f46b537fdac716a712998dd2600bc9600b01ed61912400f1"
     },
     {
       "challengeId": "ef-b2-v3-word-003",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "evaluation",
@@ -3095,17 +3095,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:v3Words:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "c66f2705eb80a243ce0f9187986b7d8267a76160234f9a01c77aaabef98d36a6"
+      "contentHash": "9e889ae2f088c60d3818bc299a4dba7ff2bed0d97e3f18cf3889b9bb1e96b965"
     },
     {
       "challengeId": "ef-b2-v3-word-004",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "professional life",
@@ -3134,17 +3134,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:v3Words:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "33bba0015f6846f5dda5d5c4f3c5758de3b6bcea663070bea6209fd6dc37a682"
+      "contentHash": "02de6ca5c3b9419901bd71411c9f45c76ab5cc87fa80b70431a39c2cb9408846"
     },
     {
       "challengeId": "ef-b2-azure-phrase-001",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "argumentation",
@@ -3171,17 +3171,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azurePhrases:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "2dd0be023fbeb901336903f2b75db019026ac0af7f8a6712aa31390670b4d7d3"
+      "contentHash": "27d0e74f8e8d7c01723f8715e508f87a56abbecc6c21dc960fbb7eb78c123e5a"
     },
     {
       "challengeId": "ef-b2-azure-phrase-002",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "collaboration",
@@ -3208,17 +3208,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azurePhrases:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "eb9f17b27295ea72def35350e9fe7fe770e6af8373ed6a5003535a74959efbbe"
+      "contentHash": "1e9a32fb9cb4cb416abe84a23fbdc53e59770923bad0e584a7e35db7a7c59358"
     },
     {
       "challengeId": "ef-b2-azure-phrase-003",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "critical thinking",
@@ -3245,17 +3245,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azurePhrases:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "48ca433dfd0ebf452249abdd02efe1d5ffd247a91706a123a22f260b47453230"
+      "contentHash": "4766cc88475cbc114fdc99f80e409e4e20e9e8f44704a0718b2cf18ae98f80ac"
     },
     {
       "challengeId": "ef-b2-azure-phrase-004",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "problem solving",
@@ -3282,17 +3282,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:azurePhrases:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4c40e66c9c4c61f1f03921f0f1a7b0d8890cca76a6dee8fd31ed8c60454a580d"
+      "contentHash": "ed827121156b398e72846b160beb45ba8124557a2374e9ceefbca0c6f70416f0"
     },
     {
       "challengeId": "ef-b2-listening-001",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "ethics",
@@ -3319,10 +3319,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "001-answer",
@@ -3338,7 +3338,7 @@
           },
           {
             "optionId": "001-decoy-1",
-            "text": "principal"
+            "text": "printable"
           },
           {
             "optionId": "001-decoy-2",
@@ -3350,12 +3350,12 @@
           }
         ]
       },
-      "contentHash": "e2e49ba565b1e1bbb93062e8b9f10749129f1909e6878f9036a566ddf49f2ca0"
+      "contentHash": "1db7c0bbe48941d33fa3519691248ab5492ec4aa2dff35e1583d14a9b4c6b2fa"
     },
     {
       "challengeId": "ef-b2-listening-002",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "description",
@@ -3366,7 +3366,7 @@
         "pos": "verb",
         "ipa": "/ˈkɑmpləˌmɛnt/",
         "variantId": "ef-en-us-complement-v1",
-        "focus": "final stress contrast"
+        "focus": "first-syllable stress and final /mɛnt/"
       },
       "resource": {
         "definition": "to complete or improve something",
@@ -3382,10 +3382,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "002-answer",
@@ -3401,7 +3401,7 @@
           },
           {
             "optionId": "002-decoy-1",
-            "text": "compliment"
+            "text": "implement"
           },
           {
             "optionId": "002-decoy-2",
@@ -3413,12 +3413,12 @@
           }
         ]
       },
-      "contentHash": "c9cfca562bd580ec7cedd162089f0099df63720145d2dbe7e1d5cbd055d0f420"
+      "contentHash": "cac8d51a3f808472a54b102628f79719d9d7e54da1e87eea09f12b83880a985c"
     },
     {
       "challengeId": "ef-b2-listening-003",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "academic work",
@@ -3429,10 +3429,10 @@
         "pos": "verb",
         "ipa": "/saɪt/",
         "variantId": "ef-en-us-cite-v1",
-        "focus": "initial /s/"
+        "focus": "diphthong /aɪ/ and final /t/"
       },
       "resource": {
-        "definition": "to refer to a source",
+        "definition": "to identify a source in writing or speech",
         "example": "Please cite the study."
       },
       "audio": {
@@ -3445,10 +3445,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "003-answer",
@@ -3464,11 +3464,11 @@
           },
           {
             "optionId": "003-decoy-1",
-            "text": "site"
+            "text": "seat"
           },
           {
             "optionId": "003-decoy-2",
-            "text": "sight"
+            "text": "set"
           },
           {
             "optionId": "003-decoy-3",
@@ -3476,12 +3476,12 @@
           }
         ]
       },
-      "contentHash": "a309aeaa2cc11a550d5d8df10296506d34b82c06c581c78d3037c7d32dc5b978"
+      "contentHash": "79bd9e2472bde611b7cd0bfb4910b8a87ef964a22f93b91245c8996818ff5d2e"
     },
     {
       "challengeId": "ef-b2-listening-004",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "planning",
@@ -3508,10 +3508,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "004-answer",
@@ -3527,7 +3527,7 @@
           },
           {
             "optionId": "004-decoy-1",
-            "text": "insure"
+            "text": "injure"
           },
           {
             "optionId": "004-decoy-2",
@@ -3539,12 +3539,12 @@
           }
         ]
       },
-      "contentHash": "ec7914289ae48903830c85c096a568287c8f26b04c4f2232fee73b32730d985e"
+      "contentHash": "8b9b14de930f57da2ca8b62836a92b60e2bcb1f5a6a6342d10e7bae7c7afbe1a"
     },
     {
       "challengeId": "ef-b2-listening-005",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "change",
@@ -3571,10 +3571,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "005-answer",
@@ -3602,12 +3602,12 @@
           }
         ]
       },
-      "contentHash": "e40712fcfaed3ed13f0c9804db5ab7cb1e98b6a836af4cbefddcfbf814fed70a"
+      "contentHash": "970833bf0e97dd2f0147db76d43ae1f5be728e3d6a8bb628ebc66b12f9f11c76"
     },
     {
       "challengeId": "ef-b2-listening-006",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "B2",
       "locale": "en-US",
       "topic": "awareness",
@@ -3634,10 +3634,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:B2:listening:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "006-answer",
@@ -3665,12 +3665,12 @@
           }
         ]
       },
-      "contentHash": "c2817ee4bc17d4a37cbb90ebe7b9e595e9f000b838a81eb1eee8ad3b658ffa72"
+      "contentHash": "d9327f9e074d9001d7866d25dfc92cb5ddec17bfba700c9440ced4700050f21c"
     },
     {
       "challengeId": "ef-c1-azure-word-001",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "academic argument",
@@ -3697,17 +3697,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "bf966296fecb1b29fcd65600c84797ff57be406d601031918e09d790cb4446c8"
+      "contentHash": "a4bfa9df0f59a6eeed0257148283bac05c30239e9b3a8931ab1b81412b0364b4"
     },
     {
       "challengeId": "ef-c1-azure-word-002",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "academic argument",
@@ -3718,7 +3718,7 @@
         "pos": "verb",
         "ipa": "/səbˈstænʃiˌeɪt/",
         "variantId": "ef-en-us-substantiate-v1",
-        "focus": "stress and affrication"
+        "focus": "stress and /ʃ/ before -iate"
       },
       "resource": {
         "definition": "to support a claim with evidence",
@@ -3734,17 +3734,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "d5aa84684bc2582f7a2af9001e3aa4c6e67d077e3a5c2bcce9b4b776910a4822"
+      "contentHash": "473613f54381b59db34bfe6116e25b24b0ec8b7854ed63f3aaeb2e171aa12c9d"
     },
     {
       "challengeId": "ef-c1-azure-word-003",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "research",
@@ -3755,7 +3755,7 @@
         "pos": "noun",
         "ipa": "/ˈpɛrəˌdaɪm/",
         "variantId": "ef-en-us-paradigm-v1",
-        "focus": "silent final letter"
+        "focus": "first-syllable stress and the /daɪm/ ending"
       },
       "resource": {
         "definition": "a framework for understanding",
@@ -3771,17 +3771,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "73058516d07e31177616c3a51a942c22932915fc2e0febe05bba67b12268ed47"
+      "contentHash": "67fc5d0528ff2336af4fdcb89ca2330f480fe544b4c2a827ed76e976797a83ac"
     },
     {
       "challengeId": "ef-c1-azure-word-004",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "critical thinking",
@@ -3808,17 +3808,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "5fa4e56a9734f9d31bf772f859fbef30d33cddbe78cb5c7caf062caa0b911684"
+      "contentHash": "3f9b758f875b398ba4da8110de9747fa56aa0774c88d47887ecb72512575e387"
     },
     {
       "challengeId": "ef-c1-azure-word-005",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "evidence",
@@ -3845,17 +3845,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4d88d4dedd2d0a85ee95bc31987218416ec882be357c570e495e2796e5a9b1f6"
+      "contentHash": "dbbdb8d1e85cad715cabade75576135d8d6390a9056193cb4677bfc538c12d2a"
     },
     {
       "challengeId": "ef-c1-azure-word-006",
       "challengeKind": "azure_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "risk",
@@ -3882,17 +3882,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azureWords:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4a2840a991c528359e9ce3bb95aff315e074d7b3cb68546d437182d87c03a79f"
+      "contentHash": "de3820ae2d2e3ea958eecb8549e5c6ebba5760329c530b5d1b01cd887b452e0a"
     },
     {
       "challengeId": "ef-c1-v3-word-001",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "research",
@@ -3921,17 +3921,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:v3Words:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "f7d8c867a4416aec9833b3368b147ea9231774e16d753575563c08df1f5b2323"
+      "contentHash": "46daa93677bfb61d128532daf52af96a2505d8a1a5ea9869ed2e150cb2753ca9"
     },
     {
       "challengeId": "ef-c1-v3-word-002",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "academic work",
@@ -3960,17 +3960,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:v3Words:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4fbd1221c8a0fcbafffd33ab7e974c3ff434dc1a1ab666fa07558dd2c4eade70"
+      "contentHash": "03bd5cab5f7cc75449e40887bcb4c0d5ffd2621cac196c02b51667a9999bb0c4"
     },
     {
       "challengeId": "ef-c1-v3-word-003",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "governance",
@@ -3999,17 +3999,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:v3Words:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "d506bd6f6b7ec530bd6909acf1bc9d22acf28b4cebc03e2cfcfc8799bf08515c"
+      "contentHash": "441298499433ed930d45326ed7156c26924d1bbe8b41ca4e23ef2f014325de79"
     },
     {
       "challengeId": "ef-c1-v3-word-004",
       "challengeKind": "v3_word",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "argumentation",
@@ -4038,17 +4038,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:v3Words:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "f94a7fd12438fa124384a77611f359bf306b9529bb36ebb2400d250ec548d268"
+      "contentHash": "0f9a1edf0dd8d8211e0638be1f132129ccb6bdf7657bce877edc0ae7f00d8110"
     },
     {
       "challengeId": "ef-c1-azure-phrase-001",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "academic argument",
@@ -4075,17 +4075,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azurePhrases:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "280dbeead892f1eaed29e3c730f6477143ab5e08b24515c8801cdcb61e3356fd"
+      "contentHash": "3708dc758a22c120a6cc3d26fbf2423b8373ba8c90b5e54878e42e5a51938897"
     },
     {
       "challengeId": "ef-c1-azure-phrase-002",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "research",
@@ -4112,17 +4112,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azurePhrases:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "4426c4ee7eb184153856d44b74b0cfcd80b9d9e2c3ee2ec762be37cf3ccfeff5"
+      "contentHash": "857f10c57b0b75482b00f02bf1f88b7cdfd26e852997ead99a06fbd43f385c38"
     },
     {
       "challengeId": "ef-c1-azure-phrase-003",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "critical thinking",
@@ -4149,17 +4149,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azurePhrases:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "834e117c183d9af4365f44cbc530d660e7222de009ff7a8874d376e5ee443c3b"
+      "contentHash": "e4eb441899eae6bcca9674b7727d93a3bfe0d6fd760339e9337f90837f467cd8"
     },
     {
       "challengeId": "ef-c1-azure-phrase-004",
       "challengeKind": "azure_phrase",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "evidence",
@@ -4186,17 +4186,17 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:azurePhrases:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
-      "contentHash": "f5237fb4824fea22ef1f41a6137447833e649d3fa3a86dc28d3cdf06b2ce266c"
+      "contentHash": "fc1073efc4a799a99f0621dbb5bb6549c7b4b58303e25110f0ab0fb5e678fd17"
     },
     {
       "challengeId": "ef-c1-listening-001",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "professional status",
@@ -4223,10 +4223,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:001",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:001",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "001-answer",
@@ -4246,7 +4246,7 @@
           },
           {
             "optionId": "001-decoy-2",
-            "text": "immanent"
+            "text": "emigrate"
           },
           {
             "optionId": "001-decoy-3",
@@ -4254,12 +4254,12 @@
           }
         ]
       },
-      "contentHash": "ec14ba1b8ee05a556c26089b5be9a6d2f7078d38105c0aff8ae660d986328608"
+      "contentHash": "fb5230df6f59bb516131c7a83121580bd75cd2e5c837d04e67df029af3e7e901"
     },
     {
       "challengeId": "ef-c1-listening-002",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "research",
@@ -4286,10 +4286,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:002",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:002",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "002-answer",
@@ -4305,7 +4305,7 @@
           },
           {
             "optionId": "002-decoy-1",
-            "text": "illicit"
+            "text": "elastic"
           },
           {
             "optionId": "002-decoy-2",
@@ -4317,12 +4317,12 @@
           }
         ]
       },
-      "contentHash": "631ca9c5d41b124b54d636ada754ecc8388e05910be3e215b4f583c43559a97b"
+      "contentHash": "11009858fabb07681f86b333e6808363fd9b88dd11792bb5ee95291cde9221f2"
     },
     {
       "challengeId": "ef-c1-listening-003",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "analysis",
@@ -4349,10 +4349,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:003",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:003",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "003-answer",
@@ -4368,7 +4368,7 @@
           },
           {
             "optionId": "003-decoy-1",
-            "text": "discreet"
+            "text": "describe"
           },
           {
             "optionId": "003-decoy-2",
@@ -4380,12 +4380,12 @@
           }
         ]
       },
-      "contentHash": "b70499a301646963966449f16b179567f313d37bd4a4803d02923f79ac19cf2b"
+      "contentHash": "6b35595b20a73a29a4f6ee4722971b4a4e91960adcbb69a84fef7536bb53b99f"
     },
     {
       "challengeId": "ef-c1-listening-004",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "sequence",
@@ -4412,10 +4412,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:004",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:004",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "004-answer",
@@ -4443,12 +4443,12 @@
           }
         ]
       },
-      "contentHash": "7f795162c869c7d86719314cc010d244c66208270f97e07c6b047b7cd40cb47f"
+      "contentHash": "27710d2cfee04b3ea42cf38c5b85971515c1f9d12bf3ab43eaa7a147e466eb47"
     },
     {
       "challengeId": "ef-c1-listening-005",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "research",
@@ -4475,10 +4475,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:005",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:005",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "005-answer",
@@ -4506,12 +4506,12 @@
           }
         ]
       },
-      "contentHash": "522b703c6f7afb210a8076e8091ecdfd9c2b1d32574987bf17cf132888a7511a"
+      "contentHash": "27869b5653b28b7070b4db56aeb19b94228ef036c3593c43efec3235e026f993"
     },
     {
       "challengeId": "ef-c1-listening-006",
       "challengeKind": "listening",
-      "contentVersion": "2026.08.23.v1",
+      "contentVersion": "2026.08.25.v2",
       "level": "C1",
       "locale": "en-US",
       "topic": "literature",
@@ -4538,10 +4538,10 @@
         "artifactStatus": "not_generated"
       },
       "provenance": {
-        "sourceKind": "curated",
-        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:006",
-        "license": "pending-review",
-        "verificationStatus": "pending_human_review"
+        "sourceKind": "project_authored",
+        "sourceId": "echo-forge-seed:2026.08.25.v2:C1:listening:006",
+        "license": "project_internal",
+        "verificationStatus": "automated_content_reviewed"
       },
       "listening": {
         "answerId": "006-answer",
@@ -4561,7 +4561,7 @@
           },
           {
             "optionId": "006-decoy-2",
-            "text": "elusion"
+            "text": "collusion"
           },
           {
             "optionId": "006-decoy-3",
@@ -4569,7 +4569,7 @@
           }
         ]
       },
-      "contentHash": "3e6e9472de63c3c307a893839b74abb443d3244a73d9e5d388e690f4df46ced5"
+      "contentHash": "75c846059ce8bb4585881ad4b893fc145949cb2725fe9811d285c430628582d4"
     }
   ]
 }

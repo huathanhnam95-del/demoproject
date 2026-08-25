@@ -174,10 +174,10 @@ function buildChallenge({ source, level, sourceKey, item, ordinal }) {
       artifactStatus: 'not_generated',
     },
     provenance: {
-      sourceKind: 'curated',
+      sourceKind: 'project_authored',
       sourceId: `echo-forge-seed:${source.contentVersion}:${level}:${sourceKey}:${item.id}`,
-      license: 'pending-review',
-      verificationStatus: 'pending_human_review',
+      license: 'project_internal',
+      verificationStatus: 'automated_content_reviewed',
     },
     ...(sourceKey === 'listening' ? { listening: buildListening(item, itemPath) } : {}),
   };

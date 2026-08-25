@@ -1,8 +1,8 @@
 {
   "schemaVersion": "echo-forge-assessment-manifest-v1",
-  "contentVersion": "2026.08.23.v1",
+  "contentVersion": "2026.08.25.v2",
   "locale": "en-US",
-  "catalogSourceSha256": "64865c5c6c9005f602c02d492e83063abc9eff14eac4f262fa9886efb10082be",
+  "catalogSourceSha256": "0191870edd334cb5bcad8516ec89e7a0e251499de433f2c37c49b1d3d038bcb0",
   "challenges": [
     {
       "challengeId": "ef-a1-azure-word-001",

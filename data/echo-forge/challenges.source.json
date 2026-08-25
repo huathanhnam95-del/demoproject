@@ -1,5 +1,5 @@
 {
-  "contentVersion": "2026.08.23.v1",
+  "contentVersion": "2026.08.25.v2",
   "locale": "en-US",
   "audioPolicy": {
     "provider": "kokoro",
@@ -28,7 +28,7 @@
           "variantId": "ef-en-us-family-v1",
           "focus": "first-syllable stress",
           "topic": "people and home",
-          "definition": "the people related to you",
+          "definition": "people who are related to you or belong to your family",
           "example": "My family eats dinner together."
         },
         {
@@ -37,7 +37,7 @@
           "pos": "noun",
           "ipa": "/ˈwɔtər/",
           "variantId": "ef-en-us-water-v1",
-          "focus": "American medial flap",
+          "focus": "broad /t/; a common American flap may appear in natural speech",
           "topic": "daily needs",
           "definition": "the clear liquid people drink",
           "example": "Please give me some water."
@@ -367,7 +367,7 @@
           "variantId": "ef-en-us-airport-v1",
           "focus": "compound stress",
           "topic": "travel",
-          "definition": "a place where airplanes arrive",
+          "definition": "a place where airplanes arrive and depart",
           "example": "We arrived at the airport early."
         },
         {
@@ -477,7 +477,7 @@
           "variantId": "ef-en-us-apartment-v1",
           "focus": "middle-syllable stress",
           "topic": "home",
-          "definition": "rooms in a larger building",
+          "definition": "a set of rooms for living in a building",
           "example": "They rent an apartment.",
           "unitType": "word",
           "expectedSyllableCount": 3,
@@ -522,9 +522,9 @@
           "id": "004",
           "text": "could you help me",
           "pos": "phrase",
-          "ipa": "/kʊd ju hɛlp mi/",
+          "ipa": "/kʊdʒu hɛlp mi/",
           "variantId": "ef-en-us-could-you-help-me-v1",
-          "focus": "connected /d j/",
+          "focus": "connected /dʒ/ in could you",
           "topic": "requests",
           "definition": "a polite request for help",
           "example": "Could you help me with this bag?"
@@ -595,7 +595,7 @@
           "pos": "verb",
           "ipa": "/wɔk/",
           "variantId": "ef-en-us-walk-v1",
-          "focus": "silent letter and /ɔ/",
+          "focus": "open back vowel /ɔ/ and final /k/",
           "topic": "routine",
           "definition": "to move on foot",
           "example": "I walk to the store.",
@@ -800,7 +800,7 @@
           "focus": "third-syllable stress",
           "topic": "work",
           "definition": "a favorable chance",
-          "example": "This course is an opportunity.",
+          "example": "This course is an opportunity to learn new skills.",
           "unitType": "word",
           "expectedSyllableCount": 5,
           "primaryStressIndex": 2
@@ -861,7 +861,7 @@
           "id": "003",
           "text": "work as a team",
           "pos": "phrase",
-          "ipa": "/wɝk æz ə tim/",
+          "ipa": "/wɝk əz ə tim/",
           "variantId": "ef-en-us-work-as-a-team-v1",
           "focus": "connected weak forms",
           "topic": "collaboration",
@@ -898,7 +898,7 @@
           "decoys": [
             {
               "id": "001-decoy-1",
-              "text": "effect"
+              "text": "afford"
             },
             {
               "id": "001-decoy-2",
@@ -1003,7 +1003,7 @@
           "pos": "adverb",
           "ipa": "/kwaɪt/",
           "variantId": "ef-en-us-quite-v1",
-          "focus": "final /t/",
+          "focus": "one-syllable /kwaɪt/ versus nearby vowel patterns",
           "topic": "degree",
           "definition": "to a noticeable degree",
           "example": "The task is quite difficult.",
@@ -1078,7 +1078,7 @@
           "variantId": "ef-en-us-negotiate-v1",
           "focus": "primary and secondary stress",
           "topic": "professional life",
-          "definition": "to discuss to reach agreement",
+          "definition": "to discuss something in order to reach agreement",
           "example": "They will negotiate the contract."
         },
         {
@@ -1248,7 +1248,7 @@
           "decoys": [
             {
               "id": "001-decoy-1",
-              "text": "principal"
+              "text": "printable"
             },
             {
               "id": "001-decoy-2",
@@ -1266,7 +1266,7 @@
           "pos": "verb",
           "ipa": "/ˈkɑmpləˌmɛnt/",
           "variantId": "ef-en-us-complement-v1",
-          "focus": "final stress contrast",
+          "focus": "first-syllable stress and final /mɛnt/",
           "topic": "description",
           "definition": "to complete or improve something",
           "example": "The colors complement each other.",
@@ -1277,7 +1277,7 @@
           "decoys": [
             {
               "id": "002-decoy-1",
-              "text": "compliment"
+              "text": "implement"
             },
             {
               "id": "002-decoy-2",
@@ -1295,9 +1295,9 @@
           "pos": "verb",
           "ipa": "/saɪt/",
           "variantId": "ef-en-us-cite-v1",
-          "focus": "initial /s/",
+          "focus": "diphthong /aɪ/ and final /t/",
           "topic": "academic work",
-          "definition": "to refer to a source",
+          "definition": "to identify a source in writing or speech",
           "example": "Please cite the study.",
           "answer": {
             "id": "003-answer",
@@ -1306,11 +1306,11 @@
           "decoys": [
             {
               "id": "003-decoy-1",
-              "text": "site"
+              "text": "seat"
             },
             {
               "id": "003-decoy-2",
-              "text": "sight"
+              "text": "set"
             },
             {
               "id": "003-decoy-3",
@@ -1335,7 +1335,7 @@
           "decoys": [
             {
               "id": "004-decoy-1",
-              "text": "insure"
+              "text": "injure"
             },
             {
               "id": "004-decoy-2",
@@ -1426,7 +1426,7 @@
           "pos": "verb",
           "ipa": "/səbˈstænʃiˌeɪt/",
           "variantId": "ef-en-us-substantiate-v1",
-          "focus": "stress and affrication",
+          "focus": "stress and /ʃ/ before -iate",
           "topic": "academic argument",
           "definition": "to support a claim with evidence",
           "example": "Substantiate the conclusion."
@@ -1437,7 +1437,7 @@
           "pos": "noun",
           "ipa": "/ˈpɛrəˌdaɪm/",
           "variantId": "ef-en-us-paradigm-v1",
-          "focus": "silent final letter",
+          "focus": "first-syllable stress and the /daɪm/ ending",
           "topic": "research",
           "definition": "a framework for understanding",
           "example": "The discovery shifted the paradigm."
@@ -1602,7 +1602,7 @@
             },
             {
               "id": "001-decoy-2",
-              "text": "immanent"
+              "text": "emigrate"
             },
             {
               "id": "001-decoy-3",
@@ -1627,7 +1627,7 @@
           "decoys": [
             {
               "id": "002-decoy-1",
-              "text": "illicit"
+              "text": "elastic"
             },
             {
               "id": "002-decoy-2",
@@ -1656,7 +1656,7 @@
           "decoys": [
             {
               "id": "003-decoy-1",
-              "text": "discreet"
+              "text": "describe"
             },
             {
               "id": "003-decoy-2",
@@ -1747,7 +1747,7 @@
             },
             {
               "id": "006-decoy-2",
-              "text": "elusion"
+              "text": "collusion"
             },
             {
               "id": "006-decoy-3",

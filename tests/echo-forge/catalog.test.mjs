@@ -107,10 +107,10 @@ test('catalog identities, pronunciation provenance, audio identity, and listenin
     assert.ok(item.pronunciation.pos);
     assert.ok(item.pronunciation.ipa);
     assert.ok(item.pronunciation.variantId);
-    assert.equal(item.provenance.sourceKind, 'curated');
+    assert.equal(item.provenance.sourceKind, 'project_authored');
     assert.ok(item.provenance.sourceId);
-    assert.equal(item.provenance.license, 'pending-review');
-    assert.equal(item.provenance.verificationStatus, 'pending_human_review');
+    assert.equal(item.provenance.license, 'project_internal');
+    assert.equal(item.provenance.verificationStatus, 'automated_content_reviewed');
 
     assert.match(item.audio.identitySha256, /^[a-f0-9]{64}$/);
     assert.equal(item.audio.hashKind, 'identity_metadata_sha256');
@@ -192,4 +192,26 @@ test('reviewed learner examples avoid elliptical or ambiguous wording', async ()
   const byId = Object.fromEntries(catalog.challenges.map((item) => [item.challengeId, item]));
   assert.equal(byId['ef-a2-listening-002'].resource.example, 'The bus leaves at fifteen past the hour.');
   assert.equal(byId['ef-c1-listening-004'].resource.example, 'A pilot study should precede the trial.');
+});
+
+test('isolated listening choices avoid known en-US homophones and duplicate acoustic distractors', async () => {
+  const catalog = buildCatalog(await loadJson(sourceUrl));
+  const byId = Object.fromEntries(catalog.challenges.map((item) => [item.challengeId, item]));
+  const prohibited = {
+    'ef-b2-listening-001': ['principal'],
+    'ef-b2-listening-002': ['compliment'],
+    'ef-b2-listening-003': ['site', 'sight'],
+    'ef-b2-listening-004': ['insure'],
+    'ef-c1-listening-001': ['immanent'],
+    'ef-c1-listening-002': ['illicit'],
+    'ef-c1-listening-003': ['discreet'],
+    'ef-c1-listening-006': ['elusion'],
+  };
+
+  for (const [challengeId, disallowedOptions] of Object.entries(prohibited)) {
+    const options = byId[challengeId].listening.options.map((option) => option.text.toLowerCase());
+    for (const disallowed of disallowedOptions) {
+      assert.equal(options.includes(disallowed), false, `${challengeId} includes ${disallowed}`);
+    }
+  }
 });

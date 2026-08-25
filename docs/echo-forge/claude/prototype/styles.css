@@ -1,0 +1,697 @@
+/* ===================================================================
+   Echo Forge — Minimal Luminous Training Arena
+   Static Prototype Styles
+   =================================================================== */
+
+:root {
+  /* Contract palette constraints: slate, violet, cyan, amber */
+  --ef-slate-900: #0f172a;
+  --ef-slate-800: #1e293b;
+  --ef-slate-700: #334155;
+  --ef-slate-600: #475569;
+  --ef-cyan-400: #22d3ee;
+  --ef-cyan-500: #06b6d4;
+  --ef-violet-400: #a78bfa;
+  --ef-violet-500: #8b5cf6;
+  --ef-amber-400: #fbbf24;
+  --ef-amber-500: #f59e0b;
+  --ef-success: #10b981;
+  --ef-error: #ef4444;
+  --ef-neutral: #94a3b8;
+  --ef-text-primary: #f8fafc;
+  --ef-text-secondary: #cbd5e1;
+
+  /* Layout */
+  --ef-stage-max-width: 1200px;
+  --ef-action-btn-height: 48px;
+  --ef-action-btn-radius: 24px;
+  --ef-health-bar-height: 8px;
+
+  /* Z-Order (from contract + spec) */
+  --ef-z-stage-bg: 10;
+  --ef-z-hero: 20;
+  --ef-z-combat-result: 30;
+  --ef-z-analysis-hold: 40;
+  --ef-z-hud: 50;
+  --ef-z-status: 55;
+  --ef-z-action-bar: 60;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  background: var(--ef-slate-900);
+  color: var(--ef-text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ─── Stage Container ─────────────────────────────────────────── */
+
+.ef-stage {
+  position: relative;
+  max-width: var(--ef-stage-max-width);
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── HUD ──────────────────────────────────────────────────────── */
+
+.ef-hud {
+  position: relative;
+  z-index: var(--ef-z-hud);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 24px 0;
+  gap: 16px;
+}
+
+.ef-health-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.ef-health-group--enemy {
+  align-items: flex-end;
+}
+
+.ef-health-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ef-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ef-health-bar {
+  width: 100%;
+  height: var(--ef-health-bar-height);
+  background: var(--ef-slate-700);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ef-health-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.ef-health-fill--hero {
+  background: var(--ef-cyan-400);
+}
+
+.ef-health-fill--enemy {
+  background: var(--ef-violet-400);
+}
+
+.ef-health-value {
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ef-text-secondary);
+}
+
+/* ─── Meters (Focus + Resonance) ──────────────────────────────── */
+
+.ef-meters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: var(--ef-z-hud);
+}
+
+.ef-meter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ef-meter-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ef-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  min-width: 75px;
+}
+
+.ef-meter-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.ef-pip {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--ef-slate-600);
+  background: transparent;
+}
+
+.ef-pip--focus {
+  border-radius: 2px;
+}
+
+.ef-pip--resonance {
+  transform: rotate(45deg);
+}
+
+.ef-pip--filled {
+  background: var(--ef-amber-400);
+  border-color: var(--ef-amber-400);
+}
+
+.ef-pip--resonance.ef-pip--filled {
+  background: var(--ef-amber-500);
+  border-color: var(--ef-amber-500);
+}
+
+/* ─── Recording Indicator ─────────────────────────────────────── */
+
+.ef-rec-indicator {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ef-neutral);
+  z-index: var(--ef-z-hud);
+}
+
+.ef-rec-indicator.active {
+  color: var(--ef-cyan-400);
+}
+
+.ef-rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ef-slate-600);
+}
+
+.ef-rec-indicator.active .ef-rec-dot {
+  background: var(--ef-cyan-400);
+}
+
+/* Reduced-motion: no pulse */
+@media (prefers-reduced-motion: no-preference) {
+  .ef-rec-indicator.active .ef-rec-dot {
+    animation: rec-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ─── Arena ────────────────────────────────────────────────────── */
+
+.ef-arena {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px;
+  min-height: 320px;
+  /* Perspective grid */
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(30,41,59,0.3) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(51,65,85,0.15) 59px, rgba(51,65,85,0.15) 60px),
+    repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(51,65,85,0.1) 59px, rgba(51,65,85,0.1) 60px);
+  z-index: var(--ef-z-stage-bg);
+}
+
+.ef-arena-floor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ef-slate-700), transparent);
+}
+
+/* ─── Characters ──────────────────────────────────────────────── */
+
+.ef-characters {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  z-index: var(--ef-z-hero);
+}
+
+.ef-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Hero silhouette (CSS-drawn for prototype) */
+.ef-hero-sprite {
+  width: 80px;
+  height: 160px;
+  position: relative;
+}
+
+.ef-hero-sprite::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ef-cyan-400);
+  box-shadow: 0 0 20px var(--ef-cyan-500);
+}
+
+.ef-hero-sprite::after {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 100px;
+  background: var(--ef-cyan-400);
+  clip-path: polygon(30% 0%, 70% 0%, 80% 50%, 100% 100%, 70% 90%, 50% 100%, 30% 90%, 0% 100%, 20% 50%);
+  box-shadow: 0 0 15px var(--ef-cyan-500);
+  opacity: 0.9;
+}
+
+/* Sound waves from hero */
+.ef-sound-waves {
+  position: absolute;
+  top: 10px;
+  right: -40px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ef-sound-waves.active {
+  opacity: 1;
+}
+
+.ef-sound-wave {
+  width: 20px;
+  height: 2px;
+  background: var(--ef-cyan-400);
+  border-radius: 1px;
+  transform-origin: left center;
+}
+
+.ef-sound-wave:nth-child(1) { width: 12px; }
+.ef-sound-wave:nth-child(2) { width: 20px; }
+.ef-sound-wave:nth-child(3) { width: 16px; }
+.ef-sound-wave:nth-child(4) { width: 20px; }
+.ef-sound-wave:nth-child(5) { width: 12px; }
+
+/* Enemy geometric construct (CSS-drawn for prototype) */
+.ef-enemy-sprite {
+  width: 90px;
+  height: 150px;
+  position: relative;
+}
+
+.ef-enemy-sprite::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: var(--ef-violet-400);
+  clip-path: polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%);
+  box-shadow: 0 0 15px var(--ef-violet-500);
+}
+
+.ef-enemy-sprite::after {
+  content: '';
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 90px;
+  background: var(--ef-violet-400);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 30%, 90% 60%, 100% 100%, 60% 80%, 40% 80%, 0% 100%, 10% 60%, 0% 30%);
+  box-shadow: 0 0 12px var(--ef-violet-500);
+  opacity: 0.85;
+}
+
+/* ─── Waveform Visualization ──────────────────────────────────── */
+
+.ef-waveform {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40%;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  z-index: var(--ef-z-combat-result);
+}
+
+.ef-waveform-bar {
+  width: 3px;
+  background: var(--ef-slate-600);
+  border-radius: 2px;
+  height: 4px;
+  transition: height 0.1s, background 0.3s;
+}
+
+.ef-waveform.recording .ef-waveform-bar {
+  background: var(--ef-cyan-400);
+}
+
+.ef-waveform.analyzing .ef-waveform-bar {
+  background: var(--ef-amber-400);
+}
+
+/* ─── Status Text ─────────────────────────────────────────────── */
+
+.ef-status {
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ef-text-primary);
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 6px;
+  z-index: var(--ef-z-status);
+  margin: 8px 24px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ef-status-icon {
+  font-size: 16px;
+}
+
+/* ─── Action Bar ──────────────────────────────────────────────── */
+
+.ef-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 24px 20px;
+  z-index: var(--ef-z-action-bar);
+}
+
+.ef-action-btn {
+  height: var(--ef-action-btn-height);
+  min-width: 120px;
+  padding: 0 24px;
+  border: 1.5px solid var(--ef-slate-700);
+  border-radius: var(--ef-action-btn-radius);
+  background: var(--ef-slate-800);
+  color: var(--ef-text-primary);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ef-action-btn:hover {
+  border-color: var(--ef-cyan-400);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+}
+
+.ef-action-btn--attack:hover,
+.ef-action-btn--attack:focus-visible {
+  border-color: var(--ef-cyan-400);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+}
+
+.ef-action-btn--block:hover,
+.ef-action-btn--block:focus-visible {
+  border-color: var(--ef-violet-400);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.25);
+}
+
+.ef-action-btn--parry:hover,
+.ef-action-btn--parry:focus-visible {
+  border-color: var(--ef-amber-400);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+}
+
+.ef-action-btn:focus-visible {
+  outline: 3px solid var(--ef-amber-400);
+  outline-offset: 2px;
+}
+
+.ef-action-btn:active {
+  background: rgba(34, 211, 238, 0.1);
+}
+
+.ef-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mic button */
+.ef-mic-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  padding: 0;
+  border: 1.5px solid var(--ef-slate-700);
+  border-radius: 50%;
+  background: var(--ef-slate-800);
+  color: var(--ef-text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ef-mic-btn:hover {
+  border-color: var(--ef-cyan-400);
+  color: var(--ef-cyan-400);
+}
+
+.ef-mic-btn.active {
+  border-color: var(--ef-cyan-400);
+  color: var(--ef-cyan-400);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.3);
+}
+
+.ef-mic-btn:focus-visible {
+  outline: 3px solid var(--ef-amber-400);
+  outline-offset: 2px;
+}
+
+/* ─── Controls Bar (prototype only) ───────────────────────────── */
+
+.ef-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-top: 1px solid var(--ef-slate-700);
+  background: var(--ef-slate-800);
+  flex-wrap: wrap;
+}
+
+.ef-controls label {
+  font-size: 12px;
+  color: var(--ef-text-secondary);
+}
+
+.ef-controls select,
+.ef-controls button {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--ef-slate-600);
+  border-radius: 4px;
+  background: var(--ef-slate-900);
+  color: var(--ef-text-primary);
+  cursor: pointer;
+}
+
+.ef-controls button:hover {
+  border-color: var(--ef-cyan-400);
+}
+
+.ef-reduced-motion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ─── Result Flash Overlay ────────────────────────────────────── */
+
+.ef-result-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ef-result-flash.success {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  opacity: 1;
+}
+
+.ef-result-flash.failure {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
+  opacity: 1;
+}
+
+/* ─── Responsive: Mobile (360px) ──────────────────────────────── */
+
+@media (max-width: 640px) {
+  .ef-hud {
+    padding: 12px 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .ef-health-group {
+    min-width: 100px;
+  }
+
+  .ef-meters {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    order: 3;
+    margin-top: 4px;
+  }
+
+  .ef-arena {
+    min-height: 240px;
+    padding: 16px;
+  }
+
+  .ef-characters {
+    max-width: 280px;
+  }
+
+  .ef-hero-sprite {
+    width: 56px;
+    height: 112px;
+  }
+
+  .ef-hero-sprite::before {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ef-hero-sprite::after {
+    top: 28px;
+    width: 30px;
+    height: 70px;
+  }
+
+  .ef-enemy-sprite {
+    width: 60px;
+    height: 105px;
+  }
+
+  .ef-enemy-sprite::before {
+    width: 30px;
+    height: 30px;
+  }
+
+  .ef-enemy-sprite::after {
+    top: 34px;
+    width: 38px;
+    height: 60px;
+  }
+
+  .ef-waveform {
+    width: 50%;
+    height: 48px;
+  }
+
+  .ef-action-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 16px 16px;
+  }
+
+  .ef-action-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .ef-mic-btn {
+    width: 100%;
+    border-radius: var(--ef-action-btn-radius);
+    height: 44px;
+  }
+
+  .ef-status {
+    margin: 4px 16px;
+    font-size: 13px;
+  }
+
+  .ef-rec-indicator {
+    right: 16px;
+  }
+
+  .ef-controls {
+    padding: 6px 16px;
+  }
+}
+
+/* ─── Reduced Motion ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.reduced-motion *, .reduced-motion *::before, .reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

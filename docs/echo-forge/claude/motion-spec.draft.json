@@ -1,0 +1,198 @@
+{
+  "$schema": "./motion-spec.schema.draft.json",
+  "specId": "echo-forge-motion-draft-v1",
+  "direction": "minimal-luminous-training-arena",
+  "motionGrammar": {
+    "phases": ["windUp", "analysisHold", "resolve", "returnToIdle"],
+    "sequence": "windUp → analysisHold (loopable, cancellable) → result-specific resolve → returnToIdle",
+    "description": "All combat actions follow this four-phase motion grammar. Timing is expressed through named variables supplied by the engine; no fixed production durations are specified."
+  },
+  "timingVariables": {
+    "motion.idle": {
+      "description": "Idle state duration — engine-controlled, no visual timer",
+      "defaultBehavior": "Hold indefinitely until next event"
+    },
+    "motion.windUp": {
+      "description": "Anticipation phase before action resolves",
+      "defaultBehavior": "Play wind-up animation once, then wait for engine signal"
+    },
+    "motion.analysisHold": {
+      "description": "Loopable hold while pronunciation analysis is pending",
+      "defaultBehavior": "Loop ef-analysis-hold frames continuously until analysis.resolved, analysis.noop, or cancellation",
+      "loopable": true,
+      "cancellable": true,
+      "safeStop": "On cancel or failure, immediately display staticFallbackFrame (frame 0, hold-1) and return to idle"
+    },
+    "motion.resultResolve": {
+      "description": "Result-specific resolve animation after analysis completes",
+      "defaultBehavior": "Play ef-combat-result frames (wind-up → resolve → return) once"
+    },
+    "motion.returnToIdle": {
+      "description": "Transition back to idle state after result resolves",
+      "defaultBehavior": "Return hero to ef-hero-idle frame 0"
+    }
+  },
+  "eventToMotionMapping": [
+    {
+      "event": "sandbox.setup.completed",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Arena initializes. Hero and enemy appear in idle poses."
+    },
+    {
+      "event": "combat.started",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Combat begins. HUD fully visible. Status: 'Combat begins'."
+    },
+    {
+      "event": "player.action.selected",
+      "motionPhase": "windUp",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Player selects action. Hero enters wind-up anticipation."
+    },
+    {
+      "event": "recording.started",
+      "motionPhase": "windUp",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Recording begins. Hero in listening pose. Waveform visualization active."
+    },
+    {
+      "event": "recording.stopped",
+      "motionPhase": "windUp",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Recording ends. Waveform freezes. Transition to analysis."
+    },
+    {
+      "event": "analysis.pending",
+      "motionPhase": "analysisHold",
+      "heroSlot": "ef-analysis-hold",
+      "heroFrame": "loop:0-3",
+      "description": "Analysis in progress. ef-analysis-hold loops through 4 frames. Must remain readable and cancellable."
+    },
+    {
+      "event": "analysis.resolved",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": "sequence:0-2",
+      "description": "Analysis complete. Play ef-combat-result (wind-up → resolve → return). Result depends on payload."
+    },
+    {
+      "event": "analysis.noop",
+      "motionPhase": "returnToIdle",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Analysis unavailable. No combat judgment. Return to idle immediately. Status: neutral system message."
+    },
+    {
+      "event": "player.attack.resolved",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": "sequence:0-2",
+      "description": "Attack result plays. ef-combat-result resolve frame shows attack outcome."
+    },
+    {
+      "event": "enemy.intent.presented",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Enemy telegraphs intent. Hero remains idle. Enemy enters telegraph pose."
+    },
+    {
+      "event": "player.block.resolved",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": "sequence:0-2",
+      "description": "Block result plays. Shield geometry effect."
+    },
+    {
+      "event": "player.parry.started",
+      "motionPhase": "windUp",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": 0,
+      "description": "Parry wind-up. Hero begins counter stance."
+    },
+    {
+      "event": "player.parry.resolved",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": "sequence:0-2",
+      "description": "Parry result plays. Reflected energy effect."
+    },
+    {
+      "event": "combat.damage.applied",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": 1,
+      "description": "Damage applied. Health bar ticks down. Receiving character flashes."
+    },
+    {
+      "event": "combat.focus.changed",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Focus meter updates. No motion change. HUD-only update."
+    },
+    {
+      "event": "combat.resonance.ready",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Resonance gauge full. Visual indicator activates (glow border, READY badge)."
+    },
+    {
+      "event": "combat.resonance.consumed",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": "sequence:0-2",
+      "description": "Resonance burst plays. Expanding amber ring effect."
+    },
+    {
+      "event": "combat.victory",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": 1,
+      "description": "Victory. Hero in raised-arms pose. Enemy collapses. Status: 'Victory! Training complete.'"
+    },
+    {
+      "event": "combat.defeat",
+      "motionPhase": "resolve",
+      "heroSlot": "ef-combat-result",
+      "heroFrame": 1,
+      "description": "Defeat. Hero kneels. Status: 'Defeat. Training ended.'"
+    },
+    {
+      "event": "combat.abandoned",
+      "motionPhase": "returnToIdle",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Session abandoned. Return to idle. Status: 'Training session ended.'"
+    },
+    {
+      "event": "telemetry.exported",
+      "motionPhase": "none",
+      "heroSlot": "ef-hero-idle",
+      "heroFrame": 0,
+      "description": "Export complete. No visual change. Status: 'Session data exported.'"
+    }
+  ],
+  "staticFirstPolicy": {
+    "description": "All states must have a clear static-first fallback for the initial sandbox build. Motion states are defined as semantically identical enhancements that can be layered in later.",
+    "reducedMotion": "static-equivalent",
+    "staticFallbackFrames": {
+      "ef-hero-idle": 0,
+      "ef-analysis-hold": 0,
+      "ef-combat-result": 1
+    }
+  },
+  "analysisHoldBehavior": {
+    "readability": "The ef-analysis-hold animation must remain visually readable at all times during pending analysis. The hero character and status text must never be obscured by the hold effect. The waveform visualization pulses in amber to indicate processing.",
+    "safeStop": "On cancellation, timeout, or analysis failure: immediately stop the loop, display staticFallbackFrame (frame 0), clear the waveform to flat line, and transition to returnToIdle. No jarring visual artifacts.",
+    "cancellation": "The engine can cancel analysisHold at any time. The visual system must handle this gracefully within a single frame update."
+  }
+}

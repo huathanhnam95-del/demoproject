@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bel.local/echo-forge/visual-contract.schema.json",
+  "title": "Echo Forge visual contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "contractId",
+    "schemaVersion",
+    "eventTypes",
+    "assetSlots",
+    "accessibility",
+    "backendBoundary",
+    "assetIdentityPolicy"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "./visual-contract.schema.json"
+    },
+    "contractId": {
+      "type": "string",
+      "const": "echo-forge-visual-v1"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "visual-contract-v1"
+    },
+    "eventTypes": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "sandbox.setup.completed",
+          "combat.started",
+          "player.action.selected",
+          "recording.started",
+          "recording.stopped",
+          "analysis.pending",
+          "analysis.resolved",
+          "analysis.noop",
+          "player.attack.resolved",
+          "enemy.intent.presented",
+          "player.block.resolved",
+          "player.parry.started",
+          "player.parry.resolved",
+          "combat.damage.applied",
+          "combat.focus.changed",
+          "combat.resonance.ready",
+          "combat.resonance.consumed",
+          "combat.victory",
+          "combat.defeat",
+          "combat.abandoned",
+          "telemetry.exported"
+        ]
+      }
+    },
+    "assetSlots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/assetSlot"
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statusTextHook", "nonColorOnly", "reducedMotion"],
+      "properties": {
+        "statusTextHook": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z][a-z0-9-]*)+$"
+        },
+        "nonColorOnly": {
+          "type": "boolean",
+          "const": true
+        },
+        "reducedMotion": {
+          "type": "string",
+          "enum": ["static-equivalent", "disable-motion"]
+        }
+      }
+    },
+    "backendBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visualOnly", "protectedResponsibilities", "untrustedInputPolicy"],
+      "properties": {
+        "visualOnly": {
+          "type": "boolean",
+          "const": true
+        },
+        "protectedResponsibilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "untrustedInputPolicy": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "assetIdentityPolicy": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "assetSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "stateEvents",
+        "canvas",
+        "frameCount",
+        "frameOrder",
+        "pivot",
+        "padding",
+        "zOrder",
+        "paletteConstraints",
+        "staticFallbackFrame",
+        "mobileSafeCrop",
+        "loop",
+        "timingVariable"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "stateEvents": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "sandbox.setup.completed",
+              "combat.started",
+              "player.action.selected",
+              "recording.started",
+              "recording.stopped",
+              "analysis.pending",
+              "analysis.resolved",
+              "analysis.noop",
+              "player.attack.resolved",
+              "enemy.intent.presented",
+              "player.block.resolved",
+              "player.parry.started",
+              "player.parry.resolved",
+              "combat.damage.applied",
+              "combat.focus.changed",
+              "combat.resonance.ready",
+              "combat.resonance.consumed",
+              "combat.victory",
+              "combat.defeat",
+              "combat.abandoned",
+              "telemetry.exported"
+            ]
+          }
+        },
+        "canvas": {
+          "type": "object",
+          "$ref": "#/$defs/rectangle"
+        },
+        "frameCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "frameOrder": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 120,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "pivot": {
+          "type": "object",
+          "$ref": "#/$defs/point"
+        },
+        "padding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["top", "right", "bottom", "left"],
+          "properties": {
+            "top": { "type": "integer", "minimum": 0, "maximum": 4096 },
+            "right": { "type": "integer", "minimum": 0, "maximum": 4096 },
+            "bottom": { "type": "integer", "minimum": 0, "maximum": 4096 },
+            "left": { "type": "integer", "minimum": 0, "maximum": 4096 }
+          }
+        },
+        "zOrder": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "paletteConstraints": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:#[0-9a-fA-F]{6}|[a-z][a-z0-9-]*)$"
+          }
+        },
+        "staticFallbackFrame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 119
+        },
+        "mobileSafeCrop": {
+          "type": "object",
+          "$ref": "#/$defs/rectangle"
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "timingVariable": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]*(?:\\.[a-z][a-zA-Z0-9-]*)+$",
+          "minLength": 3,
+          "maxLength": 120
+        }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 4096 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 4096 }
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 4096 }
+      }
+    },
+    "provenanceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "sha256",
+        "model",
+        "modelVersion",
+        "promptId",
+        "referenceIds",
+        "licenseStatus",
+        "reviewStatus"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "promptId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "referenceIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "licenseStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewStatus": {
+          "type": "string",
+          "enum": ["draft", "approved", "rejected"]
+        }
+      }
+    },
+    "provenanceSidecar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "sha256",
+        "model",
+        "modelVersion",
+        "promptId",
+        "referenceIds",
+        "licenseStatus",
+        "reviewStatus"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "promptId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "referenceIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "licenseStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewStatus": {
+          "type": "string",
+          "enum": ["draft", "approved", "rejected"]
+        }
+      }
+    }
+  }
+}

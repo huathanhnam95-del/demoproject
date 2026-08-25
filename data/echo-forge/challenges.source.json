@@ -1,0 +1,1761 @@
+{
+  "contentVersion": "2026.08.23.v1",
+  "locale": "en-US",
+  "audioPolicy": {
+    "provider": "kokoro",
+    "voiceId": "af_heart",
+    "version": "ef-audio-v1"
+  },
+  "levels": {
+    "A1": {
+      "azureWords": [
+        {
+          "id": "001",
+          "text": "hello",
+          "pos": "interjection",
+          "ipa": "/həˈloʊ/",
+          "variantId": "ef-en-us-hello-v1",
+          "focus": "initial /h/ and final diphthong",
+          "topic": "greetings",
+          "definition": "a word used when meeting someone",
+          "example": "Hello, my name is Lan."
+        },
+        {
+          "id": "002",
+          "text": "family",
+          "pos": "noun",
+          "ipa": "/ˈfæməli/",
+          "variantId": "ef-en-us-family-v1",
+          "focus": "first-syllable stress",
+          "topic": "people and home",
+          "definition": "the people related to you",
+          "example": "My family eats dinner together."
+        },
+        {
+          "id": "003",
+          "text": "water",
+          "pos": "noun",
+          "ipa": "/ˈwɔtər/",
+          "variantId": "ef-en-us-water-v1",
+          "focus": "American medial flap",
+          "topic": "daily needs",
+          "definition": "the clear liquid people drink",
+          "example": "Please give me some water."
+        },
+        {
+          "id": "004",
+          "text": "school",
+          "pos": "noun",
+          "ipa": "/skul/",
+          "variantId": "ef-en-us-school-v1",
+          "focus": "initial /sk/ cluster",
+          "topic": "learning",
+          "definition": "a place where people study",
+          "example": "The school is near my home."
+        },
+        {
+          "id": "005",
+          "text": "morning",
+          "pos": "noun",
+          "ipa": "/ˈmɔrnɪŋ/",
+          "variantId": "ef-en-us-morning-v1",
+          "focus": "final /ŋ/",
+          "topic": "daily routine",
+          "definition": "the early part of the day",
+          "example": "I walk every morning."
+        },
+        {
+          "id": "006",
+          "text": "happy",
+          "pos": "adjective",
+          "ipa": "/ˈhæpi/",
+          "variantId": "ef-en-us-happy-v1",
+          "focus": "short /æ/ and final /i/",
+          "topic": "feelings",
+          "definition": "feeling pleased or glad",
+          "example": "I am happy to see you."
+        }
+      ],
+      "v3Words": [
+        {
+          "id": "001",
+          "text": "apple",
+          "pos": "noun",
+          "ipa": "/ˈæpəl/",
+          "variantId": "ef-en-us-apple-v1",
+          "focus": "first-syllable stress",
+          "topic": "food",
+          "definition": "a round fruit",
+          "example": "I eat an apple at lunch.",
+          "unitType": "word",
+          "expectedSyllableCount": 2,
+          "primaryStressIndex": 0
+        },
+        {
+          "id": "002",
+          "text": "banana",
+          "pos": "noun",
+          "ipa": "/bəˈnænə/",
+          "variantId": "ef-en-us-banana-v1",
+          "focus": "middle-syllable stress",
+          "topic": "food",
+          "definition": "a long yellow fruit",
+          "example": "The banana is sweet.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "003",
+          "text": "computer",
+          "pos": "noun",
+          "ipa": "/kəmˈpjutər/",
+          "variantId": "ef-en-us-computer-v1",
+          "focus": "middle-syllable stress",
+          "topic": "learning",
+          "definition": "an electronic machine",
+          "example": "I use a computer at school.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "004",
+          "text": "important",
+          "pos": "adjective",
+          "ipa": "/ɪmˈpɔrtənt/",
+          "variantId": "ef-en-us-important-v1",
+          "focus": "middle-syllable stress",
+          "topic": "communication",
+          "definition": "having great value",
+          "example": "This message is important.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        }
+      ],
+      "azurePhrases": [
+        {
+          "id": "001",
+          "text": "good morning",
+          "pos": "phrase",
+          "ipa": "/ɡʊd ˈmɔrnɪŋ/",
+          "variantId": "ef-en-us-good-morning-v1",
+          "focus": "clear word boundary",
+          "topic": "greetings",
+          "definition": "a greeting used early in the day",
+          "example": "Say good morning to your teacher."
+        },
+        {
+          "id": "002",
+          "text": "thank you",
+          "pos": "phrase",
+          "ipa": "/ˈθæŋk ju/",
+          "variantId": "ef-en-us-thank-you-v1",
+          "focus": "initial /θ/ and linking",
+          "topic": "politeness",
+          "definition": "words that show gratitude",
+          "example": "Thank you for your help."
+        },
+        {
+          "id": "003",
+          "text": "my name is",
+          "pos": "phrase",
+          "ipa": "/maɪ ˈneɪm ɪz/",
+          "variantId": "ef-en-us-my-name-is-v1",
+          "focus": "smooth linking",
+          "topic": "introductions",
+          "definition": "words used before a name",
+          "example": "My name is Minh."
+        },
+        {
+          "id": "004",
+          "text": "I like music",
+          "pos": "phrase",
+          "ipa": "/aɪ laɪk ˈmjuzɪk/",
+          "variantId": "ef-en-us-i-like-music-v1",
+          "focus": "final consonants",
+          "topic": "interests",
+          "definition": "a simple statement of preference",
+          "example": "I like music after school."
+        }
+      ],
+      "listening": [
+        {
+          "id": "001",
+          "text": "ship",
+          "pos": "noun",
+          "ipa": "/ʃɪp/",
+          "variantId": "ef-en-us-ship-v1",
+          "focus": "short /ɪ/",
+          "topic": "travel",
+          "definition": "a large boat",
+          "example": "The ship is at the port.",
+          "answer": {
+            "id": "001-answer",
+            "text": "ship"
+          },
+          "decoys": [
+            {
+              "id": "001-decoy-1",
+              "text": "sheep"
+            },
+            {
+              "id": "001-decoy-2",
+              "text": "shop"
+            },
+            {
+              "id": "001-decoy-3",
+              "text": "chip"
+            }
+          ]
+        },
+        {
+          "id": "002",
+          "text": "cat",
+          "pos": "noun",
+          "ipa": "/kæt/",
+          "variantId": "ef-en-us-cat-v1",
+          "focus": "short /æ/",
+          "topic": "animals",
+          "definition": "a small pet animal",
+          "example": "The cat is on the chair.",
+          "answer": {
+            "id": "002-answer",
+            "text": "cat"
+          },
+          "decoys": [
+            {
+              "id": "002-decoy-1",
+              "text": "cap"
+            },
+            {
+              "id": "002-decoy-2",
+              "text": "cut"
+            },
+            {
+              "id": "002-decoy-3",
+              "text": "cot"
+            }
+          ]
+        },
+        {
+          "id": "003",
+          "text": "pen",
+          "pos": "noun",
+          "ipa": "/pɛn/",
+          "variantId": "ef-en-us-pen-v1",
+          "focus": "short /ɛ/",
+          "topic": "classroom",
+          "definition": "a tool for writing",
+          "example": "I have a blue pen.",
+          "answer": {
+            "id": "003-answer",
+            "text": "pen"
+          },
+          "decoys": [
+            {
+              "id": "003-decoy-1",
+              "text": "pan"
+            },
+            {
+              "id": "003-decoy-2",
+              "text": "pin"
+            },
+            {
+              "id": "003-decoy-3",
+              "text": "ten"
+            }
+          ]
+        },
+        {
+          "id": "004",
+          "text": "rice",
+          "pos": "noun",
+          "ipa": "/raɪs/",
+          "variantId": "ef-en-us-rice-v1",
+          "focus": "final unvoiced /s/",
+          "topic": "food",
+          "definition": "small grains cooked as food",
+          "example": "We eat rice for dinner.",
+          "answer": {
+            "id": "004-answer",
+            "text": "rice"
+          },
+          "decoys": [
+            {
+              "id": "004-decoy-1",
+              "text": "rise"
+            },
+            {
+              "id": "004-decoy-2",
+              "text": "race"
+            },
+            {
+              "id": "004-decoy-3",
+              "text": "ice"
+            }
+          ]
+        },
+        {
+          "id": "005",
+          "text": "coat",
+          "pos": "noun",
+          "ipa": "/koʊt/",
+          "variantId": "ef-en-us-coat-v1",
+          "focus": "final /t/",
+          "topic": "clothing",
+          "definition": "warm outer clothing",
+          "example": "Wear your coat outside.",
+          "answer": {
+            "id": "005-answer",
+            "text": "coat"
+          },
+          "decoys": [
+            {
+              "id": "005-decoy-1",
+              "text": "goat"
+            },
+            {
+              "id": "005-decoy-2",
+              "text": "code"
+            },
+            {
+              "id": "005-decoy-3",
+              "text": "cold"
+            }
+          ]
+        },
+        {
+          "id": "006",
+          "text": "three",
+          "pos": "number",
+          "ipa": "/θri/",
+          "variantId": "ef-en-us-three-v1",
+          "focus": "initial /θ/",
+          "topic": "numbers",
+          "definition": "the number after two",
+          "example": "I have three books.",
+          "answer": {
+            "id": "006-answer",
+            "text": "three"
+          },
+          "decoys": [
+            {
+              "id": "006-decoy-1",
+              "text": "tree"
+            },
+            {
+              "id": "006-decoy-2",
+              "text": "free"
+            },
+            {
+              "id": "006-decoy-3",
+              "text": "there"
+            }
+          ]
+        }
+      ]
+    },
+    "A2": {
+      "azureWords": [
+        {
+          "id": "001",
+          "text": "airport",
+          "pos": "noun",
+          "ipa": "/ˈɛrˌpɔrt/",
+          "variantId": "ef-en-us-airport-v1",
+          "focus": "compound stress",
+          "topic": "travel",
+          "definition": "a place where airplanes arrive",
+          "example": "We arrived at the airport early."
+        },
+        {
+          "id": "002",
+          "text": "ticket",
+          "pos": "noun",
+          "ipa": "/ˈtɪkɪt/",
+          "variantId": "ef-en-us-ticket-v1",
+          "focus": "short vowels",
+          "topic": "travel",
+          "definition": "a pass for a journey or event",
+          "example": "Keep your train ticket safe."
+        },
+        {
+          "id": "003",
+          "text": "weekend",
+          "pos": "noun",
+          "ipa": "/ˈwikˌɛnd/",
+          "variantId": "ef-en-us-weekend-v1",
+          "focus": "compound stress",
+          "topic": "time",
+          "definition": "Saturday and Sunday",
+          "example": "We visit friends on the weekend."
+        },
+        {
+          "id": "004",
+          "text": "weather",
+          "pos": "noun",
+          "ipa": "/ˈwɛðər/",
+          "variantId": "ef-en-us-weather-v1",
+          "focus": "voiced /ð/",
+          "topic": "daily life",
+          "definition": "the condition of the air outside",
+          "example": "The weather is warm today."
+        },
+        {
+          "id": "005",
+          "text": "doctor",
+          "pos": "noun",
+          "ipa": "/ˈdɑktər/",
+          "variantId": "ef-en-us-doctor-v1",
+          "focus": "first-syllable stress",
+          "topic": "health",
+          "definition": "a person trained to treat illness",
+          "example": "The doctor gave me advice."
+        },
+        {
+          "id": "006",
+          "text": "kitchen",
+          "pos": "noun",
+          "ipa": "/ˈkɪtʃən/",
+          "variantId": "ef-en-us-kitchen-v1",
+          "focus": "unstressed final syllable",
+          "topic": "home",
+          "definition": "a room where food is prepared",
+          "example": "Breakfast is ready in the kitchen."
+        }
+      ],
+      "v3Words": [
+        {
+          "id": "001",
+          "text": "vacation",
+          "pos": "noun",
+          "ipa": "/veɪˈkeɪʃən/",
+          "variantId": "ef-en-us-vacation-v1",
+          "focus": "middle-syllable stress",
+          "topic": "travel",
+          "definition": "time away from work or school",
+          "example": "Our vacation starts Monday.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "002",
+          "text": "tomorrow",
+          "pos": "adverb",
+          "ipa": "/təˈmɑroʊ/",
+          "variantId": "ef-en-us-tomorrow-v1",
+          "focus": "middle-syllable stress",
+          "topic": "time",
+          "definition": "on the day after today",
+          "example": "I will call you tomorrow.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "003",
+          "text": "expensive",
+          "pos": "adjective",
+          "ipa": "/ɪkˈspɛnsɪv/",
+          "variantId": "ef-en-us-expensive-v1",
+          "focus": "middle-syllable stress",
+          "topic": "shopping",
+          "definition": "costing a lot of money",
+          "example": "That jacket is expensive.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "004",
+          "text": "apartment",
+          "pos": "noun",
+          "ipa": "/əˈpɑrtmənt/",
+          "variantId": "ef-en-us-apartment-v1",
+          "focus": "middle-syllable stress",
+          "topic": "home",
+          "definition": "rooms in a larger building",
+          "example": "They rent an apartment.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        }
+      ],
+      "azurePhrases": [
+        {
+          "id": "001",
+          "text": "turn left",
+          "pos": "phrase",
+          "ipa": "/tɝn lɛft/",
+          "variantId": "ef-en-us-turn-left-v1",
+          "focus": "final consonant clusters",
+          "topic": "directions",
+          "definition": "an instruction to go left",
+          "example": "Turn left at the bank."
+        },
+        {
+          "id": "002",
+          "text": "catch the bus",
+          "pos": "phrase",
+          "ipa": "/kætʃ ðə bʌs/",
+          "variantId": "ef-en-us-catch-the-bus-v1",
+          "focus": "linking and /ð/",
+          "topic": "travel",
+          "definition": "to get on a bus before it leaves",
+          "example": "We catch the bus at eight."
+        },
+        {
+          "id": "003",
+          "text": "see you tomorrow",
+          "pos": "phrase",
+          "ipa": "/si ju təˈmɑroʊ/",
+          "variantId": "ef-en-us-see-you-tomorrow-v1",
+          "focus": "smooth linking",
+          "topic": "plans",
+          "definition": "a farewell until the next day",
+          "example": "See you tomorrow after class."
+        },
+        {
+          "id": "004",
+          "text": "could you help me",
+          "pos": "phrase",
+          "ipa": "/kʊd ju hɛlp mi/",
+          "variantId": "ef-en-us-could-you-help-me-v1",
+          "focus": "connected /d j/",
+          "topic": "requests",
+          "definition": "a polite request for help",
+          "example": "Could you help me with this bag?"
+        }
+      ],
+      "listening": [
+        {
+          "id": "001",
+          "text": "beach",
+          "pos": "noun",
+          "ipa": "/bitʃ/",
+          "variantId": "ef-en-us-beach-v1",
+          "focus": "long /i/",
+          "topic": "travel",
+          "definition": "a sandy place beside the sea",
+          "example": "We walked along the beach.",
+          "answer": {
+            "id": "001-answer",
+            "text": "beach"
+          },
+          "decoys": [
+            {
+              "id": "001-decoy-1",
+              "text": "peach"
+            },
+            {
+              "id": "001-decoy-2",
+              "text": "bench"
+            },
+            {
+              "id": "001-decoy-3",
+              "text": "batch"
+            }
+          ]
+        },
+        {
+          "id": "002",
+          "text": "fifteen",
+          "pos": "number",
+          "ipa": "/ˌfɪfˈtin/",
+          "variantId": "ef-en-us-fifteen-v1",
+          "focus": "final-syllable stress",
+          "topic": "numbers",
+          "definition": "the number 15",
+          "example": "The bus leaves at fifteen past the hour.",
+          "answer": {
+            "id": "002-answer",
+            "text": "fifteen"
+          },
+          "decoys": [
+            {
+              "id": "002-decoy-1",
+              "text": "fifty"
+            },
+            {
+              "id": "002-decoy-2",
+              "text": "fourteen"
+            },
+            {
+              "id": "002-decoy-3",
+              "text": "sixteen"
+            }
+          ]
+        },
+        {
+          "id": "003",
+          "text": "walk",
+          "pos": "verb",
+          "ipa": "/wɔk/",
+          "variantId": "ef-en-us-walk-v1",
+          "focus": "silent letter and /ɔ/",
+          "topic": "routine",
+          "definition": "to move on foot",
+          "example": "I walk to the store.",
+          "answer": {
+            "id": "003-answer",
+            "text": "walk"
+          },
+          "decoys": [
+            {
+              "id": "003-decoy-1",
+              "text": "work"
+            },
+            {
+              "id": "003-decoy-2",
+              "text": "woke"
+            },
+            {
+              "id": "003-decoy-3",
+              "text": "wall"
+            }
+          ]
+        },
+        {
+          "id": "004",
+          "text": "price",
+          "pos": "noun",
+          "ipa": "/praɪs/",
+          "variantId": "ef-en-us-price-v1",
+          "focus": "final /s/",
+          "topic": "shopping",
+          "definition": "the money something costs",
+          "example": "Check the price first.",
+          "answer": {
+            "id": "004-answer",
+            "text": "price"
+          },
+          "decoys": [
+            {
+              "id": "004-decoy-1",
+              "text": "prize"
+            },
+            {
+              "id": "004-decoy-2",
+              "text": "press"
+            },
+            {
+              "id": "004-decoy-3",
+              "text": "place"
+            }
+          ]
+        },
+        {
+          "id": "005",
+          "text": "leave",
+          "pos": "verb",
+          "ipa": "/liv/",
+          "variantId": "ef-en-us-leave-v1",
+          "focus": "long /i/ and voiced /v/",
+          "topic": "travel",
+          "definition": "to go away from a place",
+          "example": "We leave at noon.",
+          "answer": {
+            "id": "005-answer",
+            "text": "leave"
+          },
+          "decoys": [
+            {
+              "id": "005-decoy-1",
+              "text": "live"
+            },
+            {
+              "id": "005-decoy-2",
+              "text": "leaf"
+            },
+            {
+              "id": "005-decoy-3",
+              "text": "left"
+            }
+          ]
+        },
+        {
+          "id": "006",
+          "text": "quiet",
+          "pos": "adjective",
+          "ipa": "/ˈkwaɪət/",
+          "variantId": "ef-en-us-quiet-v1",
+          "focus": "two-vowel sequence",
+          "topic": "places",
+          "definition": "making little noise",
+          "example": "The library is quiet.",
+          "answer": {
+            "id": "006-answer",
+            "text": "quiet"
+          },
+          "decoys": [
+            {
+              "id": "006-decoy-1",
+              "text": "quite"
+            },
+            {
+              "id": "006-decoy-2",
+              "text": "quick"
+            },
+            {
+              "id": "006-decoy-3",
+              "text": "quilt"
+            }
+          ]
+        }
+      ]
+    },
+    "B1": {
+      "azureWords": [
+        {
+          "id": "001",
+          "text": "deadline",
+          "pos": "noun",
+          "ipa": "/ˈdɛdˌlaɪn/",
+          "variantId": "ef-en-us-deadline-v1",
+          "focus": "compound stress",
+          "topic": "work",
+          "definition": "the latest time work must be finished",
+          "example": "Our deadline is Friday."
+        },
+        {
+          "id": "002",
+          "text": "project",
+          "pos": "noun",
+          "ipa": "/ˈprɑdʒɛkt/",
+          "variantId": "ef-en-us-project-v1",
+          "focus": "noun stress pattern",
+          "topic": "work and study",
+          "definition": "a planned piece of work",
+          "example": "The team completed the project."
+        },
+        {
+          "id": "003",
+          "text": "improve",
+          "pos": "verb",
+          "ipa": "/ɪmˈpruv/",
+          "variantId": "ef-en-us-improve-v1",
+          "focus": "second-syllable stress",
+          "topic": "learning",
+          "definition": "to make something better",
+          "example": "Practice will improve your fluency."
+        },
+        {
+          "id": "004",
+          "text": "opinion",
+          "pos": "noun",
+          "ipa": "/əˈpɪnjən/",
+          "variantId": "ef-en-us-opinion-v1",
+          "focus": "three-syllable rhythm",
+          "topic": "discussion",
+          "definition": "a belief or judgment",
+          "example": "Please explain your opinion."
+        },
+        {
+          "id": "005",
+          "text": "environment",
+          "pos": "noun",
+          "ipa": "/ɪnˈvaɪrənmənt/",
+          "variantId": "ef-en-us-environment-v1",
+          "focus": "reduced syllables",
+          "topic": "society",
+          "definition": "the natural world or surroundings",
+          "example": "We should protect the environment."
+        },
+        {
+          "id": "006",
+          "text": "reliable",
+          "pos": "adjective",
+          "ipa": "/rɪˈlaɪəbəl/",
+          "variantId": "ef-en-us-reliable-v1",
+          "focus": "four-syllable rhythm",
+          "topic": "work",
+          "definition": "able to be trusted",
+          "example": "She is a reliable colleague."
+        }
+      ],
+      "v3Words": [
+        {
+          "id": "001",
+          "text": "education",
+          "pos": "noun",
+          "ipa": "/ˌɛdʒəˈkeɪʃən/",
+          "variantId": "ef-en-us-education-v1",
+          "focus": "third-syllable stress",
+          "topic": "learning",
+          "definition": "the process of teaching and learning",
+          "example": "Education creates opportunities.",
+          "unitType": "word",
+          "expectedSyllableCount": 4,
+          "primaryStressIndex": 2
+        },
+        {
+          "id": "002",
+          "text": "opportunity",
+          "pos": "noun",
+          "ipa": "/ˌɑpərˈtunəti/",
+          "variantId": "ef-en-us-opportunity-v1",
+          "focus": "third-syllable stress",
+          "topic": "work",
+          "definition": "a favorable chance",
+          "example": "This course is an opportunity.",
+          "unitType": "word",
+          "expectedSyllableCount": 5,
+          "primaryStressIndex": 2
+        },
+        {
+          "id": "003",
+          "text": "successful",
+          "pos": "adjective",
+          "ipa": "/səkˈsɛsfəl/",
+          "variantId": "ef-en-us-successful-v1",
+          "focus": "middle-syllable stress",
+          "topic": "achievement",
+          "definition": "achieving the intended result",
+          "example": "The event was successful.",
+          "unitType": "word",
+          "expectedSyllableCount": 3,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "004",
+          "text": "community",
+          "pos": "noun",
+          "ipa": "/kəˈmjunəti/",
+          "variantId": "ef-en-us-community-v1",
+          "focus": "second-syllable stress",
+          "topic": "society",
+          "definition": "people living or working together",
+          "example": "The community supports the library.",
+          "unitType": "word",
+          "expectedSyllableCount": 4,
+          "primaryStressIndex": 1
+        }
+      ],
+      "azurePhrases": [
+        {
+          "id": "001",
+          "text": "meet the deadline",
+          "pos": "phrase",
+          "ipa": "/mit ðə ˈdɛdˌlaɪn/",
+          "variantId": "ef-en-us-meet-the-deadline-v1",
+          "focus": "linking and stress",
+          "topic": "work",
+          "definition": "to finish work on time",
+          "example": "We worked late to meet the deadline."
+        },
+        {
+          "id": "002",
+          "text": "share your opinion",
+          "pos": "phrase",
+          "ipa": "/ʃɛr jʊr əˈpɪnjən/",
+          "variantId": "ef-en-us-share-your-opinion-v1",
+          "focus": "linking /r j/",
+          "topic": "discussion",
+          "definition": "to tell others what you think",
+          "example": "Share your opinion with the group."
+        },
+        {
+          "id": "003",
+          "text": "work as a team",
+          "pos": "phrase",
+          "ipa": "/wɝk æz ə tim/",
+          "variantId": "ef-en-us-work-as-a-team-v1",
+          "focus": "connected weak forms",
+          "topic": "collaboration",
+          "definition": "to cooperate with others",
+          "example": "We work as a team."
+        },
+        {
+          "id": "004",
+          "text": "solve the problem",
+          "pos": "phrase",
+          "ipa": "/sɑlv ðə ˈprɑbləm/",
+          "variantId": "ef-en-us-solve-the-problem-v1",
+          "focus": "consonant clusters",
+          "topic": "problem solving",
+          "definition": "to find an answer to a difficulty",
+          "example": "Let's solve the problem together."
+        }
+      ],
+      "listening": [
+        {
+          "id": "001",
+          "text": "affect",
+          "pos": "verb",
+          "ipa": "/əˈfɛkt/",
+          "variantId": "ef-en-us-affect-v1",
+          "focus": "initial schwa and final cluster",
+          "topic": "cause and result",
+          "definition": "to influence something",
+          "example": "Weather can affect travel.",
+          "answer": {
+            "id": "001-answer",
+            "text": "affect"
+          },
+          "decoys": [
+            {
+              "id": "001-decoy-1",
+              "text": "effect"
+            },
+            {
+              "id": "001-decoy-2",
+              "text": "infect"
+            },
+            {
+              "id": "001-decoy-3",
+              "text": "reflect"
+            }
+          ]
+        },
+        {
+          "id": "002",
+          "text": "advice",
+          "pos": "noun",
+          "ipa": "/ədˈvaɪs/",
+          "variantId": "ef-en-us-advice-v1",
+          "focus": "final unvoiced /s/",
+          "topic": "communication",
+          "definition": "a suggestion about what to do",
+          "example": "She gave useful advice.",
+          "answer": {
+            "id": "002-answer",
+            "text": "advice"
+          },
+          "decoys": [
+            {
+              "id": "002-decoy-1",
+              "text": "advise"
+            },
+            {
+              "id": "002-decoy-2",
+              "text": "device"
+            },
+            {
+              "id": "002-decoy-3",
+              "text": "advance"
+            }
+          ]
+        },
+        {
+          "id": "003",
+          "text": "desert",
+          "pos": "noun",
+          "ipa": "/ˈdɛzərt/",
+          "variantId": "ef-en-us-desert-v1",
+          "focus": "first-syllable noun stress",
+          "topic": "geography",
+          "definition": "a very dry area",
+          "example": "Few plants grow in the desert.",
+          "answer": {
+            "id": "003-answer",
+            "text": "desert"
+          },
+          "decoys": [
+            {
+              "id": "003-decoy-1",
+              "text": "dessert"
+            },
+            {
+              "id": "003-decoy-2",
+              "text": "design"
+            },
+            {
+              "id": "003-decoy-3",
+              "text": "desire"
+            }
+          ]
+        },
+        {
+          "id": "004",
+          "text": "accept",
+          "pos": "verb",
+          "ipa": "/əkˈsɛpt/",
+          "variantId": "ef-en-us-accept-v1",
+          "focus": "final /pt/ cluster",
+          "topic": "decisions",
+          "definition": "to agree to receive something",
+          "example": "I accept your invitation.",
+          "answer": {
+            "id": "004-answer",
+            "text": "accept"
+          },
+          "decoys": [
+            {
+              "id": "004-decoy-1",
+              "text": "except"
+            },
+            {
+              "id": "004-decoy-2",
+              "text": "expect"
+            },
+            {
+              "id": "004-decoy-3",
+              "text": "aspect"
+            }
+          ]
+        },
+        {
+          "id": "005",
+          "text": "quite",
+          "pos": "adverb",
+          "ipa": "/kwaɪt/",
+          "variantId": "ef-en-us-quite-v1",
+          "focus": "final /t/",
+          "topic": "degree",
+          "definition": "to a noticeable degree",
+          "example": "The task is quite difficult.",
+          "answer": {
+            "id": "005-answer",
+            "text": "quite"
+          },
+          "decoys": [
+            {
+              "id": "005-decoy-1",
+              "text": "quiet"
+            },
+            {
+              "id": "005-decoy-2",
+              "text": "quit"
+            },
+            {
+              "id": "005-decoy-3",
+              "text": "kite"
+            }
+          ]
+        },
+        {
+          "id": "006",
+          "text": "lose",
+          "pos": "verb",
+          "ipa": "/luz/",
+          "variantId": "ef-en-us-lose-v1",
+          "focus": "voiced final /z/",
+          "topic": "daily events",
+          "definition": "to no longer have something",
+          "example": "Do not lose your ticket.",
+          "answer": {
+            "id": "006-answer",
+            "text": "lose"
+          },
+          "decoys": [
+            {
+              "id": "006-decoy-1",
+              "text": "loose"
+            },
+            {
+              "id": "006-decoy-2",
+              "text": "use"
+            },
+            {
+              "id": "006-decoy-3",
+              "text": "choose"
+            }
+          ]
+        }
+      ]
+    },
+    "B2": {
+      "azureWords": [
+        {
+          "id": "001",
+          "text": "sustainable",
+          "pos": "adjective",
+          "ipa": "/səˈsteɪnəbəl/",
+          "variantId": "ef-en-us-sustainable-v1",
+          "focus": "reduced syllables",
+          "topic": "environment",
+          "definition": "able to continue without exhausting resources",
+          "example": "The city needs sustainable transport."
+        },
+        {
+          "id": "002",
+          "text": "negotiate",
+          "pos": "verb",
+          "ipa": "/nɪˈɡoʊʃiˌeɪt/",
+          "variantId": "ef-en-us-negotiate-v1",
+          "focus": "primary and secondary stress",
+          "topic": "professional life",
+          "definition": "to discuss to reach agreement",
+          "example": "They will negotiate the contract."
+        },
+        {
+          "id": "003",
+          "text": "perspective",
+          "pos": "noun",
+          "ipa": "/pərˈspɛktɪv/",
+          "variantId": "ef-en-us-perspective-v1",
+          "focus": "consonant cluster",
+          "topic": "ideas",
+          "definition": "a way of viewing something",
+          "example": "Consider another perspective."
+        },
+        {
+          "id": "004",
+          "text": "consequence",
+          "pos": "noun",
+          "ipa": "/ˈkɑnsəˌkwɛns/",
+          "variantId": "ef-en-us-consequence-v1",
+          "focus": "compound rhythm",
+          "topic": "cause and result",
+          "definition": "a result of an action",
+          "example": "One consequence was higher demand."
+        },
+        {
+          "id": "005",
+          "text": "innovative",
+          "pos": "adjective",
+          "ipa": "/ˈɪnəˌveɪtɪv/",
+          "variantId": "ef-en-us-innovative-v1",
+          "focus": "primary and secondary stress",
+          "topic": "technology",
+          "definition": "introducing new ideas",
+          "example": "They proposed an innovative design."
+        },
+        {
+          "id": "006",
+          "text": "credibility",
+          "pos": "noun",
+          "ipa": "/ˌkrɛdəˈbɪləti/",
+          "variantId": "ef-en-us-credibility-v1",
+          "focus": "five-syllable stress",
+          "topic": "argumentation",
+          "definition": "the quality of being believable",
+          "example": "Evidence increases credibility."
+        }
+      ],
+      "v3Words": [
+        {
+          "id": "001",
+          "text": "controversy",
+          "pos": "noun",
+          "ipa": "/ˈkɑntrəˌvɝsi/",
+          "variantId": "ef-en-us-controversy-v1",
+          "focus": "first-syllable stress",
+          "topic": "public debate",
+          "definition": "strong public disagreement",
+          "example": "The policy caused controversy.",
+          "unitType": "word",
+          "expectedSyllableCount": 4,
+          "primaryStressIndex": 0
+        },
+        {
+          "id": "002",
+          "text": "analysis",
+          "pos": "noun",
+          "ipa": "/əˈnæləsɪs/",
+          "variantId": "ef-en-us-analysis-v1",
+          "focus": "second-syllable stress",
+          "topic": "research",
+          "definition": "detailed examination",
+          "example": "The analysis revealed a trend.",
+          "unitType": "word",
+          "expectedSyllableCount": 4,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "003",
+          "text": "significant",
+          "pos": "adjective",
+          "ipa": "/sɪɡˈnɪfɪkənt/",
+          "variantId": "ef-en-us-significant-v1",
+          "focus": "second-syllable stress",
+          "topic": "evaluation",
+          "definition": "important enough to matter",
+          "example": "The change was significant.",
+          "unitType": "word",
+          "expectedSyllableCount": 4,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "004",
+          "text": "collaboration",
+          "pos": "noun",
+          "ipa": "/kəˌlæbəˈreɪʃən/",
+          "variantId": "ef-en-us-collaboration-v1",
+          "focus": "fourth-syllable stress",
+          "topic": "professional life",
+          "definition": "the act of working together",
+          "example": "The report required collaboration.",
+          "unitType": "word",
+          "expectedSyllableCount": 5,
+          "primaryStressIndex": 3
+        }
+      ],
+      "azurePhrases": [
+        {
+          "id": "001",
+          "text": "weigh the evidence",
+          "pos": "phrase",
+          "ipa": "/weɪ ði ˈɛvədəns/",
+          "variantId": "ef-en-us-weigh-the-evidence-v1",
+          "focus": "function-word reduction",
+          "topic": "argumentation",
+          "definition": "to judge how strong evidence is",
+          "example": "Researchers must weigh the evidence."
+        },
+        {
+          "id": "002",
+          "text": "reach a consensus",
+          "pos": "phrase",
+          "ipa": "/ritʃ ə kənˈsɛnsəs/",
+          "variantId": "ef-en-us-reach-a-consensus-v1",
+          "focus": "linking and stress",
+          "topic": "collaboration",
+          "definition": "to achieve general agreement",
+          "example": "The committee reached a consensus."
+        },
+        {
+          "id": "003",
+          "text": "challenge an assumption",
+          "pos": "phrase",
+          "ipa": "/ˈtʃælɪndʒ ən əˈsʌmpʃən/",
+          "variantId": "ef-en-us-challenge-an-assumption-v1",
+          "focus": "connected vowels",
+          "topic": "critical thinking",
+          "definition": "to question an accepted idea",
+          "example": "Research may challenge an assumption."
+        },
+        {
+          "id": "004",
+          "text": "address the consequences",
+          "pos": "phrase",
+          "ipa": "/əˈdrɛs ðə ˈkɑnsəˌkwɛnsɪz/",
+          "variantId": "ef-en-us-address-the-consequences-v1",
+          "focus": "stress contrast",
+          "topic": "problem solving",
+          "definition": "to deal with results",
+          "example": "The plan must address the consequences."
+        }
+      ],
+      "listening": [
+        {
+          "id": "001",
+          "text": "principle",
+          "pos": "noun",
+          "ipa": "/ˈprɪnsəpəl/",
+          "variantId": "ef-en-us-principle-v1",
+          "focus": "unstressed final syllables",
+          "topic": "ethics",
+          "definition": "a basic rule or belief",
+          "example": "Fairness is a principle.",
+          "answer": {
+            "id": "001-answer",
+            "text": "principle"
+          },
+          "decoys": [
+            {
+              "id": "001-decoy-1",
+              "text": "principal"
+            },
+            {
+              "id": "001-decoy-2",
+              "text": "principled"
+            },
+            {
+              "id": "001-decoy-3",
+              "text": "participate"
+            }
+          ]
+        },
+        {
+          "id": "002",
+          "text": "complement",
+          "pos": "verb",
+          "ipa": "/ˈkɑmpləˌmɛnt/",
+          "variantId": "ef-en-us-complement-v1",
+          "focus": "final stress contrast",
+          "topic": "description",
+          "definition": "to complete or improve something",
+          "example": "The colors complement each other.",
+          "answer": {
+            "id": "002-answer",
+            "text": "complement"
+          },
+          "decoys": [
+            {
+              "id": "002-decoy-1",
+              "text": "compliment"
+            },
+            {
+              "id": "002-decoy-2",
+              "text": "component"
+            },
+            {
+              "id": "002-decoy-3",
+              "text": "complicate"
+            }
+          ]
+        },
+        {
+          "id": "003",
+          "text": "cite",
+          "pos": "verb",
+          "ipa": "/saɪt/",
+          "variantId": "ef-en-us-cite-v1",
+          "focus": "initial /s/",
+          "topic": "academic work",
+          "definition": "to refer to a source",
+          "example": "Please cite the study.",
+          "answer": {
+            "id": "003-answer",
+            "text": "cite"
+          },
+          "decoys": [
+            {
+              "id": "003-decoy-1",
+              "text": "site"
+            },
+            {
+              "id": "003-decoy-2",
+              "text": "sight"
+            },
+            {
+              "id": "003-decoy-3",
+              "text": "side"
+            }
+          ]
+        },
+        {
+          "id": "004",
+          "text": "ensure",
+          "pos": "verb",
+          "ipa": "/ɪnˈʃʊr/",
+          "variantId": "ef-en-us-ensure-v1",
+          "focus": "second-syllable stress",
+          "topic": "planning",
+          "definition": "to make certain",
+          "example": "Check the data to ensure accuracy.",
+          "answer": {
+            "id": "004-answer",
+            "text": "ensure"
+          },
+          "decoys": [
+            {
+              "id": "004-decoy-1",
+              "text": "insure"
+            },
+            {
+              "id": "004-decoy-2",
+              "text": "assure"
+            },
+            {
+              "id": "004-decoy-3",
+              "text": "endure"
+            }
+          ]
+        },
+        {
+          "id": "005",
+          "text": "adapt",
+          "pos": "verb",
+          "ipa": "/əˈdæpt/",
+          "variantId": "ef-en-us-adapt-v1",
+          "focus": "short /æ/",
+          "topic": "change",
+          "definition": "to adjust to conditions",
+          "example": "Teams must adapt to change.",
+          "answer": {
+            "id": "005-answer",
+            "text": "adapt"
+          },
+          "decoys": [
+            {
+              "id": "005-decoy-1",
+              "text": "adopt"
+            },
+            {
+              "id": "005-decoy-2",
+              "text": "adept"
+            },
+            {
+              "id": "005-decoy-3",
+              "text": "addict"
+            }
+          ]
+        },
+        {
+          "id": "006",
+          "text": "conscious",
+          "pos": "adjective",
+          "ipa": "/ˈkɑnʃəs/",
+          "variantId": "ef-en-us-conscious-v1",
+          "focus": "final /ʃəs/",
+          "topic": "awareness",
+          "definition": "aware of something",
+          "example": "We are conscious of the risks.",
+          "answer": {
+            "id": "006-answer",
+            "text": "conscious"
+          },
+          "decoys": [
+            {
+              "id": "006-decoy-1",
+              "text": "conscience"
+            },
+            {
+              "id": "006-decoy-2",
+              "text": "cautious"
+            },
+            {
+              "id": "006-decoy-3",
+              "text": "constant"
+            }
+          ]
+        }
+      ]
+    },
+    "C1": {
+      "azureWords": [
+        {
+          "id": "001",
+          "text": "ambiguity",
+          "pos": "noun",
+          "ipa": "/ˌæmbɪˈɡjuəti/",
+          "variantId": "ef-en-us-ambiguity-v1",
+          "focus": "five-syllable stress",
+          "topic": "academic argument",
+          "definition": "more than one possible meaning",
+          "example": "The wording creates ambiguity."
+        },
+        {
+          "id": "002",
+          "text": "substantiate",
+          "pos": "verb",
+          "ipa": "/səbˈstænʃiˌeɪt/",
+          "variantId": "ef-en-us-substantiate-v1",
+          "focus": "stress and affrication",
+          "topic": "academic argument",
+          "definition": "to support a claim with evidence",
+          "example": "Substantiate the conclusion."
+        },
+        {
+          "id": "003",
+          "text": "paradigm",
+          "pos": "noun",
+          "ipa": "/ˈpɛrəˌdaɪm/",
+          "variantId": "ef-en-us-paradigm-v1",
+          "focus": "silent final letter",
+          "topic": "research",
+          "definition": "a framework for understanding",
+          "example": "The discovery shifted the paradigm."
+        },
+        {
+          "id": "004",
+          "text": "nuanced",
+          "pos": "adjective",
+          "ipa": "/ˈnuˌɑnst/",
+          "variantId": "ef-en-us-nuanced-v1",
+          "focus": "final cluster",
+          "topic": "critical thinking",
+          "definition": "showing subtle distinctions",
+          "example": "She offered a nuanced interpretation."
+        },
+        {
+          "id": "005",
+          "text": "discrepancy",
+          "pos": "noun",
+          "ipa": "/dɪˈskrɛpənsi/",
+          "variantId": "ef-en-us-discrepancy-v1",
+          "focus": "initial cluster and stress",
+          "topic": "evidence",
+          "definition": "an unexpected difference",
+          "example": "The audit found a discrepancy."
+        },
+        {
+          "id": "006",
+          "text": "mitigate",
+          "pos": "verb",
+          "ipa": "/ˈmɪtəˌɡeɪt/",
+          "variantId": "ef-en-us-mitigate-v1",
+          "focus": "primary and secondary stress",
+          "topic": "risk",
+          "definition": "to reduce a harmful effect",
+          "example": "The policy may mitigate risk."
+        }
+      ],
+      "v3Words": [
+        {
+          "id": "001",
+          "text": "methodology",
+          "pos": "noun",
+          "ipa": "/ˌmɛθəˈdɑlədʒi/",
+          "variantId": "ef-en-us-methodology-v1",
+          "focus": "third-syllable stress",
+          "topic": "research",
+          "definition": "a system of methods",
+          "example": "The paper explains its methodology.",
+          "unitType": "word",
+          "expectedSyllableCount": 5,
+          "primaryStressIndex": 2
+        },
+        {
+          "id": "002",
+          "text": "interdisciplinary",
+          "pos": "adjective",
+          "ipa": "/ˌɪntərˈdɪsəpləˌnɛri/",
+          "variantId": "ef-en-us-interdisciplinary-v1",
+          "focus": "third-syllable stress",
+          "topic": "academic work",
+          "definition": "involving several fields",
+          "example": "The project is interdisciplinary.",
+          "unitType": "word",
+          "expectedSyllableCount": 7,
+          "primaryStressIndex": 2
+        },
+        {
+          "id": "003",
+          "text": "legitimacy",
+          "pos": "noun",
+          "ipa": "/ləˈdʒɪtəməsi/",
+          "variantId": "ef-en-us-legitimacy-v1",
+          "focus": "second-syllable stress",
+          "topic": "governance",
+          "definition": "the quality of being justified",
+          "example": "Transparency strengthens legitimacy.",
+          "unitType": "word",
+          "expectedSyllableCount": 5,
+          "primaryStressIndex": 1
+        },
+        {
+          "id": "004",
+          "text": "unequivocal",
+          "pos": "adjective",
+          "ipa": "/ˌʌnɪˈkwɪvəkəl/",
+          "variantId": "ef-en-us-unequivocal-v1",
+          "focus": "third-syllable stress",
+          "topic": "argumentation",
+          "definition": "clear and leaving no doubt",
+          "example": "The evidence was unequivocal.",
+          "unitType": "word",
+          "expectedSyllableCount": 5,
+          "primaryStressIndex": 2
+        }
+      ],
+      "azurePhrases": [
+        {
+          "id": "001",
+          "text": "qualify the claim",
+          "pos": "phrase",
+          "ipa": "/ˈkwɑləˌfaɪ ðə kleɪm/",
+          "variantId": "ef-en-us-qualify-the-claim-v1",
+          "focus": "stress and linking",
+          "topic": "academic argument",
+          "definition": "to limit or clarify a statement",
+          "example": "The writer should qualify the claim."
+        },
+        {
+          "id": "002",
+          "text": "reconcile conflicting evidence",
+          "pos": "phrase",
+          "ipa": "/ˈrɛkənˌsaɪl kənˈflɪktɪŋ ˈɛvədəns/",
+          "variantId": "ef-en-us-reconcile-conflicting-evidence-v1",
+          "focus": "multiword stress",
+          "topic": "research",
+          "definition": "to explain opposing evidence",
+          "example": "The review reconciles conflicting evidence."
+        },
+        {
+          "id": "003",
+          "text": "articulate a nuanced position",
+          "pos": "phrase",
+          "ipa": "/ɑrˈtɪkjəˌleɪt ə ˈnuˌɑnst pəˈzɪʃən/",
+          "variantId": "ef-en-us-articulate-a-nuanced-position-v1",
+          "focus": "content-word prominence",
+          "topic": "critical thinking",
+          "definition": "to express a careful viewpoint",
+          "example": "Articulate a nuanced position."
+        },
+        {
+          "id": "004",
+          "text": "account for the discrepancy",
+          "pos": "phrase",
+          "ipa": "/əˈkaʊnt fɔr ðə dɪˈskrɛpənsi/",
+          "variantId": "ef-en-us-account-for-the-discrepancy-v1",
+          "focus": "function words and stress",
+          "topic": "evidence",
+          "definition": "to explain an unexpected difference",
+          "example": "The model cannot account for the discrepancy."
+        }
+      ],
+      "listening": [
+        {
+          "id": "001",
+          "text": "eminent",
+          "pos": "adjective",
+          "ipa": "/ˈɛmənənt/",
+          "variantId": "ef-en-us-eminent-v1",
+          "focus": "first-syllable stress",
+          "topic": "professional status",
+          "definition": "famous and respected",
+          "example": "An eminent scholar spoke.",
+          "answer": {
+            "id": "001-answer",
+            "text": "eminent"
+          },
+          "decoys": [
+            {
+              "id": "001-decoy-1",
+              "text": "imminent"
+            },
+            {
+              "id": "001-decoy-2",
+              "text": "immanent"
+            },
+            {
+              "id": "001-decoy-3",
+              "text": "evident"
+            }
+          ]
+        },
+        {
+          "id": "002",
+          "text": "elicit",
+          "pos": "verb",
+          "ipa": "/ɪˈlɪsɪt/",
+          "variantId": "ef-en-us-elicit-v1",
+          "focus": "second-syllable stress",
+          "topic": "research",
+          "definition": "to draw out a response",
+          "example": "The question may elicit detail.",
+          "answer": {
+            "id": "002-answer",
+            "text": "elicit"
+          },
+          "decoys": [
+            {
+              "id": "002-decoy-1",
+              "text": "illicit"
+            },
+            {
+              "id": "002-decoy-2",
+              "text": "explicit"
+            },
+            {
+              "id": "002-decoy-3",
+              "text": "elide"
+            }
+          ]
+        },
+        {
+          "id": "003",
+          "text": "discrete",
+          "pos": "adjective",
+          "ipa": "/dɪˈskrit/",
+          "variantId": "ef-en-us-discrete-v1",
+          "focus": "long /i/",
+          "topic": "analysis",
+          "definition": "separate and distinct",
+          "example": "The model has discrete stages.",
+          "answer": {
+            "id": "003-answer",
+            "text": "discrete"
+          },
+          "decoys": [
+            {
+              "id": "003-decoy-1",
+              "text": "discreet"
+            },
+            {
+              "id": "003-decoy-2",
+              "text": "decrease"
+            },
+            {
+              "id": "003-decoy-3",
+              "text": "district"
+            }
+          ]
+        },
+        {
+          "id": "004",
+          "text": "precede",
+          "pos": "verb",
+          "ipa": "/prɪˈsid/",
+          "variantId": "ef-en-us-precede-v1",
+          "focus": "second-syllable stress",
+          "topic": "sequence",
+          "definition": "to come before",
+          "example": "A pilot study should precede the trial.",
+          "answer": {
+            "id": "004-answer",
+            "text": "precede"
+          },
+          "decoys": [
+            {
+              "id": "004-decoy-1",
+              "text": "proceed"
+            },
+            {
+              "id": "004-decoy-2",
+              "text": "preside"
+            },
+            {
+              "id": "004-decoy-3",
+              "text": "predict"
+            }
+          ]
+        },
+        {
+          "id": "005",
+          "text": "causal",
+          "pos": "adjective",
+          "ipa": "/ˈkɔzəl/",
+          "variantId": "ef-en-us-causal-v1",
+          "focus": "voiced medial consonant",
+          "topic": "research",
+          "definition": "relating to cause and effect",
+          "example": "The data do not prove a causal link.",
+          "answer": {
+            "id": "005-answer",
+            "text": "causal"
+          },
+          "decoys": [
+            {
+              "id": "005-decoy-1",
+              "text": "casual"
+            },
+            {
+              "id": "005-decoy-2",
+              "text": "coastal"
+            },
+            {
+              "id": "005-decoy-3",
+              "text": "crucial"
+            }
+          ]
+        },
+        {
+          "id": "006",
+          "text": "allusion",
+          "pos": "noun",
+          "ipa": "/əˈluʒən/",
+          "variantId": "ef-en-us-allusion-v1",
+          "focus": "medial /ʒ/",
+          "topic": "literature",
+          "definition": "an indirect reference",
+          "example": "The poem contains an allusion.",
+          "answer": {
+            "id": "006-answer",
+            "text": "allusion"
+          },
+          "decoys": [
+            {
+              "id": "006-decoy-1",
+              "text": "illusion"
+            },
+            {
+              "id": "006-decoy-2",
+              "text": "elusion"
+            },
+            {
+              "id": "006-decoy-3",
+              "text": "allocation"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

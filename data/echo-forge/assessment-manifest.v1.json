@@ -1,0 +1,258 @@
+{
+  "schemaVersion": "echo-forge-assessment-manifest-v1",
+  "contentVersion": "2026.08.23.v1",
+  "locale": "en-US",
+  "catalogSourceSha256": "64865c5c6c9005f602c02d492e83063abc9eff14eac4f262fa9886efb10082be",
+  "challenges": [
+    {
+      "challengeId": "ef-a1-azure-word-001",
+      "evaluationMode": "azure_word",
+      "referenceText": "hello"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-002",
+      "evaluationMode": "azure_word",
+      "referenceText": "family"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-003",
+      "evaluationMode": "azure_word",
+      "referenceText": "water"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-004",
+      "evaluationMode": "azure_word",
+      "referenceText": "school"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-005",
+      "evaluationMode": "azure_word",
+      "referenceText": "morning"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-006",
+      "evaluationMode": "azure_word",
+      "referenceText": "happy"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-001",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "good morning"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-002",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "thank you"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-003",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "my name is"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-004",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "I like music"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-001",
+      "evaluationMode": "azure_word",
+      "referenceText": "airport"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-002",
+      "evaluationMode": "azure_word",
+      "referenceText": "ticket"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-003",
+      "evaluationMode": "azure_word",
+      "referenceText": "weekend"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-004",
+      "evaluationMode": "azure_word",
+      "referenceText": "weather"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-005",
+      "evaluationMode": "azure_word",
+      "referenceText": "doctor"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-006",
+      "evaluationMode": "azure_word",
+      "referenceText": "kitchen"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-001",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "turn left"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-002",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "catch the bus"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-003",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "see you tomorrow"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-004",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "could you help me"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-001",
+      "evaluationMode": "azure_word",
+      "referenceText": "deadline"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-002",
+      "evaluationMode": "azure_word",
+      "referenceText": "project"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-003",
+      "evaluationMode": "azure_word",
+      "referenceText": "improve"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-004",
+      "evaluationMode": "azure_word",
+      "referenceText": "opinion"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-005",
+      "evaluationMode": "azure_word",
+      "referenceText": "environment"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-006",
+      "evaluationMode": "azure_word",
+      "referenceText": "reliable"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-001",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "meet the deadline"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-002",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "share your opinion"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-003",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "work as a team"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-004",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "solve the problem"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-001",
+      "evaluationMode": "azure_word",
+      "referenceText": "sustainable"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-002",
+      "evaluationMode": "azure_word",
+      "referenceText": "negotiate"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-003",
+      "evaluationMode": "azure_word",
+      "referenceText": "perspective"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-004",
+      "evaluationMode": "azure_word",
+      "referenceText": "consequence"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-005",
+      "evaluationMode": "azure_word",
+      "referenceText": "innovative"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-006",
+      "evaluationMode": "azure_word",
+      "referenceText": "credibility"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-001",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "weigh the evidence"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-002",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "reach a consensus"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-003",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "challenge an assumption"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-004",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "address the consequences"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-001",
+      "evaluationMode": "azure_word",
+      "referenceText": "ambiguity"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-002",
+      "evaluationMode": "azure_word",
+      "referenceText": "substantiate"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-003",
+      "evaluationMode": "azure_word",
+      "referenceText": "paradigm"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-004",
+      "evaluationMode": "azure_word",
+      "referenceText": "nuanced"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-005",
+      "evaluationMode": "azure_word",
+      "referenceText": "discrepancy"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-006",
+      "evaluationMode": "azure_word",
+      "referenceText": "mitigate"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-001",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "qualify the claim"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-002",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "reconcile conflicting evidence"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-003",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "articulate a nuanced position"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-004",
+      "evaluationMode": "azure_phrase",
+      "referenceText": "account for the discrepancy"
+    }
+  ]
+}

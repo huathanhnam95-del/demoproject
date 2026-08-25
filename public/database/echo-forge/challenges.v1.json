@@ -1,0 +1,4575 @@
+{
+  "schemaVersion": "echo-forge-challenge-catalog-v1",
+  "contentVersion": "2026.08.23.v1",
+  "locale": "en-US",
+  "sourceSha256": "64865c5c6c9005f602c02d492e83063abc9eff14eac4f262fa9886efb10082be",
+  "levelPolicies": {
+    "A1": {
+      "allowedSupportPresets": [
+        "guided",
+        "standard",
+        "challenge"
+      ],
+      "defaultSupportPreset": "standard",
+      "manualSelectionOnly": true
+    },
+    "A2": {
+      "allowedSupportPresets": [
+        "guided",
+        "standard",
+        "challenge"
+      ],
+      "defaultSupportPreset": "standard",
+      "manualSelectionOnly": true
+    },
+    "B1": {
+      "allowedSupportPresets": [
+        "guided",
+        "standard",
+        "challenge"
+      ],
+      "defaultSupportPreset": "standard",
+      "manualSelectionOnly": true
+    },
+    "B2": {
+      "allowedSupportPresets": [
+        "guided",
+        "standard",
+        "challenge"
+      ],
+      "defaultSupportPreset": "standard",
+      "manualSelectionOnly": true
+    },
+    "C1": {
+      "allowedSupportPresets": [
+        "guided",
+        "standard",
+        "challenge"
+      ],
+      "defaultSupportPreset": "standard",
+      "manualSelectionOnly": true
+    }
+  },
+  "challenges": [
+    {
+      "challengeId": "ef-a1-azure-word-001",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "greetings",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "hello",
+      "pronunciation": {
+        "pos": "interjection",
+        "ipa": "/həˈloʊ/",
+        "variantId": "ef-en-us-hello-v1",
+        "focus": "initial /h/ and final diphthong"
+      },
+      "resource": {
+        "definition": "a word used when meeting someone",
+        "example": "Hello, my name is Lan."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "8bb0a6766aed8353cc4fc754f7b09a9e5cd4b00049d92a07f13975a5569c4dbf",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4449bd6f82e680077405e155a10a9e2f10e75361334db2ccc8e45da0a74f3c1d"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-002",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "people and home",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "family",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈfæməli/",
+        "variantId": "ef-en-us-family-v1",
+        "focus": "first-syllable stress"
+      },
+      "resource": {
+        "definition": "the people related to you",
+        "example": "My family eats dinner together."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "778d64fefa501568a895e19f1ca863abaac3cdd3cdec8fb07ac494ae68ce35e9",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "72183cbe88c39281fb673cf7637e3fcc6a7dc12c77a17af98b3c14615f04e648"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-003",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "daily needs",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "water",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈwɔtər/",
+        "variantId": "ef-en-us-water-v1",
+        "focus": "American medial flap"
+      },
+      "resource": {
+        "definition": "the clear liquid people drink",
+        "example": "Please give me some water."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4029b5a453b6765b68db498d6fe4a9bc83ee7c78e69842f09d7290d3f41f8f39",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "15021a79a3ab5613496393a8367d0a4ff2f6182f9e0f5935edfdfb087dc59343"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-004",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "learning",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "school",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/skul/",
+        "variantId": "ef-en-us-school-v1",
+        "focus": "initial /sk/ cluster"
+      },
+      "resource": {
+        "definition": "a place where people study",
+        "example": "The school is near my home."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "019b967f2d15e3c414d1603ece41bf795285770e124af580ae5760b557fbca3d",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "c698104ee3efb995f5750ff4ad3d0cca2d778dc9b92f5c2f472687b0178eada9"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-005",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "daily routine",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "morning",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈmɔrnɪŋ/",
+        "variantId": "ef-en-us-morning-v1",
+        "focus": "final /ŋ/"
+      },
+      "resource": {
+        "definition": "the early part of the day",
+        "example": "I walk every morning."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "720470ff6522df2a5bdeb20331d3e8cf5f246ee840fdaaf50593aa2518ae0aa2",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "643b63ffe3f5d3c1d70f817c98ced6325dd0dfbfa32589ef0b200e972a7672e8"
+    },
+    {
+      "challengeId": "ef-a1-azure-word-006",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "feelings",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "happy",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈhæpi/",
+        "variantId": "ef-en-us-happy-v1",
+        "focus": "short /æ/ and final /i/"
+      },
+      "resource": {
+        "definition": "feeling pleased or glad",
+        "example": "I am happy to see you."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-word-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9708acd0bb4e10d683003cfca8e0eb893eef2f07c141b775ff88671071ac6d4e",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azureWords:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "284bf4310f0187ac4f0fa6598adf4ad8f63c879fb077f2531a30acc1d8020d49"
+    },
+    {
+      "challengeId": "ef-a1-v3-word-001",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "food",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "apple",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈæpəl/",
+        "variantId": "ef-en-us-apple-v1",
+        "focus": "first-syllable stress",
+        "expectedSyllableCount": 2,
+        "primaryStressIndex": 0
+      },
+      "resource": {
+        "definition": "a round fruit",
+        "example": "I eat an apple at lunch."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-v3-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "10993f6620a092b6e17ae86cf32f4557432647daeb121a9a6bc8805aa0a01619",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "98d694c4330c04dcb41643fb6b6313c9cb98b7c68bb8412d61144a3b184b416c"
+    },
+    {
+      "challengeId": "ef-a1-v3-word-002",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "food",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "banana",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/bəˈnænə/",
+        "variantId": "ef-en-us-banana-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "a long yellow fruit",
+        "example": "The banana is sweet."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-v3-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "737f82992008dc47107164ecfd52d8f248cad5cdcc4f83d5c4d421f767133b8a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "e2dab4444f4d8423188beff889fd6fb296653b905ad039495168c9e129f95029"
+    },
+    {
+      "challengeId": "ef-a1-v3-word-003",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "learning",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "computer",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/kəmˈpjutər/",
+        "variantId": "ef-en-us-computer-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "an electronic machine",
+        "example": "I use a computer at school."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-v3-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "af0223266ae8cf60c0ce45a68003c018d272d65b4d47922dc99c52e3ce58157c",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "bedea4f4223555156858ad9d7780f4cd8f71e817ba6866e9849c7d6c5ce6ae2f"
+    },
+    {
+      "challengeId": "ef-a1-v3-word-004",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "communication",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "important",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ɪmˈpɔrtənt/",
+        "variantId": "ef-en-us-important-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "having great value",
+        "example": "This message is important."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-v3-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9ce69203f4415c61518bc0e83645f83d5c94126861abe88a4070b0d4f765afdd",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:v3Words:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "ce78d8f60858deb1cdf463948a5c461ecfe87ba794b414d190124cf6e6ea9591"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-001",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "greetings",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "good morning",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ɡʊd ˈmɔrnɪŋ/",
+        "variantId": "ef-en-us-good-morning-v1",
+        "focus": "clear word boundary"
+      },
+      "resource": {
+        "definition": "a greeting used early in the day",
+        "example": "Say good morning to your teacher."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-phrase-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "5481bb317ecf625f9a6c25fe36c2662d40db314a1823896b76ffbd6b4224695a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "0a51797029594e4cc1aac1d593054b2713aee8ccfdc717dc9958aaede5222081"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-002",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "politeness",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "thank you",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ˈθæŋk ju/",
+        "variantId": "ef-en-us-thank-you-v1",
+        "focus": "initial /θ/ and linking"
+      },
+      "resource": {
+        "definition": "words that show gratitude",
+        "example": "Thank you for your help."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-phrase-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "c746d40dd03827bd5976ba2860fe4a7b13810e0fd2157a1368fdf842e7ce866a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "1728a863e6d3185715e368755dfedeb36d41715d2d18178fbebdd364c1cfb0c0"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-003",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "introductions",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "my name is",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/maɪ ˈneɪm ɪz/",
+        "variantId": "ef-en-us-my-name-is-v1",
+        "focus": "smooth linking"
+      },
+      "resource": {
+        "definition": "words used before a name",
+        "example": "My name is Minh."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-phrase-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9a5d29e996927411305c2c5f7e320af54460087360abe60d761f1a90b90dd2fc",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "8170e85dfd3f8da7d3cbf6781ccfc193b217c28f9dfcaddfc9afc328e2c09b73"
+    },
+    {
+      "challengeId": "ef-a1-azure-phrase-004",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "interests",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "I like music",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/aɪ laɪk ˈmjuzɪk/",
+        "variantId": "ef-en-us-i-like-music-v1",
+        "focus": "final consonants"
+      },
+      "resource": {
+        "definition": "a simple statement of preference",
+        "example": "I like music after school."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-azure-phrase-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "cd07c5687b56ac6e8a0c1abcd5ed85d3f8f7bf97059897f5a942d976ee2aa676",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:azurePhrases:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "df7e158a4b867076b546db701984ab50e7b0177347dd2a61e3e6d89e69ce0681"
+    },
+    {
+      "challengeId": "ef-a1-listening-001",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "ship",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ʃɪp/",
+        "variantId": "ef-en-us-ship-v1",
+        "focus": "short /ɪ/"
+      },
+      "resource": {
+        "definition": "a large boat",
+        "example": "The ship is at the port."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "920f7722eb3e7f231e004395e9a375cdf7ce9441a8901d5697ac9d1e240971c0",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "001-answer",
+        "decoyIds": [
+          "001-decoy-1",
+          "001-decoy-2",
+          "001-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "001-answer",
+            "text": "ship"
+          },
+          {
+            "optionId": "001-decoy-1",
+            "text": "sheep"
+          },
+          {
+            "optionId": "001-decoy-2",
+            "text": "shop"
+          },
+          {
+            "optionId": "001-decoy-3",
+            "text": "chip"
+          }
+        ]
+      },
+      "contentHash": "968b197294b93deebeff11f3290251725e526698e5f4f54520f55ba41bdde6d7"
+    },
+    {
+      "challengeId": "ef-a1-listening-002",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "animals",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "cat",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/kæt/",
+        "variantId": "ef-en-us-cat-v1",
+        "focus": "short /æ/"
+      },
+      "resource": {
+        "definition": "a small pet animal",
+        "example": "The cat is on the chair."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4fbd7f5497f389ef0e3c093ad6b2c96fa0d7a2db357ee2da74c68f879797d821",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "002-answer",
+        "decoyIds": [
+          "002-decoy-1",
+          "002-decoy-2",
+          "002-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "002-answer",
+            "text": "cat"
+          },
+          {
+            "optionId": "002-decoy-1",
+            "text": "cap"
+          },
+          {
+            "optionId": "002-decoy-2",
+            "text": "cut"
+          },
+          {
+            "optionId": "002-decoy-3",
+            "text": "cot"
+          }
+        ]
+      },
+      "contentHash": "6a556efae9a76fc8f1c6360cd091aa7769dea0607bd63a6df932c84008c7b6f3"
+    },
+    {
+      "challengeId": "ef-a1-listening-003",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "classroom",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "pen",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/pɛn/",
+        "variantId": "ef-en-us-pen-v1",
+        "focus": "short /ɛ/"
+      },
+      "resource": {
+        "definition": "a tool for writing",
+        "example": "I have a blue pen."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "97a502e4fb42c13e351ca24e15731ff97a85e7e8314d36dfcd24510808ae7aa2",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "003-answer",
+        "decoyIds": [
+          "003-decoy-1",
+          "003-decoy-2",
+          "003-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "003-answer",
+            "text": "pen"
+          },
+          {
+            "optionId": "003-decoy-1",
+            "text": "pan"
+          },
+          {
+            "optionId": "003-decoy-2",
+            "text": "pin"
+          },
+          {
+            "optionId": "003-decoy-3",
+            "text": "ten"
+          }
+        ]
+      },
+      "contentHash": "243d31b873fdbbf9cbe57d8c4324690486efe4df5484695676d1e2bbadad07b7"
+    },
+    {
+      "challengeId": "ef-a1-listening-004",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "food",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "rice",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/raɪs/",
+        "variantId": "ef-en-us-rice-v1",
+        "focus": "final unvoiced /s/"
+      },
+      "resource": {
+        "definition": "small grains cooked as food",
+        "example": "We eat rice for dinner."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "a4472c46b9e155c4c68556ae809e1a6b2970c754b2c5453b98abb2ac01fe45a4",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "004-answer",
+        "decoyIds": [
+          "004-decoy-1",
+          "004-decoy-2",
+          "004-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "004-answer",
+            "text": "rice"
+          },
+          {
+            "optionId": "004-decoy-1",
+            "text": "rise"
+          },
+          {
+            "optionId": "004-decoy-2",
+            "text": "race"
+          },
+          {
+            "optionId": "004-decoy-3",
+            "text": "ice"
+          }
+        ]
+      },
+      "contentHash": "86bc9e629b007f45e3a98bf87570b7dc804b05e4724a95e72e5f21b77c876005"
+    },
+    {
+      "challengeId": "ef-a1-listening-005",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "clothing",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "coat",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/koʊt/",
+        "variantId": "ef-en-us-coat-v1",
+        "focus": "final /t/"
+      },
+      "resource": {
+        "definition": "warm outer clothing",
+        "example": "Wear your coat outside."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "702ac8c8e78253852b9620db0a32c50bc63f00374fe0e6af16f114f5105d15f8",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "005-answer",
+        "decoyIds": [
+          "005-decoy-1",
+          "005-decoy-2",
+          "005-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "005-answer",
+            "text": "coat"
+          },
+          {
+            "optionId": "005-decoy-1",
+            "text": "goat"
+          },
+          {
+            "optionId": "005-decoy-2",
+            "text": "code"
+          },
+          {
+            "optionId": "005-decoy-3",
+            "text": "cold"
+          }
+        ]
+      },
+      "contentHash": "6b645e86d51696e68edb4d512f68caf1c12ea3c88df1e7e3ecc03eaa0d574a2f"
+    },
+    {
+      "challengeId": "ef-a1-listening-006",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A1",
+      "locale": "en-US",
+      "topic": "numbers",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "three",
+      "pronunciation": {
+        "pos": "number",
+        "ipa": "/θri/",
+        "variantId": "ef-en-us-three-v1",
+        "focus": "initial /θ/"
+      },
+      "resource": {
+        "definition": "the number after two",
+        "example": "I have three books."
+      },
+      "audio": {
+        "assetId": "ef-audio-a1-listening-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "384ca0cb172e9576ccbd92ed76aad00526b1af36f78e415891ce1762f70505c3",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A1:listening:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "006-answer",
+        "decoyIds": [
+          "006-decoy-1",
+          "006-decoy-2",
+          "006-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "006-answer",
+            "text": "three"
+          },
+          {
+            "optionId": "006-decoy-1",
+            "text": "tree"
+          },
+          {
+            "optionId": "006-decoy-2",
+            "text": "free"
+          },
+          {
+            "optionId": "006-decoy-3",
+            "text": "there"
+          }
+        ]
+      },
+      "contentHash": "8ab42b3b3bfa021b4f0258b07656cb29ae24b65c549269f6d03340caf0d92927"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-001",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "airport",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈɛrˌpɔrt/",
+        "variantId": "ef-en-us-airport-v1",
+        "focus": "compound stress"
+      },
+      "resource": {
+        "definition": "a place where airplanes arrive",
+        "example": "We arrived at the airport early."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "d7a9715f9418d1990040c2aad1448b5ec3143f5eeb1ef00181641a57979c62a9",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "fcf7f3b1cf719bc719050a3fe929e3bb19a9488aebd14509b2a06eb79907d61b"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-002",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "ticket",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈtɪkɪt/",
+        "variantId": "ef-en-us-ticket-v1",
+        "focus": "short vowels"
+      },
+      "resource": {
+        "definition": "a pass for a journey or event",
+        "example": "Keep your train ticket safe."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "6a0daaf6cfa554bcdc512aa07371774652e8b90f6bb3192fb5937e1f18599b9b",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "500657b6b25f9aff0f632cb1320c2342f8635d639d6c3d67a49ba669a39bba09"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-003",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "time",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "weekend",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈwikˌɛnd/",
+        "variantId": "ef-en-us-weekend-v1",
+        "focus": "compound stress"
+      },
+      "resource": {
+        "definition": "Saturday and Sunday",
+        "example": "We visit friends on the weekend."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "5cde232522a23da58c9bcf2f4c04a7f7cdef3a50d36bc51a200414eb5ddcbfc9",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "33f3cdda62130acb74512f49d48a66424d8263d963b9b475f7f187a0fd798d83"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-004",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "daily life",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "weather",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈwɛðər/",
+        "variantId": "ef-en-us-weather-v1",
+        "focus": "voiced /ð/"
+      },
+      "resource": {
+        "definition": "the condition of the air outside",
+        "example": "The weather is warm today."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "234754a8981cc59a03cc3029cf561bd8fca86507449aaf9511ceed4337cf73e0",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "e5e5a4922981c4da65f11cd8fef5c6476870b2e8cc9cc34974f76a321ba35445"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-005",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "health",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "doctor",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈdɑktər/",
+        "variantId": "ef-en-us-doctor-v1",
+        "focus": "first-syllable stress"
+      },
+      "resource": {
+        "definition": "a person trained to treat illness",
+        "example": "The doctor gave me advice."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9003010fb927a730cfdf75d8f4f704d3f0f493fd414312bbf3092df5c928124a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "019bb0cb31b99e2e8637de1ec69a16980a1c25503746adf3e78599ed6f434f97"
+    },
+    {
+      "challengeId": "ef-a2-azure-word-006",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "home",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "kitchen",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈkɪtʃən/",
+        "variantId": "ef-en-us-kitchen-v1",
+        "focus": "unstressed final syllable"
+      },
+      "resource": {
+        "definition": "a room where food is prepared",
+        "example": "Breakfast is ready in the kitchen."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-word-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "dbbf8dcbbb3cca0e5caa9546fd39be6dbdb978d9f0107f151f32c502e5219e4b",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azureWords:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "9bbe729e95caa6ea9c0e12c4f3e38369465768a15aa397afdcf346592c939603"
+    },
+    {
+      "challengeId": "ef-a2-v3-word-001",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "vacation",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/veɪˈkeɪʃən/",
+        "variantId": "ef-en-us-vacation-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "time away from work or school",
+        "example": "Our vacation starts Monday."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-v3-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "eecd204e93fb2bd0c2b57978f6467f722e3db61cff22b8d25b32caeb3a09d14e",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "ccf5a2292d89779792a3b453ea93d03e62ca50d09fe97ad0a1bb7e32f734468b"
+    },
+    {
+      "challengeId": "ef-a2-v3-word-002",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "time",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "tomorrow",
+      "pronunciation": {
+        "pos": "adverb",
+        "ipa": "/təˈmɑroʊ/",
+        "variantId": "ef-en-us-tomorrow-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "on the day after today",
+        "example": "I will call you tomorrow."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-v3-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "dfb2140861faabe1a93d439b14f560714ded6aea876bdd896bfb0335368f93ef",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "dfea6d1daf88f684cc07f391727ea8bb9dd41a1c09361f2b35a13513ef9a0930"
+    },
+    {
+      "challengeId": "ef-a2-v3-word-003",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "shopping",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "expensive",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ɪkˈspɛnsɪv/",
+        "variantId": "ef-en-us-expensive-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "costing a lot of money",
+        "example": "That jacket is expensive."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-v3-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "81374fca35875d00b80cd3305a27fdad9bfd105f1fd3607aec320ef3eaa37740",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "ca14eee14cdaeb2fbdd940fb37986c4b4d860c721cf42d6e98ba7fc8dc60776a"
+    },
+    {
+      "challengeId": "ef-a2-v3-word-004",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "home",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "apartment",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/əˈpɑrtmənt/",
+        "variantId": "ef-en-us-apartment-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "rooms in a larger building",
+        "example": "They rent an apartment."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-v3-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "225d6cf706f7caa8d3ad6def65c015d0d261c6ced20dbf02d7ada6f9e146fdc2",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:v3Words:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "347f516e0e0d828f634d64f9fa184cf5ee9c0f7acef1b65168a26c5e5e9dbc9b"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-001",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "directions",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "turn left",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/tɝn lɛft/",
+        "variantId": "ef-en-us-turn-left-v1",
+        "focus": "final consonant clusters"
+      },
+      "resource": {
+        "definition": "an instruction to go left",
+        "example": "Turn left at the bank."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-phrase-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "5f05732a3d435b69537fef3bd09e1111141c325e987d2d20096808f9d2a7a015",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "c41c023dd7975d5d16e0188047f99bdc2b60e1446cf380db5162c6e3c7824fb8"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-002",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "catch the bus",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/kætʃ ðə bʌs/",
+        "variantId": "ef-en-us-catch-the-bus-v1",
+        "focus": "linking and /ð/"
+      },
+      "resource": {
+        "definition": "to get on a bus before it leaves",
+        "example": "We catch the bus at eight."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-phrase-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "1b88846f562db91e03113fe3c99b9e96ed05dc33b571d6893428b4d0eb262691",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "700c70bc69b72d055e4f396ab7ed30048abca8a7cb131b2402a112ed9bcde9ae"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-003",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "plans",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "see you tomorrow",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/si ju təˈmɑroʊ/",
+        "variantId": "ef-en-us-see-you-tomorrow-v1",
+        "focus": "smooth linking"
+      },
+      "resource": {
+        "definition": "a farewell until the next day",
+        "example": "See you tomorrow after class."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-phrase-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "b5e31fe838d8cf8e35139d37cca8196f693f9b058a04128117f94913aaba3498",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "0d34142503b416c9c10f9087685605b32ebf4cf697ee63fed3234e88c77a3b32"
+    },
+    {
+      "challengeId": "ef-a2-azure-phrase-004",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "requests",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "could you help me",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/kʊd ju hɛlp mi/",
+        "variantId": "ef-en-us-could-you-help-me-v1",
+        "focus": "connected /d j/"
+      },
+      "resource": {
+        "definition": "a polite request for help",
+        "example": "Could you help me with this bag?"
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-azure-phrase-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "607a15124f53f42604f497d0d52e2e1dfbb24cc0a61c766688b1f37ad0d746df",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:azurePhrases:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "542407f848749586cd6e883f4ddb9ac715b7277f1f98553257a8cb063fbfb82e"
+    },
+    {
+      "challengeId": "ef-a2-listening-001",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "beach",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/bitʃ/",
+        "variantId": "ef-en-us-beach-v1",
+        "focus": "long /i/"
+      },
+      "resource": {
+        "definition": "a sandy place beside the sea",
+        "example": "We walked along the beach."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "482aa78ff2a44fe7c2dabf6fd6a2a1c780fc23b457e6f31d8c5cdc2c2d202926",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "001-answer",
+        "decoyIds": [
+          "001-decoy-1",
+          "001-decoy-2",
+          "001-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "001-answer",
+            "text": "beach"
+          },
+          {
+            "optionId": "001-decoy-1",
+            "text": "peach"
+          },
+          {
+            "optionId": "001-decoy-2",
+            "text": "bench"
+          },
+          {
+            "optionId": "001-decoy-3",
+            "text": "batch"
+          }
+        ]
+      },
+      "contentHash": "db98eab15ac6a6eea65aac4232a4f6c480ef36c976cb96368d3f300a71d82488"
+    },
+    {
+      "challengeId": "ef-a2-listening-002",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "numbers",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "fifteen",
+      "pronunciation": {
+        "pos": "number",
+        "ipa": "/ˌfɪfˈtin/",
+        "variantId": "ef-en-us-fifteen-v1",
+        "focus": "final-syllable stress"
+      },
+      "resource": {
+        "definition": "the number 15",
+        "example": "The bus leaves at fifteen past the hour."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "03015822452be52e52225cdac6da977a2eeb5bc65647d25fa347e6af10ad58a7",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "002-answer",
+        "decoyIds": [
+          "002-decoy-1",
+          "002-decoy-2",
+          "002-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "002-answer",
+            "text": "fifteen"
+          },
+          {
+            "optionId": "002-decoy-1",
+            "text": "fifty"
+          },
+          {
+            "optionId": "002-decoy-2",
+            "text": "fourteen"
+          },
+          {
+            "optionId": "002-decoy-3",
+            "text": "sixteen"
+          }
+        ]
+      },
+      "contentHash": "7009168a746c241204c8b300aaa2dd0dc2cd7dd8c979f6d50f88b35aa1b783ac"
+    },
+    {
+      "challengeId": "ef-a2-listening-003",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "routine",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "walk",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/wɔk/",
+        "variantId": "ef-en-us-walk-v1",
+        "focus": "silent letter and /ɔ/"
+      },
+      "resource": {
+        "definition": "to move on foot",
+        "example": "I walk to the store."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ffa3579e2e3c8038cd5430a6663dc35e91eb416acd74e4dd94f6f48f3a8344cb",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "003-answer",
+        "decoyIds": [
+          "003-decoy-1",
+          "003-decoy-2",
+          "003-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "003-answer",
+            "text": "walk"
+          },
+          {
+            "optionId": "003-decoy-1",
+            "text": "work"
+          },
+          {
+            "optionId": "003-decoy-2",
+            "text": "woke"
+          },
+          {
+            "optionId": "003-decoy-3",
+            "text": "wall"
+          }
+        ]
+      },
+      "contentHash": "4cdb73d81021e350cae8b2aadf75f7a35a9bec3b44a3b6cf1ee7fc942a7020cd"
+    },
+    {
+      "challengeId": "ef-a2-listening-004",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "shopping",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "price",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/praɪs/",
+        "variantId": "ef-en-us-price-v1",
+        "focus": "final /s/"
+      },
+      "resource": {
+        "definition": "the money something costs",
+        "example": "Check the price first."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "0575438a20b61a8ccfb9fa4c67053194f6f77cb1c4ba03e78d5fa56733e66ed0",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "004-answer",
+        "decoyIds": [
+          "004-decoy-1",
+          "004-decoy-2",
+          "004-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "004-answer",
+            "text": "price"
+          },
+          {
+            "optionId": "004-decoy-1",
+            "text": "prize"
+          },
+          {
+            "optionId": "004-decoy-2",
+            "text": "press"
+          },
+          {
+            "optionId": "004-decoy-3",
+            "text": "place"
+          }
+        ]
+      },
+      "contentHash": "2181f2e1ee378075087c1e495da198238cb8a99977368805d00b6f05ed423c5e"
+    },
+    {
+      "challengeId": "ef-a2-listening-005",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "travel",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "leave",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/liv/",
+        "variantId": "ef-en-us-leave-v1",
+        "focus": "long /i/ and voiced /v/"
+      },
+      "resource": {
+        "definition": "to go away from a place",
+        "example": "We leave at noon."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "844e1d23be286edadede57e054f0abf8f749660d2d4be72c5face8138ef67750",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "005-answer",
+        "decoyIds": [
+          "005-decoy-1",
+          "005-decoy-2",
+          "005-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "005-answer",
+            "text": "leave"
+          },
+          {
+            "optionId": "005-decoy-1",
+            "text": "live"
+          },
+          {
+            "optionId": "005-decoy-2",
+            "text": "leaf"
+          },
+          {
+            "optionId": "005-decoy-3",
+            "text": "left"
+          }
+        ]
+      },
+      "contentHash": "c4c712e09dd55b0c81ca71ed62da505c09193249571bbe8e08ee5155fccbde00"
+    },
+    {
+      "challengeId": "ef-a2-listening-006",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "A2",
+      "locale": "en-US",
+      "topic": "places",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "quiet",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈkwaɪət/",
+        "variantId": "ef-en-us-quiet-v1",
+        "focus": "two-vowel sequence"
+      },
+      "resource": {
+        "definition": "making little noise",
+        "example": "The library is quiet."
+      },
+      "audio": {
+        "assetId": "ef-audio-a2-listening-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "1d556af1d116919b718c7b5d813bda690a94f33bf5bf7ddb2eedeed27790530a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:A2:listening:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "006-answer",
+        "decoyIds": [
+          "006-decoy-1",
+          "006-decoy-2",
+          "006-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "006-answer",
+            "text": "quiet"
+          },
+          {
+            "optionId": "006-decoy-1",
+            "text": "quite"
+          },
+          {
+            "optionId": "006-decoy-2",
+            "text": "quick"
+          },
+          {
+            "optionId": "006-decoy-3",
+            "text": "quilt"
+          }
+        ]
+      },
+      "contentHash": "e9bb845526953c987dab1b10c70da3d0685309848f84b50b5f7f06137ab4ae3a"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-001",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "work",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "deadline",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈdɛdˌlaɪn/",
+        "variantId": "ef-en-us-deadline-v1",
+        "focus": "compound stress"
+      },
+      "resource": {
+        "definition": "the latest time work must be finished",
+        "example": "Our deadline is Friday."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "25029740b3d0599119eac57d648e782e77e88d13ac96d1cdb69b6d0fd5f45fbc",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4fa70691fd575c678d058efbbe13eeea318941e426d410f2c7756b261dca66de"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-002",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "work and study",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "project",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈprɑdʒɛkt/",
+        "variantId": "ef-en-us-project-v1",
+        "focus": "noun stress pattern"
+      },
+      "resource": {
+        "definition": "a planned piece of work",
+        "example": "The team completed the project."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "8c4da24256d8c3a9a8ae5adebab4c3656f73bcde01d4b9717dbb55d698198884",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "3064ad0c8287fce362adb484b024a69d47c0c27b0427a9a429a7b4d28f9e7e24"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-003",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "learning",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "improve",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/ɪmˈpruv/",
+        "variantId": "ef-en-us-improve-v1",
+        "focus": "second-syllable stress"
+      },
+      "resource": {
+        "definition": "to make something better",
+        "example": "Practice will improve your fluency."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "c0d879c8200ce89aa86cc0a763f5dce28e6d8007aaf6ed18b5df0ad899dea5ec",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "7925a180a72b32a170c47491edea7d84317f75cafdfaced3099402b9ea8855b6"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-004",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "discussion",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "opinion",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/əˈpɪnjən/",
+        "variantId": "ef-en-us-opinion-v1",
+        "focus": "three-syllable rhythm"
+      },
+      "resource": {
+        "definition": "a belief or judgment",
+        "example": "Please explain your opinion."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "fa2bd192dc8c3aa009e68d4425fceddad03064e1410787cce46c22f61c5909a3",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "92b75ff89d657244a1629b979951d4b22a78ef6cf8efdd3e289e7303d7e9e6a6"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-005",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "society",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "environment",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ɪnˈvaɪrənmənt/",
+        "variantId": "ef-en-us-environment-v1",
+        "focus": "reduced syllables"
+      },
+      "resource": {
+        "definition": "the natural world or surroundings",
+        "example": "We should protect the environment."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "39f691008c1370fd39004e391e079ef9ceb61ca3a66b0b9b194f7221c21ca6f4",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "23f4fc2a33e82a335518fceee848a155908ac7f82d103ec86ca6f4fbcb75020e"
+    },
+    {
+      "challengeId": "ef-b1-azure-word-006",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "work",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "reliable",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/rɪˈlaɪəbəl/",
+        "variantId": "ef-en-us-reliable-v1",
+        "focus": "four-syllable rhythm"
+      },
+      "resource": {
+        "definition": "able to be trusted",
+        "example": "She is a reliable colleague."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-word-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "679405bb5eb3544ad3a2652677cf7b266ffd68c33963f270f405a9a2c152b568",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azureWords:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "8cc51e5967e264a8f634e24e0bb3e509ca47a616e3e77819a7640367707f74c6"
+    },
+    {
+      "challengeId": "ef-b1-v3-word-001",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "learning",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "education",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˌɛdʒəˈkeɪʃən/",
+        "variantId": "ef-en-us-education-v1",
+        "focus": "third-syllable stress",
+        "expectedSyllableCount": 4,
+        "primaryStressIndex": 2
+      },
+      "resource": {
+        "definition": "the process of teaching and learning",
+        "example": "Education creates opportunities."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-v3-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4b3b5111adb92cd6fb468dce5322e47661263d145cc1d7c76684bd3c401023cb",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "7afb8e7407945fd9684b5cc44472786b6549914a6cdb74da066a0e4b65c81fe7"
+    },
+    {
+      "challengeId": "ef-b1-v3-word-002",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "work",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "opportunity",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˌɑpərˈtunəti/",
+        "variantId": "ef-en-us-opportunity-v1",
+        "focus": "third-syllable stress",
+        "expectedSyllableCount": 5,
+        "primaryStressIndex": 2
+      },
+      "resource": {
+        "definition": "a favorable chance",
+        "example": "This course is an opportunity."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-v3-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "f2e799e3d4170d5a28949480e29e32bad67d78b191e08e935f8c698dad2ed5d0",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "9c257aabc1800fcdbb30341a36f91685fdc74169357e3e997bebc18a930d46b7"
+    },
+    {
+      "challengeId": "ef-b1-v3-word-003",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "achievement",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "successful",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/səkˈsɛsfəl/",
+        "variantId": "ef-en-us-successful-v1",
+        "focus": "middle-syllable stress",
+        "expectedSyllableCount": 3,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "achieving the intended result",
+        "example": "The event was successful."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-v3-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "2b39d432a4a868afb9b8721066828b3cecdb969065bf91af30bb5224ea20f0f2",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "1011bf23cc8f22ff1bf4d7e3c15aeb9e17000fbe60b91ba3c5de40724a78a20d"
+    },
+    {
+      "challengeId": "ef-b1-v3-word-004",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "society",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "community",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/kəˈmjunəti/",
+        "variantId": "ef-en-us-community-v1",
+        "focus": "second-syllable stress",
+        "expectedSyllableCount": 4,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "people living or working together",
+        "example": "The community supports the library."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-v3-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ce0aaa13e92e3a5b690841ffd97cd744259eb0ce29071d8e9f64800a20574489",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:v3Words:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "e40a13675bfbf1fa2f5ed538c227a141bbe4344bf46d79defa7b8b0f82e4302f"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-001",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "work",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "meet the deadline",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/mit ðə ˈdɛdˌlaɪn/",
+        "variantId": "ef-en-us-meet-the-deadline-v1",
+        "focus": "linking and stress"
+      },
+      "resource": {
+        "definition": "to finish work on time",
+        "example": "We worked late to meet the deadline."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-phrase-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "274c5de9bcdbeba836765dc76f2a9ce0052685495de94836d183324477909a6c",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "b8a0aaa317e5b8d6e1ee58413b3a728e8324a938f6b6067cd97440203dd7a883"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-002",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "discussion",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "share your opinion",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ʃɛr jʊr əˈpɪnjən/",
+        "variantId": "ef-en-us-share-your-opinion-v1",
+        "focus": "linking /r j/"
+      },
+      "resource": {
+        "definition": "to tell others what you think",
+        "example": "Share your opinion with the group."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-phrase-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "0e09f633a19309bd53c34ce2ebf6b18eea48e5b39e683e74d8e4c8fccd195533",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "8662b1a6864955fae28f2882d34f63ddf0a88c1093a5d07d55a5b96af0a3ba62"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-003",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "collaboration",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "work as a team",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/wɝk æz ə tim/",
+        "variantId": "ef-en-us-work-as-a-team-v1",
+        "focus": "connected weak forms"
+      },
+      "resource": {
+        "definition": "to cooperate with others",
+        "example": "We work as a team."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-phrase-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "8b5f9792dd5b8d83132662e1bfdbe0b7879d2c0952f3db2366d9a36ae573c306",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "3951c388c4e1ee41666dae513f2049de50e08f65faa32f24b64b5ef246a7ff2d"
+    },
+    {
+      "challengeId": "ef-b1-azure-phrase-004",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "problem solving",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "solve the problem",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/sɑlv ðə ˈprɑbləm/",
+        "variantId": "ef-en-us-solve-the-problem-v1",
+        "focus": "consonant clusters"
+      },
+      "resource": {
+        "definition": "to find an answer to a difficulty",
+        "example": "Let's solve the problem together."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-azure-phrase-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "7d6277c449e22edc0365c3939f3e2e617561b1062507e02aa08066c46e60672c",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:azurePhrases:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "d74fd618d9f9f849d1752d63e569fd0940acdd37cf9fd63673d86d5e5d032038"
+    },
+    {
+      "challengeId": "ef-b1-listening-001",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "cause and result",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "affect",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/əˈfɛkt/",
+        "variantId": "ef-en-us-affect-v1",
+        "focus": "initial schwa and final cluster"
+      },
+      "resource": {
+        "definition": "to influence something",
+        "example": "Weather can affect travel."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ca49ca1a4bf718e01b9ea96d7fd5ed2cf2c3f84897b575474aacfcadf21fd95a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "001-answer",
+        "decoyIds": [
+          "001-decoy-1",
+          "001-decoy-2",
+          "001-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "001-answer",
+            "text": "affect"
+          },
+          {
+            "optionId": "001-decoy-1",
+            "text": "effect"
+          },
+          {
+            "optionId": "001-decoy-2",
+            "text": "infect"
+          },
+          {
+            "optionId": "001-decoy-3",
+            "text": "reflect"
+          }
+        ]
+      },
+      "contentHash": "fb8918e2fc5464de74aafc245e0a1b38654df37a086fe7543830801b0af86c09"
+    },
+    {
+      "challengeId": "ef-b1-listening-002",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "communication",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "advice",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ədˈvaɪs/",
+        "variantId": "ef-en-us-advice-v1",
+        "focus": "final unvoiced /s/"
+      },
+      "resource": {
+        "definition": "a suggestion about what to do",
+        "example": "She gave useful advice."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "e55b04b4217b7719ff7d4de4b4fdf599a79a4b41abcf6d7005acd0b513bf0730",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "002-answer",
+        "decoyIds": [
+          "002-decoy-1",
+          "002-decoy-2",
+          "002-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "002-answer",
+            "text": "advice"
+          },
+          {
+            "optionId": "002-decoy-1",
+            "text": "advise"
+          },
+          {
+            "optionId": "002-decoy-2",
+            "text": "device"
+          },
+          {
+            "optionId": "002-decoy-3",
+            "text": "advance"
+          }
+        ]
+      },
+      "contentHash": "92e2109600a2cbdf66f349026965f235e299820a8064f9ec9fb50bbec0e1a3e6"
+    },
+    {
+      "challengeId": "ef-b1-listening-003",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "geography",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "desert",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈdɛzərt/",
+        "variantId": "ef-en-us-desert-v1",
+        "focus": "first-syllable noun stress"
+      },
+      "resource": {
+        "definition": "a very dry area",
+        "example": "Few plants grow in the desert."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "b6e1ea83544568894dc8206ae5c5178c2edaa4148a6ad6ba409dc31d210a5f11",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "003-answer",
+        "decoyIds": [
+          "003-decoy-1",
+          "003-decoy-2",
+          "003-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "003-answer",
+            "text": "desert"
+          },
+          {
+            "optionId": "003-decoy-1",
+            "text": "dessert"
+          },
+          {
+            "optionId": "003-decoy-2",
+            "text": "design"
+          },
+          {
+            "optionId": "003-decoy-3",
+            "text": "desire"
+          }
+        ]
+      },
+      "contentHash": "1f1c3bf2f823337118243e79e509c567e67ecfe9ccda82bdd5d1d18863c4396e"
+    },
+    {
+      "challengeId": "ef-b1-listening-004",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "decisions",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "accept",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/əkˈsɛpt/",
+        "variantId": "ef-en-us-accept-v1",
+        "focus": "final /pt/ cluster"
+      },
+      "resource": {
+        "definition": "to agree to receive something",
+        "example": "I accept your invitation."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "cfab8c4163bec53c4aebf794d09ffdb659e5bd6c227211231d8dd610c43d3769",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "004-answer",
+        "decoyIds": [
+          "004-decoy-1",
+          "004-decoy-2",
+          "004-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "004-answer",
+            "text": "accept"
+          },
+          {
+            "optionId": "004-decoy-1",
+            "text": "except"
+          },
+          {
+            "optionId": "004-decoy-2",
+            "text": "expect"
+          },
+          {
+            "optionId": "004-decoy-3",
+            "text": "aspect"
+          }
+        ]
+      },
+      "contentHash": "7244de472ef43109a9fd3937861d43adec84bcb91ced6c616ba3fc77e48a2f56"
+    },
+    {
+      "challengeId": "ef-b1-listening-005",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "degree",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "quite",
+      "pronunciation": {
+        "pos": "adverb",
+        "ipa": "/kwaɪt/",
+        "variantId": "ef-en-us-quite-v1",
+        "focus": "final /t/"
+      },
+      "resource": {
+        "definition": "to a noticeable degree",
+        "example": "The task is quite difficult."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "89bcbed4ec3babd3cb9cd090123a83011815a51ee1eae5395334edfc83723452",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "005-answer",
+        "decoyIds": [
+          "005-decoy-1",
+          "005-decoy-2",
+          "005-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "005-answer",
+            "text": "quite"
+          },
+          {
+            "optionId": "005-decoy-1",
+            "text": "quiet"
+          },
+          {
+            "optionId": "005-decoy-2",
+            "text": "quit"
+          },
+          {
+            "optionId": "005-decoy-3",
+            "text": "kite"
+          }
+        ]
+      },
+      "contentHash": "2031c6524d780789a6325a71dcaaa31700a7e12b4a906ab0d78955f05712d565"
+    },
+    {
+      "challengeId": "ef-b1-listening-006",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B1",
+      "locale": "en-US",
+      "topic": "daily events",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "lose",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/luz/",
+        "variantId": "ef-en-us-lose-v1",
+        "focus": "voiced final /z/"
+      },
+      "resource": {
+        "definition": "to no longer have something",
+        "example": "Do not lose your ticket."
+      },
+      "audio": {
+        "assetId": "ef-audio-b1-listening-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "7795c32d5588cc515ac935ab0743e79fd55a1075754f3b4de54e01c351723757",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B1:listening:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "006-answer",
+        "decoyIds": [
+          "006-decoy-1",
+          "006-decoy-2",
+          "006-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "006-answer",
+            "text": "lose"
+          },
+          {
+            "optionId": "006-decoy-1",
+            "text": "loose"
+          },
+          {
+            "optionId": "006-decoy-2",
+            "text": "use"
+          },
+          {
+            "optionId": "006-decoy-3",
+            "text": "choose"
+          }
+        ]
+      },
+      "contentHash": "0fcc8b5964e3dd35689961edf81c770bae188c31591026bca7d7838cfa33a7d8"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-001",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "environment",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "sustainable",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/səˈsteɪnəbəl/",
+        "variantId": "ef-en-us-sustainable-v1",
+        "focus": "reduced syllables"
+      },
+      "resource": {
+        "definition": "able to continue without exhausting resources",
+        "example": "The city needs sustainable transport."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "abfe4e38789fa9d20f06e12e8a69b0b49f80bdbd1f380c9ed221fc7b89588e43",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "3ae9b14038442dd2569e21934c82b37528dbb3d8e824cedeb0cb47f0001baad6"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-002",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "professional life",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "negotiate",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/nɪˈɡoʊʃiˌeɪt/",
+        "variantId": "ef-en-us-negotiate-v1",
+        "focus": "primary and secondary stress"
+      },
+      "resource": {
+        "definition": "to discuss to reach agreement",
+        "example": "They will negotiate the contract."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4c6eca4d62d654f2076064a2060268000f97c105a47a36d49dae5501929624b7",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "16b9c69c3cdbb159b0fc978ae15d60b88c62b3fbaeed42bd86851c47110c93a0"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-003",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "ideas",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "perspective",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/pərˈspɛktɪv/",
+        "variantId": "ef-en-us-perspective-v1",
+        "focus": "consonant cluster"
+      },
+      "resource": {
+        "definition": "a way of viewing something",
+        "example": "Consider another perspective."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "06e9f149f65f47cddc8c902abb962ff26b961333ed661a35ee7927f48197047a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "f254d7a8a5d3bde34778655c8b108d063b6aeda3ff505ae86856a5f52f90d0a0"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-004",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "cause and result",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "consequence",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈkɑnsəˌkwɛns/",
+        "variantId": "ef-en-us-consequence-v1",
+        "focus": "compound rhythm"
+      },
+      "resource": {
+        "definition": "a result of an action",
+        "example": "One consequence was higher demand."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "fac85e61ae7c2c7dd0808a1fab64953b6a9268e250aad0aba38321da66a5b5cb",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "dfe958f539e56d9612c14ffd41be54a01c6bfa98e8a0c78e95ad3584bea01d45"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-005",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "technology",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "innovative",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈɪnəˌveɪtɪv/",
+        "variantId": "ef-en-us-innovative-v1",
+        "focus": "primary and secondary stress"
+      },
+      "resource": {
+        "definition": "introducing new ideas",
+        "example": "They proposed an innovative design."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "580984e39f07ee76b54d91447a2c94071bbcb7d8a1483d124a74382c6b04b32f",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "5de3a80b7ea4da2a42e7570a19fff47c64bbac3846bc4fcda26f378c73d9c024"
+    },
+    {
+      "challengeId": "ef-b2-azure-word-006",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "argumentation",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "credibility",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˌkrɛdəˈbɪləti/",
+        "variantId": "ef-en-us-credibility-v1",
+        "focus": "five-syllable stress"
+      },
+      "resource": {
+        "definition": "the quality of being believable",
+        "example": "Evidence increases credibility."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-word-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "d6297247cb1ee6d53bc66610ba36cdba577eaf58ea3b448de9f9a6a3a61b3905",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azureWords:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "392f72bd435376de10b4bbc90b951b5844011c867909727bd37f08a0cf8a3012"
+    },
+    {
+      "challengeId": "ef-b2-v3-word-001",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "public debate",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "controversy",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈkɑntrəˌvɝsi/",
+        "variantId": "ef-en-us-controversy-v1",
+        "focus": "first-syllable stress",
+        "expectedSyllableCount": 4,
+        "primaryStressIndex": 0
+      },
+      "resource": {
+        "definition": "strong public disagreement",
+        "example": "The policy caused controversy."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-v3-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "0e9d287b59bb061dc072f0edc8fa0a0a8eea09299a008056ea90d8fd0c8aaad1",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4cf817eaf513f91bb043b2e648ae7d899f79a821d6731184c575dc06f3586856"
+    },
+    {
+      "challengeId": "ef-b2-v3-word-002",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "analysis",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/əˈnæləsɪs/",
+        "variantId": "ef-en-us-analysis-v1",
+        "focus": "second-syllable stress",
+        "expectedSyllableCount": 4,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "detailed examination",
+        "example": "The analysis revealed a trend."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-v3-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "18753d978960a1ae056b732bf4383d1e8e712ead2ed680077d9b106fdb127c04",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "cf293d7635a85ac80037def67f9aeb28d47246ef1320cefc9333062155a2e751"
+    },
+    {
+      "challengeId": "ef-b2-v3-word-003",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "evaluation",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "significant",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/sɪɡˈnɪfɪkənt/",
+        "variantId": "ef-en-us-significant-v1",
+        "focus": "second-syllable stress",
+        "expectedSyllableCount": 4,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "important enough to matter",
+        "example": "The change was significant."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-v3-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "3942468ccc6cecf24b75aa7704bf5ab6f54663cef6ed9724a5d4d0506d73c9a4",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "c66f2705eb80a243ce0f9187986b7d8267a76160234f9a01c77aaabef98d36a6"
+    },
+    {
+      "challengeId": "ef-b2-v3-word-004",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "professional life",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "collaboration",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/kəˌlæbəˈreɪʃən/",
+        "variantId": "ef-en-us-collaboration-v1",
+        "focus": "fourth-syllable stress",
+        "expectedSyllableCount": 5,
+        "primaryStressIndex": 3
+      },
+      "resource": {
+        "definition": "the act of working together",
+        "example": "The report required collaboration."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-v3-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "00fd40e766899278376744b0ee07143bb398fbee4168e23926fd505bf09fc518",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:v3Words:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "33bba0015f6846f5dda5d5c4f3c5758de3b6bcea663070bea6209fd6dc37a682"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-001",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "argumentation",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "weigh the evidence",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/weɪ ði ˈɛvədəns/",
+        "variantId": "ef-en-us-weigh-the-evidence-v1",
+        "focus": "function-word reduction"
+      },
+      "resource": {
+        "definition": "to judge how strong evidence is",
+        "example": "Researchers must weigh the evidence."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-phrase-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "fcb44887abe4d7f70c51abfeae1a15dbe1dbca0b0b03265d87f73c36a9d8c9dd",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "2dd0be023fbeb901336903f2b75db019026ac0af7f8a6712aa31390670b4d7d3"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-002",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "collaboration",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "reach a consensus",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ritʃ ə kənˈsɛnsəs/",
+        "variantId": "ef-en-us-reach-a-consensus-v1",
+        "focus": "linking and stress"
+      },
+      "resource": {
+        "definition": "to achieve general agreement",
+        "example": "The committee reached a consensus."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-phrase-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4034fc8b246aa97217ecadfded8ffa0fb899e987e7652f19b656a0aee2dcea34",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "eb9f17b27295ea72def35350e9fe7fe770e6af8373ed6a5003535a74959efbbe"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-003",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "critical thinking",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "challenge an assumption",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ˈtʃælɪndʒ ən əˈsʌmpʃən/",
+        "variantId": "ef-en-us-challenge-an-assumption-v1",
+        "focus": "connected vowels"
+      },
+      "resource": {
+        "definition": "to question an accepted idea",
+        "example": "Research may challenge an assumption."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-phrase-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "6d95a320df4bfa679dc45782fd592e2f1854e17ac0904eb0256b1053e4f37b62",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "48ca433dfd0ebf452249abdd02efe1d5ffd247a91706a123a22f260b47453230"
+    },
+    {
+      "challengeId": "ef-b2-azure-phrase-004",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "problem solving",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "address the consequences",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/əˈdrɛs ðə ˈkɑnsəˌkwɛnsɪz/",
+        "variantId": "ef-en-us-address-the-consequences-v1",
+        "focus": "stress contrast"
+      },
+      "resource": {
+        "definition": "to deal with results",
+        "example": "The plan must address the consequences."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-azure-phrase-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "19d26615b95be10798372741030847d0a86a0abf3cd5b98da07d0e002cc55c5d",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:azurePhrases:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4c40e66c9c4c61f1f03921f0f1a7b0d8890cca76a6dee8fd31ed8c60454a580d"
+    },
+    {
+      "challengeId": "ef-b2-listening-001",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "ethics",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "principle",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈprɪnsəpəl/",
+        "variantId": "ef-en-us-principle-v1",
+        "focus": "unstressed final syllables"
+      },
+      "resource": {
+        "definition": "a basic rule or belief",
+        "example": "Fairness is a principle."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "32c054e1f831eba41446ccae050020427e63ccffac8aa141b72205b19fa7caf2",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "001-answer",
+        "decoyIds": [
+          "001-decoy-1",
+          "001-decoy-2",
+          "001-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "001-answer",
+            "text": "principle"
+          },
+          {
+            "optionId": "001-decoy-1",
+            "text": "principal"
+          },
+          {
+            "optionId": "001-decoy-2",
+            "text": "principled"
+          },
+          {
+            "optionId": "001-decoy-3",
+            "text": "participate"
+          }
+        ]
+      },
+      "contentHash": "e2e49ba565b1e1bbb93062e8b9f10749129f1909e6878f9036a566ddf49f2ca0"
+    },
+    {
+      "challengeId": "ef-b2-listening-002",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "description",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "complement",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/ˈkɑmpləˌmɛnt/",
+        "variantId": "ef-en-us-complement-v1",
+        "focus": "final stress contrast"
+      },
+      "resource": {
+        "definition": "to complete or improve something",
+        "example": "The colors complement each other."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "45a203d13bfce51719d44736c3c07f52abd9fc2139bc32f08089b22a6381fe07",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "002-answer",
+        "decoyIds": [
+          "002-decoy-1",
+          "002-decoy-2",
+          "002-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "002-answer",
+            "text": "complement"
+          },
+          {
+            "optionId": "002-decoy-1",
+            "text": "compliment"
+          },
+          {
+            "optionId": "002-decoy-2",
+            "text": "component"
+          },
+          {
+            "optionId": "002-decoy-3",
+            "text": "complicate"
+          }
+        ]
+      },
+      "contentHash": "c9cfca562bd580ec7cedd162089f0099df63720145d2dbe7e1d5cbd055d0f420"
+    },
+    {
+      "challengeId": "ef-b2-listening-003",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "academic work",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "cite",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/saɪt/",
+        "variantId": "ef-en-us-cite-v1",
+        "focus": "initial /s/"
+      },
+      "resource": {
+        "definition": "to refer to a source",
+        "example": "Please cite the study."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "e7828167c0c1e12df1d0793f03729300f241a64e9ef59f15bc0c43d9e1671f1f",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "003-answer",
+        "decoyIds": [
+          "003-decoy-1",
+          "003-decoy-2",
+          "003-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "003-answer",
+            "text": "cite"
+          },
+          {
+            "optionId": "003-decoy-1",
+            "text": "site"
+          },
+          {
+            "optionId": "003-decoy-2",
+            "text": "sight"
+          },
+          {
+            "optionId": "003-decoy-3",
+            "text": "side"
+          }
+        ]
+      },
+      "contentHash": "a309aeaa2cc11a550d5d8df10296506d34b82c06c581c78d3037c7d32dc5b978"
+    },
+    {
+      "challengeId": "ef-b2-listening-004",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "planning",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "ensure",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/ɪnˈʃʊr/",
+        "variantId": "ef-en-us-ensure-v1",
+        "focus": "second-syllable stress"
+      },
+      "resource": {
+        "definition": "to make certain",
+        "example": "Check the data to ensure accuracy."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "4bc12c8cca21d2adb5e52482bb68b9710b955e23ced1b312ebf740f97d20b70f",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "004-answer",
+        "decoyIds": [
+          "004-decoy-1",
+          "004-decoy-2",
+          "004-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "004-answer",
+            "text": "ensure"
+          },
+          {
+            "optionId": "004-decoy-1",
+            "text": "insure"
+          },
+          {
+            "optionId": "004-decoy-2",
+            "text": "assure"
+          },
+          {
+            "optionId": "004-decoy-3",
+            "text": "endure"
+          }
+        ]
+      },
+      "contentHash": "ec7914289ae48903830c85c096a568287c8f26b04c4f2232fee73b32730d985e"
+    },
+    {
+      "challengeId": "ef-b2-listening-005",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "change",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "adapt",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/əˈdæpt/",
+        "variantId": "ef-en-us-adapt-v1",
+        "focus": "short /æ/"
+      },
+      "resource": {
+        "definition": "to adjust to conditions",
+        "example": "Teams must adapt to change."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "061c8a16f030d394d131e03374e9dbb31026b0871bb1720299a0216f64a7c839",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "005-answer",
+        "decoyIds": [
+          "005-decoy-1",
+          "005-decoy-2",
+          "005-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "005-answer",
+            "text": "adapt"
+          },
+          {
+            "optionId": "005-decoy-1",
+            "text": "adopt"
+          },
+          {
+            "optionId": "005-decoy-2",
+            "text": "adept"
+          },
+          {
+            "optionId": "005-decoy-3",
+            "text": "addict"
+          }
+        ]
+      },
+      "contentHash": "e40712fcfaed3ed13f0c9804db5ab7cb1e98b6a836af4cbefddcfbf814fed70a"
+    },
+    {
+      "challengeId": "ef-b2-listening-006",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "B2",
+      "locale": "en-US",
+      "topic": "awareness",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "conscious",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈkɑnʃəs/",
+        "variantId": "ef-en-us-conscious-v1",
+        "focus": "final /ʃəs/"
+      },
+      "resource": {
+        "definition": "aware of something",
+        "example": "We are conscious of the risks."
+      },
+      "audio": {
+        "assetId": "ef-audio-b2-listening-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ae60f5d385b8858c5528d1800e6cf080290f0afb2b678b38d4b88db78c6aca63",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:B2:listening:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "006-answer",
+        "decoyIds": [
+          "006-decoy-1",
+          "006-decoy-2",
+          "006-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "006-answer",
+            "text": "conscious"
+          },
+          {
+            "optionId": "006-decoy-1",
+            "text": "conscience"
+          },
+          {
+            "optionId": "006-decoy-2",
+            "text": "cautious"
+          },
+          {
+            "optionId": "006-decoy-3",
+            "text": "constant"
+          }
+        ]
+      },
+      "contentHash": "c2817ee4bc17d4a37cbb90ebe7b9e595e9f000b838a81eb1eee8ad3b658ffa72"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-001",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "academic argument",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "ambiguity",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˌæmbɪˈɡjuəti/",
+        "variantId": "ef-en-us-ambiguity-v1",
+        "focus": "five-syllable stress"
+      },
+      "resource": {
+        "definition": "more than one possible meaning",
+        "example": "The wording creates ambiguity."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "e61cbd278ed0223d1df509c3606e63a9c9bd1ca78c316b9713efe41c6e40ed6a",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "bf966296fecb1b29fcd65600c84797ff57be406d601031918e09d790cb4446c8"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-002",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "academic argument",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "substantiate",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/səbˈstænʃiˌeɪt/",
+        "variantId": "ef-en-us-substantiate-v1",
+        "focus": "stress and affrication"
+      },
+      "resource": {
+        "definition": "to support a claim with evidence",
+        "example": "Substantiate the conclusion."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ccded0e411bb688d655db51d9c07de9a397863e9ab193c4bbe68d86b6ff56a12",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "d5aa84684bc2582f7a2af9001e3aa4c6e67d077e3a5c2bcce9b4b776910a4822"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-003",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "paradigm",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˈpɛrəˌdaɪm/",
+        "variantId": "ef-en-us-paradigm-v1",
+        "focus": "silent final letter"
+      },
+      "resource": {
+        "definition": "a framework for understanding",
+        "example": "The discovery shifted the paradigm."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "f0e06e1e04bb3a5c780f1287cae12d65487ed0bfa733a8e48ac4f0432cefc926",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "73058516d07e31177616c3a51a942c22932915fc2e0febe05bba67b12268ed47"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-004",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "critical thinking",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "nuanced",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈnuˌɑnst/",
+        "variantId": "ef-en-us-nuanced-v1",
+        "focus": "final cluster"
+      },
+      "resource": {
+        "definition": "showing subtle distinctions",
+        "example": "She offered a nuanced interpretation."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "d7bba016e02bc00d8161f4ac5e4ecd6ca200571896adcfd9a1d504952b7914b8",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "5fa4e56a9734f9d31bf772f859fbef30d33cddbe78cb5c7caf062caa0b911684"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-005",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "evidence",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "discrepancy",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/dɪˈskrɛpənsi/",
+        "variantId": "ef-en-us-discrepancy-v1",
+        "focus": "initial cluster and stress"
+      },
+      "resource": {
+        "definition": "an unexpected difference",
+        "example": "The audit found a discrepancy."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "c7d9829dc97f8ba7c805bf475512ab594c3eca9f9763ac884b61bec70a27a2e9",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4d88d4dedd2d0a85ee95bc31987218416ec882be357c570e495e2796e5a9b1f6"
+    },
+    {
+      "challengeId": "ef-c1-azure-word-006",
+      "challengeKind": "azure_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "risk",
+      "unitType": "word",
+      "evaluationMode": "azure_word",
+      "text": "mitigate",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/ˈmɪtəˌɡeɪt/",
+        "variantId": "ef-en-us-mitigate-v1",
+        "focus": "primary and secondary stress"
+      },
+      "resource": {
+        "definition": "to reduce a harmful effect",
+        "example": "The policy may mitigate risk."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-word-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9d7c551bb07be936b4e753587309b4696712726eb8847cc33558e9e20bf80b15",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azureWords:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4a2840a991c528359e9ce3bb95aff315e074d7b3cb68546d437182d87c03a79f"
+    },
+    {
+      "challengeId": "ef-c1-v3-word-001",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "methodology",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ˌmɛθəˈdɑlədʒi/",
+        "variantId": "ef-en-us-methodology-v1",
+        "focus": "third-syllable stress",
+        "expectedSyllableCount": 5,
+        "primaryStressIndex": 2
+      },
+      "resource": {
+        "definition": "a system of methods",
+        "example": "The paper explains its methodology."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-v3-word-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "34e1e6af15eced64cd00d076a8b32e73844da302df940a9f3c07f5aa3fd97375",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "f7d8c867a4416aec9833b3368b147ea9231774e16d753575563c08df1f5b2323"
+    },
+    {
+      "challengeId": "ef-c1-v3-word-002",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "academic work",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "interdisciplinary",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˌɪntərˈdɪsəpləˌnɛri/",
+        "variantId": "ef-en-us-interdisciplinary-v1",
+        "focus": "third-syllable stress",
+        "expectedSyllableCount": 7,
+        "primaryStressIndex": 2
+      },
+      "resource": {
+        "definition": "involving several fields",
+        "example": "The project is interdisciplinary."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-v3-word-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "ba50d60ca8d85e6552a1baa4888ee266bcae536af37e99c0502d6e2920450386",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4fbd1221c8a0fcbafffd33ab7e974c3ff434dc1a1ab666fa07558dd2c4eade70"
+    },
+    {
+      "challengeId": "ef-c1-v3-word-003",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "governance",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "legitimacy",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/ləˈdʒɪtəməsi/",
+        "variantId": "ef-en-us-legitimacy-v1",
+        "focus": "second-syllable stress",
+        "expectedSyllableCount": 5,
+        "primaryStressIndex": 1
+      },
+      "resource": {
+        "definition": "the quality of being justified",
+        "example": "Transparency strengthens legitimacy."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-v3-word-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "00b5e9926483a7c10f19c167826430e5c91fb44da011ef28a8380d3536a339c1",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "d506bd6f6b7ec530bd6909acf1bc9d22acf28b4cebc03e2cfcfc8799bf08515c"
+    },
+    {
+      "challengeId": "ef-c1-v3-word-004",
+      "challengeKind": "v3_word",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "argumentation",
+      "unitType": "word",
+      "evaluationMode": "v3_word",
+      "text": "unequivocal",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˌʌnɪˈkwɪvəkəl/",
+        "variantId": "ef-en-us-unequivocal-v1",
+        "focus": "third-syllable stress",
+        "expectedSyllableCount": 5,
+        "primaryStressIndex": 2
+      },
+      "resource": {
+        "definition": "clear and leaving no doubt",
+        "example": "The evidence was unequivocal."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-v3-word-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "19bbf978587b285eaa901c1e438be28a8ac360376e524f54ae798571413cffde",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:v3Words:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "f94a7fd12438fa124384a77611f359bf306b9529bb36ebb2400d250ec548d268"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-001",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "academic argument",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "qualify the claim",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ˈkwɑləˌfaɪ ðə kleɪm/",
+        "variantId": "ef-en-us-qualify-the-claim-v1",
+        "focus": "stress and linking"
+      },
+      "resource": {
+        "definition": "to limit or clarify a statement",
+        "example": "The writer should qualify the claim."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-phrase-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "f6c11168868c6334597acea0df613612c53526fa116f45cf84d03798ac74780d",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "280dbeead892f1eaed29e3c730f6477143ab5e08b24515c8801cdcb61e3356fd"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-002",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "reconcile conflicting evidence",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ˈrɛkənˌsaɪl kənˈflɪktɪŋ ˈɛvədəns/",
+        "variantId": "ef-en-us-reconcile-conflicting-evidence-v1",
+        "focus": "multiword stress"
+      },
+      "resource": {
+        "definition": "to explain opposing evidence",
+        "example": "The review reconciles conflicting evidence."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-phrase-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "f204b73b8c6c3e571f1b2c1c3e35fb4bbbe5fe1e74fc14fbe5d000452ac995fb",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "4426c4ee7eb184153856d44b74b0cfcd80b9d9e2c3ee2ec762be37cf3ccfeff5"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-003",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "critical thinking",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "articulate a nuanced position",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/ɑrˈtɪkjəˌleɪt ə ˈnuˌɑnst pəˈzɪʃən/",
+        "variantId": "ef-en-us-articulate-a-nuanced-position-v1",
+        "focus": "content-word prominence"
+      },
+      "resource": {
+        "definition": "to express a careful viewpoint",
+        "example": "Articulate a nuanced position."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-phrase-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "a556187f1b83667da14032d94ec4f5a5ac06a2fd2350dfdd1e1b79194938e524",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "834e117c183d9af4365f44cbc530d660e7222de009ff7a8874d376e5ee443c3b"
+    },
+    {
+      "challengeId": "ef-c1-azure-phrase-004",
+      "challengeKind": "azure_phrase",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "evidence",
+      "unitType": "phrase",
+      "evaluationMode": "azure_phrase",
+      "text": "account for the discrepancy",
+      "pronunciation": {
+        "pos": "phrase",
+        "ipa": "/əˈkaʊnt fɔr ðə dɪˈskrɛpənsi/",
+        "variantId": "ef-en-us-account-for-the-discrepancy-v1",
+        "focus": "function words and stress"
+      },
+      "resource": {
+        "definition": "to explain an unexpected difference",
+        "example": "The model cannot account for the discrepancy."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-azure-phrase-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "c41c6705ac53cb7b09cd12baf7b7d86d6348dde9cfaea3fe80f1b32c3ffbfda0",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:azurePhrases:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "contentHash": "f5237fb4824fea22ef1f41a6137447833e649d3fa3a86dc28d3cdf06b2ce266c"
+    },
+    {
+      "challengeId": "ef-c1-listening-001",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "professional status",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "eminent",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈɛmənənt/",
+        "variantId": "ef-en-us-eminent-v1",
+        "focus": "first-syllable stress"
+      },
+      "resource": {
+        "definition": "famous and respected",
+        "example": "An eminent scholar spoke."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-001",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "fd5cecea11192a360ca6225b7936483eaea35a67d2a583c7a50e02a0c9787f96",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:001",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "001-answer",
+        "decoyIds": [
+          "001-decoy-1",
+          "001-decoy-2",
+          "001-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "001-answer",
+            "text": "eminent"
+          },
+          {
+            "optionId": "001-decoy-1",
+            "text": "imminent"
+          },
+          {
+            "optionId": "001-decoy-2",
+            "text": "immanent"
+          },
+          {
+            "optionId": "001-decoy-3",
+            "text": "evident"
+          }
+        ]
+      },
+      "contentHash": "ec14ba1b8ee05a556c26089b5be9a6d2f7078d38105c0aff8ae660d986328608"
+    },
+    {
+      "challengeId": "ef-c1-listening-002",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "elicit",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/ɪˈlɪsɪt/",
+        "variantId": "ef-en-us-elicit-v1",
+        "focus": "second-syllable stress"
+      },
+      "resource": {
+        "definition": "to draw out a response",
+        "example": "The question may elicit detail."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-002",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "9d86dfcb19f4fbd02c9ff88869075870ea9aa2f0b440069f92d7a858f3603cbc",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:002",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "002-answer",
+        "decoyIds": [
+          "002-decoy-1",
+          "002-decoy-2",
+          "002-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "002-answer",
+            "text": "elicit"
+          },
+          {
+            "optionId": "002-decoy-1",
+            "text": "illicit"
+          },
+          {
+            "optionId": "002-decoy-2",
+            "text": "explicit"
+          },
+          {
+            "optionId": "002-decoy-3",
+            "text": "elide"
+          }
+        ]
+      },
+      "contentHash": "631ca9c5d41b124b54d636ada754ecc8388e05910be3e215b4f583c43559a97b"
+    },
+    {
+      "challengeId": "ef-c1-listening-003",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "analysis",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "discrete",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/dɪˈskrit/",
+        "variantId": "ef-en-us-discrete-v1",
+        "focus": "long /i/"
+      },
+      "resource": {
+        "definition": "separate and distinct",
+        "example": "The model has discrete stages."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-003",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "bdf7255ee26c650b70c7e11be266bab8e07f92d0f51316382b8b86febeeef455",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:003",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "003-answer",
+        "decoyIds": [
+          "003-decoy-1",
+          "003-decoy-2",
+          "003-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "003-answer",
+            "text": "discrete"
+          },
+          {
+            "optionId": "003-decoy-1",
+            "text": "discreet"
+          },
+          {
+            "optionId": "003-decoy-2",
+            "text": "decrease"
+          },
+          {
+            "optionId": "003-decoy-3",
+            "text": "district"
+          }
+        ]
+      },
+      "contentHash": "b70499a301646963966449f16b179567f313d37bd4a4803d02923f79ac19cf2b"
+    },
+    {
+      "challengeId": "ef-c1-listening-004",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "sequence",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "precede",
+      "pronunciation": {
+        "pos": "verb",
+        "ipa": "/prɪˈsid/",
+        "variantId": "ef-en-us-precede-v1",
+        "focus": "second-syllable stress"
+      },
+      "resource": {
+        "definition": "to come before",
+        "example": "A pilot study should precede the trial."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-004",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "70841c44a7f82f5d29c6a7472bc84a7836512d5982981d07955aa5847c1f6f34",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:004",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "004-answer",
+        "decoyIds": [
+          "004-decoy-1",
+          "004-decoy-2",
+          "004-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "004-answer",
+            "text": "precede"
+          },
+          {
+            "optionId": "004-decoy-1",
+            "text": "proceed"
+          },
+          {
+            "optionId": "004-decoy-2",
+            "text": "preside"
+          },
+          {
+            "optionId": "004-decoy-3",
+            "text": "predict"
+          }
+        ]
+      },
+      "contentHash": "7f795162c869c7d86719314cc010d244c66208270f97e07c6b047b7cd40cb47f"
+    },
+    {
+      "challengeId": "ef-c1-listening-005",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "research",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "causal",
+      "pronunciation": {
+        "pos": "adjective",
+        "ipa": "/ˈkɔzəl/",
+        "variantId": "ef-en-us-causal-v1",
+        "focus": "voiced medial consonant"
+      },
+      "resource": {
+        "definition": "relating to cause and effect",
+        "example": "The data do not prove a causal link."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-005",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "d631bf56907d91cdc9ec474eda977cad4b925cd3a3c0478e2fa239a7d3bcc0c5",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:005",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "005-answer",
+        "decoyIds": [
+          "005-decoy-1",
+          "005-decoy-2",
+          "005-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "005-answer",
+            "text": "causal"
+          },
+          {
+            "optionId": "005-decoy-1",
+            "text": "casual"
+          },
+          {
+            "optionId": "005-decoy-2",
+            "text": "coastal"
+          },
+          {
+            "optionId": "005-decoy-3",
+            "text": "crucial"
+          }
+        ]
+      },
+      "contentHash": "522b703c6f7afb210a8076e8091ecdfd9c2b1d32574987bf17cf132888a7511a"
+    },
+    {
+      "challengeId": "ef-c1-listening-006",
+      "challengeKind": "listening",
+      "contentVersion": "2026.08.23.v1",
+      "level": "C1",
+      "locale": "en-US",
+      "topic": "literature",
+      "unitType": "listening",
+      "evaluationMode": "azure_word",
+      "text": "allusion",
+      "pronunciation": {
+        "pos": "noun",
+        "ipa": "/əˈluʒən/",
+        "variantId": "ef-en-us-allusion-v1",
+        "focus": "medial /ʒ/"
+      },
+      "resource": {
+        "definition": "an indirect reference",
+        "example": "The poem contains an allusion."
+      },
+      "audio": {
+        "assetId": "ef-audio-c1-listening-006",
+        "version": "ef-audio-v1",
+        "provider": "kokoro",
+        "voiceId": "af_heart",
+        "identitySha256": "91b245bfa8858488d167045274f1b768f092cce64e72c0440e4ab53da107d1ff",
+        "hashKind": "identity_metadata_sha256",
+        "artifactStatus": "not_generated"
+      },
+      "provenance": {
+        "sourceKind": "curated",
+        "sourceId": "echo-forge-seed:2026.08.23.v1:C1:listening:006",
+        "license": "pending-review",
+        "verificationStatus": "pending_human_review"
+      },
+      "listening": {
+        "answerId": "006-answer",
+        "decoyIds": [
+          "006-decoy-1",
+          "006-decoy-2",
+          "006-decoy-3"
+        ],
+        "options": [
+          {
+            "optionId": "006-answer",
+            "text": "allusion"
+          },
+          {
+            "optionId": "006-decoy-1",
+            "text": "illusion"
+          },
+          {
+            "optionId": "006-decoy-2",
+            "text": "elusion"
+          },
+          {
+            "optionId": "006-decoy-3",
+            "text": "allocation"
+          }
+        ]
+      },
+      "contentHash": "3e6e9472de63c3c307a893839b74abb443d3244a73d9e5d388e690f4df46ced5"
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "$schema": "../asset-manifest.schema.json",
+  "contractId": "echo-forge-visual-v1",
+  "schemaVersion": "asset-manifest-v1",
+  "manifestStage": "stage-a-draft",
+  "assetSlots": [
+    {
+      "assetId": "ef-hero-idle",
+      "stateEvents": [
+        "sandbox.setup.completed",
+        "combat.started",
+        "player.action.selected",
+        "recording.started",
+        "recording.stopped",
+        "enemy.intent.presented",
+        "combat.focus.changed",
+        "combat.resonance.ready",
+        "combat.resonance.consumed",
+        "combat.abandoned"
+      ],
+      "canvas": {
+        "width": 256,
+        "height": 256
+      },
+      "frameCount": 1,
+      "frameOrder": ["idle"],
+      "pivot": {
+        "x": 128,
+        "y": 224
+      },
+      "padding": {
+        "top": 16,
+        "right": 16,
+        "bottom": 16,
+        "left": 16
+      },
+      "zOrder": 20,
+      "paletteConstraints": ["slate", "violet", "cyan"],
+      "staticFallbackFrame": 0,
+      "mobileSafeCrop": {
+        "width": 224,
+        "height": 224
+      },
+      "loop": false,
+      "timingVariable": "motion.idle"
+    },
+    {
+      "assetId": "ef-analysis-hold",
+      "stateEvents": [
+        "analysis.pending",
+        "analysis.noop",
+        "analysis.resolved",
+        "telemetry.exported"
+      ],
+      "canvas": {
+        "width": 256,
+        "height": 256
+      },
+      "frameCount": 4,
+      "frameOrder": ["hold-1", "hold-2", "hold-3", "hold-4"],
+      "pivot": {
+        "x": 128,
+        "y": 128
+      },
+      "padding": {
+        "top": 24,
+        "right": 24,
+        "bottom": 24,
+        "left": 24
+      },
+      "zOrder": 40,
+      "paletteConstraints": ["slate", "violet", "cyan"],
+      "staticFallbackFrame": 0,
+      "mobileSafeCrop": {
+        "width": 208,
+        "height": 208
+      },
+      "loop": true,
+      "timingVariable": "motion.analysisHold"
+    },
+    {
+      "assetId": "ef-combat-result",
+      "stateEvents": [
+        "analysis.resolved",
+        "player.attack.resolved",
+        "player.block.resolved",
+        "player.parry.started",
+        "player.parry.resolved",
+        "combat.damage.applied",
+        "combat.victory",
+        "combat.defeat"
+      ],
+      "canvas": {
+        "width": 320,
+        "height": 320
+      },
+      "frameCount": 3,
+      "frameOrder": ["wind-up", "resolve", "return"],
+      "pivot": {
+        "x": 160,
+        "y": 288
+      },
+      "padding": {
+        "top": 20,
+        "right": 20,
+        "bottom": 20,
+        "left": 20
+      },
+      "zOrder": 30,
+      "paletteConstraints": ["slate", "violet", "cyan", "amber"],
+      "staticFallbackFrame": 1,
+      "mobileSafeCrop": {
+        "width": 272,
+        "height": 272
+      },
+      "loop": false,
+      "timingVariable": "motion.resultResolve"
+    }
+  ],
+  "provenanceSidecars": [
+    {
+      "assetId": "ef-hero-idle",
+      "generationStatus": "not_generated",
+      "binaryPath": null,
+      "sha256": null,
+      "dimensions": null,
+      "alpha": null,
+      "model": "gemini-3.7-flash",
+      "modelVersion": "3.7",
+      "promptId": "echo-forge-hero-idle-v1",
+      "referenceIds": ["claude-hero-reference-v1"],
+      "licenseStatus": "unverified",
+      "reviewStatus": "unverified"
+    },
+    {
+      "assetId": "ef-analysis-hold",
+      "generationStatus": "not_generated",
+      "binaryPath": null,
+      "sha256": null,
+      "dimensions": null,
+      "alpha": null,
+      "model": "gemini-3.7-flash",
+      "modelVersion": "3.7",
+      "promptId": "echo-forge-analysis-hold-v1",
+      "referenceIds": ["claude-effect-reference-v1"],
+      "licenseStatus": "unverified",
+      "reviewStatus": "unverified"
+    },
+    {
+      "assetId": "ef-combat-result",
+      "generationStatus": "not_generated",
+      "binaryPath": null,
+      "sha256": null,
+      "dimensions": null,
+      "alpha": null,
+      "model": "gemini-3.7-flash",
+      "modelVersion": "3.7",
+      "promptId": "echo-forge-combat-result-v1",
+      "referenceIds": ["claude-combat-reference-v1"],
+      "licenseStatus": "unverified",
+      "reviewStatus": "unverified"
+    }
+  ]
+}

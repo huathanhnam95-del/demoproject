@@ -144,7 +144,10 @@ async function main() {
               manifest: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
               tasks: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: completed ? 'completed' : 'available', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
               progress: { available: completed ? 0 : 1, reserved: 0, completed: completed ? 1 : 0, uncertain: 0, failed: 0 },
-              previousSamples: [{ taskId: 'segmentation-study-v2-previous-0001', targetWord: 'previous', referenceIpa: '/ˈpriː.vi.əs/', referenceSyllableIpa: ['priː', 'vi', 'əs'], targetSyllableCount: 3, status: 'completed', manualSegments: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] }]
+              previousSamples: [
+                { taskId: 'segmentation-study-v2-previous-0001', targetWord: 'previous', referenceIpa: '/ˈpriː.vi.əs/', referenceSyllableIpa: ['priː', 'vi', 'əs'], targetSyllableCount: 3, status: 'completed', comparison: persistedPreviousComparison(), manualSegments: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] },
+                { taskId: 'segmentation-study-v2-legacy-0001', targetWord: 'legacy', referenceIpa: '/ˈleɪ.ɡə.si/', referenceSyllableIpa: ['leɪ', 'ɡə', 'si'], targetSyllableCount: 3, status: 'completed', comparison: legacyPreviousComparison(), manualSegments: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] }
+              ]
             }});
           }
           if (url.pathname.endsWith('/claim-next') && method === 'POST') return json({ task: { taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: 'reserved', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', automaticOrder: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', automaticVersionOrder: ['v3', 'v2', 'v4'], exposureLog: [] } });
@@ -230,7 +233,7 @@ async function main() {
     assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'v3', 'The initial automatic view must be the first server-provided version.');
     assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), true, 'Compare all must stay locked before any ordered exposure.');
     assert.strictEqual(await page.locator('#segmentation-study-playback-speed option[value="0.25"]').count(), 1, 'Slower playback rates must be available for close boundary work.');
-    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check').count(), 9, 'The save checklist must surface every save requirement.');
+    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check').count(), 10, 'The save checklist must surface every save requirement.');
     await page.evaluate(() => { window.__studyWaveformFailNext = true; });
     await page.click('#segmentation-study-record');
     await page.waitForTimeout(500);
@@ -309,14 +312,29 @@ async function main() {
     assert.match(await page.locator('#segmentation-study-status').textContent(), /Next required automatic view: V4\./, 'The UI must identify the final required automatic version.');
     await page.click('[data-study-version="v3"]');
     await page.click('[data-study-version="v4"]');
+    const v4PanelText = await page.locator('#segmentation-study-panel-v4').textContent();
+    assert.match(v4PanelText, /V4 input IPA · \/ˈfoʊtəˌgræf\//, 'V4 must show the analyzed input IPA.');
+    assert.match(v4PanelText, /Exact V4 syllabification · .*ˈfoʊ/, 'V4 must display its exact syllabification label, independent of frozen study labels.');
+    assert.match(v4PanelText, /Frozen study reference · foʊ · tə · græf/, 'V4 must show the frozen study reference separately.');
+    assert.match(v4PanelText, /V4 syllabification differs from the frozen study reference/, 'V4 must make a label mismatch explicit for the reviewer.');
+    assert.match(v4PanelText, /rule pronunciation-syllabification-v1\/en-US-weight-first-max-onset-v1.*onsets en-US-onsets-v1.*hash a{64}/, 'V4 must show rule, onset inventory, and content-hash provenance.');
+    assert.match(v4PanelText, /onset \[\].*nucleus ˈfoʊ.*coda \[\]/, 'V4 rows must show explicit onset, nucleus, and coda ownership.');
+    assert.match(v4PanelText, /phones \[0\].*token 0–1.*maximal-legal-onset/, 'V4 must show phone ownership, token range, and rule evidence.');
+    assert.deepStrictEqual(await page.locator('#segmentation-study-panel-v4 .segmentation-study-ipa-labels [data-syllable-id]').evaluateAll((items) => items.map((item) => item.dataset.syllableId)), ['v4-syllable-1', 'v4-syllable-2', 'v4-syllable-3']);
+    assert.deepStrictEqual(await page.locator('#segmentation-study-panel-v4 .segmentation-study-playback button[data-syllable-id]').evaluateAll((items) => items.map((item) => item.dataset.syllableId)), ['v4-syllable-1', 'v4-syllable-2', 'v4-syllable-3']);
+    assert.ok(await page.locator('#segmentation-study-panel-v4 .segmentation-study-playback button[aria-label="Play V4 syllable 1 /ˈfoʊ/"]').count() === 1, 'V4 playback must have an explicit accessible IPA name.');
+    assert.ok(await page.evaluate(() => window.__lastStudyWave.__regionPlugin.getRegions().find((region) => region.id === 'study-v4-v4-syllable-1')?.content === 'V4 S1 /ˈfoʊ/'), 'Waveform regions must carry the exact V4 IPA label.');
+    assert.deepStrictEqual(await page.evaluate(() => window.__lastStudyWave.__regionPlugin.getRegions().filter((region) => region.id.startsWith('study-v4-')).map((region) => region.id)), ['study-v4-v4-syllable-1', 'study-v4-v4-syllable-2', 'study-v4-v4-syllable-3']);
     assert.match(await page.locator('#segmentation-study-status').textContent(), /All automatic versions viewed/, 'The UI must clear the exposure prerequisite after the final automatic view.');
+    await page.check('#segmentation-study-automatic-judgment-v4');
+    assert.match(await page.locator('#segmentation-study-judgment-status').textContent(), /recorded/i, 'The reviewer must record an automatic judgment before saving.');
     assert.ok(await page.locator('#segmentation-study-panel-v2 .segmentation-study-playback button').count() >= 2, 'Whole-word and syllable playback controls should be visible.');
 
     // V4 is a boundary refinement of V3, so the review has to show which
     // boundaries moved and on what evidence.
-    const v4PanelText = await page.locator('#segmentation-study-panel-v4').textContent();
-    assert.match(v4PanelText, /V4 moved 2 of 3 boundaries/, 'The V4 panel must summarise how many boundaries the refinement moved.');
-    assert.match(v4PanelText, /final extension/, 'The V4 panel must name each correction type applied.');
+    const v4DiagnosticsPanelText = await page.locator('#segmentation-study-panel-v4').textContent();
+    assert.match(v4DiagnosticsPanelText, /V4 moved 2 of 3 boundaries/, 'The V4 panel must summarise how many boundaries the refinement moved.');
+    assert.match(v4DiagnosticsPanelText, /final extension/, 'The V4 panel must name each correction type applied.');
     assert.strictEqual(await page.locator('#segmentation-study-panel-v4 .segmentation-study-diagnostics tbody tr').count(), 3, 'Every V4 diagnostic must be listed.');
 
     await captureStudyShot(page, 'ordered-exposure');
@@ -546,15 +564,17 @@ async function main() {
     await page.click('#segmentation-study-next');
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 0, 'The next task must require a new certainty choice.');
     await page.click('[data-study-mode="previous"]');
+    const analysisAttemptsBeforePrevious = analysisAttempts;
     await page.waitForSelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-previous-0001"]', { state: 'visible' });
     await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-previous-0001"]');
     await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'previous' && /^blob:/.test(document.querySelector('#segmentation-study-audio')?.getAttribute('src') || ''), null, { timeout: 30000 });
     await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
+    assert.strictEqual(analysisAttempts, analysisAttemptsBeforePrevious, 'Loading a previous sample must restore persisted analysis without automatic re-analysis.');
+    assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /ˈpriː/, 'Previous samples must restore the persisted V4 comparison.');
     assert.match(await page.locator('#segmentation-study-audio').getAttribute('src') || '', /^blob:/, 'Previously saved samples must retain a native audio object URL.');
     assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 3 && window.__studyWaveSurferBlobLoads[2] instanceof Blob && window.__studyWaveSurferBlobLoads[2].size > 0), 'Previously saved sample audio must reach WaveSurfer.loadBlob as a Blob.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), true, 'Previously saved samples must hide the empty state after waveform and spectrogram readiness.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'Previously saved samples must not use legacy URL loading.');
-
     // Opening a stored sample must discard everything from the previous take,
     // including the A-B listening selection.
     assert.match(await page.locator('#segmentation-study-ab-readout').textContent(), /drag across the waveform/, 'Opening a stored sample must clear the previous A–B selection.');
@@ -589,6 +609,12 @@ async function main() {
     assert.strictEqual(submittedManualReview.certainty, 'certain');
     assert.ok(requests.some((item) => /\/corpus-samples\/segmentation-study-v2-previous-0001\/manual-reviews$/.test(item.path) && item.method === 'POST'));
 
+    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-legacy-0001"]');
+    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'legacy' && /^blob:/.test(document.querySelector('#segmentation-study-audio')?.getAttribute('src') || ''), null, { timeout: 30000 });
+    await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
+    assert.strictEqual(analysisAttempts, analysisAttemptsBeforePrevious, 'Legacy sample restore must not trigger automatic re-analysis.');
+    assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /Exact V4 syllabification unavailable for this legacy analysis\./, 'Legacy timing-only V4 must disclose that exact syllabification is unavailable.');
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 4 && window.__studyWaveSurferBlobLoads[3] instanceof Blob && window.__studyWaveSurferBlobLoads[3].size > 0), 'Legacy sample audio must load from its native Blob.');
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     const unexpectedConsoleErrors = consoleErrors.filter((message) => !/503 \(Service Unavailable\)|blob:.*Content Security Policy|Fetch API cannot load blob:/i.test(message));
     assert.strictEqual(unexpectedConsoleErrors.length, 0, `Unexpected console errors:\n${unexpectedConsoleErrors.join('\n')}`);
@@ -596,19 +622,92 @@ async function main() {
   } finally { await browser.close(); }
 }
 
+function persistedPreviousComparison() {
+  const v2 = [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }];
+  const v3 = [{ startTime: 0.09, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }];
+  const v4 = [
+    { syllableId: 'v4-syllable-1', ipa: 'ˈpriː', startTime: 0.08, endTime: 0.3 },
+    { syllableId: 'v4-syllable-2', ipa: 'vi', startTime: 0.3, endTime: 0.62 },
+    { syllableId: 'v4-syllable-3', ipa: 'əs', startTime: 0.62, endTime: 0.95 }
+  ];
+  const v4Evidence = v4EnvelopeFor(v4, '/ˈpriː.vi.əs/');
+  return {
+    schemaVersion: 'pronunciation-comparison-v2', status: 'complete', comparisonId: 'comparison-previous-1',
+    v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: v2 } },
+    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: v3, partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3, v4: v4Evidence.alignment.syllables, v4AnalysisVersion: 'pronunciation-analysis-v4.1', v4SyllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', v4Alignment: v4Evidence.alignment, v4Diagnostics: [] } } },
+    v4: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2', provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: v4 } }
+  };
+}
+
+function legacyPreviousComparison() {
+  const v2 = [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }];
+  const v3 = [{ startTime: 0.09, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }];
+  const v4 = [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }];
+  return {
+    schemaVersion: 'pronunciation-comparison-v2', status: 'complete', comparisonId: 'comparison-legacy-1',
+    v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: v2 } },
+    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: v3, partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3, v4 } } },
+    v4: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2', provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: v4 } }
+  };
+}
+
+function v4EnvelopeFor(spans, originalIpa) {
+  const syllables = spans.map((span, index) => ({
+    ...span,
+    partitionStartTime: span.startTime,
+    partitionEndTime: span.endTime,
+    phoneIndexes: [index],
+    phoneOwnership: { indexes: [index], startIndex: index, endIndex: index },
+    alignmentTokenRange: { start: index, end: index + 1, endExclusive: index + 1 },
+    onset: span.onset || [],
+    nucleus: span.nucleus || span.ipa || '',
+    coda: span.coda || [],
+    timingSpanIndex: index,
+    rule: 'maximal-legal-onset',
+    ambiguity: { status: 'deterministic', candidates: [] }
+  }));
+  const provenanceSyllables = syllables.map(({ startTime, endTime, partitionStartTime, partitionEndTime, ipa, ...evidence }) => evidence);
+  const envelope = {
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: 'en-US',
+    originalIpa,
+    normalizedIpa: originalIpa.replace(/^\//, '').replace(/\/$/, ''),
+    displayIpa: originalIpa,
+    contentHash: 'a'.repeat(64),
+    rule: { id: 'weighted-maximal-onset', stressPolicy: 'primary-secondary-stressed-lax' },
+    ambiguity: { status: 'deterministic', candidates: [] },
+    syllables: provenanceSyllables
+  };
+  return {
+    alignment: {
+      aligned: true,
+      analysisVersion: 'pronunciation-analysis-v4.1',
+      syllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+      syllables,
+      provenance: envelope
+    },
+    provenance: envelope
+  };
+}
+
 function jsonComparison(route, directMismatch = false) {
+  const v4Spans = [{ syllableId: 'v4-syllable-1', ipa: 'ˈfoʊ', startTime: 0.08, endTime: 0.31 }, { syllableId: 'v4-syllable-2', ipa: 'tə', startTime: 0.31, endTime: 0.64 }, { syllableId: 'v4-syllable-3', ipa: 'græf', startTime: 0.64, endTime: 0.94 }];
+  const v4Evidence = v4EnvelopeFor(v4Spans, '/ˈfoʊtəˌgræf/');
   const payload = {
     schemaVersion: 'pronunciation-comparison-v2', status: 'complete', comparisonId: 'comparison-study-v2-1', dialect: 'en-US',
     context: { targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], expectedSyllables: 3 },
     v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] } },
-    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], v4: [{ startTime: 0.08, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }], v4AnalysisVersion: 'pronunciation-analysis-v4', v4Diagnostics: [
+    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], v4: v4Evidence.alignment.syllables, v4AnalysisVersion: 'pronunciation-analysis-v4.1', v4SyllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', v4Alignment: v4Evidence.alignment, v4Diagnostics: [
       { index: 0, correction_type: 'onset', confidence: 0.18, blend_weight: 1, shift_ms: 20, signed_shift_ms: -20, reason: 'intensity rise', boundary: 'partition_start_time', side: 'start', old: 0.1, new: 0.08, mutation: true },
       { index: 1, correction_type: 'none', confidence: 0.71, blend_weight: 0, shift_ms: 0, signed_shift_ms: 0, reason: 'high confidence', boundary: null, side: null, old: null, new: null, mutation: false },
       { index: 2, correction_type: 'final_extension', confidence: 0.24, blend_weight: 0.9, shift_ms: 20, signed_shift_ms: 20, reason: 'voicing decay', boundary: 'partition_end_time', side: 'end', old: 0.92, new: 0.94, mutation: true }
     ] } } },
     v4: { status: 'complete', analysis: {
-      analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
-      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: [{ startTime: 0.08, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }]
+      analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
+      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: [{ syllableId: 'v4-syllable-1', ipa: 'ˈfoʊ', startTime: 0.08, endTime: 0.31 }, { syllableId: 'v4-syllable-2', ipa: 'tə', startTime: 0.31, endTime: 0.64 }, { syllableId: 'v4-syllable-3', ipa: 'græf', startTime: 0.64, endTime: 0.94 }]
     } }
   };
   if (directMismatch) payload.v4.analysis.observed_syllables = [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }];

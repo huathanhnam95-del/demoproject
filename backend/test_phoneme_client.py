@@ -256,11 +256,15 @@ class TestPhonemeClient(unittest.TestCase):
         session = mock_session_cls.return_value
         session.post.return_value = _ok_response({"contract_version": "recognize-v2"})
         client = PhonemeClient(_LOCALHOST_URL, auth_mode="disabled")
-        result = client.recognize_v2(b"wav", ["æ", "tʃu", "əl"], 3)
+        result = client.recognize_v2(
+            b"wav", ["æ", "tʃu", "əl"], 3,
+            reference_ipa="/ˈætʃuəl/",
+        )
         self.assertEqual(result["contract_version"], "recognize-v2")
         request = session.post.call_args.kwargs
         self.assertEqual(request["data"]["expected_syllable_count"], "3")
         self.assertEqual(json.loads(request["data"]["reference_syllables"]), ["æ", "tʃu", "əl"])
+        self.assertEqual(request["data"]["reference_ipa"], "/ˈætʃuəl/")
 
     # -- 9. Successful recognize --------------------------------------------
 

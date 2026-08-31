@@ -6,11 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-<<<<<<< Updated upstream
   <link rel="stylesheet" href="/design-tokens.css?v=20260831-v1.8.84">
-=======
-  <link rel="stylesheet" href="/design-tokens.css?v=20260831-v1.8.84">
->>>>>>> Stashed changes
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,13 +16,8 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-<<<<<<< Updated upstream
   <link rel="stylesheet" href="style.css?v=20260831-v1.8.84&bgm=v2" />
   <link rel="stylesheet" href="crm-admin.css?v=20260831-v1.8.84&bgm=v2" />
-=======
-  <link rel="stylesheet" href="style.css?v=20260831-v1.8.84&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260831-v1.8.84&bgm=v2" />
->>>>>>> Stashed changes
 </head>
 
 <body>
@@ -530,7 +521,6 @@
             <span id="segmentation-study-analysis-status" class="crm-muted" role="status" aria-live="polite">Analysis is required before review.</span>
           </div>
 
-<<<<<<< Updated upstream
               <div class="segmentation-study-judgment" aria-label="Automatic judgment">
                 <span class="segmentation-study-judgment-label">Best automatic version(s) (ties allowed)</span>
                 <label><input id="segmentation-study-automatic-judgment-v2" type="checkbox" data-automatic-judgment-version="v2" /> V2</label>
@@ -540,27 +530,6 @@
                 <span id="segmentation-study-judgment-status" class="crm-muted" role="status" aria-live="polite">Review all automatic versions before choosing.</span>
               </div>
 
-              <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
-                <div id="segmentation-study-waveform" class="segmentation-study-waveform"></div>
-                <div id="segmentation-study-time-ruler" class="segmentation-study-time-ruler" aria-hidden="true"></div>
-                <div id="segmentation-study-spectrogram" class="segmentation-study-spectrogram"></div>
-                <div id="segmentation-study-timeline-empty" class="crm-muted">Record or load a sample to see its waveform and spectrogram.</div>
-                <div id="segmentation-study-marker-current" class="segmentation-study-marker segmentation-study-marker-current" hidden aria-hidden="true"></div>
-                <div id="segmentation-study-marker-a" class="segmentation-study-marker segmentation-study-marker-a" hidden aria-hidden="true"><span>A</span></div>
-                <div id="segmentation-study-marker-b" class="segmentation-study-marker segmentation-study-marker-b" hidden aria-hidden="true"><span>B</span></div>
-              </div>
-
-              <div class="segmentation-study-timeline-controls" aria-label="Timeline controls">
-                <span id="segmentation-study-current-time" class="segmentation-study-current-time" aria-live="polite">0.000s</span>
-                <button id="segmentation-study-play-pause" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Play</button>
-                <button id="segmentation-study-set-a" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Set A</button>
-                <button id="segmentation-study-set-b" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Set B</button>
-                <button id="segmentation-study-play-ab" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Play A-B</button>
-                <button id="segmentation-study-loop-ab" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" aria-pressed="false" disabled>Loop A-B</button>
-                <button id="segmentation-study-clear-ab" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Clear</button>
-                <button id="segmentation-study-retry-visualization" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" hidden>Retry visualization</button>
-              </div>
-=======
           <div class="segmentation-study-tabs" role="tablist" aria-label="Automatic and manual boundaries">
             <button id="segmentation-study-tab-v2" class="segmentation-study-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="segmentation-study-panel-v2" data-study-version="v2">V2</button>
             <button id="segmentation-study-tab-v3" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v3" data-study-version="v3">V3</button>
@@ -568,7 +537,6 @@
             <button id="segmentation-study-tab-manual" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-manual" data-study-version="manual">Manual review</button>
             <button id="segmentation-study-tab-compare" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-compare" data-study-version="compare" hidden>Compare all</button>
           </div>
->>>>>>> Stashed changes
 
           <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
             <div class="segmentation-study-waveform-stack">

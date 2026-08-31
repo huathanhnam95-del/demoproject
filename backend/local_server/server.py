@@ -13,6 +13,7 @@ import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
 import re
 import hashlib
+import inspect
 import secrets
 import unicodedata
 from datetime import datetime, timezone
@@ -3292,6 +3293,7 @@ def _build_v3_active_response(
     expected_syllables=None,
     *,
     include_partition_variants=False,
+    allow_legacy_v4=False,
 ):
     """Build v3 response from phoneme recognition + Praat contours.
 
@@ -3456,26 +3458,141 @@ def _build_v3_active_response(
     partition_variants = None
     if include_partition_variants:
         v3_partition_snapshot = _snapshot_partition_spans(syllables_from_recognizer)
-        # V4 is comparison-only.  Never let its experimental boundary movement
-        # mutate the active V3 spans returned to learner-facing Pronounce.
-        v4_candidate_spans = [dict(span) for span in syllables_from_recognizer]
-        v4_result = _refine_partition_boundaries_with_confidence_weighted_acoustic(
-            v4_candidate_spans,
-            praat_result.get('intensity'),
-            praat_result.get('pitch'),
-            (praat_result.get('observed') or {}).get('syllables') or [],
-            float(praat_result.get('duration') or 0),
-        )
+        # V4 is comparison-only.  New recognizer responses provide the exact
+        # reference-IPA syllabification and its CTC spans.  Keep that payload
+        # separate from the frozen V3 partition and never mutate either one.
+        remote_v4_alignment = phoneme_result.get('v4_alignment')
+
+        def _snapshot_v4_alignment(alignment):
+            if not isinstance(alignment, dict) or alignment.get('aligned') is not True:
+                return []
+            snapshots = []
+            for index, source in enumerate(alignment.get('syllables') or []):
+                if not isinstance(source, dict):
+                    continue
+                start = source.get('partitionStartTime', source.get('partition_start_time', source.get('startTime', source.get('start_time'))))
+                end = source.get('partitionEndTime', source.get('partition_end_time', source.get('endTime', source.get('end_time'))))
+                try:
+                    start = float(start)
+                    end = float(end)
+                except (TypeError, ValueError):
+                    continue
+                if not np.isfinite(start) or not np.isfinite(end) or end <= start:
+                    continue
+                snapshots.append({
+                    'index': index,
+                    'syllableId': source.get('syllableId', source.get('syllable_id', f'v4-syllable-{index + 1}')),
+                    'startTime': round(start, 6),
+                    'endTime': round(end, 6),
+                    # Keep the raw and partition timing keys available to the
+                    # existing acoustic refiner. Raw CTC coverage remains
+                    # immutable; only these V4 partition candidates may move.
+                    'start_time': source.get('start_time', source.get('startTime', source.get('start'))),
+                    'end_time': source.get('end_time', source.get('endTime', source.get('end'))),
+                    'partition_start_time': round(start, 6),
+                    'partition_end_time': round(end, 6),
+                    'duration': round(end - start, 6),
+                    'confidence': source.get('confidence'),
+                    'nucleus_start_time': source.get('nucleus_start_time', source.get('nucleusStartTime')),
+                    'nucleus_end_time': source.get('nucleus_end_time', source.get('nucleusEndTime')),
+                    'ipa': source.get('ipa'),
+                    'onset': source.get('onset', []),
+                    'nucleus': source.get('nucleus'),
+                    'coda': source.get('coda', []),
+                    'stress': source.get('stress'),
+                    # Structural provenance is copied alongside the timing
+                    # span, while the complete immutable envelope remains in
+                    # partitionVariants.v4Alignment.
+                    'phoneIndexes': source.get('phoneIndexes', source.get('phone_indexes', [])),
+                    'phoneOwnership': source.get('phoneOwnership', source.get('phone_ownership')),
+                    'alignmentTokenRange': source.get('alignmentTokenRange', source.get('alignment_token_range')),
+                    'timingSpanIndex': source.get('timingSpanIndex', source.get('timing_span_index', index)),
+                    'rule': source.get('rule'),
+                    'ambiguity': source.get('ambiguity'),
+                    'source': 'v4_alignment',
+                })
+            return snapshots
+
+        if isinstance(remote_v4_alignment, dict):
+            v4_candidate_spans = _snapshot_v4_alignment(remote_v4_alignment)
+            failure_code = remote_v4_alignment.get('failureCode') or remote_v4_alignment.get('failure_code')
+            if remote_v4_alignment.get('aligned') is True and v4_candidate_spans:
+                # A2 supplies canonical ownership and initial CTC timing. The
+                # existing acoustic boundary refinement is applied only to
+                # this copied V4 partition candidate, never to V3/raw spans.
+                v4_result = _refine_partition_boundaries_with_confidence_weighted_acoustic(
+                    v4_candidate_spans,
+                    praat_result.get('intensity'),
+                    praat_result.get('pitch'),
+                    (praat_result.get('observed') or {}).get('syllables') or [],
+                    float(praat_result.get('duration') or 0),
+                )
+                for candidate in v4_candidate_spans:
+                    candidate['startTime'] = round(float(candidate['partition_start_time']), 6)
+                    candidate['endTime'] = round(float(candidate['partition_end_time']), 6)
+                    candidate['duration'] = round(candidate['endTime'] - candidate['startTime'], 6)
+                refined_alignment = dict(remote_v4_alignment)
+                refined_syllables = []
+                for index, source in enumerate(remote_v4_alignment.get('syllables') or []):
+                    refined = dict(source) if isinstance(source, dict) else {}
+                    if index < len(v4_candidate_spans):
+                        candidate = v4_candidate_spans[index]
+                        refined_start = candidate.get('partition_start_time')
+                        refined_end = candidate.get('partition_end_time')
+                        if refined_start is not None:
+                            refined['partition_start_time'] = round(float(refined_start), 6)
+                            refined['partitionStartTime'] = round(float(refined_start), 6)
+                        if refined_end is not None:
+                            refined['partition_end_time'] = round(float(refined_end), 6)
+                            refined['partitionEndTime'] = round(float(refined_end), 6)
+                    refined_syllables.append(refined)
+                refined_alignment['syllables'] = refined_syllables
+                remote_v4_alignment = refined_alignment
+            else:
+                v4_result = {
+                    'diagnostics': [] if remote_v4_alignment.get('aligned') is True else [{
+                        'code': remote_v4_alignment.get('reason', 'V4_ALIGNMENT_UNAVAILABLE'),
+                        'failureCode': failure_code or remote_v4_alignment.get('reason', 'V4_ALIGNMENT_UNAVAILABLE'),
+                    }],
+                }
+        elif allow_legacy_v4:
+            # Compatibility for explicitly requested historical rendering.
+            # New comparisons must carry the recognizer's reference-constrained
+            # V4 alignment and never infer it from a V3 copy.
+            v4_candidate_spans = [dict(span) for span in syllables_from_recognizer]
+            v4_result = _refine_partition_boundaries_with_confidence_weighted_acoustic(
+                v4_candidate_spans,
+                praat_result.get('intensity'),
+                praat_result.get('pitch'),
+                (praat_result.get('observed') or {}).get('syllables') or [],
+                float(praat_result.get('duration') or 0),
+            )
+        else:
+            v4_candidate_spans = []
+            v4_result = {
+                'diagnostics': [{'code': 'V4_ALIGNMENT_UNAVAILABLE'}],
+            }
         partition_variants = {
             'schemaVersion': 'pronunciation-partition-variants-v2',
             'v3': v3_partition_snapshot,
-            'v4': _snapshot_partition_spans(v4_candidate_spans),
-            'v4AnalysisVersion': 'pronunciation-analysis-v4',
+            'v4': v4_candidate_spans if isinstance(remote_v4_alignment, dict) else _snapshot_partition_spans(v4_candidate_spans),
+            'v4AnalysisVersion': (
+                remote_v4_alignment.get('analysisVersion', 'pronunciation-analysis-v4.1')
+                if isinstance(remote_v4_alignment, dict) else 'pronunciation-analysis-v4'
+            ),
+            'v4SyllabificationVersion': (
+                remote_v4_alignment.get('syllabificationVersion')
+                if isinstance(remote_v4_alignment, dict) else None
+            ),
             'v4Diagnostics': (
                 v4_result.get('diagnostics', v4_result.get('corrections', []))
                 if isinstance(v4_result, dict) else []
             )
         }
+        if isinstance(remote_v4_alignment, dict):
+            partition_variants['v4Alignment'] = remote_v4_alignment
+        elif not allow_legacy_v4:
+            partition_variants['v4AnalysisVersion'] = None
     if fricative_onset_refined:
         partition_convention = 'ctc-interspan-acoustic-hybrid-contiguous-v3'
     elif acoustic_tail_refined:
@@ -3648,11 +3765,187 @@ def _build_v2_comparison_envelope(v2_result, expected_syllables):
     }
 
 
+def _v4_alignment_contract_error(alignment, expected_syllables, partition_spans):
+    """Return a stable reason when a remote V4.1 envelope is not trustworthy.
+
+    The recognizer owns this structural envelope.  The local comparison layer
+    may normalize/refine its copied timing candidate, but it must not promote a
+    response with missing provenance or mismatched syllable ownership as a
+    complete V4 analysis.
+    """
+    if not isinstance(alignment, dict) or alignment.get('aligned') is not True:
+        return 'V4_ALIGNMENT_INVALID'
+    if alignment.get('analysisVersion') != 'pronunciation-analysis-v4.1':
+        return 'V4_ALIGNMENT_INVALID'
+    if alignment.get('syllabificationVersion') != (
+        'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
+    ):
+        return 'V4_ALIGNMENT_INVALID'
+    if alignment.get('ruleVersion') != alignment.get('syllabificationVersion'):
+        return 'V4_ALIGNMENT_INVALID'
+    if alignment.get('onsetInventoryVersion') != 'en-US-onsets-v1':
+        return 'V4_ALIGNMENT_INVALID'
+    if alignment.get('schemaVersion') != 'pronunciation-syllabification-v1':
+        return 'V4_ALIGNMENT_INVALID'
+    if not isinstance(expected_syllables, int) or expected_syllables < 1:
+        return 'V4_REFERENCE_COUNT_MISMATCH'
+
+    syllables = alignment.get('syllables')
+    provenance = (
+        alignment.get('v4Syllabification')
+        or alignment.get('v4Provenance')
+        or alignment.get('provenance')
+    )
+    if not isinstance(syllables, list) or len(syllables) != expected_syllables:
+        return 'V4_REFERENCE_COUNT_MISMATCH'
+    if alignment.get('syllable_count') != expected_syllables:
+        return 'V4_REFERENCE_COUNT_MISMATCH'
+    if (
+        alignment.get('dialect') != 'en-US'
+        or not isinstance(alignment.get('originalIpa'), str)
+        or not isinstance(alignment.get('normalizedIpa'), str)
+        or not alignment.get('originalIpa')
+        or not alignment.get('normalizedIpa')
+    ):
+        return 'V4_ALIGNMENT_INVALID'
+    if not isinstance(provenance, dict):
+        return 'V4_ALIGNMENT_INVALID'
+    if provenance.get('schemaVersion') != 'pronunciation-syllabification-v1':
+        return 'V4_ALIGNMENT_INVALID'
+    if provenance.get('analysisVersion') != 'pronunciation-analysis-v4.1':
+        return 'V4_ALIGNMENT_INVALID'
+    if provenance.get('ruleVersion') != (
+        'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
+    ):
+        return 'V4_ALIGNMENT_INVALID'
+    if provenance.get('onsetInventoryVersion') != 'en-US-onsets-v1':
+        return 'V4_ALIGNMENT_INVALID'
+    if (
+        not isinstance(provenance.get('rule'), dict)
+        or not isinstance(provenance.get('ambiguity'), dict)
+        or provenance.get('timingSpanContractVersion') != 'ctc-alignment-v2'
+    ):
+        return 'V4_ALIGNMENT_INVALID'
+    content_hash = provenance.get('contentHash')
+    if (
+        not isinstance(content_hash, str)
+        or not re.fullmatch(r'[a-f0-9]{64}', content_hash)
+        or alignment.get('contentHash') != content_hash
+    ):
+        return 'V4_ALIGNMENT_INVALID'
+    structural_fields = (
+        'schemaVersion', 'analysisVersion', 'ruleVersion',
+        'onsetInventoryVersion', 'dialect', 'originalIpa', 'normalizedIpa',
+        'displayIpa', 'displaySyllabification', 'exactSyllabification',
+        'rule', 'ambiguity', 'timingSpanContractVersion', 'syllables',
+    )
+    try:
+        structural = {key: provenance[key] for key in structural_fields}
+        expected_hash = hashlib.sha256(
+            json.dumps(structural, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+        ).hexdigest()
+    except (KeyError, TypeError, ValueError):
+        return 'V4_ALIGNMENT_INVALID'
+    if expected_hash != content_hash:
+        return 'V4_ALIGNMENT_INVALID'
+    provenance_syllables = provenance.get('syllables')
+    if not isinstance(provenance_syllables, list) or len(provenance_syllables) != expected_syllables:
+        return 'V4_ALIGNMENT_INVALID'
+
+    def _value(item, camel, snake=None, default=None):
+        if not isinstance(item, dict):
+            return default
+        if camel in item:
+            return item[camel]
+        if snake and snake in item:
+            return item[snake]
+        return default
+
+    def _signature(item):
+        return {
+            'index': item.get('index'),
+            'syllableId': _value(item, 'syllableId', 'syllable_id'),
+            'ipa': item.get('ipa'),
+            'onset': item.get('onset'),
+            'nucleus': item.get('nucleus'),
+            'coda': item.get('coda'),
+            'stress': item.get('stress'),
+            'phoneIndexes': _value(item, 'phoneIndexes', 'phone_indexes'),
+            'phoneOwnership': _value(item, 'phoneOwnership', 'phone_ownership'),
+            'alignmentTokenRange': _value(item, 'alignmentTokenRange', 'alignment_token_range'),
+            'timingSpanIndex': _value(item, 'timingSpanIndex', 'timing_span_index'),
+            'rule': item.get('rule'),
+            'ambiguity': item.get('ambiguity'),
+        }
+
+    ids = set()
+    previous_phone_end = 0
+    expected_display = f"/{'.'.join(item['ipa'] for item in syllables)}/"
+    for candidate in (alignment, provenance):
+        if candidate.get('displaySyllabification') != expected_display:
+            return 'V4_ALIGNMENT_INVALID'
+        if candidate.get('exactSyllabification') != expected_display:
+            return 'V4_ALIGNMENT_INVALID'
+    for index, (item, structural) in enumerate(zip(syllables, provenance_syllables)):
+        if not isinstance(item, dict) or not isinstance(structural, dict):
+            return 'V4_ALIGNMENT_INVALID'
+        signature = _signature(item)
+        structural_signature = _signature(structural)
+        if signature != structural_signature:
+            return 'V4_ALIGNMENT_INVALID'
+        if signature['index'] != index:
+            return 'V4_ALIGNMENT_INVALID'
+        syllable_id = signature['syllableId']
+        if not isinstance(syllable_id, str) or not syllable_id or syllable_id in ids:
+            return 'V4_ALIGNMENT_INVALID'
+        ids.add(syllable_id)
+        if not isinstance(signature['ipa'], str) or not signature['ipa']:
+            return 'V4_ALIGNMENT_INVALID'
+        if not isinstance(signature['onset'], list) or not isinstance(signature['coda'], list):
+            return 'V4_ALIGNMENT_INVALID'
+        if not isinstance(signature['nucleus'], str) or not signature['nucleus']:
+            return 'V4_ALIGNMENT_INVALID'
+        phone_indexes = signature['phoneIndexes']
+        ownership = signature['phoneOwnership']
+        token_range = signature['alignmentTokenRange']
+        if (
+            not isinstance(phone_indexes, list)
+            or any(not isinstance(value, int) or isinstance(value, bool) for value in phone_indexes)
+            or phone_indexes != list(range(previous_phone_end, previous_phone_end + len(phone_indexes)))
+            or not isinstance(ownership, dict)
+            or ownership.get('indexes') != phone_indexes
+            or ownership.get('startIndex') != previous_phone_end
+            or ownership.get('endIndex') != previous_phone_end + len(phone_indexes)
+            or not isinstance(token_range, dict)
+            or token_range.get('start') != previous_phone_end
+            or token_range.get('end') != previous_phone_end + len(phone_indexes)
+            or token_range.get('endExclusive') != previous_phone_end + len(phone_indexes)
+            or signature['timingSpanIndex'] != index
+        ):
+            return 'V4_ALIGNMENT_INVALID'
+        previous_phone_end += len(phone_indexes)
+
+        if index >= len(partition_spans):
+            return 'V4_ALIGNMENT_INVALID'
+        span = partition_spans[index]
+        start = _value(item, 'partitionStartTime', 'partition_start_time')
+        end = _value(item, 'partitionEndTime', 'partition_end_time')
+        try:
+            if abs(float(start) - float(span['startTime'])) > 0.000001:
+                return 'V4_ALIGNMENT_INVALID'
+            if abs(float(end) - float(span['endTime'])) > 0.000001:
+                return 'V4_ALIGNMENT_INVALID'
+        except (TypeError, ValueError, KeyError):
+            return 'V4_ALIGNMENT_INVALID'
+    return None
+
+
 def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
     """Expose the comparison-only V4 partition as an independent envelope.
 
-    V4 is a boundary refinement of the V3 partition, not a third analyzer.  It
-    is therefore complete only when the V3 response carries the versioned V4
+    V4 is a reference-IPA A2 grouping aligned from the same recognizer logits,
+    with an optional acoustic refinement of its copied timing candidate. It is
+    therefore complete only when the V3 response carries the versioned V4
     partition with the exact count and contiguous spans required by the study.
     Invalid or missing partition data stays explicitly unavailable instead of
     being represented as a plausible V4 analysis.
@@ -3695,9 +3988,23 @@ def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
         return unavailable
     spans = partition_variants.get('v4')
     if not isinstance(spans, list) or not spans:
-        return unavailable
+        diagnostics = partition_variants.get('v4Diagnostics')
+        diagnostics = diagnostics if isinstance(diagnostics, list) else []
+        failure_code = next((
+            item.get('failureCode') or item.get('failure_code')
+            for item in diagnostics
+            if isinstance(item, dict) and (item.get('failureCode') or item.get('failure_code'))
+        ), None)
+        return {
+            **unavailable,
+            'failureCode': failure_code,
+            'diagnostics': [dict(item) if isinstance(item, dict) else item for item in diagnostics],
+        }
     if not isinstance(expected_syllables, int) or len(spans) != expected_syllables:
-        return unavailable
+        return {
+            **unavailable,
+            'failureCode': 'V4_REFERENCE_COUNT_MISMATCH',
+        }
 
     normalized_spans = []
     previous_end = None
@@ -3721,6 +4028,24 @@ def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
         normalized_spans.append(normalized)
         previous_end = end
 
+    remote_v4_alignment = partition_variants.get('v4Alignment')
+    if isinstance(remote_v4_alignment, dict):
+        failure_code = _v4_alignment_contract_error(
+            remote_v4_alignment,
+            expected_syllables,
+            normalized_spans,
+        )
+        if failure_code:
+            return {
+                **unavailable,
+                'failureCode': failure_code,
+            }
+    elif partition_variants.get('v4AnalysisVersion') == 'pronunciation-analysis-v4.1':
+        return {
+            **unavailable,
+            'failureCode': 'V4_ALIGNMENT_INVALID',
+        }
+
     v4_diagnostics = partition_variants.get('v4Diagnostics')
     if not isinstance(v4_diagnostics, list):
         v4_diagnostics = []
@@ -3728,9 +4053,9 @@ def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
     # expose it under both the V4-specific and generic comparison names.
     diagnostics = [dict(item) if isinstance(item, dict) else item for item in v4_diagnostics]
     analysis = {
-        'analysisVersion': 'pronunciation-analysis-v4',
+        'analysisVersion': partition_variants.get('v4AnalysisVersion') or 'pronunciation-analysis-v4',
         'mode': 'comparison',
-        'engine': 'ctc-praat-v4',
+        'engine': 'ctc-reference-v4.1' if partition_variants.get('v4Alignment') else 'ctc-praat-v4',
         'source': 'partitionVariants.v4',
         'provenance': {
             'source': 'partitionVariants.v4',
@@ -3748,6 +4073,18 @@ def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
         'diagnostics': diagnostics,
         'v4Diagnostics': diagnostics,
     }
+    if partition_variants.get('v4SyllabificationVersion'):
+        analysis['syllabificationVersion'] = partition_variants['v4SyllabificationVersion']
+    if isinstance(partition_variants.get('v4Alignment'), dict):
+        # Preserve the exact recognizer response as an additive provenance
+        # record while exposing the normalized contiguous spans above.
+        analysis['v4_alignment'] = partition_variants['v4Alignment']
+        analysis['v4Syllabification'] = (
+            partition_variants['v4Alignment'].get('v4Syllabification')
+            or partition_variants['v4Alignment'].get('v4Provenance')
+            or partition_variants['v4Alignment'].get('provenance')
+        )
+        analysis['v4Provenance'] = analysis['v4Syllabification']
     return {
         'status': 'complete',
         'reason': None,
@@ -4224,12 +4561,24 @@ def run_v3_pipeline(
                 recognizer_call = getattr(client, 'recognize')
                 phoneme_future = executor.submit(recognizer_call, wav_bytes)
             else:
+                recognizer_kwargs = {'variant_id': request_reference_id}
+                try:
+                    recognizer_parameters = inspect.signature(recognizer_call).parameters
+                    if 'reference_ipa' in recognizer_parameters or any(
+                        parameter.kind is inspect.Parameter.VAR_KEYWORD
+                        for parameter in recognizer_parameters.values()
+                    ):
+                        recognizer_kwargs['reference_ipa'] = reference_ipa
+                except (TypeError, ValueError):
+                    # A test double or proxy may not expose a signature. Keep
+                    # the long-standing V2 call shape in that case.
+                    pass
                 phoneme_future = executor.submit(
                     recognizer_call,
                     wav_bytes,
                     resolved_reference_syllables,
                     expected_syllables or 0,
-                    variant_id=request_reference_id,
+                    **recognizer_kwargs,
                 )
         except ConfigurationError as error:
             phoneme_future = None
@@ -4303,6 +4652,7 @@ def _build_v3_active_result_from_pipeline(
     reference_ipa=None,
     expected_syllables=None,
     include_partition_variants=False,
+    allow_legacy_v4=False,
 ):
     """Build the active V3 response and its stable unavailable reason."""
     pipeline = pipeline or {}
@@ -4328,6 +4678,7 @@ def _build_v3_active_result_from_pipeline(
         reference_ipa=reference_ipa,
         expected_syllables=expected_syllables,
         include_partition_variants=include_partition_variants,
+        allow_legacy_v4=allow_legacy_v4,
     )
     response['verification'] = _build_v3_verification(
         praat_result,
@@ -4593,6 +4944,7 @@ def analyze_comparison():
                 reference_ipa=reference_ipa,
                 expected_syllables=expected_syllables,
                 include_partition_variants=True,
+                allow_legacy_v4=False,
             )
             if not isinstance(v3_result, dict):
                 v3_envelope = {

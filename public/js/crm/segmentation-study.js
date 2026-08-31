@@ -8,6 +8,7 @@
   const ACTIVE_STUDY = VERSION_REGISTRY.v2;
   const CAPTURE_CONSTRAINTS_REQUESTED = Object.freeze({ echoCancellation: false, noiseSuppression: false, autoGainControl: false });
   const REFERENCE_LABEL_PROVENANCE = 'explicit-reviewed-en-US-v1';
+  const AUTOMATIC_JUDGMENT_SCHEMA_VERSION = 'segmentation-study-automatic-judgment-v1';
   const OPERATOR_KEY = 'bel.segmentation-study.operator-name';
   const SESSION_KEY = 'bel.segmentation-study.session-id';
   const CLAIM_HEARTBEAT_MS = 2 * 60 * 1000;
@@ -75,7 +76,8 @@
     abRegion: null,
     abStart: null,
     abEnd: null,
-    showGhosts: true
+    showGhosts: true,
+    automaticJudgmentJudgedAt: null
   };
 
   function byId(id) {
@@ -127,6 +129,9 @@
       waveform: byId('segmentation-study-waveform'),
       ghosts: byId('segmentation-study-ghosts'),
       ghostToggle: byId('segmentation-study-ghost-toggle'),
+      judgmentStatus: byId('segmentation-study-judgment-status'),
+      automaticJudgment: () => Array.from(document.querySelectorAll('[data-automatic-judgment-version]:checked')),
+      automaticJudgmentNone: byId('segmentation-study-automatic-judgment-none'),
       lanes: byId('segmentation-study-lanes'),
       deltas: byId('segmentation-study-deltas'),
       checklist: byId('segmentation-study-checklist'),
@@ -405,6 +410,7 @@
     if (state.comparison.schemaVersion !== 'pronunciation-comparison-v2' || !state.comparison.comparisonId || expected <= 0) return false;
     if (state.comparison.v3?.analysis?.partitionVariants?.schemaVersion !== 'pronunciation-partition-variants-v2') return false;
     if (!authoritativeV4MatchesDirect()) return false;
+    if (!v4Provenance()) return false;
     const editOperations = collectEditOperations(state.comparison);
     if (editOperations.some((item) => String(item?.op || item?.operation || '').toLowerCase() === 'substitution') || hasSubstitutionEvidence(state.comparison)) return false;
     const analysisVersions = [];
@@ -486,6 +492,55 @@
     });
   }
 
+  function clearAutomaticJudgmentInputs() {
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => { input.checked = false; });
+    state.automaticJudgmentJudgedAt = null;
+    if (elements?.judgmentStatus) elements.judgmentStatus.textContent = 'Review all automatic versions before choosing.';
+  }
+
+  function automaticJudgmentSelection() {
+    const selectedVersions = elements?.automaticJudgment?.()
+      .map((input) => input.dataset.automaticJudgmentVersion)
+      .filter((version) => ['v2', 'v3', 'v4'].includes(version)) || [];
+    const none = Boolean(elements?.automaticJudgmentNone?.checked);
+    if (!selectedVersions.length && !none) return null;
+    if (none) return { selectedVersions: [], none: true };
+    return { selectedVersions: Array.from(new Set(selectedVersions)).sort(), none: false };
+  }
+
+  function automaticJudgmentReady() {
+    const selection = automaticJudgmentSelection();
+    return state.mode === 'previous' || Boolean(versionExposureProofReady() && selection && (selection.none || selection.selectedVersions.length > 0));
+  }
+
+  function automaticJudgmentMetadata() {
+    if (state.mode === 'previous') return null;
+    const selection = automaticJudgmentSelection();
+    if (!versionExposureProofReady() || !selection) return null;
+    if (!state.automaticJudgmentJudgedAt) state.automaticJudgmentJudgedAt = new Date().toISOString();
+    return {
+      schemaVersion: AUTOMATIC_JUDGMENT_SCHEMA_VERSION,
+      selectedVersions: selection.selectedVersions,
+      none: selection.none,
+      judgedAfterExposureAt: state.automaticJudgmentJudgedAt
+    };
+  }
+
+  function updateJudgmentUi() {
+    const exposureReady = versionExposureProofReady();
+    const selection = automaticJudgmentSelection();
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => {
+      input.disabled = state.mode === 'previous' || !exposureReady || !state.comparison;
+    });
+    if (elements?.judgmentStatus) {
+      elements.judgmentStatus.textContent = state.mode === 'previous'
+        ? 'Automatic judgment is not required for a stored sample.'
+        : (exposureReady
+          ? (selection ? 'Automatic judgment recorded for this session.' : 'Choose the best automatic version(s), or None acceptable.')
+          : 'Review all automatic versions before choosing.');
+    }
+  }
+
   function updateButtons() {
     const hasTask = Boolean(state.task?.taskId);
     const hasAudio = Boolean(state.audioBlob);
@@ -497,6 +552,7 @@
     renderStepRail();
     updateCompareTabAvailability();
     updateTransport();
+    updateJudgmentUi();
     if (elements.claim) elements.claim.disabled = !state.operatorName || hasTask || state.mode === 'previous';
     if (elements.release) elements.release.disabled = !hasTask || state.mode === 'previous';
     if (elements.record) elements.record.disabled = !hasTask || state.mode === 'previous' || state.recording;
@@ -544,6 +600,7 @@
     state.selectedBoundaryIndex = -1;
     state.manualReviewSaved = false;
     clearCertainty();
+    clearAutomaticJudgmentInputs();
     clearRegions();
     setAnalysisStatus('Analysis is required before review.');
     if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
@@ -751,6 +808,19 @@
 
   function spanStart(span) { return Number(span?.startTime ?? span?.start_time ?? span?.start); }
   function spanEnd(span) { return Number(span?.endTime ?? span?.end_time ?? span?.end); }
+  function syllableId(span, version, index) {
+    const supplied = span?.syllableId || span?.syllable_id || span?.syllableID || span?.id;
+    return String(supplied || `${version}-syllable-${index + 1}`);
+  }
+
+  function syllableLabel(span, version, index) {
+    if (version === 'v4') {
+      // V4's exact phonological syllabification is intentionally independent
+      // of the frozen study reference labels.
+      return String(span?.ipa || span?.syllableIpa || `Syllable ${index + 1}`);
+    }
+    return String(state.task?.referenceSyllableIpa?.[index] || `Syllable ${index + 1}`);
+  }
 
   function analysisSpans(version) {
     const analysis = analysisForVersion(version);
@@ -768,12 +838,25 @@
       const v3 = state.comparison?.v3?.analysis || null;
       const variant = v3?.partitionVariants?.v4;
       const v4AnalysisVersion = v3?.partitionVariants?.v4AnalysisVersion || v3?.partitionVariants?.v4_analysis_version;
-      if (!v3 || !Array.isArray(variant) || !v4AnalysisVersion) return null;
-      return {
-        ...v3,
-        analysisVersion: v4AnalysisVersion,
-        observed_syllables: variant
-      };
+      if (Array.isArray(variant) && variant.length) {
+        return {
+          ...v3,
+          analysisVersion: v4AnalysisVersion || 'pronunciation-analysis-v4',
+          observed_syllables: variant
+        };
+      }
+      // Historical samples may have persisted only a direct timing-only V4
+      // analysis. Keep it displayable, but never upgrade it to V4.1 evidence.
+      const direct = state.comparison?.v4?.analysis || state.comparison?.v4 || null;
+      const directSpans = direct?.observed_syllables || direct?.observed?.syllables || direct?.syllables;
+      if (Array.isArray(directSpans) && directSpans.length) {
+        return {
+          ...direct,
+          analysisVersion: direct.analysisVersion || direct.analysis_version || 'pronunciation-analysis-v4',
+          observed_syllables: directSpans
+        };
+      }
+      return null;
     }
     const direct = state.comparison?.[version]?.analysis;
     if (direct) return direct;
@@ -795,7 +878,9 @@
     const partition = state.comparison?.v3?.analysis?.partitionVariants;
     const directWrapper = state.comparison?.v4;
     const direct = directWrapper?.analysis || directWrapper;
-    if (!partition || !Array.isArray(partition.v4) || !direct) return null;
+    const alignment = partition?.v4Alignment || partition?.v4_alignment;
+    const envelope = alignment?.provenance || alignment?.v4Provenance || null;
+    if (!partition || !Array.isArray(partition.v4) || !direct || !alignment || !envelope) return null;
     const sourceValues = [direct.source, direct.provenance?.source, directWrapper.source, directWrapper.provenance?.source].filter(Boolean);
     const schemaValues = [direct.schemaVersion, direct.schema_version, direct.partitionSchemaVersion, direct.partition_schema_version,
       direct.provenance?.schemaVersion, direct.provenance?.schema_version, directWrapper.schemaVersion, directWrapper.schema_version,
@@ -803,17 +888,27 @@
     const variantValues = [direct.variant, direct.provenance?.variant, directWrapper.variant, directWrapper.provenance?.variant].filter(Boolean);
     const allMatch = (values, expected) => values.length > 0 && values.every((value) => value === expected);
     const analysisVersion = partition.v4AnalysisVersion || partition.v4_analysis_version;
+    const syllabificationVersion = partition.v4SyllabificationVersion || partition.v4_syllabification_version;
     if (partition.schemaVersion !== 'pronunciation-partition-variants-v2'
       || !analysisVersion
+      || syllabificationVersion !== 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
       || !allMatch(sourceValues, 'partitionVariants.v4')
       || !allMatch(schemaValues, partition.schemaVersion)
-      || !allMatch(variantValues, 'v4')) return null;
-    return { source: sourceValues[0], schemaVersion: partition.schemaVersion, variant: variantValues[0], analysisVersion };
+      || !allMatch(variantValues, 'v4')
+      || alignment.aligned !== true
+      || envelope.schemaVersion !== 'pronunciation-syllabification-v1'
+      || envelope.analysisVersion !== 'pronunciation-analysis-v4.1'
+      || envelope.ruleVersion !== 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
+      || envelope.dialect !== 'en-US'
+      || !envelope.originalIpa || !envelope.normalizedIpa || !envelope.displayIpa
+      || !envelope.contentHash) return null;
+    return { source: sourceValues[0], schemaVersion: partition.schemaVersion, variant: variantValues[0], analysisVersion, alignment, envelope };
   }
 
   function renderPanel(version) {
     const panel = elements.panels[version];
     if (!panel) return;
+    panel.dataset.version = version;
     if (version === 'compare') { renderComparePanel(panel); return; }
     if (version === 'manual') {
       const count = state.manualSegments.length;
@@ -833,9 +928,13 @@
     const analysis = analysisForVersion(version) || {};
     if (!spans.length) { panel.textContent = `${version.toUpperCase()} is unavailable for this recording.`; return; }
     const provenance = version === 'v4' ? v4Provenance() : null;
-    if (version === 'v4' && !provenance) {
+    const legacyV4 = version === 'v4' && !provenance;
+    if (legacyV4) {
       panel.textContent = 'V4 is unavailable: authoritative partition provenance is missing.';
-      return;
+      const legacyLine = document.createElement('div');
+      legacyLine.className = 'crm-muted segmentation-study-v4-provenance';
+      legacyLine.textContent = 'Exact V4 syllabification unavailable for this legacy analysis.';
+      panel.appendChild(legacyLine);
     }
     const line = document.createElement('div');
     line.textContent = `${version.toUpperCase()} · ${spans.length} syllables · ${analysis.analysisVersion || analysis.analysis_version || 'analysis revision unavailable'}`;
@@ -843,15 +942,64 @@
     if (provenance) {
       const provenanceLine = document.createElement('div');
       provenanceLine.className = 'crm-muted segmentation-study-v4-provenance';
-      provenanceLine.textContent = `V4 provenance · source ${provenance.source} · schema ${provenance.schemaVersion} · variant ${provenance.variant} · analysis ${provenance.analysisVersion}`;
+      const envelope = provenance.envelope;
+      provenanceLine.textContent = `V4 provenance · source ${provenance.source} · schema ${provenance.schemaVersion} · variant ${provenance.variant} · analysis ${provenance.analysisVersion} · rule ${envelope.ruleVersion || 'unavailable'} · onsets ${envelope.onsetInventoryVersion || 'unavailable'} · hash ${envelope.contentHash || 'unavailable'}`;
       panel.appendChild(provenanceLine);
+    }
+    if (version === 'v4' && provenance) {
+      const inputLine = document.createElement('div');
+      inputLine.className = 'segmentation-study-v4-input crm-muted';
+      inputLine.textContent = `V4 input IPA · ${provenance.envelope.originalIpa || state.task?.referenceIpa || 'unavailable'}`;
+      panel.appendChild(inputLine);
+
+      const exactLine = document.createElement('div');
+      exactLine.className = 'segmentation-study-v4-exact';
+      const exactDisplay = provenance.envelope.displaySyllabification
+        || provenance.envelope.exactSyllabification
+        || `/${spans.map((span, index) => syllableLabel(span, version, index)).join('.')}/`;
+      exactLine.textContent = `Exact V4 syllabification · ${exactDisplay}`;
+      panel.appendChild(exactLine);
+
+      const frozenLine = document.createElement('div');
+      frozenLine.className = 'segmentation-study-v4-frozen-reference crm-muted';
+      frozenLine.textContent = `Frozen study reference · ${(Array.isArray(state.task?.referenceSyllableIpa) ? state.task.referenceSyllableIpa : []).join(' · ') || 'unavailable'}`;
+      panel.appendChild(frozenLine);
+
+      const exactLabels = spans.map((span, index) => syllableLabel(span, version, index));
+      const frozenLabels = Array.isArray(state.task?.referenceSyllableIpa) ? state.task.referenceSyllableIpa.map(String) : [];
+      if (frozenLabels.length && exactLabels.join('|') !== frozenLabels.join('|')) {
+        const mismatchLine = document.createElement('div');
+        mismatchLine.className = 'segmentation-study-v4-mismatch';
+        mismatchLine.textContent = 'V4 syllabification differs from the frozen study reference; review the exact V4 evidence below.';
+        panel.appendChild(mismatchLine);
+      }
+
+      const evidenceLine = document.createElement('div');
+      evidenceLine.className = 'segmentation-study-v4-evidence crm-muted';
+      evidenceLine.textContent = spans.map((span, index) => {
+        const ownership = span?.phoneIndexes || span?.phone_indexes || [];
+        const range = span?.alignmentTokenRange || span?.alignment_token_range || {};
+        return `${syllableId(span, version, index)} · phones [${ownership.join(', ')}] · token ${range.start ?? '?'}–${range.endExclusive ?? range.end ?? '?'} · ${span?.rule || 'rule unavailable'}`;
+      }).join(' | ');
+      panel.appendChild(evidenceLine);
+    }
+    if (version === 'v4' && !legacyV4 && !spans.every((span) => span?.ipa || span?.syllableIpa)) {
+      const legacyLine = document.createElement('div');
+      legacyLine.className = 'crm-muted segmentation-study-v4-provenance';
+      legacyLine.textContent = 'Exact V4 syllabification unavailable for this legacy analysis.';
+      panel.appendChild(legacyLine);
     }
     const labels = document.createElement('ol');
     labels.className = 'segmentation-study-ipa-labels';
     const syllables = Array.isArray(state.task?.referenceSyllableIpa) ? state.task.referenceSyllableIpa : [];
     spans.forEach((span, index) => {
       const label = document.createElement('li');
-      label.textContent = `${syllables[index] || `Syllable ${index + 1}`} · ${spanStart(span).toFixed(3)}–${spanEnd(span).toFixed(3)}s`;
+      label.dataset.syllableId = syllableId(span, version, index);
+      const labelText = version === 'v4' ? syllableLabel(span, version, index) : (syllables[index] || `Syllable ${index + 1}`);
+      const structureText = version === 'v4'
+        ? ` · onset [${(span?.onset || []).join(', ')}] · nucleus ${span?.nucleus || 'unavailable'} · coda [${(span?.coda || []).join(', ')}]`
+        : '';
+      label.textContent = `${labelText} · ${spanStart(span).toFixed(3)}–${spanEnd(span).toFixed(3)}s${structureText}`;
       labels.appendChild(label);
     });
     panel.appendChild(labels);
@@ -879,8 +1027,14 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'crm-btn crm-btn-secondary crm-btn-sm';
-      const label = state.task?.referenceSyllableIpa?.[index] || `syllable ${index + 1}`;
-      button.textContent = `Play ${version === 'manual' ? `syllable ${index + 1}` : label}`;
+      const id = syllableId(span, version, index);
+      button.dataset.syllableId = id;
+      const label = syllableLabel(span, version, index);
+      const playbackLabel = version === 'v4'
+        ? `Play V4 syllable ${index + 1} /${label}/`
+        : `Play ${version === 'manual' ? `syllable ${index + 1}` : label}`;
+      button.textContent = playbackLabel;
+      button.setAttribute('aria-label', playbackLabel);
       button.addEventListener('click', () => playRange(spanStart(span), spanEnd(span)));
       controls.appendChild(button);
     });
@@ -1094,6 +1248,9 @@
     // not more.
     const spans = version === 'compare' ? [] : versionSpans(version);
     const existing = studyRegions().filter((region) => String(region?.id || '').startsWith(`study-${version}-`));
+    const regionId = (span, index) => version === 'manual'
+      ? `study-manual-${index}`
+      : `study-${version}-${syllableId(span, version, index)}`;
     // Invariant: after any call, only this version's study regions exist, so a
     // same-version redraw can move the ones already on screen. Rebuilding them
     // instead re-runs the plugin's deferred label layout, which makes a held
@@ -1103,7 +1260,7 @@
       && existing.every((region) => typeof region.setOptions === 'function');
     if (reusable) {
       spans.forEach((span, index) => {
-        const region = existing.find((item) => item.id === `study-${version}-${index}`);
+        const region = existing.find((item) => item.id === regionId(span, index));
         const start = spanStart(span);
         const end = spanEnd(span);
         if (!region || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
@@ -1119,11 +1276,13 @@
         if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
         try {
           state.regions.addRegion({
-            id: `study-${version}-${index}`,
+            id: regionId(span, index),
             start,
             end,
             color: index % 2 === 0 ? `${color}33` : `${color}1f`,
-            content: `${version === 'manual' ? 'Manual' : version.toUpperCase()} ${index + 1}`,
+            content: version === 'v4'
+              ? `V4 S${index + 1} /${syllableLabel(span, version, index)}/`
+              : `${version === 'manual' ? 'Manual' : version.toUpperCase()} ${index + 1}`,
             // A syllable span itself must not move: reviewers drag either resize
             // handle, which represents one shared boundary with its neighbour.
             drag: false,
@@ -1494,6 +1653,7 @@
       { label: 'Waveform and spectrogram rendered', ok: Boolean(state.visualizationReady) },
       { label: 'V2/V3/V4 analysis complete', ok: completeComparisonReady() },
       { label: 'All three automatic versions viewed in order', ok: exposureViewingComplete() },
+      ...(!previous ? [{ label: 'Automatic judgment recorded', ok: automaticJudgmentReady() }] : []),
       { label: 'Playback confirmed', ok: Boolean(elements?.playbackConfirmed?.checked || state.playbackConfirmed) },
       { label: `Manual boundaries marked (${state.manualSegments.length}/${expected || '?'})`, ok: expected > 0 && state.manualSegments.length === expected },
       { label: 'Certainty chosen', ok: Boolean(elements?.certainty?.()?.value) }
@@ -1871,6 +2031,7 @@
       variantProvenance,
       exposureLog: Array.isArray(state.task?.exposureLog) ? state.task.exposureLog : [],
       versionExposureLog: state.versionExposureLog,
+      automaticJudgment: automaticJudgmentMetadata(),
       reviewStatus: elements.certainty?.()?.value === 'uncertain' ? 'uncertain' : 'complete',
       reviewerName: state.operatorName,
       reviewerSessionId: state.sessionId
@@ -1915,7 +2076,7 @@
           speakerCohort: state.task.speakerCohort || `${ACTIVE_STUDY.internalVersion}-clean`,
           analysisStatus: 'complete',
           comparison: state.comparison,
-          analysisRevision: state.comparison?.v3?.analysis?.analysisVersion || state.comparison?.v2?.analysis?.analysisVersion || 'comparison-analysis-v2',
+          analysisRevision: 'pronunciation-analysis-v4.1',
           rawCtcSpans: state.comparison?.v3?.analysis?.rawCtcSpans || state.comparison?.v3?.analysis?.observed_syllables || null,
           measurementSpans: state.comparison?.v3?.analysis?.measurementSpans || null,
           v2: state.comparison?.v2?.analysis || null,
@@ -1955,14 +2116,24 @@
       state.audioUrl = URL.createObjectURL(state.audioBlob);
       if (elements.audio) { elements.audio.src = state.audioUrl; elements.audio.hidden = false; }
       await loadWaveform(state.audioBlob);
+      // Previous samples already carry the comparison that was reviewed and
+      // persisted. Restore it as-is; a fresh request is only made by the
+      // explicit Analyze button.
+      const persistedComparison = sample.comparison || sample.analysis || null;
+      if (persistedComparison && typeof persistedComparison === 'object') {
+        state.comparison = persistedComparison;
+        state.analysisFailed = false;
+        ['v2', 'v3', 'v4'].forEach(renderPanel);
+        setAnalysisStatus('Previous sample loaded. Persisted comparison restored; click Analyze for fresh re-analysis.', 'success');
+      } else {
+        setAnalysisStatus('Previous sample loaded. Click Analyze to run a fresh comparison.');
+      }
       if (Array.isArray(sample.manualSegments) && sample.manualSegments.length) {
         state.manualSegments = sample.manualSegments.map((segment, index) => ({ ...segment, index }));
         state.manualBoundaries = [state.manualSegments[0].startTime, ...state.manualSegments.map((segment) => segment.endTime)];
       }
       selectVersion('manual');
-      setAnalysisStatus('Previous sample loaded. Automatic versions are shown when available.');
       updateButtons();
-      await analyze();
     } catch (error) { setStatus(`Previous sample unavailable: ${error.message}`, 'error'); }
   }
 
@@ -2032,6 +2203,16 @@
       }
     });
     document.querySelectorAll('input[name="segmentation-study-certainty"]').forEach((input) => input.addEventListener('change', updateButtons));
+    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => input.addEventListener('change', () => {
+      if (input.dataset.automaticJudgmentNone === 'true' && input.checked) {
+        document.querySelectorAll('[data-automatic-judgment-version]').forEach((item) => { item.checked = false; });
+      } else if (input.dataset.automaticJudgmentVersion && input.checked && elements.automaticJudgmentNone) {
+        elements.automaticJudgmentNone.checked = false;
+      }
+      if (!versionExposureProofReady()) input.checked = false;
+      else state.automaticJudgmentJudgedAt = new Date().toISOString();
+      updateButtons();
+    }));
     elements.playbackConfirmed?.addEventListener('change', () => { state.playbackConfirmed = elements.playbackConfirmed.checked; updateButtons(); });
     window.addEventListener('pagehide', () => { stopHeartbeat(); cleanupRecording(); stopPlayback(); cancelLiveManualRender(); state.waveSurfer?.destroy?.(); });
   }

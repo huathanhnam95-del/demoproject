@@ -1341,6 +1341,7 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
             reference_ipa="/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/",
             expected_syllables=3,
             include_partition_variants=True,
+            allow_legacy_v4=True,
         )
         variants = response.get("partitionVariants")
         self.assertIsInstance(variants, dict)
@@ -1365,6 +1366,7 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
             reference_ipa="/ËˆfoÊŠtÉ™ËŒÉ¡rÃ¦f/",
             expected_syllables=3,
             include_partition_variants=True,
+            allow_legacy_v4=True,
         )
         variants = response["partitionVariants"]
         self.assertNotEqual(variants["v3"], variants["v4"])
@@ -1373,6 +1375,64 @@ class PronunciationV3RecognizerContractTest(unittest.TestCase):
             [span["partitionStartTime"] for span in response["observed_syllables"]],
             [span["startTime"] for span in variants["v3"]],
         )
+
+    def test_reference_aligned_v4_refinement_isolated_from_v3(self):
+        praat = {
+            "pitch": {"times": [], "values": []},
+            "intensity": {
+                "times": [0.12, 0.14, 0.16, 0.18, 0.20],
+                "values": [70.0, 40.0, 48.0, 50.0, 65.0],
+            },
+            "duration": 0.7,
+            "sampleRate": 48000,
+            "observed": {},
+        }
+        phoneme_result = self._recognize_v2_result(confidences=(0.1, 0.1, 0.1))
+        phoneme_result["v4_alignment"] = {
+            "aligned": True,
+            "analysisVersion": "pronunciation-analysis-v4.1",
+            "syllabificationVersion": "pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1",
+            "syllables": [
+                {
+                    "syllableId": "v4-syllable-1", "ipa": "foʊ", "onset": [], "nucleus": "foʊ", "coda": [],
+                    "stress": "primary", "phoneIndexes": [0], "phoneOwnership": {"indexes": [0]},
+                    "alignmentTokenRange": {"start": 0, "end": 1, "endExclusive": 1}, "timingSpanIndex": 0,
+                    "rule": "maximal-legal-onset", "ambiguity": {"status": "deterministic", "candidates": []},
+                    "startTime": 0.0, "endTime": 0.15, "partitionStartTime": 0.0, "partitionEndTime": 0.2,
+                    "confidence": 0.1,
+                },
+                {
+                    "syllableId": "v4-syllable-2", "ipa": "tə", "onset": ["t"], "nucleus": "ə", "coda": [],
+                    "stress": None, "phoneIndexes": [1], "phoneOwnership": {"indexes": [1]},
+                    "alignmentTokenRange": {"start": 1, "end": 2, "endExclusive": 2}, "timingSpanIndex": 1,
+                    "rule": "maximal-legal-onset", "ambiguity": {"status": "deterministic", "candidates": []},
+                    "startTime": 0.2, "endTime": 0.35, "partitionStartTime": 0.2, "partitionEndTime": 0.4,
+                    "confidence": 0.1,
+                },
+                {
+                    "syllableId": "v4-syllable-3", "ipa": "ɡræf", "onset": ["ɡ"], "nucleus": "æ", "coda": ["f"],
+                    "stress": "secondary", "phoneIndexes": [2], "phoneOwnership": {"indexes": [2]},
+                    "alignmentTokenRange": {"start": 2, "end": 3, "endExclusive": 3}, "timingSpanIndex": 2,
+                    "rule": "maximal-legal-onset", "ambiguity": {"status": "deterministic", "candidates": []},
+                    "startTime": 0.4, "endTime": 0.55, "partitionStartTime": 0.4, "partitionEndTime": 0.6,
+                    "confidence": 0.1,
+                },
+            ],
+        }
+        response = server._build_v3_active_response(
+            praat,
+            phoneme_result,
+            reference_ipa="/ˈfoʊtəˌɡræf/",
+            expected_syllables=3,
+            include_partition_variants=True,
+            allow_legacy_v4=False,
+        )
+        variants = response["partitionVariants"]
+        self.assertAlmostEqual(variants["v3"][1]["startTime"], 0.175)
+        self.assertAlmostEqual(variants["v4"][1]["startTime"], 0.16)
+        self.assertAlmostEqual(variants["v4"][0]["endTime"], 0.16)
+        self.assertAlmostEqual(variants["v4Alignment"]["syllables"][1]["partitionStartTime"], 0.16)
+        self.assertEqual(variants["v4"][1]["syllableId"], "v4-syllable-2")
 
     def test_learner_v3_response_does_not_run_or_expose_v4_candidate(self):
         response = self._build(self._recognize_v2_result(confidences=(0.1, 0.1, 0.1)))

@@ -3248,7 +3248,6 @@ body {
   color: #64748b;
 }
 .segmentation-study-ghost-toggle {
->>>>>>> Stashed changes
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -3364,6 +3363,54 @@ body {
   gap: 6px;
   font-size: 12px;
   color: #475569;
+}
+.segmentation-study-ipa-labels [data-syllable-id] {
+  font-variant-numeric: tabular-nums;
+}
+.segmentation-study-v4-provenance {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.segmentation-study-v4-input,
+.segmentation-study-v4-frozen-reference {
+  margin-top: 5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-v4-exact {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-left: 3px solid #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  color: #4c1d95;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-v4-mismatch {
+  margin-top: 6px;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 600;
+}
+.segmentation-study-v4-evidence {
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-version-panel[data-version="v4"] .segmentation-study-ipa-labels {
+  color: #5b21b6;
+}
+.segmentation-study-version-panel[data-version="v4"] .segmentation-study-ipa-labels [data-syllable-id] {
+  overflow-wrap: anywhere;
+}
+.segmentation-study-timeline:focus-visible {
+  outline: 3px solid var(--accent-color, #2563eb);
+  outline-offset: 2px;
 }
 .segmentation-study-legend-item::before {
   content: '';

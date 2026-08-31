@@ -11,7 +11,7 @@ const {
   invokeHandlers,
   createReq
 } = require('./route-test-helpers');
-const { automaticOrderFor, automaticVersionOrderFor, requireAutomaticJudgment } = require('../../functions/src/routes/admin/segmentation-study');
+const { automaticOrderFor, automaticVersionOrderFor, requireAutomaticJudgment, v4ContentHash } = require('../../functions/src/routes/admin/segmentation-study');
 
 const MANIFEST_SHA256 = 'a'.repeat(64);
 const MANIFEST_VERSION = '2.0.0';
@@ -170,6 +170,62 @@ function makeComparison(status = 'complete') {
     { startTime: 0.6 + offset, endTime: 0.9 + offset },
     { startTime: 0.9 + offset, endTime: 1.2 + offset }
   ];
+  const v4Spans = spans(0.03);
+  const v4Syllables = v4Spans.map((span, index) => ({
+    ...span,
+    partitionStartTime: span.startTime,
+    partitionEndTime: span.endTime,
+    index,
+    syllableId: `v4-syllable-${index + 1}`,
+    ipa: ['ə', 'bɪ', 'lə', 'ti'][index],
+    onset: [],
+    nucleus: ['ə', 'bɪ', 'lə', 'ti'][index],
+    coda: [],
+    stress: null,
+    phoneIndexes: [index],
+    phoneOwnership: { indexes: [index], startIndex: index, endIndex: index + 1 },
+    alignmentTokenRange: { start: index, end: index + 1, endExclusive: index + 1 },
+    timingSpanIndex: index,
+    rule: 'maximal-legal-onset',
+    ambiguity: { status: 'deterministic', candidates: [] }
+  }));
+  const v4Provenance = {
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: 'en-US',
+    originalIpa: '/əˈbɪləti/',
+    normalizedIpa: 'əˈbɪləti',
+    displayIpa: '/əˈbɪləti/',
+    displaySyllabification: '/ə.bɪ.lə.ti/',
+    exactSyllabification: '/ə.bɪ.lə.ti/',
+    timingSpanContractVersion: 'ctc-alignment-v2',
+    contentHash: 'a'.repeat(64),
+    rule: { id: 'weighted-maximal-onset', stressPolicy: 'primary-secondary-stressed-lax' },
+    ambiguity: { status: 'deterministic', candidates: [] },
+    syllables: v4Syllables
+  };
+  // Keep the fixture on the approved A2 onset-inventory and hash contracts.
+  v4Provenance.onsetInventoryVersion = 'en-US-onsets-v1';
+  v4Provenance.contentHash = v4ContentHash(v4Provenance);
+  const v4Alignment = {
+    aligned: true,
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    syllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: 'en-US',
+    originalIpa: '/əˈbɪləti/',
+    normalizedIpa: 'əˈbɪləti',
+    syllable_count: 4,
+    displaySyllabification: '/ə.bɪ.lə.ti/',
+    exactSyllabification: '/ə.bɪ.lə.ti/',
+    contentHash: v4Provenance.contentHash,
+    syllables: v4Syllables,
+    provenance: v4Provenance
+  };
   return {
     schemaVersion: 'pronunciation-comparison-v2',
     status,
@@ -184,14 +240,16 @@ function makeComparison(status = 'complete') {
         partitionVariants: {
           schemaVersion: 'pronunciation-partition-variants-v2',
           v3: spans(0.02),
-          v4: spans(0.03),
-          v4AnalysisVersion: 'pronunciation-analysis-v4'
+          v4: v4Spans,
+          v4AnalysisVersion: 'pronunciation-analysis-v4.1',
+          v4SyllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+          v4Alignment
         }
       }
     },
     v4: { status, analysis: {
-      analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
-      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: spans(0.03)
+      analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
+      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: v4Spans
     } }
   };
 }
@@ -234,7 +292,7 @@ function strictMetadata(overrides = {}) {
     variantProvenance: {
       v2: { analysisVersion: 'pronunciation-analysis-v2', source: 'comparison.v2' },
       v3: { analysisVersion: 'pronunciation-analysis-v3', source: 'partitionVariants.v3' },
-      v4: { analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4' }
+      v4: { analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4' }
     },
     playbackConfirmed: true,
     exposureLog: [{ event: 'client-replacement-must-not-persist' }],
@@ -832,7 +890,10 @@ function strictMetadata(overrides = {}) {
     { index: 3, startTime: 0.93, endTime: 1.23, duration: 0.3 }
   ], 'Persisted automaticSegments must remain the authoritative V4 partition spans.');
   assert.strictEqual(completeRes._json.data.sample.versions.v2.analysisVersion, 'pronunciation-analysis-v2');
-  assert.strictEqual(completeRes._json.data.sample.versions.v4.analysisVersion, 'pronunciation-analysis-v4');
+  assert.strictEqual(completeRes._json.data.sample.versions.v4.analysisVersion, 'pronunciation-analysis-v4.1');
+  assert.strictEqual(completeRes._json.data.sample.v4Provenance.schemaVersion, 'pronunciation-syllabification-v1');
+  assert.strictEqual(completeRes._json.data.sample.v4Provenance.contentHash, v4ContentHash(completeRes._json.data.sample.v4Provenance));
+  assert.notStrictEqual(completeRes._json.data.sample.v4Provenance, completeRes._json.data.sample.automaticSegments, 'V4 structural provenance must remain separate from timing-only automaticSegments.');
   assert.ok(Array.isArray(completeRes._json.data.sample.exposureLog));
   assert.strictEqual(completeRes._json.data.sample.exposureLog[0].event, 'automatic-boundaries-exposed');
   assert.strictEqual(completeRes._json.data.sample.versionExposureLog.length, 3);
@@ -903,15 +964,84 @@ function strictMetadata(overrides = {}) {
         comparison: {
           ...makeComparison(),
           v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }] } },
-          v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4AnalysisVersion: 'pronunciation-analysis-v4' } } },
+          v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4AnalysisVersion: 'pronunciation-analysis-v4.1', v4SyllabificationVersion: 'en-US-weight-first-max-onset-v1', v4Alignment: {
+            aligned: true, analysisVersion: 'pronunciation-analysis-v4.1', syllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', dialect: 'en-US',
+            syllables: [{ startTime: 0.1, endTime: 0.5, partitionStartTime: 0.1, partitionEndTime: 0.5, syllableId: 'v4-syllable-1', ipa: 'kæ', phoneIndexes: [0], phoneOwnership: { indexes: [0], startIndex: 0, endIndex: 0 }, alignmentTokenRange: { start: 0, end: 1, endExclusive: 1 }, timingSpanIndex: 0, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { startTime: 0.5, endTime: 1.0, partitionStartTime: 0.5, partitionEndTime: 1.0, syllableId: 'v4-syllable-2', ipa: 'mə', phoneIndexes: [1], phoneOwnership: { indexes: [1], startIndex: 1, endIndex: 1 }, alignmentTokenRange: { start: 1, end: 2, endExclusive: 2 }, timingSpanIndex: 1, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { startTime: 1.0, endTime: 1.5, partitionStartTime: 1.0, partitionEndTime: 1.5, syllableId: 'v4-syllable-3', ipa: 'rə', phoneIndexes: [2], phoneOwnership: { indexes: [2], startIndex: 2, endIndex: 2 }, alignmentTokenRange: { start: 2, end: 3, endExclusive: 3 }, timingSpanIndex: 2, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }],
+            provenance: { schemaVersion: 'pronunciation-syllabification-v1', analysisVersion: 'pronunciation-analysis-v4.1', ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', onsetInventoryVersion: 'en-US-legal-onsets-v1', dialect: 'en-US', originalIpa: '/ˈkæmərə/', normalizedIpa: 'ˈkæmərə', displayIpa: '/ˈkæmərə/', contentHash: 'b'.repeat(64), rule: { id: 'weighted-maximal-onset', stressPolicy: 'primary-secondary-stressed-lax' }, ambiguity: { status: 'deterministic', candidates: [] }, syllables: [{ syllableId: 'v4-syllable-1', phoneIndexes: [0], phoneOwnership: { indexes: [0], startIndex: 0, endIndex: 0 }, alignmentTokenRange: { start: 0, end: 1, endExclusive: 1 }, timingSpanIndex: 0, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { syllableId: 'v4-syllable-2', phoneIndexes: [1], phoneOwnership: { indexes: [1], startIndex: 1, endIndex: 1 }, alignmentTokenRange: { start: 1, end: 2, endExclusive: 2 }, timingSpanIndex: 1, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { syllableId: 'v4-syllable-3', phoneIndexes: [2], phoneOwnership: { indexes: [2], startIndex: 2, endIndex: 2 }, alignmentTokenRange: { start: 2, end: 3, endExclusive: 3 }, timingSpanIndex: 2, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }]
+          } } } } },
           v4: { status: 'complete', analysis: {
-            analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
+            analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
             provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }]
           } }
+        },
+        variantProvenance: {
+          v2: { analysisVersion: 'pronunciation-analysis-v2', source: 'comparison.v2' },
+          v3: { analysisVersion: 'pronunciation-analysis-v3', source: 'partitionVariants.v3' },
+          v4: { analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4' }
         }
       })
     }
   });
+  // The inline camera comparison mirrors a legacy fixture, so normalize its
+  // V4 envelope to the current onset-inventory and content-hash contract.
+  const uncertainMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  const uncertainAlignment = uncertainMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const uncertainProvenance = uncertainAlignment.provenance;
+  uncertainAlignment.syllables.forEach((syllable, index) => {
+    syllable.index = index;
+    syllable.onset = [];
+    syllable.nucleus = syllable.ipa;
+    syllable.coda = [];
+    syllable.stress = null;
+    syllable.phoneOwnership = { indexes: syllable.phoneIndexes, startIndex: index, endIndex: index + 1 };
+  });
+  uncertainProvenance.syllables.forEach((syllable, index) => {
+    const source = uncertainAlignment.syllables[index];
+    syllable.index = index;
+    syllable.ipa = source.ipa;
+    syllable.onset = source.onset;
+    syllable.nucleus = source.nucleus;
+    syllable.coda = source.coda;
+    syllable.stress = source.stress;
+    syllable.phoneOwnership = { indexes: source.phoneIndexes, startIndex: index, endIndex: index + 1 };
+  });
+  uncertainProvenance.onsetInventoryVersion = 'en-US-onsets-v1';
+  uncertainProvenance.contentHash = v4ContentHash(uncertainProvenance);
+  uncertainCompleteReq.body.metadata = JSON.stringify(uncertainMetadata);
+
+  const spoofedDialectMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  spoofedDialectMetadata.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.contentHash = v4ContentHash(
+    spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance
+  );
+  const spoofedDialectReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(spoofedDialectMetadata) }
+  });
+  spoofedDialectReq.file = { buffer: makeWavBuffer(21) };
+  const spoofedDialectRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](spoofedDialectReq, spoofedDialectRes);
+  assert.strictEqual(spoofedDialectRes._status, 400, 'Client-supplied dialect must not override the claimed task dialect.');
+  assert.strictEqual(spoofedDialectRes._json.error, 'REFERENCE_PROVENANCE_REQUIRED');
+
+  const duplicateIdMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  const duplicateIdAlignment = duplicateIdMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const duplicateId = duplicateIdAlignment.syllables[0].syllableId;
+  duplicateIdAlignment.syllables[1].syllableId = duplicateId;
+  duplicateIdAlignment.provenance.syllables[1].syllableId = duplicateId;
+  duplicateIdAlignment.provenance.contentHash = v4ContentHash(duplicateIdAlignment.provenance);
+  const duplicateIdReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(duplicateIdMetadata) }
+  });
+  duplicateIdReq.file = { buffer: makeWavBuffer(22) };
+  const duplicateIdRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](duplicateIdReq, duplicateIdRes);
+  assert.strictEqual(duplicateIdRes._status, 400, 'Duplicate stable V4 syllable IDs must be rejected.');
+  assert.strictEqual(duplicateIdRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
+
   const missingCaptureReq = createReq({
     params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
     body: { metadata: JSON.stringify({ ...JSON.parse(uncertainCompleteReq.body.metadata), captureSettings: undefined }) }
@@ -920,6 +1050,33 @@ function strictMetadata(overrides = {}) {
   const missingCaptureRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](missingCaptureReq, missingCaptureRes);
   assert.strictEqual(missingCaptureRes._status, 400, 'Missing capture settings must block completion.');
+
+  const missingV4ProvenanceMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  missingV4ProvenanceMetadata.captureSettings = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  delete missingV4ProvenanceMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const missingV4ProvenanceReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(missingV4ProvenanceMetadata) }
+  });
+  missingV4ProvenanceReq.file = { buffer: makeWavBuffer(22) };
+  const missingV4ProvenanceRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](missingV4ProvenanceReq, missingV4ProvenanceRes);
+  assert.strictEqual(missingV4ProvenanceRes._status, 400, 'Missing immutable V4 provenance must block completion.');
+  assert.strictEqual(missingV4ProvenanceRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
+
+  const duplicatePhoneMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  duplicatePhoneMetadata.captureSettings = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  duplicatePhoneMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.syllables[1].phoneIndexes = [0];
+  duplicatePhoneMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.syllables[1].phoneOwnership.indexes = [0];
+  const duplicatePhoneReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(duplicatePhoneMetadata) }
+  });
+  duplicatePhoneReq.file = { buffer: makeWavBuffer(23) };
+  const duplicatePhoneRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](duplicatePhoneReq, duplicatePhoneRes);
+  assert.strictEqual(duplicatePhoneRes._status, 400, 'Duplicate V4 phone ownership must block completion.');
+  assert.strictEqual(duplicatePhoneRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
 
   const failedAnalysisReq = createReq({
     params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },

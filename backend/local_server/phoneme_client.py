@@ -27,6 +27,7 @@ import logging
 import json
 import os
 import time
+import unicodedata
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -296,7 +297,15 @@ class PhonemeClient:
         except Exception:
             return False
 
-    def recognize_v2(self, wav_bytes: bytes, reference_syllables: list[str], expected_syllable_count: int, *, variant_id: str | None = None) -> dict:
+    def recognize_v2(
+        self,
+        wav_bytes: bytes,
+        reference_syllables: list[str],
+        expected_syllable_count: int,
+        *,
+        variant_id: str | None = None,
+        reference_ipa: str | None = None,
+    ) -> dict:
         """Call the reference-constrained recognizer contract.
 
         The method is intentionally separate from ``recognize`` so V1 callers
@@ -312,6 +321,10 @@ class PhonemeClient:
         }
         if variant_id:
             data["variant_id"] = variant_id
+        if reference_ipa is not None:
+            if not isinstance(reference_ipa, str) or not reference_ipa.strip() or reference_ipa != unicodedata.normalize("NFC", reference_ipa):
+                raise RecognizerError("invalid reference IPA contract", reason="REFERENCE_CONFLICT")
+            data["reference_ipa"] = reference_ipa.strip()
         response = self._session.post(
             url,
             files={"audio": ("audio.wav", wav_bytes, "audio/wav")},

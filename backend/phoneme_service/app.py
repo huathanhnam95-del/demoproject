@@ -37,6 +37,7 @@ from backend.phoneme_service.syllabifier import (
     IndependentSyllabifier,
 )
 from backend.phoneme_service.stress_alignment import align_reference_syllables, ctc_hypothesis_features, tokenize_ipa
+from backend.phoneme_service.v4_syllabification import align_v4_reference
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -370,11 +371,13 @@ def create_app(
             reference_raw = request.form.get("reference_syllables", "")
             expected_raw = request.form.get("expected_syllable_count", "")
             variant_raw = request.form.get("variant_id", "")
+            reference_ipa_raw = request.form.get("reference_ipa")
         elif request.is_json:
             body = request.get_json(silent=True) or {}
             reference_raw = body.get("reference_syllables", "")
             expected_raw = body.get("expected_syllable_count", "")
             variant_raw = body.get("variant_id", "")
+            reference_ipa_raw = body.get("reference_ipa", body.get("referenceIpa"))
             if body.get("audio_base64"):
                 try:
                     wav_bytes = base64.b64decode(body["audio_base64"])
@@ -383,6 +386,7 @@ def create_app(
         else:
             reference_raw = expected_raw = ""
             variant_raw = ""
+            reference_ipa_raw = None
         if wav_bytes is None:
             return _error_response("NO_AUDIO", "No audio provided.", 400)
         if len(wav_bytes) > MAX_FILE_BYTES:
@@ -396,6 +400,16 @@ def create_app(
             return _error_response("INVALID_REFERENCE", "Expected 1-8 reference syllables matching expected_syllable_count.", 400)
         if any(not isinstance(item, str) or item != unicodedata.normalize("NFC", item) for item in reference):
             return _error_response("INVALID_REFERENCE", "Reference syllables must be NFC Unicode strings.", 400)
+        reference_ipa = None
+        if reference_ipa_raw is not None:
+            if (
+                not isinstance(reference_ipa_raw, str)
+                or not reference_ipa_raw.strip()
+                or len(reference_ipa_raw) > 300
+                or reference_ipa_raw != unicodedata.normalize("NFC", reference_ipa_raw)
+            ):
+                return _error_response("INVALID_REFERENCE", "reference_ipa must be a non-empty NFC string of at most 300 characters.", 400)
+            reference_ipa = reference_ipa_raw.strip()
         if variant_raw and (
             not isinstance(variant_raw, str)
             or len(variant_raw) > 128
@@ -476,6 +490,20 @@ def create_app(
                 "model_revision": result.get("model_revision", "unknown"),
                 "blank_id": blank_id,
             }
+            # V4 is an additive, reference-constrained view.  It consumes the
+            # exact logits already obtained above; no second model inference
+            # or mutation of canonical_alignment is permitted.
+            if reference_ipa is not None:
+                response["v4_alignment"] = align_v4_reference(
+                    log_probs,
+                    reference_ipa,
+                    symbol_table,
+                    blank_id=blank_id,
+                    sample_count=len(samples),
+                    sample_rate=sample_rate,
+                    canonical_token_ids=canonical_ids,
+                    expected_syllable_count=expected,
+                ).to_dict()
             return jsonify(response), 200
         except (ValueError, KeyError) as exc:
             return _error_response("UNRATEABLE", str(exc), 200)

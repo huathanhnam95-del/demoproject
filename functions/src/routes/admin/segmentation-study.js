@@ -39,6 +39,10 @@ function cleanString(value, maxLength = 200) {
   return String(value == null ? '' : value).trim().slice(0, maxLength);
 }
 
+function normalizeIpa(value) {
+  return cleanString(value, 320).normalize('NFC');
+}
+
 function timestampMillis(value) {
   if (value == null) return 0;
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -397,6 +401,168 @@ function requireAuthoritativeV4(comparison, partitionVariants) {
   }
 }
 
+function v4StructuralPayload(provenance) {
+  const rawSyllables = Array.isArray(provenance?.syllables) ? provenance.syllables : [];
+  const syllables = rawSyllables.map((item, index) => ({
+    index: Number.isInteger(item?.index) ? item.index : index,
+    syllableId: item?.syllableId || item?.syllable_id || `v4-syllable-${index + 1}`,
+    ipa: String(item?.ipa || item?.syllableIpa || ''),
+    onset: Array.isArray(item?.onset) ? item.onset : [],
+    nucleus: String(item?.nucleus || ''),
+    coda: Array.isArray(item?.coda) ? item.coda : [],
+    stress: item?.stress ?? null,
+    phoneIndexes: item?.phoneIndexes || item?.phone_indexes || [],
+    phoneOwnership: item?.phoneOwnership || item?.phone_ownership || { indexes: item?.phoneIndexes || item?.phone_indexes || [] },
+    alignmentTokenRange: item?.alignmentTokenRange || item?.alignment_token_range || {},
+    timingSpanIndex: Number(item?.timingSpanIndex ?? item?.timing_span_index ?? index),
+    rule: item?.rule || 'maximal-legal-onset',
+    ambiguity: item?.ambiguity || { status: 'deterministic', candidates: [] }
+  }));
+  const displaySyllabification = provenance.displaySyllabification
+    || provenance.exactSyllabification
+    || `/${syllables.map((item) => item.ipa).join('.')}/`;
+  return {
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: provenance.dialect,
+    originalIpa: provenance.originalIpa,
+    normalizedIpa: provenance.normalizedIpa,
+    displayIpa: provenance.displayIpa,
+    displaySyllabification,
+    exactSyllabification: displaySyllabification,
+    rule: {
+      id: provenance.rule?.id || 'weighted-maximal-onset',
+      stressPolicy: provenance.rule?.stressPolicy || 'primary-secondary-stressed-lax',
+      onsetPolicy: provenance.rule?.onsetPolicy || 'maximal-legal-onset'
+    },
+    ambiguity: provenance.ambiguity || { status: 'deterministic', candidates: [] },
+    timingSpanContractVersion: provenance.timingSpanContractVersion || 'ctc-alignment-v2',
+    syllables
+  };
+}
+
+function v4ContentHash(provenance) {
+  return crypto.createHash('sha256')
+    .update(JSON.stringify(canonicalJson(v4StructuralPayload(provenance))))
+    .digest('hex');
+}
+
+function requireV4Provenance(partitionVariants, expectedReferenceIpa = null, expectedDialect = 'en-US') {
+  const alignment = partitionVariants?.v4Alignment;
+  const provenance = alignment?.provenance || alignment?.v4Provenance;
+  const failProvenance = (message) => {
+    throw Object.assign(new Error(message), { status: 400, code: 'ANALYSIS_V4_PROVENANCE_REQUIRED' });
+  };
+  if (!alignment || alignment.aligned !== true || !provenance || typeof provenance !== 'object') {
+    failProvenance('Immutable V4 syllabification provenance is required before completion.');
+  }
+  if (cleanString(alignment.analysisVersion || alignment.analysis_version, 160) !== 'pronunciation-analysis-v4.1'
+    || cleanString(alignment.syllabificationVersion || alignment.syllabification_version, 200) !== 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
+    || cleanString(alignment.dialect, 40) !== expectedDialect
+    || cleanString(provenance.schemaVersion, 120) !== 'pronunciation-syllabification-v1'
+    || cleanString(provenance.analysisVersion, 160) !== 'pronunciation-analysis-v4.1'
+    || cleanString(provenance.ruleVersion, 200) !== 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1'
+    || cleanString(provenance.onsetInventoryVersion, 160) !== 'en-US-onsets-v1'
+    || cleanString(provenance.dialect, 40) !== expectedDialect
+    || (expectedReferenceIpa != null && cleanString(provenance.originalIpa, 320) !== cleanString(expectedReferenceIpa, 320))
+    || !cleanString(provenance.originalIpa, 320)
+    || !cleanString(provenance.normalizedIpa, 320)
+    || !cleanString(provenance.displayIpa, 320)
+    || !/^[a-f0-9]{64}$/.test(cleanString(provenance.contentHash, 80))
+    || v4ContentHash(provenance) !== cleanString(provenance.contentHash, 80)
+    || !provenance.rule || typeof provenance.rule !== 'object'
+    || !provenance.ambiguity || typeof provenance.ambiguity !== 'object') {
+    failProvenance('V4 provenance versions, IPA forms, dialect, and content hash are required.');
+  }
+  const syllables = provenance.syllables;
+  const alignmentSyllables = alignment.syllables;
+  if (!Array.isArray(syllables) || !Array.isArray(alignmentSyllables) || !Array.isArray(partitionVariants.v4)
+    || syllables.length !== partitionVariants.v4.length || alignmentSyllables.length !== syllables.length) {
+    failProvenance('V4 provenance must contain one ordered record per authoritative V4 span.');
+  }
+  const allPhoneIndexes = [];
+  const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+  const seenSyllableIds = new Set();
+  let expectedPhoneIndex = 0;
+  syllables.forEach((syllable, index) => {
+    const id = cleanString(syllable?.syllableId || syllable?.syllable_id, 120);
+    const phoneIndexes = syllable?.phoneIndexes || syllable?.phone_indexes;
+    const phoneOwnership = syllable?.phoneOwnership || syllable?.phone_ownership;
+    const range = syllable?.alignmentTokenRange || syllable?.alignment_token_range;
+    const timingSpanIndex = Number(syllable?.timingSpanIndex ?? syllable?.timing_span_index);
+    const rule = cleanString(syllable?.rule, 120);
+    const ambiguity = syllable?.ambiguity;
+    const source = alignmentSyllables[index];
+    const authoritativeSpan = partitionVariants.v4[index];
+    const authoritativeId = cleanString(authoritativeSpan?.syllableId || authoritativeSpan?.syllable_id, 120);
+    const ownershipIndexes = phoneOwnership?.indexes || phoneOwnership?.phoneIndexes || phoneOwnership?.phone_indexes;
+    const rangeStart = Number(range?.start);
+    const rangeEnd = Number(range?.endExclusive ?? range?.end);
+    const sourcePhoneIndexes = source?.phoneIndexes || source?.phone_indexes;
+    const sourcePhoneOwnership = source?.phoneOwnership || source?.phone_ownership;
+    const sourceRange = source?.alignmentTokenRange || source?.alignment_token_range;
+    const sourceTimingSpanIndex = Number(source?.timingSpanIndex ?? source?.timing_span_index);
+    // Raw CTC phone coverage may leave blank frames between syllables. The
+    // authoritative V4 comparison uses the contiguous partition candidate;
+    // compare that timing when present and preserve raw start/end untouched.
+    const sourceStart = Number(source?.partitionStartTime ?? source?.partition_start_time ?? source?.startTime ?? source?.start_time);
+    const sourceEnd = Number(source?.partitionEndTime ?? source?.partition_end_time ?? source?.endTime ?? source?.end_time);
+    const authoritativeStart = Number(authoritativeSpan?.startTime ?? authoritativeSpan?.start_time);
+    const authoritativeEnd = Number(authoritativeSpan?.endTime ?? authoritativeSpan?.end_time);
+    const sourceSyllableId = source?.syllableId || source?.syllable_id;
+    const sourcePhoneOwnershipIndexes = sourcePhoneOwnership?.indexes || sourcePhoneOwnership?.phoneIndexes || sourcePhoneOwnership?.phone_indexes;
+    const ownershipStart = Number(phoneOwnership?.startIndex);
+    const ownershipEnd = Number(phoneOwnership?.endIndex);
+    const sourceIndex = Number(source?.index);
+    const syllableIndex = Number(syllable?.index);
+    const expectedIndexes = Array.isArray(phoneIndexes)
+      ? phoneIndexes.map((_, itemIndex) => expectedPhoneIndex + itemIndex)
+      : null;
+    if (!id || !Array.isArray(phoneIndexes) || phoneIndexes.length < 1 || phoneIndexes.some((item) => !Number.isInteger(item))
+      || seenSyllableIds.has(id) || !Number.isInteger(syllableIndex) || syllableIndex !== index
+      || !Number.isInteger(sourceIndex) || sourceIndex !== index
+      || !phoneOwnership || typeof phoneOwnership !== 'object' || !Array.isArray(ownershipIndexes)
+      || ownershipIndexes.some((item) => !Number.isInteger(item))
+      || ownershipIndexes.length !== phoneIndexes.length || ownershipIndexes.some((item, itemIndex) => item !== phoneIndexes[itemIndex])
+      || !Number.isInteger(ownershipStart) || !Number.isInteger(ownershipEnd)
+      || ownershipStart !== phoneIndexes[0] || ownershipEnd !== phoneIndexes[phoneIndexes.length - 1] + 1
+      || !sameJson(phoneIndexes, expectedIndexes)
+      || !range || !Number.isInteger(Number(range.start)) || !Number.isInteger(Number(range.endExclusive ?? range.end))
+      || rangeEnd <= rangeStart || rangeStart !== phoneIndexes[0] || rangeEnd !== phoneIndexes[phoneIndexes.length - 1] + 1
+      || phoneIndexes.some((item) => item < rangeStart || item >= rangeEnd)
+      || timingSpanIndex !== index || !rule || !ambiguity || typeof ambiguity !== 'object'
+      || cleanString(source?.syllableId || source?.syllable_id, 120) !== id
+      || String(source?.ipa || source?.syllableIpa || '') !== String(syllable?.ipa || syllable?.syllableIpa || '')
+      || !sameJson(source?.onset || [], syllable?.onset || [])
+      || String(source?.nucleus || '') !== String(syllable?.nucleus || '')
+      || !sameJson(source?.coda || [], syllable?.coda || [])
+      || (source?.stress ?? null) !== (syllable?.stress ?? null)
+      || !sameJson(sourcePhoneIndexes, phoneIndexes)
+      || !sameJson(sourcePhoneOwnershipIndexes, phoneIndexes)
+      || !sameJson(sourceRange, range)
+      || sourceTimingSpanIndex !== index
+      || cleanString(source?.rule, 120) !== rule
+      || !sameJson(source?.ambiguity, ambiguity)
+      || !Number.isFinite(sourceStart) || !Number.isFinite(sourceEnd)
+      || !Number.isFinite(authoritativeStart) || !Number.isFinite(authoritativeEnd)
+      || Math.abs(sourceStart - authoritativeStart) > 0.000001
+      || Math.abs(sourceEnd - authoritativeEnd) > 0.000001
+      || (authoritativeId && authoritativeId !== id)) {
+      failProvenance(`V4 provenance syllable ${index + 1} is missing ownership, alignment, timing, rule, or ambiguity evidence.`);
+    }
+    seenSyllableIds.add(id);
+    expectedPhoneIndex += phoneIndexes.length;
+    allPhoneIndexes.push(...phoneIndexes);
+  });
+  const sortedPhoneIndexes = allPhoneIndexes.slice().sort((left, right) => left - right);
+  if (sortedPhoneIndexes.some((item, index) => item !== index)) {
+    failProvenance('V4 provenance phone ownership must cover each reference phone exactly once with no gaps.');
+  }
+  return provenance;
+}
+
 function collectEditOperations(value, operations = [], seen = new Set()) {
   if (!value || typeof value !== 'object' || seen.has(value)) return operations;
   seen.add(value);
@@ -443,6 +609,7 @@ function requireCompleteComparison(metadata, expectedCount) {
     throw Object.assign(new Error('A recognized V3 partition schema is required for independent V3/V4 variants.'), { status: 400, code: 'ANALYSIS_PROVENANCE_REQUIRED' });
   }
   requireAuthoritativeV4(comparison, partitionVariants);
+  const v4Provenance = requireV4Provenance(partitionVariants, metadata.referenceIpa, metadata.dialect || 'en-US');
   const versions = {};
   const editOperations = collectEditOperations(comparison);
   if (editOperations.some((item) => String(item?.op || item?.operation || '').toLowerCase() === 'substitution') || hasSubstitutionEvidence(comparison)) {
@@ -470,7 +637,7 @@ function requireCompleteComparison(metadata, expectedCount) {
       comparisonId: cleanString(comparison.comparisonId, 200)
     };
   }
-  return { comparison, versions };
+  return { comparison, versions, v4Provenance };
 }
 
 function normalizeWordBounds(value, manualSegments, duration) {
@@ -1126,6 +1293,16 @@ function registerSegmentationStudyRoutes(router, deps) {
       }
       if (!claimIsActive(task) || !ownerMatches(task, identity.operatorName, identity.sessionId)) return sendError(res, 409, 'CLAIM_EXPIRED', 'This task reservation has expired or belongs to another operator.');
       if (task.studyVersion !== registry.internalVersion) return sendError(res, 400, 'VALIDATION_ERROR', 'Task studyVersion does not match the active registry version.');
+      if (!normalizeIpa(metadata.referenceIpa) || normalizeIpa(metadata.referenceIpa) !== normalizeIpa(task.referenceIpa)) {
+        return sendError(res, 400, 'REFERENCE_PROVENANCE_REQUIRED', 'referenceIpa must match the claimed task reference IPA.');
+      }
+      const taskDialect = cleanString(task.dialect || manifest.dialect, 40) || 'en-US';
+      if (taskDialect !== 'en-US') {
+        return sendError(res, 400, 'REFERENCE_PROVENANCE_REQUIRED', 'V4 A2 syllabification currently supports en-US only.');
+      }
+      if (metadata.dialect != null && cleanString(metadata.dialect, 40) !== taskDialect) {
+        return sendError(res, 400, 'REFERENCE_PROVENANCE_REQUIRED', 'dialect must match the claimed task dialect.');
+      }
       const incomingVersionExposureLog = requireVersionExposureLog(metadata.versionExposureLog, task);
       const automaticJudgment = requireAutomaticJudgment(metadata.automaticJudgment, incomingVersionExposureLog);
       const versionExposureLog = mergeVersionExposureLogs(task.versionExposureLog, incomingVersionExposureLog);
@@ -1142,7 +1319,9 @@ function registerSegmentationStudyRoutes(router, deps) {
       if (!manualSegments?.length || manualSegments.length !== targetSyllableCount) return sendError(res, 400, 'VALIDATION_ERROR', 'manualSegments must contain one contiguous segment per target syllable.');
       if (manualSegments.some((segment) => segment.endTime > audio.duration + 0.02)) return sendError(res, 400, 'VALIDATION_ERROR', 'manualSegments must fall within the uploaded audio duration.');
       const captureSettings = requireCaptureSettings(metadata);
-      const comparisonResult = requireCompleteComparison(metadata, targetSyllableCount);
+      // Bind V4 provenance validation to the server-owned task IPA rather than
+      // trusting a client-controlled metadata copy.
+      const comparisonResult = requireCompleteComparison({ ...metadata, referenceIpa: task.referenceIpa, dialect: taskDialect }, targetSyllableCount);
       const variantProvenance = requireVariantProvenance(metadata, comparisonResult.versions);
       if (metadata.analysisStatus !== 'complete') return sendError(res, 400, 'ANALYSIS_REQUIRED', 'analysisStatus must be complete before a study task can be saved.');
       const wordBounds = normalizeWordBounds(metadata.wordBounds, manualSegments, audio.duration);
@@ -1166,7 +1345,10 @@ function registerSegmentationStudyRoutes(router, deps) {
          referenceSyllableIpa: task.referenceSyllableIpa || metadata.referenceSyllableIpa || null,
          referenceLabelProvenance: safeJson(referenceLabelProvenance, 2000),
          automaticSegmentationConvention: `${registry.internalVersion}-automatic`,
-         analysisRevision: cleanString(metadata.analysisRevision || comparisonResult.versions.v3.analysisVersion, 200),
+         // The saved automatic analysis is the comparison-only V4.1 result;
+         // V3 remains available in ``analysis``/``versions`` but must not be
+         // advertised as the revision that produced automaticSegments.
+         analysisRevision: 'pronunciation-analysis-v4.1',
          sourceComparisonId: cleanString(metadata.sourceComparisonId || metadata.comparison?.comparisonId, 200) || null,
          manualSegments,
          automaticSegments: comparisonResult.versions.v4.spans
@@ -1208,7 +1390,7 @@ function registerSegmentationStudyRoutes(router, deps) {
           annotationProtocol: 'automatic-visible-assisted-v1',
           manifestVersion,
           manifestSha256,
-          dialect: cleanString(metadata.dialect || task.dialect || manifest.dialect, 40) || 'en-US',
+          dialect: taskDialect,
           referenceLabelProvenance: safeJson(referenceLabelProvenance, 2000),
           wordBounds,
           wordStartTime: wordBounds.startTime,
@@ -1228,7 +1410,7 @@ function registerSegmentationStudyRoutes(router, deps) {
         transitionClasses: Array.isArray(task.transitionClasses) ? task.transitionClasses : [],
         manifestVersion,
         manifestSha256,
-        dialect: cleanString(metadata.dialect || task.dialect || manifest.dialect, 40) || 'en-US',
+        dialect: taskDialect,
         referenceLabelProvenance: safeJson(referenceLabelProvenance, 2000),
         wordBounds,
         wordStartTime: wordBounds.startTime,
@@ -1245,6 +1427,9 @@ function registerSegmentationStudyRoutes(router, deps) {
         analysisStatus: 'complete',
         analysisError: null,
         analysis: safeJson(metadata.comparison || metadata.analysis),
+        // Keep the immutable V4 structural evidence separate from the
+        // timing-only automaticSegments corpus field.
+        v4Provenance: safeJson(comparisonResult.v4Provenance),
         versions: safeJson(comparisonResult.versions),
         variantProvenance: safeJson(variantProvenance),
         automaticJudgment,
@@ -1377,3 +1562,4 @@ module.exports.automaticVersionOrderFor = automaticVersionOrderFor;
 module.exports.sanitizeCaptureSettings = sanitizeCaptureSettings;
 module.exports.requireAutomaticJudgment = requireAutomaticJudgment;
 module.exports.AUTOMATIC_JUDGMENT_SCHEMA_VERSION = AUTOMATIC_JUDGMENT_SCHEMA_VERSION;
+module.exports.v4ContentHash = v4ContentHash;

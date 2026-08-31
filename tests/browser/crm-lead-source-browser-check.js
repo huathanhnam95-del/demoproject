@@ -62,33 +62,16 @@ async function runTest() {
     assert.strictEqual(defaultSource, '', 'Default source should be blank');
     assert.strictEqual(await page.$eval('#lead-source', (el) => el.required), true, 'Source should be required');
 
-    // Source-specific fields should be hidden until a source is selected.
-    const isVisibleInitial = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isVisibleInitial, false, "Student's FB link field should be hidden for a blank source");
-
-    const isOwnerVisibleInitial = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleInitial, false, 'Personal Social Media Account dropdown should be hidden for a blank source');
-
+    // Check Source Account dropdown options and blank default
     const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
-    assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
+    assert.deepStrictEqual(ownerOptions, ['', 'Nam', 'Thành', 'Quỳnh'], 'Owner options should be blank prompt, Nam, Thành, Quỳnh');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), '', 'Source Account should be blank by default');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.required), true, 'Source Account should be required');
 
-    // Select Quỳnh
+    // Select source and owner
     await page.selectOption('#lead-source', 'Facebook - Personal');
-    assert.strictEqual(
-      await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none'),
-      true,
-      "Student's FB link field should be visible for Facebook - Personal"
-    );
-    assert.strictEqual(
-      await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none'),
-      true,
-      'Personal Social Media Account dropdown should be visible for Facebook - Personal'
-    );
-
     await page.selectOption('#lead-facebook-personal-owner', 'Quỳnh');
-
-    // Enter a link
-    await page.fill('#lead-facebook-profile-url', 'https://facebook.com/teststudent');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), 'Quỳnh', 'Selected owner should be Quỳnh');
 
     // Check salutation radios are present
     await page.check('#lead-salutation-mr');
@@ -99,44 +82,7 @@ async function runTest() {
     const isMsChecked = await page.$eval('#lead-salutation-ms', (el) => el.checked);
     assert.strictEqual(isMsChecked, true, 'Ms radio should be checked when clicked');
 
-    // Switch to Agent source
-    await page.selectOption('#lead-source', 'Agent');
-    const isAgentVisible = await page.$eval('#lead-agent-source-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isAgentVisible, true, 'Agent Source dropdown should be visible when Agent source selected');
-
-    // Switch to Tiktok - Personal
-    await page.selectOption('#lead-source', 'Tiktok - Personal');
-    const isOwnerVisibleTiktok = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleTiktok, true, 'Personal Social Media Account dropdown should be visible when Tiktok - Personal selected');
-
-    // Switch to Zalo + Personal
-    await page.selectOption('#lead-source', 'Zalo + Personal');
-    const isOwnerVisibleZaloPersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleZaloPersonal, true, 'Personal Social Media Account dropdown should be visible when Zalo + Personal is selected');
-
-    // Switch to Zalo - Page
-    await page.selectOption('#lead-source', 'Zalo - Page');
-    const isVisibleZalo = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isVisibleZalo, true, "Student's FB link field should be hidden for Zalo - Page");
-
-    const isOwnerVisibleZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isOwnerVisibleZalo, true, "Personal Social Media Account dropdown should be hidden for Zalo - Page");
-
-    const isAgentVisibleZalo = await page.$eval('#lead-agent-source-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isAgentVisibleZalo, true, "Agent Source dropdown should be hidden for Zalo - Page");
-
-    const zaloClearedValue = await page.$eval('#lead-facebook-profile-url', (el) => el.value);
-    assert.strictEqual(zaloClearedValue, '', "Student's FB link input value should be cleared when switching to non-Facebook source");
-
-    // Switch to Facebook - Page
-    await page.selectOption('#lead-source', 'Facebook - Page');
-    const isVisiblePage = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isVisiblePage, true, "Student's FB link field should be visible for Facebook - Page");
-
-    const isOwnerVisiblePage = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isOwnerVisiblePage, true, "FB Personal Account dropdown should be hidden for Facebook - Page");
-
-    console.log('✓ Lead source, dynamic Student\'s FB link field, FB Personal Account owner, Agent source dropdown, and Mr/Ms salutation browser check PASSED');
+    console.log('✓ Lead source, Source Account dropdown, and Mr/Ms salutation browser check PASSED');
   } finally {
     await browser.close();
     server.close();

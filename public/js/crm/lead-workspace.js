@@ -74,10 +74,7 @@ window.CrmLeadWorkspace = (function () {
             }
 
             if (groupOwner) {
-                groupOwner.style.display = isPersonalSocialMedia ? '' : 'none';
-            }
-            if (!isPersonalSocialMedia && inputOwner) {
-                inputOwner.value = 'Nam';
+                groupOwner.style.display = '';
             }
 
             if (groupAgent) {
@@ -113,7 +110,7 @@ window.CrmLeadWorkspace = (function () {
                 elements.inputLeadSource.value = '';
             }
             if (elements.inputLeadFacebookPersonalOwner) {
-                elements.inputLeadFacebookPersonalOwner.value = 'Nam';
+                elements.inputLeadFacebookPersonalOwner.value = '';
             }
             if (elements.inputLeadStage) {
                 elements.inputLeadStage.value = 'new';

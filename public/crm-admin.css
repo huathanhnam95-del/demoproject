@@ -1341,6 +1341,24 @@ body {
   color: #333;
 }
 
+#lead-composer.crm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 20px;
+  align-items: start;
+}
+
+#lead-composer .crm-form-group {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  #lead-composer.crm-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 .skill-icon {
   color: #999;
 }
@@ -2828,8 +2846,25 @@ body {
 /* ============================================
    Segmentation Study
    ============================================ */
+/* ── Segmentation Study (V4 sample review) ──
+   Flat layout: everything flows on the parent panel background. No wrapper
+   cards, so the timeline gets the full panel width. */
 .segmentation-study-workspace {
   padding: 0;
+  --study-v2: #2563eb;
+  --study-v3: #10b981;
+  --study-v4: #8b5cf6;
+  --study-manual: #f59e0b;
+  /* The waveform, the ruler, the spectrogram and every comparison lane share
+     one left gutter and one right margin, so a boundary at the same time sits
+     at the same x in all of them. Changing these keeps them aligned. */
+  --lane-label-w: 58px;
+  --lane-note-w: 190px;
+  --lane-gap: 10px;
+  /* Read back by segmentation-study.js when it sizes the WaveSurfer canvases,
+     so the rendered signal always fills its container. */
+  --waveform-height: 140px;
+  --spectrogram-height: 180px;
 }
 
 /* Header row */
@@ -2839,9 +2874,15 @@ body {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-.segmentation-study-header h3 { margin: 0 0 4px; }
+.segmentation-study-header-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.segmentation-study-header h3 { margin: 0; }
 .segmentation-study-identity {
   display: flex;
   align-items: center;
@@ -2855,9 +2896,7 @@ body {
   letter-spacing: 0.04em;
   color: #64748b;
 }
-.segmentation-study-identity .crm-input {
-  max-width: 180px;
-}
+.segmentation-study-identity .crm-input { max-width: 180px; }
 
 /* Mode tabs — pill style matching pv-sub-tabs */
 .segmentation-study-modes {
@@ -2866,7 +2905,7 @@ body {
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
-  margin: 0 0 16px;
+  margin: 0;
   border-bottom: none;
 }
 .segmentation-study-mode {
@@ -2893,48 +2932,146 @@ body {
   border-bottom-color: transparent;
 }
 
-/* Stats bar */
+/* Step rail — reflects real state, not a fixed script */
+.segmentation-study-steps {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+.segmentation-study-stepitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 150px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #64748b;
+}
+.segmentation-study-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.segmentation-study-step-label { font-weight: 600; color: #334155; }
+.segmentation-study-step-note {
+  margin-left: auto;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.segmentation-study-stepitem.is-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.segmentation-study-stepitem.is-done .segmentation-study-step-index {
+  background: #16a34a;
+  color: #fff;
+}
+.segmentation-study-stepitem.is-current {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+.segmentation-study-stepitem.is-current .segmentation-study-step-index {
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+}
+
+/* Word heading + task actions */
+.segmentation-study-task-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.segmentation-study-task-identity { min-width: 0; }
+.segmentation-study-task-heading h4 { margin: 0 0 2px; font-size: 22px; font-weight: 700; }
+.segmentation-study-reference {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 13px;
+  color: #475569;
+}
+.segmentation-study-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.segmentation-study-claim-status {
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #64748b;
+}
+.segmentation-study-step-hint { margin: 0 0 2px; font-size: 12px; }
+.segmentation-study-status { margin: 0 0 14px; font-size: 13px; min-height: 18px; }
+
+/* Queue disclosure — collapsed by default so the timeline gets the width */
+.segmentation-study-queue-details {
+  margin: 0 0 14px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.segmentation-study-queue-details > summary {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  list-style-position: inside;
+}
+.segmentation-study-queue-details > summary:focus-visible {
+  outline: 2px solid var(--accent-color, #3b82f6);
+  outline-offset: -2px;
+}
+.segmentation-study-queue-details[open] > summary {
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+.segmentation-study-queue-details > *:not(summary) { margin-left: 14px; margin-right: 14px; }
 .segmentation-study-stats {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 10px;
+  padding: 12px 0 4px;
   font-size: 13px;
-  margin-bottom: 16px;
 }
 .segmentation-study-stats strong {
   color: var(--accent-color, #3b82f6);
   font-size: 16px;
 }
-
-/* Toolbar */
-.segmentation-study-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 0 0 20px;
-}
-
-/* Two-column layout */
-.segmentation-study-queue-layout {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-.segmentation-study-queue-pane {
-  min-width: 0;
-}
-.segmentation-study-queue-pane h4 { margin: 0 0 6px; font-size: 13px; }
-.segmentation-study-queue-pane > .crm-muted { font-size: 12px; line-height: 1.5; }
+.segmentation-study-queue-details p.crm-muted { font-size: 12px; line-height: 1.5; margin: 0 14px 10px; }
 .segmentation-study-queue {
-  max-height: 480px;
+  max-height: 240px;
   overflow-y: auto;
-  margin: 10px 0 0;
+  margin: 0 14px 14px;
   padding: 0;
   list-style: none;
   border: 1px solid var(--border-color, #e2e8f0);
@@ -2954,50 +3091,61 @@ body {
   color: var(--accent-color, #3b82f6);
 }
 
-/* Review pane */
-.segmentation-study-review-pane {
-  min-width: 0;
-}
-.segmentation-study-task-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.segmentation-study-task-heading h4 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
-.segmentation-study-reference {
-  margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 13px;
-}
-.segmentation-study-claim-status {
-  padding: 4px 10px;
-  background: #f1f5f9;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #64748b;
-}
-
-/* Recording controls */
-.segmentation-study-record-controls {
+/* Transport — stays in view while scrolling the timeline */
+.segmentation-study-transport {
+  position: sticky;
+  /* .crm-header is itself sticky at top:0 with z-index 1000, so the transport
+     has to park below it rather than slide underneath. */
+  top: var(--crm-nav-height, 64px);
+  z-index: 4;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8px 18px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(6px);
 }
+.segmentation-study-transport-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.segmentation-study-transport .segmentation-study-ab { margin-left: auto; }
+.segmentation-study-toggle.is-active {
+  background: var(--accent-color, #3b82f6);
+  border-color: var(--accent-color, #3b82f6);
+  color: #fff;
+}
+.segmentation-study-speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+.segmentation-study-speed select { min-height: 30px; }
+#segmentation-study-ab-readout {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+#segmentation-study-ab-readout.is-set { color: #0f172a; font-weight: 600; }
+.segmentation-study-transport audio { max-width: 280px; height: 32px; }
+
+.segmentation-study-capture-row,
 .segmentation-study-analysis-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
 }
+.segmentation-study-playback-confirm { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Version tabs — pill style */
 .segmentation-study-tabs {
@@ -3006,7 +3154,7 @@ body {
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   border-bottom: none;
 }
 .segmentation-study-tab {
@@ -3032,103 +3180,240 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   border-bottom-color: transparent;
 }
+.segmentation-study-tab[hidden] { display: none; }
 
 /* Timeline / waveform */
 .segmentation-study-timeline {
   position: relative;
-  min-height: 180px;
-  margin: 12px 0;
-  border: 1px solid var(--border-color, #e2e8f0);
+  min-height: 260px;
+  margin: 0 0 10px;
+  padding-left: calc(var(--lane-label-w) + var(--lane-gap));
+  padding-right: calc(var(--lane-note-w) + var(--lane-gap));
+  /* Inset shadow rather than a border, so the padding box the waveform is laid
+     out in starts at the same x as the lane tracks below. */
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--border-color, #e2e8f0);
   border-radius: 8px;
   background: #fafbfc;
   overflow: hidden;
 }
+.segmentation-study-waveform-stack { position: relative; width: 100%; }
 .segmentation-study-waveform,
 .segmentation-study-spectrogram { width: 100%; }
-.segmentation-study-waveform { min-height: 96px; }
-.segmentation-study-spectrogram { min-height: 128px; }
+.segmentation-study-waveform { min-height: var(--waveform-height); }
+.segmentation-study-spectrogram { min-height: var(--spectrogram-height); }
 .segmentation-study-time-ruler { min-height: 20px; width: 100%; }
-.segmentation-study-judgment {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 0 0 10px;
-  font-size: 12px;
+.segmentation-study-timeline:focus-visible {
+  outline: 3px solid var(--accent-color, #2563eb);
+  outline-offset: 2px;
 }
-.segmentation-study-judgment-label { font-weight: 600; color: #475569; }
-.segmentation-study-judgment label { display: inline-flex; align-items: center; gap: 4px; }
-.segmentation-study-timeline-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 8px 0 12px;
+.segmentation-study-timeline-empty {
+  padding: 96px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
 }
-.segmentation-study-current-time {
-  min-width: 58px;
-  margin-right: 4px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 12px;
-  color: #334155;
+
+/* Ghost boundary ticks — every non-active version, on the signal itself */
+.segmentation-study-ghosts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
 }
-.segmentation-study-marker {
+.segmentation-study-ghost {
   position: absolute;
   top: 0;
   bottom: 0;
-  z-index: 5;
-  width: 2px;
-  pointer-events: none;
+  width: 0;
+  border-left: 2px dashed var(--ghost-color, #94a3b8);
+  opacity: .55;
+  transform: translateX(-1px);
 }
-.segmentation-study-marker span {
-  position: absolute;
-  top: 2px;
-  left: 3px;
-  padding: 1px 3px;
-  border-radius: 3px;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
+
+/* Lane strip — the four segmentations on one shared time axis */
+.segmentation-study-lanes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
-.segmentation-study-marker-current { background: #0f172a; opacity: .65; }
-.segmentation-study-marker-a { background: #16a34a; }
-.segmentation-study-marker-a span { background: #16a34a; }
-.segmentation-study-marker-b { background: #dc2626; }
-.segmentation-study-marker-b span { background: #dc2626; }
-.segmentation-study-speed {
+.segmentation-study-lanes-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+.segmentation-study-ghost-toggle {
+>>>>>>> Stashed changes
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
+  color: #64748b;
 }
-.segmentation-study-speed select { min-height: 30px; }
+.segmentation-study-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.segmentation-study-lanes > p.crm-muted { margin: 0; font-size: 12px; }
+.segmentation-study-lane {
+  display: grid;
+  grid-template-columns: var(--lane-label-w) minmax(0, 1fr) var(--lane-note-w);
+  align-items: center;
+  gap: var(--lane-gap);
+}
+.segmentation-study-lane-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lane-color, #64748b);
+  text-transform: uppercase;
+}
+.segmentation-study-lane.is-active .segmentation-study-lane-label { text-decoration: underline; }
+.segmentation-study-lane-track {
+  position: relative;
+  height: 26px;
+  /* Drawn as an inset shadow, not a border: a border would inset the padding
+     box by 1px and the lane would stop sharing the waveform's time axis. */
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--border-color, #e2e8f0);
+  border-radius: 6px;
+  background: #f8fafc;
+  overflow: hidden;
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+.segmentation-study-lane.is-active .segmentation-study-lane-track {
+  box-shadow: inset 0 0 0 2px var(--lane-color, #cbd5e1);
+}
+.segmentation-study-lane-track.is-locked {
+  background-image: repeating-linear-gradient(45deg, #f1f5f9 0 6px, #e2e8f0 6px 12px);
+}
+.segmentation-study-lane-block {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border: 0;
+  border-left: 2px solid var(--lane-color, #64748b);
+  background: rgba(100, 116, 139, .16);
+  background: color-mix(in srgb, var(--lane-color, #64748b) 18%, transparent);
+  color: #0f172a;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  text-align: left;
+}
+.segmentation-study-lane-block:hover {
+  background: rgba(100, 116, 139, .3);
+  background: color-mix(in srgb, var(--lane-color, #64748b) 34%, transparent);
+}
+.segmentation-study-lane-block:focus-visible {
+  outline: 2px solid var(--accent-color, #3b82f6);
+  outline-offset: -2px;
+}
+.segmentation-study-lane-note {
+  font-size: 11px;
+  color: #64748b;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Version detail panels */
+.segmentation-study-version-panel {
+  min-height: 44px;
+  padding: 8px 0;
+}
+.segmentation-study-ipa-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
 .segmentation-study-playback {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 10px;
 }
-.segmentation-study-timeline-empty {
-  padding: 48px 16px;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 13px;
-}
-.segmentation-study-version-panel {
-  min-height: 44px;
-  padding: 8px 0;
-}
-.segmentation-study-ipa-labels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+.segmentation-study-legend {
+  display: flex;
   gap: 6px 16px;
-  margin: 10px 0 0;
-  padding-left: 22px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
-.segmentation-study-timeline:focus-visible {
-  outline: 3px solid var(--accent-color, #2563eb);
-  outline-offset: 2px;
+.segmentation-study-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
 }
+.segmentation-study-legend-item::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--lane-color, #64748b);
+  flex: 0 0 auto;
+}
+
+/* V4 diagnostics + manual-vs-automatic deltas */
+.segmentation-study-tablewrap { overflow-x: auto; margin-top: 8px; }
+.segmentation-study-diagnostics,
+.segmentation-study-delta-table {
+  border-collapse: collapse;
+  /* Columns hug their content; a full-width table strands the numbers far
+     apart and makes them hard to compare down a column. */
+  width: auto;
+  font-size: 12px;
+}
+.segmentation-study-delta-table tbody th,
+.segmentation-study-diagnostics tbody th { text-transform: none; font-size: 12px; color: #334155; }
+.segmentation-study-diagnostics th,
+.segmentation-study-diagnostics td,
+.segmentation-study-delta-table th,
+.segmentation-study-delta-table td {
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+.segmentation-study-diagnostics th,
+.segmentation-study-delta-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  font-weight: 600;
+}
+.segmentation-study-delta-table thead th { color: var(--lane-color, #64748b); }
+.segmentation-study-diagnostics tr.is-unchanged td { color: #94a3b8; }
+.segmentation-study-diagnostics td.is-later { color: #b45309; font-weight: 600; }
+.segmentation-study-diagnostics td.is-earlier { color: #0369a1; font-weight: 600; }
+.segmentation-study-diagnostics-headline { margin: 8px 0 0; font-size: 13px; font-weight: 600; }
+.segmentation-study-delta-table td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.segmentation-study-delta-table td.is-wide { color: #b91c1c; font-weight: 700; }
+.segmentation-study-delta-table tfoot td,
+.segmentation-study-delta-table tfoot th { font-weight: 700; border-bottom: 0; }
+.segmentation-study-deltas { margin: 6px 0 0; }
+.segmentation-study-deltas-title { margin: 0; font-size: 12px; color: #64748b; }
 
 /* Manual controls */
 .segmentation-study-manual-controls {
@@ -3139,27 +3424,68 @@ body {
   margin-top: 10px;
 }
 .segmentation-study-summary {
-  min-height: 24px;
+  min-height: 20px;
   margin-top: 8px;
   font-size: 13px;
 }
 
-/* Bottom actions */
+/* Bottom actions — checklist explains a disabled Save */
 .segmentation-study-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+.segmentation-study-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 2px 18px;
+  flex: 1 1 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.segmentation-study-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.segmentation-study-check.is-done { color: #15803d; }
+.segmentation-study-check-mark {
+  display: inline-flex;
+  justify-content: center;
+  width: 14px;
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.segmentation-study-action-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  padding-top: 16px;
-  margin-top: 8px;
-  border-top: 1px solid var(--border-color, #e2e8f0);
 }
 
 @media (max-width: 900px) {
-  .segmentation-study-queue-layout { grid-template-columns: 1fr; }
-  .segmentation-study-queue { max-height: 220px; }
+  .segmentation-study-workspace { --lane-label-w: 46px; --lane-note-w: 0px; }
+  .segmentation-study-timeline { padding-right: 0; }
+  .segmentation-study-queue { max-height: 200px; }
+  .segmentation-study-lane { grid-template-columns: var(--lane-label-w) minmax(0, 1fr); }
+  .segmentation-study-lane-note { grid-column: 2; text-align: left; }
+  .segmentation-study-transport { position: static; }
+  .segmentation-study-transport .segmentation-study-ab { margin-left: 0; }
+  .segmentation-study-actions { flex-direction: column; }
+  /* In a column flex container `flex-basis` sizes the height, which would
+     stretch the checklist rows apart. */
+  .segmentation-study-checklist { flex: 0 0 auto; width: 100%; }
+  .segmentation-study-action-buttons { width: 100%; justify-content: flex-end; }
 }
+
 
 /* ── Auto-advance Toggle ── */
 .corpus-auto-advance {

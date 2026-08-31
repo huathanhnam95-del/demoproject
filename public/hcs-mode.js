@@ -90,10 +90,9 @@
   }
 
   function resetAudioProgress() {
-    if (elements.timeCurrent) elements.timeCurrent.textContent = '00:00';
-    if (elements.timeDuration) elements.timeDuration.textContent = '00:00';
-    if (elements.timelineFill) elements.timelineFill.style.width = '0%';
-    if (elements.timelineThumb) elements.timelineThumb.style.left = '0%';
+    if (elements.progressFill) elements.progressFill.style.width = '0';
+    if (elements.seek) elements.seek.value = '0';
+    if (elements.audioTime) elements.audioTime.textContent = '00:00 / 00:00';
   }
 
   function setAudioControlsEnabled(enabled) {
@@ -101,8 +100,8 @@
       elements.playBtn.disabled = !enabled;
       elements.playBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
     }
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    if (elements.seek) {
+      elements.seek.disabled = !enabled;
     }
   }
 
@@ -138,15 +137,13 @@
 
     // audio element and player elements
     elements.audioElement = document.getElementById('hcs-audio-element');
-    elements.visualizer = document.getElementById('hcs-visualizer');
     elements.playBtn = document.getElementById('hcs-play-btn');
     elements.playIcon = document.getElementById('hcs-play-icon');
-    elements.pauseIcon = document.getElementById('hcs-pause-icon');
-    elements.timelineWrapper = document.getElementById('hcs-timeline-wrapper');
-    elements.timelineFill = document.getElementById('hcs-timeline-fill');
-    elements.timelineThumb = document.getElementById('hcs-timeline-thumb');
-    elements.timeCurrent = document.getElementById('hcs-time-current');
-    elements.timeDuration = document.getElementById('hcs-time-duration');
+    elements.playLabel = document.getElementById('hcs-play-label');
+    elements.progressFill = document.getElementById('hcs-progress-fill');
+    elements.seek = document.getElementById('hcs-seek');
+    elements.audioTime = document.getElementById('hcs-audio-time');
+    elements.volume = document.getElementById('hcs-volume');
     elements.voiceSelect = document.getElementById('hcs-voice-select');
     elements.speedBtns = document.querySelectorAll('.hcs-speed-btn');
 
@@ -158,12 +155,11 @@
     // action buttons
     elements.submitBtn = document.getElementById('hcs-submit-btn');
     elements.retryBtn = document.getElementById('hcs-retry-btn');
-    elements.explanationToggle = document.getElementById('hcs-explanation-toggle');
-
     // results and explanations
     elements.resultBox = document.getElementById('hcs-result-box');
-    elements.explanationPanel = document.getElementById('hcs-explanation-panel');
+    elements.reviewContent = document.getElementById('hcs-review-content');
     elements.explanationContent = document.getElementById('hcs-explanation-content');
+    elements.containerEl = document.querySelector('.hcs-container');
   }
 
   function setupEventListeners() {
@@ -229,9 +225,6 @@
       });
     }
 
-    if (elements.explanationToggle) {
-      elements.explanationToggle.addEventListener('click', toggleExplanation);
-    }
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && state.pickerOpen) {
@@ -252,8 +245,16 @@
       elements.audioElement.addEventListener('pause', onAudioPause);
     }
 
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.addEventListener('click', seekAudio);
+    if (elements.seek) {
+      elements.seek.addEventListener('input', seekAudio);
+    }
+
+    if (elements.volume) {
+      elements.volume.addEventListener('input', () => {
+        if (elements.audioElement) {
+          elements.audioElement.volume = Number(elements.volume.value);
+        }
+      });
     }
 
     if (elements.voiceSelect) {
@@ -276,6 +277,7 @@
 
     if (elements.audioElement.paused) {
       elements.audioElement.playbackRate = state.currentSpeed;
+      elements.audioElement.volume = Number(elements.volume?.value ?? 1);
       elements.audioElement.play().catch((err) => {
         console.error('[HCSMode] Play failed:', err);
       });
@@ -285,15 +287,13 @@
   }
 
   function onAudioPlay() {
-    if (elements.playIcon) elements.playIcon.style.display = 'none';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'block';
-    if (elements.visualizer) elements.visualizer.classList.add('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'pause';
+    if (elements.playLabel) elements.playLabel.textContent = 'Pause';
   }
 
   function onAudioPause() {
-    if (elements.playIcon) elements.playIcon.style.display = 'block';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'none';
-    if (elements.visualizer) elements.visualizer.classList.remove('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'play_arrow';
+    if (elements.playLabel) elements.playLabel.textContent = 'Play';
   }
 
   function onAudioEnded() {
@@ -306,31 +306,26 @@
 
   function updateAudioProgress() {
     const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
 
-    const percentage = (audio.currentTime / audio.duration) * 100;
-    if (elements.timelineFill) elements.timelineFill.style.width = `${percentage}%`;
-    if (elements.timelineThumb) elements.timelineThumb.style.left = `${percentage}%`;
-    if (elements.timeCurrent) elements.timeCurrent.textContent = formatTime(audio.currentTime);
+    const percentage = Math.min(100, (audio.currentTime / audio.duration) * 100);
+    if (elements.progressFill) elements.progressFill.style.width = `${percentage}%`;
+    if (elements.seek) elements.seek.value = String(percentage);
+    if (elements.audioTime) {
+      elements.audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
   }
 
   function updateAudioDuration() {
-    const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
-    if (elements.timeDuration) elements.timeDuration.textContent = formatTime(audio.duration);
+    updateAudioProgress();
   }
 
   // Seek audio helper
-  function seekAudio(e) {
+  function seekAudio() {
     const audio = elements.audioElement;
-    const wrapper = elements.timelineWrapper;
-    if (!audio || !audio.duration || !wrapper) return;
-
-    const rect = wrapper.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    audio.currentTime = percentage * audio.duration;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const percentage = Math.min(100, Math.max(0, Number(elements.seek.value) || 0));
+    audio.currentTime = (percentage / 100) * audio.duration;
     updateAudioProgress();
   }
 
@@ -408,20 +403,18 @@
 
   function resetFeedbackUI() {
     state.explanationVisible = false;
+    if (elements.containerEl) {
+      elements.containerEl.classList.remove('is-reviewed');
+    }
     if (elements.retryBtn) {
       elements.retryBtn.style.display = 'none';
-    }
-    if (elements.explanationToggle) {
-      elements.explanationToggle.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
     }
     if (elements.resultBox) {
       elements.resultBox.style.display = 'none';
       elements.resultBox.replaceChildren();
     }
-    if (elements.explanationPanel) {
-      elements.explanationPanel.style.display = 'none';
+    if (elements.reviewContent) {
+      elements.reviewContent.style.display = 'none';
     }
     if (elements.explanationContent) {
       elements.explanationContent.replaceChildren();
@@ -650,7 +643,7 @@
       }
     }
 
-    // Reset progress text and visualizer
+    // Reset progress
     resetAudioProgress();
 
     // Apply speed settings to player
@@ -785,35 +778,20 @@
       correct: score === 1
     }).catch((error) => console.warn('[PTE Archive] HCS save failed:', error));
 
-    // Render transcript and explanation post-submission
+    // Render transcript and explanation in the right column
     if (elements.passageText) {
       elements.passageText.textContent = state.currentQuestion.transcript || 'No transcript available for this audio.';
     }
-
-    if (elements.explanationToggle && (state.currentQuestion.explanation || state.currentQuestion.transcript)) {
-      elements.explanationToggle.style.display = 'block';
-      if (elements.explanationContent) {
-        const explanation = state.currentQuestion.explanation ||
-          '<p>No detailed explanation is available for this question yet. Use the transcript to review the evidence before retrying.</p>';
-        safeRenderHtml(explanation, elements.explanationContent);
-      }
+    if (elements.explanationContent) {
+      const explanation = state.currentQuestion.explanation ||
+        '<p>No detailed explanation is available for this question yet. Use the transcript to review the evidence before retrying.</p>';
+      safeRenderHtml(explanation, elements.explanationContent);
+    }
+    if (elements.containerEl) {
+      elements.containerEl.classList.add('is-reviewed');
     }
   }
 
-  function toggleExplanation() {
-    if (!elements.explanationPanel || !elements.explanationToggle) return;
-
-    state.explanationVisible = !state.explanationVisible;
-    if (state.explanationVisible) {
-      elements.explanationPanel.style.display = 'block';
-      elements.explanationToggle.textContent = 'Hide explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'true');
-    } else {
-      elements.explanationPanel.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
-    }
-  }
 
   async function loadQuestionById(questionId) {
     if (state.questions.length === 0) {

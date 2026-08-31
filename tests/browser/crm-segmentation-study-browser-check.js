@@ -17,6 +17,14 @@ function makeWavBuffer() {
   return buffer;
 }
 
+async function captureStudyShot(page, name) {
+  const dir = path.join(process.cwd(), 'tmp');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `crm-segmentation-study-${name}.png`);
+  await page.locator('#segmentation-study-workspace').screenshot({ path: file });
+  console.log(`Screenshot saved to tmp\\crm-segmentation-study-${name}.png`);
+}
+
 function contentTypeFor(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.html') return 'text/html; charset=utf-8';
@@ -42,8 +50,21 @@ function firebaseStub() {
 
 function waveSurferStub() {
   return `(function(){
-    class Regions { constructor(){this.items=[];this.isRegionsPlugin=true;} addRegion(item){this.items.push(item);return item;} clearRegions(){this.items=[];} getRegions(){return this.items;} }
-    class Spectrogram { constructor(options){this.container=options?.container;this.isSpectrogramPlugin=true;} render(){const render=()=>{const canvas=document.createElement('canvas');canvas.width=Math.max(640,this.container?.clientWidth||640);canvas.height=128;canvas.style.width='100%';canvas.style.height='128px';if(window.__studyUseShadowFixture){const root=this.container.shadowRoot||this.container.attachShadow({mode:'open'});root.replaceChildren(canvas);}else this.container?.appendChild(canvas);};if(window.__studyUseShadowFixture)setTimeout(render,35);else render();} }
+    // Mirrors wavesurfer.js 7.12.6 dist/plugins/regions.js: region events are
+    // emitted by the PLUGIN (not the wavesurfer instance) and are named
+    // 'region-update' (live, during a drag) and 'region-updated' (on drag end).
+    // There is no 'region-update-end'. addRegion() emits 'region-created'
+    // synchronously via saveRegion(), and getRegions() returns the live array.
+    class Regions {
+      constructor(){this.items=[];this.isRegionsPlugin=true;this.handlers={};this.dragSelectionThreshold=null;}
+      addRegion(item){const self=this;const region=Object.assign({},item,{remove(){const i=self.items.indexOf(region);if(i>=0)self.items.splice(i,1);self.emit('region-removed',region);},setOptions(options){Object.assign(region,options);}});this.items.push(region);this.emit('region-created',region);return region;}
+      clearRegions(){this.items=[];}
+      getRegions(){return this.items;}
+      enableDragSelection(options,threshold){this.dragSelectionOptions=options;this.dragSelectionThreshold=threshold;return()=>{this.dragSelectionThreshold=null;};}
+      on(event,cb){(this.handlers[event] ||= []).push(cb);return()=>{};}
+      emit(event,...payload){this.handlers[event]?.forEach((cb)=>cb(...payload));}
+    }
+    class Spectrogram { constructor(options){this.container=options?.container;this.isSpectrogramPlugin=true;} render(){const canvas=document.createElement('canvas');canvas.width=Math.max(640,this.container?.clientWidth||640);canvas.height=128;canvas.style.width='100%';canvas.style.height='128px';this.container?.appendChild(canvas);} }
     class FakeWave { constructor(options){this.options=options;this.handlers={};this.duration=0;const c=typeof options.container==='string'?document.querySelector(options.container):options.container;this.container=c;c?.addEventListener('click',(event)=>{const rect=c.getBoundingClientRect();const t=rect.width?Math.max(0.02,Math.min(0.98,(event.clientX-rect.left)/rect.width)):0.2;this.handlers.interaction?.forEach((cb)=>cb(t));});}
       static create(options){return new FakeWave(options);} registerPlugin(plugin){if(plugin?.isRegionsPlugin)this.__regionPlugin=plugin;if(plugin?.isSpectrogramPlugin)this.__spectrogramPlugin=plugin;return plugin;} on(event,cb){(this.handlers[event] ||= []).push(cb);return()=>{};}
       emit(event,payload){this.handlers[event]?.forEach((cb)=>cb(payload));}
@@ -70,14 +91,10 @@ function waveSurferStub() {
         canvas.height = 96;
         canvas.style.width = '100%';
         canvas.style.height = '96px';
-        if(window.__studyUseShadowFixture){const root=this.container.shadowRoot||this.container.attachShadow({mode:'open'});root.replaceChildren(canvas);}else this.container?.appendChild(canvas);
+        this.container?.appendChild(canvas);
         this.__spectrogramPlugin?.render?.();
         this.emit('ready');
       }
-      setTime(time){(this.__setTimeCalls ||= []).push(Number(time));this.__currentTime=Number(time);}
-      setPlaybackRate(rate){this.__playbackRate=Number(rate);}
-      play(){this.__playCalls=(this.__playCalls||0)+1;return Promise.resolve();}
-      pause(){this.__pauseCalls=(this.__pauseCalls||0)+1;return Promise.resolve();}
       getDuration(){return this.duration;} destroy(){} }
     window.WaveSurfer={create:(options)=>{const wave=new FakeWave(options);window.__lastStudyWave=wave;return wave;},RegionsPlugin:{create:()=>new Regions()},TimelinePlugin:{create:()=>({})},SpectrogramPlugin:{create:(options)=>new Spectrogram(options)}};
   })();`;
@@ -85,7 +102,6 @@ function waveSurferStub() {
 
 async function main() {
   const requests = [];
-  const claimBodies = [];
   const pageErrors = [];
   const consoleErrors = [];
   const browser = await chromium.launch({
@@ -109,25 +125,10 @@ async function main() {
         return stream;
       };
     });
-    await context.addInitScript(() => {
-      window.addEventListener('DOMContentLoaded', () => {
-        const audio = document.getElementById('segmentation-study-audio');
-        if (!audio) return;
-        let currentTime = 0;
-        let paused = true;
-        window.__studyNativeCurrentTimeWrites = 0;
-        Object.defineProperty(audio, 'currentTime', { configurable: true, get: () => currentTime, set: (value) => { window.__studyNativeCurrentTimeWrites += 1; currentTime = Number(value) || 0; } });
-        Object.defineProperty(audio, 'duration', { configurable: true, get: () => 1 });
-        Object.defineProperty(audio, 'paused', { configurable: true, get: () => paused });
-        audio.play = async () => { paused = false; window.__studyNativePlayCalls = (window.__studyNativePlayCalls || 0) + 1; audio.dispatchEvent(new Event('play')); };
-        audio.pause = () => { paused = true; window.__studyNativePauseCalls = (window.__studyNativePauseCalls || 0) + 1; audio.dispatchEvent(new Event('pause')); };
-        window.__studyEmitNativeTimeupdate = (time) => { currentTime = Number(time) || 0; audio.dispatchEvent(new Event('timeupdate')); };
-      });
-    });
     let completed = false;
-    let claimedTaskId = null;
     let analysisAttempts = 0;
     let submittedMetadata = null;
+    let submittedManualReview = null;
     await context.route('**/*', async (route) => {
       const url = new URL(route.request().url());
       const method = route.request().method();
@@ -138,40 +139,16 @@ async function main() {
           if (url.pathname === '/api/config') return json({ config: { apiKey: 'mock', authDomain: 'mock', projectId: 'mock', storageBucket: 'mock', messagingSenderId: 'mock', appId: 'mock' } });
           if (url.pathname === '/api/admin/status') return json({ isAdmin: true, uid: 'admin-1', email: 'admin@example.com', bootstrapped: true });
           if (url.pathname === '/api/admin/dev/segmentation-study/v2' && method === 'GET') {
-            const task = (taskId, targetWord, targetSyllableCount, status = 'available', split = 'development') => ({ taskId, targetWord, referenceIpa: `/${targetWord}/`, referenceSyllableIpa: Array.from({ length: targetSyllableCount }, (_, index) => `${targetWord}-${index + 1}`), targetSyllableCount, status, split, dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' });
-            const queueTasks = [
-              task('segmentation-study-v2-able', 'able', 2),
-              task('segmentation-study-v2-about', 'about', 2),
-              task('segmentation-study-v2-above', 'above', 2),
-              task('segmentation-study-v2-abroad', 'abroad', 2),
-              task('segmentation-study-v2-holdout', 'holdout', 2, 'available', 'holdout'),
-              task('segmentation-study-v2-0001', 'photograph', 3, completed ? 'completed' : (claimedTaskId === 'segmentation-study-v2-0001' ? 'reserved' : 'available'))
-            ];
-            if (claimedTaskId && claimedTaskId !== 'segmentation-study-v2-0001') {
-              const claimed = queueTasks.find((item) => item.taskId === claimedTaskId);
-              if (claimed) claimed.status = 'reserved';
-            }
             return json({ data: {
               studyVersion: 'study-v2', studyId: 'segmentation-study-v2', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dialect: 'en-US',
-              manifest: queueTasks.map(({ status, split, ...entry }) => entry),
-              tasks: queueTasks,
-              progress: { available: queueTasks.filter((item) => item.status === 'available').length, reserved: queueTasks.filter((item) => item.status === 'reserved').length, completed: completed ? 1 : 0, uncertain: 0, failed: 0 },
-              currentClaim: claimedTaskId && !completed ? queueTasks.find((item) => item.taskId === claimedTaskId) : null,
+              manifest: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
+              tasks: [{ taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: completed ? 'completed' : 'available', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1' }],
+              progress: { available: completed ? 0 : 1, reserved: 0, completed: completed ? 1 : 0, uncertain: 0, failed: 0 },
               previousSamples: [{ taskId: 'segmentation-study-v2-previous-0001', targetWord: 'previous', referenceIpa: '/ˈpriː.vi.əs/', referenceSyllableIpa: ['priː', 'vi', 'əs'], targetSyllableCount: 3, status: 'completed', manualSegments: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] }]
             }});
           }
-          if (url.pathname.endsWith('/claim-next') && method === 'POST') {
-            const body = JSON.parse(route.request().postData() || '{}');
-            claimBodies.push(body);
-            claimedTaskId = body.taskId || 'segmentation-study-v2-0001';
-            const targetWord = claimedTaskId === 'segmentation-study-v2-abroad' ? 'abroad' : 'photograph';
-            const targetSyllableCount = claimedTaskId === 'segmentation-study-v2-abroad' ? 2 : 3;
-            return json({ task: { taskId: claimedTaskId, targetWord, referenceIpa: `/${targetWord}/`, referenceSyllableIpa: Array.from({ length: targetSyllableCount }, (_, index) => `${targetWord}-${index + 1}`), targetSyllableCount, status: 'reserved', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', automaticOrder: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', automaticVersionOrder: ['v3', 'v2', 'v4'], exposureLog: [] } });
-          }
-          if (/\/segmentation-study\/v2\/tasks\/[^/]+\/(heartbeat|release)$/.test(url.pathname)) {
-            if (url.pathname.endsWith('/release')) claimedTaskId = null;
-            return json({ ok: true });
-          }
+          if (url.pathname.endsWith('/claim-next') && method === 'POST') return json({ task: { taskId: 'segmentation-study-v2-0001', targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], targetSyllableCount: 3, status: 'reserved', dialect: 'en-US', referenceLabelProvenance: 'explicit-reviewed-en-US-v1', manifestVersion: '2.0.0', manifestSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', automaticOrder: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', automaticVersionOrder: ['v3', 'v2', 'v4'], exposureLog: [] } });
+          if (/\/segmentation-study\/study-v2\/tasks\/segmentation-study-v2-0001\/(heartbeat|release)$/.test(url.pathname)) return json({ ok: true });
           if (url.pathname.endsWith('/tasks/segmentation-study-v2-0001/complete') && method === 'POST') {
             const postData = route.request().postData() || '';
             const metadataStart = postData.indexOf('name="metadata"\r\n\r\n');
@@ -184,6 +161,10 @@ async function main() {
             return json({ taskId: 'segmentation-study-v2-0001', status: 'completed' });
           }
           if (/^\/api\/admin\/dev\/corpus-samples\/[^/]+\/audio$/.test(url.pathname)) return route.fulfill({ status: 200, contentType: 'audio/wav', body: makeWavBuffer() });
+          if (/^\/api\/admin\/dev\/corpus-samples\/[^/]+\/manual-reviews$/.test(url.pathname) && method === 'POST') {
+            try { submittedManualReview = JSON.parse(route.request().postData() || '{}'); } catch (_) { submittedManualReview = null; }
+            return json({ reviewId: 'review-browser-test' });
+          }
           return json({});
         }
         return serveLocalAsset(route, url);
@@ -227,18 +208,6 @@ async function main() {
     });
     assert.strictEqual(legacyBlobFetchBlocked, true, 'The page CSP must block legacy fetch(blob:) loading.');
     await page.fill('#segmentation-study-operator', 'Team reviewer');
-    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]');
-    await page.waitForFunction(() => /holdout locked until development configuration is frozen/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
-    assert.strictEqual(claimBodies.length, 0, 'Clicking an available holdout item must not send an explicit claim.');
-    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-holdout"]').textContent(), 'holdout · 2 syllables · available');
-    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'abroad', null, { timeout: 5000 });
-    assert.deepStrictEqual(claimBodies[0]?.taskId, 'segmentation-study-v2-abroad', 'Clicking an available queue item must claim that exact task.');
-    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]').textContent(), 'abroad · 2 syllables · reserved');
-    await page.click('#segmentation-study-release');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'No word claimed', null, { timeout: 5000 });
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]')?.textContent.includes('available'), null, { timeout: 5000 });
-    assert.strictEqual(await page.locator('#segmentation-study-queue [data-task-id="segmentation-study-v2-abroad"]').textContent(), 'abroad · 2 syllables · available', 'Release must return the clicked word to a clean available queue.');
     await page.click('#segmentation-study-claim');
     try {
       await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'photograph', null, { timeout: 5000 });
@@ -257,8 +226,11 @@ async function main() {
       console.log('DEBUG pageErrors', pageErrors, consoleErrors);
       throw error;
     }
-    assert.deepStrictEqual(await page.locator('.segmentation-study-tab').evaluateAll((tabs) => tabs.map((tab) => tab.dataset.studyVersion)), ['v3', 'v2', 'v4', 'manual'], 'Automatic tabs must follow the server-provided deterministic order.');
+    assert.deepStrictEqual(await page.locator('.segmentation-study-tab').evaluateAll((tabs) => tabs.map((tab) => tab.dataset.studyVersion)), ['v3', 'v2', 'v4', 'manual', 'compare'], 'Automatic tabs must follow the server-provided deterministic order, with Compare all last.');
     assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'v3', 'The initial automatic view must be the first server-provided version.');
+    assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), true, 'Compare all must stay locked before any ordered exposure.');
+    assert.strictEqual(await page.locator('#segmentation-study-playback-speed option[value="0.25"]').count(), 1, 'Slower playback rates must be available for close boundary work.');
+    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check').count(), 9, 'The save checklist must surface every save requirement.');
     await page.evaluate(() => { window.__studyWaveformFailNext = true; });
     await page.click('#segmentation-study-record');
     await page.waitForTimeout(500);
@@ -268,7 +240,6 @@ async function main() {
     await page.waitForFunction(() => /waveform/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
     assert.match(await page.locator('#segmentation-study-status').textContent(), /waveform unavailable/i, 'Waveform failure must provide a retryable unavailable status.');
     assert.ok(await page.locator('#segmentation-study-audio').getAttribute('src'), 'Waveform failure must preserve the native audio object URL.');
-    assert.strictEqual(await page.locator('#segmentation-study-retry-visualization').isVisible(), true, 'Visualization failure must offer a retry control.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), false, 'The empty state must remain visible when visualization is unavailable.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled before waveform readiness.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'WaveSurfer must not use legacy URL loading.');
@@ -283,28 +254,11 @@ async function main() {
     assert.match(await page.locator('#segmentation-study-status').textContent(), /audio and analysis are retained.*re-record/i, 'Visualization failure must retain textual analysis with a retry/re-record status.');
     assert.match(await page.locator('#segmentation-study-panel-v2').textContent(), /pronunciation-analysis-v2/, 'Textual V2 analysis must remain available when visualization fails.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled while waveform visualization is unavailable.');
-    await page.click('#segmentation-study-retry-visualization');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-timeline-empty')?.hidden === true, null, { timeout: 5000 });
-    assert.strictEqual(await page.locator('#segmentation-study-retry-visualization').isHidden(), true, 'A successful visualization retry must hide the retry control.');
-    await page.evaluate(() => { window.__staleStudyWave = window.__lastStudyWave; });
-    await page.click('#segmentation-study-play-pause');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
-    const pauseCallsBeforeRedo = await page.evaluate(() => window.__studyNativePauseCalls || 0);
-    await page.click('#segmentation-study-redo');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.getAttribute('src') === null && document.querySelector('#segmentation-study-audio')?.hidden === true, null, { timeout: 5000 });
-    await page.evaluate(() => setTimeout(() => {
-      window.__staleStudyWave?.emit('ready');
-      window.__staleStudyWave?.emit('error', new Error('stale visualization error'));
-    }, 25));
-    await page.waitForTimeout(75);
-    assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), false, 'Delayed ready/error events from a replaced visualization must not resurrect stale surfaces.');
-    assert.ok(await page.evaluate((before) => (window.__studyNativePauseCalls || 0) > before, pauseCallsBeforeRedo), 'Redo must stop native playback before clearing the recording.');
     await page.click('[data-study-version="manual"]');
     await page.check('#segmentation-study-manual-certainty');
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 1, 'Recording A must allow a certainty choice before replacement.');
     await page.check('#segmentation-study-playback-confirmed');
     assert.strictEqual(await page.locator('#segmentation-study-playback-confirmed').isChecked(), true);
-    await page.evaluate(() => { window.__studyUseShadowFixture = true; });
     await page.click('#segmentation-study-record');
     await page.waitForFunction(() => /Recording/i.test(document.querySelector('#segmentation-study-record-status')?.textContent || ''), null, { timeout: 5000 });
     assert.strictEqual(await page.locator('#segmentation-study-playback-confirmed').isChecked(), false, 'A direct replacement recording must require fresh playback confirmation.');
@@ -313,42 +267,17 @@ async function main() {
     assert.strictEqual(await page.locator('#segmentation-study-audio').isHidden(), true, 'A direct replacement recording must hide the prior native audio player.');
     await page.click('#segmentation-study-stop');
     await page.waitForFunction(() => {
-      const findCanvas = (root) => {
-        if (!root) return null;
-        const direct = root.querySelector?.('canvas');
-        if (direct) return direct;
-        const shadowCanvas = findCanvas(root.shadowRoot);
-        if (shadowCanvas) return shadowCanvas;
-        for (const element of root.querySelectorAll?.('*') || []) {
-          const nested = findCanvas(element.shadowRoot);
-          if (nested) return nested;
-        }
-        return null;
-      };
       const wave = window.__lastStudyWave;
-      const waveformCanvas = findCanvas(document.querySelector('#segmentation-study-waveform'));
-      const spectrogramCanvas = findCanvas(document.querySelector('#segmentation-study-spectrogram'));
+      const waveformCanvas = document.querySelector('#segmentation-study-waveform canvas');
+      const spectrogramCanvas = document.querySelector('#segmentation-study-spectrogram canvas');
       return Number(wave?.getDuration?.()) > 0
         && Number(waveformCanvas?.width) > 0 && Number(waveformCanvas?.height) > 0
-        && Number(spectrogramCanvas?.width) > 0 && Number(spectrogramCanvas?.height) > 0
-        && document.querySelector('#segmentation-study-timeline-empty')?.hidden === true;
+        && Number(spectrogramCanvas?.width) > 0 && Number(spectrogramCanvas?.height) > 0;
     }, null, { timeout: 5000 });
     const waveformDimensions = await page.evaluate(() => {
-      const findCanvas = (root) => {
-        if (!root) return null;
-        const direct = root.querySelector?.('canvas');
-        if (direct) return direct;
-        const shadowCanvas = findCanvas(root.shadowRoot);
-        if (shadowCanvas) return shadowCanvas;
-        for (const element of root.querySelectorAll?.('*') || []) {
-          const nested = findCanvas(element.shadowRoot);
-          if (nested) return nested;
-        }
-        return null;
-      };
       const wave = window.__lastStudyWave;
-      const waveformCanvas = findCanvas(document.querySelector('#segmentation-study-waveform'));
-      const spectrogramCanvas = findCanvas(document.querySelector('#segmentation-study-spectrogram'));
+      const waveformCanvas = document.querySelector('#segmentation-study-waveform canvas');
+      const spectrogramCanvas = document.querySelector('#segmentation-study-spectrogram canvas');
       const waveformRect = waveformCanvas?.getBoundingClientRect();
       const spectrogramRect = spectrogramCanvas?.getBoundingClientRect();
       return {
@@ -362,72 +291,7 @@ async function main() {
     assert.ok(waveformDimensions.spectrogram.width > 0 && waveformDimensions.spectrogram.height > 0 && waveformDimensions.spectrogram.renderedWidth > 0 && waveformDimensions.spectrogram.renderedHeight > 0, 'Ready spectrogram canvas must have positive intrinsic and rendered dimensions.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), true, 'The empty state must be hidden after a real waveform ready event.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'The production path must never call legacy WaveSurfer.load(url).');
-    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 3 && window.__studyWaveSurferBlobLoads.every((blob) => blob instanceof Blob && blob.size > 0)), 'Each recording and visualization retry must pass an original Blob to WaveSurfer.loadBlob.');
-    await page.click('#segmentation-study-play-pause');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
-    const releaseWaveformSurface = await page.locator('#segmentation-study-waveform').boundingBox();
-    const releaseSpectrogramSurface = await page.locator('#segmentation-study-spectrogram').boundingBox();
-    await page.click('#segmentation-study-set-a');
-    await page.mouse.click(releaseWaveformSurface.x + releaseWaveformSurface.width * 0.25, releaseWaveformSurface.y + 30);
-    await page.click('#segmentation-study-set-b');
-    await page.mouse.click(releaseSpectrogramSurface.x + releaseSpectrogramSurface.width * 0.75, releaseSpectrogramSurface.y + 30);
-    await page.click('#segmentation-study-play-ab');
-    await page.waitForTimeout(75);
-    const timerCallsBeforeRelease = await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0);
-    const pauseCallsBeforeRelease = await page.evaluate(() => window.__studyNativePauseCalls || 0);
-    await page.click('#segmentation-study-release');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'No word claimed', null, { timeout: 5000 });
-    assert.ok(await page.evaluate((before) => (window.__studyNativePauseCalls || 0) > before, pauseCallsBeforeRelease), 'Release must stop native playback before clearing the current task.');
-    assert.strictEqual(await page.locator('#segmentation-study-audio').getAttribute('src'), null, 'Release must clear the native audio source.');
-    const timerCallsAfterRelease = await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0);
-    await page.waitForTimeout(100);
-    assert.strictEqual(await page.evaluate(() => window.__lastStudyWave?.__setTimeCalls?.length || 0), timerCallsAfterRelease, `Release must clear the A-B interval before replacing visualization state (before=${timerCallsBeforeRelease}, after=${timerCallsAfterRelease}).`);
-    await page.click('#segmentation-study-queue [data-task-id="segmentation-study-v2-0001"]');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'photograph', null, { timeout: 5000 });
-    await page.click('#segmentation-study-record');
-    await page.waitForFunction(() => /Recording/i.test(document.querySelector('#segmentation-study-record-status')?.textContent || ''), null, { timeout: 5000 });
-    await page.click('#segmentation-study-stop');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-timeline-empty')?.hidden === true && Number(window.__lastStudyWave?.getDuration?.()) > 0, null, { timeout: 5000 });
-    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 4), 'A released task must be re-recordable with a fresh Blob visualization.');
-    const nativeTimeWritesBeforePassiveUpdate = await page.evaluate(() => window.__studyNativeCurrentTimeWrites || 0);
-    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.42));
-    await page.waitForFunction(() => /0\.420s/.test(document.querySelector('#segmentation-study-current-time')?.textContent || ''), null, { timeout: 5000 });
-    assert.strictEqual(await page.evaluate(() => window.__studyNativeCurrentTimeWrites || 0), nativeTimeWritesBeforePassiveUpdate, 'Passive native audio timeupdate must not write back to audio.currentTime.');
-    const waveformSurface = await page.locator('#segmentation-study-waveform').boundingBox();
-    const spectrogramSurface = await page.locator('#segmentation-study-spectrogram').boundingBox();
-    assert.ok(waveformSurface && spectrogramSurface, 'Both timeline surfaces must be clickable.');
-    const playCountsBeforeTimelineClick = await page.evaluate(() => ({ native: window.__studyNativePlayCalls || 0, wave: window.__lastStudyWave?.__playCalls || 0 }));
-    await page.mouse.click(waveformSurface.x + waveformSurface.width * 0.35, waveformSurface.y + 30);
-    await page.waitForFunction(() => (window.__lastStudyWave?.__setTimeCalls || []).length > 0, null, { timeout: 5000 });
-    await page.mouse.click(spectrogramSurface.x + spectrogramSurface.width * 0.68, spectrogramSurface.y + 30);
-    await page.waitForFunction((before) => (window.__studyNativePlayCalls || 0) >= before.native + 2 && (window.__lastStudyWave?.__playCalls || 0) === before.wave, playCountsBeforeTimelineClick, { timeout: 5000 });
-    assert.ok((await page.evaluate(() => window.__studyNativePlayCalls || 0)) > playCountsBeforeTimelineClick.native, 'Waveform/spectrogram inspection must immediately play native audio.');
-    const nativeTimeBeforeIndependentWaveClock = await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0);
-    const wavePlayCountAfterTimelineClick = await page.evaluate(() => window.__lastStudyWave?.__playCalls || 0);
-    await page.evaluate(() => window.__lastStudyWave?.emit('timeupdate', 0.91));
-    assert.strictEqual(await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0), nativeTimeBeforeIndependentWaveClock, 'An independently advancing WaveSurfer clock must not feed back into native audio time.');
-    assert.strictEqual(await page.evaluate(() => window.__lastStudyWave?.__playCalls || 0), wavePlayCountAfterTimelineClick, 'WaveSurfer must never start an independent audible playback engine.');
-    assert.match(await page.locator('#segmentation-study-current-time').textContent(), /\d+\.\d+s/, `Timeline inspection must expose the current time (got ${await page.locator('#segmentation-study-current-time').textContent()}).`);
-    await page.click('#segmentation-study-set-a');
-    await page.mouse.click(waveformSurface.x + waveformSurface.width * 0.25, waveformSurface.y + 30);
-    await page.click('#segmentation-study-set-b');
-    await page.mouse.click(spectrogramSurface.x + spectrogramSurface.width * 0.75, spectrogramSurface.y + 30);
-    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isVisible(), true, 'Set A must expose a visible session-local marker.');
-    assert.strictEqual(await page.locator('#segmentation-study-marker-b').isVisible(), true, 'Set B must expose a visible session-local marker.');
-    await page.click('#segmentation-study-play-ab');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
-    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.75));
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === true, null, { timeout: 5000 });
-    assert.ok(Math.abs((await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0)) - 0.75) < 0.01, 'Play A-B must stop at B when looping is off.');
-    await page.click('#segmentation-study-loop-ab');
-    assert.strictEqual(await page.locator('#segmentation-study-loop-ab').getAttribute('aria-pressed'), 'true', 'Loop A-B must be toggleable.');
-    await page.click('#segmentation-study-play-ab');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
-    await page.evaluate(() => window.__studyEmitNativeTimeupdate?.(0.75));
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false && (document.querySelector('#segmentation-study-audio')?.currentTime || 0) < 0.35, null, { timeout: 5000 });
-    assert.ok(Math.abs((await page.evaluate(() => document.querySelector('#segmentation-study-audio')?.currentTime || 0)) - 0.25) < 0.02, 'Loop A-B must wrap to A and remain playing when B is reached.');
-    await page.click('#segmentation-study-clear-ab');
-    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isHidden(), true, 'Clear must remove A/B markers.');
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 2 && window.__studyWaveSurferBlobLoads.every((blob) => blob instanceof Blob && blob.size > 0)), 'Each recording must pass its original Blob to WaveSurfer.loadBlob.');
     await page.waitForFunction(() => !document.querySelector('#segmentation-study-analyze')?.disabled, null, { timeout: 30000 });
     await page.click('#segmentation-study-analyze');
     await page.waitForFunction(() => /failed/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
@@ -436,6 +300,8 @@ async function main() {
     await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
     assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /pronunciation-partition-variants-v2/, 'V4 must visibly identify the authoritative partition schema.');
     assert.match(await page.locator('#segmentation-study-panel-v4').textContent(), /partitionVariants\.v4/, 'V4 must visibly identify its authoritative provenance source.');
+    assert.ok(await page.locator('.segmentation-study-lane-track.is-locked').count() >= 2, 'Automatic versions the reviewer has not reached yet must stay behind the blind exposure lock.');
+    assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), true, 'Compare all must stay locked until every automatic version has been viewed in order.');
     await page.check('#segmentation-study-playback-confirmed');
     await page.click('[data-study-version="v3"]');
     await page.click('[data-study-version="v2"]');
@@ -444,25 +310,119 @@ async function main() {
     await page.click('[data-study-version="v3"]');
     await page.click('[data-study-version="v4"]');
     assert.match(await page.locator('#segmentation-study-status').textContent(), /All automatic versions viewed/, 'The UI must clear the exposure prerequisite after the final automatic view.');
-    assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled until an automatic judgment is recorded.');
-    assert.strictEqual(await page.locator('.segmentation-study-judgment-label').textContent(), 'Best automatic version(s) (ties allowed)', 'Automatic judgment must explicitly permit ties.');
-    assert.strictEqual((await page.locator('#segmentation-study-automatic-judgment-none').locator('..').textContent()).trim(), 'None acceptable', 'Automatic judgment must label the exclusive None option clearly.');
-    await page.check('#segmentation-study-automatic-judgment-v2');
-    await page.check('#segmentation-study-automatic-judgment-v3');
-    assert.strictEqual(await page.locator('#segmentation-study-automatic-judgment-none').isChecked(), false, 'A tied automatic subset must remain exclusive of None.');
     assert.ok(await page.locator('#segmentation-study-panel-v2 .segmentation-study-playback button').count() >= 2, 'Whole-word and syllable playback controls should be visible.');
+
+    // V4 is a boundary refinement of V3, so the review has to show which
+    // boundaries moved and on what evidence.
+    const v4PanelText = await page.locator('#segmentation-study-panel-v4').textContent();
+    assert.match(v4PanelText, /V4 moved 2 of 3 boundaries/, 'The V4 panel must summarise how many boundaries the refinement moved.');
+    assert.match(v4PanelText, /final extension/, 'The V4 panel must name each correction type applied.');
+    assert.strictEqual(await page.locator('#segmentation-study-panel-v4 .segmentation-study-diagnostics tbody tr').count(), 3, 'Every V4 diagnostic must be listed.');
+
+    await captureStudyShot(page, 'ordered-exposure');
+
+    // The blind ordering evidence is now complete, so the combined view unlocks.
+    assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), false, 'Compare all must unlock once the ordered exposure is complete.');
+    assert.strictEqual(await page.locator('.segmentation-study-lane-track.is-locked').count(), 0, 'Every lane must unlock once the ordered exposure evidence is complete.');
+    assert.deepStrictEqual(await page.locator('.segmentation-study-lane').evaluateAll((lanes) => lanes.map((lane) => lane.dataset.version)), ['v2', 'v3', 'v4', 'manual'], 'The lane strip must place all four segmentations on one shared time axis.');
+    await page.click('[data-study-version="compare"]');
+    assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'compare');
+    assert.strictEqual(await page.locator('#segmentation-study-panel-compare .segmentation-study-legend-item').count(), 4, 'Compare all must legend every version it draws.');
+    await captureStudyShot(page, 'compare-all');
+
+    // Narrow viewport: the lane strip drops its note column and the timeline
+    // must follow, or the two stop sharing a time axis.
+    await page.setViewportSize({ width: 860, height: 1200 });
+    await page.waitForTimeout(300);
+    const narrowAlignment = await page.evaluate(() => {
+      const track = document.querySelector('.segmentation-study-lane-track');
+      const waveform = document.querySelector('#segmentation-study-waveform');
+      if (!track || !waveform) return null;
+      const laneBox = track.getBoundingClientRect();
+      const waveBox = waveform.getBoundingClientRect();
+      return {
+        leftDelta: Math.abs(laneBox.left - waveBox.left),
+        widthDelta: Math.abs(laneBox.width - waveBox.width),
+        bodyOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      };
+    });
+    assert.ok(narrowAlignment, 'The lane strip and waveform must both be present at a narrow viewport.');
+    assert.ok(narrowAlignment.leftDelta <= 1 && narrowAlignment.widthDelta <= 1, `Lane tracks must share the waveform time axis at narrow widths (left off by ${narrowAlignment.leftDelta}px, width off by ${narrowAlignment.widthDelta}px).`);
+    assert.ok(narrowAlignment.bodyOverflow <= 0, `The study workspace must not force horizontal page scrolling (overflow ${narrowAlignment.bodyOverflow}px).`);
+    await captureStudyShot(page, 'narrow-860');
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.waitForTimeout(300);
+
+    // A–B listening selection: a stray micro-drag is not a selection.
+    const abSelection = await page.evaluate(() => {
+      const plugin = window.__lastStudyWave?.__regionPlugin;
+      if (!plugin) return null;
+      // addRegion emits 'region-created' itself, exactly as the real plugin's
+      // saveRegion() does at the end of a drag-selection gesture.
+      const tiny = plugin.addRegion({ id: 'drag-tiny', start: 0.1, end: 0.105 });
+      const tinyKept = plugin.getRegions().includes(tiny);
+      const real = plugin.addRegion({ id: 'drag-real', start: 0.2, end: 0.55 });
+      return {
+        tinyKept,
+        realKept: plugin.getRegions().includes(real),
+        readout: document.querySelector('#segmentation-study-ab-readout')?.textContent || '',
+        playLabel: document.querySelector('#segmentation-study-play')?.textContent || '',
+        clearDisabled: document.querySelector('#segmentation-study-ab-clear')?.disabled
+      };
+    });
+    assert.ok(abSelection, 'The regions plugin must be reachable for the A–B selection check.');
+    assert.strictEqual(abSelection.tinyKept, false, 'A sub-20 ms drag must be discarded instead of becoming an A–B selection.');
+    assert.strictEqual(abSelection.realKept, true, 'A deliberate drag must be kept as the A–B selection.');
+    assert.match(abSelection.readout, /0\.200 → 0\.550 s \(350 ms\)/, 'The transport must publish the A–B slice bounds and length.');
+    assert.match(abSelection.playLabel, /Play A–B/, 'Play must target the A–B slice once one is selected.');
+    assert.strictEqual(abSelection.clearDisabled, false, 'Clear A–B must enable once a slice is selected.');
+    await captureStudyShot(page, 'ab-selection');
+
+    const loopState = await page.evaluate(() => {
+      const button = document.querySelector('#segmentation-study-loop');
+      button.click();
+      const on = { pressed: button.getAttribute('aria-pressed'), active: button.classList.contains('is-active') };
+      button.click();
+      return { on, offPressed: button.getAttribute('aria-pressed') };
+    });
+    assert.strictEqual(loopState.on.pressed, 'true', 'The loop toggle must expose its state to assistive technology.');
+    assert.strictEqual(loopState.on.active, true, 'The loop toggle must show an active state.');
+    assert.strictEqual(loopState.offPressed, 'false', 'The loop toggle must switch back off.');
+
+    // Shrinking the slice below the minimum on drag end must drop it, rather
+    // than leaving the readout describing a slice no longer on the waveform.
+    const abShrunk = await page.evaluate(() => {
+      const plugin = window.__lastStudyWave?.__regionPlugin;
+      const region = plugin.getRegions().find((item) => item.id === 'drag-real');
+      region.end = region.start + 0.004;
+      plugin.emit('region-update', region);
+      const midDrag = document.querySelector('#segmentation-study-ab-readout')?.textContent || '';
+      plugin.emit('region-updated', region);
+      return { midDrag, afterDrag: document.querySelector('#segmentation-study-ab-readout')?.textContent || '', kept: plugin.getRegions().includes(region) };
+    });
+    assert.match(abShrunk.midDrag, /0\.200 → 0\.550/, 'A drag passing through a tiny state must keep the previous slice until it ends.');
+    assert.match(abShrunk.afterDrag, /drag across the waveform/, 'A slice resized below the minimum must be dropped on drag end.');
+    assert.strictEqual(abShrunk.kept, false, 'The discarded A–B region must be removed from the waveform.');
+    assert.strictEqual(await page.locator('#segmentation-study-ab-clear').isDisabled(), true, 'Clear A–B must disable once the slice is gone.');
+
+    // Re-select, then clear it through the button.
+    await page.evaluate(() => { window.__lastStudyWave.__regionPlugin.addRegion({ id: 'drag-again', start: 0.3, end: 0.62 }); });
+    assert.match(await page.locator('#segmentation-study-ab-readout').textContent(), /0\.300 → 0\.620/, 'A fresh drag must replace the discarded slice.');
+    await page.click('#segmentation-study-ab-clear');
+    assert.match(await page.locator('#segmentation-study-ab-readout').textContent(), /drag across the waveform/, 'Clearing A–B must restore the selection hint.');
+
     await page.selectOption('#segmentation-study-playback-speed', '0.75');
-    assert.deepStrictEqual(await page.evaluate(() => ({ native: document.querySelector('#segmentation-study-audio')?.playbackRate, wave: window.__lastStudyWave?.__playbackRate })), { native: 0.75, wave: 0.75 }, 'Playback speed must remain synchronized across native audio and WaveSurfer.');
     for (const tab of ['v2', 'v3', 'v4', 'manual']) await page.click(`[data-study-version="${tab}"]`);
     await page.locator('#segmentation-study-tab-manual').focus();
     await page.keyboard.press('ArrowLeft');
     assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'v4');
     await page.keyboard.press('End');
+    assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'compare', 'Compare all is the last tab once unlocked.');
+    await page.click('[data-study-version="manual"]');
     assert.strictEqual(await page.locator('.segmentation-study-tab.is-active').getAttribute('data-study-version'), 'manual');
     const waveform = page.locator('#segmentation-study-waveform');
     const box = await waveform.boundingBox();
     assert.ok(box && box.width > 100, 'Aligned waveform should render for the review.');
-    const nativePlayCountBeforeManualClicks = await page.evaluate(() => window.__studyNativePlayCalls || 0);
     for (const ratio of [0.08, 0.35, 0.68, 0.92]) await page.mouse.click(box.x + box.width * ratio, box.y + 40);
     try {
       await page.waitForFunction(() => /3 of 3 segments/.test(document.querySelector('#segmentation-study-manual-count')?.textContent || ''), null, { timeout: 5000 });
@@ -476,28 +436,73 @@ async function main() {
       })));
       throw error;
     }
-    assert.strictEqual(await page.evaluate(() => window.__studyNativePlayCalls || 0), nativePlayCountBeforeManualClicks, 'Manual review clicks must remain boundary-only unless Set A/B is armed.');
-    const manualCountBeforeArmedMarker = await page.locator('#segmentation-study-manual-count').textContent();
-    await page.click('#segmentation-study-set-a');
-    await page.mouse.click(box.x + box.width * 0.22, box.y + 40);
-    assert.strictEqual(await page.locator('#segmentation-study-manual-count').textContent(), manualCountBeforeArmedMarker, 'An armed Set A click must not create a manual boundary.');
-    assert.strictEqual(await page.locator('#segmentation-study-marker-a').isVisible(), true, 'An armed Set A click must set the A marker.');
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 0, 'Certainty must require an explicit reviewer choice.');
     assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), true, 'Save must remain disabled until certainty is chosen.');
+    // WaveSurfer 7 emits region events from the plugin, named 'region-update'
+    // (live) and 'region-updated' (drag end). Binding the wrong names silently
+    // skips the re-snap that keeps adjacent syllables contiguous.
+    assert.deepStrictEqual(
+      await page.evaluate(() => Object.keys(window.__lastStudyWave?.handlers || {}).filter((name) => name.startsWith('region-'))),
+      [],
+      'Region events must be bound to the regions plugin; the wavesurfer instance does not re-emit them in v7.'
+    );
+    assert.deepStrictEqual(
+      await page.evaluate(() => Object.keys(window.__lastStudyWave?.__regionPlugin?.handlers || {}).filter((name) => name.startsWith('region-')).sort()),
+      ['region-created', 'region-update', 'region-updated'],
+      'The study must bind the region event names WaveSurfer 7 actually emits.'
+    );
+    assert.strictEqual(await page.evaluate(() => window.__lastStudyWave?.__regionPlugin?.dragSelectionThreshold), 8, 'Drag selection must use a raised threshold so an ordinary boundary click is not swallowed as a drag.');
+
     const snappedBoundary = await page.evaluate(() => {
-      const wave = window.__lastStudyWave;
-      const manual = document.querySelector('#segmentation-study-tab-manual');
-      if (!wave || !manual) return null;
-      const regionPlugin = wave.__regionPlugin || null;
-      const visibleRegions = regionPlugin?.getRegions?.() || [];
-      if (visibleRegions.length < 2) return null;
-      visibleRegions[1].start = 0.42;
-      wave.handlers['region-update-end'].forEach((callback) => callback(visibleRegions[1]));
-      const rebuilt = regionPlugin.getRegions();
+      const plugin = window.__lastStudyWave?.__regionPlugin;
+      if (!plugin) return null;
+      const manualRegions = () => plugin.getRegions().filter((region) => String(region.id || '').startsWith('study-manual-'));
+      const before = manualRegions();
+      if (before.length < 2) return null;
+      const target = before[1];
+      target.start = 0.42;
+      plugin.emit('region-update', target);
+      plugin.emit('region-updated', target);
+      const rebuilt = manualRegions();
       return { leftEnd: rebuilt[0]?.end, rightStart: rebuilt[1]?.start };
     });
     assert.ok(snappedBoundary && Math.abs(snappedBoundary.leftEnd - snappedBoundary.rightStart) < 0.000001, 'Dragging either side of a manual boundary must keep adjacent syllables contiguous.');
     await page.check('#segmentation-study-manual-certainty');
+
+    // With a complete manual segmentation the study's own metric — how far each
+    // automatic version sits from the reviewer's boundaries — becomes visible
+    // while the boundaries can still be corrected.
+    assert.strictEqual(await page.locator('#segmentation-study-deltas .segmentation-study-delta-table').count(), 1, 'A complete manual segmentation must surface the manual-vs-automatic deltas.');
+    assert.deepStrictEqual(await page.locator('#segmentation-study-deltas thead th').evaluateAll((cells) => cells.map((cell) => cell.textContent)), ['Boundary', 'V2', 'V3', 'V4'], 'The delta table must compare every automatic version against the manual boundaries.');
+    assert.strictEqual(await page.locator('#segmentation-study-deltas tfoot td').count(), 3, 'The delta table must report a mean absolute error per version.');
+    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check:not(.is-done)').count(), 0, 'Every save requirement must read as met once Save is enabled.');
+    assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), false, 'Save must enable once every requirement is met.');
+    await captureStudyShot(page, 'manual-and-deltas');
+
+    // Nudging a boundary must move the regions already on screen rather than
+    // tearing the overlay down and rebuilding it, which re-runs the plugin's
+    // deferred label layout and leaks a subscription set per region per press.
+    await page.locator('#segmentation-study-timeline').focus();
+    const nudgeReuse = await page.evaluate(() => {
+      const manual = () => window.__lastStudyWave.__regionPlugin.getRegions().filter((region) => String(region.id || '').startsWith('study-manual-'));
+      window.__regionsBeforeNudge = manual();
+      // Snapshot the numbers, not the objects: reuse means the objects are the
+      // same ones, so reading them afterwards would show the moved value.
+      return { count: window.__regionsBeforeNudge.length, bounds: window.__regionsBeforeNudge.map((region) => [region.start, region.end]) };
+    });
+    await page.locator('#segmentation-study-timeline').press('ArrowLeft');
+    const afterNudge = await page.evaluate((before) => {
+      const after = window.__lastStudyWave.__regionPlugin.getRegions().filter((region) => String(region.id || '').startsWith('study-manual-'));
+      return {
+        count: after.length,
+        sameObjects: after.length === window.__regionsBeforeNudge.length && after.every((region, index) => region === window.__regionsBeforeNudge[index]),
+        moved: after.some((region, index) => region.start !== before.bounds[index][0] || region.end !== before.bounds[index][1])
+      };
+    }, nudgeReuse);
+    assert.strictEqual(afterNudge.count, nudgeReuse.count, 'A nudge must not change how many regions are drawn.');
+    assert.strictEqual(afterNudge.sameObjects, true, 'A nudge must reposition the existing regions, not recreate them.');
+    assert.strictEqual(afterNudge.moved, true, 'A nudge must actually move a boundary.');
+
     await page.click('#segmentation-study-manual-undo');
     await page.locator('#segmentation-study-timeline').focus();
     await page.locator('#segmentation-study-timeline').press('ArrowLeft');
@@ -514,11 +519,10 @@ async function main() {
       })));
       throw error;
     }
-    await page.mouse.click(box.x + box.width * 0.92, box.y + 40);
-    await page.evaluate(() => { const audio = document.querySelector('#segmentation-study-audio'); if (audio && !audio.paused) audio.pause(); });
-    await page.click('#segmentation-study-play-pause');
-    await page.waitForFunction(() => document.querySelector('#segmentation-study-audio')?.paused === false, null, { timeout: 5000 });
-    const pauseCallsBeforeSaveNext = await page.evaluate(() => window.__studyNativePauseCalls || 0);
+    // Re-measure: scrolling (screenshots, focus moves) invalidates the earlier box.
+    const replacedBox = await waveform.boundingBox();
+    await page.mouse.click(replacedBox.x + replacedBox.width * 0.92, replacedBox.y + 40);
+    await page.waitForFunction(() => /3 of 3 segments/.test(document.querySelector('#segmentation-study-manual-count')?.textContent || ''), null, { timeout: 5000 });
     await page.click('#segmentation-study-save');
     try {
       await page.waitForFunction(() => /saved/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
@@ -536,15 +540,10 @@ async function main() {
     assert.ok(submittedMetadata, 'Completion must submit parseable metadata in the multipart request.');
     assert.deepStrictEqual(submittedMetadata.automaticVersionOrder, ['v3', 'v2', 'v4']);
     assert.deepStrictEqual(submittedMetadata.versionExposureLog.map((entry) => entry.version), ['v3', 'v2', 'v4']);
-    assert.deepStrictEqual(submittedMetadata.automaticJudgment.selectedVersions, ['v2', 'v3']);
-    assert.strictEqual(submittedMetadata.automaticJudgment.none, false);
-    assert.strictEqual(submittedMetadata.automaticJudgment.schemaVersion, 'segmentation-study-automatic-judgment-v1');
     assert.strictEqual(new Set(submittedMetadata.versionExposureLog.map((entry) => entry.version)).size, 3, 'Revisited automatic tabs must not duplicate exposure entries.');
     assert.ok(submittedMetadata.versionExposureLog.every((entry) => entry.automaticOrder === 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' && Number.isFinite(Date.parse(entry.viewedAt))));
     assert.ok(requests.some((item) => item.path.endsWith('/tasks/segmentation-study-v2-0001/complete') && item.method === 'POST'));
     await page.click('#segmentation-study-next');
-    const pauseCallsAfterNext = await page.evaluate(() => window.__studyNativePauseCalls || 0);
-    assert.ok(pauseCallsAfterNext > pauseCallsBeforeSaveNext, `Play followed by Next must stop native playback during task reset (before=${pauseCallsBeforeSaveNext}, after=${pauseCallsAfterNext}).`);
     assert.strictEqual(await page.locator('input[name="segmentation-study-certainty"]:checked').count(), 0, 'The next task must require a new certainty choice.');
     await page.click('[data-study-mode="previous"]');
     await page.waitForSelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-previous-0001"]', { state: 'visible' });
@@ -552,9 +551,44 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#segmentation-study-word')?.textContent === 'previous' && /^blob:/.test(document.querySelector('#segmentation-study-audio')?.getAttribute('src') || ''), null, { timeout: 30000 });
     await page.waitForFunction(() => /loaded/i.test(document.querySelector('#segmentation-study-analysis-status')?.textContent || ''), null, { timeout: 30000 });
     assert.match(await page.locator('#segmentation-study-audio').getAttribute('src') || '', /^blob:/, 'Previously saved samples must retain a native audio object URL.');
-    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 5 && window.__studyWaveSurferBlobLoads[4] instanceof Blob && window.__studyWaveSurferBlobLoads[4].size > 0), 'Previously saved sample audio must reach WaveSurfer.loadBlob as a Blob.');
+    assert.ok(await page.evaluate(() => (window.__studyWaveSurferBlobLoads || []).length === 3 && window.__studyWaveSurferBlobLoads[2] instanceof Blob && window.__studyWaveSurferBlobLoads[2].size > 0), 'Previously saved sample audio must reach WaveSurfer.loadBlob as a Blob.');
     assert.strictEqual(await page.locator('#segmentation-study-timeline-empty').isHidden(), true, 'Previously saved samples must hide the empty state after waveform and spectrogram readiness.');
     assert.strictEqual(await page.evaluate(() => (window.__studyWaveSurferLegacyLoads || []).length), 0, 'Previously saved samples must not use legacy URL loading.');
+
+    // Opening a stored sample must discard everything from the previous take,
+    // including the A-B listening selection.
+    assert.match(await page.locator('#segmentation-study-ab-readout').textContent(), /drag across the waveform/, 'Opening a stored sample must clear the previous A–B selection.');
+
+    // A stored sample carries no server-issued automatic order and no capture
+    // settings from this session, so its checklist drops the capture row and
+    // proves ordered exposure by viewing rather than by token. The corpus
+    // manual-review endpoint validates neither, so this review must be savable.
+    assert.deepStrictEqual(
+      await page.evaluate(() => {
+        const item = (window.__studyPreviousSampleProbe = document.querySelector('#segmentation-study-queue [data-task-id="segmentation-study-v2-previous-0001"]'));
+        return { hasQueueItem: Boolean(item), captureStatus: document.querySelector('#segmentation-study-capture-status')?.textContent };
+      }),
+      { hasQueueItem: true, captureStatus: 'Capture settings unavailable.' },
+      'A stored sample has no capture settings from this session — which is exactly why the checklist must not demand them.'
+    );
+    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check').count(), 8, 'A stored sample must not be asked for this session\'s raw capture settings.');
+    assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), true, 'Compare all must start locked for a stored sample too.');
+    for (const version of ['v2', 'v3', 'v4']) await page.click(`[data-study-version="${version}"]`);
+    assert.strictEqual(await page.locator('#segmentation-study-tab-compare').isHidden(), false, 'Compare all must unlock for a stored sample once all three versions have been viewed.');
+    assert.strictEqual(await page.locator('.segmentation-study-lane-track.is-locked').count(), 0, 'Every lane must unlock for a stored sample once all three versions have been viewed.');
+
+    await page.click('[data-study-version="manual"]');
+    await page.check('#segmentation-study-playback-confirmed');
+    await page.check('#segmentation-study-manual-certainty');
+    assert.strictEqual(await page.locator('#segmentation-study-checklist .segmentation-study-check:not(.is-done)').count(), 0, 'A stored sample with boundaries, playback and certainty must satisfy every requirement.');
+    assert.strictEqual(await page.locator('#segmentation-study-save').isDisabled(), false, 'A stored sample review must be savable.');
+    await page.click('#segmentation-study-save');
+    await page.waitForFunction(() => /saved/i.test(document.querySelector('#segmentation-study-status')?.textContent || ''), null, { timeout: 5000 });
+    assert.ok(submittedManualReview, 'A stored sample review must POST to the corpus manual-reviews endpoint.');
+    assert.strictEqual(submittedManualReview.manualSegments.length, 3, 'The stored sample review must carry its manual segments.');
+    assert.strictEqual(submittedManualReview.certainty, 'certain');
+    assert.ok(requests.some((item) => /\/corpus-samples\/segmentation-study-v2-previous-0001\/manual-reviews$/.test(item.path) && item.method === 'POST'));
+
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     const unexpectedConsoleErrors = consoleErrors.filter((message) => !/503 \(Service Unavailable\)|blob:.*Content Security Policy|Fetch API cannot load blob:/i.test(message));
     assert.strictEqual(unexpectedConsoleErrors.length, 0, `Unexpected console errors:\n${unexpectedConsoleErrors.join('\n')}`);
@@ -567,7 +601,11 @@ function jsonComparison(route, directMismatch = false) {
     schemaVersion: 'pronunciation-comparison-v2', status: 'complete', comparisonId: 'comparison-study-v2-1', dialect: 'en-US',
     context: { targetWord: 'photograph', referenceIpa: '/ˈfoʊtəˌgræf/', referenceSyllableIpa: ['foʊ', 'tə', 'græf'], expectedSyllables: 3 },
     v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: [{ startTime: 0.08, endTime: 0.3 }, { startTime: 0.3, endTime: 0.62 }, { startTime: 0.62, endTime: 0.95 }] } },
-    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], v4: [{ startTime: 0.08, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }], v4AnalysisVersion: 'pronunciation-analysis-v4', v4Diagnostics: [] } } },
+    v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.32 }, { startTime: 0.32, endTime: 0.63 }, { startTime: 0.63, endTime: 0.92 }], v4: [{ startTime: 0.08, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }], v4AnalysisVersion: 'pronunciation-analysis-v4', v4Diagnostics: [
+      { index: 0, correction_type: 'onset', confidence: 0.18, blend_weight: 1, shift_ms: 20, signed_shift_ms: -20, reason: 'intensity rise', boundary: 'partition_start_time', side: 'start', old: 0.1, new: 0.08, mutation: true },
+      { index: 1, correction_type: 'none', confidence: 0.71, blend_weight: 0, shift_ms: 0, signed_shift_ms: 0, reason: 'high confidence', boundary: null, side: null, old: null, new: null, mutation: false },
+      { index: 2, correction_type: 'final_extension', confidence: 0.24, blend_weight: 0.9, shift_ms: 20, signed_shift_ms: 20, reason: 'voicing decay', boundary: 'partition_end_time', side: 'end', old: 0.92, new: 0.94, mutation: true }
+    ] } } },
     v4: { status: 'complete', analysis: {
       analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
       provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: [{ startTime: 0.08, endTime: 0.31 }, { startTime: 0.31, endTime: 0.64 }, { startTime: 0.64, endTime: 0.94 }]

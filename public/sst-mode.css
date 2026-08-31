@@ -146,6 +146,7 @@
 .sst-audio-time {
   font-size: 0.86rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sst-volume-label {

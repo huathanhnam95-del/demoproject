@@ -8,12 +8,16 @@
   const ACTIVE_STUDY = VERSION_REGISTRY.v2;
   const CAPTURE_CONSTRAINTS_REQUESTED = Object.freeze({ echoCancellation: false, noiseSuppression: false, autoGainControl: false });
   const REFERENCE_LABEL_PROVENANCE = 'explicit-reviewed-en-US-v1';
-  const AUTOMATIC_JUDGMENT_SCHEMA_VERSION = 'segmentation-study-automatic-judgment-v1';
   const OPERATOR_KEY = 'bel.segmentation-study.operator-name';
   const SESSION_KEY = 'bel.segmentation-study.session-id';
   const CLAIM_HEARTBEAT_MS = 2 * 60 * 1000;
-  const VISUALIZATION_READY_TIMEOUT_MS = 3000;
-  const VISUALIZATION_POLL_MS = 25;
+  // One colour per version, reused by the lane strip, the ghost boundary ticks
+  // and the delta table so a reviewer only has to learn the mapping once.
+  const VERSION_COLORS = Object.freeze({ v2: '#2563eb', v3: '#10b981', v4: '#8b5cf6', manual: '#f59e0b' });
+  const COMPARISON_VERSIONS = Object.freeze(['v2', 'v3', 'v4', 'manual']);
+  // Anything shorter than this is a mis-click rather than a deliberate drag.
+  const AB_MIN_DURATION = 0.02;
+  const AB_DRAG_THRESHOLD_PX = 8;
 
   let initialized = false;
   let elements = null;
@@ -59,15 +63,19 @@
     analysisFailed: false,
     visualizationReady: false,
     playTimer: null,
-    currentTime: 0,
-    pointA: null,
-    pointB: null,
-    abArm: null,
-    loopAB: false,
-    automaticJudgmentJudgedAt: null,
-    lastWaveInteractionAt: 0,
-    lastWaveInteractionTime: null,
-    visualizationAttemptId: 0
+    // Playback: a monotonic token invalidates any in-flight loop pass so a new
+    // play request never races with the previous one's scheduled restart.
+    playbackToken: 0,
+    playbackRafId: null,
+    loopTimer: null,
+    activePlayRange: null,
+    liveManualRaf: null,
+    loopEnabled: false,
+    // Transient A–B listening selection. Never persisted with the review.
+    abRegion: null,
+    abStart: null,
+    abEnd: null,
+    showGhosts: true
   };
 
   function byId(id) {
@@ -92,6 +100,9 @@
       refresh: byId('segmentation-study-refresh'),
       status: byId('segmentation-study-status'),
       queue: byId('segmentation-study-queue'),
+      queueDetails: byId('segmentation-study-queue-details'),
+      queueCount: byId('segmentation-study-queue-count'),
+      steps: byId('segmentation-study-steps'),
       step: byId('segmentation-study-step'),
       word: byId('segmentation-study-word'),
       reference: byId('segmentation-study-reference'),
@@ -101,36 +112,34 @@
       redo: byId('segmentation-study-redo'),
       audio: byId('segmentation-study-audio'),
       playbackSpeed: byId('segmentation-study-playback-speed'),
+      loopGap: byId('segmentation-study-loop-gap'),
+      play: byId('segmentation-study-play'),
+      loop: byId('segmentation-study-loop'),
+      abReadout: byId('segmentation-study-ab-readout'),
+      abClear: byId('segmentation-study-ab-clear'),
       recordStatus: byId('segmentation-study-record-status'),
       captureStatus: byId('segmentation-study-capture-status'),
       playbackConfirmed: byId('segmentation-study-playback-confirmed'),
       analyze: byId('segmentation-study-analyze'),
       analysisStatus: byId('segmentation-study-analysis-status'),
       tabs: Array.from(document.querySelectorAll('[data-study-version]')),
+      compareTab: byId('segmentation-study-tab-compare'),
       waveform: byId('segmentation-study-waveform'),
+      ghosts: byId('segmentation-study-ghosts'),
+      ghostToggle: byId('segmentation-study-ghost-toggle'),
+      lanes: byId('segmentation-study-lanes'),
+      deltas: byId('segmentation-study-deltas'),
+      checklist: byId('segmentation-study-checklist'),
       spectrogram: byId('segmentation-study-spectrogram'),
       timelineRuler: byId('segmentation-study-time-ruler'),
       timeline: byId('segmentation-study-timeline'),
       timelineEmpty: byId('segmentation-study-timeline-empty'),
-      currentTime: byId('segmentation-study-current-time'),
-      playPause: byId('segmentation-study-play-pause'),
-      setA: byId('segmentation-study-set-a'),
-      setB: byId('segmentation-study-set-b'),
-      playAB: byId('segmentation-study-play-ab'),
-      loopAB: byId('segmentation-study-loop-ab'),
-      clearAB: byId('segmentation-study-clear-ab'),
-      retryVisualization: byId('segmentation-study-retry-visualization'),
-      markerCurrent: byId('segmentation-study-marker-current'),
-      markerA: byId('segmentation-study-marker-a'),
-      markerB: byId('segmentation-study-marker-b'),
-      judgmentStatus: byId('segmentation-study-judgment-status'),
-      automaticJudgment: () => Array.from(document.querySelectorAll('[data-automatic-judgment-version]:checked')),
-      automaticJudgmentNone: byId('segmentation-study-automatic-judgment-none'),
       panels: {
         v2: byId('segmentation-study-panel-v2'),
         v3: byId('segmentation-study-panel-v3'),
         v4: byId('segmentation-study-panel-v4'),
-        manual: byId('segmentation-study-panel-manual')
+        manual: byId('segmentation-study-panel-manual'),
+        compare: byId('segmentation-study-panel-compare')
       },
       manualInstructions: byId('segmentation-study-manual-instructions'),
       manualSummary: byId('segmentation-study-manual-summary'),
@@ -202,18 +211,6 @@
     elements.analysisStatus.dataset.tone = tone;
   }
 
-  function findRenderedCanvases(root, canvases = []) {
-    if (!root) return canvases;
-    const directCanvases = root.querySelectorAll?.('canvas') || [];
-    directCanvases.forEach((canvas) => canvases.push(canvas));
-    const descendants = root.querySelectorAll?.('*') || [];
-    descendants.forEach((element) => {
-      if (element.shadowRoot) findRenderedCanvases(element.shadowRoot, canvases);
-    });
-    if (root.shadowRoot) findRenderedCanvases(root.shadowRoot, canvases);
-    return canvases;
-  }
-
   function waveformUnavailableMessage() {
     return state.comparison
       ? 'Waveform unavailable; audio and analysis are retained. Retry waveform or re-record.'
@@ -226,37 +223,20 @@
       elements.timelineEmpty.hidden = false;
       elements.timelineEmpty.textContent = message;
     }
-    if (elements.retryVisualization) {
-      elements.retryVisualization.hidden = !state.audioBlob;
-      elements.retryVisualization.disabled = !state.audioBlob;
-    }
     setStatus(message, 'warning');
-    updateTimelineUi();
   }
 
   function renderedCanvasReady(container) {
-    return findRenderedCanvases(container).some((canvas) => {
-      const rect = canvas.getBoundingClientRect();
-      return Number(canvas.width) > 0 && Number(canvas.height) > 0 && rect.width > 0 && rect.height > 0;
-    });
+    const canvas = container?.querySelector('canvas');
+    if (!canvas) return false;
+    const rect = canvas.getBoundingClientRect();
+    return Number(canvas.width) > 0 && Number(canvas.height) > 0 && rect.width > 0 && rect.height > 0;
   }
 
   function visualizationSurfacesReady() {
     return Number(state.waveSurfer?.getDuration?.()) > 0
       && renderedCanvasReady(elements.waveform)
       && renderedCanvasReady(elements.spectrogram);
-  }
-
-  function waitForVisualizationSurfaces(timeoutMs = VISUALIZATION_READY_TIMEOUT_MS) {
-    const startedAt = Date.now();
-    return new Promise((resolve) => {
-      const check = () => {
-        if (visualizationSurfacesReady()) { resolve(true); return; }
-        if (Date.now() - startedAt >= timeoutMs) { resolve(false); return; }
-        setTimeout(check, VISUALIZATION_POLL_MS);
-      };
-      check();
-    });
   }
 
   function normalizeTask(task) {
@@ -295,6 +275,18 @@
     return log.every((entry, index) => entry?.version === order[index]
       && entry.automaticOrder === automaticOrder
       && Number.isFinite(Date.parse(String(entry.viewedAt || ''))));
+  }
+
+  function allAutomaticVersionsViewed() {
+    return ['v2', 'v3', 'v4'].every((version) => state.versionExposureLog.some((entry) => entry.version === version));
+  }
+
+  // A study task carries a server-issued automaticOrder to prove the reviewer
+  // saw the versions in the assigned order. A stored sample reopened for review
+  // has no such token, so there the proof is simply having viewed all three —
+  // selectVersion() enforces the order either way.
+  function exposureViewingComplete() {
+    return state.mode === 'previous' ? allAutomaticVersionsViewed() : versionExposureProofReady();
   }
 
   function exposureRequirementMessage() {
@@ -390,7 +382,24 @@
       && allMatch(directVariants, 'v4');
   }
 
+  // `computeCompleteComparisonReady` deep-walks the whole comparison payload
+  // (pitch and intensity contours, phoneme lists) twice. It is called several
+  // times per updateButtons(), and updateButtons() runs on every boundary
+  // nudge, so the result is cached against the comparison object identity —
+  // the payload is only ever replaced wholesale by analyze() or cleared.
+  let comparisonReadyCache = { comparison: undefined, expected: -1, value: false };
+
   function completeComparisonReady() {
+    const expected = Number(state.task?.targetSyllableCount || 0);
+    if (comparisonReadyCache.comparison === state.comparison && comparisonReadyCache.expected === expected) {
+      return comparisonReadyCache.value;
+    }
+    const value = computeCompleteComparisonReady();
+    comparisonReadyCache = { comparison: state.comparison, expected, value };
+    return value;
+  }
+
+  function computeCompleteComparisonReady() {
     const expected = Number(state.task?.targetSyllableCount || 0);
     if (!state.comparison || state.comparison.status !== 'complete') return false;
     if (state.comparison.schemaVersion !== 'pronunciation-comparison-v2' || !state.comparison.comparisonId || expected <= 0) return false;
@@ -448,6 +457,14 @@
   function renderQueue() {
     if (!elements.queue) return;
     const items = state.mode === 'previous' ? state.previousSamples : state.tasks;
+    if (elements.queueCount) {
+      elements.queueCount.textContent = state.mode === 'previous'
+        ? `(${items.length} previous ${items.length === 1 ? 'sample' : 'samples'})`
+        : `(${state.progress?.available ?? items.filter((item) => item.status === 'available').length} available)`;
+    }
+    // The queue is the only way to pick a previous sample, and it is the only
+    // thing to do before a word is claimed — otherwise it stays out of the way.
+    if (elements.queueDetails) elements.queueDetails.open = state.mode === 'previous' || !state.task?.taskId;
     elements.queue.replaceChildren();
     if (!items.length) {
       const empty = document.createElement('li');
@@ -459,241 +476,27 @@
     items.forEach((item) => {
       const li = document.createElement('li');
       li.dataset.taskId = String(item.taskId || '');
-      const currentTask = state.mode !== 'previous' && state.task?.taskId && state.task.taskId === item.taskId;
-      const status = String(currentTask ? 'reserved' : (item.status || item.reviewStatus || 'available')).replaceAll('_', ' ');
+      const status = String(item.status || item.reviewStatus || 'available').replaceAll('_', ' ');
       li.textContent = `${item.targetWord || 'Unnamed'} · ${item.targetSyllableCount || '?'} syllables · ${status}`;
       if (state.task?.taskId && state.task.taskId === item.taskId) li.classList.add('is-current');
       li.tabIndex = 0;
-      li.addEventListener('click', () => {
-        if (state.mode === 'previous') return openPreviousSample(item);
-        if (!state.task?.taskId && state.operatorName && item.status === 'available' && item.split === 'holdout') {
-          setStatus('Holdout locked until development configuration is frozen.');
-          return;
-        }
-        if (!state.task?.taskId && state.operatorName && item.status === 'available' && !elements.claim?.disabled) return claimNext(item.taskId);
-        if (!state.task?.taskId && !state.operatorName) {
-          setStatus('Enter your name before claiming a word.', 'error');
-          elements.operator?.focus();
-          return;
-        }
-        if (item.status === 'completed') setStatus('Completed study tasks cannot be claimed.');
-        else if (state.task?.taskId) setStatus('Release the current word before claiming another task.');
-      });
+      li.addEventListener('click', () => state.mode === 'previous' ? openPreviousSample(item) : setStatus('Use Claim next word to reserve a study task.'));
       li.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); li.click(); } });
       elements.queue.appendChild(li);
     });
-  }
-
-  function clearAutomaticJudgmentInputs() {
-    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => { input.checked = false; });
-    if (elements?.judgmentStatus) elements.judgmentStatus.textContent = 'Review all automatic versions before choosing.';
-  }
-
-  function automaticJudgmentSelection() {
-    const selectedVersions = elements?.automaticJudgment?.().map((input) => input.dataset.automaticJudgmentVersion).filter((version) => ['v2', 'v3', 'v4'].includes(version)) || [];
-    const none = Boolean(elements?.automaticJudgmentNone?.checked);
-    if (!selectedVersions.length && !none) return null;
-    if (none) return { selectedVersions: [], none: true };
-    return { selectedVersions: Array.from(new Set(selectedVersions)).sort(), none: false };
-  }
-
-  function automaticJudgmentReady() {
-    const selection = automaticJudgmentSelection();
-    return Boolean(versionExposureProofReady() && selection && (selection.none || selection.selectedVersions.length > 0));
-  }
-
-  function automaticJudgmentMetadata() {
-    const selection = automaticJudgmentSelection();
-    if (!versionExposureProofReady() || !selection) return null;
-    if (!state.automaticJudgmentJudgedAt) state.automaticJudgmentJudgedAt = new Date().toISOString();
-    return {
-      schemaVersion: AUTOMATIC_JUDGMENT_SCHEMA_VERSION,
-      selectedVersions: selection.selectedVersions,
-      none: selection.none,
-      judgedAfterExposureAt: state.automaticJudgmentJudgedAt
-    };
-  }
-
-  function updateJudgmentUi() {
-    const exposureReady = versionExposureProofReady();
-    const selection = automaticJudgmentSelection();
-    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => {
-      input.disabled = !exposureReady || !state.comparison;
-    });
-    if (elements?.judgmentStatus) {
-      elements.judgmentStatus.textContent = exposureReady
-        ? (selection ? 'Automatic judgment recorded for this session.' : 'Choose the best automatic version(s), or None acceptable.')
-        : 'Review all automatic versions before choosing.';
-    }
-  }
-
-  function formatTimelineTime(value) {
-    return `${Math.max(0, Number(value) || 0).toFixed(3)}s`;
-  }
-
-  function timelineDuration() {
-    return Number(state.waveSurfer?.getDuration?.() || elements.audio?.duration || 0);
-  }
-
-  function updateMarker(marker, time, duration) {
-    if (!marker) return;
-    const valid = Number.isFinite(time) && duration > 0 && time >= 0 && time <= duration;
-    marker.hidden = !valid;
-    if (valid) marker.style.left = `${Math.max(0, Math.min(100, (time / duration) * 100))}%`;
-  }
-
-  function updateTimelineUi() {
-    const duration = timelineDuration();
-    const hasAudio = Boolean(state.audioBlob && state.visualizationReady && duration > 0);
-    if (elements.currentTime) elements.currentTime.textContent = formatTimelineTime(state.currentTime);
-    updateMarker(elements.markerCurrent, state.currentTime, duration);
-    updateMarker(elements.markerA, state.pointA, duration);
-    updateMarker(elements.markerB, state.pointB, duration);
-    if (elements.playPause) {
-      elements.playPause.disabled = !hasAudio;
-      elements.playPause.textContent = elements.audio && !elements.audio.paused ? 'Pause' : 'Play';
-    }
-    if (elements.setA) elements.setA.disabled = !hasAudio;
-    if (elements.setB) elements.setB.disabled = !hasAudio;
-    if (elements.setA) elements.setA.setAttribute('aria-pressed', String(state.abArm === 'a'));
-    if (elements.setB) elements.setB.setAttribute('aria-pressed', String(state.abArm === 'b'));
-    const hasRange = hasAudio && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && state.pointB > state.pointA;
-    if (elements.playAB) elements.playAB.disabled = !hasRange;
-    if (elements.loopAB) {
-      elements.loopAB.disabled = !hasRange;
-      elements.loopAB.setAttribute('aria-pressed', String(state.loopAB));
-    }
-    if (elements.clearAB) elements.clearAB.disabled = !hasAudio || (!Number.isFinite(state.pointA) && !Number.isFinite(state.pointB));
-    if (elements.retryVisualization) {
-      elements.retryVisualization.hidden = state.visualizationReady || !state.audioBlob;
-      elements.retryVisualization.disabled = !state.audioBlob;
-    }
-  }
-
-  function observeNativeTime(time) {
-    const duration = timelineDuration();
-    const next = Math.max(0, Math.min(duration || Number(time) || 0, Number(time) || 0));
-    state.currentTime = Number(next.toFixed(6));
-    try { state.waveSurfer?.setTime?.(state.currentTime); } catch (_) { /* ignore */ }
-    updateTimelineUi();
-    return state.currentTime;
-  }
-
-  function seekTimelineTime(time) {
-    const next = observeNativeTime(time);
-    if (elements.audio && Number.isFinite(next)) {
-      try { elements.audio.currentTime = next; } catch (_) { /* ignore */ }
-    }
-    return next;
-  }
-
-  function playNativeAudio() {
-    const audio = elements.audio;
-    if (!audio?.src) return;
-    const playbackRate = Number(elements.playbackSpeed?.value || 1);
-    audio.playbackRate = playbackRate;
-    try { state.waveSurfer?.setPlaybackRate?.(playbackRate); } catch (_) { /* native audio remains authoritative */ }
-    const nativePlay = audio.play?.();
-    if (nativePlay?.catch) nativePlay.catch(() => setStatus('Playback is unavailable for this recording.', 'error'));
-    updateTimelineUi();
-  }
-
-  function stopPlayback() {
-    try { elements.audio?.pause?.(); } catch (_) { /* ignore */ }
-    if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
-  }
-
-  function pauseNativeAudio() {
-    stopPlayback();
-    updateTimelineUi();
-  }
-
-  function setTimelinePoint(point, time = state.currentTime) {
-    const duration = timelineDuration();
-    const value = Math.max(0, Math.min(duration || Number(time) || 0, Number(time) || 0));
-    state[point] = Number(value.toFixed(6));
-    state.abArm = null;
-    updateTimelineUi();
-    return state[point];
-  }
-
-  function armTimelinePoint(point) {
-    if (!state.audioBlob || !timelineDuration()) return;
-    setTimelinePoint(point === 'a' ? 'pointA' : 'pointB', state.currentTime);
-    state.abArm = state.abArm === point ? null : point;
-    setStatus(`Click the timeline to set ${point.toUpperCase()}.`);
-    updateTimelineUi();
-  }
-
-  function handleTimelineInteraction(rawTime, source = 'waveform') {
-    const duration = timelineDuration();
-    const time = Math.max(0, Math.min(duration || Number(rawTime) || 0, Number(rawTime) || 0));
-    if (state.abArm) {
-      const arm = state.abArm;
-      setTimelinePoint(arm === 'a' ? 'pointA' : 'pointB', time);
-      setStatus(`${arm === 'a' ? 'A' : 'B'} marker set at ${formatTimelineTime(time)}.`);
-      return;
-    }
-    if (state.activeVersion === 'manual') {
-      addManualBoundary(time);
-      return;
-    }
-    state.lastWaveInteractionTime = time;
-    state.lastWaveInteractionAt = Date.now();
-    seekTimelineTime(time);
-    playNativeAudio();
-    if (source === 'spectrogram') setStatus(`Playing from ${formatTimelineTime(time)}.`);
-  }
-
-  function timelinePointFromEvent(event, surface) {
-    const rect = surface?.getBoundingClientRect?.();
-    const duration = timelineDuration();
-    if (!rect || !rect.width || !duration) return 0;
-    return ((Number(event.clientX) - rect.left) / rect.width) * duration;
-  }
-
-  function playPause() {
-    if (!state.audioBlob || !elements.audio?.src) return;
-    if (elements.audio.paused) {
-      if (state.currentTime >= timelineDuration() - 0.001) seekTimelineTime(0);
-      playNativeAudio();
-    } else pauseNativeAudio();
-  }
-
-  function playAB() {
-    if (!Number.isFinite(state.pointA) || !Number.isFinite(state.pointB) || state.pointB <= state.pointA) return;
-    if (state.playTimer) clearInterval(state.playTimer);
-    seekTimelineTime(state.pointA);
-    playNativeAudio();
-    state.playTimer = setInterval(() => {
-      const current = Number(elements.audio?.currentTime || state.currentTime || 0);
-      observeNativeTime(current);
-      if (current >= state.pointB - 0.005) {
-        if (state.loopAB) seekTimelineTime(state.pointA);
-        else pauseNativeAudio();
-      }
-    }, 25);
-  }
-
-  function clearAB() {
-    if (state.playTimer) pauseNativeAudio();
-    state.pointA = null;
-    state.pointB = null;
-    state.abArm = null;
-    state.loopAB = false;
-    updateTimelineUi();
   }
 
   function updateButtons() {
     const hasTask = Boolean(state.task?.taskId);
     const hasAudio = Boolean(state.audioBlob);
     const hasAnalysis = completeComparisonReady();
-    const exposureReady = versionExposureProofReady();
-    const judgmentReady = state.mode === 'previous' || automaticJudgmentReady();
-    const completeManual = state.manualSegments.length === Number(state.task?.targetSyllableCount || 0);
-    const certainty = elements?.certainty?.()?.value || '';
-    const playbackConfirmed = Boolean(elements?.playbackConfirmed?.checked || state.playbackConfirmed);
-    const canSave = hasTask && hasAudio && state.visualizationReady && hasAnalysis && exposureReady && judgmentReady && captureSettingsReady() && completeManual && playbackConfirmed && Boolean(certainty) && !state.manualReviewSaved;
+    const exposureReady = exposureViewingComplete();
+    const requirements = saveRequirements();
+    const canSave = !outstandingRequirement(requirements) && !state.manualReviewSaved;
+    renderSaveChecklist(requirements);
+    renderStepRail();
+    updateCompareTabAvailability();
+    updateTransport();
     if (elements.claim) elements.claim.disabled = !state.operatorName || hasTask || state.mode === 'previous';
     if (elements.release) elements.release.disabled = !hasTask || state.mode === 'previous';
     if (elements.record) elements.record.disabled = !hasTask || state.mode === 'previous' || state.recording;
@@ -707,62 +510,69 @@
       elements.save.setAttribute('aria-label', exposureMessage ? `Save sample (${exposureMessage})` : 'Save sample');
       if (hasTask && hasAudio && hasAnalysis && !state.visualizationReady) setStatus(waveformUnavailableMessage(), 'warning');
       else if (exposureMessage) setStatus(exposureMessage, 'warning');
-      else if (hasTask && hasAudio && hasAnalysis && exposureReady && !judgmentReady) setStatus('All automatic versions viewed. Choose the best automatic version(s), or None acceptable, before saving.', 'warning');
       else if (hasTask && hasAudio && hasAnalysis && elements.status?.textContent?.startsWith('Next required automatic view:')) setStatus('All automatic versions viewed. Complete the manual review to save.', 'success');
     }
     if (elements.next) elements.next.disabled = !state.manualReviewSaved;
     if (elements.manualUndo) elements.manualUndo.disabled = !state.manualBoundaries.length;
     if (elements.manualClear) elements.manualClear.disabled = !state.manualBoundaries.length;
-    updateJudgmentUi();
-    updateTimelineUi();
   }
 
   function clearCertainty() {
     document.querySelectorAll('input[name="segmentation-study-certainty"]').forEach((input) => { input.checked = false; });
   }
 
-  function resetTaskState() {
+  // A recording, its analysis and every artefact derived from them are one
+  // unit: starting a new take, redoing one, and claiming a new word all discard
+  // exactly the same things. This lives in one place because three hand-rolled
+  // copies had already drifted apart.
+  function resetRecordingState() {
     stopPlayback();
-    destroyVisualization();
-    stopHeartbeat();
-    cleanupRecording();
+    cancelLiveManualRender();
+    clearAbSelection();
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
     state.audioBlob = null;
     state.audioUrl = null;
     state.comparison = null;
     state.analysisFailed = false;
     state.captureSettings = null;
+    state.captureEligibility = false;
     state.versionExposureLog = [];
-    state.exposureTaskId = '';
     state.playbackConfirmed = false;
     state.visualizationReady = false;
     state.manualBoundaries = [];
     state.manualSegments = [];
     state.selectedBoundaryIndex = -1;
     state.manualReviewSaved = false;
-    state.currentTime = 0;
-    state.pointA = null;
-    state.pointB = null;
-    state.abArm = null;
-    state.loopAB = false;
-    state.automaticJudgmentJudgedAt = null;
-    state.lastWaveInteractionAt = 0;
-    state.lastWaveInteractionTime = null;
     clearCertainty();
+    clearRegions();
+    setAnalysisStatus('Analysis is required before review.');
     if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
-    if (elements.word) elements.word.textContent = 'No word claimed';
-    if (elements.reference) elements.reference.textContent = 'The selected word and IPA will appear here.';
-    if (elements.claimStatus) elements.claimStatus.textContent = 'Not reserved';
-    if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
     if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
-    if (elements.summary) elements.summary.textContent = '';
+    if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
     if (elements.timelineEmpty) {
       elements.timelineEmpty.hidden = false;
       elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.';
     }
-    clearRegions();
-    clearAutomaticJudgmentInputs();
-    updateTimelineUi();
+  }
+
+  function renderDerivedViews() {
+    renderGhostBoundaries();
+    renderLaneStrip();
+    renderDeltaTable();
+  }
+
+  function resetTaskState() {
+    stopHeartbeat();
+    cleanupRecording();
+    resetRecordingState();
+    state.exposureTaskId = '';
+    if (elements.word) elements.word.textContent = 'No word claimed';
+    if (elements.reference) elements.reference.textContent = 'The selected word and IPA will appear here.';
+    if (elements.claimStatus) elements.claimStatus.textContent = 'Not reserved';
+    if (elements.recordStatus) elements.recordStatus.textContent = 'No recording yet.';
+    if (elements.summary) elements.summary.textContent = '';
+    renderDerivedViews();
+    updateTransport();
     updateManualUi();
   }
 
@@ -779,7 +589,6 @@
     if (elements.word) elements.word.textContent = task.targetWord || 'Unnamed word';
     if (elements.reference) elements.reference.textContent = `${task.referenceIpa || 'IPA unavailable'} · ${task.targetSyllableCount || '?'} syllables`;
     if (elements.claimStatus) elements.claimStatus.textContent = state.mode === 'previous' ? 'Previous sample' : (task.status || 'Reserved').replaceAll('_', ' ');
-    if (elements.step) elements.step.textContent = state.mode === 'previous' ? 'Step 2 · Review previous sample' : 'Step 2 · Record and review';
     updateButtons();
   }
 
@@ -797,17 +606,14 @@
     }
   }
 
-  async function claimNext(taskId = '') {
+  async function claimNext() {
     if (!state.operatorName) { setStatus('Enter your name before claiming a word.', 'error'); elements.operator?.focus(); return; }
     try {
       elements.claim.disabled = true;
-      const body = { operatorName: state.operatorName, sessionId: state.sessionId };
-      const requestedTaskId = String(taskId || '').trim();
-      if (requestedTaskId) body.taskId = requestedTaskId;
       const payload = await apiFetch(studyApiPath('claim-next'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ operatorName: state.operatorName, sessionId: state.sessionId })
       });
       resetTaskState();
       state.task = normalizeTask(payload.task || payload.claim || payload);
@@ -886,33 +692,10 @@
   async function startRecording() {
     if (!state.task || state.mode === 'previous' || state.recording) return;
     try {
-      stopPlayback();
-      destroyVisualization();
       cleanupRecording();
-      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-      state.audioUrl = null;
-      state.audioBlob = null;
-      state.comparison = null;
-      state.analysisFailed = false;
-      state.captureSettings = null;
-      state.captureEligibility = false;
-      state.versionExposureLog = [];
+      resetRecordingState();
       state.activeVersion = automaticVersionOrder(state.task)[0];
-      state.visualizationReady = false;
-      state.playbackConfirmed = false;
-      state.manualBoundaries = [];
-      state.manualSegments = [];
-      state.manualReviewSaved = false;
-      state.currentTime = 0;
-      state.pointA = null;
-      state.pointB = null;
-      state.abArm = null;
-      state.loopAB = false;
-      state.automaticJudgmentJudgedAt = null;
-      clearAutomaticJudgmentInputs();
-      clearCertainty();
-      if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
-      if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
+      renderDerivedViews();
       state.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
       const track = state.stream.getAudioTracks?.()[0] || state.stream.getTracks?.()[0];
       state.captureSettings = sanitizeCaptureSettings(track?.getSettings?.());
@@ -958,20 +741,12 @@
   }
 
   async function redoRecording() {
-    stopPlayback();
-    destroyVisualization();
-    if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-    state.audioBlob = null; state.audioUrl = null; state.comparison = null; state.analysisFailed = false; state.captureSettings = null; state.captureEligibility = false; state.playbackConfirmed = false; state.versionExposureLog = []; state.activeVersion = automaticVersionOrder(state.task)[0]; state.manualBoundaries = []; state.manualSegments = []; state.selectedBoundaryIndex = -1; state.manualReviewSaved = false; state.visualizationReady = false; state.currentTime = 0; state.pointA = null; state.pointB = null; state.abArm = null; state.loopAB = false; state.automaticJudgmentJudgedAt = null;
-    clearAutomaticJudgmentInputs();
-    clearCertainty();
-    if (elements.audio) { elements.audio.hidden = true; elements.audio.removeAttribute('src'); }
-    clearRegions();
-    setAnalysisStatus('Analysis is required before review.');
+    resetRecordingState();
+    state.activeVersion = automaticVersionOrder(state.task)[0];
     if (elements.recordStatus) elements.recordStatus.textContent = 'No recording yet.';
-    if (elements.captureStatus) elements.captureStatus.textContent = 'Capture settings unavailable.';
-    if (elements.playbackConfirmed) elements.playbackConfirmed.checked = false;
-    if (elements.timelineEmpty) { elements.timelineEmpty.hidden = false; elements.timelineEmpty.textContent = 'Record or load a sample to see its waveform and spectrogram.'; }
-    updateManualUi(); updateTimelineUi(); updateButtons();
+    renderDerivedViews();
+    updateManualUi();
+    updateButtons();
   }
 
   function spanStart(span) { return Number(span?.startTime ?? span?.start_time ?? span?.start); }
@@ -1009,7 +784,7 @@
     const versions = automaticVersionOrder({ automaticVersionOrder: order });
     const tabContainer = elements.tabs[0]?.parentElement;
     if (!tabContainer) return;
-    versions.concat('manual').forEach((version) => {
+    versions.concat('manual', 'compare').forEach((version) => {
       const tab = elements.tabs.find((item) => item.dataset.studyVersion === version);
       if (tab) tabContainer.appendChild(tab);
     });
@@ -1039,6 +814,7 @@
   function renderPanel(version) {
     const panel = elements.panels[version];
     if (!panel) return;
+    if (version === 'compare') { renderComparePanel(panel); return; }
     if (version === 'manual') {
       const count = state.manualSegments.length;
       if (elements.manualSummary) {
@@ -1051,7 +827,9 @@
       return;
     }
     panel.replaceChildren();
-    const spans = analysisSpans(version);
+    // One span accessor for the panel, the waveform overlay and the lane strip,
+    // so the three can never disagree about where a boundary is.
+    const spans = versionSpans(version);
     const analysis = analysisForVersion(version) || {};
     if (!spans.length) { panel.textContent = `${version.toUpperCase()} is unavailable for this recording.`; return; }
     const provenance = version === 'v4' ? v4Provenance() : null;
@@ -1081,6 +859,9 @@
     timing.className = 'crm-muted';
     timing.textContent = spans.map((span, index) => `#${index + 1} ${spanStart(span).toFixed(3)}–${spanEnd(span).toFixed(3)}s`).join(' · ');
     panel.appendChild(timing);
+    // V4 is a boundary refinement of V3, so the only way to review it is to see
+    // which boundaries it moved, by how much, and on what evidence.
+    if (version === 'v4') renderV4Diagnostics(panel);
     renderPlaybackButtons(panel, spans, version);
   }
 
@@ -1092,7 +873,7 @@
     whole.type = 'button';
     whole.className = 'crm-btn crm-btn-secondary crm-btn-sm';
     whole.textContent = 'Play whole word';
-    whole.addEventListener('click', () => playRange(0, Number(state.waveSurfer?.getDuration?.() || elements.audio?.duration || 0)));
+    whole.addEventListener('click', () => playRange(0, audioDuration()));
     controls.appendChild(whole);
     spans.forEach((span, index) => {
       const button = document.createElement('button');
@@ -1106,65 +887,682 @@
     panel.appendChild(controls);
   }
 
-  function playRange(start, end) {
-    const audio = elements.audio;
-    if (!audio?.src || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
-    if (state.playTimer) clearInterval(state.playTimer);
-    seekTimelineTime(Math.max(0, start));
+  // Reads a length token off the workspace so the stylesheet stays the single
+  // source of truth for the timeline's geometry.
+  function cssPx(name, fallback) {
+    if (!elements?.workspace || typeof getComputedStyle !== 'function') return fallback;
+    const value = Number.parseFloat(getComputedStyle(elements.workspace).getPropertyValue(name));
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
+
+  function audioDuration() {
+    return Number(state.waveSurfer?.getDuration?.() || elements?.audio?.duration || 0);
+  }
+
+  function loopGapMs() {
+    const value = Number(elements?.loopGap?.value);
+    return Number.isFinite(value) && value >= 0 ? value : 300;
+  }
+
+  function isPlaying() {
+    // A loop counts as playing during its inter-repeat silence, otherwise the
+    // transport button would flicker back to "Play" between passes.
+    if (state.loopTimer) return true;
+    return Boolean(state.activePlayRange) && Boolean(elements?.audio) && !elements.audio.paused;
+  }
+
+  function stopPlayback() {
+    // Bumping the token orphans any pass that is mid-flight, including a loop
+    // restart already queued on the timer.
+    state.playbackToken += 1;
+    if (state.loopTimer) { clearTimeout(state.loopTimer); state.loopTimer = null; }
+    if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
+    if (state.playbackRafId) {
+      try { cancelAnimationFrame(state.playbackRafId); } catch (_) { /* ignore */ }
+      state.playbackRafId = null;
+    }
+    const audio = elements?.audio;
+    if (audio && !audio.paused) { try { audio.pause(); } catch (_) { /* ignore */ } }
+    state.activePlayRange = null;
+    updateTransport();
+  }
+
+  function playRange(start, end, options = {}) {
+    if (!elements?.audio?.src || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+    stopPlayback();
+    const loop = options.loop === undefined ? Boolean(state.loopEnabled) : Boolean(options.loop);
+    state.activePlayRange = { start, end, loop };
+    startPlaybackPass(start, end, loop, state.playbackToken);
+  }
+
+  function startPlaybackPass(start, end, loop, token) {
+    const audio = elements?.audio;
+    if (!audio || token !== state.playbackToken) return;
+    audio.playbackRate = Number(elements.playbackSpeed?.value || 1);
+    // True (non pitch-corrected) slowdown keeps consonant transients where they
+    // actually are, which is what a boundary judgement depends on.
+    try { audio.preservesPitch = false; } catch (_) { /* ignore */ }
+    try { audio.mozPreservesPitch = false; } catch (_) { /* ignore */ }
+    try { audio.webkitPreservesPitch = false; } catch (_) { /* ignore */ }
+    try { audio.currentTime = Math.max(0, start); } catch (_) { /* ignore */ }
     const stopAt = Math.max(start, end);
-    state.playTimer = setInterval(() => {
-      const current = Number(audio.currentTime || state.currentTime || 0);
-      observeNativeTime(current);
-      if (current >= stopAt - 0.01) {
-        if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && Math.abs(start - state.pointA) < 0.001 && Math.abs(end - state.pointB) < 0.001) {
-          seekTimelineTime(state.pointA);
-        } else {
-          pauseNativeAudio();
-        }
-      }
-    }, 25);
-    playNativeAudio();
+    const finish = () => {
+      if (token !== state.playbackToken) return;
+      state.playbackRafId = null;
+      try { audio.pause(); } catch (_) { /* ignore */ }
+      if (!loop) { state.activePlayRange = null; updateTransport(); return; }
+      state.loopTimer = setTimeout(() => {
+        state.loopTimer = null;
+        startPlaybackPass(start, end, loop, token);
+      }, loopGapMs());
+    };
+    // requestAnimationFrame polls far finer than `timeupdate` (~250 ms), which
+    // is far too coarse to stop cleanly on a 150 ms syllable.
+    const tick = () => {
+      if (token !== state.playbackToken) return;
+      if (audio.ended || audio.currentTime >= stopAt - 0.005) { finish(); return; }
+      state.playbackRafId = requestAnimationFrame(tick);
+    };
+    const startTicking = () => {
+      if (token !== state.playbackToken) return;
+      if (typeof requestAnimationFrame === 'function') state.playbackRafId = requestAnimationFrame(tick);
+      else state.playTimer = setInterval(() => { if (audio.currentTime >= stopAt - 0.005) { clearInterval(state.playTimer); state.playTimer = null; finish(); } }, 15);
+      updateTransport();
+    };
+    const played = audio.play();
+    if (played && typeof played.then === 'function') {
+      played.then(startTicking).catch(() => {
+        state.activePlayRange = null;
+        setStatus('Playback is unavailable for this recording.', 'error');
+        updateTransport();
+      });
+    } else {
+      startTicking();
+    }
+  }
+
+  function togglePlayback() {
+    if (isPlaying()) { stopPlayback(); return; }
+    const duration = audioDuration();
+    if (Number.isFinite(state.abStart) && Number.isFinite(state.abEnd) && state.abEnd > state.abStart) {
+      playRange(state.abStart, state.abEnd);
+      return;
+    }
+    if (duration > 0) playRange(0, duration);
+  }
+
+  function setAbSelection(start, end) {
+    const duration = audioDuration();
+    const from = Math.max(0, Math.min(Number(start), Number(end)));
+    const to = Math.min(duration || Math.max(Number(start), Number(end)), Math.max(Number(start), Number(end)));
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to - from < AB_MIN_DURATION) return false;
+    state.abStart = Number(from.toFixed(6));
+    state.abEnd = Number(to.toFixed(6));
+    updateTransport();
+    return true;
+  }
+
+  function clearAbSelection() {
+    if (state.abRegion) {
+      try { state.abRegion.remove?.(); } catch (_) { /* ignore */ }
+    }
+    state.abRegion = null;
+    state.abStart = null;
+    state.abEnd = null;
+    if (state.activePlayRange) stopPlayback();
+    else updateTransport();
+  }
+
+  function isAbRegion(region) {
+    return Boolean(region) && !String(region.id || '').startsWith('study-');
+  }
+
+  function handleRegionCreated(region) {
+    if (!isAbRegion(region)) return;
+    const start = Number(region.start);
+    const end = Number(region.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end - start < AB_MIN_DURATION) {
+      // A stray micro-drag while clicking should not become a selection.
+      try { region.remove?.(); } catch (_) { /* ignore */ }
+      return;
+    }
+    if (state.abRegion && state.abRegion !== region) {
+      try { state.abRegion.remove?.(); } catch (_) { /* ignore */ }
+    }
+    state.abRegion = region;
+    try { region.setOptions?.({ color: 'rgba(15,23,42,.14)', drag: true, resize: true }); } catch (_) { /* ignore */ }
+    setAbSelection(start, end);
+  }
+
+  function handleRegionUpdated(region, finalize) {
+    if (isAbRegion(region)) {
+      state.abRegion = region;
+      if (setAbSelection(region.start, region.end) || !finalize) return;
+      // Resized below the minimum: drop it, rather than leaving the readout
+      // describing a slice that is no longer on the waveform. Only enforced on
+      // finalize so a drag may pass through a tiny state on its way somewhere.
+      clearAbSelection();
+      return;
+    }
+    syncManualFromRegion(region, finalize);
+  }
+
+  function studyRegions() {
+    const list = typeof state.regions?.getRegions === 'function' ? state.regions.getRegions() : null;
+    return Array.isArray(list) ? list : [];
   }
 
   function clearRegions() {
-    try { state.regions?.clearRegions?.(); } catch (_) { /* ignore */ }
+    const plugin = state.regions;
+    if (!plugin) return;
+    const list = studyRegions();
+    // Remove only the version overlay so the A–B listening selection survives a
+    // tab switch; fall back to a full clear when the plugin has no per-region
+    // remove (older builds and the browser-check stub).
+    if (list.length && list.every((region) => typeof region?.remove === 'function')) {
+      list.slice().forEach((region) => {
+        if (!String(region?.id || '').startsWith('study-')) return;
+        try { region.remove(); } catch (_) { /* ignore */ }
+      });
+      return;
+    }
+    try { plugin.clearRegions?.(); } catch (_) { /* ignore */ }
+    state.abRegion = null;
   }
 
-  function destroyVisualization() {
-    state.visualizationAttemptId += 1;
-    const wave = state.waveSurfer;
-    state.waveSurfer = null;
-    state.regions = null;
-    state.spectrogram = null;
-    state.timeline = null;
-    try { wave?.destroy?.(); } catch (_) { /* ignore stale WaveSurfer instances */ }
-    elements.waveform?.replaceChildren();
-    elements.spectrogram?.replaceChildren();
-    elements.timelineRuler?.replaceChildren();
+  function ensureAbRegion() {
+    if (!state.regions || !Number.isFinite(state.abStart) || !Number.isFinite(state.abEnd)) return;
+    const existing = studyRegions().some((region) => region === state.abRegion);
+    if (existing) return;
+    try {
+      state.abRegion = state.regions.addRegion({
+        id: 'ab-selection',
+        start: state.abStart,
+        end: state.abEnd,
+        color: 'rgba(15,23,42,.14)',
+        content: 'A–B',
+        drag: true,
+        resize: true
+      });
+    } catch (_) { /* WaveSurfer can reject regions before ready */ }
   }
 
   function drawRegions(version) {
-    clearRegions();
-    if (!state.regions) return;
-    const colors = ['rgba(37,99,235,.28)', 'rgba(16,185,129,.28)', 'rgba(139,92,246,.28)', 'rgba(234,88,12,.28)'];
-    const spans = version === 'manual' ? state.manualSegments : analysisSpans(version);
-    spans.forEach((span, index) => {
-      const start = spanStart(span); const end = spanEnd(span);
-      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
-      try {
-        state.regions.addRegion({
-          id: `study-${version}-${index}`,
-          start,
-          end,
-          color: colors[index % colors.length],
-          content: `${version === 'manual' ? 'Manual' : version.toUpperCase()} ${index + 1}`,
-          // A syllable span itself must not move: reviewers drag either resize
-          // handle, which represents one shared boundary with its neighbour.
-          drag: false,
-          resize: version === 'manual'
-        });
-      } catch (_) { /* WaveSurfer can reject regions before ready */ }
+    if (!state.regions) { renderDerivedViews(); return; }
+    // "Compare all" is read through the lane strip and the ghost ticks, so no
+    // filled region is drawn there — four translucent overlays are less legible,
+    // not more.
+    const spans = version === 'compare' ? [] : versionSpans(version);
+    const existing = studyRegions().filter((region) => String(region?.id || '').startsWith(`study-${version}-`));
+    // Invariant: after any call, only this version's study regions exist, so a
+    // same-version redraw can move the ones already on screen. Rebuilding them
+    // instead re-runs the plugin's deferred label layout, which makes a held
+    // arrow key jitter and leaks a subscription set per region per keypress.
+    const reusable = spans.length > 0
+      && existing.length === spans.length
+      && existing.every((region) => typeof region.setOptions === 'function');
+    if (reusable) {
+      spans.forEach((span, index) => {
+        const region = existing.find((item) => item.id === `study-${version}-${index}`);
+        const start = spanStart(span);
+        const end = spanEnd(span);
+        if (!region || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+        if (region.start === start && region.end === end) return;
+        try { region.setOptions({ start, end }); } catch (_) { /* ignore */ }
+      });
+    } else {
+      clearRegions();
+      const color = VERSION_COLORS[version] || VERSION_COLORS.v2;
+      spans.forEach((span, index) => {
+        const start = spanStart(span);
+        const end = spanEnd(span);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+        try {
+          state.regions.addRegion({
+            id: `study-${version}-${index}`,
+            start,
+            end,
+            color: index % 2 === 0 ? `${color}33` : `${color}1f`,
+            content: `${version === 'manual' ? 'Manual' : version.toUpperCase()} ${index + 1}`,
+            // A syllable span itself must not move: reviewers drag either resize
+            // handle, which represents one shared boundary with its neighbour.
+            drag: false,
+            resize: version === 'manual'
+          });
+        } catch (_) { /* WaveSurfer can reject regions before ready */ }
+      });
+    }
+    ensureAbRegion();
+    renderDerivedViews();
+  }
+
+  function labelFor(version) {
+    if (version === 'manual') return 'Manual';
+    if (version === 'compare') return 'Compare';
+    return version.toUpperCase();
+  }
+
+  function versionSpans(version) {
+    return version === 'manual' ? state.manualSegments : spansForComparison(version);
+  }
+
+  function boundariesFor(version) {
+    const spans = versionSpans(version);
+    if (!Array.isArray(spans) || !spans.length) return [];
+    return [spanStart(spans[0]), ...spans.map(spanEnd)].filter((value) => Number.isFinite(value));
+  }
+
+  // The blind protocol only permits a version to be drawn once the reviewer has
+  // reached it in the server-assigned order; after all three are logged the
+  // ordering evidence is complete and everything may be shown together.
+  function versionUnlocked(version) {
+    if (version === 'manual') return true;
+    if (!state.comparison) return false;
+    if (exposureViewingComplete()) return true;
+    return state.versionExposureLog.some((entry) => entry.version === version);
+  }
+
+  function v4Diagnostics() {
+    const partition = state.comparison?.v3?.analysis?.partitionVariants;
+    const diagnostics = partition?.v4Diagnostics || partition?.v4_diagnostics;
+    return Array.isArray(diagnostics) ? diagnostics : [];
+  }
+
+  function diagnosticShiftMs(entry) {
+    const signed = Number(entry?.signed_shift_ms ?? entry?.signedShiftMs);
+    if (Number.isFinite(signed)) return signed;
+    const magnitude = Number(entry?.shift_ms ?? entry?.shiftMs);
+    return Number.isFinite(magnitude) ? magnitude : 0;
+  }
+
+  function diagnosticType(entry) {
+    return String(entry?.correction_type || entry?.correctionType || 'none').toLowerCase();
+  }
+
+  function diagnosticMoved(entry) {
+    return diagnosticType(entry) !== 'none' && Math.abs(diagnosticShiftMs(entry)) >= 0.5;
+  }
+
+  function formatSignedMs(value) {
+    const rounded = Math.round(Number(value) || 0);
+    return `${rounded > 0 ? '+' : ''}${rounded} ms`;
+  }
+
+  function updateTransport() {
+    if (!elements) return;
+    const hasAudio = Boolean(elements.audio?.src) && audioDuration() > 0;
+    const hasAb = Number.isFinite(state.abStart) && Number.isFinite(state.abEnd) && state.abEnd > state.abStart;
+    if (elements.play) {
+      elements.play.disabled = !hasAudio;
+      elements.play.textContent = isPlaying() ? '■ Stop' : (hasAb ? '▶ Play A–B' : '▶ Play word');
+    }
+    if (elements.loop) {
+      elements.loop.disabled = !hasAudio;
+      elements.loop.classList.toggle('is-active', Boolean(state.loopEnabled));
+      elements.loop.setAttribute('aria-pressed', String(Boolean(state.loopEnabled)));
+    }
+    if (elements.abClear) elements.abClear.disabled = !hasAb;
+    if (elements.abReadout) {
+      elements.abReadout.textContent = hasAb
+        ? `A–B · ${state.abStart.toFixed(3)} → ${state.abEnd.toFixed(3)} s (${Math.round((state.abEnd - state.abStart) * 1000)} ms)`
+        : 'A–B · drag across the waveform to select a slice';
+      elements.abReadout.classList.toggle('is-set', hasAb);
+    }
+  }
+
+  function renderGhostBoundaries() {
+    const host = elements?.ghosts;
+    if (!host) return;
+    host.replaceChildren();
+    const duration = audioDuration();
+    if (!duration || !state.visualizationReady || !state.showGhosts) return;
+    COMPARISON_VERSIONS.forEach((version) => {
+      // The active version is already drawn as a filled region.
+      if (version === state.activeVersion || !versionUnlocked(version)) return;
+      boundariesFor(version).forEach((time, index) => {
+        const tick = document.createElement('span');
+        tick.className = 'segmentation-study-ghost';
+        tick.dataset.version = version;
+        tick.style.left = `${Math.max(0, Math.min(100, (time / duration) * 100))}%`;
+        tick.style.setProperty('--ghost-color', VERSION_COLORS[version]);
+        tick.title = `${labelFor(version)} boundary ${index} · ${time.toFixed(3)} s`;
+        host.appendChild(tick);
+      });
     });
+  }
+
+  function laneNote(version) {
+    if (!versionUnlocked(version)) return '';
+    if (version === 'manual') {
+      const expected = Number(state.task?.targetSyllableCount || 0);
+      return expected ? `${state.manualSegments.length}/${expected} marked` : '';
+    }
+    if (version === 'v4') {
+      const diagnostics = v4Diagnostics();
+      if (diagnostics.length) {
+        const moved = diagnostics.filter(diagnosticMoved);
+        if (!moved.length) return 'no boundary moved vs V3';
+        const largest = moved.reduce((best, item) => (Math.abs(diagnosticShiftMs(item)) > Math.abs(diagnosticShiftMs(best)) ? item : best), moved[0]);
+        return `${moved.length} moved vs V3 · max ${formatSignedMs(diagnosticShiftMs(largest))}`;
+      }
+    }
+    const spans = versionSpans(version);
+    return spans.length ? `${spans.length} syllables` : '';
+  }
+
+  function renderLaneStrip() {
+    const host = elements?.lanes;
+    if (!host) return;
+    host.replaceChildren();
+    const duration = audioDuration();
+    if (!duration || !state.visualizationReady) {
+      const empty = document.createElement('p');
+      empty.className = 'crm-muted';
+      empty.textContent = 'Boundary lanes appear once a recording is loaded and analysed.';
+      host.appendChild(empty);
+      return;
+    }
+    const ipa = Array.isArray(state.task?.referenceSyllableIpa) ? state.task.referenceSyllableIpa : [];
+    COMPARISON_VERSIONS.forEach((version) => {
+      const row = document.createElement('div');
+      row.className = 'segmentation-study-lane';
+      row.dataset.version = version;
+      if (version === state.activeVersion) row.classList.add('is-active');
+      row.style.setProperty('--lane-color', VERSION_COLORS[version]);
+
+      const label = document.createElement('span');
+      label.className = 'segmentation-study-lane-label';
+      label.textContent = labelFor(version);
+      row.appendChild(label);
+
+      const track = document.createElement('div');
+      track.className = 'segmentation-study-lane-track';
+      const spans = versionSpans(version);
+      if (!versionUnlocked(version)) {
+        track.classList.add('is-locked');
+        track.textContent = 'Not yet viewed';
+      } else if (!spans.length) {
+        track.classList.add('is-empty');
+        track.textContent = version === 'manual' ? 'No boundaries marked yet' : 'Unavailable';
+      } else {
+        spans.forEach((span, index) => {
+          const start = spanStart(span);
+          const end = spanEnd(span);
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+          const block = document.createElement('button');
+          block.type = 'button';
+          block.className = 'segmentation-study-lane-block';
+          block.style.left = `${Math.max(0, (start / duration) * 100)}%`;
+          block.style.width = `${Math.max(0.4, ((end - start) / duration) * 100)}%`;
+          block.textContent = ipa[index] || String(index + 1);
+          block.title = `${labelFor(version)} syllable ${index + 1} · ${start.toFixed(3)}–${end.toFixed(3)} s (${Math.round((end - start) * 1000)} ms) · click to play`;
+          block.addEventListener('click', () => playRange(start, end));
+          track.appendChild(block);
+        });
+      }
+      row.appendChild(track);
+
+      const note = document.createElement('span');
+      note.className = 'segmentation-study-lane-note';
+      note.textContent = laneNote(version);
+      row.appendChild(note);
+      host.appendChild(row);
+    });
+  }
+
+  function renderV4Diagnostics(panel) {
+    const diagnostics = v4Diagnostics();
+    if (!diagnostics.length) return;
+    const moved = diagnostics.filter(diagnosticMoved);
+    const headline = document.createElement('p');
+    headline.className = 'segmentation-study-diagnostics-headline';
+    if (!moved.length) {
+      headline.textContent = `V4 kept all ${diagnostics.length} V3 boundaries unchanged.`;
+    } else {
+      const largest = moved.reduce((best, item) => (Math.abs(diagnosticShiftMs(item)) > Math.abs(diagnosticShiftMs(best)) ? item : best), moved[0]);
+      headline.textContent = `V4 moved ${moved.length} of ${diagnostics.length} boundaries · largest ${formatSignedMs(diagnosticShiftMs(largest))} (${diagnosticType(largest)}, syllable ${Number(largest.index ?? 0) + 1}).`;
+    }
+    panel.appendChild(headline);
+
+    const table = document.createElement('table');
+    table.className = 'segmentation-study-diagnostics';
+    const head = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    ['Boundary', 'Correction', 'Shift', 'Confidence', 'Blend', 'Reason'].forEach((text) => {
+      const cell = document.createElement('th');
+      cell.scope = 'col';
+      cell.textContent = text;
+      headRow.appendChild(cell);
+    });
+    head.appendChild(headRow);
+    table.appendChild(head);
+
+    const body = document.createElement('tbody');
+    diagnostics.forEach((entry, index) => {
+      const row = document.createElement('tr');
+      const shift = diagnosticShiftMs(entry);
+      if (!diagnosticMoved(entry)) row.classList.add('is-unchanged');
+      const confidence = Number(entry?.confidence);
+      const blend = Number(entry?.blend_weight ?? entry?.blendWeight);
+      const cells = [
+        `Syllable ${Number(entry?.index ?? index) + 1}${entry?.boundary ? ` · ${String(entry.boundary).replace(/_/g, ' ')}` : ''}`,
+        diagnosticType(entry).replace(/_/g, ' '),
+        diagnosticMoved(entry) ? formatSignedMs(shift) : '—',
+        Number.isFinite(confidence) ? confidence.toFixed(2) : '—',
+        Number.isFinite(blend) ? blend.toFixed(2) : '—',
+        String(entry?.reason || '—')
+      ];
+      cells.forEach((text, cellIndex) => {
+        const cell = document.createElement('td');
+        cell.textContent = text;
+        if (cellIndex === 2 && diagnosticMoved(entry)) cell.classList.add(shift >= 0 ? 'is-later' : 'is-earlier');
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    table.appendChild(body);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'segmentation-study-tablewrap';
+    wrapper.appendChild(table);
+    panel.appendChild(wrapper);
+  }
+
+  function renderComparePanel(panel) {
+    panel.replaceChildren();
+    if (!exposureViewingComplete()) {
+      panel.textContent = 'Compare all unlocks after every automatic version has been viewed in the required order.';
+      return;
+    }
+    const legend = document.createElement('div');
+    legend.className = 'segmentation-study-legend';
+    COMPARISON_VERSIONS.forEach((version) => {
+      const item = document.createElement('span');
+      item.className = 'segmentation-study-legend-item';
+      item.style.setProperty('--lane-color', VERSION_COLORS[version]);
+      item.textContent = `${labelFor(version)} · ${laneNote(version) || 'unavailable'}`;
+      legend.appendChild(item);
+    });
+    panel.appendChild(legend);
+
+    const hint = document.createElement('p');
+    hint.className = 'crm-muted';
+    hint.textContent = 'Every version is drawn on the shared time axis above. Click any lane block to play that syllable, or drag across the waveform to loop an A–B slice.';
+    panel.appendChild(hint);
+
+    renderV4Diagnostics(panel);
+    const spans = state.manualSegments.length ? state.manualSegments : spansForComparison('v4');
+    renderPlaybackButtons(panel, spans, state.manualSegments.length ? 'manual' : 'v4');
+  }
+
+  function renderDeltaTable() {
+    const host = elements?.deltas;
+    if (!host) return;
+    host.replaceChildren();
+    const expected = Number(state.task?.targetSyllableCount || 0);
+    const manual = boundariesFor('manual');
+    if (!expected || state.manualSegments.length !== expected || !state.comparison) return;
+    const versions = ['v2', 'v3', 'v4'].filter((version) => versionUnlocked(version) && boundariesFor(version).length === manual.length);
+    if (!versions.length) return;
+
+    const title = document.createElement('p');
+    title.className = 'segmentation-study-deltas-title';
+    title.textContent = 'Automatic boundaries vs your manual boundaries (positive = the automatic boundary is later)';
+    host.appendChild(title);
+
+    const table = document.createElement('table');
+    table.className = 'segmentation-study-delta-table';
+    const head = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    const corner = document.createElement('th');
+    corner.scope = 'col';
+    corner.textContent = 'Boundary';
+    headRow.appendChild(corner);
+    versions.forEach((version) => {
+      const cell = document.createElement('th');
+      cell.scope = 'col';
+      cell.textContent = labelFor(version);
+      cell.style.setProperty('--lane-color', VERSION_COLORS[version]);
+      headRow.appendChild(cell);
+    });
+    head.appendChild(headRow);
+    table.appendChild(head);
+
+    const body = document.createElement('tbody');
+    const errors = new Map(versions.map((version) => [version, []]));
+    manual.forEach((time, index) => {
+      const row = document.createElement('tr');
+      const header = document.createElement('th');
+      header.scope = 'row';
+      header.textContent = index === 0 ? 'Word start' : (index === manual.length - 1 ? 'Word end' : `Boundary ${index}`);
+      row.appendChild(header);
+      versions.forEach((version) => {
+        const value = boundariesFor(version)[index];
+        const cell = document.createElement('td');
+        if (Number.isFinite(value)) {
+          const delta = (value - time) * 1000;
+          errors.get(version).push(Math.abs(delta));
+          cell.textContent = formatSignedMs(delta);
+          if (Math.abs(delta) >= 30) cell.classList.add('is-wide');
+        } else {
+          cell.textContent = '—';
+        }
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    table.appendChild(body);
+
+    const foot = document.createElement('tfoot');
+    const footRow = document.createElement('tr');
+    const footHeader = document.createElement('th');
+    footHeader.scope = 'row';
+    footHeader.textContent = 'Mean absolute error';
+    footRow.appendChild(footHeader);
+    versions.forEach((version) => {
+      const values = errors.get(version);
+      const cell = document.createElement('td');
+      cell.textContent = values.length ? `${Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)} ms` : '—';
+      footRow.appendChild(cell);
+    });
+    foot.appendChild(footRow);
+    table.appendChild(foot);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'segmentation-study-tablewrap';
+    wrapper.appendChild(table);
+    host.appendChild(wrapper);
+  }
+
+  // The single definition of what Save needs. `canSave`, the visible checklist
+  // and save()'s own guard all derive from this, so they cannot drift apart.
+  //
+  // A stored sample was captured in an earlier session, so its raw capture
+  // settings and the study's server-issued exposure order belong to that
+  // session, not to this review. The two save paths validate accordingly:
+  // /tasks/:id/complete (study) requires both; /corpus-samples/:id/manual-reviews
+  // (previous sample) requires neither.
+  function saveRequirements() {
+    const expected = Number(state.task?.targetSyllableCount || 0);
+    const previous = state.mode === 'previous';
+    const requirements = [
+      { label: previous ? 'Sample opened' : 'Word claimed', ok: Boolean(state.task?.taskId) },
+      { label: previous ? 'Recording loaded' : 'Recording captured', ok: Boolean(state.audioBlob) }
+    ];
+    if (!previous) requirements.push({ label: 'Raw capture verified (AEC/NS/AGC off)', ok: captureSettingsReady() });
+    requirements.push(
+      { label: 'Waveform and spectrogram rendered', ok: Boolean(state.visualizationReady) },
+      { label: 'V2/V3/V4 analysis complete', ok: completeComparisonReady() },
+      { label: 'All three automatic versions viewed in order', ok: exposureViewingComplete() },
+      { label: 'Playback confirmed', ok: Boolean(elements?.playbackConfirmed?.checked || state.playbackConfirmed) },
+      { label: `Manual boundaries marked (${state.manualSegments.length}/${expected || '?'})`, ok: expected > 0 && state.manualSegments.length === expected },
+      { label: 'Certainty chosen', ok: Boolean(elements?.certainty?.()?.value) }
+    );
+    return requirements;
+  }
+
+  function outstandingRequirement(requirements = saveRequirements()) {
+    return requirements.find((requirement) => !requirement.ok) || null;
+  }
+
+  function renderSaveChecklist(requirements) {
+    const host = elements?.checklist;
+    if (!host) return;
+    host.replaceChildren();
+    requirements.forEach((requirement) => {
+      const item = document.createElement('li');
+      item.className = `segmentation-study-check${requirement.ok ? ' is-done' : ''}`;
+      const mark = document.createElement('span');
+      mark.className = 'segmentation-study-check-mark';
+      mark.textContent = requirement.ok ? '✓' : '○';
+      mark.setAttribute('aria-hidden', 'true');
+      item.appendChild(mark);
+      const label = document.createElement('span');
+      label.textContent = requirement.label;
+      item.appendChild(label);
+      item.setAttribute('aria-label', `${requirement.label}: ${requirement.ok ? 'done' : 'outstanding'}`);
+      host.appendChild(item);
+    });
+  }
+
+  const STEP_HINTS = Object.freeze([
+    'Step 1 · Claim a word from the shared queue.',
+    'Step 2 · Record one clear pronunciation of the word.',
+    'Step 3 · Run the V2/V3/V4 analysis.',
+    'Step 4 · View each automatic version in the required order.',
+    'Step 5 · Mark the shared boundaries, choose certainty, and save.'
+  ]);
+
+  function renderStepRail() {
+    const hasTask = Boolean(state.task?.taskId);
+    const hasAudio = Boolean(state.audioBlob);
+    const hasAnalysis = completeComparisonReady();
+    const expected = Number(state.task?.targetSyllableCount || 0);
+    const viewed = new Set(state.versionExposureLog.map((entry) => entry.version)).size;
+    const stages = [
+      { key: 'claim', done: hasTask, note: hasTask ? String(state.task.targetWord || '') : '' },
+      { key: 'record', done: hasAudio, note: hasAudio && audioDuration() ? `${audioDuration().toFixed(2)} s` : '' },
+      { key: 'analyze', done: hasAnalysis, note: hasAnalysis ? 'V2/V3/V4 ready' : '' },
+      { key: 'compare', done: exposureViewingComplete(), note: hasAnalysis ? `${viewed}/3 viewed` : '' },
+      { key: 'mark', done: state.manualReviewSaved, note: expected ? `${state.manualSegments.length}/${expected} segments` : '' }
+    ];
+    const pending = stages.findIndex((stage) => !stage.done);
+    const currentIndex = pending === -1 ? stages.length - 1 : pending;
+    if (elements?.steps) {
+      stages.forEach((stage, index) => {
+        const item = elements.steps.querySelector(`[data-step="${stage.key}"]`);
+        if (!item) return;
+        item.classList.toggle('is-done', stage.done);
+        item.classList.toggle('is-current', !stage.done && index === currentIndex);
+        const note = item.querySelector('.segmentation-study-step-note');
+        if (note) note.textContent = stage.note;
+      });
+    }
+    if (elements?.step) {
+      elements.step.textContent = state.mode === 'previous' && currentIndex < 4
+        ? 'Previous sample · review the stored recording and mark boundaries.'
+        : STEP_HINTS[currentIndex];
+    }
   }
 
   function syncManualFromRegion(region, finalize = false) {
@@ -1188,13 +1586,49 @@
     state.manualBoundaries[boundaryIndex] = Number(Math.min(upper, Math.max(lower, candidate)).toFixed(6));
     clampSelectedBoundary();
     rebuildManualSegments();
+    if (!finalize) {
+      // `region-update` fires on every pointermove, so the live pass only
+      // refreshes the lane strip and the count, coalesced to one animation
+      // frame. The full re-render (and the re-snap of the neighbouring region
+      // to the clamped boundary) happens once, on `region-updated`.
+      scheduleLiveManualRender();
+      return;
+    }
     renderPanel('manual');
     updateManualUi();
-    if (finalize) drawRegions('manual');
+    drawRegions('manual');
+  }
+
+  function cancelLiveManualRender() {
+    if (!state.liveManualRaf) return;
+    try { cancelAnimationFrame(state.liveManualRaf); } catch (_) { /* ignore */ }
+    state.liveManualRaf = null;
+  }
+
+  function scheduleLiveManualRender() {
+    if (state.liveManualRaf || typeof requestAnimationFrame !== 'function') return;
+    state.liveManualRaf = requestAnimationFrame(() => {
+      state.liveManualRaf = null;
+      renderLaneStrip();
+      if (elements?.manualCount) {
+        const expected = Number(state.task?.targetSyllableCount || 0);
+        elements.manualCount.textContent = `${state.manualSegments.length} of ${expected} segments · ${state.manualBoundaries.length} boundaries`;
+      }
+    });
+  }
+
+  function updateCompareTabAvailability() {
+    const ready = exposureViewingComplete();
+    if (elements?.compareTab) elements.compareTab.hidden = !ready;
+    if (!ready && state.activeVersion === 'compare') selectVersion('manual', { recordExposure: false });
   }
 
   function selectVersion(version, options = {}) {
     let exposureChanged = false;
+    if (version === 'compare' && !exposureViewingComplete()) {
+      setStatus('Compare all unlocks after every automatic version has been viewed in the required order.', 'warning');
+      return false;
+    }
     if (options.recordExposure !== false && ['v2', 'v3', 'v4'].includes(version) && state.task?.taskId) {
       const alreadyViewed = state.versionExposureLog.some((entry) => entry.version === version);
       if (!alreadyViewed) {
@@ -1221,22 +1655,23 @@
       tab.tabIndex = active ? 0 : -1;
     });
     Object.entries(elements.panels).forEach(([key, panel]) => { if (panel) panel.hidden = key !== version; });
+    // Switching views must not leave a loop from the previous view running.
+    stopPlayback();
     renderPanel(version);
     drawRegions(version);
+    updateCompareTabAvailability();
+    renderStepRail();
     if (elements.manualInstructions) elements.manualInstructions.hidden = version !== 'manual';
     if (exposureChanged) updateButtons();
+    return true;
   }
 
   async function loadWaveform(blob) {
-    destroyVisualization();
-    const attemptId = state.visualizationAttemptId;
-    const isCurrentAttempt = () => state.visualizationAttemptId === attemptId;
     state.visualizationReady = false;
     if (elements.timelineEmpty) {
       elements.timelineEmpty.hidden = false;
       elements.timelineEmpty.textContent = 'Loading waveform…';
     }
-    if (elements.retryVisualization) elements.retryVisualization.hidden = true;
     if (!elements.waveform || !window.WaveSurfer) {
       markVisualizationUnavailable();
       updateButtons();
@@ -1244,87 +1679,65 @@
     }
     try {
       if (!(blob instanceof Blob)) throw new TypeError('Waveform visualization requires the original audio Blob.');
+      if (state.waveSurfer) state.waveSurfer.destroy();
       elements.waveform.replaceChildren();
       elements.spectrogram?.replaceChildren();
       const plugins = [];
-      state.waveSurfer = WaveSurfer.create({ container: elements.waveform, waveColor: '#64748b', progressColor: '#2563eb', height: 96, normalize: true, plugins });
-      const waveSurfer = state.waveSurfer;
+      // Heights come from the stylesheet so the rendered canvases always fill
+      // their containers; a shorter canvas would leave the ghost boundary ticks
+      // extending past the end of the signal they annotate.
+      state.waveSurfer = WaveSurfer.create({ container: elements.waveform, waveColor: '#64748b', progressColor: '#2563eb', height: cssPx('--waveform-height', 140), normalize: true, plugins });
       const RegionsPlugin = WaveSurfer.RegionsPlugin || WaveSurfer.Regions;
       const TimelinePlugin = WaveSurfer.TimelinePlugin || WaveSurfer.Timeline;
       const SpectrogramPlugin = WaveSurfer.SpectrogramPlugin || WaveSurfer.Spectrogram;
       state.regions = RegionsPlugin ? state.waveSurfer.registerPlugin(RegionsPlugin.create()) : null;
+      state.abRegion = null;
+      if (state.regions) {
+        // Dragging across the waveform picks an arbitrary A–B slice to loop.
+        // The threshold is raised from the plugin default of 3px: the same
+        // gesture area is used to click a manual boundary into place, and a
+        // drag past the threshold suppresses the click entirely.
+        try { state.regions.enableDragSelection?.({ color: 'rgba(15,23,42,.14)', drag: true, resize: true }, AB_DRAG_THRESHOLD_PX); } catch (_) { /* ignore */ }
+        // WaveSurfer 7 emits region events from the plugin, not the instance,
+        // and names them `region-update` (live, during the drag) and
+        // `region-updated` (once, on drag end). There is no `region-update-end`.
+        try {
+          state.regions.on?.('region-created', (region) => handleRegionCreated(region));
+          state.regions.on?.('region-update', (region) => handleRegionUpdated(region, false));
+          state.regions.on?.('region-updated', (region) => handleRegionUpdated(region, true));
+        } catch (_) { /* ignore */ }
+      }
       if (TimelinePlugin && elements.timelineRuler) {
         elements.timelineRuler.replaceChildren();
         state.timeline = state.waveSurfer.registerPlugin(TimelinePlugin.create({ container: elements.timelineRuler, height: 20 }));
       }
       if (SpectrogramPlugin && elements.spectrogram) {
         state.spectrogram = state.waveSurfer.registerPlugin(SpectrogramPlugin.create({
-          container: elements.spectrogram, labels: true, height: 128, fftSamples: 512, scale: 'mel', windowFunc: 'hann', frequencyMax: 8000
+          container: elements.spectrogram, labels: true, height: cssPx('--spectrogram-height', 180), fftSamples: 512, scale: 'mel', windowFunc: 'hann', frequencyMax: 8000
         }));
       }
-      let readySettled = false;
-      let visualizationAttemptActive = true;
-      let resolveReady;
-      const readyPromise = new Promise((resolve) => { resolveReady = resolve; });
-      const settleReady = (ready) => {
-        if (readySettled) return;
-        readySettled = true;
-        resolveReady(Boolean(ready));
-      };
-      state.waveSurfer.on('ready', async () => {
-        if (!visualizationAttemptActive || !isCurrentAttempt()) return;
-        const ready = await waitForVisualizationSurfaces();
-        if (!visualizationAttemptActive || !isCurrentAttempt()) return;
-        if (!ready) {
+      state.waveSurfer.on('ready', () => {
+        if (!visualizationSurfacesReady()) {
           markVisualizationUnavailable();
-          settleReady(false);
           updateButtons();
           return;
         }
         state.visualizationReady = true;
         if (elements.timelineEmpty) elements.timelineEmpty.hidden = true;
-        if (elements.retryVisualization) elements.retryVisualization.hidden = true;
         selectVersion(state.activeVersion);
-        updateTimelineUi();
+        updateTransport();
         updateButtons();
-        settleReady(true);
       });
       state.waveSurfer.on('interaction', (time) => {
-        if (!isCurrentAttempt()) return;
-        state.lastWaveInteractionTime = Number(time);
-        state.lastWaveInteractionAt = Date.now();
-        handleTimelineInteraction(Number(time), 'waveform');
+        if (state.activeVersion === 'manual') addManualBoundary(Number(time));
       });
-      state.waveSurfer.on('region-updated', (region) => { if (isCurrentAttempt()) syncManualFromRegion(region); });
-      state.waveSurfer.on('region-update-end', (region) => { if (isCurrentAttempt()) syncManualFromRegion(region, true); });
       state.waveSurfer.on('error', () => {
-        if (!isCurrentAttempt()) return;
-        visualizationAttemptActive = false;
         markVisualizationUnavailable();
-        settleReady(false);
         updateButtons();
       });
-      const loadError = { value: null };
-      const loadPromise = Promise.resolve().then(() => waveSurfer.loadBlob(blob)).catch((error) => { loadError.value = error; return null; });
-      const loadTimeout = new Promise((resolve) => setTimeout(() => resolve('timeout'), VISUALIZATION_READY_TIMEOUT_MS));
-      const loadResult = await Promise.race([loadPromise.then(() => 'loaded'), loadTimeout]);
-      if (!isCurrentAttempt()) return false;
-      if (loadResult === 'timeout' || loadError.value) {
-        visualizationAttemptActive = false;
-        markVisualizationUnavailable();
-        settleReady(false);
-        updateButtons();
-        return false;
-      }
-      const ready = await Promise.race([readyPromise, new Promise((resolve) => setTimeout(() => resolve(false), VISUALIZATION_READY_TIMEOUT_MS))]);
-      if (!isCurrentAttempt()) return false;
-      if (!ready) {
-        visualizationAttemptActive = false;
-        markVisualizationUnavailable();
-      }
-      return Boolean(ready && state.visualizationReady);
+      await state.waveSurfer.loadBlob(blob);
+      return state.visualizationReady;
     } catch (error) {
-      if (!isCurrentAttempt()) return false;
       markVisualizationUnavailable();
       updateButtons();
       return false;
@@ -1381,6 +1794,8 @@
   }
 
   function updateManualUi() {
+    // The lane strip, ghost ticks and delta table are refreshed by
+    // drawRegions(), which every caller of this function also runs.
     const expected = Number(state.task?.targetSyllableCount || 0);
     if (elements.manualCount) elements.manualCount.textContent = `${state.manualSegments.length} of ${expected} segments · ${state.manualBoundaries.length} boundaries`;
     if (elements.manualInstructions) {
@@ -1456,7 +1871,6 @@
       variantProvenance,
       exposureLog: Array.isArray(state.task?.exposureLog) ? state.task.exposureLog : [],
       versionExposureLog: state.versionExposureLog,
-      automaticJudgment: automaticJudgmentMetadata(),
       reviewStatus: elements.certainty?.()?.value === 'uncertain' ? 'uncertain' : 'complete',
       reviewerName: state.operatorName,
       reviewerSessionId: state.sessionId
@@ -1464,9 +1878,14 @@
   }
 
   async function save() {
-    const judgmentReady = state.mode === 'previous' || automaticJudgmentReady();
-    if (!state.task || !state.audioBlob || !state.manualSegments.length || !state.visualizationReady || !completeComparisonReady() || !versionExposureProofReady() || !judgmentReady || !captureSettingsReady() || !(elements.playbackConfirmed?.checked || state.playbackConfirmed)) {
-      setStatus(!state.visualizationReady ? waveformUnavailableMessage() : (!versionExposureProofReady() ? exposureRequirementMessage() : (!judgmentReady ? 'Choose the best automatic version(s), or None acceptable, before saving.' : 'Save requires playback confirmation, verified raw capture settings, and complete V2/V3/V4 analysis.')), 'error');
+    const outstanding = outstandingRequirement();
+    if (outstanding || state.manualReviewSaved) {
+      // Name the first thing that is actually missing rather than restating the
+      // whole contract; the visible checklist shows the rest.
+      const reason = state.manualReviewSaved ? 'this review has already been saved'
+        : (!state.visualizationReady ? waveformUnavailableMessage()
+          : (!exposureViewingComplete() ? exposureRequirementMessage() : `${outstanding.label} is still outstanding`));
+      setStatus(`Save is blocked: ${reason}`, 'error');
       updateButtons();
       return;
     }
@@ -1558,61 +1977,47 @@
       await refresh();
       if (state.mode === 'previous') setStatus('Choose a previous sample from the queue.');
     }));
-    elements.claim.addEventListener('click', () => claimNext());
+    elements.claim.addEventListener('click', claimNext);
     elements.release.addEventListener('click', releaseTask);
     elements.refresh.addEventListener('click', refresh);
     elements.record.addEventListener('click', startRecording);
     elements.stop.addEventListener('click', stopRecording);
     elements.redo.addEventListener('click', redoRecording);
     elements.analyze.addEventListener('click', analyze);
-    elements.save.addEventListener('click', save);
-    elements.retryVisualization?.addEventListener('click', async () => {
-      if (!state.audioBlob) return;
-      setStatus('Retrying waveform and spectrogram visualization…');
-      await loadWaveform(state.audioBlob);
-      if (state.visualizationReady) setStatus('Waveform and spectrogram visualization restored.', 'success');
+    elements.play?.addEventListener('click', togglePlayback);
+    elements.loop?.addEventListener('click', () => {
+      state.loopEnabled = !state.loopEnabled;
+      // Apply the change to whatever is already playing rather than waiting for
+      // the next press.
+      const active = state.activePlayRange;
+      if (active) playRange(active.start, active.end, { loop: state.loopEnabled });
+      else updateTransport();
     });
-    elements.playPause?.addEventListener('click', playPause);
-    elements.setA?.addEventListener('click', () => armTimelinePoint('a'));
-    elements.setB?.addEventListener('click', () => armTimelinePoint('b'));
-    elements.playAB?.addEventListener('click', playAB);
-    elements.loopAB?.addEventListener('click', () => { state.loopAB = !state.loopAB; updateTimelineUi(); });
-    elements.clearAB?.addEventListener('click', clearAB);
+    elements.abClear?.addEventListener('click', clearAbSelection);
     elements.playbackSpeed?.addEventListener('change', () => {
-      const playbackRate = Number(elements.playbackSpeed.value || 1);
-      if (elements.audio) elements.audio.playbackRate = playbackRate;
-      try { state.waveSurfer?.setPlaybackRate?.(playbackRate); } catch (_) { /* native audio remains authoritative */ }
+      if (elements.audio) elements.audio.playbackRate = Number(elements.playbackSpeed.value || 1);
     });
-    elements.waveform?.addEventListener('click', (event) => {
-      const time = timelinePointFromEvent(event, elements.waveform);
-      if (Date.now() - state.lastWaveInteractionAt < 50 && Math.abs(time - Number(state.lastWaveInteractionTime || 0)) < 0.02) return;
-      handleTimelineInteraction(time, 'waveform');
+    elements.ghostToggle?.addEventListener('change', () => {
+      state.showGhosts = Boolean(elements.ghostToggle.checked);
+      renderGhostBoundaries();
     });
-    elements.spectrogram?.addEventListener('click', (event) => handleTimelineInteraction(timelinePointFromEvent(event, elements.spectrogram), 'spectrogram'));
-    elements.audio?.addEventListener('timeupdate', () => {
-      observeNativeTime(Number(elements.audio.currentTime || 0));
-      if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB) && Number(elements.audio.currentTime) >= state.pointB - 0.005) {
-        seekTimelineTime(state.pointA);
-        playNativeAudio();
-      }
-    });
-    elements.audio?.addEventListener('play', updateTimelineUi);
-    elements.audio?.addEventListener('pause', updateTimelineUi);
-    elements.audio?.addEventListener('ended', () => {
-      if (state.loopAB && Number.isFinite(state.pointA) && Number.isFinite(state.pointB)) playAB();
-      else updateTimelineUi();
-    });
+    elements.audio?.addEventListener('pause', updateTransport);
+    elements.audio?.addEventListener('ended', () => { state.activePlayRange = null; updateTransport(); });
+    elements.save.addEventListener('click', save);
     elements.next.addEventListener('click', async () => { state.task = null; resetTaskState(); state.mode = 'record'; await refresh(); });
     elements.tabs.forEach((tab) => {
       tab.addEventListener('click', () => selectVersion(tab.dataset.studyVersion || 'v2'));
       tab.addEventListener('keydown', (event) => {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
-        const index = elements.tabs.indexOf(tab);
+        // A locked "Compare all" tab is hidden and must stay out of the roving
+        // tab order.
+        const reachable = elements.tabs.filter((item) => !item.hidden);
+        const index = Math.max(0, reachable.indexOf(tab));
         const nextIndex = event.key === 'Home' ? 0
-          : (event.key === 'End' ? elements.tabs.length - 1
-            : (index + (event.key === 'ArrowLeft' ? -1 : 1) + elements.tabs.length) % elements.tabs.length);
-        const next = elements.tabs[nextIndex];
+          : (event.key === 'End' ? reachable.length - 1
+            : (index + (event.key === 'ArrowLeft' ? -1 : 1) + reachable.length) % reachable.length);
+        const next = reachable[nextIndex];
         next?.focus();
         if (next) selectVersion(next.dataset.studyVersion || 'v2');
       });
@@ -1627,18 +2032,8 @@
       }
     });
     document.querySelectorAll('input[name="segmentation-study-certainty"]').forEach((input) => input.addEventListener('change', updateButtons));
-    document.querySelectorAll('[data-automatic-judgment-version], [data-automatic-judgment-none]').forEach((input) => input.addEventListener('change', () => {
-      if (input.dataset.automaticJudgmentNone === 'true' && input.checked) {
-        document.querySelectorAll('[data-automatic-judgment-version]').forEach((item) => { item.checked = false; });
-      } else if (input.dataset.automaticJudgmentVersion && input.checked && elements.automaticJudgmentNone) {
-        elements.automaticJudgmentNone.checked = false;
-      }
-      if (!versionExposureProofReady()) input.checked = false;
-      else state.automaticJudgmentJudgedAt = new Date().toISOString();
-      updateButtons();
-    }));
     elements.playbackConfirmed?.addEventListener('change', () => { state.playbackConfirmed = elements.playbackConfirmed.checked; updateButtons(); });
-    window.addEventListener('pagehide', () => { stopPlayback(); destroyVisualization(); stopHeartbeat(); cleanupRecording(); });
+    window.addEventListener('pagehide', () => { stopHeartbeat(); cleanupRecording(); stopPlayback(); cancelLiveManualRender(); state.waveSurfer?.destroy?.(); });
   }
 
   async function init() {

@@ -310,6 +310,52 @@
   let boundProgressModalKeyDown = null;
   let isProgressModalListenersInitialized = false;
 
+  /**
+   * Panels carry data-tab-panel so tab -> panel stays a direct match. The
+   * previous two-way string ternary silently broke once a third tab existed.
+   */
+  const PROGRESS_TABS = ['vocabulary', 'question-mastery', 'pte-attempts'];
+
+  /** Legacy tab names, kept working for call sites in index.html / script.js. */
+  const PROGRESS_TAB_ALIASES = {
+    'vocab-progress': 'vocabulary',
+    'vocab': 'vocabulary',
+    'attempts': 'pte-attempts'
+  };
+
+  function normalizeProgressTab(tab) {
+    const resolved = PROGRESS_TAB_ALIASES[tab] || tab;
+    return PROGRESS_TABS.includes(resolved) ? resolved : PROGRESS_TABS[0];
+  }
+
+  /** Which question database the Question Mastery tab is showing. */
+  let questionMasteryMode = null;
+
+  function getQuestionMasteryMode() {
+    if (!questionMasteryMode) {
+      // First open: follow whichever practice tab the user already has open.
+      const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
+      questionMasteryMode = isSpeakActive ? 'speak' : 'type';
+    }
+    return questionMasteryMode;
+  }
+
+  function syncQuestionMasteryControl() {
+    const mode = getQuestionMasteryMode();
+    document.querySelectorAll('.tp-segmented-btn[data-qm-mode]').forEach(btn => {
+      const isActive = btn.getAttribute('data-qm-mode') === mode;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+  }
+
+  function renderQuestionMasteryTab() {
+    syncQuestionMasteryControl();
+    if (window.updateProgressPanel) {
+      window.updateProgressPanel(getQuestionMasteryMode());
+    }
+  }
+
   function initProgressModalListeners(modal) {
     if (isProgressModalListenersInitialized) return;
 
@@ -331,11 +377,19 @@
     }
 
     // Bind progress tab buttons
-    const tabButtons = modal.querySelectorAll('.progress-tab-btn');
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const tab = e.target.getAttribute('data-tab');
-        switchProgressTab(tab);
+    modal.querySelectorAll('.progress-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchProgressTab(btn.getAttribute('data-tab'));
+      });
+    });
+
+    // Type / Speak toggle on the Question Mastery tab
+    modal.querySelectorAll('.tp-segmented-btn[data-qm-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nextMode = btn.getAttribute('data-qm-mode');
+        if (nextMode === questionMasteryMode) return;
+        questionMasteryMode = nextMode;
+        renderQuestionMasteryTab();
       });
     });
 
@@ -346,36 +400,204 @@
     const modal = document.getElementById('progress-attempts-modal');
     if (!modal) return;
 
-    const tabButtons = modal.querySelectorAll('.progress-tab-btn');
-    const tabContents = modal.querySelectorAll('.progress-tab-content');
+    const active = normalizeProgressTab(tab);
 
-    tabButtons.forEach(btn => {
-      if (btn.getAttribute('data-tab') === tab) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
+    modal.querySelectorAll('.progress-tab-btn').forEach(btn => {
+      const isActive = btn.getAttribute('data-tab') === active;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+      btn.tabIndex = isActive ? 0 : -1;
     });
 
-    tabContents.forEach(content => {
-      if (content.id === `progress-tab-content-${tab === 'vocab-progress' ? 'vocab' : 'attempts'}`) {
-        content.classList.add('active');
-        content.style.display = 'block';
-      } else {
-        content.classList.remove('active');
-        content.style.display = 'none';
-      }
+    modal.querySelectorAll('.progress-tab-content').forEach(content => {
+      const isActive = content.getAttribute('data-tab-panel') === active;
+      content.classList.toggle('active', isActive);
+      content.style.display = isActive ? 'block' : 'none';
     });
 
-    // Trigger reload when tab changes
-    if (tab === 'vocab-progress') {
-      if (window.updateProgressPanel) {
-        const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
-        window.updateProgressPanel(isSpeakActive ? 'speak' : 'type');
-      }
+    if (active === 'vocabulary') {
+      renderVocabularyTab();
+    } else if (active === 'question-mastery') {
+      renderQuestionMasteryTab();
     } else {
       renderLearnerHistory();
     }
+  }
+
+  /* ============================================================
+     Vocabulary tab - real SRS data
+     ============================================================ */
+
+  /** Tier rows for the collection bar, in progression order. */
+  const VOCAB_TIERS = [
+    { key: 'new', label: 'New' },
+    { key: 'learning', label: 'Learning' },
+    { key: 'reviewing', label: 'Reviewing' },
+    { key: 'relearning', label: 'Relearning' },
+    { key: 'mastered', label: 'Mastered' }
+  ];
+
+  /**
+   * Cumulative "words mastered over time" polyline.
+   * This is the only genuine time series the SRS keeps - cards themselves are
+   * stored last-state-only, so nothing else can be plotted against time.
+   * Hidden below two points, where a line would be meaningless.
+   */
+  function buildMasterySparkline(timeline) {
+    if (!Array.isArray(timeline) || timeline.length < 2) return '';
+
+    const points = timeline
+      .map(entry => new Date(entry.masteredAt).getTime())
+      .filter(t => Number.isFinite(t))
+      .sort((a, b) => a - b);
+    if (points.length < 2) return '';
+
+    const first = points[0];
+    const last = points[points.length - 1];
+    const span = Math.max(last - first, 1);
+    const total = points.length;
+
+    const coords = points.map((t, i) => {
+      const x = ((t - first) / span) * 100;
+      const y = 100 - (((i + 1) / total) * 100);
+      return x.toFixed(2) + ',' + y.toFixed(2);
+    });
+    // Anchor the fill to the baseline so the area closes cleanly.
+    const areaPoints = '0,100 ' + coords.join(' ') + ' 100,100';
+
+    const firstLabel = new Date(first).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const lastLabel = new Date(last).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const ariaLabel = total + ' words mastered between ' + firstLabel + ' and ' + lastLabel;
+
+    return [
+      '<section class="tp-section">',
+      '<h4 class="tp-section-title">Words mastered over time</h4>',
+      '<div class="tp-spark" role="img" aria-label="' + escapeHtml(ariaLabel) + '">',
+      '<svg class="tp-spark-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">',
+      '<polygon class="tp-spark-area" points="' + areaPoints + '"></polygon>',
+      '<polyline class="tp-spark-line" points="' + coords.join(' ') + '" vector-effect="non-scaling-stroke"></polyline>',
+      '</svg>',
+      '</div>',
+      '<div class="tp-spark-axis">',
+      '<span>' + escapeHtml(firstLabel) + '</span>',
+      '<span>' + escapeHtml(lastLabel) + '</span>',
+      '</div>',
+      '</section>'
+    ].join('');
+  }
+
+  function buildVocabTierBar(tiers) {
+    const total = Number(tiers.total) || 0;
+    if (total <= 0) return '';
+
+    const rows = VOCAB_TIERS
+      .map(tier => ({ key: tier.key, label: tier.label, count: Number(tiers[tier.key]) || 0 }))
+      .filter(tier => tier.count > 0);
+    if (!rows.length) return '';
+
+    const segments = rows.map(tier =>
+      '<div class="tp-bar-segment" data-tier="' + tier.key + '" style="width: '
+      + ((tier.count / total) * 100).toFixed(2) + '%;"></div>').join('');
+
+    const legend = rows.map(tier =>
+      '<li class="tp-legend-item">'
+      + '<span class="tp-legend-dot" data-tier="' + tier.key + '"></span>'
+      + '<span class="tp-legend-label">' + tier.label + '</span>'
+      + '<span class="tp-legend-value">' + tier.count + '</span>'
+      + '</li>').join('');
+
+    return [
+      '<section class="tp-section">',
+      '<h4 class="tp-section-title">Collection</h4>',
+      '<div class="tp-bar" role="img" aria-label="Vocabulary collection by review stage">' + segments + '</div>',
+      '<ul class="tp-legend">' + legend + '</ul>',
+      '</section>'
+    ].join('');
+  }
+
+  function buildVocabEmptyState(title, hint) {
+    return '<div class="tp-empty">'
+      + '<p class="tp-empty-title">' + escapeHtml(title) + '</p>'
+      + '<p class="tp-empty-hint">' + escapeHtml(hint) + '</p>'
+      + '</div>';
+  }
+
+  /**
+   * Renders the Vocabulary tab from live SRS state.
+   * Deliberately reuses readPracticeState() - the same helper behind the Vocab
+   * Book practice dashboard - so the two surfaces can never disagree.
+   */
+  async function renderVocabularyTab() {
+    const mount = document.getElementById('tp-vocabulary-mount');
+    if (!mount) return;
+
+    let state = null;
+    try {
+      const mod = await import('./vocab/vocab-practice-view.js');
+      state = mod.readPracticeState();
+    } catch (err) {
+      console.warn('[Progress] Could not load vocabulary state:', err);
+    }
+
+    if (!state || !state.available) {
+      mount.innerHTML = buildVocabEmptyState(
+        'Vocabulary review is not available yet',
+        'Open the Vocab Book and bookmark a few words to start tracking mastery.'
+      );
+      return;
+    }
+
+    if (!state.totalWords) {
+      mount.innerHTML = buildVocabEmptyState(
+        'No words tracked yet',
+        'Bookmark words while you practise - they show up here once they enter review.'
+      );
+      return;
+    }
+
+    const srs = window.SRSReview;
+    const tiers = srs && srs.getTierCounts ? srs.getTierCounts() : {};
+    const timeline = srs && srs.getMasteryTimeline ? srs.getMasteryTimeline() : [];
+
+    const dueLine = state.dueCount > 0
+      ? '<strong>' + state.dueCount + '</strong> ' + (state.dueCount === 1 ? 'word' : 'words') + ' due now'
+      : escapeHtml(state.entryLabel);
+
+    const nextLine = state.dueCount === 0
+      ? '<p class="tp-hero-next">Next review: <strong>' + escapeHtml(state.nextLabel) + '</strong></p>'
+      : '';
+
+    const hero = [
+      '<section class="tp-hero">',
+      // Caption sits below the disc, not inside it: near the bottom of a circle
+      // the available chord is too narrow for the word to fit without clipping.
+      '<div class="tp-ring-wrap">',
+      '<div class="tp-ring" style="--tp-ring-p:' + state.masteryPct + '" role="img"',
+      ' aria-label="' + state.masteryPct + '% of your words are mastered">',
+      '<span class="tp-ring-value">' + state.masteryPct + '<span class="tp-ring-unit">%</span></span>',
+      '</div>',
+      '<span class="tp-ring-caption">mastered</span>',
+      '</div>',
+      '<div class="tp-hero-copy">',
+      '<p class="tp-hero-due">' + dueLine + '</p>',
+      nextLine,
+      '</div>',
+      '</section>'
+    ].join('');
+
+    const statRow = [
+      '<section class="tp-section">',
+      '<h4 class="tp-section-title">Stats</h4>',
+      '<div class="tp-stat-row">',
+      '<div class="tp-stat"><span class="tp-stat-value">' + state.streak + '</span><span class="tp-stat-label">Day streak</span></div>',
+      '<div class="tp-stat"><span class="tp-stat-value">' + state.longestStreak + '</span><span class="tp-stat-label">Best streak</span></div>',
+      '<div class="tp-stat"><span class="tp-stat-value">' + state.totalWords + '</span><span class="tp-stat-label">Words tracked</span></div>',
+      '<div class="tp-stat"><span class="tp-stat-value">' + state.mastered + '</span><span class="tp-stat-label">Mastered</span></div>',
+      '</div>',
+      '</section>'
+    ].join('');
+
+    mount.innerHTML = hero + statRow + buildVocabTierBar(tiers) + buildMasterySparkline(timeline);
   }
 
   function closeProgressModal() {
@@ -392,7 +614,7 @@
     }
   }
 
-  function openProgressModal(defaultTab = 'vocab-progress') {
+  function openProgressModal(defaultTab = 'vocabulary') {
     const modal = document.getElementById('progress-attempts-modal');
     if (!modal) return;
 
@@ -460,16 +682,15 @@
   function installHistoryAutoRender() {
     const schedule = () => {
       const modal = document.getElementById('progress-attempts-modal');
-      if (modal && modal.style.display !== 'none') {
-        const activeTab = modal.querySelector('.progress-tab-btn.active')?.getAttribute('data-tab');
-        if (activeTab === 'vocab-progress') {
-          if (window.updateProgressPanel) {
-            const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
-            window.updateProgressPanel(isSpeakActive ? 'speak' : 'type');
-          }
-        } else if (activeTab === 'pte-attempts') {
-          renderLearnerHistory();
-        }
+      if (!modal || modal.style.display === 'none') return;
+
+      const activeTab = modal.querySelector('.progress-tab-btn.active')?.getAttribute('data-tab');
+      if (activeTab === 'vocabulary') {
+        renderVocabularyTab();
+      } else if (activeTab === 'question-mastery') {
+        renderQuestionMasteryTab();
+      } else if (activeTab === 'pte-attempts') {
+        renderLearnerHistory();
       }
     };
     window.PracticeScopeManager?.subscribe?.(() => schedule());

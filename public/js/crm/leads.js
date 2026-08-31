@@ -117,7 +117,7 @@ window.CrmLeads = (function () {
         if (targetInputZalo) targetInputZalo.value = String(lead?.zalo || '');
         if (targetInputFacebook) targetInputFacebook.value = String(lead?.facebook || '');
         if (targetInputFacebookProfileUrl) targetInputFacebookProfileUrl.value = String(lead?.facebookProfileUrl || '');
-        if (targetInputFacebookPersonalOwner) targetInputFacebookPersonalOwner.value = String(lead?.facebookPersonalOwner || 'Nam');
+        if (targetInputFacebookPersonalOwner) targetInputFacebookPersonalOwner.value = String(lead?.facebookPersonalOwner || '');
         if (targetInputSource) targetInputSource.value = String(lead?.source || '');
         if (targetInputAgentSource) targetInputAgentSource.value = String(lead?.agentSourceId || '');
         if (targetInputStage) targetInputStage.value = String(lead?.stage || 'new');
@@ -169,7 +169,7 @@ window.CrmLeads = (function () {
             email: String(lead?.email || '').trim(),
             zalo: String(lead?.zalo || '').trim(),
             facebook,
-            facebookPersonalOwner: String(lead?.facebookPersonalOwner || 'Nam').trim(),
+            facebookPersonalOwner: String(lead?.facebookPersonalOwner || '').trim() || null,
             acquisitionSource: String(lead?.source || '').trim(),
             agentSourceId: String(lead?.agentSourceId || '').trim(),
             lifecycleStage: 'potential',

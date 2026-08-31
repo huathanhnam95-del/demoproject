@@ -1448,6 +1448,9 @@
   function getModeMeta(mode) {
     return getResolvedModeMeta(mode) || null;
   }
+  // Exposed so other modules (e.g. the Vocab Book list) can render human mode
+  // labels from this registry instead of keeping their own copy that drifts.
+  window.getModeMeta = getModeMeta;
 
   function getSkillForMode(mode) {
     return getModeMeta(mode)?.skill || null;
@@ -2502,11 +2505,11 @@
       // Reset replay counter
       window.typeReplayCount = 0;
 
-      // Reset play button state
+      // Reset play button state (hidden — new wfd-audio player replaces it visually)
       const playBtn = document.getElementById('play-btn');
       if (playBtn) {
         playBtn.disabled = false;
-        playBtn.style.display = 'inline-block'; // Ensure it's visible
+        playBtn.style.display = 'none';
         playBtn.title = 'Play audio';
       }
 
@@ -3159,7 +3162,8 @@
     // Only show for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     const guestNotice = document.getElementById('progress-guest-notice');
-    const progressPanelContent = document.getElementById('progress-panel-content') || document.getElementById('progress-tab-content-vocab');
+    const progressPanelContent = document.getElementById('progress-tab-content-question-mastery')
+      || document.getElementById('progress-panel-content');
 
     // Toggle guest mode class for blur effect
     if (progressPanelContent) {
@@ -3170,21 +3174,23 @@
       guestNotice.style.display = isLoggedIn ? 'none' : 'block';
     }
 
+    // Mode label is set before the guest early-return: the Type/Speak toggle
+    // must still reflect the chosen mode for guests, who otherwise bail out
+    // below with every count zeroed.
+    const modeLabel = document.getElementById('progress-mode-label');
+    if (modeLabel) {
+      modeLabel.textContent = mode === 'type' ? 'Type Mode' : 'Speak Mode';
+    }
+
     // Get total questions for this mode
     const database = mode === 'type' ? typeDatabase : speakDatabase;
     const totalQuestions = database.length;
 
     if (!isLoggedIn) {
       // Reset counts for guests - all questions are "not started"
-      updateTierCounts(0, 0, 0);
+      updateTierCounts(0, 0, 0, totalQuestions, totalQuestions);
       updateDistribution({ notStarted: totalQuestions, inProgress: 0, completed: 0, consolidated: 0, mastered: 0 }, totalQuestions);
       return;
-    }
-
-    // Update mode label
-    const modeLabel = document.getElementById('progress-mode-label');
-    if (modeLabel) {
-      modeLabel.textContent = mode === 'type' ? 'Type Mode' : 'Speak Mode';
     }
 
     // Count all states from cache
@@ -3219,7 +3225,7 @@
     });
 
     // Update UI
-    updateTierCounts(completedCount, consolidatedCount, masteredCount);
+    updateTierCounts(completedCount, consolidatedCount, masteredCount, totalQuestions, notStartedCount);
 
     // Update distribution bar and pie chart
     const stateCounts = {
@@ -3239,25 +3245,24 @@
   /**
    * Update tier count display
    */
-  function updateTierCounts(completed, consolidated, mastered) {
-    const completedEl = document.getElementById('completed-count');
-    const consolidatedEl = document.getElementById('consolidated-count');
-    const masteredEl = document.getElementById('mastered-count');
+  function updateTierCounts(completed, consolidated, mastered, total, notStarted) {
+    setText('completed-count', completed);
+    setText('consolidated-count', consolidated);
+    setText('mastered-count', mastered);
 
-    if (completedEl) completedEl.textContent = completed;
-    if (consolidatedEl) consolidatedEl.textContent = consolidated;
-    if (masteredEl) masteredEl.textContent = mastered;
+    // Total / Not started carry the numbers the removed donut centre used to.
+    if (total !== undefined) setText('tp-total-count', total);
+    if (notStarted !== undefined) setText('tp-not-started-count', notStarted);
   }
 
   /**
-   * Update distribution UI (bar and pie chart)
-   * 
+   * Update distribution UI (stacked bar + legend)
+   *
    * @param {Object} stateCounts - { notStarted, inProgress, completed, consolidated, mastered }
    * @param {number} total - Total number of questions
    */
   function updateDistribution(stateCounts, total) {
     updateTierDistributionBar(stateCounts, total);
-    updateDistributionPieChart(stateCounts, total);
   }
 
   /**
@@ -3287,106 +3292,22 @@
     if (barCompleted) barCompleted.style.width = `${completedPct}%`;
     if (barConsolidated) barConsolidated.style.width = `${consolidatedPct}%`;
     if (barMastered) barMastered.style.width = `${masteredPct}%`;
+
+    // Legend counts used to be written by the donut renderer; the bar owns
+    // them now so the two can never disagree.
+    setText('tp-legend-not-started', stateCounts.notStarted);
+    setText('tp-legend-in-progress', stateCounts.inProgress);
+    setText('tp-legend-completed', stateCounts.completed);
+    setText('tp-legend-consolidated', stateCounts.consolidated);
+    setText('tp-legend-mastered', stateCounts.mastered);
   }
 
-  /**
-   * Update distribution pie chart
-   * Renders SVG pie chart with all 5 states
-   * 
-   * @param {Object} stateCounts - { notStarted, inProgress, completed, consolidated, mastered }
-   * @param {number} total - Total number of questions
-   */
-  function updateDistributionPieChart(stateCounts, total) {
-    const pieSvg = document.getElementById('distribution-pie');
-    const pieTotalCount = document.getElementById('pie-total-count');
-
-    if (!pieSvg) return;
-
-    // Update total count in center
-    if (pieTotalCount) {
-      pieTotalCount.textContent = total;
-    }
-
-    // Define colors for each state
-    const stateColors = {
-      notStarted: '#6b7280',
-      inProgress: '#7c3aed',
-      completed: '#f59e0b',
-      consolidated: '#3b82f6',
-      mastered: '#22c55e'
-    };
-
-    // State order for rendering (reversed so mastered is on top visually)
-    const stateOrder = ['notStarted', 'inProgress', 'completed', 'consolidated', 'mastered'];
-
-    // Calculate percentages and update legend
-    const percentages = {};
-    stateOrder.forEach(state => {
-      const count = stateCounts[state] || 0;
-      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-      percentages[state] = pct;
-
-      // Update legend
-      const legendEl = document.getElementById(`pie-legend-${state.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
-      if (legendEl) {
-        legendEl.textContent = `${pct}% (${count})`;
-      }
-    });
-
-    // Generate SVG paths for pie chart
-    // Using stroke-dasharray technique for donut chart
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-
-    // Clear existing paths
-    pieSvg.innerHTML = '';
-
-    // Add background circle
-    const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    bgCircle.setAttribute('cx', '50');
-    bgCircle.setAttribute('cy', '50');
-    bgCircle.setAttribute('r', String(radius));
-    bgCircle.setAttribute('fill', 'none');
-    bgCircle.setAttribute('stroke', '#e5e7eb');
-    bgCircle.setAttribute('stroke-width', '20');
-    pieSvg.appendChild(bgCircle);
-
-    // Calculate cumulative offset for each segment
-    let cumulativePercent = 0;
-
-    // Render segments in order
-    stateOrder.forEach(state => {
-      const count = stateCounts[state] || 0;
-      if (count === 0) return;
-
-      const percent = (count / total) * 100;
-      const dashLength = (percent / 100) * circumference;
-      const dashOffset = (cumulativePercent / 100) * circumference;
-
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', '50');
-      circle.setAttribute('cy', '50');
-      circle.setAttribute('r', String(radius));
-      circle.setAttribute('fill', 'none');
-      circle.setAttribute('stroke', stateColors[state]);
-      circle.setAttribute('stroke-width', '20');
-      circle.setAttribute('stroke-dasharray', `${dashLength} ${circumference}`);
-      circle.setAttribute('stroke-dashoffset', String(-dashOffset));
-      circle.style.transition = 'stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease';
-
-      pieSvg.appendChild(circle);
-
-      cumulativePercent += percent;
-    });
-
-    // Add center circle (white) to create donut effect
-    const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    centerCircle.setAttribute('cx', '50');
-    centerCircle.setAttribute('cy', '50');
-    centerCircle.setAttribute('r', '30');
-    centerCircle.setAttribute('fill', '#ffffff');
-    pieSvg.appendChild(centerCircle);
+  /** Write a number into an element by id, if that element exists. */
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
   }
+
 
   /**
    * Update next goal hint message
@@ -3900,6 +3821,88 @@
       }
     });
   }
+
+  // WFD SST-style Audio Player Integration
+  (function initWfdPlayer() {
+    const wfdPlayBtn = document.getElementById('wfd-play-btn');
+    const wfdPlayIcon = document.getElementById('wfd-play-icon');
+    const wfdPlayLabel = document.getElementById('wfd-play-label');
+    const wfdProgressFill = document.getElementById('wfd-progress-fill');
+    const wfdSeek = document.getElementById('wfd-seek');
+    const wfdAudioTime = document.getElementById('wfd-audio-time');
+    const wfdVolume = document.getElementById('wfd-volume');
+
+    if (!wfdPlayBtn || !audio) return;
+
+    function fmtTime(s) {
+      if (!s || !Number.isFinite(s)) return '00:00';
+      return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    }
+
+    function updateWfdProgress() {
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+      const pct = Math.min(100, (audio.currentTime / audio.duration) * 100);
+      if (wfdProgressFill) wfdProgressFill.style.width = `${pct}%`;
+      if (wfdSeek) wfdSeek.value = String(pct);
+      if (wfdAudioTime) wfdAudioTime.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+    }
+
+    audio.addEventListener('timeupdate', updateWfdProgress);
+    audio.addEventListener('loadedmetadata', updateWfdProgress);
+
+    audio.addEventListener('play', () => {
+      if (wfdPlayIcon) wfdPlayIcon.textContent = 'pause';
+      if (wfdPlayLabel) wfdPlayLabel.textContent = 'Pause';
+    });
+
+    audio.addEventListener('pause', () => {
+      if (wfdPlayIcon) wfdPlayIcon.textContent = 'play_arrow';
+      if (wfdPlayLabel) wfdPlayLabel.textContent = 'Play';
+    });
+
+    audio.addEventListener('ended', () => {
+      if (wfdPlayIcon) wfdPlayIcon.textContent = 'play_arrow';
+      if (wfdPlayLabel) wfdPlayLabel.textContent = 'Play';
+      if (wfdProgressFill) wfdProgressFill.style.width = '0';
+      if (wfdSeek) wfdSeek.value = '0';
+      if (wfdAudioTime) wfdAudioTime.textContent = `00:00 / ${fmtTime(audio.duration)}`;
+    });
+
+    wfdPlayBtn.addEventListener('click', () => {
+      if (!audio.src) return;
+      if (!audio.paused) {
+        audio.pause();
+      } else if (audio.currentTime > 0.1 && !audio.ended) {
+        audio.volume = Number(wfdVolume?.value ?? 1);
+        audio.play().catch(() => {});
+      } else {
+        audio.volume = Number(wfdVolume?.value ?? 1);
+        playBtn.click();
+      }
+    });
+
+    if (wfdSeek) {
+      wfdSeek.addEventListener('input', () => {
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+        audio.currentTime = (Number(wfdSeek.value) / 100) * audio.duration;
+        updateWfdProgress();
+      });
+    }
+
+    if (wfdVolume) {
+      wfdVolume.addEventListener('input', () => {
+        audio.volume = Number(wfdVolume.value);
+      });
+    }
+
+    window._resetWfdPlayer = function () {
+      if (wfdProgressFill) wfdProgressFill.style.width = '0';
+      if (wfdSeek) wfdSeek.value = '0';
+      if (wfdAudioTime) wfdAudioTime.textContent = '00:00 / 00:00';
+      if (wfdPlayIcon) wfdPlayIcon.textContent = 'play_arrow';
+      if (wfdPlayLabel) wfdPlayLabel.textContent = 'Play';
+    };
+  })();
 
   // Hint Button Logic
   function updatePopoverAvailability() {
@@ -8556,7 +8559,7 @@
       if (checkBtn) checkBtn.style.display = "none";
       if (retryBtn) retryBtn.style.display = "none";
       if (input) input.disabled = true;
-      if (playBtn) playBtn.style.display = "inline-block"; // Reset Play button
+      if (playBtn) playBtn.style.display = "none"; // Hidden — new wfd-audio player replaces it
     } else {
       if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
       if (retryBtnSpeak) retryBtnSpeak.style.display = "none";
@@ -9474,6 +9477,8 @@
         if (timesLeft === 0) {
           replayBadge.classList.add('limit-reached');
           if (playBtn) playBtn.style.display = 'none';
+          const wfdBtn = document.getElementById('wfd-play-btn');
+          if (wfdBtn) wfdBtn.disabled = true;
         }
       }
     }
@@ -9543,6 +9548,8 @@
     if (input) input.disabled = true;
     if (checkBtn) checkBtn.style.display = "none";
     if (playBtn) playBtn.style.display = "none";
+    const wfdBtnChk = document.getElementById('wfd-play-btn');
+    if (wfdBtnChk) wfdBtnChk.disabled = true;
     if (retryBtn) retryBtn.style.display = "inline-block";
 
     // Grammar check: capitalization and period
@@ -9601,7 +9608,9 @@
           }
         }
 
-        playBtn.style.display = (timesLeft === null || timesLeft > 0) ? 'inline-block' : 'none';
+        playBtn.style.display = 'none';
+        const wfdBtn = document.getElementById('wfd-play-btn');
+        if (wfdBtn) wfdBtn.disabled = (timesLeft !== null && timesLeft <= 0);
       }
 
       // Hide hint controls and reset hint state for new attempt
@@ -10848,6 +10857,11 @@
     }
   }
   window.toggleProgressPanel = toggleProgressPanel;
+
+  // The progress modal lives outside this IIFE and re-renders the Question
+  // Mastery tab through this hook (tab switch, Type/Speak toggle, auth change).
+  // Without the export the call silently no-ops.
+  window.updateProgressPanel = updateProgressPanel;
 
   // Defer mobile toolbar event listener attachment
   // The toolbar HTML is placed at the end of body, after script.js

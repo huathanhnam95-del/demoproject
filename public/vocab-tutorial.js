@@ -43,7 +43,9 @@
                     }
                 },
                 {
-                    target: '.vocab-section:first-child',
+                    // Explicit id, not ':first-child' — a positional selector silently
+                    // retargets this step if the panel sections are ever reordered.
+                    target: '#vocab-section-bookmarked',
                     icon: '📌',
                     title: 'Bookmarked Words',
                     text: 'Words you <strong>manually save</strong> appear here. Add any word you want to remember by clicking the + button!',
@@ -51,15 +53,18 @@
                     nextLabel: 'Got It →',
                     interactive: false,
                     beforeShow: () => {
-                        // Ensure panel is open
+                        // Ensure panel is open. The panel's open class is 'expanded'
+                        // (see vocab-book.js togglePanel / style.css .vocab-panel-side.expanded);
+                        // this used to add 'open', which no stylesheet matches, so the
+                        // panel stayed shut and the step spotlit a hidden element.
                         const panel = document.getElementById('vocab-panel-side');
-                        if (panel && !panel.classList.contains('open')) {
-                            panel.classList.add('open');
+                        if (panel && !panel.classList.contains('expanded')) {
+                            panel.classList.add('expanded');
                         }
                     }
                 },
                 {
-                    target: '.vocab-section:last-child',
+                    target: '#vocab-section-missed',
                     icon: '⚠️',
                     title: 'Frequently Missed',
                     text: 'Words you miss <strong>3+ times</strong> during practice are automatically tracked here. No word slips through the cracks!',
@@ -869,17 +874,23 @@
 
         Object.entries(toggleIds).forEach(([toggleId, tutorialId]) => {
             const toggle = document.getElementById(toggleId);
-            if (toggle) {
-                // Set initial state
-                const prefs = getReplayPreferences();
-                toggle.checked = prefs[tutorialId] === true;
+            if (!toggle) return;
 
-                // Listen for changes
-                toggle.addEventListener('change', () => {
-                    setReplayEnabled(tutorialId, toggle.checked);
-                    Logger.log(`[VocabTutorial] Replay ${tutorialId}: ${toggle.checked}`);
-                });
-            }
+            // Always refresh the checked state — the toggle may have just been
+            // re-rendered, and stored preferences can change between renders.
+            const prefs = getReplayPreferences();
+            toggle.checked = prefs[tutorialId] === true;
+
+            // Bind once per element. This function doubles as the rebind hook for
+            // lazily-rendered surfaces (the Vocab Practice tab), so it must be safe
+            // to call repeatedly without stacking duplicate change listeners.
+            if (toggle.dataset.replayBound === 'true') return;
+            toggle.dataset.replayBound = 'true';
+
+            toggle.addEventListener('change', () => {
+                setReplayEnabled(tutorialId, toggle.checked);
+                Logger.log(`[VocabTutorial] Replay ${tutorialId}: ${toggle.checked}`);
+            });
         });
     }
 
@@ -909,6 +920,10 @@
         // Replay preferences
         getReplayPreferences,
         setReplayEnabled,
+        // Re-wire the #tutorial-replay-* checkboxes after they are (re)rendered.
+        // The Vocab Practice tab renders lazily, so the DOM-ready pass alone would
+        // leave the toggles inert. Idempotent — safe to call after every render.
+        rebindReplayToggles: initReplayToggles,
 
         // Tutorial starters
         startVocabBookIntro,

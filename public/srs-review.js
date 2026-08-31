@@ -137,6 +137,9 @@ const SRSReview = (function () {
     }
     let pendingSave = null;
     const GUEST_USER_ID = 'guest';
+    // In-session drill types. 'cloze' additionally requires a maskable example sentence,
+    // so it is only ever offered when canDoCloze is true for the current card.
+    const REVIEW_MODES = ['listen', 'speak', 'cloze'];
     const IS_LOCAL_HOST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
     if (IS_LOCAL_HOST) {
@@ -248,6 +251,10 @@ const SRSReview = (function () {
             currentAlgorithm,
             isEarlyReview: reviewSession.isEarlyReview === true,
             currentIndex: reviewSession.currentIndex,
+            // Which drill is on screen ('listen' | 'speak' | 'cloze'), and which one
+            // the caller pinned via startReviewSession({ mode }), if any.
+            currentMode: reviewSession.currentMode || null,
+            requestedMode: reviewSession.requestedMode || null,
             currentWord: currentWord
                 ? normalizeStoredCard(currentWord.lemma || currentWord.originalWord || '', currentWord)
                 : null,
@@ -1770,7 +1777,22 @@ const SRSReview = (function () {
      * Start a review session
      * @param {boolean} forceEarly - If true, skip due check and review all words
      */
-    async function startReviewSession(forceEarly = false) {
+    /**
+     * Start a review session.
+     *
+     * @param {boolean|{forceEarly?: boolean, mode?: 'listen'|'speak'|'cloze'}} optionsOrForceEarly
+     *   Legacy boolean form (forceEarly) is still supported. The object form adds
+     *   `mode`, which pins every card in the session to one drill type instead of
+     *   letting the weighted picker choose. See selectReviewMode() for the fallback
+     *   rule when a card's allowedModes excludes the requested mode.
+     */
+    async function startReviewSession(optionsOrForceEarly = false) {
+        const options = typeof optionsOrForceEarly === 'boolean'
+            ? { forceEarly: optionsOrForceEarly }
+            : (optionsOrForceEarly || {});
+        const forceEarly = options.forceEarly === true;
+        const requestedMode = REVIEW_MODES.includes(options.mode) ? options.mode : null;
+
         // Check if SRS Onboarding needs to be shown (first-time user)
         if (window.SRSOnboarding && !window.SRSOnboarding.isOnboardingComplete()) {
             log.debug('First-time user, showing algorithm selection...');
@@ -1818,7 +1840,7 @@ const SRSReview = (function () {
                 // Fall through to start session with all words
             } else {
                 // Show confirmation for early review
-                showEarlyReviewConfirmation(allWords);
+                showEarlyReviewConfirmation(allWords, options);
                 return;
             }
         }
@@ -1845,7 +1867,8 @@ const SRSReview = (function () {
             sessionResults: [],
             startTime: new Date(),
             isEarlyReview: dueWords.length === 0,
-            pendingWritingChallenges: []
+            pendingWritingChallenges: [],
+            requestedMode: requestedMode
         };
 
         // Reset daily count if new day
@@ -1868,7 +1891,7 @@ const SRSReview = (function () {
     /**
      * Show confirmation popup for early review
      */
-    function showEarlyReviewConfirmation(allWords) {
+    function showEarlyReviewConfirmation(allWords, options = {}) {
         // Create confirmation modal
         const overlay = document.createElement('div');
         overlay.id = 'srs-early-confirm-overlay';
@@ -1941,7 +1964,8 @@ const SRSReview = (function () {
 
         document.getElementById('srs-early-yes').addEventListener('click', () => {
             overlay.remove();
-            startReviewSession(true); // Force early review
+            // Force early review, preserving any mode the caller pinned.
+            startReviewSession({ ...options, forceEarly: true });
         });
 
         // Close on overlay click
@@ -2275,20 +2299,32 @@ const SRSReview = (function () {
             validModes.push('listen', 'speak');
         }
 
-        // Calculate total weight for VALID modes only
-        let totalWeight = 0;
-        validModes.forEach(m => totalWeight += reviewSession.modeWeights[m]);
+        let selectedMode;
 
-        // Weighted Random Selection
-        let r = Math.random() * totalWeight;
-        let selectedMode = validModes[0];
-        let runningSum = 0;
+        if (reviewSession.requestedMode && validModes.includes(reviewSession.requestedMode)) {
+            // Caller pinned a drill type (e.g. the Vocab Practice "Listen and Type" card).
+            selectedMode = reviewSession.requestedMode;
+        } else {
+            // Default path, unchanged. Also the deliberate fallback when the pinned mode
+            // is not valid for THIS card (e.g. a phrase whose allowedModes excludes cloze).
+            // We fall back per-card rather than filtering the queue: dropping cards would
+            // starve the due list and corrupt SRS scheduling, which must stay intact.
 
-        for (const mode of validModes) {
-            runningSum += reviewSession.modeWeights[mode];
-            if (r < runningSum) {
-                selectedMode = mode;
-                break;
+            // Calculate total weight for VALID modes only
+            let totalWeight = 0;
+            validModes.forEach(m => totalWeight += reviewSession.modeWeights[m]);
+
+            // Weighted Random Selection
+            let r = Math.random() * totalWeight;
+            selectedMode = validModes[0];
+            let runningSum = 0;
+
+            for (const mode of validModes) {
+                runningSum += reviewSession.modeWeights[mode];
+                if (r < runningSum) {
+                    selectedMode = mode;
+                    break;
+                }
             }
         }
 
@@ -3410,6 +3446,127 @@ const SRSReview = (function () {
         return getWordsDueForReview().length;
     }
 
+    /**
+     * Count cards per SRS state, for the Vocab Practice dashboard.
+     * Uses the same normalisation as getWordsDueForReview() so `due` here and
+     * getDueCount() can never disagree.
+     *
+     * @returns {{new:number, learning:number, reviewing:number, relearning:number,
+     *            mastered:number, total:number, due:number}}
+     */
+    function getTierCounts() {
+        const now = new Date();
+        const counts = {
+            new: 0,
+            learning: 0,
+            reviewing: 0,
+            relearning: 0,
+            mastered: 0,
+            total: 0,
+            due: 0
+        };
+
+        for (const [lemma, data] of Object.entries(srsCache.srsData)) {
+            const card = normalizeStoredCard(lemma, data, now);
+            if (Object.prototype.hasOwnProperty.call(counts, card.state)) {
+                counts[card.state] += 1;
+            }
+            counts.total += 1;
+            if (!isMasteredCard(card) && isCardDue(card, now)) {
+                counts.due += 1;
+            }
+        }
+
+        return counts;
+    }
+
+    /**
+     * Timestamped list of mastered words, oldest first.
+     *
+     * This is the ONLY genuine time series the SRS keeps: cards are stored
+     * last-state-only (each review overwrites the same doc), so nothing else
+     * can be plotted against time without adding a review-event log.
+     *
+     * @returns {Array<{lemma: string, masteredAt: string}>}
+     */
+    function getMasteryTimeline() {
+        return (srsCache.masteredWords || [])
+            .filter(entry => entry && entry.masteredAt)
+            .map(entry => ({ lemma: entry.lemma, masteredAt: entry.masteredAt }))
+            .sort((a, b) => new Date(a.masteredAt) - new Date(b.masteredAt));
+    }
+
+    /**
+     * Normalised review statistics for the Vocab Practice dashboard.
+     * srsCache.reviewStats has two historical shapes — the guest/reset shape
+     * ({dailyReviews, lastReviewDate, xp, ...}) and the Firestore summary shape
+     * ({reviewsToday, lastReviewSession, longestStreak, ...}). Callers should not
+     * have to know which one they got, so normalise here and never return undefined.
+     *
+     * @returns {{totalReviews:number, reviewsToday:number, streak:number,
+     *            longestStreak:number, lastReviewAt:string|null}}
+     */
+    function getReviewStats() {
+        const stats = srsCache.reviewStats || {};
+        const streak = Number(stats.streak) || 0;
+        return {
+            totalReviews: Number(stats.totalReviews) || 0,
+            reviewsToday: Number(stats.reviewsToday ?? stats.dailyReviews) || 0,
+            streak,
+            // longestStreak was added later; fall back to the current streak so the
+            // dashboard never shows a "longest" that is lower than "current".
+            longestStreak: Math.max(Number(stats.longestStreak) || 0, streak),
+            lastReviewAt: stats.lastReviewSession || stats.lastReviewDate || null
+        };
+    }
+
+    /**
+     * Earliest upcoming review across the whole collection.
+     * Extracted from updateDashboardUI() so the dashboard, the summary strip and
+     * the Vocab Practice tab all read the same value instead of each re-scanning.
+     *
+     * @returns {{date: Date|null, dueNow: boolean, minutesUntil: number|null, label: string}}
+     */
+    function getNextReviewSummary() {
+        const now = new Date();
+
+        if (reviewSession.active && reviewSession.isEarlyReview) {
+            return { date: null, dueNow: false, minutesUntil: null, label: 'Early review' };
+        }
+
+        if (getDueCount() > 0) {
+            return { date: null, dueNow: true, minutesUntil: 0, label: 'Now!' };
+        }
+
+        let earliest = null;
+        for (const [lemma, data] of Object.entries(srsCache.srsData)) {
+            const card = normalizeStoredCard(lemma, data, now);
+            if (isMasteredCard(card)) continue;
+            const next = new Date(card.nextReviewDate);
+            if (Number.isNaN(next.getTime()) || next <= now) continue;
+            if (!earliest || next < earliest) earliest = next;
+        }
+
+        if (!earliest) {
+            return { date: null, dueNow: false, minutesUntil: null, label: '-' };
+        }
+
+        // Rounding matches the original inline implementation so the visible
+        // strings do not shift; only the "In 1 hours" plural bug is corrected.
+        const diffMs = earliest - now;
+        const minutesUntil = Math.round(diffMs / 60000);
+        const hours = Math.round(diffMs / 3600000);
+        const days = Math.round(diffMs / 86400000);
+
+        let label;
+        if (minutesUntil < 60) label = `In ${minutesUntil} min`;
+        else if (hours < 24) label = `In ${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+        else if (days === 1) label = 'Tomorrow';
+        else label = `In ${days} days`;
+
+        return { date: earliest, dueNow: false, minutesUntil, label };
+    }
+
     function launchReviewFromDashboard() {
         const vocabPanelSide = document.getElementById('vocab-panel-side');
         if (vocabPanelSide) vocabPanelSide.classList.remove('expanded');
@@ -3593,63 +3750,23 @@ const SRSReview = (function () {
      * Update Dashboard UI (Next Review Date & Due Badge)
      */
     function updateDashboardUI() {
-        // 1. Update Due Badge
-        const entryState = getEntryState();
-        const dueCount = entryState.dueCount;
-        const badge = document.getElementById('srs-due-badge');
-        if (badge) {
-            badge.textContent = dueCount;
-            badge.style.display = dueCount > 0 ? 'inline-block' : 'none';
-        }
+        // The due badge is rendered and owned by the Vocab Practice dashboard
+        // (js/vocab/vocab-practice-view.js), reached from here via
+        // VocabularyBook.updateSRSDueBadge(). This function used to write it too,
+        // with a different display value ('inline-block' vs 'inline'), so whichever
+        // ran last won. Single owner now.
 
-        // 2. Update Next Review Text
+        // Update Next Review Text
         const nextReviewEl = document.getElementById('srs-next-date');
         const nextReviewContainer = document.getElementById('srs-next-review-info');
 
         if (nextReviewEl) {
-            if (entryState.sessionActive && entryState.isEarlyReview) {
-                nextReviewEl.textContent = 'Early review';
-                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
-                return;
-            }
-
-            if (dueCount > 0) {
-                nextReviewEl.textContent = 'Now!';
-                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
-                return;
-            }
-
-            // Find earliest next review date
-            let earliest = null;
-            const now = new Date();
-
-            Object.values(srsCache.srsData).forEach(wordData => {
-                if (wordData.nextReviewDate) {
-                    const d = new Date(wordData.nextReviewDate);
-                    // Only consider future dates
-                    if (d > now) {
-                        if (!earliest || d < earliest) earliest = d;
-                    }
-                }
-            });
-
-            if (earliest) {
-                const diffMs = earliest - now;
-                const diffMins = Math.round(diffMs / 60000);
-                const diffHours = Math.round(diffMs / 3600000);
-                const diffDays = Math.round(diffMs / 86400000);
-
-                let text = '';
-                if (diffMins < 60) text = `In ${diffMins} min`;
-                else if (diffHours < 24) text = `In ${diffHours} hours`;
-                else if (diffDays === 1) text = `Tomorrow`;
-                else text = `In ${diffDays} days`; // e.g., "In 2 days"
-
-                nextReviewEl.textContent = text;
-                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
-            } else {
-                nextReviewEl.textContent = '-';
-                // keep visible or hide? maybe visible to show "Empty" state
+            const next = getNextReviewSummary();
+            nextReviewEl.textContent = next.label;
+            // '-' means there is nothing scheduled at all; keep the row hidden in
+            // that case rather than showing an empty value.
+            if (nextReviewContainer) {
+                nextReviewContainer.style.display = next.label === '-' ? 'none' : 'block';
             }
         }
     }
@@ -4833,6 +4950,10 @@ const SRSReview = (function () {
         initializeWord,
         getWordsDueForReview,
         getDueCount,
+        getTierCounts,
+        getMasteryTimeline,
+        getNextReviewSummary,
+        getReviewStats,
         getEntryState,
         getCurrentReviewSnapshot,
         refreshEntrySurfaces,

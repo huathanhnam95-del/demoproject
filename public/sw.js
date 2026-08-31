@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v22';
+const CACHE_VERSION = 'bel-offline-v23';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

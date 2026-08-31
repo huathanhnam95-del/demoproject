@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.83",
+  "version": "1.8.84",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -49,6 +49,7 @@
     "verify:rmcsa": "npm run test:rmcsa:guardrails && npm run test:rmcsa:browser",
     "test:rfib:lazy-loader-retry:browser": "node tests/browser/lazy-loader-retry-rfib-browser-check.js",
     "test:practice-router:back:browser": "node tests/browser/practice-router-back-popstate-browser-check.js",
+    "test:track-progress:browser": "node tests/browser/track-progress-modal-browser-check.js",
     "test:read-aloud:v7:browser": "node tests/browser/read-aloud-question-picker-v7-dom-contract-browser-check.js",
     "test:read-aloud:lifecycle:browser": "node tests/browser/read-aloud-lifecycle-browser-check.js",
     "test:site-header:browser": "node tests/browser/site-header-about-check.js",

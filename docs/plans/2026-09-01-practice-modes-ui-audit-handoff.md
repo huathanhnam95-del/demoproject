@@ -2,8 +2,22 @@
 
 **Date:** 2026-09-01
 **Branch:** `main`
-**Status:** Audit complete, fixes landed, harness committed. Backlog and open threads below.
+**Status:** Audit complete, fixes committed, harness committed. Backlog and open threads below.
 **Task Tracker:** #756 (Done). Related: #753 (remediation), #754 (WFD Play), #755 (audio clipping)
+
+**Commits**
+
+| SHA | Contents |
+|---|---|
+| `b9bfb911` | Task 756 — audit fixes, harness, findings doc, this handoff |
+| `bb575524` | Tasks 753/754 — pre-existing remediation, separated so the two bisect apart |
+
+**Not pushed, and the branch is one commit behind `origin/main`** (`97603fab feat: add V4 A2
+syllabification provenance`). The fast-forward was deliberately not taken: that upstream commit
+modifies `public/crm-admin.html` and `public/crm-admin.css`, which is the same area as the
+unresolved conflict described in *Open threads → 6*. Rebasing before that conflict is resolved
+would tangle the two. `bb575524` touches `crm-admin.css`, so expect a conflict there on rebase —
+resolve it together with the HTML.
 
 ---
 

@@ -7,6 +7,148 @@ import {
   prepareWavBlob,
 } from '../../public/js/echo-forge/adapters/audio-capture-adapter.js';
 import { createAnalysisClient } from '../../public/js/echo-forge/adapters/analysis-client.js';
+import { createAudioPromptAdapter } from '../../public/js/echo-forge/adapters/audio-prompt-adapter.js';
+
+const catalog = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../../public/database/echo-forge/challenges.v1.json', import.meta.url), 'utf8'));
+
+function audioManifestForCatalog(overrides = {}) {
+  return {
+    schemaVersion: 'echo-forge-audio-manifest-v1',
+    audioVersion: 'v1',
+    contentVersion: catalog.contentVersion,
+    locale: catalog.locale,
+    catalogSourceSha256: catalog.sourceSha256,
+    sourceSha256: catalog.sourceSha256,
+    provider: 'kokoro',
+    providerRevision: 'kokoro-v1',
+    generatorRevision: 'echo-forge-listening-audio-v1',
+    generatedAt: '2026-08-25T00:00:00.000Z',
+    model: { id: 'kokoro', sha256: 'a'.repeat(64) },
+    voice: { id: 'af_heart', sha256: 'b'.repeat(64) },
+    provenance: { license: 'Apache-2.0' },
+    entries: catalog.challenges.filter((challenge) => challenge.unitType === 'listening').map((challenge) => ({
+      challengeId: challenge.challengeId,
+      level: challenge.level,
+      sourceId: challenge.provenance.sourceId,
+      contentHash: challenge.contentHash,
+      audioIdentitySha256: challenge.audio.identitySha256,
+      path: `/database/echo-forge/audio/v1/${challenge.level.toLowerCase()}/listening/${challenge.challengeId.slice(-3)}.wav`,
+      sha256: 'c'.repeat(64),
+      byteLength: 100,
+      durationMs: 100,
+      artifactStatus: 'generated',
+      status: 'verified',
+      reviewStatus: 'automated_verified',
+      reviewMethod: 'structural_audio_validation',
+      ...overrides,
+    })),
+  };
+}
+
+test('audio prompt adapter validates the manifest, hashes same-origin bytes, caches, and prevents overlap', async () => {
+  const challenge = catalog.challenges.find((item) => item.challengeId === 'ef-a1-listening-001');
+  const bytes = new Uint8Array([82, 73, 70, 70]);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const expectedHash = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('');
+  const manifest = audioManifestForCatalog({ sha256: expectedHash });
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(String(url));
+    if (String(url).endsWith('audio-manifest.v1.json')) return new Response(JSON.stringify(manifest), { headers: { 'content-type': 'application/json' } });
+    return new Response(bytes, { headers: { 'content-type': 'audio/wav' } });
+  };
+  const urls = { created: [], revoked: [] };
+  class FakeAudio {
+    static instances = [];
+    constructor() { this.listeners = {}; this.paused = true; FakeAudio.instances.push(this); }
+    addEventListener(type, callback) { this.listeners[type] = callback; }
+    removeEventListener(type) { delete this.listeners[type]; }
+    async play() { this.paused = false; return undefined; }
+    pause() { this.paused = true; this.pauseCount = (this.pauseCount || 0) + 1; }
+    load() {}
+    end() { this.listeners.ended?.(); }
+  }
+  const adapter = createAudioPromptAdapter({
+    fetchImpl,
+    AudioClass: FakeAudio,
+    URLApi: { createObjectURL: (blob) => { const url = `blob:test-${urls.created.length}`; urls.created.push({ url, blob }); return url; }, revokeObjectURL: (url) => urls.revoked.push(url) },
+    cryptoImpl: crypto,
+    manifestUrl: '/database/echo-forge/audio-manifest.v1.json',
+  });
+  await adapter.load(catalog);
+  assert.equal(adapter.isReady(), true);
+  const firstPlay = adapter.play(challenge);
+  const firstOutcome = firstPlay.catch((error) => error);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(FakeAudio.instances.length, 1);
+  const secondPlay = adapter.play(challenge);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.match((await firstOutcome).name, /AbortError/);
+  FakeAudio.instances.at(-1).end();
+  await secondPlay;
+  assert.equal(calls.filter((url) => url.endsWith('.wav')).length, 1, 'audio bytes should be cached');
+  assert.equal(FakeAudio.instances[0].pauseCount, 1, 'a new play cancels the active element');
+  assert.equal(urls.created.length, 1);
+  adapter.dispose();
+  assert.deepEqual(urls.revoked, urls.created.map((entry) => entry.url));
+});
+
+test('audio prompt adapter fails closed for traversal or external paths and stale cancelled playback', async () => {
+  const challenge = catalog.challenges.find((item) => item.challengeId === 'ef-a1-listening-001');
+  const manifest = audioManifestForCatalog({ path: 'https://evil.test/audio.wav' });
+  const adapter = createAudioPromptAdapter({
+    fetchImpl: async () => new Response(JSON.stringify(manifest), { headers: { 'content-type': 'application/json' } }),
+    AudioClass: class {},
+    cryptoImpl: crypto,
+    manifestUrl: '/database/echo-forge/audio-manifest.v1.json',
+  });
+  await assert.rejects(() => adapter.load(catalog), /same-origin|external|path|URL/i);
+
+  const safeManifest = audioManifestForCatalog();
+  safeManifest.entries[0].path = '/database/echo-forge/audio/v1/a1/listening/001.wav';
+  let resolveBytes;
+  const pending = new Promise((resolve) => { resolveBytes = resolve; });
+  const cancelAdapter = createAudioPromptAdapter({
+    fetchImpl: async (url) => {
+      if (String(url).endsWith('audio-manifest.v1.json')) return new Response(JSON.stringify(safeManifest), { headers: { 'content-type': 'application/json' } });
+      return pending;
+    },
+    AudioClass: class {},
+    cryptoImpl: crypto,
+    manifestUrl: '/database/echo-forge/audio-manifest.v1.json',
+  });
+  await cancelAdapter.load(catalog);
+  const play = cancelAdapter.play(challenge);
+  cancelAdapter.cancel();
+  resolveBytes(new Response(new Uint8Array([1]), { headers: { 'content-type': 'audio/wav' } }));
+  await assert.rejects(() => play, /cancel|stale|abort/i);
+});
+
+test('audio prompt adapter aborts a pending audio fetch when cancelled', async () => {
+  const challenge = catalog.challenges.find((item) => item.challengeId === 'ef-a1-listening-001');
+  const manifest = audioManifestForCatalog();
+  let audioSignal;
+  const fetchImpl = async (url, options = {}) => {
+    if (String(url).endsWith('audio-manifest.v1.json')) {
+      return new Response(JSON.stringify(manifest), { headers: { 'content-type': 'application/json' } });
+    }
+    audioSignal = options.signal;
+    return new Promise((resolve, reject) => {
+      options.signal?.addEventListener('abort', () => reject(new DOMException('cancelled', 'AbortError')), { once: true });
+    });
+  };
+  const adapter = createAudioPromptAdapter({
+    fetchImpl,
+    AudioClass: class {},
+    cryptoImpl: crypto,
+    manifestUrl: '/database/echo-forge/audio-manifest.v1.json',
+  });
+  await adapter.load(catalog);
+  const play = adapter.play(challenge);
+  adapter.cancel();
+  assert.equal(audioSignal?.aborted, true);
+  await assert.rejects(() => play, /AbortError|cancel/i);
+});
 
 test('WAV encoder writes a mono PCM header and prepareWavBlob preserves WAV input', async () => {
   const buffer = { sampleRate: 16000, getChannelData: () => new Float32Array([0, 0.5, -0.5]) };

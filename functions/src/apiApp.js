@@ -24,6 +24,7 @@ const {
     sharedPracticeAttemptsLimiter,
     azureAssessmentRateLimiter
 } = require('./middleware/practice-attempts-rate-limiter');
+const { createEchoForgeOriginGuard } = require('./middleware/echo-forge-origin-guard');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
     generateClassCode,
@@ -373,6 +374,7 @@ app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 app.use('/api/read-aloud/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
+app.use('/api/echo-forge/assess', createEchoForgeOriginGuard({ environment: process.env }));
 app.use('/api/echo-forge/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/vowel-hint', optionalAuthMiddleware, azureAssessmentRateLimiter);

@@ -6,6 +6,7 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const express = require('express');
 const { createEchoForgeRouter } = require('../../src/routes/echo-forge');
+const { createEchoForgeRouter: createFunctionsEchoForgeRouter } = require('../../functions/src/routes/echo-forge');
 
 function wavBlob({ audioFormat = 1, channels = 1, sampleRate = 16000, bitsPerSample = 16, durationSeconds = 0.01 } = {}) {
   const bytesPerSample = bitsPerSample / 8;
@@ -163,4 +164,30 @@ test('stateless route rejects malformed, non-mono PCM, and overlong WAV before A
     }
   });
   assert.equal(calls, 0);
+});
+
+test('local and Functions routes reject non-numeric Azure aggregate scores without coercing them to zero', async () => {
+  for (const createRouter of [createEchoForgeRouter, createFunctionsEchoForgeRouter]) {
+    for (const invalidScore of ['', false, 'malformed']) {
+      const router = createRouter({
+        environment: { ECHO_FORGE_SANDBOX_ENABLED: 'true', AZURE_SPEECH_KEY: 'key', AZURE_SPEECH_REGION: 'region' },
+        fetchImpl: async () => ({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ NBest: [{ PronunciationAssessment: {
+            AccuracyScore: invalidScore,
+            FluencyScore: 82,
+            CompletenessScore: 97,
+          } }] }),
+        }),
+      });
+      await withServer(router, async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/api/echo-forge/assess`, { method: 'POST', body: requestBody() });
+        assert.equal(response.status, 422);
+        const payload = await response.json();
+        assert.equal(payload.error, 'AZURE_REQUIRED_SCORE_MISSING');
+        assert.notEqual(payload.accuracyScore, 0);
+      });
+    }
+  }
 });

@@ -7,7 +7,8 @@
  *   - praat-api never made private
  *   - phoneme-recognizer never made public
  *   - IAM never mutated by a candidate deploy
- *   - shadow mode and no-minScale retained
+ *   - shadow remains the default while an active candidate requires an explicit flag
+ *   - candidate identity inputs are validated before gcloud can run
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -93,6 +94,36 @@ test('shadow mode and recognizer wiring are declared', () => {
     assert.equal(env.PRONUNCIATION_V3_MODE, 'shadow', 'V3 must stay off the learner path');
     assert.equal(env.PHONEME_SERVICE_AUTH, 'google');
     assert.ok(env.PHONEME_SERVICE_URL.startsWith('https://'), 'recognizer URL must be https');
+});
+
+test('active V3 is opt-in for a zero-traffic praat-api candidate only', () => {
+    assert.match(code, /ValidateSet\('shadow','active'\).*PronunciationV3Mode/s,
+        'the release entrypoint must expose only the two reviewed V3 modes');
+    assert.match(code, /PRONUNCIATION_V3_MODE=\$effectiveV3Mode/,
+        'the candidate environment must bind the explicit or declared mode');
+    assert.match(code, /if\s*\(\$Service\s+-eq\s+'phoneme-recognizer'[^)]*\$PronunciationV3Mode/s,
+        'the recognizer must reject an API-only mode override');
+    assert.match(code, /--no-traffic/,
+        'an active candidate must remain at zero traffic until explicit promotion');
+});
+
+test('candidate source SHA and image digest are validated before gcloud', () => {
+    assert.match(code, /\$Sha\s+-notmatch\s+'\^\[0-9a-f\]\{7,40\}\$'/,
+        'candidate source SHA must be constrained to lowercase hexadecimal');
+    assert.match(code, /\$Digest\s+-notmatch\s+'\^sha256:\[0-9a-f\]\{64\}\$'/,
+        'candidate digest must be an immutable sha256 digest');
+    const deploy = code.slice(code.indexOf("  'DeployCandidate' {"), code.indexOf("  'Promote' {"));
+    assert.ok(deploy.indexOf('$Sha -notmatch') < deploy.indexOf('Assert-AccessUnchanged'),
+        'source validation must happen before any gcloud-backed access check');
+    assert.ok(deploy.indexOf('$Digest -notmatch') < deploy.indexOf('Assert-AccessUnchanged'),
+        'digest validation must happen before any gcloud-backed access check');
+});
+
+test('praat-api candidate environment stays one quoted compound argument', () => {
+    assert.match(code, /\$envFlag\s*=\s*"--update-env-vars=PRONUNCIATION_V3_MODE=\$effectiveV3Mode,PHONEME_SERVICE_URL=\$recognizerUrl,PHONEME_SERVICE_AUTH=\$recognizerAuth,GIT_SHA=\$Sha,BUILD_SHA=\$Sha"/,
+        'the complete candidate environment must be one quoted PowerShell string');
+    assert.match(code, /\$deployArgs\s*\+=\s*\$envFlag/,
+        'the compound environment string must be appended as one argument');
 });
 
 test('recognizer startup probe gates on /readyz, not a TCP bind', () => {

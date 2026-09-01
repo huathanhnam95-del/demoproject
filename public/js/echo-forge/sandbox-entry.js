@@ -1,11 +1,14 @@
 import { config as pronunciationConfig } from '../../pronunciation-analyzer/config.js';
 import { createAudioCapture } from './adapters/audio-capture-adapter.js';
 import { createAnalysisClient } from './adapters/analysis-client.js';
+import { createAudioPromptAdapter } from './adapters/audio-prompt-adapter.js';
 import { createTimingTelemetry } from './adapters/timing-telemetry.js';
 import { ATTACK_CARDS, createRunPreferences } from './core/policy.js';
 import { createSeededRng } from './core/rng.js';
 import { selectChallenge } from './core/challenge-selector.js';
+import { LEVEL_DESCRIPTORS, SUPPORT_DESCRIPTORS, describeActionCard, formatAnalysisFeedback, humanizeEvent, summarizeRun } from './core/learner-feedback.js';
 import { createInitialCombatState, reduceCombat, replayCombat } from './core/combat-reducer.js';
+import { createVisualPresenter } from './visual/presenter.js';
 
 const hooks = window.__ECHO_FORGE_TEST_HOOKS__ || {};
 const ENEMY_BASE_DAMAGE = 20;
@@ -21,6 +24,11 @@ const defendControls = document.querySelector('#defend-controls');
 const blockOptions = document.querySelector('#block-options');
 const optionRow = document.querySelector('#option-row');
 const eventLog = document.querySelector('#event-log');
+const summaryNode = document.querySelector('#summary');
+const feedbackNode = document.querySelector('#feedback');
+const feedbackText = document.querySelector('#feedback-text');
+const parryCountdown = document.querySelector('#parry-countdown');
+const visualPresenter = createVisualPresenter({ root });
 
 let catalog = null;
 let preferences = null;
@@ -40,6 +48,13 @@ let blockTimer = null;
 let operationGeneration = 0;
 let analysisAbortController = null;
 let analysisPending = false;
+let promptAdapter = null;
+let blockPlaybackGeneration = 0;
+let blockPlaybackReady = false;
+let challengeHistory = new Set();
+let runAttempts = [];
+let parryCountdownTimer = null;
+let parryWindowStartedAt = null;
 
 const analysisClient = hooks.analysisClient || createAnalysisClient({
   v3BaseUrl: pronunciationConfig.backendUrl,
@@ -53,11 +68,65 @@ function setStatus(message, tone = 'neutral') {
 function appendEvents(events) {
   for (const semanticEvent of events) {
     const row = document.createElement('li');
-    row.textContent = semanticEvent.type;
+    row.textContent = humanizeEvent(semanticEvent.type);
+    row.dataset.eventType = semanticEvent.type;
     eventLog.prepend(row);
     while (eventLog.children.length > 12) eventLog.lastElementChild.remove();
     root.dispatchEvent(new CustomEvent('echo-forge:event', { detail: semanticEvent }));
   }
+}
+
+function showFeedback(feedback) {
+  feedbackNode.dataset.tone = feedback.tone;
+  feedbackText.textContent = feedback.text;
+}
+
+function updateSetupDescriptions() {
+  document.querySelector('#level-help').textContent = LEVEL_DESCRIPTORS[document.querySelector('#level-select').value];
+  document.querySelector('#support-help').textContent = SUPPORT_DESCRIPTORS[document.querySelector('#support-select').value];
+}
+
+function focusElement(selector) {
+  document.querySelector(selector)?.focus({ preventScroll: true });
+}
+
+function focusFirstEnabledAttack() {
+  document.querySelector('[data-card]:not([disabled])')?.focus({ preventScroll: true });
+}
+
+function startParryCountdown() {
+  clearTimeout(parryCountdownTimer);
+  parryWindowStartedAt = performance.now();
+  let lastText = '';
+  const update = () => {
+    const remaining = Math.max(0, PARRY_WINDOW_MS - (performance.now() - parryWindowStartedAt));
+    const seconds = Math.ceil(remaining / 1000);
+    const text = remaining > 0 ? `Parry window: ${seconds} seconds remaining.` : 'Parry window expired.';
+    if (text !== lastText) { parryCountdown.textContent = text; lastText = text; }
+    if (remaining > 0) parryCountdownTimer = setTimeout(update, 1000);
+    else parryCountdownTimer = null;
+  };
+  update();
+}
+
+function stopParryCountdown() {
+  clearTimeout(parryCountdownTimer);
+  parryCountdownTimer = null;
+  parryWindowStartedAt = null;
+  parryCountdown.textContent = '';
+}
+
+function renderSummary() {
+  if (!combat || !['victory', 'defeat', 'abandoned'].includes(combat.status)) return;
+  const summary = summarizeRun({ outcome: combat.status, rounds: combat.round, attempts: runAttempts });
+  summaryNode.hidden = false;
+  document.querySelector('#summary-outcome').textContent = summary.outcome === 'victory' ? 'Victory—your practice broke the Echo Warden’s guard.' : summary.outcome === 'defeat' ? 'Defeat—this result is practice feedback, not a learner judgment.' : 'Run abandoned—no account progress was changed.';
+  document.querySelector('#summary-rounds').textContent = String(summary.rounds);
+  document.querySelector('#summary-scored').textContent = String(summary.scoredAttempts);
+  document.querySelector('#summary-scores').textContent = summary.averageScore === null ? 'No scored attempts' : `${summary.averageScore} average / ${summary.bestScore} best`;
+  document.querySelector('#summary-actions').textContent = String(summary.successfulActions);
+  document.querySelector('#summary-focus').textContent = summary.pronunciationFocusReview.length ? summary.pronunciationFocusReview.join('; ') : 'No focus evidence recorded';
+  document.querySelector('#summary-heading').focus({ preventScroll: true });
 }
 
 function emitOwnedEvent(type, payload = {}) {
@@ -110,7 +179,11 @@ function render() {
   defendControls.hidden = terminal || combat.turn !== 'enemy' || !blockOptions.hidden || Boolean(pendingChallenge);
   for (const button of document.querySelectorAll('[data-card]')) {
     const card = ATTACK_CARDS[button.dataset.card];
-    button.disabled = terminal || combat.turn !== 'player' || combat.hero.focus < card.focusCost;
+    const detail = describeActionCard(card, { focus: combat.hero.focus, terminal });
+    const disabledReason = terminal ? 'The run has ended.' : combat.turn !== 'player' ? 'Available on your attack turn.' : detail.disabledReason;
+    button.disabled = Boolean(disabledReason);
+    button.title = disabledReason || detail.description;
+    button.setAttribute('aria-label', disabledReason ? `${card.label}. ${disabledReason}` : `${card.label}. ${detail.description}`);
   }
   const burst = document.querySelector('#burst-toggle');
   burst.disabled = combat.hero.resonance < 100;
@@ -120,9 +193,12 @@ function render() {
     blockOptions.hidden = true;
     document.querySelector('#abandon-btn').hidden = true;
   }
+  const blockButton = document.querySelector('#block-btn');
+  if (blockButton) blockButton.disabled = !promptIsReady();
   if (combat.status === 'victory') setStatus('Victory. Your pronunciation broke the Echo Warden’s guard.', 'success');
   if (combat.status === 'defeat') setStatus('Run ended. This result is practice feedback, not a learner judgment.', 'warning');
   if (combat.status === 'abandoned') setStatus('Run abandoned. No account progress was changed.', 'neutral');
+  renderSummary();
 }
 
 function challengeForCard(card) {
@@ -131,6 +207,7 @@ function challengeForCard(card) {
     evaluationMode: card.evaluationMode,
     unitType: card.unitType,
     rng,
+    recentChallengeIds: challengeHistory,
   });
 }
 
@@ -142,10 +219,12 @@ function chooseAttack(cardId) {
   attackControls.hidden = true;
   recordControls.hidden = false;
   document.querySelector('#record-label').textContent = 'Speak the target';
+  focusElement('#record-btn');
   setStatus('Read the target, then record when ready.');
 }
 
 function clearRecordingUi() {
+  stopParryCountdown();
   recordControls.hidden = true;
   document.querySelector('#record-btn').disabled = false;
   document.querySelector('#stop-btn').disabled = true;
@@ -195,6 +274,7 @@ async function startRecording() {
     recordingPurpose = combat.turn === 'enemy' ? 'parry' : 'attack';
     document.querySelector('#record-btn').disabled = true;
     document.querySelector('#stop-btn').disabled = false;
+    focusElement('#stop-btn');
     emitOwnedEvent('recording.started', {
       challengeId: pendingChallenge.challengeId,
     });
@@ -203,6 +283,7 @@ async function startRecording() {
         challengeId: pendingChallenge.challengeId,
         windowMs: PARRY_WINDOW_MS,
       });
+      startParryCountdown();
     }
     setStatus(recordingPurpose === 'parry' ? 'Parry window open—repeat the target now.' : 'Recording…');
   } catch (error) {
@@ -240,6 +321,7 @@ async function stopAndAnalyze() {
   const operation = ++operationGeneration;
   analysisPending = true;
   const reactionDurationMs = performance.now() - reactionStartedAt;
+  stopParryCountdown();
   document.querySelector('#stop-btn').disabled = true;
   setStatus('Analysis pending. The reaction timer is stopped.', 'neutral');
   emitOwnedEvent('recording.stopped', { challengeId: challenge.challengeId });
@@ -271,6 +353,18 @@ async function stopAndAnalyze() {
     }
     timingRecord({ challenge, audio, analysisResult, reducerDurationMs: performance.now() - reducerStarted });
     const noOp = result.events.some((event) => event.type === 'analysis.noop');
+    const damage = result.events
+      .filter((event) => event.type === 'combat.damage.applied' && event.payload.target === 'enemy')
+      .reduce((sum, event) => sum + (Number(event.payload.damage) || 0), 0);
+    const feedback = formatAnalysisFeedback({
+      analysis: analysisResult.analysis,
+      challenge,
+      card: card || { label: 'Parry', evaluationMode: challenge.evaluationMode },
+      damage,
+      supportPreset: preferences.supportPreset,
+    });
+    showFeedback(feedback);
+  runAttempts.push({ status: analysisResult.analysis.status, score: analysisResult.analysis.score, damage, success: analysisResult.analysis.status === 'scored', focus: challenge.pronunciation.focus });
     if (result.events.some((event) => event.type === 'analysis.noop')) {
       if (purpose === 'parry') {
         clearRecordingUi();
@@ -286,6 +380,7 @@ async function stopAndAnalyze() {
       setStatus('Analysis could not rate this recording. Try again; no turn or resource changed.', 'warning');
       document.querySelector('#record-btn').disabled = false;
       document.querySelector('#stop-btn').disabled = true;
+      focusElement('#record-btn');
       return;
     }
     clearRecordingUi();
@@ -302,6 +397,8 @@ async function stopAndAnalyze() {
       error?.name === 'AbortError' ? 'cancelled' : 'unavailable',
       error?.name === 'AbortError' ? 'CANCELLED' : 'CLIENT_ANALYSIS_ERROR',
     );
+    showFeedback(formatAnalysisFeedback({ analysis: technicalAnalysis, challenge, card: card || { label: 'Parry', evaluationMode: challenge.evaluationMode }, damage: 0, supportPreset: preferences.supportPreset }));
+    runAttempts.push({ status: technicalAnalysis.status, score: null, damage: 0, success: false, focus: challenge.pronunciation.focus });
     if (purpose === 'parry') {
       coreDispatch({ type: 'RESOLVE_PARRY', timing: 'timely', enemyBaseDamage: ENEMY_BASE_DAMAGE, analysis: technicalAnalysis });
       clearRecordingUi();
@@ -312,6 +409,7 @@ async function stopAndAnalyze() {
     }
     setStatus(`Technical analysis error: ${error.message}. No learner failure was recorded.`, 'warning');
     document.querySelector('#record-btn').disabled = false;
+    focusElement('#record-btn');
   } finally {
     if (operation === operationGeneration) {
       analysisAbortController = null;
@@ -339,11 +437,13 @@ function cancelRecording() {
   showChallenge(null);
   render();
   setStatus('Recording cancelled. Combat state is unchanged.');
+  if (combat.turn === 'player') focusFirstEnabledAttack();
+  else focusElement(promptIsReady() ? '#block-btn' : '#parry-btn');
 }
 
 function chooseListeningChallenge() {
   return selectChallenge(catalog.challenges, {
-    level: preferences.level, unitType: 'listening', rng,
+    level: preferences.level, unitType: 'listening', rng, recentChallengeIds: challengeHistory,
   });
 }
 
@@ -357,24 +457,53 @@ function shuffledOptions(options) {
 }
 
 function playPrompt(challenge) {
-  if (hooks.playPrompt) return hooks.playPrompt(challenge);
-  setStatus('Listening Block is unavailable until its versioned audio artifact is verified. Choose Parry.', 'warning');
-  return false;
+  if (hooks.playPrompt) {
+    try {
+      return Promise.resolve(hooks.playPrompt(challenge)).then((result) => result !== false).catch((error) => {
+        setStatus(`Listening Block playback failed. Choose Parry; no combat state changed. (${error.message})`, 'neutral');
+        return false;
+      });
+    } catch (error) {
+      setStatus(`Listening Block playback failed. Choose Parry; no combat state changed. (${error.message})`, 'neutral');
+      return Promise.resolve(false);
+    }
+  }
+  if (!promptAdapter?.isReady?.()) {
+    setStatus('Listening Block is unavailable until its versioned audio artifact is verified. Choose Parry.', 'neutral');
+    return Promise.resolve(false);
+  }
+  return promptAdapter.play(challenge).then(() => true).catch((error) => {
+    setStatus(`Listening Block playback failed. Choose Parry; no combat state changed. (${error.message})`, 'neutral');
+    return false;
+  });
+}
+
+function promptIsReady() {
+  return Boolean(hooks.playPrompt || promptAdapter?.isReady?.());
 }
 
 function resolveBlockOutcome(outcome) {
+  if (!blockPlaybackReady) return;
   clearTimeout(blockTimer);
+  blockTimer = null;
+  blockPlaybackGeneration += 1;
+  blockPlaybackReady = false;
+  promptAdapter?.cancel?.();
+  blockOptions.setAttribute('aria-busy', 'false');
   blockOptions.hidden = true;
   coreDispatch({ type: 'RESOLVE_BLOCK', outcome, enemyBaseDamage: ENEMY_BASE_DAMAGE });
   showChallenge(null);
   setStatus(outcome === 'correct' ? 'Correct Block: half damage and one Focus restored.' : `${outcome === 'timeout' ? 'Block timed out' : 'Incorrect Block'}: defence reduced.`, outcome === 'correct' ? 'success' : 'warning');
+  focusFirstEnabledAttack();
 }
 
 function presentBlock() {
-  if (!hooks.playPrompt) {
+  if (!promptIsReady()) {
     setStatus('Listening Block is unavailable until its versioned audio artifact is verified. Choose Parry.', 'warning');
     return;
   }
+  const playbackGeneration = ++blockPlaybackGeneration;
+  blockPlaybackReady = false;
   pendingChallenge = null;
   defendControls.hidden = true;
   blockOptions.hidden = false;
@@ -383,7 +512,15 @@ function presentBlock() {
   const hear = document.createElement('button');
   hear.type = 'button';
   hear.textContent = 'Hear word';
-  hear.addEventListener('click', () => playPrompt(blockChallenge));
+  hear.addEventListener('click', () => {
+    clearTimeout(blockTimer);
+    blockTimer = null;
+    blockPlaybackReady = false;
+    setBlockPlaybackPending(true);
+    promptAdapter?.cancel?.();
+    blockPlaybackGeneration += 1;
+    void beginBlockPlayback(blockChallenge, blockPlaybackGeneration);
+  });
   optionRow.append(hear);
   for (const option of shuffledOptions(blockChallenge.listening.options)) {
     const button = document.createElement('button');
@@ -395,7 +532,52 @@ function presentBlock() {
     ));
     optionRow.append(button);
   }
-  playPrompt(blockChallenge);
+  setBlockPlaybackPending(true);
+  focusElement('#block-options');
+  void beginBlockPlayback(blockChallenge, playbackGeneration);
+}
+
+function setBlockPlaybackPending(pending) {
+  blockOptions.setAttribute('aria-busy', pending ? 'true' : 'false');
+  for (const button of optionRow.querySelectorAll('button')) button.disabled = pending;
+}
+
+function cancelBlockPrompt() {
+  if (blockOptions.hidden) return false;
+  clearTimeout(blockTimer);
+  blockTimer = null;
+  blockPlaybackGeneration += 1;
+  blockPlaybackReady = false;
+  promptAdapter?.cancel?.();
+  setBlockPlaybackPending(false);
+  blockOptions.hidden = true;
+  optionRow.replaceChildren();
+  defendControls.hidden = false;
+  focusElement('#block-btn');
+  setStatus('Listening Block cancelled. Combat state is unchanged.');
+  return true;
+}
+
+async function beginBlockPlayback(challenge, playbackGeneration) {
+  const hadReadyPlayback = blockPlaybackReady;
+  const played = await playPrompt(challenge);
+  if (playbackGeneration !== blockPlaybackGeneration || challenge !== blockChallenge || combat?.status !== 'active') return;
+  if (!played) {
+    blockPlaybackReady = hadReadyPlayback;
+    setBlockPlaybackPending(false);
+    if (!hadReadyPlayback) {
+      blockOptions.hidden = true;
+      optionRow.replaceChildren();
+      defendControls.hidden = false;
+      focusElement('#parry-btn');
+    }
+    setStatus('Listening Block playback failed. Choose Parry; no combat state changed.', 'neutral');
+    return;
+  }
+  blockPlaybackReady = true;
+  setBlockPlaybackPending(false);
+  optionRow.querySelector('button[data-option-id]:not([disabled])')?.focus({ preventScroll: true });
+  clearTimeout(blockTimer);
   blockTimer = setTimeout(() => resolveBlockOutcome('timeout'), 8000);
 }
 
@@ -406,6 +588,7 @@ function presentParry() {
   recordControls.hidden = false;
   document.querySelector('#record-label').textContent = 'Repeat within four seconds to Parry';
   showChallenge(parryChallenge);
+  focusElement('#record-btn');
   setStatus('Start recording when ready. Analysis time will not count against the Parry window.');
 }
 
@@ -413,14 +596,15 @@ function presentEnemyIntent() {
   if (combat.status !== 'active' || combat.turn !== 'enemy') return;
   blockChallenge = chooseListeningChallenge();
   parryChallenge = selectChallenge(catalog.challenges, {
-    level: preferences.level, evaluationMode: 'azure_word', unitType: 'word', rng,
+    level: preferences.level, evaluationMode: 'azure_word', unitType: 'word', rng, recentChallengeIds: challengeHistory,
   });
   pendingChallenge = null;
   showChallenge(null);
   defendControls.hidden = false;
   const blockButton = document.querySelector('#block-btn');
-  blockButton.disabled = !hooks.playPrompt;
-  setStatus(hooks.playPrompt
+  blockButton.disabled = !promptIsReady();
+  focusElement(promptIsReady() ? '#block-btn' : '#parry-btn');
+  setStatus(promptIsReady()
     ? 'Enemy intent: choose a safe listening Block or a timed pronunciation Parry.'
     : 'Enemy intent: versioned Block audio is pending verification; pronunciation Parry remains available.');
 }
@@ -434,6 +618,11 @@ async function startRun() {
   initialState = createInitialCombatState({ level: preferences.level });
   combat = initialState;
   replayActions = [];
+  challengeHistory = new Set();
+  runAttempts = [];
+  summaryNode.hidden = true;
+  eventLog.replaceChildren();
+  showFeedback({ tone: 'neutral', text: 'Choose an action to receive pronunciation feedback.' });
   setupNode.hidden = true;
   battleNode.hidden = false;
   document.querySelector('#abandon-btn').hidden = false;
@@ -480,10 +669,24 @@ async function init() {
       || catalog.challenges.some((challenge) => challenge.level === 'C2')) {
       throw new Error('catalog contract is invalid');
     }
+    if (hooks.audioPromptAdapter) {
+      promptAdapter = hooks.audioPromptAdapter;
+      if (typeof promptAdapter.load === 'function' && !promptAdapter.isReady?.()) await promptAdapter.load(catalog);
+    } else if (!hooks.playPrompt) {
+      try {
+        promptAdapter = createAudioPromptAdapter();
+        await promptAdapter.load(catalog);
+      } catch (error) {
+        promptAdapter = null;
+        setStatus(`Sandbox ready; Listening Block is unavailable until audio verification completes. (${error.message})`, 'neutral');
+      }
+    }
     root.dataset.state = 'ready';
     document.querySelector('#start-btn').disabled = false;
+    updateSetupDescriptions();
+    void visualPresenter.load();
     emitOwnedEvent('sandbox.setup.completed');
-    setStatus('Sandbox ready. Choose a level and support preset.');
+    if (promptIsReady()) setStatus('Sandbox ready. Choose a level and support preset.');
   } catch (error) {
     root.dataset.state = 'error';
     setStatus(`Sandbox unavailable: ${error.message}`, 'error');
@@ -492,6 +695,8 @@ async function init() {
 
 for (const button of document.querySelectorAll('[data-card]')) button.addEventListener('click', () => chooseAttack(button.dataset.card));
 document.querySelector('#start-btn').addEventListener('click', startRun);
+document.querySelector('#level-select').addEventListener('change', updateSetupDescriptions);
+document.querySelector('#support-select').addEventListener('change', updateSetupDescriptions);
 document.querySelector('#record-btn').addEventListener('click', startRecording);
 document.querySelector('#stop-btn').addEventListener('click', stopAndAnalyze);
 document.querySelector('#cancel-btn').addEventListener('click', cancelRecording);
@@ -500,22 +705,58 @@ document.querySelector('#parry-btn').addEventListener('click', presentParry);
 document.querySelector('#abandon-btn').addEventListener('click', () => {
   if (!combat || combat.status !== 'active') return;
   invalidateActiveOperation();
+  promptAdapter?.cancel?.();
   analysisPending = false;
   clearTimeout(blockTimer);
+  blockTimer = null;
+  setBlockPlaybackPending(false);
   blockOptions.hidden = true;
   optionRow.replaceChildren();
   clearRecordingUi();
   coreDispatch({ type: 'ABANDON_COMBAT' });
 });
+document.querySelector('#play-again-btn').addEventListener('click', () => { void startRun(); });
+document.querySelector('#change-settings-btn').addEventListener('click', () => {
+  invalidateActiveOperation();
+  stopParryCountdown();
+  summaryNode.hidden = true;
+  battleNode.hidden = true;
+  setupNode.hidden = false;
+  document.querySelector('#abandon-btn').hidden = true;
+  updateSetupDescriptions();
+  document.querySelector('#setup-heading').focus({ preventScroll: true });
+});
 document.querySelector('#replay-btn').addEventListener('click', replayState);
 document.querySelector('#export-json-btn').addEventListener('click', () => download('echo-forge-timing.json', 'application/json', telemetry.exportJson()));
 document.querySelector('#export-csv-btn').addEventListener('click', () => download('echo-forge-timing.csv', 'text/csv', telemetry.exportCsv()));
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !combat || combat.status !== 'active') return;
+  if (!recordControls.hidden) {
+    event.preventDefault();
+    cancelRecording();
+    return;
+  }
+  if (!blockOptions.hidden && cancelBlockPrompt()) event.preventDefault();
+});
 
 window.echoForgeSandbox = Object.freeze({
   getState: () => combat,
   getReplay: () => Object.freeze(structuredClone(replayActions)),
   getTelemetry: () => telemetry.snapshot(),
   replay: replayState,
+});
+
+window.addEventListener('pagehide', () => {
+  invalidateActiveOperation();
+  clearTimeout(blockTimer);
+  blockTimer = null;
+  setBlockPlaybackPending(false);
+  promptAdapter?.dispose?.();
+  promptAdapter = null;
+  blockPlaybackGeneration += 1;
+  blockPlaybackReady = false;
+  stopParryCountdown();
+  visualPresenter.dispose();
 });
 
 init();

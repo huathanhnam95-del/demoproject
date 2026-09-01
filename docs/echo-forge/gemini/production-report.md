@@ -2,7 +2,9 @@
 
 ## Status
 
-This remains a Stage A specification-only package. It records the approved visual contract and planned generation inputs; it does not claim that any PNG or other production binary has been generated, cleaned up, reviewed, or licensed.
+This Gemini handoff remains a Stage A specification-only package. It records the approved visual contract and planned generation inputs; it does not claim that Gemini generated any PNG or other production binary.
+
+The approved internal production package is now deterministic and project-authored. Its runtime manifest is `../../public/assets/echo-forge/v1/visual-manifest.v1.json` and its closed schema/report are under `docs/echo-forge/production/`. Those binaries are not Gemini output and must not be attributed to Gemini.
 
 The **Stage B timing gate passed** on 2026-08-25: the empirical export reports `timingGate.ready: true` for 170 records. Binary generation, provenance completion, visual review, and runtime integration remain pending. The v1 motion specification and Gemini request are approved for empirical timing, not for final visual production.
 
@@ -24,10 +26,10 @@ The **Stage B timing gate passed** on 2026-08-25: the empirical export reports `
 | Stage A generation truthfulness | PASS | Draft sidecars and prompt records remain `not_generated`; hashes, binary paths, dimensions, and alpha are null. |
 | Placeholder hash rejection | PASS | Empty-content, single-character, repeated-character, and malformed hashes are not accepted as generated provenance. |
 | Stage B timing gate | PASS | `timing-evidence.v1.json` has `timingGate.ready: true` across 170 records; see the v1 timing report for measured scope and limitations. |
-| Real binaries | BLOCKED | No `public/assets/echo-forge/v1/` production binaries exist. |
-| Matching SHA-256 and PNG dimensions/alpha | BLOCKED | Final assets must be present, hash-matched, dimension-matched, and alpha-valid before integration. |
-| Stage B binary generation/integration | BLOCKED | Final binaries, manifest, provenance, visual review, and runtime integration are still required. |
-| Final integration readiness | BLOCKED | Readiness remains false until the final manifest, real binaries, matching hashes, dimensions/alpha, review, and integration checks pass together. |
+| Gemini handoff real binaries | BLOCKED | The Gemini handoff contains no generated binaries; the internal package is separate. |
+| Gemini handoff integration | BLOCKED | Gemini did not generate or integrate production assets. |
+| Deterministic internal production package | READY | Project-authored SVG sources rasterize to 9 hashed transparent PNG frames; manifest validates dimensions, alpha, paths, source hash, and approved internal review. |
+| Internal runtime integration | READY | Same-origin loader and event-only presenter consume the internal manifest with CSS fallback and reduced-motion static equivalence. |
 
 ## Empirical timing boundary
 

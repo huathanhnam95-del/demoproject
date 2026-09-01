@@ -1,0 +1,194 @@
+{
+  "$schema": "./visual-manifest.schema.json",
+  "contractId": "echo-forge-visual-v1",
+  "schemaVersion": "echo-forge-visual-manifest-v1",
+  "manifestStage": "production-ready",
+  "sourceSha256": "9742e3f2fa845c2a9e104307f15525e29f26a48cc269a3949e1003e5e727cdd7",
+  "assetIds": [
+    "ef-hero-idle",
+    "ef-enemy-idle",
+    "ef-analysis-hold",
+    "ef-combat-result"
+  ],
+  "assets": [
+    {
+      "assetId": "ef-hero-idle",
+      "canvas": {
+        "width": 256,
+        "height": 256
+      },
+      "frames": [
+        {
+          "frameIndex": 0,
+          "name": "idle",
+          "path": "ef-hero-idle/idle.png",
+          "sha256": "489885e26e2099254b4c9cc41c37a00cde70206b8394f2b20491c264ddb4d39e",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        }
+      ],
+      "pivot": {
+        "x": 128,
+        "y": 224
+      },
+      "mobileSafeCrop": {
+        "width": 224,
+        "height": 224
+      },
+      "staticFallbackFrame": 0,
+      "loop": false,
+      "timingVariable": "motion.idle"
+    },
+    {
+      "assetId": "ef-enemy-idle",
+      "canvas": {
+        "width": 256,
+        "height": 256
+      },
+      "frames": [
+        {
+          "frameIndex": 0,
+          "name": "idle",
+          "path": "ef-enemy-idle/idle.png",
+          "sha256": "30b9991d1c6a3816bd5df9deb04b854f4d716a28d4c5ee7208d60a9253bf227b",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        }
+      ],
+      "pivot": {
+        "x": 128,
+        "y": 224
+      },
+      "mobileSafeCrop": {
+        "width": 224,
+        "height": 224
+      },
+      "staticFallbackFrame": 0,
+      "loop": false,
+      "timingVariable": "motion.idle"
+    },
+    {
+      "assetId": "ef-analysis-hold",
+      "canvas": {
+        "width": 256,
+        "height": 256
+      },
+      "frames": [
+        {
+          "frameIndex": 0,
+          "name": "hold-1",
+          "path": "ef-analysis-hold/hold-1.png",
+          "sha256": "5d8f507738591cdfdfe93bfcaee3ddf2ba9d8bac4e07171e8897806f224c7ebd",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        },
+        {
+          "frameIndex": 1,
+          "name": "hold-2",
+          "path": "ef-analysis-hold/hold-2.png",
+          "sha256": "01f74d6450bf01161f3b1ac2f75f2e2ffc4f6ab67ed039b3d5cca51d836bfd29",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        },
+        {
+          "frameIndex": 2,
+          "name": "hold-3",
+          "path": "ef-analysis-hold/hold-3.png",
+          "sha256": "a4e27090dd672a67b6098480b54eb03cca7eb54c1f90a51c9ee71a75dcac45ba",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        },
+        {
+          "frameIndex": 3,
+          "name": "hold-4",
+          "path": "ef-analysis-hold/hold-4.png",
+          "sha256": "4ab60e426dda9c5b3f890c6537f05aecbcb8a0f28e55e189c48b41718d0498fc",
+          "width": 256,
+          "height": 256,
+          "alpha": true
+        }
+      ],
+      "pivot": {
+        "x": 128,
+        "y": 128
+      },
+      "mobileSafeCrop": {
+        "width": 208,
+        "height": 208
+      },
+      "staticFallbackFrame": 0,
+      "loop": true,
+      "timingVariable": "motion.analysisHold"
+    },
+    {
+      "assetId": "ef-combat-result",
+      "canvas": {
+        "width": 320,
+        "height": 320
+      },
+      "frames": [
+        {
+          "frameIndex": 0,
+          "name": "wind-up",
+          "path": "ef-combat-result/wind-up.png",
+          "sha256": "eacb0cd182f2ea1a51c455dc1120aaca802ee4047313b4cfcd13b3f09ad80c46",
+          "width": 320,
+          "height": 320,
+          "alpha": true
+        },
+        {
+          "frameIndex": 1,
+          "name": "resolve",
+          "path": "ef-combat-result/resolve.png",
+          "sha256": "4cde176b042bd61f33473ffebfcbfe24708b0f348c7c2bbb38f33b77f53267c5",
+          "width": 320,
+          "height": 320,
+          "alpha": true
+        },
+        {
+          "frameIndex": 2,
+          "name": "return",
+          "path": "ef-combat-result/return.png",
+          "sha256": "a9af8fe3cf94f04a651eeded7afbf46a9c459c6664638cd1252c99efa2460060",
+          "width": 320,
+          "height": 320,
+          "alpha": true
+        }
+      ],
+      "pivot": {
+        "x": 160,
+        "y": 288
+      },
+      "mobileSafeCrop": {
+        "width": 272,
+        "height": 272
+      },
+      "staticFallbackFrame": 1,
+      "loop": false,
+      "timingVariable": "motion.resultResolve"
+    }
+  ],
+  "tool": {
+    "name": "Playwright Chromium",
+    "revision": "playwright@1.58.2; chromium@145.0.7632.6"
+  },
+  "provenance": {
+    "kind": "project-authored-deterministic-vector",
+    "provider": "internal-authored-svg",
+    "review": "approved internal integration review; deterministic package generated without Gemini binaries"
+  },
+  "motion": {
+    "windUpMs": 200,
+    "analysisHoldFrameCount": 4,
+    "analysisHoldCycleMs": 600,
+    "resultEnterMs": 100,
+    "resultHoldMs": 1000,
+    "resultReturnMs": 400,
+    "reducedMotion": "static-equivalent"
+  }
+}

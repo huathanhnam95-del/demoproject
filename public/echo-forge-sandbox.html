@@ -4,36 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Echo Forge Combat Sandbox</title>
-  <style>
-    :root { color-scheme: dark; --ink:#f8fafc; --muted:#94a3b8; --stage:#121826; --line:#334155; --blue:#3b82f6; --violet:#8b5cf6; --green:#10b981; --red:#ef4444; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; background:#080d18; color:var(--ink); font:16px/1.5 system-ui,sans-serif; }
-    button,select { min-height:44px; font:inherit; color:inherit; background:#182235; border:1px solid var(--line); border-radius:8px; padding:10px 14px; }
-    button { cursor:pointer; } button:hover:not(:disabled) { border-color:var(--blue); } button:disabled { opacity:.48; cursor:not-allowed; }
-    :focus-visible { outline:3px solid #fbbf24; outline-offset:3px; }
-    main { width:min(1120px,100%); margin:auto; padding:24px; }
-    header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:24px; }
-    h1,h2,p { margin-top:0; } h1 { font-size:clamp(1.8rem,5vw,3rem); margin-bottom:6px; } .eyebrow { color:#93c5fd; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-    #system-status { min-height:48px; color:var(--muted); border-left:4px solid var(--blue); padding:10px 14px; }
-    #system-status[data-tone="success"] { border-color:var(--green); color:#a7f3d0; } #system-status[data-tone="warning"] { border-color:#f59e0b; color:#fde68a; } #system-status[data-tone="error"] { border-color:var(--red); color:#fecaca; }
-    .setup-row,.toolbar,.action-row,.record-row,.option-row { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
-    label { display:grid; gap:6px; color:var(--muted); font-weight:600; }
-    .burst-choice { min-height:44px; display:inline-flex; align-items:center; gap:10px; padding:8px 4px; color:var(--ink); }
-    .burst-choice input { width:24px; height:24px; margin:0; accent-color:var(--violet); }
-    #battle { margin-top:28px; }
-    .meter-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:18px; }
-    .meter-line { display:flex; justify-content:space-between; gap:12px; } progress { width:100%; height:16px; accent-color:var(--green); }
-    .battle-stage { min-height:300px; padding:28px; background:radial-gradient(circle at center,#1e293b 0,var(--stage) 66%); border:1px solid var(--line); border-radius:16px; display:grid; grid-template-columns:1fr minmax(220px,1.2fr) 1fr; align-items:center; gap:24px; }
-    .fighter { text-align:center; } .fighter-mark { width:104px; height:104px; margin:0 auto 12px; display:grid; place-items:center; border:3px solid var(--blue); border-radius:24px 24px 40px 40px; font-size:2.5rem; background:#172554; }
-    .enemy .fighter-mark { border-color:var(--violet); background:#2e1065; }
-    .challenge { text-align:center; } #challenge-text { font-size:clamp(1.35rem,4vw,2.2rem); font-weight:800; margin-bottom:8px; } #challenge-support { color:#cbd5e1; }
-    .controls { padding-top:24px; } .section-label { color:#c4b5fd; font-weight:700; margin:18px 0 8px; }
-    .primary { background:#1d4ed8; border-color:#60a5fa; } .danger { background:#7f1d1d; border-color:#f87171; } .success { background:#065f46; border-color:#34d399; }
-    #event-log { margin-top:24px; padding-left:22px; color:var(--muted); max-height:150px; overflow:auto; }
-    [hidden] { display:none !important; }
-    @media (max-width:700px) { main{padding:16px} header{display:block}.battle-stage{grid-template-columns:1fr 1fr;padding:18px;min-height:260px}.challenge{grid-column:1/-1;grid-row:1}.fighter-mark{width:76px;height:76px}.meter-grid{grid-template-columns:1fr}.setup-row>*{width:100%}.setup-row button{width:100%} }
-    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
-  </style>
+  <link rel="stylesheet" href="/css/echo-forge-sandbox.css">
+  <!-- prefers-reduced-motion uses the static-equivalent CSS path in the external stylesheet. -->
+  <!-- Interactive controls keep min-height:44px and visible focus in that stylesheet. -->
 </head>
 <body>
   <main id="echo-forge-root" data-state="loading">
@@ -42,24 +15,20 @@
       <button id="abandon-btn" type="button" class="danger" hidden>Abandon run</button>
     </header>
     <div id="system-status" role="status" aria-live="polite">Checking sandbox availability…</div>
-
     <section id="setup" aria-labelledby="setup-heading">
-      <h2 id="setup-heading">Choose your run</h2>
+      <h2 id="setup-heading" tabindex="-1">Choose your run</h2>
       <div class="setup-row">
-        <label>CEFR level
-          <select id="level-select">
-            <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option>
-          </select>
+        <label class="setup-field">CEFR level
+          <select id="level-select" aria-describedby="level-help"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select>
+          <span class="field-help" id="level-help">Everyday words and short exchanges.</span>
         </label>
-        <label>Support
-          <select id="support-select">
-            <option value="guided">Guided</option><option value="standard" selected>Standard</option><option value="challenge">Challenge</option>
-          </select>
+        <label class="setup-field">Support
+          <select id="support-select" aria-describedby="support-help"><option value="guided">Guided</option><option value="standard" selected>Standard</option><option value="challenge">Challenge</option></select>
+          <span class="field-help" id="support-help">Before you attempt: meaning. Afterward: corrective feedback and engine evidence.</span>
         </label>
         <button id="start-btn" type="button" class="primary" disabled>Enter the forge</button>
       </div>
     </section>
-
     <section id="battle" hidden aria-labelledby="battle-heading">
       <h2 id="battle-heading">Echo Warden encounter</h2>
       <div class="meter-grid">
@@ -67,41 +36,27 @@
         <div><div class="meter-line"><strong>Echo Warden</strong><span id="enemy-hp-text"></span></div><progress id="enemy-hp" max="120" aria-label="Echo Warden health"></progress><div class="meter-line"><span>Combo <b id="combo-value"></b></span><span>Round <b id="round-value"></b></span></div></div>
       </div>
       <div class="battle-stage" aria-label="Battle stage">
-        <div class="fighter hero"><div class="fighter-mark" aria-hidden="true">◇</div><strong>Resonant</strong></div>
+        <div class="echo-visual-layer" aria-hidden="true"><img data-visual="effect" alt="" hidden></div>
+        <div class="fighter hero"><div class="fighter-mark"><img data-visual="hero" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Resonant</strong></div>
         <div class="challenge"><div id="challenge-text">Choose an action</div><div id="challenge-support"></div></div>
-        <div class="fighter enemy"><div class="fighter-mark" aria-hidden="true">◆</div><strong>Echo Warden</strong></div>
+        <div class="fighter enemy"><div class="fighter-mark"><img data-visual="enemy" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Echo Warden</strong></div>
       </div>
-
       <div class="controls">
-        <div id="attack-controls">
-          <div class="section-label">Attack turn</div>
-          <div class="action-row">
-            <button type="button" data-card="precision_strike">Precision Strike · Azure word</button>
-            <button type="button" data-card="stress_breaker">Stress Breaker · V3 word · 1 Focus</button>
-            <button type="button" data-card="echo_chain">Echo Chain · Azure phrase · 1 Focus</button>
-            <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Use Resonance Burst</span></label>
-          </div>
-        </div>
-        <div id="record-controls" hidden>
-          <div class="section-label" id="record-label">Speak the target</div>
-          <div class="record-row"><button id="record-btn" type="button" class="primary">Start recording</button><button id="stop-btn" type="button" class="success" disabled>Stop and analyze</button><button id="cancel-btn" type="button">Cancel</button></div>
-        </div>
-        <div id="defend-controls" hidden>
-          <div class="section-label">Defend turn</div>
-          <div class="action-row"><button id="block-btn" type="button">Block · listen and choose</button><button id="parry-btn" type="button">Parry · repeat within 4 seconds</button></div>
-        </div>
-        <div id="block-options" hidden>
-          <div class="section-label">Choose the word you heard</div>
-          <div class="option-row" id="option-row"></div>
-        </div>
-        <div class="toolbar">
-          <button id="replay-btn" type="button">Replay state</button>
-          <button id="export-json-btn" type="button">Export timing JSON</button>
-          <button id="export-csv-btn" type="button">Export timing CSV</button>
-        </div>
+        <div id="attack-controls"><div class="section-label">Attack turn</div><div class="action-row">
+          <button type="button" data-card="precision_strike" aria-describedby="card-precision-description"><span class="action-title">Precision Strike</span><span class="action-meta">Azure word · 20 base damage · no Focus cost</span></button><span id="card-precision-description" class="action-description" hidden>Azure word evidence; low resource risk.</span>
+          <button type="button" data-card="stress_breaker" aria-describedby="card-stress-description"><span class="action-title">Stress Breaker</span><span class="action-meta">V3 word · 24 base damage · 1 Focus</span></button><span id="card-stress-description" class="action-description" hidden>V3 count and stress evidence; spends Focus even when incorrect.</span>
+          <button type="button" data-card="echo_chain" aria-describedby="card-echo-description"><span class="action-title">Echo Chain</span><span class="action-meta">Azure phrase · 26 base damage · 1 Focus</span></button><span id="card-echo-description" class="action-description" hidden>Azure phrase accuracy, fluency, and completeness; spends Focus even when incorrect.</span>
+          <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Use Resonance Burst</span></label>
+        </div></div>
+        <div id="record-controls" hidden><div class="section-label" id="record-label">Speak the target</div><div class="record-row"><button id="record-btn" type="button" class="primary">Start recording</button><button id="stop-btn" type="button" class="success" disabled>Stop and analyze</button><button id="cancel-btn" type="button">Cancel</button></div></div>
+        <div id="defend-controls" hidden><div class="section-label">Defend turn</div><div id="parry-countdown" role="status" aria-live="polite" aria-atomic="true"></div><div class="action-row"><button id="block-btn" type="button">Block · listen and choose</button><button id="parry-btn" type="button">Parry · repeat within 4 seconds</button></div></div>
+        <div id="block-options" tabindex="-1" hidden><div class="section-label">Choose the word you heard</div><div class="option-row" id="option-row"></div></div>
+        <div class="toolbar"><button id="replay-btn" type="button">Replay state</button><button id="export-json-btn" type="button">Export timing JSON</button><button id="export-csv-btn" type="button">Export timing CSV</button></div>
       </div>
+      <section id="feedback" data-tone="neutral" aria-labelledby="feedback-heading"><h3 id="feedback-heading">Attempt feedback</h3><p id="feedback-text">Choose an action to receive pronunciation feedback.</p></section>
       <ol id="event-log" aria-label="Recent combat events"></ol>
     </section>
+    <section id="summary" hidden aria-labelledby="summary-heading"><h2 id="summary-heading" tabindex="-1">Run summary</h2><p id="summary-outcome"></p><dl><dt>Rounds</dt><dd id="summary-rounds"></dd><dt>Scored attempts</dt><dd id="summary-scored"></dd><dt>Average / best score</dt><dd id="summary-scores"></dd><dt>Successful actions</dt><dd id="summary-actions"></dd><dt>Pronunciation focus review</dt><dd id="summary-focus"></dd></dl><div class="toolbar"><button id="play-again-btn" type="button" class="primary">Play Again (same settings)</button><button id="change-settings-btn" type="button">Change level or support</button></div></section>
   </main>
   <script type="module" src="/js/echo-forge/sandbox-entry.js"></script>
 </body>

@@ -571,13 +571,15 @@ test('v1 motion and request are approved for empirical timing after the referenc
   }
 });
 
-test('production report records timing PASS while binaries and integration remain BLOCKED, and Task 726 is done', () => {
+test('production report distinguishes the Gemini spec-only gate from the ready internal package, and Task 726 is done', () => {
   const report = fs.readFileSync(PRODUCTION_REPORT_PATH, 'utf8');
   assert.match(report, /stage a.*specification|not.generated/i);
   assert.match(report, /\|\s*Stage B timing gate\s*\|\s*PASS\s*\|/i);
-  assert.match(report, /\|\s*Real binaries\s*\|\s*BLOCKED\s*\|/i);
-  assert.match(report, /\|\s*Stage B binary generation\/integration\s*\|\s*BLOCKED\s*\|/i);
-  assert.match(report, /\|\s*Final integration readiness\s*\|\s*BLOCKED\s*\|/i);
+  assert.match(report, /Gemini.*specification-only|specification-only.*Gemini/i);
+  assert.match(report, /\|\s*Gemini handoff real binaries\s*\|\s*BLOCKED\s*\|/i);
+  assert.match(report, /\|\s*Gemini handoff integration\s*\|\s*BLOCKED\s*\|/i);
+  assert.match(report, /\|\s*Deterministic internal production package\s*\|\s*READY\s*\|/i);
+  assert.match(report, /visual-manifest\.v1\.json/);
   assert.match(report, /real binaries|matching sha|alpha/i);
   assert.match(report, /asset-manifest\.schema\.json/);
 

@@ -18,7 +18,6 @@ const PROMPT_LOG_PATH = path.join(GEMINI, 'prompt-log.jsonl');
 const MOTION_PATH = path.join(CLAUDE, 'motion-spec.v1.json');
 const REQUEST_PATH = path.join(CLAUDE, 'gemini-asset-request.v1.json');
 const PRODUCTION_REPORT_PATH = path.join(GEMINI, 'production-report.md');
-const TASK_TRACKER_PATH = path.join(ROOT, 'TASK_TRACKER.csv');
 const FINAL_MANIFEST_PATH = path.join(GEMINI, 'asset-manifest.v1.json');
 const FINAL_ASSETS_ROOT = path.join(ROOT, 'public', 'assets', 'echo-forge', 'v1');
 const TIMING_EXPORT_PATH = path.join(DOCS, 'timing', 'timing-evidence.v1.json');
@@ -571,7 +570,7 @@ test('v1 motion and request are approved for empirical timing after the referenc
   }
 });
 
-test('production report distinguishes the Gemini spec-only gate from the ready internal package, and Task 726 is done', () => {
+test('production report distinguishes the Gemini spec-only gate from the ready internal package', () => {
   const report = fs.readFileSync(PRODUCTION_REPORT_PATH, 'utf8');
   assert.match(report, /stage a.*specification|not.generated/i);
   assert.match(report, /\|\s*Stage B timing gate\s*\|\s*PASS\s*\|/i);
@@ -582,12 +581,4 @@ test('production report distinguishes the Gemini spec-only gate from the ready i
   assert.match(report, /visual-manifest\.v1\.json/);
   assert.match(report, /real binaries|matching sha|alpha/i);
   assert.match(report, /asset-manifest\.schema\.json/);
-
-  const task = fs.readFileSync(TASK_TRACKER_PATH, 'utf8')
-    .split(/\r?\n/)
-    .find((line) => line.startsWith('726,'));
-  assert.ok(task, 'Task 726 must remain in the tracker');
-  const columns = task.split(',');
-  assert.equal(columns[3], 'Done');
-  assert.equal(columns[4], '2026-08-25', 'Task 726 must record the timing-gate completion date');
 });

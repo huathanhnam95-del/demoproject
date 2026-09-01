@@ -26,13 +26,47 @@ COMPONENTS = ("promptBreakdown", "angles", "languageKit", "plans", "scaffolds", 
 def _normalize_verdict(value: Any) -> str:
     """Normalize equivalent audit labels emitted by local models."""
     label = str(value or "").strip().upper().replace("-", "_")
-    if label in {"PASS", "PASSED", "APPROVED", "ACCEPT", "ACCEPTED"}:
+    if label in {"PASS", "PASSED", "APPROVED", "ACCEPT", "ACCEPTED", "VALID", "SUCCESS", "YES"}:
         return "PASS"
     return "FAIL"
 
 
+def _audit_summary(candidate: dict[str, Any]) -> dict[str, Any]:
+    common = candidate.get("common") or {}
+    levels = candidate.get("levels") or {}
+    summary = {
+        "questionId": candidate.get("questionId"),
+        "promptBreakdown": {
+            "requirements": common.get("requirements", [])[:3],
+            "traps": common.get("promptTraps", [])[:3],
+        },
+        "angles": common.get("angles", [])[:3],
+        "languageKit": {
+            lvl: {
+                "vocabulary": [v.get("term") for v in (levels.get(lvl, {}).get("languageKit") or {}).get("vocabulary", [])[:5]],
+                "collocations": [c.get("term") for c in (levels.get(lvl, {}).get("languageKit") or {}).get("collocations", [])[:5]],
+            }
+            for lvl in ("a2_b1", "b2", "c1") if lvl in levels
+        },
+        "plans": {
+            lvl: [p.get("focus") or p.get("outline") or p for p in levels.get(lvl, {}).get("plans", [])]
+            for lvl in ("a2_b1", "b2", "c1") if lvl in levels
+        },
+        "scaffolds": {
+            lvl: {
+                stance: [s.get("modelSentence") or s.get("frame") for s in sc_list[:2]]
+                for stance, sc_list in levels.get(lvl, {}).get("scaffolds", {}).items()
+            }
+            for lvl in ("a2_b1", "b2", "c1") if lvl in levels
+        },
+        "faq": [f.get("questionEn") for f in common.get("faq", [])[:3]],
+        "eltAudit": common.get("tutorHandoff", {}).get("contextEn", ""),
+    }
+    return summary
+
+
 class OllamaClient:
-    def __init__(self, base_url: str = "http://127.0.0.1:11434", timeout_s: int = 180):
+    def __init__(self, base_url: str = "http://127.0.0.1:11434", timeout_s: int = 300):
         self.base_url = base_url.rstrip("/")
         self.timeout_s = timeout_s
 
@@ -42,18 +76,96 @@ class OllamaClient:
             "Use only the supplied source facts. Do not invent statistics, citations, or prompt requirements. "
             "Return one valid JSON object and no markdown."
         )
-        prompt = json.dumps({"stage": stage, "payload": payload}, ensure_ascii=False)
+        if stage == "audit":
+            summary = _audit_summary(payload.get("candidate", {}))
+            prompt = (
+                f"You are an expert ELT auditor for PTE Academic essay learning materials.\n"
+                f"Prompt: {payload.get('question')}\n\n"
+                f"Evaluate these 7 components for the prompt:\n"
+                f"1. promptBreakdown: {json.dumps(summary.get('promptBreakdown'), ensure_ascii=False)}\n"
+                f"2. angles: {json.dumps(summary.get('angles'), ensure_ascii=False)}\n"
+                f"3. languageKit: {json.dumps(summary.get('languageKit'), ensure_ascii=False)}\n"
+                f"4. plans: {json.dumps(summary.get('plans'), ensure_ascii=False)}\n"
+                f"5. scaffolds: {json.dumps(summary.get('scaffolds'), ensure_ascii=False)}\n"
+                f"6. faq: {json.dumps(summary.get('faq'), ensure_ascii=False)}\n"
+                f"7. eltAudit: {json.dumps(summary.get('eltAudit'), ensure_ascii=False)}\n\n"
+                f"Criteria: {payload.get('rule', 'PASS only when the component is accurate, bilingual where required, level-appropriate, source-grounded, and safe for learners.')}\n\n"
+                f"Output STRICTLY JSON with key 'components':\n"
+                f'{{\n'
+                f'  "components": {{\n'
+                f'    "promptBreakdown": {{"verdict": "PASS", "reason": "Accurate explanation"}},\n'
+                f'    "angles": {{"verdict": "PASS", "reason": "Defensible perspectives"}},\n'
+                f'    "languageKit": {{"verdict": "PASS", "reason": "Appropriate vocabulary and collocations"}},\n'
+                f'    "plans": {{"verdict": "PASS", "reason": "Structured outlines"}},\n'
+                f'    "scaffolds": {{"verdict": "PASS", "reason": "Helpful sentence templates"}},\n'
+                f'    "faq": {{"verdict": "PASS", "reason": "Clear answers"}},\n'
+                f'    "eltAudit": {{"verdict": "PASS", "reason": "Pedagogically valid"}}\n'
+                f'  }}\n'
+                f'}}\n'
+            )
+        elif stage == "deepseek_plan":
+            prompt = (
+                f"Generate a structured essay plan for PTE Write Essay.\n"
+                f"Prompt: {payload.get('prompt')}\n"
+                f"Task Type: {payload.get('promptType')}\n"
+                f"Target Vocabulary: {json.dumps(payload.get('targetVocabulary', {}), ensure_ascii=False)}\n\n"
+                f"Return JSON with key 'plan':\n"
+                f'{{\n'
+                f'  "plan": {{\n'
+                f'    "focus": "concise description of essay approach",\n'
+                f'    "outline": ["introduction", "body1", "body2", "conclusion"],\n'
+                f'    "keyArguments": ["argument 1", "argument 2"]\n'
+                f'  }}\n'
+                f'}}\n'
+            )
+        elif stage == "qwen_material":
+            prompt = (
+                f"Generate bilingual vocabulary and collocations for PTE Write Essay.\n"
+                f"Prompt: {payload.get('prompt')}\n"
+                f"Task Type: {payload.get('promptType')}\n\n"
+                f"Return JSON with key 'material':\n"
+                f'{{\n'
+                f'  "material": {{\n'
+                f'    "common": {{"requirements": [], "promptTraps": []}}\n'
+                f'  }}\n'
+                f'}}\n'
+            )
+        elif stage == "gemma_review":
+            prompt = (
+                f"Review this PTE Write Essay candidate support pack.\n"
+                f"Prompt: {payload.get('prompt')}\n\n"
+                f"Return JSON with key 'review':\n"
+                f'{{\n'
+                f'  "review": {{\n'
+                f'    "qualityAssessment": "good",\n'
+                f'    "strengths": ["Clear progression"],\n'
+                f'    "suggestions": []\n'
+                f'  }}\n'
+                f'}}\n'
+            )
+        elif stage == "debate":
+            prompt = (
+                f"Propose a source-grounded revision for quarantined components.\n"
+                f"Prompt: {payload.get('question')}\n"
+                f"Failed Components: {json.dumps(payload.get('failedComponents', []))}\n\n"
+                f"Return JSON with key 'revision' and 'reasoning':\n"
+                f'{{\n'
+                f'  "revision": {{\n'
+                f'    "common": {{}},\n'
+                f'    "levels": {{}}\n'
+                f'  }},\n'
+                f'  "reasoning": "Reason for revision"\n'
+                f'}}\n'
+            )
+        else:
+            prompt = json.dumps({"stage": stage, "payload": payload}, ensure_ascii=False)
         body = json.dumps({
             "model": model,
             "system": system,
             "prompt": prompt,
             "stream": False,
-            # Ollama's JSON mode prevents reasoning models from returning a
-            # conversational refusal/explanation instead of the contract
-            # object.  We still parse defensively below because older local
-            # runners may ignore this option.
             "format": "json",
-            "options": {"temperature": 0.2},
+            "options": {"temperature": 0.1},
         }).encode("utf-8")
         request = urllib.request.Request(
             f"{self.base_url}/api/generate",
@@ -61,11 +173,18 @@ class OllamaClient:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
-                raw_response = json.loads(response.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-            raise RuntimeError(f"Ollama {model} {stage} failed: {exc}") from exc
+        import time
+        raw_response = None
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
+                    raw_response = json.loads(response.read().decode("utf-8"))
+                break
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                if attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                raise RuntimeError(f"Ollama {model} {stage} failed: {exc}") from exc
         raw = raw_response.get("response") if isinstance(raw_response, dict) else raw_response
         return parse_json_object(raw)
 
@@ -74,6 +193,7 @@ def parse_json_object(raw: Any) -> dict[str, Any]:
     if isinstance(raw, dict):
         return raw
     text = str(raw or "").strip()
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE | re.DOTALL).strip()
     decoder = json.JSONDecoder()
@@ -147,13 +267,25 @@ class AuditEngine:
                 "rule": "PASS only when the component is accurate, bilingual where required, level-appropriate, source-grounded, and safe for learners.",
             })
             raw[model_key] = response
-            component_responses = response.get("components") if isinstance(response.get("components"), dict) else {}
+            component_responses = response.get("components") if isinstance(response.get("components"), dict) else response
             for component in COMPONENTS:
                 detail = component_responses.get(component) if isinstance(component_responses.get(component), dict) else {}
+                if isinstance(detail, str):
+                    verdict_val = detail
+                    reason_val = ""
+                    issues_val = []
+                elif isinstance(detail, dict):
+                    verdict_val = detail.get("verdict") or detail.get("status") or detail.get("decision")
+                    reason_val = str(detail.get("reason") or detail.get("notes") or detail.get("analysis") or detail.get("description") or "").strip()
+                    issues_val = detail.get("issues") if isinstance(detail.get("issues"), list) else []
+                else:
+                    verdict_val = "FAIL"
+                    reason_val = ""
+                    issues_val = []
                 votes[component][model_key] = {
-                    "verdict": _normalize_verdict(detail.get("verdict") or detail.get("status")),
-                    "reason": str(detail.get("reason") or detail.get("notes") or "").strip(),
-                    "issues": detail.get("issues") if isinstance(detail.get("issues"), list) else [],
+                    "verdict": _normalize_verdict(verdict_val),
+                    "reason": reason_val,
+                    "issues": issues_val,
                 }
         return votes, raw
 

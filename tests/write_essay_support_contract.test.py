@@ -28,7 +28,7 @@ class WriteEssaySupportContractsTest(unittest.TestCase):
     def test_real_sources_cover_all_questions_and_levels(self):
         source = load_question_sources(ROOT)
         self.assertEqual(len(source.questions), 453)
-        self.assertEqual(source.invalid_questions, {"370": ["missing_prompt"]})
+        self.assertEqual(source.invalid_questions, {})
         self.assertEqual(set(source.questions), {
             str(int(row[0]))
             for row in __import__("openpyxl").load_workbook(
@@ -39,8 +39,7 @@ class WriteEssaySupportContractsTest(unittest.TestCase):
             if row[0]
         })
         for question in source.questions.values():
-            if question["id"] != "370":
-                self.assertTrue(question["prompt"])
+            self.assertTrue(question["prompt"])
             self.assertIn(question["promptType"], {
                 "agree_disagree",
                 "advantages_disadvantages",
@@ -172,8 +171,9 @@ class WriteEssaySupportContractsTest(unittest.TestCase):
 
     def test_template_candidate_rejects_missing_prompt_source(self):
         source = load_question_sources(ROOT)
+        invalid_q = dict(source.questions["1"], prompt="")
         with self.assertRaises(ValueError):
-            build_template_candidate(source.questions["370"], source.collocations)
+            build_template_candidate(invalid_q, source.collocations)
 
 
 if __name__ == "__main__":

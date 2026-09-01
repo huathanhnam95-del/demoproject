@@ -93,10 +93,10 @@ class WriteEssaySupportPipelineTest(unittest.TestCase):
     def test_template_batch_publishes_valid_questions_and_reports_invalid_source(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output = Path(temp_dir)
-            report = run_batch(ROOT, output, question_ids=["1", "370"], template_only=True)
+            report = run_batch(ROOT, output, question_ids=["1", "9999"], template_only=True)
             self.assertEqual(report["questionsProcessed"], 2)
             self.assertEqual(report["publishedCount"], 1)
-            self.assertEqual(report["sourceInvalidIds"], ["370"])
+            self.assertEqual(report["sourceInvalidIds"], ["9999"])
             manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(list(manifest["questions"]), ["1"])
             self.assertEqual(len(list((output / "packs").glob("*.json"))), 1)

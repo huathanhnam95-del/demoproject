@@ -4038,9 +4038,11 @@
   },
   {
     "id": 370,
-    "title": "#370 WE 论点翻译 2",
-    "prompt": "",
-    "promptType": "other"
+    "title": "#370 Positive Aspects and Perspective",
+    "prompt": "It is important to look at the positive aspects when discussing various subjects. Do you agree or disagree? Give reasons and examples to support your view.",
+    "promptType": "agree_disagree",
+    "standardizedTaskType": "agree_disagree",
+    "verifiedPrimaryTopic": "Education"
   },
   {
     "id": 384,

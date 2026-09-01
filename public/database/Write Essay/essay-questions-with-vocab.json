@@ -169883,8 +169883,8 @@
   },
   {
     "id": 370,
-    "title": "#370 WE 论点翻译 2",
-    "prompt": "",
+    "title": "#370 Positive Aspects and Perspective",
+    "prompt": "It is important to look at the positive aspects when discussing various subjects. Do you agree or disagree? Give reasons and examples to support your view.",
     "targetVocabulary": {
       "A2": [
         "small changes",
@@ -169922,7 +169922,7 @@
         "systemic collapse"
       ]
     },
-    "promptType": "other",
+    "promptType": "agree_disagree",
     "sampleResponses": {
       "levels": {
         "a2_b1": {
@@ -170073,7 +170073,7 @@
     "verifiedSecondaryTopic2": null,
     "auditStatus": "PASSED_UNCONTESTED",
     "auditConsensus": "3/3 Unanimous",
-    "standardizedTaskType": "others"
+    "standardizedTaskType": "agree_disagree"
   },
   {
     "id": 384,

@@ -1,0 +1,22 @@
+{
+  "questionsProcessed": 453,
+  "componentsProcessed": 3171,
+  "componentStatusCounts": {
+    "PASSED_MAJORITY": 1697,
+    "PASSED_UNCONTESTED": 1469,
+    "REVISED_WITH_UNANIMOUS_CONSENSUS": 5
+  },
+  "questionsQuarantined": [],
+  "sourceHashes": {
+    "questionWorkbookSha256": "5280f07abd04c59703937438a9b35e89a3181f72200b67f77cf9e1ae4d2ab1c1",
+    "questionJsonSha256": "87d5e046bf3209ad843ccddbed4f18dc1ef56579ad52e291d27f8ce8627b005f",
+    "collocationWorkbookSha256": "41a5b969ffc81cd56eeef857034fecc15124b396116509a1dfc51971fb0b58f2"
+  },
+  "generationMode": "ollama_three_model_audit",
+  "publishedCount": 453,
+  "sourceInvalidIds": [],
+  "quarantinedIds": [],
+  "generationErrorIds": [],
+  "reportKind": "targeted_rerun",
+  "fullReportPath": "../report.json"
+}

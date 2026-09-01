@@ -7,4 +7,3 @@ function buildPublicFeatures(environment = {}) {
 }
 
 module.exports = { buildPublicFeatures };
-

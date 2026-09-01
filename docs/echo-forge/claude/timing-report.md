@@ -1,8 +1,8 @@
 # Echo Forge — No-Animation Timing Sandbox Report
 
-> **Date**: 2026-08-23  
-> **Prototype**: `docs/echo-forge/claude/prototype/index.html`  
-> **Art direction**: Option 3 — Minimal Luminous Training Arena (approved)  
+> **Date**: 2026-08-23
+> **Prototype**: `docs/echo-forge/claude/prototype/index.html`
+> **Art direction**: Option 3 — Minimal Luminous Training Arena (approved)
 > **Method**: Static-first prototype verified in browser with manual event cycling
 
 ---

@@ -1,15 +1,15 @@
 # Echo Forge Battle Stage: Responsive Layout Specification
 
-**Document Version:** 1.0.0  
-**Author:** Claude (Visual Design Specification Lead)  
-**Contract Reference:** `docs/echo-forge/visual-contract.v1.json` (`echo-forge-visual-v1`)  
-**Target Path:** `docs/echo-forge/claude/responsive-layout-spec.md`  
+**Document Version:** 1.0.0
+**Author:** Claude (Visual Design Specification Lead)
+**Contract Reference:** `docs/echo-forge/visual-contract.v1.json` (`echo-forge-visual-v1`)
+**Target Path:** `docs/echo-forge/claude/responsive-layout-spec.md`
 
 ---
 
 ## 1. Executive Summary & Design Principles
 
-This specification defines the production-ready responsive layout for the **Echo Forge** pronunciation-combat RPG battle stage. 
+This specification defines the production-ready responsive layout for the **Echo Forge** pronunciation-combat RPG battle stage.
 
 Echo Forge combines speech analysis with turn-based combat mechanics. In combat, the learner speaks pronunciation targets to execute attacks, blocks, and parries. The presentation layer consumes normalized event payloads from the backend game engine and renders a unified battle environment across screen sizes ranging from compact mobile screens (360px) to high-resolution desktop viewports (≥1024px).
 
@@ -51,11 +51,11 @@ The visual system builds upon the **BEL (Basic English Language)** design token 
   --ef-surface-dark: #1e293b;       /* Slate 800 - Stage Depth & Backdrops */
   --ef-surface-elevated: #334155;   /* Slate 700 - Controls & Elevated Elements */
   --ef-surface-border: #475569;     /* Slate 600 - High-contrast Borders */
-  
+
   --ef-accent-primary: #1a73e8;     /* BEL Blue / Accent Primary */
   --ef-accent-hover: #2563eb;       /* Blue 600 - Active / Hover */
   --ef-accent-active: #1d4ed8;      /* Blue 700 - Pressed */
-  
+
   --ef-palette-slate: #94a3b8;      /* Slate 400 - Muted HUD & Labels */
   --ef-palette-slate-light: #f8fafc;/* Slate 50 - High-contrast Typography */
   --ef-palette-violet: #8b5cf6;     /* Violet 500 - Enemy/Resonance Accent */
@@ -64,7 +64,7 @@ The visual system builds upon the **BEL (Basic English Language)** design token 
   --ef-palette-cyan-glow: rgba(6, 182, 212, 0.35);
   --ef-palette-amber: #f59e0b;      /* Amber 500 - Intent Warning / Combos */
   --ef-palette-amber-glow: rgba(245, 158, 11, 0.35);
-  
+
   /* Status & Semantic Feedback */
   --ef-status-recording: #ef4444;   /* Red 500 - Mic Active */
   --ef-status-recording-glow: rgba(239, 68, 68, 0.4);
@@ -90,7 +90,7 @@ The visual system builds upon the **BEL (Basic English Language)** design token 
   --ef-stage-max-width: 1200px;
   --ef-stage-min-height-desktop: 600px;
   --ef-stage-min-height-mobile: 520px;
-  
+
   --ef-touch-target-min: 44px;      /* Strict WCAG 2.5.5 / BEL Requirement */
   --ef-radius-sm: 6px;
   --ef-radius-md: 10px;
@@ -363,24 +363,24 @@ Below is the complete, drop-in CSS stylesheet implementing the dual-breakpoint r
   --ef-surface-dark: #1e293b;
   --ef-surface-elevated: #334155;
   --ef-surface-border: #475569;
-  
+
   --ef-accent-primary: #1a73e8;
   --ef-accent-hover: #2563eb;
   --ef-accent-active: #1d4ed8;
-  
+
   --ef-palette-slate: #94a3b8;
   --ef-palette-slate-light: #f8fafc;
   --ef-palette-violet: #8b5cf6;
   --ef-palette-cyan: #06b6d4;
   --ef-palette-amber: #f59e0b;
-  
+
   --ef-status-recording: #ef4444;
   --ef-status-success: #10b981;
   --ef-focus-outline: #fbbf24;
 
   /* Typography */
   --ef-font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+
   /* Stacking Context */
   --ef-z-background: 10;
   --ef-z-hero-idle: 20;
@@ -431,7 +431,7 @@ body {
   inset: 0;
   z-index: var(--ef-z-background);
   pointer-events: none;
-  background-image: 
+  background-image:
     radial-gradient(ellipse at 50% 90%, rgba(30, 41, 59, 0.6) 0%, transparent 70%),
     linear-gradient(to bottom, transparent 65%, rgba(15, 23, 42, 0.8) 100%);
 }

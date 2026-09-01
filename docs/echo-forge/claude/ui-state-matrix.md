@@ -1,9 +1,9 @@
 # Echo Forge UI State Matrix & Visual Specification
 
-**Contract Version**: `echo-forge-visual-v1`  
-**Author**: Claude (Visual System Designer)  
-**Target File**: `docs/echo-forge/claude/ui-state-matrix.md`  
-**Status**: Production Specification  
+**Contract Version**: `echo-forge-visual-v1`
+**Author**: Claude (Visual System Designer)
+**Target File**: `docs/echo-forge/claude/ui-state-matrix.md`
+**Status**: Production Specification
 **Design Tokens**: BEL Surface Palette (Background `#0f172a`, Surface `#1e293b`, Accent Primary `#1a73e8`, Font: *Outfit*), Contract Palette (*Slate*, *Violet*, *Cyan*, *Amber*)
 
 ---
@@ -102,7 +102,7 @@ The visual engine enforces a strict 4-phase motion grammar to bridge player spee
 ### 4.2 Phase 2: `analysisHold`
 - **Trigger Events**: `analysis.pending`.
 - **Purpose**: Maintains a clear, visually engaging, non-blocking hold state while the backend speech analyzer (Azure Speech API or V3 Phoneme engine) processes the audio stream.
-- **Looping Mechanics**: 
+- **Looping Mechanics**:
   - Utilizes `ef-analysis-hold` (4 frames: `hold-1` → `hold-2` → `hold-3` → `hold-4`).
   - Loops continuously at an engine-controlled rate specified by `motion.analysisHold`.
   - Frame sequence represents a 4-node rotating harmonic acoustic ring centered at `(128, 128)`.
@@ -114,7 +114,7 @@ The visual engine enforces a strict 4-phase motion grammar to bridge player spee
 ### 4.3 Phase 3: `resolve`
 - **Trigger Events**: `analysis.resolved`, `player.attack.resolved`, `player.block.resolved`, `player.parry.resolved`, `combat.damage.applied`, `combat.victory`, `combat.defeat`.
 - **Purpose**: Renders the definitive, server-adjudicated combat outcome.
-- **Visual Treatment**: 
+- **Visual Treatment**:
   - `ef-combat-result` plays Frame 0 (`wind-up`) → Frame 1 (`resolve`).
   - Impacts, damage numbers, health bar deltas, and enemy recoil animations execute in exact sync with the `motion.resultResolve` timing variable.
   - For critical hits (accuracy > 90%), amber acoustic fracture particles disperse at 45° angles.
@@ -134,20 +134,20 @@ Echo Forge maintains a strict policy regarding network timeouts, microphone disc
 stateDiagram-v2
     [*] --> WindUp: recording.started
     WindUp --> AnalysisHold: recording.stopped / analysis.pending
-    
+
     state AnalysisHold {
         [*] --> LoopFrames: hold-1 -> hold-2 -> hold-3 -> hold-4
         LoopFrames --> LoopFrames: loop = true
     }
-    
+
     AnalysisHold --> ResultResolve: analysis.resolved (Valid Payload)
     AnalysisHold --> SafeStopNoOp: analysis.noop (Network/Engine Timeout)
     AnalysisHold --> SafeStopCancel: User Cancelled / combat.abandoned
-    
+
     ResultResolve --> ReturnToIdle: motion.resultResolve complete
     SafeStopNoOp --> ReturnToIdle: Immediate Graceful Halt
     SafeStopCancel --> ReturnToIdle: Immediate Stage Reset
-    
+
     ReturnToIdle --> [*]: ef-hero-idle (Frame 0)
 ```
 
@@ -155,7 +155,7 @@ stateDiagram-v2
 1. **Immediate Loop Termination**: When `analysis.noop` or `combat.abandoned` is received, the `ef-analysis-hold` loop halts immediately on its current frame without waiting for the 4-frame cycle to finish.
 2. **Neutral System State Policy**:
    - Technical failures are never displayed as learner mistakes, "Misses", or "Zero Scores".
-   - The status text hook (`combat.status`) **must** output:  
+   - The status text hook (`combat.status`) **must** output:
      `"Analysis unavailable — no combat judgment was made"`
    - No damage is applied to the player or enemy. Focus and Resonance meters are fully preserved.
 3. **Action Drawer Restoration**:
@@ -183,11 +183,11 @@ All dynamic combat announcements flow through a dedicated ARIA live region with 
 
 ```html
 <!-- Semantic Battle Arena Accessibility Live Region -->
-<div 
-  id="ef-combat-status-live" 
-  class="sr-only" 
-  role="status" 
-  aria-live="polite" 
+<div
+  id="ef-combat-status-live"
+  class="sr-only"
+  role="status"
+  aria-live="polite"
   aria-atomic="true"
   data-hook="combat.status">
   Battle arena initialized. Select an action to begin.

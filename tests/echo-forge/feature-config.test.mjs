@@ -26,4 +26,3 @@ test('both /api/config responses include feature parity without exposing the san
   const launcher = await readFile(new URL('../../public/script.js', import.meta.url), 'utf8');
   assert.doesNotMatch(`${index}\n${launcher}`, /echo-forge|echoForge/i);
 });
-

@@ -8,9 +8,9 @@
 
 Echo Forge is a pronunciation-combat game inside the BEL learning platform. Learners **speak** to attack, block, and parry. The visual system consumes normalized event payloads from the backend and renders a single coherent battle stage — no dashboards, no nested cards.
 
-**Palette anchors** (from `visual-contract.v1.json`): slate · violet · cyan · amber  
-**BEL surfaces**: `bg-dark #0f172a` · `surface-dark #1e293b`  
-**Typography**: Outfit (headings + body), monospace for IPA / timers  
+**Palette anchors** (from `visual-contract.v1.json`): slate · violet · cyan · amber
+**BEL surfaces**: `bg-dark #0f172a` · `surface-dark #1e293b`
+**Typography**: Outfit (headings + body), monospace for IPA / timers
 **Asset slots**: `ef-hero-idle` 256×256 · `ef-analysis-hold` 256×256 4-frame loop · `ef-combat-result` 320×320 3-frame one-shot
 
 ---

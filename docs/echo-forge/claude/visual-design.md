@@ -1,7 +1,7 @@
 # Echo Forge — Visual Design Specification
 
-> **Approved direction**: Option 3 — Minimal Luminous Training Arena  
-> **Owner**: Claude (presentation only)  
+> **Approved direction**: Option 3 — Minimal Luminous Training Arena
+> **Owner**: Claude (presentation only)
 > **Contract**: `visual-contract.v1.json` · `echo-forge-visual-v1`
 
 ---

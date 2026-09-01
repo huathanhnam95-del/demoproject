@@ -53,4 +53,3 @@ export function createRunPreferences({ level, locale = 'en-US', supportPreset = 
   }
   return Object.freeze({ level, locale, supportPreset });
 }
-

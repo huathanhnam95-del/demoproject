@@ -47,7 +47,7 @@ To ensure unambiguous visibility across both dark slate containers (`#0f172a`), 
 The tab order follows a logical, predictable visual flow from top-level session management down through combat decision matrices and utility toolbars.
 
 ```
-[Header: Abandon Run] 
+[Header: Abandon Run]
          ↓
 [Setup: Level Select] → [Setup: Support Select] → [Setup: Enter Forge Button]
          ↓ (Battle Active)
@@ -128,7 +128,7 @@ The table below maps all 21 immutable contract events from `visual-contract.v1.j
 ### 3.2 Technical Failure & Neutral Error Policy
 
 > [!IMPORTANT]
-> **Technical Failures are Never Learner Failures**  
+> **Technical Failures are Never Learner Failures**
 > If an acoustic analysis fails due to microphone timeout, API disconnection, background noise rejection, or server error:
 > 1. The message **MUST** state: `"Analysis unavailable. No combat judgment was made."`
 > 2. The turn is restored to a safe state without HP loss or focus penalties.

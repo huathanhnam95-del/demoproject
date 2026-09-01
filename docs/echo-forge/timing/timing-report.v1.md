@@ -1,7 +1,7 @@
 # Echo Forge — Empirical Timing Report v1
 
-**Date:** 2026-08-25  
-**Evidence export:** [`timing-evidence.v1.json`](./timing-evidence.v1.json)  
+**Date:** 2026-08-25
+**Evidence export:** [`timing-evidence.v1.json`](./timing-evidence.v1.json)
 **Scope:** service/runtime timing evidence for the Echo Forge visual timing gate
 
 ## Gate result

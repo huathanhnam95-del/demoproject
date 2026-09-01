@@ -38,6 +38,7 @@ npm-debug.log*
 .env
 .env.local
 .local/
+.firebase/
 
 # Secret/Credential files (NEVER COMMIT)
 serviceAccountKey.json
@@ -79,6 +80,7 @@ ef-vis-02-*
 study-v2-real-*.png
 track-progress-*.png
 v4-a2-*
+!tests/audit/v4-a2-hardening-contract.test.js
 output/
 
 # Scratch scripts (one-off fix/rebuild scripts)

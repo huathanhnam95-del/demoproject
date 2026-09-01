@@ -1,5 +1,16 @@
 # Project Progress
 
+## Active package: V4-A2-HARDEN-01 production follow-up hardening
+
+- Goal: close the four verified follow-ups from the V4 A2 release: Firebase runtime/dependency deprecation, the production CMU dictionary fetch error, Firebase Hosting alias CORS behavior for pronunciation services, and generated Firebase cache contamination of isolated release worktrees.
+- Scope: the smallest relevant Functions runtime/package metadata and lockfile, pronunciation service CORS configuration, CMU dictionary loading path, Firebase release configuration/cache handling, focused tests, and production Chrome/network verification. Preserve V3/V4 provenance, CRM study data, historical samples, unrelated application behavior, and the dirty primary checkout.
+- Constraints: Heavy route in `C:\Cursor AI-v4-a2-syllabification`; root-cause evidence and failing regression checks before production changes; no Firestore backfill, sample claim, migration, or unrelated dependency batch update; production deployment only after implementation, Terra review, independent verification, and explicit rollback anchors.
+- Acceptance: Functions deploy without Node-runtime or stale-SDK warnings on a supported compatible runtime; custom-domain and Firebase-alias CRM analyzer requests succeed without CORS errors; CMU dictionary loading succeeds or fails through an intentional tested fallback without false console errors; Firebase deploy leaves reviewed tracked source unchanged; exact V4.1 `/ˈræb.ɪt/` behavior and CRM review contracts remain green.
+- Ordered phases: exact baseline; official/runtime and repository investigation; test-first implementation; Terra actual-diff review and repair; independent command and Chrome gates; narrow commit/push/deploy; live verification and rollback record.
+- Roles: root lead; Luna researcher for official runtime/dependency compatibility; Luna researcher for repository CORS/CMU/cache diagnosis; Luna browser debugger for live network reproduction; Luna coder after diagnosis; Terra reviewer; Luna tester and browser debugger for final verification.
+- Current state: investigation starting from released SHA `97603fab66b01add3b4370fb17b0c23457316d7a`. Production revisions are recognizer `phoneme-recognizer-00016-lum`, pronunciation API `praat-api-00069-fub`, and Firebase API `api-00085-yaw`; the user-facing custom origin is `https://betterenglishlearning.com`.
+- Next action: collect independent official-documentation, repository, and live-browser evidence; then authorize the smallest coherent implementation increment.
+
 ## Locally verified package: V4FIX-UI-01 study-v2 review controls and visualization readiness
 
 - Goal: make the production recording review workflow usable by repairing false WaveSurfer readiness failures and adding explicit automatic-version judgment plus precise timeline/A-B playback controls.

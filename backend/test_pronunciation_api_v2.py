@@ -71,6 +71,46 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
             "https://betterenglishlearning.com",
         )
 
+    def test_listening_tasks_origins_are_cors_allowed_for_get(self):
+        origins = [
+            "https://listening-tasks-3ae34.web.app",
+            "https://listening-tasks-3ae34.firebaseapp.com",
+        ]
+
+        for origin in origins:
+            with self.subTest(origin=origin):
+                response = self.client.get("/health", headers={"Origin": origin})
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.headers.get("Access-Control-Allow-Origin"),
+                    origin,
+                )
+                self.assertNotEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+
+    def test_listening_tasks_origins_are_cors_allowed_for_options(self):
+        origins = [
+            "https://listening-tasks-3ae34.web.app",
+            "https://listening-tasks-3ae34.firebaseapp.com",
+        ]
+
+        for origin in origins:
+            with self.subTest(origin=origin):
+                response = self.client.options(
+                    "/health",
+                    headers={
+                        "Origin": origin,
+                        "Access-Control-Request-Method": "GET",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.headers.get("Access-Control-Allow-Origin"),
+                    origin,
+                )
+                self.assertIn("GET", response.headers.get("Access-Control-Allow-Methods", ""))
+
     def test_car_returns_one_valid_canonical_variant(self):
         with patch.object(
             server.http_requests,

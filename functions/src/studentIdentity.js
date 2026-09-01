@@ -165,7 +165,7 @@ const autoEnrollByEmail = async (email, studentId) => {
  * Cloud Function Trigger: Runs when a new Firebase Auth user is created.
  * Automatically checks if their email matches a crmStudent and enrolls them.
  */
-const functions = require('firebase-functions');
+const functions = require('firebase-functions/v1');
 
 const onUserSignUp = functions.auth.user().onCreate(async (user) => {
     if (!user || !user.email) return;

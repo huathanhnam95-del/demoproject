@@ -643,6 +643,8 @@ cors_origins_env = str(os.environ.get('CORS_ORIGINS', '')).strip()
 cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()] if cors_origins_env else [
     'https://betterenglishlearning.com',
     'https://www.betterenglishlearning.com',
+    'https://listening-tasks-3ae34.web.app',
+    'https://listening-tasks-3ae34.firebaseapp.com',
     'http://localhost:8443',
     'https://localhost:8443',
     'http://127.0.0.1:8443',

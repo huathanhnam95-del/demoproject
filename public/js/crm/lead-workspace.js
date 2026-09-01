@@ -22,6 +22,7 @@ window.CrmLeadWorkspace = (function () {
             formatDateTime
         } = deps;
         const selectedLeadIds = new Set();
+        let stageFilter = null;
 
         function formatList(values) {
             const list = Array.isArray(values) ? values : [];
@@ -512,11 +513,23 @@ window.CrmLeadWorkspace = (function () {
 
             const counts = window.CrmLeads.summarize(leads);
             elements.leadStageBoard.innerHTML = window.CrmLeads.STAGES.map((stage) => `
-      <div class="crm-lead-stage-card">
+      <div class="crm-lead-stage-card${stageFilter === stage ? ' active' : ''}" data-stage="${escapeHtml(stage)}" role="button" tabindex="0">
         <div class="text-muted">${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</div>
         <strong>${escapeHtml(String(counts[stage] || 0))}</strong>
       </div>
     `).join('');
+
+            if (!elements.leadStageBoard.__crmStageFilterBound) {
+                elements.leadStageBoard.addEventListener('click', (event) => {
+                    const card = event.target.closest('.crm-lead-stage-card[data-stage]');
+                    if (!card || !elements.leadStageBoard.contains(card)) return;
+                    const clickedStage = card.dataset.stage;
+                    stageFilter = stageFilter === clickedStage ? null : clickedStage;
+                    renderLeadStageBoard(dataCache.leads || []);
+                    renderLeadTable(dataCache.leads || []);
+                });
+                elements.leadStageBoard.__crmStageFilterBound = true;
+            }
         }
 
         function renderLeadTable(leads) {
@@ -525,6 +538,9 @@ window.CrmLeadWorkspace = (function () {
                 elements.leadListContainer.innerHTML = 'No leads yet.';
                 return;
             }
+            const filteredLeads = stageFilter
+                ? leads.filter((lead) => lead.stage === stageFilter)
+                : leads;
 
             if (!elements.leadListContainer.__crmLeadTableHandlerBound) {
                 elements.leadListContainer.addEventListener('click', async (event) => {
@@ -617,8 +633,14 @@ window.CrmLeadWorkspace = (function () {
                 elements.leadListContainer.__crmLeadTableHandlerBound = true;
             }
 
+            if (!filteredLeads.length) {
+                const label = stageFilter && window.CrmLeads?.formatStageLabel
+                    ? window.CrmLeads.formatStageLabel(stageFilter) : stageFilter;
+                elements.leadListContainer.innerHTML = `No leads in "${escapeHtml(label)}".`;
+                return;
+            }
             const checkedCount = selectedLeadIds.size;
-            const allChecked = checkedCount > 0 && leads.every((lead) => selectedLeadIds.has(String(lead.leadId || '').trim()));
+            const allChecked = checkedCount > 0 && filteredLeads.every((lead) => selectedLeadIds.has(String(lead.leadId || '').trim()));
             elements.leadListContainer.innerHTML = `
       <div class="crm-inline-fields" style="justify-content: space-between; margin-bottom: 12px;">
         <div class="crm-muted">${checkedCount ? `${checkedCount} selected` : 'Select rows to move to Recycle Bin.'}</div>
@@ -635,7 +657,7 @@ window.CrmLeadWorkspace = (function () {
             </tr>
           </thead>
           <tbody>
-            ${leads.map((lead) => `
+            ${filteredLeads.map((lead) => `
               ${(() => {
                     const isConverted = window.CrmLeads.isConvertedLead(lead);
                     const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
@@ -776,16 +798,19 @@ window.CrmLeadWorkspace = (function () {
                         ? event.target.closest('input[type="checkbox"][data-lead-select-all]')
                         : null;
                     if (!checkbox || !elements.leadListContainer.contains(checkbox)) return;
-                    const leads = Array.isArray(dataCache.leads) ? dataCache.leads : [];
+                    const allLeads = Array.isArray(dataCache.leads) ? dataCache.leads : [];
+                    const visible = stageFilter
+                        ? allLeads.filter((lead) => lead.stage === stageFilter)
+                        : allLeads;
                     if (checkbox.checked) {
-                        leads.forEach((lead) => {
+                        visible.forEach((lead) => {
                             const id = String(lead.leadId || '').trim();
                             if (id) selectedLeadIds.add(id);
                         });
                     } else {
                         clearLeadSelection();
                     }
-                    renderLeadTable(leads);
+                    renderLeadTable(allLeads);
                 });
                 elements.leadListContainer.addEventListener('click', (event) => {
                     const button = event.target && typeof event.target.closest === 'function'

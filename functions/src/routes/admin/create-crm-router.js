@@ -57,6 +57,9 @@ const {
 } = require('../../crm/homework-service');
 const { getAuth } = require('../../utils/firebase_admin_init');
 
+const ACCOUNT_BULK_ACTIONS = new Set(['archive', 'restore', 'delete']);
+const MAX_BULK_ACCOUNT_MUTATIONS = 200;
+
 function cleanOptionalString(value, fallback = null) {
     const normalized = String(value || '').trim();
     return normalized || fallback;
@@ -438,6 +441,7 @@ module.exports = function createCrmRouter(rawDeps) {
                 const isAdmin = Boolean(d.isAdmin);
                 const isTeacher = Boolean(d.isTeacher || d.crmRole === 'teacher');
                 const crmRole = d.crmRole || (isAdmin ? 'admin' : (isTeacher ? 'teacher' : 'user'));
+                const archived = Boolean(d.archived || d.accountStatus === 'archived');
 
                 accounts.push({
                     uid,
@@ -445,7 +449,9 @@ module.exports = function createCrmRouter(rawDeps) {
                     displayName: d.displayName || d.name || '',
                     isAdmin,
                     isTeacher,
-                    crmRole
+                    crmRole,
+                    archived,
+                    archivedAt: archived ? (d.archivedAt || null) : null
                 });
             });
 
@@ -555,6 +561,216 @@ module.exports = function createCrmRouter(rawDeps) {
             }, isAdmin ? 'Account promoted to admin.' : 'Account demoted from admin.');
         } catch (error) {
             return sendError(res, 500, 'UPDATE_ACCOUNT_ROLE_ERROR', 'Failed to update account role.', error?.message || error);
+        }
+    });
+
+    // --- Account lifecycle: archive / restore / permanent delete (admin only) ---
+    // Every mutation runs through loadAccountForMutation so the bootstrap-admin,
+    // self-mutation and admin-deletion guards cannot be bypassed by a caller that
+    // reaches only one of the routes below.
+    async function loadAccountForMutation(rawUid, req, operation) {
+        const uid = String(rawUid || '').trim();
+        if (!uid) {
+            return { error: { status: 400, code: 'VALIDATION_ERROR', message: 'Missing target UID.' } };
+        }
+
+        const ref = deps.db.collection(USERS).doc(uid);
+        const snap = await ref.get();
+        if (!snap.exists) {
+            return { error: { status: 404, code: 'ACCOUNT_NOT_FOUND', message: 'User account not found.' } };
+        }
+
+        const data = snap.data() || {};
+        let email = String(data.email || '').trim().toLowerCase();
+
+        const auth = resolveAuthClient(deps);
+        let authUser = null;
+        if (auth) {
+            try {
+                authUser = await auth.getUser(uid);
+                if (!email && authUser?.email) {
+                    email = String(authUser.email).trim().toLowerCase();
+                }
+            } catch (getUserError) {
+                // Seeded/dummy profiles often exist in Firestore with no Auth record.
+                // That is not an error here: the Firestore doc is still cleanable.
+                void getUserError;
+            }
+        }
+
+        if (req.user?.uid === uid) {
+            return { error: { status: 403, code: 'SELF_MUTATION_FORBIDDEN', message: `Cannot ${operation} your own account.` } };
+        }
+
+        const bootstrapAdminEmails = resolveBootstrapAdminEmails(deps);
+        if (email && bootstrapAdminEmails.has(email)) {
+            return { error: { status: 403, code: 'BOOTSTRAP_ADMIN_PROTECTED', message: `Cannot ${operation} a bootstrap admin account.` } };
+        }
+
+        if (operation === 'delete' && Boolean(data.isAdmin)) {
+            return { error: { status: 403, code: 'ADMIN_DELETE_FORBIDDEN', message: 'Demote this admin before deleting the account.' } };
+        }
+
+        return { uid, ref, data, email, auth, authUser };
+    }
+
+    async function applyAccountArchive(loaded, archived, req) {
+        const { uid, ref, data, email, auth, authUser } = loaded;
+        const nowIso = new Date().toISOString();
+
+        await ref.set({
+            accountStatus: archived ? 'archived' : 'active',
+            archived,
+            archivedAt: archived ? nowIso : null,
+            archivedBy: archived ? (req.user?.uid || null) : null
+        }, { merge: true });
+
+        // Archiving must also block sign-in, otherwise the account is merely
+        // hidden in the CRM while still fully usable by its owner.
+        if (auth && authUser) {
+            try {
+                await auth.updateUser(uid, { disabled: archived });
+            } catch (disableError) {
+                console.warn('[CRM Admin] Failed to sync auth disabled flag for account:', disableError?.message || disableError);
+            }
+        }
+
+        await writeAuditLog({
+            action: archived ? 'account.archive' : 'account.restore',
+            entityType: 'user',
+            entityId: uid,
+            metadata: {
+                email: email || data.email || null,
+                displayName: data.displayName || null
+            }
+        }, { user: req.user });
+
+        return { uid, email: email || data.email || '', archived };
+    }
+
+    async function applyAccountDelete(loaded, req) {
+        const { uid, ref, data, email, auth, authUser } = loaded;
+
+        if (auth && authUser) {
+            try {
+                await auth.deleteUser(uid);
+            } catch (deleteAuthError) {
+                console.warn('[CRM Admin] Failed to delete auth user for account:', deleteAuthError?.message || deleteAuthError);
+            }
+        }
+
+        await ref.delete();
+
+        await writeAuditLog({
+            action: 'account.delete',
+            entityType: 'user',
+            entityId: uid,
+            metadata: {
+                email: email || data.email || null,
+                displayName: data.displayName || null,
+                isTeacher: Boolean(data.isTeacher)
+            }
+        }, { user: req.user });
+
+        return { uid, email: email || data.email || '' };
+    }
+
+    router.patch('/accounts/:uid/status', ...requireAdminHandlers, async (req, res) => {
+        try {
+            if (typeof req.body?.archived !== 'boolean') {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'archived must be a boolean.');
+            }
+
+            const archived = req.body.archived;
+            const loaded = await loadAccountForMutation(req.params.uid, req, archived ? 'archive' : 'restore');
+            if (loaded.error) {
+                return sendError(res, loaded.error.status, loaded.error.code, loaded.error.message);
+            }
+
+            const account = await applyAccountArchive(loaded, archived, req);
+            return sendSuccess(res, { account }, archived ? 'Account archived.' : 'Account restored.');
+        } catch (error) {
+            return sendError(res, 500, 'UPDATE_ACCOUNT_STATUS_ERROR', 'Failed to update account status.', error?.message || error);
+        }
+    });
+
+    router.delete('/accounts/:uid', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const loaded = await loadAccountForMutation(req.params.uid, req, 'delete');
+            if (loaded.error) {
+                return sendError(res, loaded.error.status, loaded.error.code, loaded.error.message);
+            }
+
+            const account = await applyAccountDelete(loaded, req);
+            return sendSuccess(res, { account }, 'Account deleted permanently.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_ACCOUNT_ERROR', 'Failed to delete account.', error?.message || error);
+        }
+    });
+
+    router.post('/accounts/bulk', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const action = String(req.body?.action || '').trim().toLowerCase();
+            if (!ACCOUNT_BULK_ACTIONS.has(action)) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'action must be one of: archive, restore, delete.');
+            }
+
+            const uids = [];
+            const seen = new Set();
+            for (const value of (Array.isArray(req.body?.uids) ? req.body.uids : [])) {
+                const uid = String(value || '').trim();
+                if (!uid || seen.has(uid)) continue;
+                seen.add(uid);
+                uids.push(uid);
+            }
+
+            if (!uids.length) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'uids must contain at least one account id.');
+            }
+            if (uids.length > MAX_BULK_ACCOUNT_MUTATIONS) {
+                return sendError(res, 400, 'VALIDATION_ERROR', `Cannot process more than ${MAX_BULK_ACCOUNT_MUTATIONS} accounts per request.`);
+            }
+
+            const processed = [];
+            const skipped = [];
+
+            // Sequential on purpose: a partial failure must leave a readable
+            // per-account outcome rather than an all-or-nothing rejection.
+            for (const uid of uids) {
+                const loaded = await loadAccountForMutation(uid, req, action);
+                if (loaded.error) {
+                    skipped.push({ uid, error: loaded.error.code, message: loaded.error.message });
+                    continue;
+                }
+
+                try {
+                    processed.push(action === 'delete'
+                        ? await applyAccountDelete(loaded, req)
+                        : await applyAccountArchive(loaded, action === 'archive', req));
+                } catch (itemError) {
+                    skipped.push({
+                        uid,
+                        error: 'ACCOUNT_MUTATION_FAILED',
+                        message: itemError?.message || 'Failed to update account.'
+                    });
+                }
+            }
+
+            const verb = action === 'delete' ? 'Deleted' : (action === 'archive' ? 'Archived' : 'Restored');
+            const summary = skipped.length
+                ? `${verb} ${processed.length} account(s). ${skipped.length} skipped.`
+                : `${verb} ${processed.length} account(s).`;
+
+            return sendSuccess(res, {
+                action,
+                requestedCount: uids.length,
+                processedCount: processed.length,
+                skippedCount: skipped.length,
+                processed,
+                skipped
+            }, summary);
+        } catch (error) {
+            return sendError(res, 500, 'BULK_ACCOUNT_ACTION_ERROR', 'Failed to process bulk account action.', error?.message || error);
         }
     });
 

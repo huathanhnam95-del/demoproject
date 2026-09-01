@@ -53,8 +53,12 @@ window.CrmDashboard = (function () {
         ];
     }
 
+    // Shared with the Enquiry board — see js/crm/lifecycle-stages.js. The literal is kept
+    // only as a fallback for contexts that load this module standalone (browser tests).
     function getFunnelOrder() {
-        return ['new', 'contacted', 'test_scheduled', 'test_completed', 'counseling', 'trial', 'won', 'lost', 'converted'];
+        return window.CrmLifecycleStages
+            ? window.CrmLifecycleStages.getFunnelOrder()
+            : ['new', 'contacted', 'test_scheduled', 'test_completed', 'counseling', 'trial', 'won', 'lost', 'converted'];
     }
 
     function buildFunnelRows(funnel) {

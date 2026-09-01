@@ -1,0 +1,171 @@
+/* ============================================================================
+   progress-roadmap.css — styling for the "Your Journey" progression screen.
+
+   Every class emitted by js/modules/level-system.js (rpg-roadmap-shell, -grid, -card,
+   -progress-bar, -chip, -xp …) previously had ZERO matching rules in any stylesheet in
+   the project. The screen rendered as unstyled stacked text: the XP bar received an
+   inline width but had no height, background or track so it drew nothing, and the unlock
+   chips had no padding or background so their labels ran together — "Word GhostFirst-
+   Letter PeekHint: Reveal Word" is three separate rewards with no delimiter.
+
+   This is the surface that tells a learner their effort accumulated into something, so
+   it reads as a progress board: one card per skill branch, level and XP stated plainly,
+   a real track for the bar, and unlocks as discrete chips.
+
+   Colours and radii come from design-tokens.css / style.css tokens.
+   ============================================================================ */
+
+.rpg-roadmap-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg, 24px);
+}
+
+.rpg-roadmap-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rpg-roadmap-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary, #1e293b);
+}
+
+.rpg-roadmap-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.rpg-roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md, 16px);
+}
+
+.rpg-roadmap-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 16px);
+  padding: 20px;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--r-inner, 18px);
+  background: var(--bg-surface, #ffffff);
+}
+
+.rpg-roadmap-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rpg-roadmap-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--blue-50, #eff6ff);
+  color: var(--blue-600, #2563eb);
+}
+
+.rpg-roadmap-icon .material-icons {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.rpg-roadmap-branch {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+}
+
+.rpg-roadmap-level {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* The bar had an inline width but nothing to sit in, so it rendered as nothing. */
+.rpg-roadmap-progress {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gray-200, #e2e8f0);
+  overflow: hidden;
+}
+
+.rpg-roadmap-progress-bar {
+  height: 100%;
+  min-width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green-600, #1b8a4f), var(--blue-600, #2563eb));
+  transition: width 0.4s ease-out;
+}
+
+.rpg-roadmap-xp {
+  margin-top: -8px;
+  font-family: var(--font-mono, 'Roboto Mono', monospace);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.rpg-roadmap-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rpg-roadmap-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Chips had no padding or background, so consecutive rewards read as one run-on string. */
+.rpg-roadmap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rpg-roadmap-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  background: var(--gray-100, #f1f5f9);
+  color: var(--text-secondary, #475569);
+}
+
+.rpg-roadmap-chip.unlocked {
+  background: var(--green-50, #f0fdf4);
+  color: var(--green-700, #156d3e);
+}
+
+.rpg-roadmap-empty,
+.rpg-roadmap-next {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.rpg-roadmap-next {
+  color: var(--text-secondary, #475569);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpg-roadmap-progress-bar {
+    transition: none;
+  }
+}

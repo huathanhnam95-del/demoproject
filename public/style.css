@@ -36,26 +36,31 @@
   /* Elevation */
   --shadow-premium: 0 10px 40px rgba(0, 0, 0, 0.04);
 
+  /* Radius scale. Eleven distinct radii rendered on the practice page — 4, 8, 14, 16, 22,
+     30, 32, 50%, 500px, 999px — with three spellings of "pill" and pairs (14/16, 30/32)
+     nobody can tell apart. Collapsed to four steps plus a pill, so a chip's softness and
+     a card's are related rather than independent decisions. */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
-  --radius-xl: 32px;
-  --radius-pill: 500px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
 
-  /* Card-specific */
-  --r-card: 22px;
-  --r-inner: 18px;
+  /* Card-specific — aligned to the scale above (were 22px / 18px). */
+  --r-card: var(--radius-lg);
+  --r-inner: var(--radius-md);
   --ease-smooth: cubic-bezier(0.2, 0.9, 0.2, 1);
   --sh-1: 0 10px 30px rgba(15, 23, 42, 0.08);
   --sh-2: 0 18px 60px rgba(15, 23, 42, 0.12);
 
-  /* Was cubic-bezier(0.34, 1.56, 0.64, 1) — a 1.56 overshoot applied to `all`, so 12
-     elements sprang past their resting position on any colour or size change. Overshoot
-     reads as toy-like next to exam-preparation content, and it was reached by accident
-     rather than chosen. design-tokens.css already defines this token as
-     `all 0.3s ease-out`; matching it here keeps the two in step. */
-  --transition-base: all 0.3s ease-out;
-  --transition-fast: all 0.2s ease-out;
+  /* Was `all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)`: a 1.56 overshoot bounce applied to
+     every animatable property. Two problems, both from `all`. The overshoot made twelve
+     elements spring past their resting position on any colour or size change — toy-like
+     next to exam-preparation content, and reached by accident rather than chosen. And
+     `all` includes `outline-width`, so focus rings faded in over 300ms; a keyboard user
+     saw no indicator at the moment they needed one. Naming the properties fixes both. */
+  --transition-base: color 0.25s ease-out, background-color 0.25s ease-out, border-color 0.25s ease-out, box-shadow 0.25s ease-out, transform 0.25s ease-out, opacity 0.25s ease-out;
+  --transition-fast: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out, opacity 0.15s ease-out;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -89,6 +94,19 @@ textarea {
 button {
   background: none;
   border: 0;
+}
+
+/* One visible focus ring for everything that takes focus. Individual components may
+   still override it, but nothing falls through to "no indicator at all" — which is what
+   the three primary panel tabs and the header account button did. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Premium Animations */
@@ -490,13 +508,19 @@ h6 {
   }
 }
 
+/* CLAUDE.md: "Avoid wrapping components in multiple layers of cards or nested container
+   boxes. Layout elements should flow naturally on the parent .container background."
+   This wrapper was itself a card — a white panel with a radius and a shadow — so the page
+   nested three deep (container card -> skill card -> mode card), and four inside a
+   practice mode. Dropping the card treatment here leaves the content flowing on the page
+   ground and lets the cards inside it be the only cards. */
 .container {
   max-width: 1100px;
-  margin: 64px auto;
-  padding: 40px;
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-premium);
+  margin: 40px auto;
+  padding: 0 40px 40px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   transition: var(--transition-base);
 }
 
@@ -1024,9 +1048,43 @@ h1 {
   border-radius: var(--r-card);
 }
 
+/* ── Skill palette for practice-mode cards ───────────────────────────────
+   Each mode previously hardcoded its own hue through a .visual-<mode> class — blue,
+   fuchsia, amber, emerald, rose, violet, indigo, cyan — so selecting "Writing" turned
+   the skill card gold and then delivered blue mode cards underneath. The page taught a
+   colour code in one row and broke it in the next.
+
+   `data-practice-skill` is already on every card and the inline SVGs already consume
+   --visual-bg / --visual-fg / --visual-accent, so re-mapping the custom properties by
+   skill needs no markup change. Attribute + class beats the bare .visual-<mode> class
+   on specificity, so these win. Hues come from design-tokens.css --skill-*.
+   ──────────────────────────────────────────────────────────────────────── */
+[data-practice-skill="speaking"] .card-visual,
+[data-practice-skill="reading"] .card-visual {
+  --visual-bg: var(--blue-50);
+  --visual-fg: var(--blue-600);
+  --visual-accent: var(--blue-400);
+}
+
+[data-practice-skill="listening"] .card-visual {
+  --visual-bg: var(--green-50);
+  --visual-fg: var(--green-600);
+  --visual-accent: var(--green-400);
+}
+
+[data-practice-skill="writing"] .card-visual {
+  --visual-bg: var(--gold-50);
+  --visual-fg: var(--gold-600);
+  --visual-accent: var(--gold-400);
+}
+
 .card-visual {
-  height: 140px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  /* Was 140px. The icon is decorative; at 140px it was the largest element in a card
+     whose useful content is a title and two lines, and it pushed the grid to 1,658px on
+     desktop / 3,588px on mobile. */
+  height: 96px;
+  background: var(--visual-bg, var(--blue-50));
+  color: var(--visual-fg, var(--blue-600));
   position: relative;
   display: flex;
   justify-content: center;
@@ -1077,6 +1135,15 @@ h1 {
 .modern-card:focus-within .whats-this-link {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Touch devices have no hover state, so a hover-revealed control is simply absent there.
+   Keep the tidy reveal on pointer devices; show it outright where hover does not exist. */
+@media (hover: none) {
+  .whats-this-link {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Animation Containers */
@@ -1552,25 +1619,18 @@ h1 {
   }
 }
 
-/* Specific Card Mesh Gradients */
-.card-visual.visual-type {
-  background: radial-gradient(circle at 100% 0%, #e0e7ff 0%, #eff6ff 50%, #ffffff 100%);
-}
-
-.card-visual.visual-collo {
-  background: radial-gradient(circle at 100% 0%, #fae8ff 0%, #fdf4ff 50%, #ffffff 100%);
-}
-
-.card-visual.visual-speak {
-  background: radial-gradient(circle at 100% 0%, #fef3c7 0%, #fffbeb 50%, #ffffff 100%);
-}
-
-.card-visual.visual-pronounce {
-  background: radial-gradient(circle at 100% 0%, #dcfce7 0%, #f0fdf4 50%, #ffffff 100%);
-}
-
+/* Per-mode mesh gradients, now driven by the selected skill's hue rather than a
+   hardcoded one per mode. Previously these five hardcoded amber / violet / fuchsia /
+   emerald meshes, so e.g. Repeat Sentence rendered amber inside a blue Speaking grid and
+   Write from Dictation rendered indigo inside a green Listening grid — the skill colour
+   code was contradicted by the cards it was meant to describe. --visual-bg is set by the
+   [data-practice-skill] block near .card-visual. */
+.card-visual.visual-type,
+.card-visual.visual-collo,
+.card-visual.visual-speak,
+.card-visual.visual-pronounce,
 .card-visual.visual-watch {
-  background: radial-gradient(circle at 100% 0%, #fae8ff 0%, #fdf4ff 50%, #ffffff 100%);
+  background: radial-gradient(circle at 100% 0%, var(--visual-bg) 0%, var(--visual-bg) 50%, #ffffff 100%);
 }
 
 .visual-srs {
@@ -1736,11 +1796,18 @@ h1 {
 }
 
 /* ===== SPEAK MODE: mic → transcript → checkmark ===== */
-.mic-body {
+/* Card-visual decoration animates on interaction rather than forever. Six loops ran
+   permanently on the practice grid at 2s / 2s / 2s / 2.5s / 3s / 3s — periods with no
+   common short multiple, so they only realigned every 30 seconds and something in the
+   periphery was always starting to move. Peripheral motion is involuntary attention;
+   during a timed speaking exercise that is a direct tax on the task. */
+.modern-card:hover .mic-body,
+.modern-card:focus-within .mic-body {
   animation: micPulse 2s ease-in-out infinite;
 }
 
-.transcript-line {
+.modern-card:hover .transcript-line,
+.modern-card:focus-within .transcript-line {
   animation: transcriptAppear 2s ease-out infinite;
 }
 
@@ -1915,7 +1982,8 @@ h1 {
 }
 
 /* ===== NOTE MODE: video → arrow → note lines ===== */
-.transfer-arrow {
+.modern-card:hover .transfer-arrow,
+.modern-card:focus-within .transfer-arrow {
   animation: arrowPulse 2s ease-in-out infinite;
 }
 
@@ -2517,20 +2585,22 @@ h1 {
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   margin-top: auto;
   text-align: center;
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
+  /* Was opacity: 0 / pointer-events: none, revealed only by .modern-card:hover — with no
+     :focus-within and no touch fallback. It reserved ~48px of card height permanently and
+     was unreachable on every phone and tablet, which is what made the cards look 40%
+     empty. It is the card's primary action; it is now always present. */
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
-.modern-card:hover .card-cta {
-  opacity: 1;
-  transform: translateY(0);
+.modern-card:hover .card-cta,
+.modern-card:focus-within .card-cta {
   background: var(--primary);
   color: white;
-  pointer-events: auto;
 }
 
 .practice-placeholder-card:hover .card-cta.is-disabled,
@@ -2603,7 +2673,6 @@ h1 {
   border: 1px solid var(--primary);
   box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
   transition: var(--transition-base);
-  animation: pulse-soft 3s infinite;
 }
 
 #what-is-this-btn.btn-compact {
@@ -5099,6 +5168,22 @@ textarea:focus {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-main);
+}
+
+/* The level picker offered three words and no way to tell them apart — a first-run
+   forced choice with nothing to base it on. */
+.entry-hint {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  max-width: 32ch;
+}
+
+.entry-modal-lede {
+  margin: 0 0 24px;
+  color: var(--text-secondary, #475569);
+  max-width: 52ch;
+  margin-inline: auto;
 }
 
 .entry-desc {
@@ -8406,7 +8491,15 @@ textarea:focus {
 
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    visibility 0s linear 0.3s;
+
+  /* Collapsing by width alone left the panel's buttons in the tab order: a keyboard walk
+     of the practice page went brand -> header -> "Add New Word" -> "Close" -> "Reset
+     Cache" inside a panel that is off-screen, before reaching any page content.
+     `visibility: hidden` removes them; the delay lets the close animation finish first.
+     (.account-panel-content already uses display:none and was never affected.) */
+  visibility: hidden;
 
   white-space: nowrap;
   pointer-events: auto;
@@ -8441,6 +8534,8 @@ textarea:focus {
   width: 420px;
   padding: 20px;
   opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 /* Ensure inner content doesn't break layout during slide */
@@ -12990,11 +13085,16 @@ textarea:focus {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Modern Card Tweaks */
+/* Modern Card Tweaks
+   Was an indigo gradient (#6366f1 → #4f46e5) with a matching indigo-tinted lift. Indigo
+   appears in no token file: the practice grid — the largest, most repeated, most clicked
+   element in the app — was carrying a third accent that belonged to neither the green
+   brand mark nor the blue interactive colour. The card now takes the selected skill's
+   hue through --visual-accent (see the skill palette block above .card-visual). */
 .modern-card {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2), 0 4px 6px -2px rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface, #ffffff);
+  box-shadow: var(--sh-1);
+  border: 1px solid var(--border-default, #e2e8f0);
 }
 
 .tutorial-card-content.modern-card-content {
@@ -13991,7 +14091,8 @@ html {
   overflow: hidden;
   color: white;
   cursor: pointer;
-  animation: diffBadgePulse 3s ease-in-out infinite;
+  /* The level badge is a persistent status chip, not an alert — a permanent pulse gave
+     it the visual weight of something needing attention. */
 }
 
 .difficulty-badge:hover {
@@ -14167,6 +14268,39 @@ html {
   background: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Shop alert dialog — was built with inline hex values in shop-module.js. */
+.shop-alert {
+  max-width: 400px;
+  padding: 30px;
+  text-align: center;
+}
+
+.shop-alert-icon {
+  margin-bottom: 16px;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.shop-alert-message {
+  margin: 0 0 24px;
+  color: var(--text-secondary, #475569);
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.shop-alert-ok {
+  padding: 10px 30px;
+  border-radius: var(--radius-sm);
+  background: var(--color-success, #1b8a4f);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shop-alert-ok.is-error {
+  background: var(--color-danger, #dc2626);
 }
 
 

@@ -130,6 +130,14 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-  /* Transitions */
-  --transition-base: all 0.3s ease-out;
+  /* Focus — one ring for the whole app. A keyboard walk of the practice page found five
+     different treatments (1px auto black, 3px blue at 35% alpha, 3px near-black, 2px
+     solid blue) and, on the three primary tabs and the account button, none at all. */
+  --focus-ring-color: var(--blue-600);
+  --focus-ring: 2px solid var(--focus-ring-color);
+  --focus-ring-offset: 2px;
+
+  /* Transitions — named properties, not `all`. `all` includes outline-width, which made
+     focus rings fade in over the transition duration instead of appearing on focus. */
+  --transition-base: color 0.25s ease-out, background-color 0.25s ease-out, border-color 0.25s ease-out, box-shadow 0.25s ease-out, transform 0.25s ease-out, opacity 0.25s ease-out;
 }

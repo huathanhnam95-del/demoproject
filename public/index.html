@@ -44,6 +44,7 @@
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="speaking-practice-controller.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="progress-roadmap.css">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
   <!-- Scripts moved to end of body for performance -->
@@ -432,21 +433,24 @@
   <!-- Level Selection Modal (shown on first login) -->
   <div id="level-selection-modal" class="entry-modal" style="display: none;">
     <div class="entry-modal-content">
-      <h2>Choose Your English Level</h2>
-      <p style="margin-bottom: 24px; color: #4b5563;">Select your current level to customize your practice experience.
-      </p>
+      <h2 id="level-selection-title">Choose Your English Level</h2>
+      <p class="entry-modal-lede">This sets how hard your first questions are. You can change it any time from the
+        level badge at the top of the practice page.</p>
       <div class="entry-options">
         <button class="entry-btn level-btn" data-level="beginner">
           <span class="entry-icon">🌱</span>
           <span class="entry-label">Beginner</span>
+          <span class="entry-hint">Short sentences, slower audio</span>
         </button>
         <button class="entry-btn level-btn" data-level="intermediate">
           <span class="entry-icon">🌿</span>
           <span class="entry-label">Intermediate</span>
+          <span class="entry-hint">Exam-length prompts at natural pace</span>
         </button>
         <button class="entry-btn level-btn" data-level="expert">
           <span class="entry-icon">🌳</span>
           <span class="entry-label">Expert</span>
+          <span class="entry-hint">Long, dense passages and fast speech</span>
         </button>
       </div>
     </div>
@@ -1053,7 +1057,6 @@
               <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('read-aloud')" tabindex="0" role="button"
                 aria-label="Read Aloud mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1118,7 +1121,6 @@
               <!-- 3. Describe Image Mode Card (PTE 3) -->
               <div id="mode-btn-describe-image" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-describe-image">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1141,7 +1143,6 @@
               <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('notes')" tabindex="0" role="button"
                 aria-label="Retell Lecture mode">
-                <span class="badge">New</span>
                 <div class="card-visual visual-notes">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1176,7 +1177,6 @@
               <!-- 5. ASQ (Quiz) Mode Card (PTE 5: Answer Short Question) -->
               <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Answer Short Questions mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1200,7 +1200,6 @@
               <!-- 6. Discussion Mode Card (PTE 6: SGD) -->
               <div id="mode-btn-sgd" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Summarize Group Discussion mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1228,7 +1227,6 @@
               <!-- 7. Respond To Situation Mode Card (PTE 7: RTS) -->
               <div id="mode-btn-rts" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('rts')" tabindex="0" role="button" aria-label="Respond To Situation mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1253,7 +1251,6 @@
               <div id="mode-btn-sst" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('sst')" tabindex="0" role="button"
                 aria-label="Summarize Spoken Text mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
                     <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1273,7 +1270,6 @@
               <!-- LMCMA Mode Card -->
               <div id="mode-btn-lmcma" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('lmcma')" tabindex="0" role="button" aria-label="Multiple Choice, Multiple Answers mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-lmcma">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1329,7 +1325,6 @@
               <!-- HCS Mode Card -->
               <div id="mode-btn-hcs" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('hcs')" tabindex="0" role="button" aria-label="Highlight Correct Summary mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-hcs">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1351,7 +1346,6 @@
               <!-- LMCSA Mode Card -->
               <div id="mode-btn-lmcsa" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('lmcsa')" tabindex="0" role="button" aria-label="Multiple Choice, Single Answer mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-lmcsa">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1376,7 +1370,6 @@
               <!-- SMW Mode Card -->
               <div id="mode-btn-smw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('smw')" tabindex="0" role="button" aria-label="Select Missing Word mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-smw">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1396,7 +1389,6 @@
               <!-- HIW Mode Card -->
               <div id="mode-btn-hiw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('hiw')" tabindex="0" role="button" aria-label="Highlight Incorrect Words mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-hiw">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1464,7 +1456,6 @@
               <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('collo-dictate')" tabindex="0"
                 role="button" aria-label="Collo-dictate mode (Collocation dictation)">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-collo">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1710,7 +1701,6 @@
               <!-- Essay Mode Card -->
               <div id="mode-btn-essay" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
                 onclick="window.switchToMode('essay')" tabindex="0" role="button" aria-label="Write Essay mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1732,7 +1722,6 @@
               <!-- SWT Mode Card -->
               <div id="mode-btn-swt" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
                 onclick="window.switchToMode('swt')" tabindex="0" role="button" aria-label="Summarize Written Text mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -5342,6 +5331,7 @@
   </script>
   <script src="js/points-logic.js"></script>
   <script src="js/skill-catalog.js"></script>
+  <script type="module" src="js/dialog-a11y-bridge.js"></script>
   <script type="module" src="js/difficulty-manager.js"></script>
   <script src="js/adaptive-engine-ui.js"></script>
   <script src="js/performance-tracker.js"></script>
@@ -6006,7 +5996,7 @@
   <style>
     /* --- Hide the default Dialogflow bubble --- */
     df-messenger {
-      z-index: 998;
+      z-index: 899;
       position: fixed;
       --df-messenger-font-color: #000;
       --df-messenger-font-family: Google Sans, sans-serif;
@@ -6027,7 +6017,11 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      z-index: 1000;
+      /* Sat at 1000 against a mobile toolbar at 998 and a df-messenger host also at 998,
+         so it covered the toolbar's "Account" tab and the version indicator, and stayed
+         fully lit above modal dimmers while everything else was darkened. Its own band,
+         below dialogs. */
+      z-index: 900;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -6038,6 +6032,18 @@
 
     .bel-chat-trigger:hover {
       transform: scale(1.1) translateY(-5px);
+    }
+
+    /* Now that the trigger sits below the mobile toolbar's band, lift it clear of the
+       toolbar rather than letting the toolbar cover it. */
+    @media (max-width: 768px) {
+      .bel-chat-trigger {
+        bottom: 84px;
+      }
+
+      df-messenger {
+        bottom: 84px;
+      }
     }
 
     /* Speech bubble - 2x larger */
@@ -6053,7 +6059,10 @@
       margin-bottom: 12px;
       position: relative;
       box-shadow: 0 4px 12px rgba(26, 115, 232, 0.45);
-      animation: bel-bubble-bounce 2.5s ease-in-out infinite;
+      /* The bubble bounced on a permanent 2.5s loop, out of phase with five other
+         infinite animations, so the periphery never settled. It now animates once on
+         load to draw the eye, then rests. */
+      animation: bel-bubble-bounce 2.5s ease-in-out 3;
     }
 
     /* Triangle pointer below the bubble */

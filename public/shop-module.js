@@ -397,19 +397,36 @@ const ShopModule = (() => {
         alertModal.className = 'shop-modal active';
         alertModal.style.zIndex = '11000'; // Above Journey modal
 
+        // Styling moved out of inline hex into shop-alert-* classes (style.css) so this
+        // dialog follows the same tokens as the rest of the app.
         alertModal.innerHTML = `
-            <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">${isError ? '⚠️' : '✅'}</div>
-                <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5; font-size: 1.1rem;">${message}</p>
-                <button id="${modalId}-ok" style="padding: 10px 30px; border: none; background: ${isError ? '#ef4444' : '#22c55e'}; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">OK</button>
+            <div class="shop-modal-content shop-alert" role="document">
+                <div class="shop-alert-icon" aria-hidden="true">${isError ? '⚠️' : '✅'}</div>
+                <p class="shop-alert-message" id="${modalId}-message">${message}</p>
+                <button type="button" id="${modalId}-ok" class="shop-alert-ok${isError ? ' is-error' : ''}">OK</button>
             </div>
         `;
 
         document.body.appendChild(alertModal);
 
-        document.getElementById(`${modalId}-ok`).onclick = () => alertModal.remove();
+        function close() {
+            controller?.handleClosed?.();
+            alertModal.remove();
+        }
+
+        // Previously this bound only click handlers, so Escape did nothing and focus was
+        // never trapped or restored — during testing one of these stayed open and blocked
+        // every click on the header until it was dismissed by pointer.
+        const controller = window.DialogA11y?.register(alertModal, {
+            labelledBy: `${modalId}-message`,
+            isOpen: () => document.body.contains(alertModal),
+            onRequestClose: close
+        });
+        controller?.handleOpened?.();
+
+        document.getElementById(`${modalId}-ok`).onclick = close;
         alertModal.onclick = (e) => {
-            if (e.target === alertModal) alertModal.remove();
+            if (e.target === alertModal) close();
         };
     }
 

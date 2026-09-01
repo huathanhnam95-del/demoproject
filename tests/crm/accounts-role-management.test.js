@@ -113,6 +113,9 @@ async function runHandlers(handlers, req, res) {
                                 const existing = usersStore.get(uid) || {};
                                 const merged = opts.merge ? { ...existing, ...data } : data;
                                 usersStore.set(uid, merged);
+                            },
+                            async delete() {
+                                usersStore.delete(uid);
                             }
                         };
                     }
@@ -136,8 +139,16 @@ async function runHandlers(handlers, req, res) {
         }
     };
 
+    const disabledStore = new Map();
+    const deletedAuthUids = [];
+
     const mockAuth = {
         async getUser(uid) {
+            if (!customClaimsStore.has(uid)) {
+                const error = new Error('No user record found for the provided identifier.');
+                error.code = 'auth/user-not-found';
+                throw error;
+            }
             return {
                 uid,
                 customClaims: customClaimsStore.get(uid) || {}
@@ -145,6 +156,17 @@ async function runHandlers(handlers, req, res) {
         },
         async setCustomUserClaims(uid, claims) {
             customClaimsStore.set(uid, claims);
+        },
+        async updateUser(uid, patch) {
+            if (Object.prototype.hasOwnProperty.call(patch || {}, 'disabled')) {
+                disabledStore.set(uid, Boolean(patch.disabled));
+            }
+            return { uid };
+        },
+        async deleteUser(uid) {
+            deletedAuthUids.push(uid);
+            customClaimsStore.delete(uid);
+            disabledStore.delete(uid);
         }
     };
 
@@ -312,6 +334,249 @@ async function runHandlers(handlers, req, res) {
         assert.strictEqual(res._status, 400);
         assert.strictEqual(res._json.error, 'VALIDATION_ERROR');
         console.log('✔ PATCH /accounts/:uid/role validates isAdmin boolean payload');
+    }
+
+    // --- Account lifecycle: archive / restore / delete ---
+    // Seeded after the listing assertions above so their fixed counts stay valid.
+    usersStore.set('dummy-firestore-only-uid', {
+        email: 'bel.audit.dummy1@example.com',
+        displayName: '',
+        isAdmin: false,
+        isTeacher: false,
+        crmRole: 'user'
+    });
+    usersStore.set('dummy-with-auth-uid', {
+        email: 'bel.audit.dummy2@example.com',
+        displayName: 'Dummy Two',
+        isAdmin: false,
+        isTeacher: false,
+        crmRole: 'user'
+    });
+    customClaimsStore.set('dummy-with-auth-uid', {});
+
+    // 8. PATCH /accounts/:uid/status -> archive disables login and flags the profile
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid/status', 'patch');
+        const req = { params: { uid: 'dummy-with-auth-uid' }, body: { archived: true } };
+        const res = buildRes();
+
+        await runHandlers(handlers, req, res);
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(res._json.success, true);
+        assert.strictEqual(res._json.account.archived, true);
+
+        const stored = usersStore.get('dummy-with-auth-uid');
+        assert.strictEqual(stored.archived, true);
+        assert.strictEqual(stored.accountStatus, 'archived');
+        assert.strictEqual(stored.archivedBy, 'current-admin-uid');
+        assert.ok(stored.archivedAt, 'archivedAt must be recorded');
+        assert.strictEqual(disabledStore.get('dummy-with-auth-uid'), true, 'Auth login must be disabled on archive');
+
+        const archiveAudit = auditLogs.find((l) => l.action === 'account.archive' && l.entityId === 'dummy-with-auth-uid');
+        assert.ok(archiveAudit, 'Archive audit log must exist');
+        console.log('✔ PATCH /accounts/:uid/status archives an account and disables its login');
+    }
+
+    // 9. GET /accounts -> surfaces archived state to the CRM UI
+    {
+        const handlers = getRouteHandlers(router, '/accounts', 'get');
+        const req = { headers: {} };
+        const res = buildRes();
+
+        await runHandlers(handlers, req, res);
+        const archivedAccount = res._json.accounts.find((a) => a.uid === 'dummy-with-auth-uid');
+        assert.ok(archivedAccount, 'Archived account must still be listed');
+        assert.strictEqual(archivedAccount.archived, true);
+        assert.ok(archivedAccount.archivedAt, 'archivedAt must be exposed');
+
+        const activeAccount = res._json.accounts.find((a) => a.uid === 'regular-user-uid');
+        assert.strictEqual(activeAccount.archived, false);
+        console.log('✔ GET /accounts exposes archived state');
+    }
+
+    // 10. PATCH /accounts/:uid/status -> restore re-enables login
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid/status', 'patch');
+        const req = { params: { uid: 'dummy-with-auth-uid' }, body: { archived: false } };
+        const res = buildRes();
+
+        await runHandlers(handlers, req, res);
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(res._json.account.archived, false);
+
+        const stored = usersStore.get('dummy-with-auth-uid');
+        assert.strictEqual(stored.archived, false);
+        assert.strictEqual(stored.accountStatus, 'active');
+        assert.strictEqual(stored.archivedAt, null);
+        assert.strictEqual(disabledStore.get('dummy-with-auth-uid'), false, 'Auth login must be re-enabled on restore');
+
+        const restoreAudit = auditLogs.find((l) => l.action === 'account.restore' && l.entityId === 'dummy-with-auth-uid');
+        assert.ok(restoreAudit, 'Restore audit log must exist');
+        console.log('✔ PATCH /accounts/:uid/status restores an archived account');
+    }
+
+    // 11. PATCH /accounts/:uid/status -> validation + guards
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid/status', 'patch');
+
+        const badPayload = buildRes();
+        await runHandlers(handlers, { params: { uid: 'dummy-with-auth-uid' }, body: { archived: 'yes' } }, badPayload);
+        assert.strictEqual(badPayload._status, 400);
+        assert.strictEqual(badPayload._json.error, 'VALIDATION_ERROR');
+
+        const bootstrapRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'bootstrap-admin-uid' }, body: { archived: true } }, bootstrapRes);
+        assert.strictEqual(bootstrapRes._status, 403);
+        assert.strictEqual(bootstrapRes._json.error, 'BOOTSTRAP_ADMIN_PROTECTED');
+        assert.ok(!usersStore.get('bootstrap-admin-uid').archived, 'Bootstrap admin must stay active');
+
+        const selfRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'current-admin-uid' }, body: { archived: true } }, selfRes);
+        assert.strictEqual(selfRes._status, 403);
+        assert.strictEqual(selfRes._json.error, 'SELF_MUTATION_FORBIDDEN');
+
+        const missingRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'non-existent-uid' }, body: { archived: true } }, missingRes);
+        assert.strictEqual(missingRes._status, 404);
+        assert.strictEqual(missingRes._json.error, 'ACCOUNT_NOT_FOUND');
+        console.log('✔ PATCH /accounts/:uid/status validates payload and protects bootstrap/self/missing accounts');
+    }
+
+    // 12. DELETE /accounts/:uid -> removes a Firestore-only dummy profile
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid', 'delete');
+        const req = { params: { uid: 'dummy-firestore-only-uid' } };
+        const res = buildRes();
+
+        await runHandlers(handlers, req, res);
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(res._json.success, true);
+        assert.strictEqual(res._json.account.uid, 'dummy-firestore-only-uid');
+        assert.strictEqual(usersStore.has('dummy-firestore-only-uid'), false, 'Firestore profile must be removed');
+        assert.strictEqual(
+            deletedAuthUids.includes('dummy-firestore-only-uid'),
+            false,
+            'No Auth record exists, so deleteUser must not be attempted'
+        );
+
+        const deleteAudit = auditLogs.find((l) => l.action === 'account.delete' && l.entityId === 'dummy-firestore-only-uid');
+        assert.ok(deleteAudit, 'Delete audit log must exist');
+        console.log('✔ DELETE /accounts/:uid deletes a Firestore-only account without an Auth record');
+    }
+
+    // 13. DELETE /accounts/:uid -> removes both the Auth user and the profile
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid', 'delete');
+        const res = buildRes();
+
+        await runHandlers(handlers, { params: { uid: 'dummy-with-auth-uid' } }, res);
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(usersStore.has('dummy-with-auth-uid'), false);
+        assert.ok(deletedAuthUids.includes('dummy-with-auth-uid'), 'Auth user must be deleted');
+        console.log('✔ DELETE /accounts/:uid deletes the Auth user alongside the profile');
+    }
+
+    // 14. DELETE /accounts/:uid -> guards
+    {
+        const handlers = getRouteHandlers(router, '/accounts/:uid', 'delete');
+
+        const bootstrapRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'bootstrap-admin-uid' } }, bootstrapRes);
+        assert.strictEqual(bootstrapRes._status, 403);
+        assert.strictEqual(bootstrapRes._json.error, 'BOOTSTRAP_ADMIN_PROTECTED');
+        assert.ok(usersStore.has('bootstrap-admin-uid'), 'Bootstrap admin must survive');
+
+        const selfRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'current-admin-uid' } }, selfRes);
+        assert.strictEqual(selfRes._status, 403);
+        assert.strictEqual(selfRes._json.error, 'SELF_MUTATION_FORBIDDEN');
+        assert.ok(usersStore.has('current-admin-uid'), 'Requesting admin must survive');
+
+        // A non-bootstrap admin must be demoted first — deletion is blocked while isAdmin.
+        usersStore.set('spare-admin-uid', {
+            email: 'spare.admin@example.com',
+            displayName: 'Spare Admin',
+            isAdmin: true,
+            isTeacher: false,
+            crmRole: 'admin'
+        });
+        const adminRes = buildRes();
+        await runHandlers(handlers, { params: { uid: 'spare-admin-uid' } }, adminRes);
+        assert.strictEqual(adminRes._status, 403);
+        assert.strictEqual(adminRes._json.error, 'ADMIN_DELETE_FORBIDDEN');
+        assert.ok(usersStore.has('spare-admin-uid'), 'Admin account must survive until demoted');
+        console.log('✔ DELETE /accounts/:uid protects bootstrap, self and still-admin accounts');
+    }
+
+    // 15. POST /accounts/bulk -> archives many, reporting per-account skips
+    {
+        const handlers = getRouteHandlers(router, '/accounts/bulk', 'post');
+        for (let i = 1; i <= 3; i += 1) {
+            usersStore.set(`bulk-dummy-${i}`, {
+                email: `bel.audit.bulk${i}@example.com`,
+                displayName: `Bulk Dummy ${i}`,
+                isAdmin: false,
+                isTeacher: false,
+                crmRole: 'user'
+            });
+        }
+
+        const res = buildRes();
+        await runHandlers(handlers, {
+            body: {
+                action: 'archive',
+                uids: ['bulk-dummy-1', 'bulk-dummy-2', 'bulk-dummy-3', 'bootstrap-admin-uid', 'missing-uid']
+            }
+        }, res);
+
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(res._json.processedCount, 3);
+        assert.strictEqual(res._json.skippedCount, 2);
+        assert.strictEqual(usersStore.get('bulk-dummy-1').archived, true);
+        assert.strictEqual(usersStore.get('bulk-dummy-3').archived, true);
+        assert.ok(!usersStore.get('bootstrap-admin-uid').archived, 'Bootstrap admin must be skipped, not archived');
+
+        const skipCodes = res._json.skipped.map((s) => s.error).sort();
+        assert.deepStrictEqual(skipCodes, ['ACCOUNT_NOT_FOUND', 'BOOTSTRAP_ADMIN_PROTECTED']);
+        console.log('✔ POST /accounts/bulk archives in bulk and reports skipped accounts');
+    }
+
+    // 16. POST /accounts/bulk -> deletes many and validates its payload
+    {
+        const handlers = getRouteHandlers(router, '/accounts/bulk', 'post');
+
+        const badAction = buildRes();
+        await runHandlers(handlers, { body: { action: 'nuke', uids: ['bulk-dummy-1'] } }, badAction);
+        assert.strictEqual(badAction._status, 400);
+        assert.strictEqual(badAction._json.error, 'VALIDATION_ERROR');
+        assert.ok(usersStore.has('bulk-dummy-1'), 'Unknown action must not touch any account');
+
+        const emptyUids = buildRes();
+        await runHandlers(handlers, { body: { action: 'delete', uids: [] } }, emptyUids);
+        assert.strictEqual(emptyUids._status, 400);
+        assert.strictEqual(emptyUids._json.error, 'VALIDATION_ERROR');
+
+        const tooMany = buildRes();
+        await runHandlers(handlers, {
+            body: { action: 'delete', uids: Array.from({ length: 201 }, (_, i) => `over-limit-${i}`) }
+        }, tooMany);
+        assert.strictEqual(tooMany._status, 400);
+        assert.strictEqual(tooMany._json.error, 'VALIDATION_ERROR');
+
+        const res = buildRes();
+        await runHandlers(handlers, {
+            // Duplicate id proves de-duplication before the per-account loop.
+            body: { action: 'delete', uids: ['bulk-dummy-1', 'bulk-dummy-1', 'bulk-dummy-2', 'bulk-dummy-3'] }
+        }, res);
+
+        assert.strictEqual(res._status, 200);
+        assert.strictEqual(res._json.requestedCount, 3);
+        assert.strictEqual(res._json.processedCount, 3);
+        assert.strictEqual(res._json.skippedCount, 0);
+        assert.strictEqual(usersStore.has('bulk-dummy-1'), false);
+        assert.strictEqual(usersStore.has('bulk-dummy-2'), false);
+        assert.strictEqual(usersStore.has('bulk-dummy-3'), false);
+        console.log('✔ POST /accounts/bulk deletes in bulk, de-duplicates ids and validates payload limits');
     }
 
     console.log('\nAll Accounts Role Management Unit Tests Passed!');

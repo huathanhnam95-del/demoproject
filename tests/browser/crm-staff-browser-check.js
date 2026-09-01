@@ -166,7 +166,9 @@ function createHarnessState() {
     accounts: [
       { uid: 'admin-1', displayName: 'Admin', email: 'admin@example.com', isAdmin: true, isTeacher: false, crmRole: 'admin' },
       { uid: 'teacher-1', displayName: 'Teacher One', email: 'teacher.one@example.com', isAdmin: false, isTeacher: true, crmRole: 'teacher' },
-      { uid: 'user-1', displayName: 'Student One', email: 'student.one@example.com', isAdmin: false, isTeacher: false, crmRole: 'user' }
+      { uid: 'user-1', displayName: 'Student One', email: 'student.one@example.com', isAdmin: false, isTeacher: false, crmRole: 'user' },
+      { uid: 'dummy-1', displayName: 'Dummy One', email: 'bel.audit.dummy1@example.com', isAdmin: false, isTeacher: false, crmRole: 'user', archived: false },
+      { uid: 'dummy-2', displayName: 'Dummy Two', email: 'bel.audit.dummy2@example.com', isAdmin: false, isTeacher: false, crmRole: 'user', archived: false }
     ],
     courses: [
       {
@@ -340,6 +342,69 @@ async function routeApi(route, url, state, requestLog) {
         success: Boolean(target),
         account: target || null,
         message: target ? (body?.isAdmin ? 'Account promoted to admin.' : 'Account demoted from admin.') : 'Account not found.'
+      })
+    });
+  }
+
+  if (/^\/api\/admin\/accounts\/[^/]+\/status$/i.test(pathname) && method === 'PATCH') {
+    const uid = pathname.split('/')[4];
+    const target = state.accounts.find((a) => a.uid === uid);
+    if (target) {
+      target.archived = Boolean(body?.archived);
+    }
+    return route.fulfill({
+      status: target ? 200 : 404,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: Boolean(target),
+        account: target || null,
+        message: target ? (body?.archived ? 'Account archived.' : 'Account restored.') : 'Account not found.'
+      })
+    });
+  }
+
+  if (pathname === '/api/admin/accounts/bulk' && method === 'POST') {
+    const action = String(body?.action || '');
+    const uids = Array.isArray(body?.uids) ? body.uids : [];
+    const processed = [];
+
+    uids.forEach((uid) => {
+      const index = state.accounts.findIndex((a) => a.uid === uid);
+      if (index < 0) return;
+      if (action === 'delete') {
+        processed.push(state.accounts.splice(index, 1)[0]);
+        return;
+      }
+      state.accounts[index].archived = action === 'archive';
+      processed.push(state.accounts[index]);
+    });
+
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: true,
+        action,
+        requestedCount: uids.length,
+        processedCount: processed.length,
+        skippedCount: uids.length - processed.length,
+        processed,
+        skipped: [],
+        message: `Applied ${action} to ${processed.length} account(s).`
+      })
+    });
+  }
+
+  if (/^\/api\/admin\/accounts\/[^/]+$/i.test(pathname) && method === 'DELETE') {
+    const uid = pathname.split('/')[4];
+    const index = state.accounts.findIndex((a) => a.uid === uid);
+    if (index >= 0) state.accounts.splice(index, 1);
+    return route.fulfill({
+      status: index >= 0 ? 200 : 404,
+      contentType: 'application/json; charset=utf-8',
+      body: JSON.stringify({
+        success: index >= 0,
+        message: index >= 0 ? 'Account deleted permanently.' : 'Account not found.'
       })
     });
   }
@@ -811,6 +876,85 @@ async function main() {
       && entry.body?.isAdmin === false
     );
     assert.ok(accountPatchDemote, 'Expected account demotion PATCH request.');
+
+    // --- Account cleanup: search, archive/restore, per-row delete, bulk delete ---
+
+    // Search narrows the table to the dummy accounts only.
+    await page.fill('#staff-account-search', 'bel.audit');
+    await page.waitForFunction(() => {
+      const rows = document.querySelectorAll('#staff-account-list tbody tr');
+      return rows.length === 2;
+    });
+    const filteredText = await page.textContent('#staff-account-list tbody');
+    assert.ok(/Dummy One/.test(filteredText), 'Expected Dummy One in filtered rows.');
+    assert.ok(!/Student One/.test(filteredText), 'Expected Student One to be filtered out.');
+
+    // Archive dummy-1: it leaves the default "Active" view.
+    await page.click('#staff-account-list .btn-account-archive[data-uid="dummy-1"][data-action="archive"]');
+    await page.waitForFunction(() => {
+      return !document.querySelector('#staff-account-list [data-uid="dummy-1"]');
+    });
+    const archivePatch = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/dummy-1/status'
+      && entry.method === 'PATCH'
+      && entry.body?.archived === true
+    );
+    assert.ok(archivePatch, 'Expected an archive PATCH request.');
+
+    // The Archived filter surfaces it again, with a Restore action.
+    await page.selectOption('#staff-account-status-filter', 'archived');
+    await page.waitForSelector('#staff-account-list .btn-account-archive[data-uid="dummy-1"][data-action="restore"]');
+    await page.click('#staff-account-list .btn-account-archive[data-uid="dummy-1"][data-action="restore"]');
+    await page.waitForFunction(() => {
+      return !document.querySelector('#staff-account-list [data-uid="dummy-1"]');
+    });
+    const restorePatch = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/dummy-1/status'
+      && entry.method === 'PATCH'
+      && entry.body?.archived === false
+    );
+    assert.ok(restorePatch, 'Expected a restore PATCH request.');
+
+    await page.selectOption('#staff-account-status-filter', 'active');
+    await page.waitForSelector('#staff-account-list .btn-account-delete[data-uid="dummy-1"]');
+
+    // Per-row permanent delete.
+    await page.click('#staff-account-list .btn-account-delete[data-uid="dummy-1"]');
+    await page.waitForFunction(() => {
+      return !document.querySelector('#staff-account-list [data-uid="dummy-1"]');
+    });
+    const deleteRequest = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/dummy-1' && entry.method === 'DELETE'
+    );
+    assert.ok(deleteRequest, 'Expected a per-row DELETE request.');
+
+    // Bulk delete via the select-all checkbox over the filtered view.
+    await page.check('#staff-account-select-all');
+    await page.waitForFunction(() => {
+      const label = document.getElementById('staff-account-selection-count');
+      return !!label && /1 selected/.test(label.textContent || '');
+    });
+    await page.click('#btn-account-bulk-delete');
+    await page.waitForFunction(() => {
+      return !document.querySelector('#staff-account-list [data-uid="dummy-2"]');
+    });
+    const bulkRequest = requestLog.find((entry) =>
+      entry.path === '/api/admin/accounts/bulk'
+      && entry.method === 'POST'
+      && entry.body?.action === 'delete'
+    );
+    assert.ok(bulkRequest, 'Expected a bulk delete request.');
+    assert.deepStrictEqual(bulkRequest.body.uids, ['dummy-2'], 'Expected only the selected account in the bulk payload.');
+
+    // Protected rows (the signed-in admin) must never expose a selection checkbox.
+    await page.fill('#staff-account-search', '');
+    await page.waitForFunction(() => {
+      return document.querySelectorAll('#staff-account-list tbody tr').length >= 3;
+    });
+    const adminRowSelectable = await page.evaluate(() => {
+      return !!document.querySelector('#staff-account-list .account-select-checkbox[data-uid="admin-1"]');
+    });
+    assert.strictEqual(adminRowSelectable, false, 'Protected admin row must not be selectable.');
 
     await page.goto(CLASS_MANAGEMENT_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#class-management-grid .crm-classroom-link[data-classroom-id="class-1"]');

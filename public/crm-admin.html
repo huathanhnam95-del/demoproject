@@ -21,14 +21,19 @@
 </head>
 
 <body>
+  <a class="crm-skip-link" href="#crm-main">Skip to main content</a>
   <div class="crm-admin">
     <header class="crm-header">
       <div class="crm-header-left">
+        <button id="crm-nav-toggle" class="crm-nav-toggle" type="button" aria-expanded="false"
+          aria-controls="crm-nav" aria-label="Main menu">
+          <span class="crm-nav-toggle-bars" aria-hidden="true"></span>
+        </button>
         <div class="crm-logo-box">
           <img src="database/Logo.png" alt="BEL" class="crm-logo-img">
         </div>
 
-        <nav class="crm-nav" aria-label="CRM Main Navigation">
+        <nav id="crm-nav" class="crm-nav" aria-label="CRM Main Navigation">
           <ul class="crm-nav-list">
             <li><button class="crm-nav-item active" data-main="dashboard" data-label="Dashboard">Dashboard</button></li>
             <li><button class="crm-nav-item" data-main="students" data-label="Student Management">Student
@@ -92,7 +97,9 @@
 
     <!-- Content -->
     <!-- Content -->
-    <main class="crm-content" aria-live="polite">
+    <div id="crm-nav-scrim" class="crm-nav-scrim" hidden></div>
+
+    <main id="crm-main" class="crm-content" aria-live="polite" tabindex="-1">
       <!-- Dev Tools (Local Only) -->
       <section class="crm-panel" data-panel="devtools" style="display: none;">
         <div class="crm-panel-header">
@@ -166,6 +173,32 @@
                     style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">
                     Open Firebase Emulator UI ↗
                   </a>
+                </div>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Read Aloud Connected Speech</h3>
+                  <p class="crm-muted">Prompt inventory, sample coverage, and recent usage telemetry.</p>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Prompt Inventory</label>
+                <div id="read-aloud-prompt-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading prompt summary...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Representative Prompts</label>
+                <div id="read-aloud-prompt-samples" class="crm-stack-list">
+                  <div class="crm-muted">Loading prompt examples...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Usage Last 7 Days</label>
+                <div id="read-aloud-usage-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading usage summary...</div>
                 </div>
               </div>
             </section>
@@ -680,32 +713,6 @@
               </div>
               <div id="dashboard-audit-logs" class="crm-stack-list">
                 <div class="crm-muted">Loading audit logs...</div>
-              </div>
-            </section>
-            <section class="crm-workspace-card">
-              <div class="crm-section-header">
-                <div>
-                  <h3>Read Aloud Connected Speech</h3>
-                  <p class="crm-muted">Prompt inventory, sample coverage, and recent usage telemetry.</p>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Prompt Inventory</label>
-                <div id="read-aloud-prompt-summary-cards" class="crm-summary-grid">
-                  <div class="crm-muted">Loading prompt summary...</div>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Representative Prompts</label>
-                <div id="read-aloud-prompt-samples" class="crm-stack-list">
-                  <div class="crm-muted">Loading prompt examples...</div>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Usage Last 7 Days</label>
-                <div id="read-aloud-usage-summary-cards" class="crm-summary-grid">
-                  <div class="crm-muted">Loading usage summary...</div>
-                </div>
               </div>
             </section>
           </div>
@@ -2553,6 +2560,7 @@
 
   <script src="js/auth-session-guard.js?v=20260831-v1.8.84"></script>
   <script src="js/classroom-api.js?v=20260831-v1.8.84"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260831-v1.8.84"></script>
   <script src="js/crm/utils.js?v=20260831-v1.8.84"></script>
   <script src="js/crm/state.js?v=20260831-v1.8.84"></script>
   <script src="js/crm/dom.js?v=20260831-v1.8.84"></script>

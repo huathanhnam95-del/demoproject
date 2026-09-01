@@ -671,7 +671,18 @@ async function checkLevelSelection(userId) {
       // If no englishLevel set, show modal
       if (!data.englishLevel) {
         const modal = document.getElementById('level-selection-modal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+          modal.style.display = 'flex';
+          // Dialog semantics, focus trap and focus restore come from the shared helper
+          // (js/dialog-a11y.js via the bridge). This modal is a required first-run choice,
+          // so it deliberately has no Escape-to-dismiss — the helper's onRequestClose is a
+          // no-op and the three options stay the only way out.
+          window.DialogA11y?.register(modal, {
+            labelledBy: 'level-selection-title',
+            isOpen: () => modal.style.display !== 'none',
+            onRequestClose: () => {}
+          })?.handleOpened?.();
+        }
 
         // Setup listeners if not already done (idempotent check)
         setupLevelSelectionListeners();
@@ -775,7 +786,10 @@ async function handleLevelSelection(level) {
     }
 
     // Hide Modal
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      window.DialogA11y?.register(modal)?.handleClosed?.();
+    }
 
     // Reload page to apply new filter settings (simplest way to ensure script.js re-runs logic)
     window.location.reload();
@@ -799,6 +813,10 @@ function showEntryModal() {
   const entryModal = document.getElementById('entry-modal');
   if (entryModal) {
     entryModal.style.display = 'flex';
+    window.DialogA11y?.register(entryModal, {
+      isOpen: () => entryModal.style.display !== 'none',
+      onRequestClose: () => {}
+    })?.handleOpened?.();
   }
 }
 
@@ -809,6 +827,7 @@ function hideEntryModal() {
   const entryModal = document.getElementById('entry-modal');
   if (entryModal) {
     entryModal.style.display = 'none';
+    window.DialogA11y?.register(entryModal)?.handleClosed?.();
   }
 }
 
@@ -1520,6 +1539,23 @@ function setupAuthStateListener() {
         isGuestMode = false;
         sessionStorage.removeItem('guestMode');
         hideGuestToast();
+
+        // Return the user to where they were headed before the auth gate bounced them
+        // (crm-admin.js sets ?next= when it redirects an unauthenticated admin here).
+        // Same-origin, same-path only, so this cannot be used as an open redirect.
+        try {
+          const next = new URLSearchParams(window.location.search).get('next');
+          if (next) {
+            const target = new URL(next, window.location.origin);
+            if (target.origin === window.location.origin
+              && target.pathname !== window.location.pathname) {
+              window.location.replace(target.pathname + target.search + target.hash);
+              return;
+            }
+          }
+        } catch (_err) {
+          // A malformed ?next= is ignored — stay on the practice app.
+        }
 
         if (authOverlay) {
           authOverlay.style.display = 'none';

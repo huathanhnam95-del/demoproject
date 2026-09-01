@@ -1,14 +1,18 @@
 window.CrmLeads = (function () {
-    const STAGES = [
-        'new',
-        'contacted',
-        'test_scheduled',
-        'test_completed',
-        'counseling',
-        'trial',
-        'won',
-        'lost'
-    ];
+    // Shared with the dashboard funnel — see js/crm/lifecycle-stages.js. The literal is
+    // kept only as a fallback for contexts that load this module standalone.
+    const STAGES = window.CrmLifecycleStages
+        ? window.CrmLifecycleStages.getWorkingStages()
+        : [
+            'new',
+            'contacted',
+            'test_scheduled',
+            'test_completed',
+            'counseling',
+            'trial',
+            'won',
+            'lost'
+        ];
 
     function getValue(element) {
         return String(element?.value || '').trim();

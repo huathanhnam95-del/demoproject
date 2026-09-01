@@ -68,6 +68,27 @@ function Assert-NoLatest {
     }
 }
 
+function Get-SafeCandidateTag {
+    param(
+        [Parameter(Mandatory)][string]$ServiceName,
+        [Parameter(Mandatory)][string]$SourceSha
+    )
+
+    # Cloud Run's tagged hostname combines the tag and service name. Keep the
+    # candidate identity readable while bounding that combined name to the
+    # reviewed 46-character limit.
+    $combinedNameLimit = 46
+    $tagServiceSeparatorLength = 3 # '---'
+    $tagPrefix = 'cand'
+    $maxTagLength = $combinedNameLimit - $ServiceName.Length - $tagServiceSeparatorLength
+    $shaLength = [Math]::Min(12, $SourceSha.Length)
+    $shaLength = [Math]::Min($shaLength, $maxTagLength - $tagPrefix.Length)
+    if ($shaLength -lt 1) {
+        throw "Service name '$ServiceName' leaves no room for a valid candidate tag"
+    }
+    return "$tagPrefix$($SourceSha.Substring(0, $shaLength))"
+}
+
 function Invoke-Gcloud {
     param([string[]]$Arguments, [switch]$AllowFailure)
     Assert-NoLatest -Arguments $Arguments
@@ -129,17 +150,13 @@ switch ($Action) {
         throw '-PronunciationV3Mode applies only to praat-api'
     }
     $svc = $cfg.services.$Service
+    $candidateTag = Get-SafeCandidateTag -ServiceName $Service -SourceSha $Sha
 
     # Snapshot and verify access BEFORE any mutation. Never repair it here.
     Write-Host "Verifying access mechanism is unchanged..." -ForegroundColor Cyan
     Assert-AccessUnchanged -Name $Service
 
     $image = "$($svc.imageRepository)@$Digest"
-    # Cloud Run limits the combined service name and traffic tag to 46
-    # characters. Keep the full SHA in GIT_SHA/BUILD_SHA below, while using a
-    # deterministic 12-character prefix only for the candidate URL tag.
-    $candidateTagSuffix = $Sha.Substring(0, [Math]::Min(12, $Sha.Length))
-    $candidateTag = "cand$candidateTagSuffix"
     $deployArgs = @(
         'run','deploy',$Service,
         "--image=$image",

@@ -34,6 +34,7 @@ class ReadAloudMode {
     this.recordSeconds = 0;
     this.state = 'IDLE'; // IDLE, PREP, REQUESTING_MIC, RECORDING, STOPPING_RECORDING, RECORDED, RESULTS
     this.timerInterval = null;
+    this.prepTutorialHold = null; // pause/resume listeners while a tutorial overlay is open
     this.pendingBlob = null;
     this.pendingSession = null;
     this.database = [];
@@ -3244,15 +3245,40 @@ class ReadAloudMode {
     let timeLeft = this.prepSeconds;
     this.updateTimerDisplay('ra-prep-time', timeLeft);
 
-    this.timerInterval = setInterval(() => {
-      timeLeft -= 1;
-      if (timeLeft < 0) {
-        this.stopTimer();
-        this.startRecording();
-      } else {
-        this.updateTimerDisplay('ra-prep-time', timeLeft);
+    // A blocking tutorial covers the prompt, so a countdown running behind it spends the
+    // learner's prep on reading the tutorial. Measured before this guard: prep fell
+    // 00:32 -> 00:22 over ten seconds with the overlay confirmed open.
+    //
+    // The tutorial auto-start is deferred (tutorial.js queueAutoStart), so it usually
+    // opens AFTER the countdown has begun — hold on tutorial:start and resume from the
+    // same remaining time on tutorial:end.
+    const tick = () => {
+      this.timerInterval = setInterval(() => {
+        timeLeft -= 1;
+        if (timeLeft < 0) {
+          this.stopTimer();
+          this.startRecording();
+        } else {
+          this.updateTimerDisplay('ra-prep-time', timeLeft);
+        }
+      }, 1000);
+    };
+
+    this.prepTutorialHold = {
+      onStart: () => {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+      },
+      onEnd: () => {
+        if (this.isActive && this.state === 'PREP' && !this.timerInterval) tick();
       }
-    }, 1000);
+    };
+    window.addEventListener('tutorial:start', this.prepTutorialHold.onStart);
+    window.addEventListener('tutorial:end', this.prepTutorialHold.onEnd);
+
+    if (!window.isTutorialActive) tick();
   }
 
   async startRecording() {
@@ -3358,6 +3384,13 @@ class ReadAloudMode {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+    }
+    // Detach the tutorial pause/resume listeners, so leaving the mode cannot resurrect a
+    // countdown once the tutorial finally closes.
+    if (this.prepTutorialHold) {
+      window.removeEventListener('tutorial:start', this.prepTutorialHold.onStart);
+      window.removeEventListener('tutorial:end', this.prepTutorialHold.onEnd);
+      this.prepTutorialHold = null;
     }
   }
 

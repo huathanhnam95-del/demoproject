@@ -22,17 +22,18 @@
   --warning-bg: linear-gradient(135deg, var(--gold-50) 0%, var(--gold-100) 100%);
   --warning-text: var(--gold-800);
 
-  --bg-main: var(--gray-50);
+  /* --bg-main, --text-muted, --border-light, --shadow-sm, --shadow-md and
+     --transition-base are defined in design-tokens.css. They were re-declared here and,
+     because this file loads second, these copies silently won — which is how --shadow-sm
+     ended up as Google's Material elevation (rgba(60,64,67,…)) and --transition-base as
+     an overshoot bounce applied to `all`. Deleted so design-tokens.css is the single
+     source. Only genuinely app-specific tokens remain below. */
   --bg-card: #ffffff;
   --bg-input: var(--gray-100);
 
   --text-main: var(--gray-900);
-  --text-muted: var(--gray-500);
-  --border-light: var(--gray-200);
 
-  /* Elevation & Radius */
-  --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.302), 0 1px 3px 1px rgba(60, 64, 67, 0.149);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* Elevation */
   --shadow-premium: 0 10px 40px rgba(0, 0, 0, 0.04);
 
   --radius-sm: 8px;
@@ -48,8 +49,46 @@
   --sh-1: 0 10px 30px rgba(15, 23, 42, 0.08);
   --sh-2: 0 18px 60px rgba(15, 23, 42, 0.12);
 
-  --transition-base: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Was cubic-bezier(0.34, 1.56, 0.64, 1) — a 1.56 overshoot applied to `all`, so 12
+     elements sprang past their resting position on any colour or size change. Overshoot
+     reads as toy-like next to exam-preparation content, and it was reached by accident
+     rather than chosen. design-tokens.css already defines this token as
+     `all 0.3s ease-out`; matching it here keeps the two in step. */
+  --transition-base: all 0.3s ease-out;
   --transition-fast: all 0.2s ease-out;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Form control reset
+
+   Browsers do NOT inherit the page font into form controls — the UA stylesheet
+   applies the system font instead. Any rule that styles a control's padding,
+   colour, weight and size but omits `font-family` therefore ships in the OS
+   default (Arial on Windows Chrome). Measured before this reset: 9 of 18 visible
+   controls on the practice page, including the three primary tabs — Learning
+   Center / Daily Review / Entertainment Hub — plus "Help me choose a mode" and
+   "Back to Dashboard". The same gap left two vocabulary-panel buttons wearing the
+   UA `2px outset` 3D border.
+
+   This generalises two choices already made in this codebase: `.crm-nav-item`
+   declares `font-family: inherit`, and `.whats-this-link` strips the UA button
+   chrome with an explanatory comment. Loaded by index.html and crm-admin.html, so
+   one rule covers both surfaces.
+   ───────────────────────────────────────────────────────────────────────── */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  /* `font: inherit` also pulls in the body's 1.55 leading, which would inflate every
+     button's height. Controls size from their own padding, so keep them tight. */
+  line-height: normal;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
 }
 
 /* Premium Animations */
@@ -83,6 +122,20 @@ body {
   margin: 0;
   background: var(--bg-main);
   color: var(--text-main);
+  /* Leading computed to `normal` (~1.2) on 11 of 20 text blocks — tight enough that
+     descriptive copy visually merges. The blocks that did set leading already used 1.6,
+     so the intent existed; it just was not the default. Headings and controls opt back
+     out below so this does not inflate component heights. */
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
 }
 
 [hidden] {
@@ -276,7 +329,9 @@ body {
   right: 14px;
   font-family: 'Roboto Mono', monospace;
   font-size: 0.7rem;
-  color: rgba(0, 0, 0, 0.22);
+  /* Was rgba(0,0,0,0.22) — 1.69:1. Support asks users to read this back, so it has to be
+     legible; kept quiet by size and placement rather than by being nearly invisible. */
+  color: rgba(15, 23, 42, 0.62);
   letter-spacing: 0.04em;
   pointer-events: none;
   user-select: none;
@@ -544,7 +599,8 @@ h1 {
   appearance: none;
   border: none;
   background: transparent;
-  color: #64748b;
+  /* Hard-coded #64748b measured 4.17:1 against the segmented track it sits on. */
+  color: var(--text-muted);
   border-radius: 999px;
   padding: 10px 24px;
   font-size: 0.95rem;
@@ -757,7 +813,11 @@ h1 {
 }
 
 .skill-card-chevron {
-  color: #c5c9d2;
+  /* Was #c5c9d2 — 1.66:1 on white, 1.52:1 on the selected card's blue tint. This is the
+     only mark saying a skill card is navigable, so it was the quietest element on the
+     page while the decorative illustration behind it was the loudest. Now 3.4:1, above
+     the 3:1 floor for graphical objects. */
+  color: var(--gray-500, #64748b);
   font-size: 20px;
   margin-left: 8px;
   flex-shrink: 0;

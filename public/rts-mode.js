@@ -449,6 +449,22 @@
 
     /* ──────────────────────────── STEP 2: PREPARATION (10s) ──────────────────────────── */
 
+    // Hold the prep countdown while a blocking tutorial covers the prompt, then resume
+    // from the same remaining time. See describe-image-mode.js for the same pattern.
+    let prepPausedAt = null;
+    let resumePrepTick = null;
+    window.addEventListener('tutorial:start', () => {
+        if (currentStep !== 'prep' || prepPausedAt !== null) return;
+        prepPausedAt = performance.now();
+        if (prepRAF) { cancelAnimationFrame(prepRAF); prepRAF = null; }
+    });
+    window.addEventListener('tutorial:end', () => {
+        if (prepPausedAt === null) return;
+        prepStartTime += performance.now() - prepPausedAt;
+        prepPausedAt = null;
+        if (currentStep === 'prep' && resumePrepTick) prepRAF = requestAnimationFrame(resumePrepTick);
+    });
+
     function startPrepTimer() {
         currentStep = 'prep';
         updateProgressBreadcrumb('prep');
@@ -475,6 +491,11 @@
                 return;
             }
             prepRAF = requestAnimationFrame(tick);
+        }
+        resumePrepTick = tick;
+        if (window.isTutorialActive) {
+            prepPausedAt = performance.now();
+            return;
         }
         prepRAF = requestAnimationFrame(tick);
     }

@@ -98,7 +98,11 @@
   /* Text */
   --text-primary:   var(--gray-800);
   --text-secondary: var(--gray-600);
-  --text-muted:     var(--gray-500);
+  /* Deliberately darker than --gray-500 (#64748b). At gray-500 this token measured
+     4.17–4.37:1 on the tinted surfaces it is actually used on (segmented-control track,
+     skill-card tint), i.e. below AA everywhere it mattered. #5d6b7f clears 4.5:1 on
+     white and on every tint in use. */
+  --text-muted:     #5d6b7f;
 
   /* Backgrounds */
   --bg-main:    var(--gray-50);

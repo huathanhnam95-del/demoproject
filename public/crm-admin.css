@@ -13,8 +13,9 @@
 }
 
 :root {
-  /* Brand */
-  --crm-primary: #1b8a4f;
+  /* Brand — one step deeper than #1b8a4f so white 13px text on the header and on
+     primary buttons clears AA (was 4.38:1, now 5.38:1). Hover stays distinguishable. */
+  --crm-primary: #177a44;
   --crm-primary-hover: #156d3e;
   --crm-primary-light: #f0fdf4;
 
@@ -24,10 +25,14 @@
   --crm-surface-dim: #f8f9fa;
   --crm-surface-input: #f1f5f9;
 
-  /* Text */
-  --crm-text-main: #2c3e50;
-  --crm-text-muted: #7f8c8d;
-  --crm-text-dark: #1e293b;
+  /* Text — one neutral family, shared with the learner app's slate ramp.
+     Previously #2c3e50 / #7f8c8d (a warmer Flat-UI pair) ran alongside slate #1e293b,
+     giving the CRM two competing greys. #7f8c8d also measured 3.48:1 on white, below
+     the 4.5:1 AA floor, and it carries every KPI label, footnote and empty-state line. */
+  --crm-text-main: var(--gray-800, #1e293b);
+  --crm-text-muted: #5b6b73;
+  /* 5.53:1 on #ffffff, 5.15:1 on --crm-bg */
+  --crm-text-dark: var(--gray-900, #0f172a);
 
   /* Borders */
   --crm-border: #e2e8f0;
@@ -63,6 +68,16 @@ body {
   color: var(--crm-text-main);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Leading computed to `normal` (~1.2) on 27 of 39 CRM text blocks. At 13.6px that is
+     cramped for the descriptive copy under every panel heading. */
+  line-height: 1.5;
+}
+
+.crm-admin h1,
+.crm-admin h2,
+.crm-admin h3,
+.crm-admin h4 {
+  line-height: 1.25;
 }
 
 .crm-admin {
@@ -132,14 +147,25 @@ body {
   display: flex;
   gap: clamp(4px, 0.5vw, 10px);
   height: 100%;
-  align-items: center;
+  align-items: stretch;
+}
+
+/* `.crm-nav-item` sets `height: 100%`, which resolves against its <li>. Without an
+   explicit height here the <li> shrinks to its text line box and the button's hit area
+   collapses to 16px inside a 64px header. `.crm-nav-dropdown` already sets this; plain
+   items were missing it. */
+.crm-nav-list>li {
+  display: flex;
+  height: 100%;
 }
 
 .crm-nav-item {
   appearance: none;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.55);
+  /* 0.55 alpha measured ~2.7:1 against the header green — well under AA for a label
+     that is the only way to see where you can navigate. */
+  color: rgba(255, 255, 255, 0.88);
   font-family: inherit;
   font-weight: 500;
   font-size: 0.85rem;
@@ -156,18 +182,27 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent width shift on weight change */
+/* Prevent width shift on weight change.
+   MUST stay out of flow: `.crm-nav-item` is a flex container, so a `display: block`
+   pseudo-element becomes a second flex item laid out BESIDE the label, doubling every
+   nav button's width (measured: nav intrinsic width 1021px in a 790px slot at 1440,
+   clipping Agents and Books). Absolute positioning keeps the width reservation without
+   consuming horizontal space. */
 .crm-nav-item::after {
   content: attr(data-label);
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block;
   font-weight: 600;
   height: 0;
   overflow: hidden;
   visibility: hidden;
+  pointer-events: none;
 }
 
 .crm-nav-item:hover {
-  color: rgba(255, 255, 255, 0.88);
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.07);
 }
 

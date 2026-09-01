@@ -344,10 +344,32 @@
 
     /* ──────────────────────────── PREPARATION TIMER ──────────────────────────── */
 
+    // Don't spend the learner's prep window while a blocking tutorial covers the image.
+    // Elapsed time is derived from performance.now(), so pausing means holding the RAF
+    // loop and shifting prepStartTime forward by however long the overlay was up.
+    // Registered once at module scope — tutorial auto-start is deferred, so the overlay
+    // usually opens after the countdown has already begun.
+    let prepPausedAt = null;
+    window.addEventListener('tutorial:start', () => {
+        if (currentStep !== 'preparing' || prepPausedAt !== null) return;
+        prepPausedAt = performance.now();
+        if (prepRAF) { cancelAnimationFrame(prepRAF); prepRAF = null; }
+    });
+    window.addEventListener('tutorial:end', () => {
+        if (prepPausedAt === null) return;
+        prepStartTime += performance.now() - prepPausedAt;
+        prepPausedAt = null;
+        if (currentStep === 'preparing') tickPrep();
+    });
+
     function startPrepTimer() {
         prepStartTime = performance.now();
         if (el.diPrepTimer) el.diPrepTimer.textContent = `00:00 / 00:${PREP_SECONDS}`;
         if (el.diPrepBarFill) el.diPrepBarFill.style.width = '0%';
+        if (window.isTutorialActive) {
+            prepPausedAt = performance.now();
+            return;
+        }
         tickPrep();
     }
 

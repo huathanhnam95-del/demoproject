@@ -3869,7 +3869,11 @@
     });
 
     wfdPlayBtn.addEventListener('click', () => {
-      if (!audio.src) return;
+      // loadQuestion() supplies audio via an appended <source> child, so audio.src
+      // stays empty. Check currentSrc (and the pending <source>, which is all that
+      // exists before resource selection resolves) instead.
+      const hasAudioSource = audio.currentSrc || audio.getAttribute('src') || audio.querySelector('source[src]');
+      if (!hasAudioSource) return;
       if (!audio.paused) {
         audio.pause();
       } else if (audio.currentTime > 0.1 && !audio.ended) {

@@ -1456,6 +1456,18 @@
         // Set global flag for other scripts
         window.isTutorialActive = true;
 
+        // Mirror of `tutorial:end`. Timed practice modes use this pair to pause their
+        // prep countdown: the tutorial covers the prompt, so a countdown running behind
+        // it spends the learner's preparation on reading the tutorial instead.
+        // Auto-start is deferred (see queueAutoStart), so the countdown is usually
+        // already running by the time this fires — a start signal is required, not just
+        // an end one.
+        try {
+            window.dispatchEvent(new CustomEvent('tutorial:start', { detail: { mode: currentMode } }));
+        } catch (_) {
+            // Ignore event dispatch failures.
+        }
+
         // Show first step
         showStep(currentStep);
     }

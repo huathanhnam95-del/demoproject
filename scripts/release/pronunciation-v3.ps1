@@ -135,13 +135,18 @@ switch ($Action) {
     Assert-AccessUnchanged -Name $Service
 
     $image = "$($svc.imageRepository)@$Digest"
+    # Cloud Run limits the combined service name and traffic tag to 46
+    # characters. Keep the full SHA in GIT_SHA/BUILD_SHA below, while using a
+    # deterministic 12-character prefix only for the candidate URL tag.
+    $candidateTagSuffix = $Sha.Substring(0, [Math]::Min(12, $Sha.Length))
+    $candidateTag = "cand$candidateTagSuffix"
     $deployArgs = @(
         'run','deploy',$Service,
         "--image=$image",
         "--region=$($cfg.region)",
         "--project=$($cfg.project)",
         '--no-traffic',
-        "--tag=cand$Sha",
+        "--tag=$candidateTag",
         "--timeout=$($svc.timeoutSeconds)",
         "--cpu=$($svc.cpu)",
         "--memory=$($svc.memory)",
@@ -163,7 +168,7 @@ switch ($Action) {
     # flag to praat-api would take the public API offline.
     Invoke-Gcloud -Arguments $deployArgs | Out-Null
     Write-Host "Candidate deployed at 0% traffic. No production traffic changed. Smoke-test before promoting:" -ForegroundColor Yellow
-    Write-Host "  https://cand$Sha---$Service-oq3kyypf4q-uc.a.run.app/health"
+    Write-Host "  https://$candidateTag---$Service-oq3kyypf4q-uc.a.run.app/health"
   }
 
   'Promote' {

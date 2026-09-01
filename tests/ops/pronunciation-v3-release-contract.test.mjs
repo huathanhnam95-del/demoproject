@@ -119,6 +119,16 @@ test('candidate source SHA and image digest are validated before gcloud', () => 
         'digest validation must happen before any gcloud-backed access check');
 });
 
+test('full source SHA keeps full provenance but uses a bounded candidate tag', () => {
+  assert.match(
+    script,
+    /\$candidateTagSuffix\s*=\s*\$Sha\.Substring\(0,\s*\[Math\]::Min\(12,\s*\$Sha\.Length\)\)/,
+    'candidate tag suffix must be bounded for Cloud Run while accepting a full SHA'
+  );
+  assert.match(script, /--tag=\$candidateTag/);
+  assert.match(script, /GIT_SHA=\$Sha,BUILD_SHA=\$Sha/);
+});
+
 test('praat-api candidate environment stays one quoted compound argument', () => {
     assert.match(code, /\$envFlag\s*=\s*"--update-env-vars=PRONUNCIATION_V3_MODE=\$effectiveV3Mode,PHONEME_SERVICE_URL=\$recognizerUrl,PHONEME_SERVICE_AUTH=\$recognizerAuth,GIT_SHA=\$Sha,BUILD_SHA=\$Sha"/,
         'the complete candidate environment must be one quoted PowerShell string');

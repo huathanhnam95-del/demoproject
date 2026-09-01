@@ -284,7 +284,7 @@ async function retryAndAssertReset(page) {
     ];
     const hasStaleState = cards.some((card) => staleStateClasses.some((className) => card.classList.contains(className)));
     const resultBoxDisplay = getComputedStyle(document.getElementById('hcs-result-box')).display;
-    const explanationDisplay = getComputedStyle(document.getElementById('hcs-explanation-panel')).display;
+    const explanationDisplay = getComputedStyle(document.getElementById('hcs-review-content')).display;
     const submitDisabled = document.getElementById('hcs-submit-btn')?.disabled;
     return {
       hasStaleState,
@@ -498,13 +498,8 @@ async function retryAndAssertReset(page) {
 
     await assertScore(page, 1, 1, 'Correct!');
 
-    // Verify explanation toggle button is visible
-    const explanationToggle = page.locator('#hcs-explanation-toggle');
-    assert.equal(await explanationToggle.isVisible(), true, 'Explanation toggle should be visible after submit');
-
-    await explanationToggle.click();
     await page.waitForFunction(() => {
-      const panel = document.getElementById('hcs-explanation-panel');
+      const panel = document.getElementById('hcs-review-content');
       return !!panel && getComputedStyle(panel).display !== 'none';
     }, { timeout: 5000 });
 
@@ -523,12 +518,6 @@ async function retryAndAssertReset(page) {
     } catch (ssErr) {
       console.error('Failed to capture success screenshot:', ssErr);
     }
-
-    await explanationToggle.click();
-    await page.waitForFunction(() => {
-      const panel = document.getElementById('hcs-explanation-panel');
-      return !!panel && getComputedStyle(panel).display === 'none';
-    }, { timeout: 5000 });
 
     await retryAndAssertReset(page);
 

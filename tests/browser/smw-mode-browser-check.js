@@ -263,7 +263,7 @@ async function retryAndAssertReset(page) {
     ];
     const hasStaleState = cards.some((card) => staleStateClasses.some((className) => card.classList.contains(className)));
     const resultBoxDisplay = getComputedStyle(document.getElementById('smw-result-box')).display;
-    const explanationDisplay = getComputedStyle(document.getElementById('smw-explanation-panel')).display;
+    const explanationDisplay = getComputedStyle(document.getElementById('smw-review-content')).display;
     const submitDisabled = document.getElementById('smw-submit-btn')?.disabled;
     return {
       hasStaleState,
@@ -508,13 +508,8 @@ async function retryAndAssertReset(page) {
 
     await assertScore(page, 1, 1, 'Correct!');
 
-    // Verify explanation toggle button is visible
-    const explanationToggle = page.locator('#smw-explanation-toggle');
-    assert.equal(await explanationToggle.isVisible(), true, 'Explanation toggle should be visible after submit');
-
-    await explanationToggle.click();
     await page.waitForFunction(() => {
-      const panel = document.getElementById('smw-explanation-panel');
+      const panel = document.getElementById('smw-review-content');
       return !!panel && getComputedStyle(panel).display !== 'none';
     }, undefined, { timeout: 5000 });
 
@@ -534,12 +529,6 @@ async function retryAndAssertReset(page) {
     } catch (ssErr) {
       console.error('Failed to capture success screenshot:', ssErr);
     }
-
-    await explanationToggle.click();
-    await page.waitForFunction(() => {
-      const panel = document.getElementById('smw-explanation-panel');
-      return !!panel && getComputedStyle(panel).display === 'none';
-    }, undefined, { timeout: 5000 });
 
     await retryAndAssertReset(page);
 

@@ -184,8 +184,9 @@ function summaryOfWords(count) {
       hasVoiceControl: false
     }, 'Started SST attempts should be one-play and lock navigation');
 
-    await page.evaluate(() => { window.confirm = () => false; });
-    await page.evaluate(async () => window.switchToMode('type'));
+    await page.evaluate(() => { window.__sstExitPromise = window.switchToMode('type'); });
+    await page.click('#custom-confirm-modal-cancel');
+    await page.evaluate(() => window.__sstExitPromise);
     assert.strictEqual(await page.evaluate(() => window.appState.currentMode), 'sst', 'Cancelled exit should preserve the active attempt');
 
     await page.evaluate(() => document.getElementById('sst-audio-element').pause());

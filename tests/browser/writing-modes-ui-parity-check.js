@@ -398,8 +398,8 @@ async function checkResponsive(page) {
     const layout = document.querySelector('#mode-swt .swt-split-layout');
     return layout ? getComputedStyle(layout).gridTemplateColumns : null;
   });
-  check(wideColumns && wideColumns.split(' ').length === 2,
-    `SWT split layout should be two-column at 1440px, got "${wideColumns}"`);
+  check(wideColumns && wideColumns.split(' ').length === 1,
+    `SWT split layout should remain single-column (stacked) at 1440px per design, got "${wideColumns}"`);
 }
 
 /* ── Runner ────────────────────────────────────────────────────────────── */

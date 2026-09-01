@@ -47,92 +47,6 @@
   font-weight: 700;
 }
 
-/* SST-style Audio Player */
-.hcs-audio {
-  width: min(470px, 100%);
-  margin: 6px auto 20px;
-  padding: 22px 24px;
-  border-radius: 8px;
-  background: #235e92;
-  color: #fff;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-  align-items: center;
-}
-
-.hcs-play-btn {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  min-height: 44px;
-  padding: 0 14px 0 9px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.hcs-play-btn:disabled {
-  opacity: 0.52;
-  cursor: not-allowed;
-}
-
-.hcs-progress-wrap {
-  position: relative;
-}
-
-.hcs-progress {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.34);
-}
-
-.hcs-progress-fill {
-  width: 0;
-  height: 100%;
-  background: #fff;
-  border-radius: inherit;
-}
-
-.hcs-seek {
-  position: absolute;
-  inset: -12px 0;
-  width: 100%;
-  height: 32px;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.hcs-seek:disabled {
-  pointer-events: none;
-}
-
-.hcs-progress-wrap:focus-within .hcs-progress {
-  outline: 2px solid #fff;
-  outline-offset: 4px;
-}
-
-.hcs-audio-time {
-  font-size: 0.86rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.hcs-volume-label {
-  grid-column: 1 / 2;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.hcs-volume {
-  grid-column: 2 / 4;
-  accent-color: #fff;
-}
 
 /* Selector settings */
 .hcs-settings-row {
@@ -535,12 +449,7 @@
   margin-top: 4px;
 }
 
-/* Responsive queries */
-@media (max-width: 900px) {
-  .hcs-audio {
-    padding: 18px 16px;
-  }
-}
+
 
 @media (max-width: 640px) {
   #mode-hcs {
@@ -564,12 +473,4 @@
     gap: 14px;
   }
 
-  .hcs-audio {
-    grid-template-columns: auto 1fr;
-    padding: 18px 16px;
-  }
-  .hcs-audio-time {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
 }

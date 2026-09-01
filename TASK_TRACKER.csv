@@ -1740,6 +1740,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 754,2026-09-01,Fix Write From Dictation Play button not playing audio - WFD player guard checked audio.src which is empty when source is a child source element,Done,2026-09-01
 755,2026-09-01,Fix listening mode audio player right-side clipping - content-box sizing made the 470px player 518px wide overflowing two-column layouts (HCS LMCSA LMCMA SMW) and mobile (SST HIW WFD),Done,2026-09-01
 
-754,2026-08-31,BLOCKED: unresolved git merge conflict in public/crm-admin.html Segmentation Study panel (lines 524-562) - duplicate segmentation-study-timeline id; needs product decision on which side to keep,In Progress,
+758,2026-08-31,BLOCKED: unresolved git merge conflict in public/crm-admin.html Segmentation Study panel (lines 524-562) - duplicate segmentation-study-timeline id; needs product decision on which side to keep,Done,2026-09-01
 756,2026-09-01,Full UI audit of all main app practice modes (28 surfaces) - built re-runnable geometry/interaction harness; fixed invisible Write Essay filter dropdowns (1.00:1) vocab panel z-index inversion global box-sizing reset collo-dictate toolbar overflow and 10 contrast failures; 110 findings resolved,Done,2026-09-01
 757,2026-09-01,Task 756 handoff: clean audit re-run after stash contamination (110 resolved P2 569 to 2 contrast 64 to 0); split working tree into 2 commits excluding unresolved crm-admin.html conflict; wrote docs/plans/2026-09-01-practice-modes-ui-audit-handoff.md,Done,2026-09-01
+759,2026-09-01,Execute handoff open threads: fix 5 stale browser tests + resolve CRM merge conflict + unify 7 duplicated audio player CSS + renumber duplicate task 754 + rebase onto origin/main,Done,2026-09-01

@@ -116,6 +116,15 @@
 }
 
 /* ──────────────────────────── Filter Toolbar ──────────────────────────── */
+/* This block was authored against a dark design system. --surface-1, --surface-2 and
+   --border-subtle are not defined anywhere in the learner app, so every one of them
+   fell through to its dark-theme fallback on a light page. The worst of it was
+   .essay-filter-select below: `color: var(--text-primary, #f8fafc)` resolved to the
+   defined token --gray-800 = #1e293b while `background: var(--surface-1, #1e293b)`
+   fell through to the literal #1e293b — the same colour. Measured 1.00:1: the Type
+   and Task-type dropdown values were invisible.
+
+   Now on the tokens this app actually defines. */
 .essay-filter-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -123,8 +132,8 @@
   gap: 10px;
   margin: 12px 0 16px 0;
   padding: 10px 14px;
-  background: var(--surface-2, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  background: var(--gray-50);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md, 8px);
 }
 
@@ -138,7 +147,7 @@
 .essay-filter-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -147,9 +156,9 @@
   min-width: 140px;
   padding: 6px 10px;
   font-size: 13px;
-  color: var(--text-primary, #f8fafc);
-  background: var(--surface-1, #1e293b);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
   outline: none;
@@ -171,7 +180,7 @@
 .essay-filter-counter {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 

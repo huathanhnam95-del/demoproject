@@ -49,6 +49,10 @@
 
 .pa-btn-record:disabled {
     background-color: #fca5a5;
+    /* The button inherits `color: white` from .pa-btn-record, which measured 1.9:1
+       on this tint — the label was unreadable, and Record is disabled on arrival
+       until a word is selected, so this is the first state a learner sees. */
+    color: #7f1d1d;
     cursor: not-allowed;
 }
 
@@ -63,6 +67,8 @@
 
 .pa-btn-stop:disabled {
     background-color: #9ca3af;
+    /* White on gray-400 measured 2.54:1. */
+    color: #1f2937;
     cursor: not-allowed;
 }
 
@@ -1505,7 +1511,8 @@
     padding: 9px 24px;
     border: none;
     background: transparent;
-    color: #64748b;
+    /* 4.34:1 on the slate-100 sub-tab track — under AA. */
+    color: var(--text-muted);
     font-weight: 500;
     font-size: 0.92rem;
     border-radius: 999px;
@@ -1522,7 +1529,9 @@
 
 .pa-sub-tab.active {
     background: #ffffff;
-    color: #3b82f6;
+    /* blue-500 on white is 3.68:1; the selected tab is the label a learner reads to
+       know where they are. blue-600 is the app's interactive blue and clears AA. */
+    color: var(--blue-600);
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }

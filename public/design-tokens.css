@@ -1,4 +1,31 @@
 /* design-tokens.css — Single source of truth for UI palette */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Box model
+
+   The learner app shipped without a border-box reset. crm-admin.css has had one
+   since it was written, which is why this bug class only ever surfaced on the
+   learner side: 57 rules across style.css and the mode stylesheets combine a
+   `width: 100%` / `min()` / `calc()` with padding or a border, and each one
+   overflowed its container by exactly its padding plus border.
+
+   That is what produced the clipped listening-mode audio player (task 755):
+   `width: min(470px, 100%)` plus `padding: 22px 24px` measured 518px. Six copies
+   of that player were patched by hand; the measured overflow that remained after
+   those patches was +67px on the Collocation Dictation toolbar, +40px on Answer
+   Short Question, +24px on the Pronunciation panel, and a 2-4px spill on the
+   Describe Image preview and the RFIB passage text.
+
+   This file is loaded first by both index.html and crm-admin.html, so one rule
+   covers both surfaces. Verified against a geometry baseline captured before the
+   change — see tests/browser/practice-modes-ui-full-audit.js.
+   ───────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* ── Primitive Color Ramps ── */
 

@@ -3122,7 +3122,9 @@ h1 {
   margin-top: 2px;
   margin-bottom: 4px;
   font-size: 0.78rem;
-  color: #9ca3af;
+  /* Was #9ca3af (gray-400) — 2.54:1 on white, at 0.78rem. This line states how many
+     questions the mode holds, so it is information, not decoration. */
+  color: var(--text-muted);
 }
 
 .controls {
@@ -9184,14 +9186,25 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Ensure panel is above overlay */
+/* The Vocabulary Book panel is `top: 0; height: 100vh` and its first 76px hold the
+   panel header — the "+" add-word button and the "x" close button. `.site-header` is
+   `position: fixed` at z-index 1100 across that same band, so while this rule held the
+   panel at 1001 the header painted over both buttons and swallowed their clicks:
+   elementFromPoint at the centre of each resolved to `.site-header__brand-subtitle`,
+   and Playwright could not click either one.
+
+   The panel's own declaration (see `.vocab-panel-side` above) is z-index 3000, which
+   clears the header. This override predates the site header and was written to beat a
+   z-index 1000 overlay — 3000 satisfies that intent too, so the override is now only
+   the exclusivity note it always meant to be. */
 .vocab-panel-side {
-  z-index: 1001;
+  z-index: 3000;
 }
 
-/* Ensure add modal is above everything */
+/* Follows the panel up. At 1002 this modal sat below both the panel and the site
+   header, so its top edge was covered by the header on every open. */
 .vocab-add-modal {
-  z-index: 1002 !important;
+  z-index: 3001 !important;
 }
 
 /* Improving Words Toggle Button */
@@ -18920,7 +18933,9 @@ body.readingjourney-active #readingjourney-root {
 
 .calibration-indicator {
   font-size: 0.85rem;
-  color: #d97706;
+  /* Amber-600 on amber-100 measured 2.86:1. --gold-800 keeps the amber reading
+     while clearing AA on the same tint. */
+  color: var(--gold-800);
   font-weight: 600;
   background: #fef3c7;
   padding: 6px 12px;

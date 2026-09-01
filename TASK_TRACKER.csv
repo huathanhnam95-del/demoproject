@@ -1736,3 +1736,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 752,2026-08-31,Deploy Release V1.8.84 with Vocab Book Rework Track Progress UI and V4 Review Redesign to production,Done,2026-08-31
 
 
+753,2026-08-31,UI/UX remediation Phase 0-1: control reset token reconciliation CRM nav fix prep-timer guard leading measure and contrast,Done,2026-08-31
+754,2026-09-01,Fix Write From Dictation Play button not playing audio - WFD player guard checked audio.src which is empty when source is a child source element,Done,2026-09-01
+755,2026-09-01,Fix listening mode audio player right-side clipping - content-box sizing made the 470px player 518px wide overflowing two-column layouts (HCS LMCSA LMCMA SMW) and mobile (SST HIW WFD),Done,2026-09-01
+
+754,2026-08-31,BLOCKED: unresolved git merge conflict in public/crm-admin.html Segmentation Study panel (lines 524-562) - duplicate segmentation-study-timeline id; needs product decision on which side to keep,In Progress,
+756,2026-09-01,Full UI audit of all main app practice modes (28 surfaces) - built re-runnable geometry/interaction harness; fixed invisible Write Essay filter dropdowns (1.00:1) vocab panel z-index inversion global box-sizing reset collo-dictate toolbar overflow and 9 contrast failures; 107 findings resolved,Done,2026-09-01

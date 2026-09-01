@@ -103,7 +103,11 @@
   gap: 6px;
   flex: 1 1 0;
   min-width: 0;
-  color: #94a3b8;
+  /* Was #94a3b8 (gray-400) — 2.56:1 on white, on every one of the seven Speaking
+     modes. An upcoming step is quieter than the current one, but its label is
+     informative text, not a disabled control, so it still owes AA. --text-muted
+     clears 4.5:1 and the current/complete states below keep the hierarchy. */
+  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.2;
@@ -121,7 +125,8 @@
   border: 1px solid #cbd5e1;
   border-radius: 50%;
   background: #fff;
-  color: #94a3b8;
+  /* Same 2.56:1 problem as the label, on a 0.72rem numeral. */
+  color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 700;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;

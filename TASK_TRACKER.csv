@@ -1746,3 +1746,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 759,2026-09-01,Execute handoff open threads: fix 5 stale browser tests + resolve CRM merge conflict + unify 7 duplicated audio player CSS + renumber duplicate task 754 + rebase onto origin/main,Done,2026-09-01
 760,2026-09-01,Enquiry Tracking stage cards as clickable filters for lead list,Done,2026-09-01
 761,2026-09-01,CRM Accounts: add archive/restore + permanent delete (single and bulk with select-all and search filter) and rename admin toggle to Grant/Revoke admin; guards for bootstrap admin self-mutation and still-admin deletion; audit logged,Done,2026-09-01
+762,2026-09-01,Deploy Release V1.8.85 with Practice Modes UI Audit Remediation Audio Player CSS Unification CRM Lead Stage Filtering and Accounts Role Management to production,Done,2026-09-01

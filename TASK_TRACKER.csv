@@ -1804,4 +1804,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 810,2026-09-02,Redesign PTE Write Essay Guided Practice support rail UX (wall of text + tiny fonts),Done,2026-09-02
 811,2026-09-02,Execute V4 follow-up handoff plan - Packages B C D (Evaluation Smoke Firebase Upgrade),Done,2026-09-02
 812,2026-09-02,Echo Forge: fix V3 Cloud Run endpoint connection + add Parry prompt audio and word masking + auto-record and 1s silence VAD,Done,2026-09-02
-813,2026-09-02,Deploy Release V1.8.88 with Write Essay Guided Support UI Redesign and Echo Forge improvements to production,In Progress,
+813,2026-09-02,Deploy Release V1.8.88 with Write Essay Guided Support UI Redesign and Echo Forge improvements to production,Done,2026-09-02

@@ -13,18 +13,18 @@
 
 | Metric | V2 (Praat Baseline) | V3 (CTC Raw Midpoint) | V4.1 (Maximal Onset / Phonological) | Preregistered Threshold | Gate Verdict |
 |---|---|---|---|---|---|
-| **Boundary MAE (Holdout)** | 47.58 ms | 26.62 ms | **10.14 ms** | $\le 45.0$ ms | **PASSED** |
-| **Tolerance $\le 80$ ms** | 90.91% | 100.0% | **100.0%** | $\ge 85.0\%$ | **PASSED** |
-| **Tolerance $\le 30$ ms** | 27.27% | 59.74% | **98.7%** | Descriptive | **+71.4% over V2** |
+| **Boundary MAE (Holdout)** | 47.58 ms | 26.62 ms | **10.14 ms** | <= 45.0 ms | **PASSED** |
+| **Tolerance <= 80 ms** | 90.91% | 100.0% | **100.0%** | >= 85.0% | **PASSED** |
+| **Tolerance <= 30 ms** | 27.27% | 59.74% | **98.7%** | Descriptive | **+71.4% over V2** |
 | **Median Absolute Error** | 49.0 ms | 26.0 ms | **9.0 ms** | Descriptive | **PASSED** |
-| **Rateability / Availability** | 100.0% | 100.0% | **100.0%** | $100.0\%$ | **PASSED** |
+| **Rateability / Availability** | 100.0% | 100.0% | **100.0%** | 100.0% | **PASSED** |
 | **Phonological Violations** | N/A | High (coda clipping) | **0 violations** | 0 violations | **PASSED** |
 
 ---
 
 ## 2. Full Cohort Summary (100 Samples: 70 Dev + 30 Holdout)
 
-| Version | Total Samples | Boundaries Evaluated | MAE (ms) | Median (ms) | P90 (ms) | $\le 30$ ms (%) | $\le 80$ ms (%) | Rateability |
+| Version | Total Samples | Boundaries Evaluated | MAE (ms) | Median (ms) | P90 (ms) | <= 30 ms (%) | <= 80 ms (%) | Rateability |
 |---|---|---|---|---|---|---|---|---|
 | **V2 (Praat)** | 100 | 250 | 46.55 ms | 47.5 ms | 78.0 ms | 26.8% | 91.2% | 100.0% |
 | **V3 (CTC)** | 100 | 250 | 25.82 ms | 25.0 ms | 46.0 ms | 63.6% | 100.0% | 100.0% |

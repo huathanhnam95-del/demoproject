@@ -150,6 +150,35 @@ function exportBlindEvaluation(options = {}) {
   return bundle;
 }
 
+function parseArgs(argv) {
+  const args = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (!token.startsWith('--')) continue;
+    const key = token.slice(2);
+    const value = argv[i + 1];
+    args[key] = value && !value.startsWith('--') ? value : true;
+    if (args[key] !== true) i += 1;
+  }
+  return args;
+}
+
+if (require.main === module) {
+  try {
+    const args = parseArgs(process.argv.slice(2));
+    const bundle = exportBlindEvaluation({
+      manifestPath: args.manifest,
+      outputPath: args.out || args.output,
+      includeHoldout: Boolean(args['include-holdout']),
+      protocolHash: args['protocol-hash']
+    });
+    console.log(`Exported ${bundle.entryCount} blind entries for ${bundle.studyId} (mode: ${bundle.exportMode}).`);
+  } catch (error) {
+    console.error(error.message || error);
+    process.exitCode = 1;
+  }
+}
+
 module.exports = {
   buildBlindExport,
   computeSplitToken,
@@ -157,3 +186,4 @@ module.exports = {
   getCanonicalProtocolHash,
   validateBlindBundle
 };
+

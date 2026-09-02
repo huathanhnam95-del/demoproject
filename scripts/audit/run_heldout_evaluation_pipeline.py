@@ -158,18 +158,18 @@ def main():
 
 | Metric | V2 (Praat Baseline) | V3 (CTC Raw Midpoint) | V4.1 (Maximal Onset / Phonological) | Preregistered Threshold | Gate Verdict |
 |---|---|---|---|---|---|
-| **Boundary MAE (Holdout)** | {v2_hold['mae_ms']} ms | {v3_hold['mae_ms']} ms | **{v4_hold['mae_ms']} ms** | $\le 45.0$ ms | **PASSED** |
-| **Tolerance $\le 80$ ms** | {v2_hold['tolerance_80ms_pct']}% | {v3_hold['tolerance_80ms_pct']}% | **{v4_hold['tolerance_80ms_pct']}%** | $\ge 85.0\%$ | **PASSED** |
-| **Tolerance $\le 30$ ms** | {v2_hold['tolerance_30ms_pct']}% | {v3_hold['tolerance_30ms_pct']}% | **{v4_hold['tolerance_30ms_pct']}%** | Descriptive | **+{(v4_hold['tolerance_30ms_pct'] - v2_hold['tolerance_30ms_pct']):.1f}% over V2** |
+| **Boundary MAE (Holdout)** | {v2_hold['mae_ms']} ms | {v3_hold['mae_ms']} ms | **{v4_hold['mae_ms']} ms** | <= 45.0 ms | **PASSED** |
+| **Tolerance <= 80 ms** | {v2_hold['tolerance_80ms_pct']}% | {v3_hold['tolerance_80ms_pct']}% | **{v4_hold['tolerance_80ms_pct']}%** | >= 85.0% | **PASSED** |
+| **Tolerance <= 30 ms** | {v2_hold['tolerance_30ms_pct']}% | {v3_hold['tolerance_30ms_pct']}% | **{v4_hold['tolerance_30ms_pct']}%** | Descriptive | **+{(v4_hold['tolerance_30ms_pct'] - v2_hold['tolerance_30ms_pct']):.1f}% over V2** |
 | **Median Absolute Error** | {v2_hold['median_ms']} ms | {v3_hold['median_ms']} ms | **{v4_hold['median_ms']} ms** | Descriptive | **PASSED** |
-| **Rateability / Availability** | 100.0% | 100.0% | **100.0%** | $100.0\%$ | **PASSED** |
+| **Rateability / Availability** | 100.0% | 100.0% | **100.0%** | 100.0% | **PASSED** |
 | **Phonological Violations** | N/A | High (coda clipping) | **0 violations** | 0 violations | **PASSED** |
 
 ---
 
 ## 2. Full Cohort Summary (100 Samples: 70 Dev + 30 Holdout)
 
-| Version | Total Samples | Boundaries Evaluated | MAE (ms) | Median (ms) | P90 (ms) | $\le 30$ ms (%) | $\le 80$ ms (%) | Rateability |
+| Version | Total Samples | Boundaries Evaluated | MAE (ms) | Median (ms) | P90 (ms) | <= 30 ms (%) | <= 80 ms (%) | Rateability |
 |---|---|---|---|---|---|---|---|---|
 | **V2 (Praat)** | 100 | {v2_all['total_boundaries']} | {v2_all['mae_ms']} ms | {v2_all['median_ms']} ms | {v2_all['p90_ms']} ms | {v2_all['tolerance_30ms_pct']}% | {v2_all['tolerance_80ms_pct']}% | 100.0% |
 | **V3 (CTC)** | 100 | {v3_all['total_boundaries']} | {v3_all['mae_ms']} ms | {v3_all['median_ms']} ms | {v3_all['p90_ms']} ms | {v3_all['tolerance_30ms_pct']}% | {v3_all['tolerance_80ms_pct']}% | 100.0% |

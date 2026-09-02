@@ -47,7 +47,7 @@
     let guidedLanguage = 'en';
     let guidedPack = null;
     let guidedSection = 'understand';
-    let guidedHintDepth = 1;
+    let guidedHintDepth = 2;
     let guidedSelectedVariantId = null;
     let guidedSelectedTargetIds = [];
     let guidedSelectedPointIds = [];
@@ -572,7 +572,7 @@
         essayElapsedSeconds = 0;
         guidedPack = null;
         guidedSection = 'understand';
-        guidedHintDepth = 1;
+        guidedHintDepth = 2;
         guidedSelectedVariantId = null;
         guidedSelectedTargetIds = [];
         guidedSelectedPointIds = [];

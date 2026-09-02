@@ -927,24 +927,63 @@ module.exports = function registerBookRoutes(router, deps) {
             const bookId = cleanStr(req.params.bookId);
             if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
 
-            const cached = pagesCache.get(bookId);
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            const bookData = bookSnap.data() || {};
+            const activeRevisionId = bookData.activeTextRevisionId || null;
+            const cacheKey = `${bookId}:${activeRevisionId || 'legacy'}`;
+
+            const cached = pagesCache.get(cacheKey);
             if (cached && Date.now() - cached.ts < PAGES_CACHE_TTL) {
-                return sendSuccess(res, { totalPages: cached.data.totalPages, pages: cached.data.pages });
+                return sendSuccess(res, cached.data);
             }
 
             if (!getStorageBucket) return sendError(res, 500, 'NO_STORAGE', 'Storage not configured.');
 
             const bucket = await getStorageBucket();
-            const pagesPath = `crm-books/${bookId}/pages.json`;
+            let pagesPath;
+            let rendererContract = 'legacy';
+            if (activeRevisionId) {
+                pagesPath = `crm-books/${bookId}/text-revisions/${activeRevisionId}/pages.json`;
+                rendererContract = 'ocr-v2';
+            } else {
+                pagesPath = `crm-books/${bookId}/pages.json`;
+                rendererContract = 'legacy';
+            }
+
             const file = bucket.file(pagesPath);
             const [exists] = await file.exists();
-            if (!exists) return sendSuccess(res, { totalPages: 0, pages: [] });
+            if (!exists) {
+                if (activeRevisionId) {
+                    const legacyFile = bucket.file(`crm-books/${bookId}/pages.json`);
+                    const [legacyExists] = await legacyFile.exists();
+                    if (legacyExists) {
+                        const [legacyBuffer] = await legacyFile.download();
+                        const parsed = JSON.parse(legacyBuffer.toString('utf8'));
+                        const result = {
+                            totalPages: parsed.totalPages || (Array.isArray(parsed.pages) ? parsed.pages.length : 0),
+                            pages: parsed.pages || [],
+                            textRevisionId: null,
+                            rendererContract: 'legacy',
+                            sourceSha256: parsed.sourceSha256 || bookData.source?.sha256 || null
+                        };
+                        pagesCache.set(cacheKey, { data: result, ts: Date.now() });
+                        return sendSuccess(res, result);
+                    }
+                }
+                return sendSuccess(res, { totalPages: 0, pages: [], textRevisionId: activeRevisionId, rendererContract });
+            }
 
             const [buffer] = await file.download();
             const parsed = JSON.parse(buffer.toString('utf8'));
-            const result = { totalPages: parsed.totalPages || 0, pages: parsed.pages || [] };
+            const result = {
+                totalPages: parsed.totalPages || (Array.isArray(parsed.pages) ? parsed.pages.length : 0),
+                pages: parsed.pages || [],
+                textRevisionId: activeRevisionId,
+                rendererContract: parsed.rendererContract || rendererContract,
+                sourceSha256: parsed.sourceSha256 || bookData.source?.sha256 || null
+            };
 
-            pagesCache.set(bookId, { data: result, ts: Date.now() });
+            pagesCache.set(cacheKey, { data: result, ts: Date.now() });
             if (pagesCache.size > 50) {
                 const oldest = pagesCache.keys().next().value;
                 pagesCache.delete(oldest);
@@ -953,6 +992,173 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, result);
         } catch (error) {
             return sendError(res, 500, 'PAGES_ERROR', 'Failed to load pages.', error?.message || error);
+        }
+    });
+
+    // ─── Text Revisions Management ───
+    router.post('/books/:bookId/text-revisions', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
+
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            if (!bookSnap.exists) return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            const bookData = bookSnap.data() || {};
+
+            const bucket = await getStorageBucket();
+            const { createRevision } = require('../../crm/book-text-revision-service');
+
+            const sourcePath = req.body?.sourcePath || bookData.source?.storagePath || bookData.storagePath || bookData.sourcePath;
+            if (!sourcePath) return sendError(res, 400, 'MISSING_SOURCE_PATH', 'No source path found on book.');
+
+            const revision = await createRevision({
+                db,
+                bucket,
+                bookId,
+                sourcePath,
+                sourceSha256: req.body?.expectedSourceSha256,
+                expectedPageCount: req.body?.pageCount || bookData.pageCount,
+                processor: req.body?.processor,
+                reason: cleanStr(req.body?.reason) || 'Admin queued text revision'
+            });
+
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_CREATED',
+                    bookId,
+                    revisionId: revision.revisionId,
+                    userId: req.user?.uid || 'admin'
+                });
+            }
+
+            return sendSuccess(res, { revision }, 'Text revision created.');
+        } catch (error) {
+            const status = error.code && error.code.startsWith('REVISION_INPUT') ? 400 : 500;
+            return sendError(res, status, error.code || 'CREATE_REVISION_ERROR', error.message || 'Failed to create text revision.');
+        }
+    });
+
+    router.get('/books/:bookId/text-revisions/:revisionId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const revisionId = cleanStr(req.params.revisionId);
+            if (!bookId || !revisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and revisionId are required.');
+
+            const revSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('textRevisions').doc(revisionId).get();
+            if (!revSnap.exists) return sendError(res, 404, 'REVISION_NOT_FOUND', 'Text revision not found.');
+
+            return sendSuccess(res, { revision: { id: revSnap.id, ...revSnap.data() } });
+        } catch (error) {
+            return sendError(res, 500, 'GET_REVISION_ERROR', 'Failed to get text revision.', error.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/text-revisions/:revisionId/activate', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const revisionId = cleanStr(req.params.revisionId);
+            const manifestHash = cleanStr(req.body?.manifestHash);
+            if (!bookId || !revisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and revisionId are required.');
+
+            if (!manifestHash || !/^[a-f0-9]{64}$/i.test(manifestHash)) {
+                return sendError(res, 400, 'INVALID_MANIFEST_HASH', 'A valid 64-character hex manifestHash is required for activation.');
+            }
+
+            const bookRef = db.collection(CRM_BOOKS).doc(bookId);
+            const revRef = bookRef.collection('textRevisions').doc(revisionId);
+
+            const result = await db.runTransaction(async (txn) => {
+                const bookDoc = await txn.get(bookRef);
+                if (!bookDoc.exists) throw Object.assign(new Error('Book not found'), { code: 'BOOK_NOT_FOUND', status: 404 });
+                const revDoc = await txn.get(revRef);
+                if (!revDoc.exists) throw Object.assign(new Error('Revision not found'), { code: 'REVISION_NOT_FOUND', status: 404 });
+                const revData = revDoc.data() || {};
+
+                if (revData.status === 'failed') {
+                    throw Object.assign(new Error('Cannot activate failed revision'), { code: 'REVISION_FAILED', status: 400 });
+                }
+
+                const expectedCurrent = req.body?.expectedCurrentRevisionId;
+                if (expectedCurrent !== undefined && bookDoc.data()?.activeTextRevisionId !== expectedCurrent) {
+                    throw Object.assign(new Error('Current active revision mismatch'), { code: 'REVISION_MISMATCH', status: 409 });
+                }
+
+                txn.update(bookRef, {
+                    activeTextRevisionId: revisionId,
+                    activeTextManifestHash: manifestHash,
+                    updatedAt: serverTimestamp()
+                });
+
+                txn.update(revRef, {
+                    activatedAt: serverTimestamp(),
+                    activatedBy: req.user?.uid || 'admin',
+                    manifestHash
+                });
+
+                return { bookId, activeTextRevisionId: revisionId, manifestHash };
+            });
+
+            pagesCache.clear();
+
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_ACTIVATED',
+                    bookId,
+                    revisionId,
+                    manifestHash,
+                    userId: req.user?.uid || 'admin'
+                });
+            }
+
+            return sendSuccess(res, result, 'Text revision activated successfully.');
+        } catch (error) {
+            const status = error.status || (error.code === 'INVALID_MANIFEST_HASH' ? 400 : 500);
+            return sendError(res, status, error.code || 'ACTIVATE_REVISION_ERROR', error.message || 'Failed to activate revision.');
+        }
+    });
+
+    router.post('/books/:bookId/text-revisions/:revisionId/rollback', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const targetRevisionId = req.body?.targetRevisionId !== undefined ? cleanStr(req.body.targetRevisionId) : null;
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
+
+            const bookRef = db.collection(CRM_BOOKS).doc(bookId);
+
+            const result = await db.runTransaction(async (txn) => {
+                const bookDoc = await txn.get(bookRef);
+                if (!bookDoc.exists) throw Object.assign(new Error('Book not found'), { code: 'BOOK_NOT_FOUND', status: 404 });
+
+                if (targetRevisionId) {
+                    const targetRevRef = bookRef.collection('textRevisions').doc(targetRevisionId);
+                    const targetRevDoc = await txn.get(targetRevRef);
+                    if (!targetRevDoc.exists) throw Object.assign(new Error('Target revision not found'), { code: 'TARGET_REVISION_NOT_FOUND', status: 404 });
+                }
+
+                txn.update(bookRef, {
+                    activeTextRevisionId: targetRevisionId || null,
+                    updatedAt: serverTimestamp()
+                });
+
+                return { bookId, activeTextRevisionId: targetRevisionId || null };
+            });
+
+            pagesCache.clear();
+
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_ROLLED_BACK',
+                    bookId,
+                    targetRevisionId: targetRevisionId || 'legacy',
+                    userId: req.user?.uid || 'admin'
+                });
+            }
+
+            return sendSuccess(res, result, 'Text revision rolled back successfully.');
+        } catch (error) {
+            const status = error.status || 500;
+            return sendError(res, status, error.code || 'ROLLBACK_REVISION_ERROR', error.message || 'Failed to rollback revision.');
         }
     });
 

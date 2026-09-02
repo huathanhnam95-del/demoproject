@@ -122,4 +122,13 @@ assert.match(citationHtml, /crm-books-citation-source/, 'Source citations must u
 assert.match(citationHtml, /crm-books-citation-button-page/, 'Source citation buttons must show their page range directly.');
 assert.match(citationHtml, /pp\. 52–53/, 'Citation buttons must show their page range directly.');
 
+const ocrV2Text = workspace.formatPageText(
+    'Specias and specialized terminology remain intact under OCR-v2 contract.',
+    (value) => String(value),
+    '',
+    { rendererContract: 'ocr-v2' }
+);
+assert.match(ocrV2Text, /Specias and specialized terminology/, 'OCR-v2 contract must preserve genuine page text without segmenter word splitting.');
+
 console.log('books workspace helper contracts passed');
+

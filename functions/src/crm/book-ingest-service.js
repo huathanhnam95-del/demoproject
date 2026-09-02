@@ -5,6 +5,7 @@ const { extractPdfPages } = require('./book-pdf-extractor');
 const { chunkPages } = require('./book-chunker');
 const { embedTexts, getConfig: getEmbedConfig } = require('./book-embeddings');
 const { groupChunksIntoSections, summarizeSection, reduceSummary } = require('./book-summary-service');
+const { runBookTextRevisionQueue } = require('./book-text-revision-service');
 
 const LEASE_DURATION_MS = 9 * 60 * 1000;
 const SOFT_DEADLINE_MS = 7 * 60 * 1000;
@@ -560,6 +561,7 @@ async function releaseForResume(db, bookId, nextStage) {
 
 module.exports = {
     runBookIngestQueue,
+    runBookTextRevisionQueue,
     sweepAbandonedUploads,
     claimJob,
     failJob,

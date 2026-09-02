@@ -165,9 +165,12 @@ window.CrmBooksWorkspace = (function () {
         return true;
     }
 
-    function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
+    function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
-        const repaired = repairMissingSpaces(String(text ?? '').replace(/\r\n?/g, '\n'));
+        const rawNormalized = String(text ?? '').replace(/\r\n?/g, '\n');
+        const isOcrV2 = options?.rendererContract === 'ocr-v2' || options?.preserveSpacing === true
+            || (typeof pagesData === 'object' && pagesData?.rendererContract === 'ocr-v2');
+        const repaired = isOcrV2 ? rawNormalized : repairMissingSpaces(rawNormalized);
         const lines = repaired
             .split('\n')
             .map((line) => line.trim());
@@ -258,8 +261,8 @@ window.CrmBooksWorkspace = (function () {
         return html;
     }
 
-    function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '') {
-        return formatPageBlocks(text, escHtml, highlightQuote).join('');
+    function formatPageText(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
+        return formatPageBlocks(text, escHtml, highlightQuote, options).join('');
     }
 
     function getReadablePageNumbers(pages) {

@@ -134,7 +134,7 @@ function validateCitations(rawCitations, sentChunks) {
     const validated = [];
     const seenMarkers = new Set();
     for (const cit of rawCitations) {
-        const marker = String(cit.marker || '').trim();
+        const marker = String(cit.marker || '').replace(/[[\]()]/g, '').trim();
         const chunk = chunkMap.get(marker);
         if (!chunk) continue;
         if (seenMarkers.has(marker)) continue;
@@ -153,7 +153,8 @@ function validateCitations(rawCitations, sentChunks) {
             pageStart: chunk.pageStart,
             pageEnd: chunk.pageEnd,
             snippet: chunk.text.slice(0, SNIPPET_LENGTH),
-            highlightText
+            highlightText,
+            textRevisionId: chunk.textRevisionId ?? null
         });
     }
 
@@ -206,7 +207,10 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         throw Object.assign(new Error(`Daily chat limit (${quota.limit}) reached. Resets tomorrow.`), { code: 'resource-exhausted' });
     }
 
-    const chunks = await retrieveTopChunks(db, bookId, question, { bookTitle: bookData.title });
+    const chunks = await retrieveTopChunks(db, bookId, question, {
+        bookTitle: bookData.title,
+        textRevisionId: bookData.activeTextRevisionId
+    });
 
     const messagesCol = threadRef.collection('messages');
     const recentSnap = await messagesCol.orderBy('createdAt', 'desc').limit(MAX_HISTORY_MESSAGES).get();
@@ -248,6 +252,7 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         retrieval: {
             chunkIds: chunks.map((c) => c.chunkId),
             distances: chunks.map((c) => c.distance),
+            textRevisionId: chunks[0]?.textRevisionId || bookData.activeTextRevisionId || null,
             strategy: chunks[0]?.strategy || 'unknown'
         },
         model,

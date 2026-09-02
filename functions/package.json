@@ -14,6 +14,7 @@
     },
     "main": "src/index.js",
     "dependencies": {
+        "@google-cloud/documentai": "10.0.0",
         "@google-cloud/vertexai": "^1.12.0",
         "@google/genai": "^2.0.1",
         "@google/generative-ai": "^0.24.1",

@@ -1,6 +1,15 @@
+const { analyzeTextQuality, compareTextQuality } = require('./book-text-quality');
+
 const MIN_AVG_CHARS_PER_PAGE = 50;
 
-async function extractPdfPages(buffer) {
+function countImageXObjects(buffer) {
+    const source = Buffer.isBuffer(buffer)
+        ? buffer.toString('latin1')
+        : Buffer.from(buffer).toString('latin1');
+    return (source.match(/\/Subtype\s*\/Image\b/g) || []).length;
+}
+
+async function extractPdfPages(buffer, options = {}) {
     const uint8 = Buffer.isBuffer(buffer)
         ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
         : (buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer));
@@ -9,16 +18,54 @@ async function extractPdfPages(buffer) {
     const result = await extractText(uint8, { mergePages: false });
     const pages = result.text || [];
     const totalPages = result.totalPages ?? pages.length;
+    const physicalPageCount = Number.isInteger(totalPages) && totalPages >= 0 ? totalPages : pages.length;
 
-    if (totalPages === 0) {
-        return { totalPages: 0, pages: [], avgCharsPerPage: 0, isScanned: true };
+    if (physicalPageCount === 0) {
+        const quality = analyzeTextQuality({ pages: [], referencePages: options.referencePages, physicalPageCount: 0 });
+        return {
+            totalPages: 0,
+            physicalPageCount: 0,
+            pages: [],
+            avgCharsPerPage: 0,
+            isScanned: true,
+            imageXObjectCount: countImageXObjects(buffer),
+            blankPageCount: quality.blankPageCount,
+            blankPages: quality.blankPages,
+            extractedTextBlankCount: quality.extractedTextBlankCount,
+            extractedTextBlankPages: quality.extractedTextBlankPages,
+            sourceAccuracyStatus: quality.sourceAccuracyStatus,
+            isSourceAccurate: quality.sourceAccurate,
+            sourceAccurate: quality.sourceAccurate,
+            quality
+        };
     }
 
     const totalChars = pages.reduce((sum, p) => sum + (p || '').length, 0);
-    const avgCharsPerPage = Math.round(totalChars / totalPages);
+    const avgCharsPerPage = Math.round(totalChars / physicalPageCount);
     const isScanned = avgCharsPerPage < MIN_AVG_CHARS_PER_PAGE;
+    const quality = analyzeTextQuality({
+        pages,
+        referencePages: options.referencePages,
+        physicalPageCount
+    });
+    const imageXObjectCount = countImageXObjects(buffer);
 
-    return { totalPages, pages, avgCharsPerPage, isScanned };
+    return {
+        totalPages: physicalPageCount,
+        physicalPageCount,
+        pages,
+        avgCharsPerPage,
+        isScanned,
+        imageXObjectCount,
+        blankPageCount: quality.blankPageCount,
+        blankPages: quality.blankPages,
+        extractedTextBlankCount: quality.extractedTextBlankCount,
+        extractedTextBlankPages: quality.extractedTextBlankPages,
+        sourceAccuracyStatus: quality.sourceAccuracyStatus,
+        isSourceAccurate: quality.sourceAccurate,
+        sourceAccurate: quality.sourceAccurate,
+        quality
+    };
 }
 
-module.exports = { extractPdfPages, MIN_AVG_CHARS_PER_PAGE };
+module.exports = { compareTextQuality, countImageXObjects, extractPdfPages, MIN_AVG_CHARS_PER_PAGE };

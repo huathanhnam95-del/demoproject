@@ -1,5 +1,7 @@
 const assert = require('assert');
+const crypto = require('crypto');
 const { extractPdfPages } = require('../../functions/src/crm/book-pdf-extractor');
+const { EXPECTED, buildCorruptTextLayerPdf } = require('./fixtures/build-corrupt-text-layer-pdf');
 
 function escapePdfText(text) {
     return String(text).replace(/([\\()])/g, '\\$1');
@@ -39,7 +41,76 @@ function buildTinyPdf(pageTexts) {
     return Buffer.from(pdf, 'ascii');
 }
 
+function extractAsciiHexImagePayloads(pdfBuffer) {
+    const source = Buffer.from(pdfBuffer).toString('ascii');
+    const images = [];
+    const imagePattern = /\/Subtype\s*\/Image\b[\s\S]*?\/Length\s+(\d+)\s*>>\s*stream\r?\n/g;
+    let match;
+    while ((match = imagePattern.exec(source))) {
+        const streamStart = imagePattern.lastIndex;
+        const streamEnd = source.indexOf('\nendstream', streamStart);
+        assert.ok(streamEnd > streamStart, 'image XObject must have a complete stream');
+        const payloadText = source.slice(streamStart, streamEnd).replace(/\s+/g, '').replace(/>$/, '');
+        const payloadOffset = source.indexOf(payloadText, streamStart);
+        images.push({
+            bytes: Buffer.from(payloadText, 'hex'),
+            payloadOffset
+        });
+        imagePattern.lastIndex = streamEnd + '\nendstream'.length;
+    }
+    return images;
+}
+
+function assertRasterPayloadsMatch(pdfBuffer, expectedPages) {
+    const images = extractAsciiHexImagePayloads(pdfBuffer);
+    assert.strictEqual(images.length, expectedPages.length, 'every expected physical page must have one raster payload');
+    images.forEach((image, index) => {
+        const actualSha256 = crypto.createHash('sha256').update(image.bytes).digest('hex');
+        assert.strictEqual(
+            actualSha256,
+            expectedPages[index].rasterSha256,
+            `raster SHA-256 mismatch on page ${index + 1}`
+        );
+    });
+    return images;
+}
+
 async function main() {
+    const corruptFixture = buildCorruptTextLayerPdf();
+    const rasterImages = assertRasterPayloadsMatch(corruptFixture, EXPECTED.pages);
+    const mutatedFixture = Buffer.from(corruptFixture);
+    mutatedFixture[rasterImages[0].payloadOffset] = '0'.charCodeAt(0);
+    mutatedFixture[rasterImages[0].payloadOffset + 1] = '0'.charCodeAt(0);
+    assert.throws(
+        () => assertRasterPayloadsMatch(mutatedFixture, EXPECTED.pages),
+        /raster SHA-256 mismatch/,
+        'a corrupt/white raster mutation must fail independent raster validation'
+    );
+    const allWhiteFixture = Buffer.from(corruptFixture);
+    rasterImages.forEach((image) => {
+        for (let index = 0; index < image.bytes.length; index++) {
+            allWhiteFixture[image.payloadOffset + index * 2] = 'F'.charCodeAt(0);
+            allWhiteFixture[image.payloadOffset + index * 2 + 1] = 'F'.charCodeAt(0);
+        }
+    });
+    assert.throws(
+        () => assertRasterPayloadsMatch(allWhiteFixture, EXPECTED.pages),
+        /raster SHA-256 mismatch/,
+        'an all-white raster mutation must fail independent raster validation'
+    );
+
+    const corruptExtracted = await extractPdfPages(corruptFixture);
+    assert.strictEqual(corruptExtracted.totalPages, EXPECTED.physicalPageCount);
+    assert.strictEqual(corruptExtracted.pages.length, EXPECTED.pages.length);
+    assert.match(corruptExtracted.pages[0], /ANeglectedSpecias/);
+    assert.match(corruptExtracted.pages[1], /IIMIWIN/);
+    assert.match(corruptExtracted.pages[1], /itt/);
+    assert.match(corruptExtracted.pages[1], /jof ASTD/);
+    assert.notStrictEqual(corruptExtracted.pages[0].trim(), EXPECTED.pages[0].rasterText);
+    assert.notStrictEqual(corruptExtracted.pages[1].trim(), EXPECTED.pages[1].rasterText);
+    assert.strictEqual(corruptExtracted.sourceAccuracyStatus, 'unverified');
+    assert.strictEqual(corruptExtracted.isSourceAccurate, null, 'corrupt native text must not be source-accurate');
+
     const extracted = await extractPdfPages(buildTinyPdf(['First page text', 'Second page text']));
 
     assert.strictEqual(extracted.totalPages, 2);

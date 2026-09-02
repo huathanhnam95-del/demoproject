@@ -135,9 +135,10 @@
             const response = await fetch(record.url, { signal: combinedSignal, cache: 'force-cache' });
             if (!response.ok) throw new EssaySupportUnavailableError(`Guided support pack unavailable (${response.status}).`, 'pack_http');
             const text = await response.text();
-            const actualHash = await sha256Hex(text);
+            const normalizedText = (text || '').trim();
+            const actualHash = await sha256Hex(normalizedText);
             if (actualHash && actualHash !== record.sha256) throw new EssaySupportUnavailableError('This Guided support pack failed its integrity check.', 'hash_mismatch');
-            const pack = JSON.parse(text);
+            const pack = JSON.parse(normalizedText);
             if (pack.schemaVersion !== 'EssaySupportPackV1' || String(pack.questionId) !== id || !pack.levels || !pack.common) {
                 throw new EssaySupportUnavailableError('This Guided support pack is incompatible.', 'incompatible_pack');
             }

@@ -50,6 +50,9 @@
     let guidedHintDepth = 1;
     let guidedSelectedVariantId = null;
     let guidedSelectedTargetIds = [];
+    let guidedSelectedPointIds = [];
+    let guidedExpandedPointExplId = null;
+    let guidedQuizSelectedOption = null;
     let guidedPackRequestId = 0;
     // Disclosure + checklist state must outlive a re-render: switching step or
     // support language used to wipe every tick and reopen every group.
@@ -143,8 +146,283 @@
         isInitialized = true;
     }
 
+    /* ──────────────── FULLSCREEN TOGGLE ──────────────── */
+    const FULLSCREEN_STORAGE_KEY = 'essay-fullscreen';
+    const EXPAND_SVG = '<path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>';
+    const COMPRESS_SVG = '<path d="M4 14h6m0 0v6m0-6L3 21M20 10h-6m0 0V4m0 6l7-7"/>';
+    let _modePanelEl = null;
+    function getModePanelEl() {
+        return _modePanelEl || (_modePanelEl = document.getElementById('mode-essay'));
+    }
+
+    /**
+     * User-initiated toggle (button click).
+     */
+    function toggleEssayFullscreen() {
+        const mp = getModePanelEl();
+        if (!mp) return;
+        const entering = !mp.classList.contains('essay-fullscreen');
+        _applyFullscreen(entering);
+        // Persist only on explicit user action
+        _persistFullscreenPref(entering);
+    }
+
+    /**
+     * Exit fullscreen when the user presses Escape.
+     * Also clears the sessionStorage preference (deliberate exit).
+     */
+    function exitEssayFullscreen() {
+        _applyFullscreen(false);
+        _persistFullscreenPref(false);
+    }
+
+    /**
+     * Internal: apply or remove the fullscreen CSS class + body scroll lock.
+     * Does NOT touch sessionStorage — callers decide persistence.
+     */
+    function _applyFullscreen(on) {
+        const mp = getModePanelEl();
+        if (!mp) return;
+        if (mp.classList.contains('essay-fullscreen') === on) return;
+
+        mp.classList.toggle('essay-fullscreen', on);
+        // Clean up writing phase when exiting fullscreen entirely
+        if (!on) mp.classList.remove('essay-fs-writing');
+
+        // Update button icon + label on all fullscreen buttons
+        [el.fullscreenBtn, el.railFullscreenBtn].forEach(btn => {
+            if (!btn) return;
+            const svg = btn.querySelector('svg');
+            const lbl = btn.querySelector('.essay-fullscreen-label');
+            if (svg) svg.innerHTML = on ? COMPRESS_SVG : EXPAND_SVG;
+            if (lbl) lbl.textContent = on ? 'Collapse' : 'Expand';
+            btn.setAttribute('aria-pressed', String(on));
+        });
+
+        // Prevent body scroll behind the fixed overlay
+        document.body.style.overflow = on ? 'hidden' : '';
+
+        // Scroll overlay to top on enter so the user sees the full workspace
+        if (on) mp.scrollTop = 0;
+    }
+
+    function _persistFullscreenPref(on) {
+        try {
+            if (on) sessionStorage.setItem(FULLSCREEN_STORAGE_KEY, '1');
+            else sessionStorage.removeItem(FULLSCREEN_STORAGE_KEY);
+        } catch (_) { /* quota / private mode */ }
+    }
+
+    function restoreEssayFullscreen() {
+        try {
+            if (sessionStorage.getItem(FULLSCREEN_STORAGE_KEY) === '1') {
+                _applyFullscreen(true);
+            }
+        } catch (_) { /* ignore */ }
+    }
+
+    /* ── Guided Walkthrough & Writing Phase Transitions ─────────────── */
+
+    /**
+     * Transition from walkthrough to writing phase.
+     * Reveals the essay textarea, displays the generated draft card, and focuses the editor.
+     */
+    function enterFsWritingPhase() {
+        const mp = getModePanelEl();
+        if (!mp) return;
+        mp.classList.add('essay-writing-phase');
+        if (mp.classList.contains('essay-fullscreen')) {
+            mp.classList.add('essay-fs-writing');
+        }
+        // Ensure the compose card is visible
+        if (el.stepWrite) el.stepWrite.style.display = 'block';
+
+        // Render generated draft card based on user's choices in Steps 1-5
+        renderGuidedDraft();
+
+        if (el.essayInput) {
+            el.essayInput.focus();
+            el.essayInput.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    /**
+     * Return from writing phase back to walkthrough view.
+     */
+    function exitFsWritingPhase() {
+        const mp = getModePanelEl();
+        if (!mp) return;
+        mp.classList.remove('essay-writing-phase');
+        mp.classList.remove('essay-fs-writing');
+
+        // Hide compose card if in guided walkthrough mode
+        if (practiceKind === 'guided' && el.stepWrite) {
+            el.stepWrite.style.display = 'none';
+        }
+        // Scroll back to top
+        mp.scrollTop = 0;
+        if (el.guidedRail) el.guidedRail.scrollTop = 0;
+    }
+
+    /**
+     * Synthesize a coherent, academic 4-paragraph PTE essay draft from the user's
+     * chosen stance, arguments, and sentence scaffolding frames.
+     */
+    function generateGuidedDraft(levelData) {
+        if (!guidedPack || !levelData) return null;
+        const common = guidedPack.common || {};
+        const activePlan = (levelData.plans || []).find(p => p.variantId === guidedSelectedVariantId) || levelData.plans?.[0] || {};
+        const variantId = activePlan.variantId || 'agree';
+        const [body1Point, body2Point] = getSelectedPointsForPlan(activePlan, levelData, common);
+        const stance = String(activePlan.stance || variantId).toLowerCase();
+        const isDisagree = stance.includes('disagree');
+
+        // Extract topic title or clean prompt
+        const promptText = String(currentEntry?.prompt || '').trim();
+        const topicName = (common.topics?.[0] || 'the given topic').toLowerCase();
+
+        // 1. Introduction Paragraph
+        let introP1 = `The debate surrounding whether ${promptText ? `"${promptText.replace(/^["“]|["”]$/g, '').trim()}"` : topicName} has garnered significant attention in contemporary society.`;
+        if (activePlan.thesisFrame) {
+            introP1 += ` In my perspective, I ${isDisagree ? 'firmly disagree with this viewpoint' : 'strongly advocate this point of view'} as ${activePlan.thesisFrame.replace(/^In my view,?\s*/i, '').replace(/\.$/, '')}.`;
+        } else {
+            introP1 += ` In my perspective, I ${isDisagree ? 'firmly disagree with this statement' : 'strongly agree with this notion'} due to several compelling educational and practical factors.`;
+        }
+        introP1 += ` This essay will examine how ${body1Point ? body1Point.replace(/\.$/, '').toLowerCase() : 'inflexible systems limit development'} and demonstrate that ${body2Point ? body2Point.replace(/\.$/, '').toLowerCase() : 'holistic approaches provide essential skills'}.`;
+
+        // 2. Body Paragraph 1
+        let body1 = `To begin with, the primary argument in support of this stance is that ${body1Point ? body1Point.replace(/\.$/, '') : 'standardized frameworks often constrain personal curiosity'}.`;
+        body1 += ` Specifically, when instructional methods enforce rigid adherence to prescribed curricula, learners are frequently discouraged from pursuing self-directed exploration and critical thinking.`;
+        body1 += ` For instance, empirical studies in educational psychology illustrate that students who are given the autonomy to explore concepts independently demonstrate superior retention and creative problem-solving skills compared to those subjected to rote memorization.`;
+        body1 += ` Consequently, this evidence clearly substantiates the position that ${body1Point ? body1Point.replace(/\.$/, '').toLowerCase() : 'over-regulation hinders natural intellectual growth'}.`;
+
+        // 3. Body Paragraph 2
+        let body2 = `Furthermore, another vital aspect that warrants careful consideration is that ${body2Point ? body2Point.replace(/\.$/, '') : 'academic settings must balance foundational instruction with practical life aptitudes'}.`;
+        body2 += ` That is to say, genuine competency extends beyond mere theoretical test scores to encompass collaborative teamwork, adaptability, and real-world application.`;
+        body2 += ` A pertinent example can be observed in modern workplaces, where analytical resilience and emotional intelligence are consistently valued above mechanical recall of factual data.`;
+        body2 += ` Hence, it becomes unequivocally clear that ${body2Point ? body2Point.replace(/\.$/, '').toLowerCase() : 'balanced learning environments cultivate lasting competence'}.`;
+
+        // 4. Conclusion Paragraph
+        let concl = `In conclusion, having analyzed both theoretical principles and practical ramifications, I reaffirm my conviction that ${isDisagree ? 'formal education remains fundamentally beneficial when properly adapted' : 'unyielding academic constraints can indeed impede meaningful self-discovery'}.`;
+        concl += ` Looking forward, educational institutions should strive to harmonize rigorous academic benchmarks with flexible, passion-driven inquiry to optimize intellectual potential for future generations.`;
+
+        const fullText = `${introP1}\n\n${body1}\n\n${body2}\n\n${concl}`;
+        const wordCount = fullText.trim().split(/\s+/).length;
+
+        return {
+            stance: isDisagree ? 'DISAGREE' : 'AGREE',
+            thesis: activePlan.thesisFrame || '',
+            point1: body1Point,
+            point2: body2Point,
+            introduction: introP1,
+            body1: body1,
+            body2: body2,
+            conclusion: concl,
+            fullText: fullText,
+            wordCount: wordCount
+        };
+    }
+
+    /**
+     * Render the generated draft card in the writing area.
+     */
+    function renderGuidedDraft() {
+        if (!el.guidedDraftContainer) return;
+        const levelData = getGuidedLevelData();
+        const draft = generateGuidedDraft(levelData);
+        if (!draft) {
+            el.guidedDraftContainer.style.display = 'none';
+            return;
+        }
+
+        el.guidedDraftContainer.style.display = 'block';
+        el.guidedDraftContainer.innerHTML = `
+            <div class="essay-guided-draft-header">
+                <div class="essay-guided-draft-title">
+                    <span>📝 ${guidedText('Generated Essay Draft', 'Dàn bài hoàn chỉnh từ Guided')}</span>
+                    <span class="essay-guided-draft-badge">${escapeHtml(draft.stance)} · ~${draft.wordCount} words</span>
+                </div>
+                <div class="essay-guided-draft-actions">
+                    <button type="button" class="essay-guided-draft-btn-insert" id="essay-draft-insert-btn" title="${guidedText('Populate this draft into the essay editor', 'Điền dàn bài này vào khung viết')}">
+                        ⚡ ${guidedText('Insert Draft into Editor', 'Điền vào bài viết')}
+                    </button>
+                    <button type="button" class="essay-guided-draft-btn-copy" id="essay-draft-copy-btn" title="${guidedText('Copy entire draft to clipboard', 'Sao chép toàn bộ dàn bài')}">
+                        📋 ${guidedText('Copy Draft', 'Sao chép')}
+                    </button>
+                </div>
+            </div>
+            <div class="essay-guided-draft-content">
+                <div class="essay-guided-draft-para">
+                    <div class="essay-guided-draft-para-label">📌 ${guidedText('1. Introduction', '1. Mở bài (Introduction)')}</div>
+                    <p class="essay-guided-draft-para-text">${escapeHtml(draft.introduction)}</p>
+                </div>
+                <div class="essay-guided-draft-para">
+                    <div class="essay-guided-draft-para-label">📌 ${guidedText('2. Body Paragraph 1 (Main Point 1)', '2. Thân bài 1 (Luận điểm 1)')}</div>
+                    <p class="essay-guided-draft-para-text">${escapeHtml(draft.body1)}</p>
+                </div>
+                <div class="essay-guided-draft-para">
+                    <div class="essay-guided-draft-para-label">📌 ${guidedText('3. Body Paragraph 2 (Main Point 2)', '3. Thân bài 2 (Luận điểm 2)')}</div>
+                    <p class="essay-guided-draft-para-text">${escapeHtml(draft.body2)}</p>
+                </div>
+                <div class="essay-guided-draft-para">
+                    <div class="essay-guided-draft-para-label">📌 ${guidedText('4. Conclusion', '4. Kết bài (Conclusion)')}</div>
+                    <p class="essay-guided-draft-para-text">${escapeHtml(draft.conclusion)}</p>
+                </div>
+            </div>
+        `;
+
+        // Wire up dynamic buttons
+        const insertBtn = document.getElementById('essay-draft-insert-btn');
+        if (insertBtn) {
+            insertBtn.addEventListener('click', () => {
+                if (el.essayInput) {
+                    el.essayInput.value = draft.fullText;
+                    updateWordCount();
+                    el.essayInput.focus();
+                    el.essayInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    insertBtn.textContent = '✓ ' + guidedText('Draft Inserted!', 'Đã điền vào bài!');
+                    setTimeout(() => {
+                        insertBtn.innerHTML = '⚡ ' + guidedText('Insert Draft into Editor', 'Điền vào bài viết');
+                    }, 2000);
+                }
+            });
+        }
+
+        const copyBtn = document.getElementById('essay-draft-copy-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                copyGuidedText(draft.fullText, copyBtn);
+            });
+        }
+    }
+
+    /**
+     * Watch for the mode panel being hidden externally (e.g. user switches
+     * to a different practice mode via the tab bar). When that happens,
+     * remove the fullscreen overlay so body.overflow isn't left locked.
+     * Does NOT clear sessionStorage so fullscreen restores when they return.
+     */
+    function _watchForModeHide() {
+        const mp = getModePanelEl();
+        if (!mp || typeof MutationObserver === 'undefined') return;
+        const obs = new MutationObserver(() => {
+            if (mp.style.display === 'none' && mp.classList.contains('essay-fullscreen')) {
+                _applyFullscreen(false);
+            }
+        });
+        obs.observe(mp, { attributes: true, attributeFilter: ['style'] });
+    }
+
     function reset() {
         stopTimer();
+        _applyFullscreen(false);
+        const mp = getModePanelEl();
+        if (mp) {
+            mp.classList.remove('essay-guided-mode');
+            mp.classList.remove('essay-writing-phase');
+            mp.classList.remove('essay-fs-writing');
+        }
+        if (el.guidedDraftContainer) el.guidedDraftContainer.style.display = 'none';
         if (window.WriteEssaySupport?.abortPackLoad) window.WriteEssaySupport.abortPackLoad();
         isSubmitting = false;
         isAiScoring = false;
@@ -161,6 +439,9 @@
         guidedHintDepth = 1;
         guidedSelectedVariantId = null;
         guidedSelectedTargetIds = [];
+        guidedSelectedPointIds = [];
+        guidedExpandedPointExplId = null;
+        guidedQuizSelectedOption = null;
         guidedPackRequestId += 1;
         guidedVisitedSections = new Set(['understand']);
         guidedOpenGroups = new Set();
@@ -242,6 +523,11 @@
         el.guidedChecklist = document.getElementById('essay-guided-checklist');
         el.guidedRecycle = document.getElementById('essay-guided-recycle');
         el.requestGuidedBtn = document.getElementById('essay-request-guided-btn');
+        el.fullscreenBtn = document.getElementById('essay-fullscreen-btn');
+        el.railFullscreenBtn = document.getElementById('essay-rail-fullscreen-btn');
+        el.fsReadyBtn = document.getElementById('essay-fs-ready-btn');
+        el.fsBackBtn = document.getElementById('essay-fs-back-btn');
+        el.guidedDraftContainer = document.getElementById('essay-guided-draft-container');
 
         // Step 1: Write
         el.stepWrite = document.getElementById('essay-step-write');
@@ -326,9 +612,17 @@
             });
         }
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && pickerOpen) {
-                closePicker();
-                if (el.questionPill) el.questionPill.focus();
+            if (e.key === 'Escape') {
+                // Exit fullscreen first if active
+                const mp = getModePanelEl();
+                if (mp && mp.classList.contains('essay-fullscreen')) {
+                    exitEssayFullscreen();
+                    return;
+                }
+                if (pickerOpen) {
+                    closePicker();
+                    if (el.questionPill) el.questionPill.focus();
+                }
             }
         });
         if (el.startBtn) el.startBtn.addEventListener('click', startPractice);
@@ -360,6 +654,11 @@
             el.guidedChecklist.addEventListener('click', onGuidedChecklistClick);
         }
         if (el.requestGuidedBtn) el.requestGuidedBtn.addEventListener('click', requestGuidedHelpMidAttempt);
+        if (el.fullscreenBtn) el.fullscreenBtn.addEventListener('click', toggleEssayFullscreen);
+        if (el.railFullscreenBtn) el.railFullscreenBtn.addEventListener('click', toggleEssayFullscreen);
+        if (el.fsReadyBtn) el.fsReadyBtn.addEventListener('click', enterFsWritingPhase);
+        if (el.fsBackBtn) el.fsBackBtn.addEventListener('click', exitFsWritingPhase);
+        _watchForModeHide();
         restoreGuidedPreferences();
     }
 
@@ -407,6 +706,9 @@
         if (el.guidedLanguage) el.guidedLanguage.value = guidedLanguage;
         persistGuidedPreferences();
         renderGuidedSupport();
+        if (getModePanelEl()?.classList.contains('essay-writing-phase')) {
+            renderGuidedDraft();
+        }
     }
 
     function toggleGuidedMobileRail() {
@@ -580,10 +882,35 @@
             group?.classList.toggle('is-open', open);
             if (body) body.hidden = !open;
         } else if (action === 'focus-editor') {
-            el.essayInput?.focus();
-            el.essayInput?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            enterFsWritingPhase();
+        } else if (action === 'answer-prompt-quiz') {
+            const optIdx = Number(target.dataset.optionIndex);
+            guidedQuizSelectedOption = isNaN(optIdx) ? null : optIdx;
+            renderGuidedSupport();
         } else if (action === 'select-variant') {
             guidedSelectedVariantId = target.dataset.variantId || null;
+            guidedSelectedPointIds = [];
+            guidedExpandedPointExplId = null;
+            renderGuidedSupport();
+        } else if (action === 'select-point') {
+            const pointId = target.dataset.pointId;
+            if (pointId) {
+                const idx = guidedSelectedPointIds.indexOf(pointId);
+                if (idx >= 0) {
+                    if (guidedSelectedPointIds.length > 1) {
+                        guidedSelectedPointIds.splice(idx, 1);
+                    }
+                } else {
+                    if (guidedSelectedPointIds.length >= 2) {
+                        guidedSelectedPointIds.shift();
+                    }
+                    guidedSelectedPointIds.push(pointId);
+                }
+                renderGuidedSupport();
+            }
+        } else if (action === 'toggle-point-expl') {
+            const pointId = target.dataset.pointId;
+            guidedExpandedPointExplId = guidedExpandedPointExplId === pointId ? null : pointId;
             renderGuidedSupport();
         } else if (action === 'set-depth') {
             guidedHintDepth = Math.min(3, Math.max(1, Number(target.dataset.depth) || 1));
@@ -701,61 +1028,430 @@
         renderGuidedRecycle(levelData);
     }
 
+    function buildPromptQuiz(pack, entry) {
+        const rawType = (entry?.standardizedTaskType || entry?.promptType || '').toLowerCase();
+        
+        let correctTextEn = 'Take a clear stance and defend it with specific reasons and real-world examples.';
+        let correctTextVi = 'Chọn một lập trường rõ ràng (đồng ý hoặc không đồng ý) và bảo vệ bằng các lý do, dẫn chứng cụ thể.';
+        let d1En = 'Just summarize general background facts without giving any personal viewpoint.';
+        let d1Vi = 'Chỉ tóm tắt sự thật chung mà không thể hiện quan điểm cá nhân rõ ràng.';
+        let d2En = 'List every possible opinion without organizing them into structured paragraphs.';
+        let d2Vi = 'Liệt kê mọi ý kiến rời rạc mà không phân chia bố cục đoạn văn mạch lạc.';
+
+        if (rawType.includes('advantage') || rawType.includes('outweigh')) {
+            correctTextEn = 'Analyze both advantages and disadvantages, then state which side is stronger.';
+            correctTextVi = 'Phân tích cả mặt thuận lợi lẫn bất lợi, sau đó kết luận mặt nào chiếm ưu thế hơn.';
+            d1En = 'Only discuss the positive aspects and completely ignore drawbacks.';
+            d1Vi = 'Chỉ nói về mặt tích cực và bỏ qua hoàn toàn các hạn chế.';
+        } else if (rawType.includes('cause') || rawType.includes('solution') || rawType.includes('problem')) {
+            correctTextEn = 'Identify the root causes and propose realistic, actionable solutions.';
+            correctTextVi = 'Chỉ ra các nguyên nhân gốc rễ và đề xuất các giải pháp thực tế, khả thi.';
+            d1En = 'Argue whether the problem is good or bad without proposing solutions.';
+            d1Vi = 'Tranh cãi vấn đề là tốt hay xấu mà không đề xuất giải pháp nào.';
+        } else if (rawType.includes('both') || rawType.includes('discuss')) {
+            correctTextEn = 'Examine both perspectives fairly before concluding with your own reasoned position.';
+            correctTextVi = 'Xem xét công bằng cả hai quan điểm trước khi đưa ra kết luận và lập trường của bạn.';
+            d1En = 'Only discuss one perspective and dismiss the other side immediately.';
+            d1Vi = 'Chỉ bàn luận một góc nhìn duy nhất và bác bỏ ngay góc nhìn còn lại.';
+        }
+
+        const options = [
+            { en: correctTextEn, vi: correctTextVi, isCorrect: true },
+            { en: d1En, vi: d1Vi, isCorrect: false },
+            { en: d2En, vi: d2Vi, isCorrect: false },
+        ];
+        return {
+            questionEn: 'Quick Check: What is the core task required for this essay prompt?',
+            questionVi: 'Kiểm tra nhanh: Yêu cầu cốt lõi bạn cần thực hiện cho đề bài này là gì?',
+            options,
+        };
+    }
+
     function renderGuidedUnderstand() {
         const common = guidedPack.common || {};
         const section = GUIDED_SECTIONS[0];
 
+        // 1. Interactive Prompt Comprehension Quiz
+        const quiz = buildPromptQuiz(guidedPack, currentEntry);
+        const isAnswered = guidedQuizSelectedOption !== null;
+        const selectedOpt = isAnswered ? quiz.options[guidedQuizSelectedOption] : null;
+
+        const quizHtml = `<div class="essay-guided-quiz">
+            <div class="essay-guided-quiz-head">
+                <span class="essay-guided-quiz-badge">💡 ${guidedText('Comprehension Check', 'Kiểm tra nhanh')}</span>
+                <p class="essay-guided-quiz-question">${escapeHtml(guidedText(quiz.questionEn, quiz.questionVi))}</p>
+            </div>
+            <div class="essay-guided-quiz-options">
+                ${quiz.options.map((opt, idx) => {
+                    const isSelected = guidedQuizSelectedOption === idx;
+                    let statusClass = '';
+                    if (isAnswered) {
+                        if (opt.isCorrect) statusClass = ' is-correct';
+                        else if (isSelected) statusClass = ' is-incorrect';
+                    }
+                    return `<button type="button" class="essay-guided-quiz-opt${statusClass}${isSelected ? ' is-selected' : ''}" data-guided-action="answer-prompt-quiz" data-option-index="${idx}">
+                        <span class="essay-guided-quiz-radio" aria-hidden="true">${opt.isCorrect && isAnswered ? '✓' : (isSelected && !opt.isCorrect ? '✕' : (idx + 1))}</span>
+                        <span class="essay-guided-quiz-text">${escapeHtml(preferTranslated(opt.en, guidedLanguage === 'vi' ? opt.vi : ''))}</span>
+                    </button>`;
+                }).join('')}
+            </div>
+            ${isAnswered ? `
+            <div class="essay-guided-quiz-feedback ${selectedOpt?.isCorrect ? 'is-success' : 'is-warning'}">
+                <span class="essay-guided-quiz-feedback-icon" aria-hidden="true">${selectedOpt?.isCorrect ? '🎉' : '⚠️'}</span>
+                <div>
+                    <strong>${selectedOpt?.isCorrect ? guidedText('Correct! You identified the core requirements.', 'Chính xác! Bạn đã nắm đúng dạng bài và yêu cầu cốt lõi.') : guidedText('Not quite. Review the requirements checklist below.', 'Chưa chính xác. Hãy xem kỹ phần Yêu cầu bắt buộc ở bên dưới để nắm đúng dạng bài.')}</strong>
+                    <p>${selectedOpt?.isCorrect ? guidedText('Proceed to the next step to select your stance and main points.', 'Hãy tiếp tục sang bước tiếp theo để chọn lập trường và luận điểm phù hợp.') : guidedText('Make sure to address all parts of the question to achieve high task achievement.', 'Đảm bảo trả lời đầy đủ các phần của đề để đạt điểm tối đa.')}</p>
+                </div>
+            </div>` : ''}
+        </div>`;
+
+        // 2. Prompt Segments (Structure)
         const segments = common.promptSegments || [];
-        // One shared role across every segment says nothing; drop the label then.
         const showRoles = new Set(segments.map(segment => String(segment.role || ''))).size > 1;
         const segmentsHtml = segments.length ? `<ol class="essay-guided-parts">${segments.map((segment, index) => `<li>
             <span class="essay-guided-part-index" aria-hidden="true">${index + 1}</span>
             <div>${showRoles ? `<span class="essay-guided-part-role">${escapeHtml(guidedSegmentRoleLabel(segment.role))}</span>` : ''}<p>${escapeHtml(segment.text)}</p></div>
         </li>`).join('')}</ol>` : '';
 
+        // 3. Requirements
         const reqs = common.requirements || [];
         const reqsHtml = reqs.length ? `<ul class="essay-guided-ticklist">${reqs.map(item => `<li><span class="essay-guided-check" aria-hidden="true">✓</span><span>${escapeHtml(bilingual(item))}</span></li>`).join('')}</ul>` : '';
 
+        // 4. Traps
         const traps = common.promptTraps || [];
         const trapsHtml = traps.length ? `<ul class="essay-guided-ticklist essay-guided-ticklist--warn">${traps.map(item => `<li><span class="essay-guided-warn" aria-hidden="true">!</span><span>${escapeHtml(bilingual(item))}</span></li>`).join('')}</ul>` : '';
 
-        const angles = (common.angles || []).slice(0, 6);
-        const anglesHtml = angles.length ? `<ul class="essay-guided-anglelist">${angles.map(item => {
-            const stance = String(item.sourceVariantId || '').trim();
-            const chip = stance ? `<span class="essay-guided-chip">${escapeHtml(stance.toUpperCase())}</span>` : '';
-            return `<li>${chip}<span>${escapeHtml(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''))}</span></li>`;
-        }).join('')}</ul>` : '';
+        // 5. Grouped Stances & Approaches (Angles)
+        const angles = common.angles || [];
+        const grouped = {};
+        angles.forEach((item, idx) => {
+            let stanceKey = String(item.sourceVariantId || 'general').trim().toLowerCase();
+            if (!stanceKey || stanceKey === 'undefined') stanceKey = 'general';
+            if (!grouped[stanceKey]) grouped[stanceKey] = [];
+            grouped[stanceKey].push({ ...item, originalIndex: idx });
+        });
+
+        const stanceLabels = {
+            agree: { en: 'Stance 1: Agree / Support', vi: 'Hướng 1: Quan điểm Đồng ý (Agree)', icon: '👍', tone: 'agree' },
+            disagree: { en: 'Stance 2: Disagree / Alternative', vi: 'Hướng 2: Quan điểm Không đồng ý (Disagree)', icon: '👎', tone: 'disagree' },
+            advantage: { en: 'Advantages / Positive Aspects', vi: 'Mặt Thuận lợi / Tích cực', icon: '✨', tone: 'agree' },
+            disadvantage: { en: 'Disadvantages / Negative Aspects', vi: 'Mặt Bất lợi / Hạn chế', icon: '⚠️', tone: 'disagree' },
+            general: { en: 'Key Perspectives', vi: 'Các góc nhìn trọng tâm', icon: '🎯', tone: 'general' }
+        };
+
+        let anglesHtml = '';
+        const stanceKeys = Object.keys(grouped);
+        if (stanceKeys.length > 0) {
+            anglesHtml = `<div class="essay-guided-stance-groups">${stanceKeys.map(key => {
+                const meta = stanceLabels[key] || { en: `Approach: ${key.toUpperCase()}`, vi: `Hướng tiếp cận: ${key.toUpperCase()}`, icon: '📌', tone: 'general' };
+                const items = grouped[key];
+                return `<div class="essay-guided-stance-card is-${meta.tone}">
+                    <div class="essay-guided-stance-head">
+                        <span class="essay-guided-stance-icon" aria-hidden="true">${meta.icon}</span>
+                        <strong>${escapeHtml(guidedText(meta.en, meta.vi))}</strong>
+                        <span class="essay-guided-stance-count">${items.length} ${guidedText('ideas', 'ý')}</span>
+                    </div>
+                    <ul class="essay-guided-anglelist">
+                        ${items.map(item => `<li><span>${escapeHtml(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''))}</span></li>`).join('')}
+                    </ul>
+                </div>`;
+            }).join('')}</div>`;
+        }
 
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Read the prompt in pieces before you decide what to argue.', 'Hãy đọc đề theo từng phần trước khi quyết định lập luận.'))}
+            ${guidedSectionHead(section, guidedText('Analyze the prompt structure and core requirements before formulating your argument.', 'Phân tích kỹ cấu trúc câu hỏi và yêu cầu bắt buộc trước khi lập luận.'))}
             <h4 class="essay-guided-visually-hidden">${guidedText('Break down the prompt', 'Phân tích đề')}</h4>
             <blockquote class="essay-guided-prompt">${escapeHtml(guidedPack.prompt)}</blockquote>
-            ${guidedGroup('parts', guidedText('Prompt parts', 'Các phần của đề'), segmentsHtml, { count: segments.length, defaultOpen: true })}
-            ${guidedGroup('requirements', guidedText('You must answer', 'Bạn phải trả lời'), reqsHtml, { count: reqs.length, defaultOpen: true })}
-            ${guidedGroup('traps', guidedText('Common traps', 'Bẫy thường gặp'), trapsHtml, { count: traps.length, tone: 'warn' })}
-            ${guidedGroup('angles', guidedText('Possible angles', 'Các hướng triển khai'), anglesHtml, { count: angles.length })}
+            ${quizHtml}
+            ${guidedGroup('parts', guidedText('Question Structure', 'Cấu trúc câu hỏi'), segmentsHtml, { count: segments.length, defaultOpen: true })}
+            ${guidedGroup('requirements', guidedText('Mandatory Requirements', 'Yêu cầu bắt buộc'), reqsHtml, { count: reqs.length, defaultOpen: true })}
+            ${guidedGroup('traps', guidedText('Common Traps to Avoid', 'Các bẫy cần tránh'), trapsHtml, { count: traps.length, tone: 'warn' })}
+            ${guidedGroup('angles', guidedText('Suggested Approaches', 'Gợi ý các hướng tiếp cận'), anglesHtml, { count: angles.length, defaultOpen: true })}
         </section>`;
+    }
+
+    function getAvailablePointsForPlan(plan, levelData, common) {
+        if (!plan) return [];
+        const variantId = plan.variantId || 'default';
+        const points = [];
+        const seenTexts = new Set();
+
+        const addPoint = (id, en, vi, explEn = '', explVi = '') => {
+            const cleanEn = String(en || '').trim();
+            if (!cleanEn || seenTexts.has(cleanEn.toLowerCase())) return;
+            seenTexts.add(cleanEn.toLowerCase());
+            points.push({
+                id,
+                en: cleanEn,
+                vi: String(vi || '').trim(),
+                explEn: String(explEn || '').trim(),
+                explVi: String(explVi || '').trim(),
+            });
+        };
+
+        if (plan.point1) {
+            addPoint(
+                `${variantId}_p1`,
+                plan.point1,
+                guidedLanguage === 'vi' ? 'Luận điểm trọng tâm 1 cho phần thân bài' : 'Core Argument 1 for Body Paragraph 1',
+                'Develop this argument with specific explanation and supporting evidence in Body 1.',
+                'Phát triển luận điểm này kèm theo giải thích nguyên nhân/hệ quả và dẫn chứng cụ thể trong Thân bài 1.'
+            );
+        }
+        if (plan.point2) {
+            addPoint(
+                `${variantId}_p2`,
+                plan.point2,
+                guidedLanguage === 'vi' ? 'Luận điểm trọng tâm 2 cho phần thân bài' : 'Core Argument 2 for Body Paragraph 2',
+                'Develop this complementary argument with distinct examples in Body 2.',
+                'Phát triển luận điểm bổ trợ này với các ví dụ hoặc khía cạnh thực tế khác biệt trong Thân bài 2.'
+            );
+        }
+
+        const angles = common?.angles || [];
+        const targetStance = String(plan.stance || plan.variantId || '').trim().toLowerCase();
+        angles.forEach((angle, idx) => {
+            const angleStance = String(angle.sourceVariantId || '').trim().toLowerCase();
+            if (angleStance === targetStance || targetStance === 'all' || !targetStance) {
+                const angleEn = String(angle.en || '').trim();
+                const angleVi = String(angle.vi || '').trim();
+                addPoint(
+                    `${variantId}_ang_${idx}`,
+                    angleEn,
+                    angleVi,
+                    'You can use this perspective as one of your two main body arguments.',
+                    'Bạn có thể chọn góc nhìn này làm một trong hai luận điểm chính để bảo vệ lập trường của bài viết.'
+                );
+            }
+        });
+
+        return points;
+    }
+
+    function getSelectedPointsForPlan(plan, levelData, common) {
+        const available = getAvailablePointsForPlan(plan, levelData, common);
+        if (available.length === 0) return [plan?.point1 || '', plan?.point2 || ''];
+
+        const validIds = new Set(available.map(p => p.id));
+        let selected = guidedSelectedPointIds.filter(id => validIds.has(id));
+        if (selected.length < 2) {
+            for (const p of available) {
+                if (!selected.includes(p.id)) selected.push(p.id);
+                if (selected.length === 2) break;
+            }
+            guidedSelectedPointIds = selected.slice(0, 2);
+        }
+
+        const selectedObjects = guidedSelectedPointIds.map(id => available.find(p => p.id === id)).filter(Boolean);
+        return [
+            selectedObjects[0]?.en || plan?.point1 || '',
+            selectedObjects[1]?.en || plan?.point2 || ''
+        ];
     }
 
     function renderGuidedDirection(levelData) {
         const section = GUIDED_SECTIONS[1];
+        const common = guidedPack.common || {};
         const plans = levelData.plans || [];
-        const items = plans.map(plan => {
-            const selected = guidedSelectedVariantId === plan.variantId;
-            return `<button type="button" class="essay-guided-choice${selected ? ' is-selected' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${selected ? 'true' : 'false'}">
-                <span class="essay-guided-choice-head">
-                    <strong>${escapeHtml(plan.label || plan.variantId)}</strong>
-                    <span class="essay-guided-choice-state">${selected ? guidedText('Selected', 'Đang chọn') : guidedText('Choose', 'Chọn')}</span>
-                </span>
-                ${plan.stance ? `<span class="essay-guided-chip">${escapeHtml(String(plan.stance).toUpperCase())}</span>` : ''}
-                <span class="essay-guided-choice-point"><em>1.</em> ${escapeHtml(plan.point1 || '')}</span>
-                <span class="essay-guided-choice-point"><em>2.</em> ${escapeHtml(plan.point2 || '')}</span>
-            </button>`;
-        }).join('');
+        if (plans.length === 0) {
+            return `<section class="essay-guided-section">
+                ${guidedSectionHead(section, guidedText('Pick one stance and choose 2 main arguments.', 'Xác định quan điểm rõ ràng và chọn 2 luận điểm chính bạn muốn bảo vệ.'))}
+                <p class="essay-guided-empty">${guidedText('No directions are available for this level.', 'Chưa có hướng triển khai cho mức này.')}</p>
+            </section>`;
+        }
+
+        const activePlan = plans.find(p => p.variantId === guidedSelectedVariantId) || plans[0];
+        if (!guidedSelectedVariantId && activePlan) {
+            guidedSelectedVariantId = activePlan.variantId;
+        }
+
+        const availablePoints = getAvailablePointsForPlan(activePlan, levelData, common);
+        const validIds = new Set(availablePoints.map(p => p.id));
+        if (!guidedSelectedPointIds.some(id => validIds.has(id)) || guidedSelectedPointIds.length < 2) {
+            guidedSelectedPointIds = availablePoints.slice(0, 2).map(p => p.id);
+        }
+
+        // Stance selector tabs
+        const stanceSelectorHtml = `
+        <div class="essay-guided-stance-selector" role="group" aria-label="${guidedText('Select essay stance', 'Chọn lập trường bài viết')}">
+            ${plans.map(plan => {
+                const isSelected = guidedSelectedVariantId === plan.variantId;
+                const isDisagree = String(plan.stance || plan.variantId).toLowerCase().includes('disagree');
+                return `<button type="button" class="essay-guided-stance-tab${isSelected ? ' is-active' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${isSelected ? 'true' : 'false'}">
+                    <span class="essay-guided-stance-tab-icon">${isDisagree ? '👎' : '👍'}</span>
+                    <span class="essay-guided-stance-tab-label">${escapeHtml(plan.label || plan.variantId)}</span>
+                    <span class="essay-guided-stance-tab-state">${isSelected ? guidedText('Selected', 'Đang chọn') : guidedText('Choose', 'Chọn')}</span>
+                </button>`;
+            }).join('')}
+        </div>`;
+
+        // Points Picker with <?> Vietnamese explanation button
+        const selectedCount = guidedSelectedPointIds.length;
+        const pointsPickerHtml = `
+        <div class="essay-guided-points-container">
+            <div class="essay-guided-points-head">
+                <div>
+                    <h4>${guidedText('Choose 2 Main Points for Your Essay', 'Chọn 2 luận điểm cho bài viết của bạn')}</h4>
+                    <p class="essay-guided-points-subtitle">${guidedText('Select the 2 most convincing arguments you want to develop in Body 1 & Body 2.', 'Chọn 2 luận điểm bạn thấy thuyết phục nhất để triển khai trong Thân bài 1 & Thân bài 2.')}</p>
+                </div>
+                <div class="essay-guided-meter${selectedCount >= 2 ? ' is-full' : ''}">
+                    <span>${guidedText('Selected', 'Đã chọn')}</span>
+                    <strong>${selectedCount}/2</strong>
+                </div>
+            </div>
+            <div class="essay-guided-points-list">
+                ${availablePoints.map((point) => {
+                    const isSelected = guidedSelectedPointIds.includes(point.id);
+                    const isExplOpen = guidedExpandedPointExplId === point.id;
+                    const selectedIdx = isSelected ? guidedSelectedPointIds.indexOf(point.id) + 1 : null;
+                    return `
+                    <div class="essay-guided-point-card${isSelected ? ' is-selected' : ''}">
+                        <div class="essay-guided-point-main">
+                            <button type="button" class="essay-guided-point-select-btn" data-guided-action="select-point" data-point-id="${escapeHtml(point.id)}" aria-pressed="${isSelected ? 'true' : 'false'}">
+                                <span class="essay-guided-point-checkbox" aria-hidden="true">${isSelected ? `✓ ${selectedIdx}` : ''}</span>
+                                <div class="essay-guided-point-text">
+                                    <strong class="essay-guided-point-title">${escapeHtml(point.en)}</strong>
+                                    ${point.vi ? `<span class="essay-guided-point-vi">${escapeHtml(preferTranslated(point.en, guidedLanguage === 'vi' ? point.vi : ''))}</span>` : ''}
+                                </div>
+                            </button>
+                            <button type="button" class="essay-guided-info-btn${isExplOpen ? ' is-open' : ''}" data-guided-action="toggle-point-expl" data-point-id="${escapeHtml(point.id)}" title="${guidedText('Show Vietnamese explanation & elaboration', 'Xem giải thích chi tiết và cách triển khai bằng tiếng Việt')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
+                                <span aria-hidden="true">?</span>
+                            </button>
+                        </div>
+                        ${isExplOpen ? `
+                        <div class="essay-guided-point-expl">
+                            <div class="essay-guided-point-expl-head">
+                                <span class="essay-guided-point-expl-icon" aria-hidden="true">💡</span>
+                                <strong>${guidedText('Vietnamese Explanation & Argument Strategy', 'Giải thích chi tiết & Hướng dẫn triển khai')}</strong>
+                            </div>
+                            <p class="essay-guided-point-expl-desc">${escapeHtml(preferTranslated(point.explEn, guidedLanguage === 'vi' ? (point.explVi || point.vi || 'Luận điểm này giúp làm rõ lập trường của bạn. Bạn nên đưa ra giải thích lý do tại sao điều này xảy ra và dẫn chứng thực tế.') : point.explEn))}</p>
+                            <div class="essay-guided-point-expl-tip">
+                                <strong>${guidedText('Writing cue:', 'Gợi ý câu:')}</strong>
+                                <span>${guidedText('Begin with a topic sentence introducing this point, then explain the mechanism (why/how) and give a specific real-world example.', 'Bắt đầu bằng câu chủ đề nêu luận điểm này, sau đó giải thích nguyên nhân / tác động và đưa ra ví dụ cụ thể.')}</span>
+                            </div>
+                        </div>` : ''}
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>`;
+
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Pick one stance and keep it consistent through the whole essay.', 'Chọn một lập trường và giữ nhất quán trong toàn bài.'))}
-            <div class="essay-guided-choice-list">${items || `<p class="essay-guided-empty">${guidedText('No directions are available for this level.', 'Chưa có hướng triển khai cho mức này.')}</p>`}</div>
+            ${guidedSectionHead(section, guidedText('Pick one stance and choose 2 main arguments for your body paragraphs.', 'Xác định quan điểm rõ ràng và chọn 2 luận điểm chính bạn muốn bảo vệ.'))}
+            ${stanceSelectorHtml}
+            ${pointsPickerHtml}
         </section>`;
+    }
+
+    function getVocabContextExample(item, currentEntry, guidedPack) {
+        if (item.example || item.exampleSentence) {
+            return item.example || item.exampleSentence;
+        }
+        const term = String(item.term || '').trim().toLowerCase();
+        const topic = String(currentEntry?.verifiedPrimaryTopic || 'Education').toLowerCase();
+
+        const examples = {
+            'system': 'A well-structured educational system should nurture critical inquiry rather than enforce rigid conformity.',
+            'test': 'Standardized tests often assess rote memorization instead of evaluating practical analytical thinking.',
+            'learn': 'Students learn most effectively when actively engaged in problem-solving and open discussions.',
+            'facts': 'Merely absorbing isolated facts does not equip young learners for complex modern challenges.',
+            'art': 'Integrating creative arts into the curriculum fosters innovation, emotional intelligence, and self-expression.',
+            'passion': 'Pursuing a personal passion enables students to sustain long-term intellectual motivation.',
+            'rote learning': 'Over-reliance on rote learning restricts independent analytical capabilities in schoolchildren.',
+            'memorization': 'Excessive memorization can diminish a student’s innate curiosity and enthusiasm for discovery.',
+            'curriculum': 'A balanced school curriculum should harmonize fundamental theory with practical application.',
+            'skill': 'Acquiring critical reasoning and collaboration skills is essential for modern professional success.',
+            'knowledge': 'Practical knowledge empowers individuals to make informed ethical and economic decisions.',
+            'opportunity': 'Providing equal educational opportunities is crucial for bridging socio-economic divides.',
+            'technology': 'Digital technology provides students with instantaneous access to global research resources.',
+            'environment': 'Environmental sustainability should be embedded into school curricula to raise eco-awareness.',
+            'society': 'A progressive society depends fundamentally on the intellectual freedom of its citizens.',
+            'development': 'Holistic intellectual development occurs when learners are encouraged to think independently.',
+            'impact': 'Formal schooling exerts a profound impact on cognitive development and lifelong career trajectories.',
+            'challenge': 'Overcoming contemporary challenges demands adaptable thinking and cross-disciplinary collaboration.'
+        };
+
+        if (examples[term]) return examples[term];
+        return `Using "${item.term}" effectively articulates core concepts related to ${currentEntry?.verifiedPrimaryTopic || 'the essay prompt'}.`;
+    }
+
+    function getCollocationInfo(item, currentEntry) {
+        const rawTerm = String(item.term || '').trim().toLowerCase();
+        const existingGloss = String(item.viGloss || item.vi || item.enGloss || item.en || '').trim();
+        const isGenericBoilerplate = existingGloss.toLowerCase().includes('cụm từ học thuật tự nhiên') || existingGloss.toLowerCase().includes('natural academic collocation');
+
+        const dictionary = {
+            'active participant': {
+                vi: 'Người tham gia chủ động / đóng góp tích cực',
+                example: 'Students should become active participants in seminars rather than passive listeners.'
+            },
+            'active participation': {
+                vi: 'Sự tham gia tích cực / tương tác chủ động',
+                example: 'Active participation in group discussions promotes deeper comprehension and retention.'
+            },
+            'artificial intelligence': {
+                vi: 'Trí tuệ nhân tạo (AI)',
+                example: 'Artificial intelligence can personalize learning materials to suit individual student needs.'
+            },
+            'binary system': {
+                vi: 'Hệ thống đánh giá nhị phân / phân loại hai mặt',
+                example: 'Evaluating student progress through a strict binary system oversimplifies nuanced talents.'
+            },
+            'critical thinking': {
+                vi: 'Tư duy phản biện',
+                example: 'Fostering critical thinking enables learners to evaluate controversial information objectively.'
+            },
+            'rote learning': {
+                vi: 'Phương pháp học vẹt / học thuộc lòng thụ động',
+                example: 'Rote learning fails to cultivate genuine problem-solving capabilities in students.'
+            },
+            'academic achievement': {
+                vi: 'Thành tích học tập / thành tựu học thuật',
+                example: 'Standardized test scores alone should not define an individual’s overall academic achievement.'
+            },
+            'curriculum design': {
+                vi: 'Thiết kế chương trình giảng dạy',
+                example: 'Modern curriculum design must integrate experiential learning with core academic subjects.'
+            },
+            'technological advancement': {
+                vi: 'Sự tiến bộ vượt bậc của công nghệ',
+                example: 'Technological advancement has revolutionized independent research and remote education.'
+            },
+            'higher education': {
+                vi: 'Giáo dục bậc cao (đại học & sau đại học)',
+                example: 'Higher education institutions play an indispensable role in fostering social mobility.'
+            },
+            'equal opportunity': {
+                vi: 'Cơ hội bình đẳng / tiếp cận công bằng',
+                example: 'Governments should guarantee equal opportunity for all students regardless of socio-economic status.'
+            },
+            'sustainable development': {
+                vi: 'Sự phát triển bền vững',
+                example: 'Promoting sustainable development requires coordinated environmental education and policy.'
+            },
+            'economic growth': {
+                vi: 'Sự tăng trưởng kinh tế',
+                example: 'Investing in quality education is a vital prerequisite for sustained economic growth.'
+            }
+        };
+
+        const entry = dictionary[rawTerm];
+        if (entry) {
+            return {
+                meaning: guidedLanguage === 'vi' ? entry.vi : (item.enGloss || item.en || entry.vi),
+                example: entry.example
+            };
+        }
+
+        let cleanMeaning = existingGloss;
+        if (isGenericBoilerplate) {
+            cleanMeaning = guidedLanguage === 'vi' 
+                ? `Cụm từ diễn đạt học thuật chuyên sâu về "${item.term}"` 
+                : `Key academic phrase for "${item.term}"`;
+        }
+        return {
+            meaning: cleanMeaning || item.term,
+            example: `Incorporating "${item.term}" enhances the formal academic register of your arguments.`
+        };
     }
 
     function renderGuidedLanguage(levelData) {
@@ -766,14 +1462,31 @@
         const vocabHtml = vocabulary.length ? `<div class="essay-guided-target-grid">${vocabulary.map(item => {
             const selected = guidedSelectedTargetIds.includes(item.term);
             const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
+            const example = getVocabContextExample(item, currentEntry, guidedPack);
             return `<button type="button" class="essay-guided-target${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>
-                <strong>${escapeHtml(item.term)}</strong>
-                <span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
+                <div class="essay-guided-target-head">
+                    <strong class="essay-guided-target-term">${escapeHtml(item.term)}</strong>
+                    <span class="essay-guided-target-gloss">${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
+                    <span class="essay-guided-target-badge">${selected ? '✓ ' + guidedText('Selected', 'Đã chọn') : '+ ' + guidedText('Add Target', 'Chọn mục tiêu')}</span>
+                </div>
+                <div class="essay-guided-vocab-example">
+                    <span class="essay-guided-vocab-example-label">📝 ${guidedText('Essay Example:', 'Ví dụ trong bài:')}</span>
+                    <p class="essay-guided-vocab-example-text">"${escapeHtml(example)}"</p>
+                </div>
             </button>`;
         }).join('')}</div>` : '';
 
         const collocations = kit.collocations || [];
-        const colloHtml = collocations.length ? `<dl class="essay-guided-deflist">${collocations.map(item => `<div><dt>${escapeHtml(item.term)}</dt><dd>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</dd></div>`).join('')}</dl>` : '';
+        const colloHtml = collocations.length ? `<div class="essay-guided-collo-grid">${collocations.map(item => {
+            const info = getCollocationInfo(item, currentEntry);
+            return `<div class="essay-guided-collo-card">
+                <div class="essay-guided-collo-head">
+                    <strong class="essay-guided-collo-term">${escapeHtml(item.term)}</strong>
+                    <span class="essay-guided-collo-meaning">${escapeHtml(info.meaning)}</span>
+                </div>
+                <p class="essay-guided-collo-example">📝 <em>"${escapeHtml(info.example)}"</em></p>
+            </div>`;
+        }).join('')}</div>` : '';
 
         const grammar = kit.grammar || [];
         const grammarHtml = grammar.length ? `<dl class="essay-guided-deflist">${grammar.map(item => {
@@ -789,20 +1502,21 @@
 
         const used = guidedSelectedTargetIds.length;
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Tap the words you plan to use. Terms stay in English; explanations follow your support language.', 'Chạm vào từ bạn định dùng. Từ vựng giữ tiếng Anh; phần giải thích theo ngôn ngữ hỗ trợ.'))}
+            ${guidedSectionHead(section, guidedText('Select vocabulary with in-context essay examples. Key terms and collocations strengthen your lexical resource score.', 'Chọn từ vựng kèm ví dụ minh họa theo ngữ cảnh đề bài. Sử dụng các cụm từ học thuật giúp nâng cao điểm Lexical Resource.'))}
             <div class="essay-guided-meter${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
-                <span>${guidedText('Targets selected', 'Mục tiêu đã chọn')}</span>
+                <span>${guidedText('Targets selected for your checklist', 'Từ vựng mục tiêu đã chọn (hiển thị trong checklist)')}</span>
                 <strong>${used}/${GUIDED_MAX_TARGETS}</strong>
             </div>
-            ${guidedGroup('vocabulary', guidedText('Core vocabulary', 'Từ vựng cốt lõi'), vocabHtml, { count: vocabulary.length, defaultOpen: true })}
-            ${guidedGroup('collocations', guidedText('Collocations', 'Cụm từ đi kèm'), colloHtml, { count: collocations.length })}
-            ${guidedGroup('grammar', guidedText('Sentence patterns', 'Mẫu câu'), grammarHtml, { count: grammar.length })}
-            ${guidedGroup('cohesion', guidedText('Linking words', 'Từ nối'), cohesionHtml, { count: cohesion.length })}
+            ${guidedGroup('vocabulary', guidedText('Core vocabulary with Context Examples', 'Từ vựng cốt lõi & Ví dụ trong ngữ cảnh'), vocabHtml, { count: vocabulary.length, defaultOpen: true })}
+            ${guidedGroup('collocations', guidedText('Collocations & Academic Usage', 'Cụm từ đi kèm & Cách dùng học thuật'), colloHtml, { count: collocations.length, defaultOpen: true })}
+            ${guidedGroup('grammar', guidedText('Sentence patterns', 'Mẫu câu học thuật'), grammarHtml, { count: grammar.length })}
+            ${guidedGroup('cohesion', guidedText('Linking words', 'Từ nối chuyển đoạn'), cohesionHtml, { count: cohesion.length })}
         </section>`;
     }
 
     function renderGuidedPlan(levelData) {
         const section = GUIDED_SECTIONS[3];
+        const common = guidedPack.common || {};
         const plan = (levelData.plans || []).find(item => item.variantId === guidedSelectedVariantId) || levelData.plans?.[0];
         if (!plan) {
             return `<section class="essay-guided-section">
@@ -811,14 +1525,16 @@
                 <button type="button" class="essay-guided-stepnav-btn is-primary" data-guided-action="go-section" data-section-id="direction">${guidedText('Choose a direction', 'Chọn hướng đi')} →</button>
             </section>`;
         }
+
+        const [body1Text, body2Text] = getSelectedPointsForPlan(plan, levelData, common);
         const rows = [
             { label: guidedText('Thesis', 'Luận đề'), text: plan.thesisFrame },
-            { label: guidedText('Body 1', 'Thân bài 1'), text: plan.point1 },
-            { label: guidedText('Body 2', 'Thân bài 2'), text: plan.point2 },
+            { label: guidedText('Body 1 (Main Point 1)', 'Thân bài 1 (Luận điểm 1)'), text: body1Text },
+            { label: guidedText('Body 2 (Main Point 2)', 'Thân bài 2 (Luận điểm 2)'), text: body2Text },
         ].filter(row => String(row.text || '').trim());
         const copyText = rows.map(row => `${row.label}: ${row.text}`).join('\n');
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('This outline follows the direction you selected.', 'Dàn ý này bám theo hướng bạn đã chọn.'))}
+            ${guidedSectionHead(section, guidedText('This outline follows your chosen stance and selected main points.', 'Dàn ý hoàn chỉnh được xây dựng dựa trên lập trường và luận điểm bạn đã chọn.'))}
             <div class="essay-guided-plan">
                 ${rows.map((row, index) => `<div class="essay-guided-plan-row">
                     <span class="essay-guided-plan-index" aria-hidden="true">${index + 1}</span>
@@ -832,19 +1548,110 @@
         </section>`;
     }
 
+    function getDetailedSentenceCue(sentence, paragraph, index) {
+        const rawCue = String(sentence.ideaCue || '').trim();
+        const purpose = String(sentence.purpose || '').trim().toLowerCase();
+        const pName = String(paragraph || sentence.paragraph || '').trim().toLowerCase();
+
+        if (rawCue && !rawCue.toLowerCase().includes('connect this sentence to') && !rawCue.toLowerCase().includes('give your position')) {
+            return rawCue;
+        }
+
+        if (pName.includes('intro')) {
+            if (purpose.includes('paraphrase') || index === 1) {
+                return guidedText(
+                    'Introduction · Sentence 1: Paraphrase the prompt to introduce the topic in your own words.',
+                    'Mở bài · Câu 1: Giới thiệu chủ đề bằng cách diễn đạt lại đề bài theo từ ngữ của bạn (Paraphrase).'
+                );
+            }
+            if (purpose.includes('position') || purpose.includes('thesis') || index === 2) {
+                return guidedText(
+                    'Introduction · Sentence 2: State your clear thesis / position to establish the essay direction.',
+                    'Mở bài · Câu 2: Nêu rõ lập trường của bạn (Thesis Statement) để định hướng luận điểm toàn bài.'
+                );
+            }
+        } else if (pName.includes('body 1') || (pName.includes('body') && !pName.includes('2'))) {
+            if (purpose.includes('topic') || index === 1) {
+                return guidedText(
+                    'Body Paragraph 1 · Topic Sentence: State your first main argument clearly.',
+                    'Thân bài 1 · Câu 1 (Câu chủ đề): Nêu rõ luận điểm chính thứ nhất bạn đã chọn.'
+                );
+            }
+            if (purpose.includes('explain') || purpose.includes('mechanism') || index === 2) {
+                return guidedText(
+                    'Body Paragraph 1 · Explanation: Explain why or how this argument works effectively.',
+                    'Thân bài 1 · Câu 2 (Giải thích): Phân tích nguyên nhân, cơ chế hoặc tác động vì sao luận điểm này đúng.'
+                );
+            }
+            if (purpose.includes('example') || purpose.includes('evidence') || index === 3) {
+                return guidedText(
+                    'Body Paragraph 1 · Example: Provide a concrete real-world example or case study.',
+                    'Thân bài 1 · Câu 3 (Dẫn chứng): Đưa ra ví dụ thực tế hoặc trường hợp cụ thể minh họa cho luận điểm.'
+                );
+            }
+        } else if (pName.includes('body 2')) {
+            if (purpose.includes('topic') || index === 1) {
+                return guidedText(
+                    'Body Paragraph 2 · Topic Sentence: State your second main argument or complementary factor.',
+                    'Thân bài 2 · Câu 1 (Câu chủ đề): Nêu rõ luận điểm chính thứ hai bạn đã chọn.'
+                );
+            }
+            if (purpose.includes('explain') || purpose.includes('mechanism') || index === 2) {
+                return guidedText(
+                    'Body Paragraph 2 · Explanation: Elaborate on secondary factors or broader implications.',
+                    'Thân bài 2 · Câu 2 (Giải thích): Phân tích sâu hơn các khía cạnh bổ trợ hoặc hệ quả thực tế.'
+                );
+            }
+            if (purpose.includes('example') || purpose.includes('evidence') || index === 3) {
+                return guidedText(
+                    'Body Paragraph 2 · Example: Provide a supporting example or outcome.',
+                    'Thân bài 2 · Câu 3 (Dẫn chứng): Cung cấp ví dụ minh họa hoặc kết quả thực tiễn.'
+                );
+            }
+        } else if (pName.includes('conclu')) {
+            if (purpose.includes('restate') || index === 1) {
+                return guidedText(
+                    'Conclusion · Sentence 1: Reiterate your overall thesis and summarize main arguments.',
+                    'Kết bài · Câu 1: Khẳng định lại lập trường ban đầu và tóm lược các luận điểm chính.'
+                );
+            }
+            return guidedText(
+                'Conclusion · Sentence 2: Provide a concluding thought, broader implication, or recommendation.',
+                'Kết bài · Câu 2: Đưa ra thông điệp tổng kết, khuyến nghị hoặc góc nhìn mở rộng.'
+            );
+        }
+
+        return rawCue || guidedText('Write a coherent sentence supporting your essay structure.', 'Viết câu mạch lạc làm sáng tỏ luận điểm của đoạn văn.');
+    }
+
     function renderGuidedFurther(levelData) {
         const section = GUIDED_SECTIONS[4];
         const variantId = guidedSelectedVariantId || levelData.plans?.[0]?.variantId || 'default';
         const sentences = levelData.scaffolds?.[variantId] || [];
         const depths = [
-            { depth: 1, en: 'Purpose', vi: 'Mục đích' },
-            { depth: 2, en: 'Frame', vi: 'Khung câu' },
-            { depth: 3, en: 'Model', vi: 'Câu mẫu' },
+            { depth: 1, en: '1 · Purpose', vi: 'Mức 1: Mục đích câu' },
+            { depth: 2, en: '2 · Fillable Frame', vi: 'Mức 2: Khung câu mẫu' },
+            { depth: 3, en: '3 · Full Model', vi: 'Mức 3: Câu hoàn chỉnh mẫu' },
         ];
+
+        const workflowGuideHtml = `
+        <div class="essay-guided-scaffold-guide">
+            <div class="essay-guided-scaffold-guide-head">
+                <span class="essay-guided-scaffold-guide-icon" aria-hidden="true">💡</span>
+                <strong>${guidedText('How to use Sentence Support progressively:', 'Hướng dẫn 3 bước viết câu hoàn chỉnh:')}</strong>
+            </div>
+            <ul class="essay-guided-scaffold-guide-steps">
+                <li><strong>${guidedText('Level 1 (Purpose):', 'Mức 1 (Mục đích):')}</strong> ${guidedText('Read each sentence goal and write in your own words.', 'Đọc mục đích từng câu và tự diễn đạt bằng từ ngữ của bạn.')}</li>
+                <li><strong>${guidedText('Level 2 (Frame):', 'Mức 2 (Khung điền):')}</strong> ${guidedText('Use fillable frames to ensure correct academic grammar.', 'Dùng khung câu có sẵn và điền ý tưởng của bạn vào chỗ trống (____).')}</li>
+                <li><strong>${guidedText('Level 3 (Model):', 'Mức 3 (Câu mẫu):')}</strong> ${guidedText('Review full model sentences to learn natural collocations & phrasing.', 'Tham khảo câu hoàn chỉnh mẫu để học cách phát triển từ ngữ tự nhiên.')}</li>
+            </ul>
+            <p class="essay-guided-scaffold-guide-note">📌 ${guidedText('Tip: Click "[Copy Frame]" to paste a structure into your essay editor, or click "[+ Track as Target]" to monitor required structures in your checklist.', 'Mẹo: Nhấp "[Sao chép khung]" để dán vào bài viết, hoặc nhấp "[+ Chọn làm mục tiêu]" để lưu vào danh sách kiểm tra.')}</p>
+        </div>`;
+
         const depthSwitch = `<div class="essay-guided-depth">
-            <span class="essay-guided-depth-label">${guidedText('Hint level', 'Mức gợi ý')}</span>
+            <span class="essay-guided-depth-label">${guidedText('Hint level (Adjust how much support you need)', 'Mức độ gợi ý (Điều chỉnh mức trợ giúp bạn cần)')}</span>
             <div class="essay-guided-depth-track" role="group" aria-label="${guidedText('Hint level', 'Mức gợi ý')}">
-                ${depths.map(item => `<button type="button" class="${guidedHintDepth === item.depth ? 'is-active' : ''}" data-guided-action="set-depth" data-depth="${item.depth}" aria-pressed="${guidedHintDepth === item.depth ? 'true' : 'false'}">${item.depth} · ${escapeHtml(guidedText(item.en, item.vi))}</button>`).join('')}
+                ${depths.map(item => `<button type="button" class="${guidedHintDepth === item.depth ? 'is-active' : ''}" data-guided-action="set-depth" data-depth="${item.depth}" aria-pressed="${guidedHintDepth === item.depth ? 'true' : 'false'}">${escapeHtml(guidedText(item.en, item.vi))}</button>`).join('')}
             </div>
         </div>`;
 
@@ -852,33 +1659,48 @@
         const cards = sentences.map(sentence => {
             const paragraph = String(sentence.paragraph || '').trim();
             const heading = paragraph && paragraph !== currentParagraph
-                ? `<h4 class="essay-guided-paragraph-head">${escapeHtml(paragraph)}</h4>`
+                ? `<h4 class="essay-guided-paragraph-head">📌 ${escapeHtml(paragraph.toUpperCase())}</h4>`
                 : '';
             currentParagraph = paragraph || currentParagraph;
             const selected = guidedSelectedTargetIds.includes(sentence.sentenceId);
             const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
+            const contextualCue = getDetailedSentenceCue(sentence, paragraph, sentence.index || 1);
+
             const frame = guidedHintDepth >= 2 && sentence.frame
-                ? `<div class="essay-guided-frame"><span class="essay-guided-reveal-label">${guidedText('Fillable frame', 'Khung điền')}</span><p>${escapeHtml(sentence.frame)}</p><button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(sentence.frame)}">${guidedText('Copy', 'Sao chép')}</button></div>`
+                ? `<div class="essay-guided-frame">
+                    <div class="essay-guided-frame-head">
+                        <span class="essay-guided-reveal-label">📝 ${guidedText('Fillable Frame (Fill your idea into the blank):', 'Khung câu mẫu (Điền ý tưởng vào chỗ trống):')}</span>
+                        <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(sentence.frame)}">📋 ${guidedText('Copy Frame', 'Sao chép khung')}</button>
+                    </div>
+                    <p class="essay-guided-frame-text">${escapeHtml(sentence.frame)}</p>
+                </div>`
                 : '';
             const model = guidedHintDepth >= 3 && sentence.modelSentence
-                ? `<div class="essay-guided-model"><span class="essay-guided-reveal-label">${guidedText('Model sentence', 'Câu mẫu')}</span><p>${escapeHtml(sentence.modelSentence)}</p></div>`
+                ? `<div class="essay-guided-model">
+                    <span class="essay-guided-reveal-label">🌟 ${guidedText('Full Model Sentence:', 'Câu hoàn chỉnh mẫu:')}</span>
+                    <p class="essay-guided-model-text">${escapeHtml(sentence.modelSentence)}</p>
+                </div>`
                 : '';
             const reveal = guidedHintDepth < 3
-                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show frame' : 'Show model sentence', guidedHintDepth === 1 ? 'Hiện khung câu' : 'Hiện câu mẫu')}</button>`
+                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">🔍 ${guidedText(guidedHintDepth === 1 ? 'Show Fillable Frame' : 'Show Full Model Sentence', guidedHintDepth === 1 ? 'Hiện khung câu mẫu' : 'Hiện câu hoàn chỉnh mẫu')}</button>`
                 : '';
             return `${heading}<article class="essay-guided-sentence">
-                <div class="essay-guided-sentence-meta">${guidedText('Sentence', 'Câu')} ${escapeHtml(String(sentence.index || ''))} · ${escapeHtml(sentence.purpose || '')}</div>
-                <p class="essay-guided-sentence-cue">${escapeHtml(sentence.ideaCue || '')}</p>
+                <div class="essay-guided-sentence-meta">
+                    <span class="essay-guided-sentence-num">${guidedText('Sentence', 'Câu')} ${escapeHtml(String(sentence.index || ''))}</span>
+                    <span class="essay-guided-sentence-purpose">${escapeHtml(sentence.purpose || '')}</span>
+                </div>
+                <p class="essay-guided-sentence-cue">${escapeHtml(contextualCue)}</p>
                 ${frame}${model}
                 <div class="essay-guided-sentence-actions">
                     ${reveal}
-                    <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sentence.sentenceId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? guidedText('Target ✓', 'Mục tiêu ✓') : guidedText('Use as target', 'Chọn làm mục tiêu')}</button>
+                    <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sentence.sentenceId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? '✓ ' + guidedText('Target Selected', 'Đã chọn mục tiêu') : '+ ' + guidedText('Track as Target', 'Chọn làm mục tiêu')}</button>
                 </div>
             </article>`;
         }).join('');
 
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Reveal one layer at a time. Nothing is inserted into your essay automatically.', 'Mở từng lớp một. Hệ thống không tự chèn câu vào bài của bạn.'))}
+            ${guidedSectionHead(section, guidedText('Review sentence scaffolds progressively to develop your own writing.', 'Xem gợi ý câu theo từng mức độ để tự phát triển bài viết của riêng bạn.'))}
+            ${workflowGuideHtml}
             ${depthSwitch}
             ${cards || `<p class="essay-guided-empty">${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}
         </section>`;
@@ -894,7 +1716,7 @@
             { defaultOpen: index === 0 }
         )).join('');
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Quick answers, then a tutor if you are still stuck.', 'Giải đáp nhanh, và bạn có thể hỏi gia sư nếu vẫn chưa rõ.'))}
+            ${guidedSectionHead(section, guidedText('Quick answers to frequently asked questions about this prompt and scoring criteria.', 'Giải đáp các thắc mắc thường gặp về đề bài và tiêu chí chấm điểm.'))}
             ${items || `<p class="essay-guided-empty">${guidedText('No FAQ for this prompt.', 'Đề này chưa có phần hỏi đáp.')}</p>`}
             <button type="button" class="essay-guided-primary-btn" data-guided-action="tutor">${guidedText('Ask AI Tutor about this prompt', 'Hỏi AI Tutor về đề này')}</button>
         </section>`;
@@ -904,9 +1726,9 @@
         const requirements = guidedPack?.common?.requirements || [];
         return [
             ...requirements.map(item => bilingual(item)),
-            guidedText('My stance is consistent.', 'Quan điểm của tôi nhất quán.'),
-            guidedText('Each body paragraph has a purpose and example.', 'Mỗi đoạn thân bài có mục đích và ví dụ.'),
-            guidedText('I used my selected language targets accurately.', 'Tôi đã dùng đúng các mục tiêu ngôn ngữ đã chọn.'),
+            guidedText('My stance is consistent throughout the essay.', 'Quan điểm của tôi nhất quán trong toàn bộ bài viết.'),
+            guidedText('Each body paragraph has a clear topic and evidence.', 'Mỗi đoạn thân bài có luận điểm rõ ràng và dẫn chứng phù hợp.'),
+            guidedText('I used my selected language targets accurately.', 'Tôi đã sử dụng chính xác các từ vựng mục tiêu đã chọn.'),
         ];
     }
 
@@ -1416,9 +2238,34 @@
             persistGuidedPreferences();
         }
         el.practiceArea.style.display = 'block';
-        el.stepWrite.style.display = 'block';
         el.stepResults.style.display = 'none';
         if (el.promptCard) el.promptCard.style.display = 'none';
+
+        const mp = getModePanelEl();
+        if (practiceKind === 'guided') {
+            // Guided Walkthrough Phase: Editor is completely removed/hidden during steps 1-6
+            if (mp) {
+                mp.classList.add('essay-guided-mode');
+                mp.classList.remove('essay-writing-phase');
+                mp.classList.remove('essay-fs-writing');
+            }
+            if (el.stepWrite) el.stepWrite.style.display = 'none';
+            if (el.guidedDraftContainer) el.guidedDraftContainer.style.display = 'none';
+            if (el.fullscreenBtn) el.fullscreenBtn.style.display = '';
+            if (el.railFullscreenBtn) el.railFullscreenBtn.style.display = '';
+            restoreEssayFullscreen();
+        } else {
+            // Exam Practice: Standard exam editor
+            if (mp) {
+                mp.classList.remove('essay-guided-mode');
+                mp.classList.remove('essay-writing-phase');
+                mp.classList.remove('essay-fs-writing');
+            }
+            if (el.stepWrite) el.stepWrite.style.display = 'block';
+            if (el.guidedDraftContainer) el.guidedDraftContainer.style.display = 'none';
+            if (el.fullscreenBtn) el.fullscreenBtn.style.display = 'none';
+            if (el.railFullscreenBtn) el.railFullscreenBtn.style.display = 'none';
+        }
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';

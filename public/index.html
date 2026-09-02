@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="rmcsa-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="swt-mode.css">
-  <link rel="stylesheet" href="write-essay-mode.css?v=20260902_guided_ux">
+  <link rel="stylesheet" href="write-essay-mode.css?v=20260902_guided_walkthrough_v3">
   <link rel="stylesheet" href="css/practice-audio-player.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.89</div>
+  <div id="version-indicator" class="version-indicator">V1.8.90</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4601,6 +4601,12 @@
                   <strong id="essay-guided-rail-title">Guided support</strong>
                   <div class="essay-guided-rail-actions">
                     <button id="essay-guided-language-toggle" class="essay-guided-language-toggle" type="button" aria-label="Switch support language" title="Switch support language">VI</button>
+                    <button id="essay-rail-fullscreen-btn" class="essay-fullscreen-btn" type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen guided mode">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+                      </svg>
+                      <span class="essay-fullscreen-label">Expand</span>
+                    </button>
                     <button id="essay-guided-mobile-toggle" class="essay-guided-mobile-toggle" type="button" aria-expanded="true">Collapse</button>
                   </div>
                 </div>
@@ -4619,18 +4625,30 @@
                 <div id="essay-guided-checklist" class="essay-guided-checklist" hidden></div>
                 <div id="essay-guided-recycle" class="essay-guided-recycle" hidden></div>
                 <button id="essay-request-guided-btn" class="essay-request-guided-btn" type="button" hidden>Need guided help?</button>
+                <button id="essay-fs-ready-btn" class="essay-fs-ready-btn" type="button">✍️ I'm ready — start writing</button>
               </aside>
 
               <!-- Step 1: Write -->
               <div id="essay-step-write" class="essay-compose-card" style="display: none;">
               <div class="essay-card-header">
                 <span class="essay-kicker">Your essay</span>
+                <button id="essay-fs-back-btn" class="essay-fs-back-btn" type="button"
+                  aria-label="Return to guided walkthrough">← Back to guide</button>
                 <div id="essay-write-meta-badges" class="essay-prompt-meta-badges"></div>
                 <div id="essay-timer" class="essay-timer">20:00</div>
+                <button id="essay-fullscreen-btn" class="essay-fullscreen-btn" type="button"
+                  aria-label="Toggle fullscreen" title="Toggle fullscreen writing mode">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+                  </svg>
+                  <span class="essay-fullscreen-label">Expand</span>
+                </button>
               </div>
               <div id="essay-prompt-display" class="essay-prompt-display">
                 <p>Prompt will appear here…</p>
               </div>
+              <!-- Generated Guided Draft Card (revealed when entering writing phase in guided mode) -->
+              <div id="essay-guided-draft-container" class="essay-guided-draft-card" style="display: none;"></div>
               <div class="essay-input-area">
                 <textarea id="essay-input" class="essay-textarea"
                   placeholder="Write your essay here. You should write between 200 and 300 words." rows="16"></textarea>
@@ -6111,12 +6129,12 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.89"></script>
+  <script src="/read-aloud-mode.js?v=1.8.90"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/js/write-essay-support.js?v=20260902_integrity_fix"></script>
-  <script src="/write-essay-mode.js?v=20260902_guided_ux"></script>
+  <script src="/write-essay-mode.js?v=20260902_guided_walkthrough_v3"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

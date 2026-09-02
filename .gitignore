@@ -78,10 +78,10 @@ rts-nav-active-live-check.png
 echo-forge-*.png
 ef-vis-02-*
 study-v2-real-*.png
-track-progress-*.png
-v4-a2-*
+/v4-a2-*
 !tests/audit/v4-a2-hardening-contract.test.js
-output/
+!docs/audits/**
+!docs/evals/**
 
 # Scratch scripts (one-off fix/rebuild scripts)
 fix.js

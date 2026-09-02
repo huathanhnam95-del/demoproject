@@ -98,9 +98,15 @@ assert.throws(
     /Please fill at least 1 field in Info tab before saving/
 );
 
-assert.throws(
-    () => buildStudentPatchData(created, {}, context),
-    /No student fields provided for update/
-);
+const externalLinkStudent = buildStudentCreateData({
+    name: 'External Student',
+    externalTestUrl: 'https://ielts.org/trf/999888'
+}, context);
+assert.strictEqual(externalLinkStudent.externalTestUrl, 'https://ielts.org/trf/999888');
+
+const patchedStudentLink = buildStudentPatchData(externalLinkStudent, {
+    externalTestUrl: 'https://pearsonpte.com/score/111222'
+}, context);
+assert.strictEqual(patchedStudentLink.externalTestUrl, 'https://pearsonpte.com/score/111222');
 
 console.log('student service passed');

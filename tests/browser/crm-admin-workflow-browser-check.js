@@ -739,7 +739,7 @@ async function main() {
       'Blank source must not create a lead.'
     );
     assert.strictEqual(await page.evaluate(() => document.activeElement?.id || ''), 'lead-source', 'Blank source rejection must focus the source field.');
-    await page.selectOption('#lead-source', 'Zalo + Personal');
+    await page.selectOption('#lead-source', 'Zalo - Personal');
     await page.click('#crm-student-modal .crm-sidebar-item[data-tab="learning"]');
     await page.fill('#score-overall', '79');
     await page.fill('#score-listening', '78');

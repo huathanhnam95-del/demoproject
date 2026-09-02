@@ -120,7 +120,7 @@ function renderSummary() {
   if (!combat || !['victory', 'defeat', 'abandoned'].includes(combat.status)) return;
   const summary = summarizeRun({ outcome: combat.status, rounds: combat.round, attempts: runAttempts });
   summaryNode.hidden = false;
-  document.querySelector('#summary-outcome').textContent = summary.outcome === 'victory' ? 'Victory—your practice broke the Echo Warden’s guard.' : summary.outcome === 'defeat' ? 'Defeat—this result is practice feedback, not a learner judgment.' : 'Run abandoned—no account progress was changed.';
+  document.querySelector('#summary-outcome').textContent = summary.outcome === 'victory' ? 'Victory! Your pronunciation shattered the Warden\'s defenses.' : summary.outcome === 'defeat' ? 'Defeat — use the feedback below to sharpen your skills.' : 'You retreated from the arena.';
   document.querySelector('#summary-rounds').textContent = String(summary.rounds);
   document.querySelector('#summary-scored').textContent = String(summary.scoredAttempts);
   document.querySelector('#summary-scores').textContent = summary.averageScore === null ? 'No scored attempts' : `${summary.averageScore} average / ${summary.bestScore} best`;
@@ -150,8 +150,8 @@ function supportText(challenge) {
   return `${ipa}${challenge.resource.definition}.${example}`;
 }
 
-function showChallenge(challenge, { hideTarget = false } = {}) {
-  document.querySelector('#challenge-text').textContent = hideTarget ? 'Listen, then choose' : challenge?.text || 'Choose an action';
+function showChallenge(challenge, { hideTarget = false, promptLabel = 'Listen, then choose' } = {}) {
+  document.querySelector('#challenge-text').textContent = hideTarget ? promptLabel : challenge?.text || 'Choose an action';
   document.querySelector('#challenge-support').textContent = hideTarget ? '' : supportText(challenge);
 }
 
@@ -195,9 +195,9 @@ function render() {
   }
   const blockButton = document.querySelector('#block-btn');
   if (blockButton) blockButton.disabled = !promptIsReady();
-  if (combat.status === 'victory') setStatus('Victory. Your pronunciation broke the Echo Warden’s guard.', 'success');
-  if (combat.status === 'defeat') setStatus('Run ended. This result is practice feedback, not a learner judgment.', 'warning');
-  if (combat.status === 'abandoned') setStatus('Run abandoned. No account progress was changed.', 'neutral');
+  if (combat.status === 'victory') setStatus('Victory! The Echo Warden falls.', 'success');
+  if (combat.status === 'defeat') setStatus('Defeated — but every attempt sharpens your pronunciation.', 'warning');
+  if (combat.status === 'abandoned') setStatus('Retreated. No progress changed.', 'neutral');
   renderSummary();
 }
 
@@ -211,7 +211,118 @@ function challengeForCard(card) {
   });
 }
 
+let autoRecordTimer = null;
+let silenceMonitorInterval = null;
+let silenceAudioContext = null;
+
+function clearAutoRecord() {
+  if (autoRecordTimer) {
+    clearInterval(autoRecordTimer);
+    autoRecordTimer = null;
+  }
+  const recordBtn = document.querySelector('#record-btn');
+  if (recordBtn && !recordBtn.disabled) {
+    recordBtn.textContent = 'Start recording';
+  }
+}
+
+function startAutoRecordCountdown(seconds = 2) {
+  clearAutoRecord();
+  let remaining = seconds;
+  const recordBtn = document.querySelector('#record-btn');
+  const updateLabel = () => {
+    if (recordBtn && !recordBtn.disabled) {
+      recordBtn.textContent = `Auto-recording in ${remaining}s... (click to start)`;
+    }
+  };
+  updateLabel();
+  autoRecordTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearAutoRecord();
+      if (combat?.status === 'active' && !recordControls.hidden && recordBtn && !recordBtn.disabled) {
+        void startRecording();
+      }
+    } else {
+      updateLabel();
+    }
+  }, 1000);
+}
+
+function stopSilenceDetection() {
+  if (silenceMonitorInterval) {
+    clearInterval(silenceMonitorInterval);
+    silenceMonitorInterval = null;
+  }
+  if (silenceAudioContext) {
+    try {
+      silenceAudioContext.close();
+    } catch {
+      // ignore
+    }
+    silenceAudioContext = null;
+  }
+}
+
+function startSilenceDetection() {
+  stopSilenceDetection();
+  const stream = capture?.stream;
+  if (!stream || typeof window === 'undefined') return;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return;
+
+  try {
+    silenceAudioContext = new AudioCtx();
+    const source = silenceAudioContext.createMediaStreamSource(stream);
+    const analyser = silenceAudioContext.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+
+    const buffer = new Uint8Array(analyser.frequencyBinCount);
+    let speechDetected = false;
+    let lastSpeechTime = performance.now();
+    const startTime = performance.now();
+
+    silenceMonitorInterval = setInterval(() => {
+      if (!capture || capture.state !== 'recording' || combat?.status !== 'active') {
+        stopSilenceDetection();
+        return;
+      }
+      analyser.getByteTimeDomainData(buffer);
+      let sum = 0;
+      for (let i = 0; i < buffer.length; i++) {
+        const norm = (buffer[i] - 128) / 128;
+        sum += norm * norm;
+      }
+      const rms = Math.sqrt(sum / buffer.length);
+      const now = performance.now();
+
+      if (rms > 0.02) {
+        speechDetected = true;
+        lastSpeechTime = now;
+      }
+
+      // If user has spoken and then pauses for 1000ms (1.0s silence)
+      if (speechDetected && (now - lastSpeechTime >= 1000)) {
+        stopSilenceDetection();
+        void stopAndAnalyze();
+        return;
+      }
+
+      // Safety limit: max 8 seconds per recording
+      if (now - startTime >= 8000) {
+        stopSilenceDetection();
+        void stopAndAnalyze();
+      }
+    }, 80);
+  } catch {
+    // AudioContext VAD best effort
+  }
+}
+
 function chooseAttack(cardId) {
+  clearAutoRecord();
+  stopSilenceDetection();
   pendingCard = ATTACK_CARDS[cardId];
   pendingChallenge = challengeForCard(pendingCard);
   emitOwnedEvent('player.action.selected', { cardId, challengeId: pendingChallenge.challengeId });
@@ -219,11 +330,15 @@ function chooseAttack(cardId) {
   attackControls.hidden = true;
   recordControls.hidden = false;
   document.querySelector('#record-label').textContent = 'Speak the target';
+  document.querySelector('#record-btn').disabled = false;
   focusElement('#record-btn');
-  setStatus('Read the target, then record when ready.');
+  setStatus('Target ready. Auto-recording in 2s, or click Start recording now.');
+  startAutoRecordCountdown(2);
 }
 
 function clearRecordingUi() {
+  clearAutoRecord();
+  stopSilenceDetection();
   stopParryCountdown();
   recordControls.hidden = true;
   document.querySelector('#record-btn').disabled = false;
@@ -239,6 +354,8 @@ function makeCapture() {
 }
 
 function invalidateActiveOperation() {
+  clearAutoRecord();
+  stopSilenceDetection();
   operationGeneration += 1;
   analysisAbortController?.abort();
   analysisAbortController = null;
@@ -261,6 +378,7 @@ function makeNoopAnalysis(challenge, status, reasonCode) {
 }
 
 async function startRecording() {
+  clearAutoRecord();
   const generation = operationGeneration;
   try {
     const nextCapture = makeCapture();
@@ -285,7 +403,8 @@ async function startRecording() {
       });
       startParryCountdown();
     }
-    setStatus(recordingPurpose === 'parry' ? 'Parry window open—repeat the target now.' : 'Recording…');
+    setStatus(recordingPurpose === 'parry' ? 'Parry window open—repeat what you heard now.' : 'Recording… (auto-stops after 1s silence)');
+    startSilenceDetection();
   } catch (error) {
     if (generation !== operationGeneration || combat?.status !== 'active') return;
     setStatus(`Microphone unavailable: ${error.message}. No combat state changed.`, 'warning');
@@ -323,7 +442,7 @@ async function stopAndAnalyze() {
   const reactionDurationMs = performance.now() - reactionStartedAt;
   stopParryCountdown();
   document.querySelector('#stop-btn').disabled = true;
-  setStatus('Analysis pending. The reaction timer is stopped.', 'neutral');
+  setStatus('Analyzing your pronunciation...', 'neutral');
   emitOwnedEvent('recording.stopped', { challengeId: challenge.challengeId });
   emitOwnedEvent('analysis.pending', { challengeId: challenge.challengeId });
   try {
@@ -581,21 +700,53 @@ async function beginBlockPlayback(challenge, playbackGeneration) {
   blockTimer = setTimeout(() => resolveBlockOutcome('timeout'), 8000);
 }
 
-function presentParry() {
+async function playParryAttackAudio(challenge) {
+  if (!challenge) return false;
+  if (hooks.playPrompt) {
+    try {
+      const res = await Promise.resolve(hooks.playPrompt(challenge));
+      return res !== false;
+    } catch {
+      return false;
+    }
+  }
+  if (promptAdapter?.isReady?.()) {
+    try {
+      await promptAdapter.play(challenge);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+async function presentParry() {
+  clearAutoRecord();
+  stopSilenceDetection();
   pendingCard = null;
   pendingChallenge = parryChallenge;
   defendControls.hidden = true;
   recordControls.hidden = false;
-  document.querySelector('#record-label').textContent = 'Repeat within four seconds to Parry';
-  showChallenge(parryChallenge);
+  document.querySelector('#record-label').textContent = 'Parry: Listen & repeat';
+  document.querySelector('#record-btn').disabled = false;
+  showChallenge(parryChallenge, { hideTarget: true, promptLabel: '🎧 Listen & Repeat' });
   focusElement('#record-btn');
-  setStatus('Start recording when ready. Analysis time will not count against the Parry window.');
+  setStatus('The Warden strikes with a spoken word! Listening...', 'neutral');
+
+  await playParryAttackAudio(parryChallenge);
+
+  if (combat?.status !== 'active' || recordControls.hidden) return;
+  setStatus('Parry window open! Repeat the word now (auto-recording in 1s)...');
+  startAutoRecordCountdown(1);
 }
 
 function presentEnemyIntent() {
   if (combat.status !== 'active' || combat.turn !== 'enemy') return;
   blockChallenge = chooseListeningChallenge();
   parryChallenge = selectChallenge(catalog.challenges, {
+    level: preferences.level, unitType: 'listening', rng, recentChallengeIds: challengeHistory,
+  }) || selectChallenge(catalog.challenges, {
     level: preferences.level, evaluationMode: 'azure_word', unitType: 'word', rng, recentChallengeIds: challengeHistory,
   });
   pendingChallenge = null;
@@ -605,8 +756,8 @@ function presentEnemyIntent() {
   blockButton.disabled = !promptIsReady();
   focusElement(promptIsReady() ? '#block-btn' : '#parry-btn');
   setStatus(promptIsReady()
-    ? 'Enemy intent: choose a safe listening Block or a timed pronunciation Parry.'
-    : 'Enemy intent: versioned Block audio is pending verification; pronunciation Parry remains available.');
+    ? 'The Warden attacks! Block or Parry to defend.'
+    : 'The Warden attacks! Parry is available.');
 }
 
 async function startRun() {
@@ -622,13 +773,13 @@ async function startRun() {
   runAttempts = [];
   summaryNode.hidden = true;
   eventLog.replaceChildren();
-  showFeedback({ tone: 'neutral', text: 'Choose an action to receive pronunciation feedback.' });
+  showFeedback({ tone: 'neutral', text: 'Choose an action to begin.' });
   setupNode.hidden = true;
   battleNode.hidden = false;
   document.querySelector('#abandon-btn').hidden = false;
   coreDispatch({ type: 'START_COMBAT' });
   showChallenge(null);
-  setStatus('Your turn. Choose an attack; your level and support choices remain under your control.');
+  setStatus('Your turn — choose an attack!');
   const prewarm = await analysisClient.prewarmV3?.();
   prewarmDurationMs = prewarm?.durationMs || 0;
 }
@@ -686,7 +837,7 @@ async function init() {
     updateSetupDescriptions();
     void visualPresenter.load();
     emitOwnedEvent('sandbox.setup.completed');
-    if (promptIsReady()) setStatus('Sandbox ready. Choose a level and support preset.');
+    if (promptIsReady()) setStatus('Arena ready. Choose your settings and begin.');
   } catch (error) {
     root.dataset.state = 'error';
     setStatus(`Sandbox unavailable: ${error.message}`, 'error');

@@ -25,9 +25,15 @@ window.CrmTaskActivityWorkspace = (function () {
             dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
 
             if (dataCache.students.length) {
-                const buckets = window.CrmStudents.splitStudents(dataCache.students);
-                renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-                renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+                const target = elements.studentsContainer || elements.studentDataContainer || elements.potentialStudentsContainer;
+                if (target) {
+                    renderStudentsTable(target, dataCache.students, 'No students in database yet.');
+                }
+                if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== target) {
+                    const buckets = window.CrmStudents.splitStudents(dataCache.students);
+                    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+                    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+                }
             }
 
             if (dataCache.leads.length) {

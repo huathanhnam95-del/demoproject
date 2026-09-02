@@ -73,6 +73,7 @@ export function createAudioCapture({
 
   return Object.freeze({
     get state() { return state; },
+    get stream() { return stream; },
     async start() {
       if (state === 'recording') throw new Error('recording is already active');
       if (!mediaDevices?.getUserMedia || typeof MediaRecorderClass !== 'function') {

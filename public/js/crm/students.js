@@ -42,6 +42,7 @@ window.CrmStudents = (function () {
             facebookPersonalOwner: getValue(elements.inputStudentFacebookPersonalOwner),
             acquisitionSource: getValue(elements.inputStudentAcquisitionSource),
             agentSourceId: getValue(elements.inputStudentAgentSource),
+            externalTestUrl: getValue(elements.inputStudentExternalTestLink || elements.inputLeadExternalTestLink) || null,
             learningProfile: {
                 overall: getNumberValue(elements.inputScoreOverall),
                 listening: getNumberValue(elements.inputScoreListening),
@@ -108,6 +109,12 @@ window.CrmStudents = (function () {
         if (elements.inputStudentLevel) elements.inputStudentLevel.value = String(learning.entryLevel || '');
         if (elements.inputVisaType) elements.inputVisaType.value = String(learning.visaType || '');
         if (elements.inputTargetLevel) elements.inputTargetLevel.value = String(learning.targetLevel || '');
+        if (elements.inputStudentExternalTestLink) {
+            elements.inputStudentExternalTestLink.value = String(student?.externalTestUrl || '');
+        }
+        if (elements.btnOpenStudentExternalTestLink) {
+            elements.btnOpenStudentExternalTestLink.disabled = !elements.inputStudentExternalTestLink?.value;
+        }
         syncScoreDecorations(elements);
     }
 

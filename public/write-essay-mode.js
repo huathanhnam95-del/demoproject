@@ -51,6 +51,12 @@
     let guidedSelectedVariantId = null;
     let guidedSelectedTargetIds = [];
     let guidedPackRequestId = 0;
+    // Disclosure + checklist state must outlive a re-render: switching step or
+    // support language used to wipe every tick and reopen every group.
+    let guidedVisitedSections = new Set(['understand']);
+    let guidedOpenGroups = new Set();
+    let guidedChecklistState = new Set();
+    let guidedChecklistOpen = false;
 
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
@@ -156,6 +162,10 @@
         guidedSelectedVariantId = null;
         guidedSelectedTargetIds = [];
         guidedPackRequestId += 1;
+        guidedVisitedSections = new Set(['understand']);
+        guidedOpenGroups = new Set();
+        guidedChecklistState = new Set();
+        guidedChecklistOpen = false;
         if (el.practiceArea) el.practiceArea.style.display = 'none';
         if (el.stepWrite) el.stepWrite.style.display = 'none';
         if (el.stepResults) el.stepResults.style.display = 'none';
@@ -227,6 +237,7 @@
         el.guidedMobileToggle = document.getElementById('essay-guided-mobile-toggle');
         el.guidedUnavailable = document.getElementById('essay-guided-unavailable');
         el.guidedNav = document.getElementById('essay-guided-nav');
+        el.guidedProgress = document.getElementById('essay-guided-progress');
         el.guidedContent = document.getElementById('essay-guided-content');
         el.guidedChecklist = document.getElementById('essay-guided-checklist');
         el.guidedRecycle = document.getElementById('essay-guided-recycle');
@@ -344,7 +355,10 @@
         if (el.guidedMobileToggle) el.guidedMobileToggle.addEventListener('click', toggleGuidedMobileRail);
         if (el.guidedNav) el.guidedNav.addEventListener('click', onGuidedSectionChosen);
         if (el.guidedContent) el.guidedContent.addEventListener('click', onGuidedContentAction);
-        if (el.guidedChecklist) el.guidedChecklist.addEventListener('change', updateGuidedChecklistState);
+        if (el.guidedChecklist) {
+            el.guidedChecklist.addEventListener('change', updateGuidedChecklistState);
+            el.guidedChecklist.addEventListener('click', onGuidedChecklistClick);
+        }
         if (el.requestGuidedBtn) el.requestGuidedBtn.addEventListener('click', requestGuidedHelpMidAttempt);
         restoreGuidedPreferences();
     }
@@ -402,11 +416,149 @@
         el.guidedMobileToggle.textContent = collapsed ? guidedText('Expand', 'Mở rộng') : guidedText('Collapse', 'Thu gọn');
     }
 
+    /* ──────────────────────── GUIDED SUPPORT RENDERING ───────────── */
+    /*
+       The rail is a six-step walkthrough, not a document. Each step shows one
+       job, long lists live behind disclosure groups, and a footer moves the
+       learner forward so nothing arrives as a single wall of text.
+    */
+
+    const GUIDED_SECTIONS = Object.freeze([
+        { id: 'understand', icon: '🔍', en: 'Understand the prompt', vi: 'Hiểu đề bài' },
+        { id: 'direction', icon: '🧭', en: 'Choose a direction', vi: 'Chọn hướng đi' },
+        { id: 'language', icon: '🧰', en: 'Language kit', vi: 'Bộ ngôn ngữ' },
+        { id: 'plan', icon: '🗂️', en: 'Make a plan', vi: 'Lập dàn ý' },
+        { id: 'further', icon: '✍️', en: 'Sentence support', vi: 'Hỗ trợ từng câu' },
+        { id: 'faq', icon: '💬', en: 'FAQ', vi: 'Hỏi đáp' },
+    ]);
+
+    const GUIDED_MAX_TARGETS = 6;
+    const GUIDED_DEFAULT_OPEN_GROUPS = ['parts', 'requirements', 'vocabulary'];
+
+    // Machine role keys ship inside the packs; learners must never see them.
+    const GUIDED_SEGMENT_ROLES = Object.freeze({
+        prompt_clause: { en: 'Prompt part', vi: 'Phần đề' },
+        statement: { en: 'Statement', vi: 'Nhận định' },
+        question: { en: 'Question', vi: 'Câu hỏi' },
+        instruction: { en: 'Instruction', vi: 'Yêu cầu' },
+        context: { en: 'Context', vi: 'Bối cảnh' },
+    });
+
+    function guidedSectionIndex(id) {
+        const index = GUIDED_SECTIONS.findIndex(section => section.id === id);
+        return index < 0 ? 0 : index;
+    }
+
+    function guidedSectionLabel(section) {
+        return guidedText(section.en, section.vi);
+    }
+
+    function guidedTargetKey(target) {
+        return String(target?.term || target?.id || '').trim();
+    }
+
+    function guidedSegmentRoleLabel(role) {
+        const known = GUIDED_SEGMENT_ROLES[String(role || '').trim().toLowerCase()];
+        if (known) return guidedText(known.en, known.vi);
+        return guidedText('Prompt part', 'Phần đề');
+    }
+
+    /**
+     * Some packs carry a Vietnamese string that is only an English sentence with
+     * a Vietnamese label glued on front. Showing that is worse than showing the
+     * English, so fall back whenever the translation adds no Vietnamese.
+     */
+    function preferTranslated(en, vi) {
+        const source = String(en || '').trim();
+        const translated = String(vi || '').trim();
+        if (!translated) return source;
+        if (!source) return translated;
+        const stripped = translated.replace(/^[^:]{1,24}:\s*/, '').trim();
+        if (stripped.toLowerCase() === source.toLowerCase()) return source;
+        return translated;
+    }
+
+    function isGuidedGroupOpen(key, defaultOpen = false) {
+        if (guidedOpenGroups.has(`-${key}`)) return false;
+        if (guidedOpenGroups.has(key)) return true;
+        return defaultOpen;
+    }
+
+    function setGuidedGroupOpen(key, open) {
+        guidedOpenGroups.delete(key);
+        guidedOpenGroups.delete(`-${key}`);
+        guidedOpenGroups.add(open ? key : `-${key}`);
+    }
+
+    /** Collapsible block: the main tool against the old wall of bullet lists. */
+    function guidedGroup(key, title, bodyHtml, { count = null, defaultOpen = false, tone = '' } = {}) {
+        if (!bodyHtml) return '';
+        const open = isGuidedGroupOpen(key, defaultOpen);
+        const badge = count === null ? '' : `<span class="essay-guided-group-count">${escapeHtml(String(count))}</span>`;
+        return `<div class="essay-guided-group${open ? ' is-open' : ''}${tone ? ` essay-guided-group--${tone}` : ''}">
+            <button type="button" class="essay-guided-group-toggle" data-guided-action="toggle-group" data-group-key="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}">
+                <span class="essay-guided-group-title">${escapeHtml(title)}</span>
+                ${badge}
+                <span class="essay-guided-group-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="essay-guided-group-body"${open ? '' : ' hidden'}>${bodyHtml}</div>
+        </div>`;
+    }
+
+    function guidedSectionHead(section, lede) {
+        const index = guidedSectionIndex(section.id);
+        return `<header class="essay-guided-section-head">
+            <span class="essay-guided-step-tag">${guidedText('Step', 'Bước')} ${index + 1}/${GUIDED_SECTIONS.length}</span>
+            <h3><span class="essay-guided-section-icon" aria-hidden="true">${section.icon}</span>${escapeHtml(guidedSectionLabel(section))}</h3>
+            ${lede ? `<p class="essay-guided-section-lede">${escapeHtml(lede)}</p>` : ''}
+        </header>`;
+    }
+
+    function guidedStepNav() {
+        const index = guidedSectionIndex(guidedSection);
+        const prev = GUIDED_SECTIONS[index - 1];
+        const next = GUIDED_SECTIONS[index + 1];
+        const prevBtn = prev
+            ? `<button type="button" class="essay-guided-stepnav-btn" data-guided-action="go-section" data-section-id="${escapeHtml(prev.id)}">← ${escapeHtml(guidedSectionLabel(prev))}</button>`
+            : '<span></span>';
+        const nextBtn = next
+            ? `<button type="button" class="essay-guided-stepnav-btn is-primary" data-guided-action="go-section" data-section-id="${escapeHtml(next.id)}">${escapeHtml(guidedSectionLabel(next))} →</button>`
+            : `<button type="button" class="essay-guided-stepnav-btn is-primary" data-guided-action="focus-editor">${guidedText('Start writing', 'Bắt đầu viết')} →</button>`;
+        return `<nav class="essay-guided-stepnav" aria-label="${guidedText('Support step navigation', 'Điều hướng bước hỗ trợ')}">${prevBtn}${nextBtn}</nav>`;
+    }
+
+    function goToGuidedSection(id) {
+        const target = GUIDED_SECTIONS.find(section => section.id === id);
+        if (!target) return;
+        guidedSection = target.id;
+        guidedVisitedSections.add(target.id);
+        renderGuidedSupport();
+        if (el.guidedContent?.scrollIntoView) {
+            el.guidedRail?.scrollTo?.({ top: 0, behavior: 'smooth' });
+        }
+    }
+
     function onGuidedSectionChosen(event) {
         const button = event.target.closest('[data-guided-section]');
         if (!button || !guidedPack) return;
-        guidedSection = button.dataset.guidedSection || 'understand';
-        renderGuidedSupport();
+        goToGuidedSection(button.dataset.guidedSection || 'understand');
+    }
+
+    async function copyGuidedText(text, button) {
+        const value = String(text || '');
+        if (!value) return;
+        try {
+            await navigator.clipboard?.writeText(value);
+            if (!button) return;
+            const original = button.dataset.copyLabel || button.textContent;
+            button.dataset.copyLabel = original;
+            button.textContent = guidedText('Copied', 'Đã sao chép');
+            button.classList.add('is-copied');
+            setTimeout(() => {
+                button.textContent = button.dataset.copyLabel || original;
+                button.classList.remove('is-copied');
+            }, 1400);
+        } catch (_) { /* clipboard blocked; nothing to recover */ }
     }
 
     function onGuidedContentAction(event) {
@@ -415,16 +567,44 @@
         const action = target.dataset.guidedAction;
         if (action === 'retry-pack') {
             loadGuidedPack({ force: true });
+        } else if (action === 'go-section') {
+            goToGuidedSection(target.dataset.sectionId);
+        } else if (action === 'toggle-group') {
+            const key = target.dataset.groupKey;
+            if (!key) return;
+            const open = target.getAttribute('aria-expanded') !== 'true';
+            setGuidedGroupOpen(key, open);
+            const group = target.closest('.essay-guided-group');
+            const body = group?.querySelector('.essay-guided-group-body');
+            target.setAttribute('aria-expanded', open ? 'true' : 'false');
+            group?.classList.toggle('is-open', open);
+            if (body) body.hidden = !open;
+        } else if (action === 'focus-editor') {
+            el.essayInput?.focus();
+            el.essayInput?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
         } else if (action === 'select-variant') {
             guidedSelectedVariantId = target.dataset.variantId || null;
             renderGuidedSupport();
-        } else if (action === 'reveal-hint') {
-            guidedHintDepth = Math.max(guidedHintDepth, Number(target.dataset.depth) || 1);
+        } else if (action === 'set-depth') {
+            guidedHintDepth = Math.min(3, Math.max(1, Number(target.dataset.depth) || 1));
             renderGuidedSupport();
+        } else if (action === 'reveal-hint') {
+            guidedHintDepth = Math.min(3, Math.max(guidedHintDepth, Number(target.dataset.depth) || 1));
+            renderGuidedSupport();
+        } else if (action === 'copy') {
+            copyGuidedText(target.dataset.copyText, target);
         } else if (action === 'target') {
             const id = target.dataset.targetId;
-            if (id && !guidedSelectedTargetIds.includes(id) && guidedSelectedTargetIds.length < 6) guidedSelectedTargetIds.push(id);
-            target.classList.toggle('is-selected', guidedSelectedTargetIds.includes(id));
+            if (!id) return;
+            const existing = guidedSelectedTargetIds.indexOf(id);
+            if (existing >= 0) {
+                guidedSelectedTargetIds.splice(existing, 1);
+            } else if (guidedSelectedTargetIds.length < GUIDED_MAX_TARGETS) {
+                guidedSelectedTargetIds.push(id);
+            } else {
+                return;
+            }
+            renderGuidedSupport();
         } else if (action === 'tutor') {
             const handoff = guidedPack?.common?.tutorHandoff;
             if (handoff) {
@@ -453,9 +633,10 @@
             if (requestId !== guidedPackRequestId || !currentEntry) return null;
             guidedPack = pack;
             guidedSelectedVariantId = getGuidedLevelData()?.plans?.[0]?.variantId || null;
-            guidedSelectedTargetIds = [];
             const levelData = getGuidedLevelData();
-            guidedSelectedTargetIds = (levelData?.coreTargets || []).slice(0, 2).map(target => String(target.id));
+            // Chips in the Language kit are keyed by term, so seed the selection
+            // the same way or the counter reads 2/6 with nothing highlighted.
+            guidedSelectedTargetIds = (levelData?.coreTargets || []).slice(0, 2).map(guidedTargetKey);
             renderGuidedSupport();
             return pack;
         } catch (error) {
@@ -466,15 +647,43 @@
         }
     }
 
+    function renderGuidedNav() {
+        if (!el.guidedNav) return;
+        const enabled = Boolean(guidedPack);
+        el.guidedNav.innerHTML = GUIDED_SECTIONS.map((section, index) => {
+            const active = section.id === guidedSection;
+            const visited = guidedVisitedSections.has(section.id) && !active;
+            return `<button type="button" data-guided-section="${escapeHtml(section.id)}" class="${active ? 'is-active' : ''}${visited ? ' is-visited' : ''}" aria-current="${active ? 'step' : 'false'}"${enabled ? '' : ' disabled'}>
+                <span class="essay-guided-nav-index" aria-hidden="true">${visited ? '✓' : index + 1}</span>
+                <span class="essay-guided-nav-label">${escapeHtml(guidedSectionLabel(section))}</span>
+            </button>`;
+        }).join('');
+    }
+
+    function renderGuidedProgress() {
+        if (!el.guidedProgress) return;
+        const index = guidedSectionIndex(guidedSection);
+        const percent = Math.round(((index + 1) / GUIDED_SECTIONS.length) * 100);
+        el.guidedProgress.innerHTML = `<div class="essay-guided-progress-bar"><span style="width:${percent}%"></span></div>`;
+        el.guidedProgress.hidden = !guidedPack;
+    }
+
     function renderGuidedSupport() {
         if (!el.guidedRail) return;
         el.guidedRail.hidden = practiceKind !== 'guided';
         if (practiceKind !== 'guided') return;
         if (el.guidedRailTitle) el.guidedRailTitle.textContent = guidedText('Guided support', 'Hỗ trợ Guided');
-        if (el.guidedLanguageToggle) el.guidedLanguageToggle.textContent = guidedLanguage === 'en' ? 'VI' : 'EN';
-        el.guidedNav?.querySelectorAll('[data-guided-section]').forEach(button => button.classList.toggle('is-active', button.dataset.guidedSection === guidedSection));
+        if (el.guidedLanguageToggle) {
+            el.guidedLanguageToggle.textContent = guidedLanguage === 'en' ? 'VI' : 'EN';
+            el.guidedLanguageToggle.title = guidedLanguage === 'en' ? 'Chuyển sang tiếng Việt' : 'Switch to English';
+        }
+        guidedVisitedSections.add(guidedSection);
+        renderGuidedNav();
+        renderGuidedProgress();
         if (!guidedPack) {
-            if (el.guidedContent) el.guidedContent.innerHTML = `<p class="essay-guided-loading">${guidedText('Loading prompt-specific support…', 'Đang tải hỗ trợ riêng cho đề…')}</p>`;
+            if (el.guidedContent) el.guidedContent.innerHTML = `<div class="essay-guided-loading"><span class="essay-guided-spinner" aria-hidden="true"></span>${guidedText('Loading prompt-specific support…', 'Đang tải hỗ trợ riêng cho đề…')}</div>`;
+            if (el.guidedChecklist) el.guidedChecklist.hidden = true;
+            if (el.guidedRecycle) el.guidedRecycle.hidden = true;
             return;
         }
         const levelData = getGuidedLevelData();
@@ -487,83 +696,296 @@
         if (section === 'plan') html = renderGuidedPlan(levelData);
         if (section === 'further') html = renderGuidedFurther(levelData);
         if (section === 'faq') html = renderGuidedFaq();
-        if (el.guidedContent) el.guidedContent.innerHTML = html;
+        if (el.guidedContent) el.guidedContent.innerHTML = html + guidedStepNav();
         renderGuidedChecklist();
         renderGuidedRecycle(levelData);
     }
 
     function renderGuidedUnderstand() {
         const common = guidedPack.common || {};
-        const segments = (common.promptSegments || []).map(segment => `<li><strong>${escapeHtml(segment.role || guidedText('Prompt part', 'Phần đề'))}:</strong> ${escapeHtml(segment.text)}</li>`).join('');
-        const reqs = (common.requirements || []).map(item => `<li><span class="essay-guided-check">✓</span>${escapeHtml(bilingual(item))}</li>`).join('');
-        const traps = (common.promptTraps || []).map(item => `<li>${escapeHtml(bilingual(item))}</li>`).join('');
-        const angles = (common.angles || []).slice(0, 3).map(item => `<li>${escapeHtml(bilingual(item))}</li>`).join('');
-        return `<section class="essay-guided-section"><h3>${guidedText('Break down the prompt', 'Phân tích đề')}</h3><p class="essay-guided-prompt">${escapeHtml(guidedPack.prompt)}</p><h4>${guidedText('Prompt parts', 'Các phần của đề')}</h4><ul>${segments}</ul><h4>${guidedText('You must answer', 'Bạn phải trả lời')}</h4><ul>${reqs}</ul><h4>${guidedText('Prompt traps', 'Bẫy của đề')}</h4><ul>${traps}</ul><h4>${guidedText('Possible angles', 'Các hướng triển khai')}</h4><ul>${angles}</ul></section>`;
+        const section = GUIDED_SECTIONS[0];
+
+        const segments = common.promptSegments || [];
+        // One shared role across every segment says nothing; drop the label then.
+        const showRoles = new Set(segments.map(segment => String(segment.role || ''))).size > 1;
+        const segmentsHtml = segments.length ? `<ol class="essay-guided-parts">${segments.map((segment, index) => `<li>
+            <span class="essay-guided-part-index" aria-hidden="true">${index + 1}</span>
+            <div>${showRoles ? `<span class="essay-guided-part-role">${escapeHtml(guidedSegmentRoleLabel(segment.role))}</span>` : ''}<p>${escapeHtml(segment.text)}</p></div>
+        </li>`).join('')}</ol>` : '';
+
+        const reqs = common.requirements || [];
+        const reqsHtml = reqs.length ? `<ul class="essay-guided-ticklist">${reqs.map(item => `<li><span class="essay-guided-check" aria-hidden="true">✓</span><span>${escapeHtml(bilingual(item))}</span></li>`).join('')}</ul>` : '';
+
+        const traps = common.promptTraps || [];
+        const trapsHtml = traps.length ? `<ul class="essay-guided-ticklist essay-guided-ticklist--warn">${traps.map(item => `<li><span class="essay-guided-warn" aria-hidden="true">!</span><span>${escapeHtml(bilingual(item))}</span></li>`).join('')}</ul>` : '';
+
+        const angles = (common.angles || []).slice(0, 6);
+        const anglesHtml = angles.length ? `<ul class="essay-guided-anglelist">${angles.map(item => {
+            const stance = String(item.sourceVariantId || '').trim();
+            const chip = stance ? `<span class="essay-guided-chip">${escapeHtml(stance.toUpperCase())}</span>` : '';
+            return `<li>${chip}<span>${escapeHtml(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''))}</span></li>`;
+        }).join('')}</ul>` : '';
+
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Read the prompt in pieces before you decide what to argue.', 'Hãy đọc đề theo từng phần trước khi quyết định lập luận.'))}
+            <h4 class="essay-guided-visually-hidden">${guidedText('Break down the prompt', 'Phân tích đề')}</h4>
+            <blockquote class="essay-guided-prompt">${escapeHtml(guidedPack.prompt)}</blockquote>
+            ${guidedGroup('parts', guidedText('Prompt parts', 'Các phần của đề'), segmentsHtml, { count: segments.length, defaultOpen: true })}
+            ${guidedGroup('requirements', guidedText('You must answer', 'Bạn phải trả lời'), reqsHtml, { count: reqs.length, defaultOpen: true })}
+            ${guidedGroup('traps', guidedText('Common traps', 'Bẫy thường gặp'), trapsHtml, { count: traps.length, tone: 'warn' })}
+            ${guidedGroup('angles', guidedText('Possible angles', 'Các hướng triển khai'), anglesHtml, { count: angles.length })}
+        </section>`;
     }
 
     function renderGuidedDirection(levelData) {
+        const section = GUIDED_SECTIONS[1];
         const plans = levelData.plans || [];
-        const items = plans.map(plan => `<button type="button" class="essay-guided-choice${guidedSelectedVariantId === plan.variantId ? ' is-selected' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}"><strong>${escapeHtml(plan.label || plan.variantId)}</strong><span>${escapeHtml(plan.stance || '')}</span><small>${escapeHtml(plan.point1 || '')}</small><small>${escapeHtml(plan.point2 || '')}</small></button>`).join('');
-        return `<section class="essay-guided-section"><h3>${guidedText('Choose a direction', 'Chọn hướng triển khai')}</h3><p>${guidedText('Pick one approved sample stance and keep it consistent.', 'Chọn một lập trường từ bài mẫu được duyệt và giữ nhất quán.')}</p><div class="essay-guided-choice-list">${items}</div></section>`;
+        const items = plans.map(plan => {
+            const selected = guidedSelectedVariantId === plan.variantId;
+            return `<button type="button" class="essay-guided-choice${selected ? ' is-selected' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${selected ? 'true' : 'false'}">
+                <span class="essay-guided-choice-head">
+                    <strong>${escapeHtml(plan.label || plan.variantId)}</strong>
+                    <span class="essay-guided-choice-state">${selected ? guidedText('Selected', 'Đang chọn') : guidedText('Choose', 'Chọn')}</span>
+                </span>
+                ${plan.stance ? `<span class="essay-guided-chip">${escapeHtml(String(plan.stance).toUpperCase())}</span>` : ''}
+                <span class="essay-guided-choice-point"><em>1.</em> ${escapeHtml(plan.point1 || '')}</span>
+                <span class="essay-guided-choice-point"><em>2.</em> ${escapeHtml(plan.point2 || '')}</span>
+            </button>`;
+        }).join('');
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Pick one stance and keep it consistent through the whole essay.', 'Chọn một lập trường và giữ nhất quán trong toàn bài.'))}
+            <div class="essay-guided-choice-list">${items || `<p class="essay-guided-empty">${guidedText('No directions are available for this level.', 'Chưa có hướng triển khai cho mức này.')}</p>`}</div>
+        </section>`;
     }
 
     function renderGuidedLanguage(levelData) {
+        const section = GUIDED_SECTIONS[2];
         const kit = levelData.languageKit || {};
-        const vocab = (kit.vocabulary || []).map(item => `<button type="button" class="essay-guided-target" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" aria-pressed="${guidedSelectedTargetIds.includes(item.term) ? 'true' : 'false'}"><strong>${escapeHtml(item.term)}</strong><span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span></button>`).join('');
-        const collocations = (kit.collocations || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.term)}</strong><span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span></div>`).join('');
-        const grammar = (kit.grammar || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.en || '')}</strong><span>${escapeHtml(bilingual(item))}</span></div>`).join('');
-        const cohesion = (kit.cohesion || []).map(item => `<div class="essay-guided-language-item"><strong>${escapeHtml(item.term || '')}</strong><span>${escapeHtml(bilingual(item))}</span></div>`).join('');
-        return `<section class="essay-guided-section"><h3>${guidedText('Language kit', 'Bộ ngôn ngữ')}</h3><p>${guidedText('Choose up to six targets. Terms stay in English; explanations can switch language.', 'Chọn tối đa sáu mục tiêu. Từ vựng giữ bằng tiếng Anh; phần giải thích có thể đổi ngôn ngữ.')}</p><h4>${guidedText('Core vocabulary', 'Từ vựng cốt lõi')}</h4><div class="essay-guided-target-grid">${vocab}</div><h4>${guidedText('Official collocations', 'Cụm từ chính thức')}</h4>${collocations}<h4>${guidedText('Grammar', 'Ngữ pháp')}</h4>${grammar}<h4>${guidedText('Cohesion', 'Liên kết')}</h4>${cohesion}</section>`;
+
+        const vocabulary = kit.vocabulary || [];
+        const vocabHtml = vocabulary.length ? `<div class="essay-guided-target-grid">${vocabulary.map(item => {
+            const selected = guidedSelectedTargetIds.includes(item.term);
+            const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
+            return `<button type="button" class="essay-guided-target${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>
+                <strong>${escapeHtml(item.term)}</strong>
+                <span>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
+            </button>`;
+        }).join('')}</div>` : '';
+
+        const collocations = kit.collocations || [];
+        const colloHtml = collocations.length ? `<dl class="essay-guided-deflist">${collocations.map(item => `<div><dt>${escapeHtml(item.term)}</dt><dd>${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</dd></div>`).join('')}</dl>` : '';
+
+        const grammar = kit.grammar || [];
+        const grammarHtml = grammar.length ? `<dl class="essay-guided-deflist">${grammar.map(item => {
+            const pattern = String(item.en || '').trim();
+            const gloss = guidedLanguage === 'vi'
+                ? preferTranslated(item.purpose || '', item.vi)
+                : String(item.purpose || '').trim();
+            return `<div><dt>${escapeHtml(pattern)}</dt><dd>${escapeHtml(gloss)}</dd></div>`;
+        }).join('')}</dl>` : '';
+
+        const cohesion = kit.cohesion || [];
+        const cohesionHtml = cohesion.length ? `<dl class="essay-guided-deflist">${cohesion.map(item => `<div><dt>${escapeHtml(item.term || '')}</dt><dd>${escapeHtml(bilingual(item))}</dd></div>`).join('')}</dl>` : '';
+
+        const used = guidedSelectedTargetIds.length;
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Tap the words you plan to use. Terms stay in English; explanations follow your support language.', 'Chạm vào từ bạn định dùng. Từ vựng giữ tiếng Anh; phần giải thích theo ngôn ngữ hỗ trợ.'))}
+            <div class="essay-guided-meter${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
+                <span>${guidedText('Targets selected', 'Mục tiêu đã chọn')}</span>
+                <strong>${used}/${GUIDED_MAX_TARGETS}</strong>
+            </div>
+            ${guidedGroup('vocabulary', guidedText('Core vocabulary', 'Từ vựng cốt lõi'), vocabHtml, { count: vocabulary.length, defaultOpen: true })}
+            ${guidedGroup('collocations', guidedText('Collocations', 'Cụm từ đi kèm'), colloHtml, { count: collocations.length })}
+            ${guidedGroup('grammar', guidedText('Sentence patterns', 'Mẫu câu'), grammarHtml, { count: grammar.length })}
+            ${guidedGroup('cohesion', guidedText('Linking words', 'Từ nối'), cohesionHtml, { count: cohesion.length })}
+        </section>`;
     }
 
     function renderGuidedPlan(levelData) {
+        const section = GUIDED_SECTIONS[3];
         const plan = (levelData.plans || []).find(item => item.variantId === guidedSelectedVariantId) || levelData.plans?.[0];
-        if (!plan) return `<p>${guidedText('Choose a direction first.', 'Hãy chọn hướng triển khai trước.')}</p>`;
-        return `<section class="essay-guided-section"><h3>${guidedText('Make a plan', 'Lập dàn ý')}</h3><div class="essay-guided-plan"><p><strong>${guidedText('Thesis frame', 'Khung luận đề')}:</strong> ${escapeHtml(plan.thesisFrame)}</p><p><strong>${guidedText('Body 1', 'Thân bài 1')}:</strong> ${escapeHtml(plan.point1)}</p><p><strong>${guidedText('Body 2', 'Thân bài 2')}:</strong> ${escapeHtml(plan.point2)}</p><p class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}</p></div></section>`;
+        if (!plan) {
+            return `<section class="essay-guided-section">
+                ${guidedSectionHead(section, '')}
+                <p class="essay-guided-empty">${guidedText('Choose a direction first.', 'Hãy chọn hướng triển khai trước.')}</p>
+                <button type="button" class="essay-guided-stepnav-btn is-primary" data-guided-action="go-section" data-section-id="direction">${guidedText('Choose a direction', 'Chọn hướng đi')} →</button>
+            </section>`;
+        }
+        const rows = [
+            { label: guidedText('Thesis', 'Luận đề'), text: plan.thesisFrame },
+            { label: guidedText('Body 1', 'Thân bài 1'), text: plan.point1 },
+            { label: guidedText('Body 2', 'Thân bài 2'), text: plan.point2 },
+        ].filter(row => String(row.text || '').trim());
+        const copyText = rows.map(row => `${row.label}: ${row.text}`).join('\n');
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('This outline follows the direction you selected.', 'Dàn ý này bám theo hướng bạn đã chọn.'))}
+            <div class="essay-guided-plan">
+                ${rows.map((row, index) => `<div class="essay-guided-plan-row">
+                    <span class="essay-guided-plan-index" aria-hidden="true">${index + 1}</span>
+                    <div><span class="essay-guided-plan-label">${escapeHtml(row.label)}</span><p>${escapeHtml(row.text)}</p></div>
+                </div>`).join('')}
+            </div>
+            <div class="essay-guided-inline-actions">
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">${guidedText('Copy outline', 'Sao chép dàn ý')}</button>
+                <span class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}</span>
+            </div>
+        </section>`;
     }
 
     function renderGuidedFurther(levelData) {
+        const section = GUIDED_SECTIONS[4];
         const variantId = guidedSelectedVariantId || levelData.plans?.[0]?.variantId || 'default';
         const sentences = levelData.scaffolds?.[variantId] || [];
-        const html = sentences.map(sentence => {
-            const model = guidedHintDepth >= 3 && sentence.modelSentence ? `<div class="essay-guided-model"><strong>${guidedText('Optional model sentence', 'Câu mẫu tùy chọn')}:</strong> ${escapeHtml(sentence.modelSentence)}</div>` : '';
-            const frame = guidedHintDepth >= 2 ? `<div class="essay-guided-frame"><strong>${guidedText('Fillable frame', 'Khung điền')}:</strong> ${escapeHtml(sentence.frame)}</div>` : '';
-            const reveal = guidedHintDepth < 3 ? `<button type="button" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show fillable frame' : 'Show optional model sentence', guidedHintDepth === 1 ? 'Hiện khung điền' : 'Hiện câu mẫu tùy chọn')}</button>` : '';
-            return `<article class="essay-guided-sentence"><div class="essay-guided-sentence-meta">${escapeHtml(sentence.paragraph)} · ${escapeHtml(sentence.purpose)}</div><p>${guidedText('Purpose:', 'Mục đích:')} ${escapeHtml(sentence.purpose)}</p><p>${guidedText('Idea cue:', 'Gợi ý ý:')} ${escapeHtml(sentence.ideaCue)}</p>${frame}${model}<div class="essay-guided-sentence-actions">${reveal}<button type="button" data-guided-action="target" data-target-id="${escapeHtml(sentence.sentenceId)}">${guidedText('Use as a target', 'Chọn làm mục tiêu')}</button></div></article>`;
+        const depths = [
+            { depth: 1, en: 'Purpose', vi: 'Mục đích' },
+            { depth: 2, en: 'Frame', vi: 'Khung câu' },
+            { depth: 3, en: 'Model', vi: 'Câu mẫu' },
+        ];
+        const depthSwitch = `<div class="essay-guided-depth">
+            <span class="essay-guided-depth-label">${guidedText('Hint level', 'Mức gợi ý')}</span>
+            <div class="essay-guided-depth-track" role="group" aria-label="${guidedText('Hint level', 'Mức gợi ý')}">
+                ${depths.map(item => `<button type="button" class="${guidedHintDepth === item.depth ? 'is-active' : ''}" data-guided-action="set-depth" data-depth="${item.depth}" aria-pressed="${guidedHintDepth === item.depth ? 'true' : 'false'}">${item.depth} · ${escapeHtml(guidedText(item.en, item.vi))}</button>`).join('')}
+            </div>
+        </div>`;
+
+        let currentParagraph = '';
+        const cards = sentences.map(sentence => {
+            const paragraph = String(sentence.paragraph || '').trim();
+            const heading = paragraph && paragraph !== currentParagraph
+                ? `<h4 class="essay-guided-paragraph-head">${escapeHtml(paragraph)}</h4>`
+                : '';
+            currentParagraph = paragraph || currentParagraph;
+            const selected = guidedSelectedTargetIds.includes(sentence.sentenceId);
+            const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
+            const frame = guidedHintDepth >= 2 && sentence.frame
+                ? `<div class="essay-guided-frame"><span class="essay-guided-reveal-label">${guidedText('Fillable frame', 'Khung điền')}</span><p>${escapeHtml(sentence.frame)}</p><button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(sentence.frame)}">${guidedText('Copy', 'Sao chép')}</button></div>`
+                : '';
+            const model = guidedHintDepth >= 3 && sentence.modelSentence
+                ? `<div class="essay-guided-model"><span class="essay-guided-reveal-label">${guidedText('Model sentence', 'Câu mẫu')}</span><p>${escapeHtml(sentence.modelSentence)}</p></div>`
+                : '';
+            const reveal = guidedHintDepth < 3
+                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show frame' : 'Show model sentence', guidedHintDepth === 1 ? 'Hiện khung câu' : 'Hiện câu mẫu')}</button>`
+                : '';
+            return `${heading}<article class="essay-guided-sentence">
+                <div class="essay-guided-sentence-meta">${guidedText('Sentence', 'Câu')} ${escapeHtml(String(sentence.index || ''))} · ${escapeHtml(sentence.purpose || '')}</div>
+                <p class="essay-guided-sentence-cue">${escapeHtml(sentence.ideaCue || '')}</p>
+                ${frame}${model}
+                <div class="essay-guided-sentence-actions">
+                    ${reveal}
+                    <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sentence.sentenceId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? guidedText('Target ✓', 'Mục tiêu ✓') : guidedText('Use as target', 'Chọn làm mục tiêu')}</button>
+                </div>
+            </article>`;
         }).join('');
-        return `<section class="essay-guided-section"><h3>${guidedText('Further Support', 'Hỗ trợ thêm')}</h3><p>${guidedText('Reveal one layer at a time: purpose → idea cue → fillable frame → optional model sentence. Copy frames if useful; nothing is inserted into your essay automatically.', 'Mở từng lớp: mục đích → gợi ý ý → khung điền → câu mẫu tùy chọn. Bạn có thể sao chép khung; hệ thống không tự chèn câu vào bài.')}</p>${html || `<p>${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}</section>`;
+
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Reveal one layer at a time. Nothing is inserted into your essay automatically.', 'Mở từng lớp một. Hệ thống không tự chèn câu vào bài của bạn.'))}
+            ${depthSwitch}
+            ${cards || `<p class="essay-guided-empty">${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}
+        </section>`;
     }
 
     function renderGuidedFaq() {
+        const section = GUIDED_SECTIONS[5];
         const faq = guidedPack.common?.faq || [];
-        return `<section class="essay-guided-section"><h3>FAQ</h3>${faq.map(item => `<details><summary>${escapeHtml(guidedText(item.questionEn, item.questionVi))}</summary><p>${escapeHtml(guidedText(item.answerEn, item.answerVi))}</p></details>`).join('')}<button type="button" class="essay-request-guided-btn" data-guided-action="tutor">${guidedText('Ask AI Tutor about this prompt', 'Hỏi AI Tutor về đề này')}</button></section>`;
+        const items = faq.map((item, index) => guidedGroup(
+            `faq-${index}`,
+            guidedText(item.questionEn, item.questionVi),
+            `<p>${escapeHtml(guidedText(item.answerEn, item.answerVi))}</p>`,
+            { defaultOpen: index === 0 }
+        )).join('');
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Quick answers, then a tutor if you are still stuck.', 'Giải đáp nhanh, và bạn có thể hỏi gia sư nếu vẫn chưa rõ.'))}
+            ${items || `<p class="essay-guided-empty">${guidedText('No FAQ for this prompt.', 'Đề này chưa có phần hỏi đáp.')}</p>`}
+            <button type="button" class="essay-guided-primary-btn" data-guided-action="tutor">${guidedText('Ask AI Tutor about this prompt', 'Hỏi AI Tutor về đề này')}</button>
+        </section>`;
     }
 
+    function buildGuidedChecklistLabels() {
+        const requirements = guidedPack?.common?.requirements || [];
+        return [
+            ...requirements.map(item => bilingual(item)),
+            guidedText('My stance is consistent.', 'Quan điểm của tôi nhất quán.'),
+            guidedText('Each body paragraph has a purpose and example.', 'Mỗi đoạn thân bài có mục đích và ví dụ.'),
+            guidedText('I used my selected language targets accurately.', 'Tôi đã dùng đúng các mục tiêu ngôn ngữ đã chọn.'),
+        ];
+    }
+
+    /**
+     * The checklist gates Submit, so its ticks must survive a step change or a
+     * language switch — the state lives in guidedChecklistState, not the DOM.
+     */
     function renderGuidedChecklist() {
         if (!el.guidedChecklist) return;
-        const requirements = guidedPack.common?.requirements || [];
-        const checks = [...requirements.map(item => bilingual(item)), guidedText('My stance is consistent.', 'Quan điểm của tôi nhất quán.'), guidedText('Each body paragraph has a purpose and example.', 'Mỗi đoạn thân bài có mục đích và ví dụ.'), guidedText('I used my selected language targets accurately.', 'Tôi đã dùng đúng các mục tiêu ngôn ngữ đã chọn.')];
+        const checks = buildGuidedChecklistLabels();
+        const done = checks.filter((_, index) => guidedChecklistState.has(index)).length;
+        const complete = checks.length > 0 && done === checks.length;
+        // Opens itself on the last step, where "before you submit" is the job.
+        const open = guidedChecklistOpen || (!complete && guidedSection === 'faq');
         el.guidedChecklist.hidden = false;
-        el.guidedChecklist.innerHTML = `<h4>${guidedText('Before you submit', 'Trước khi nộp bài')}</h4>${checks.map((label, index) => `<label><input type="checkbox" data-guided-check="${index}"> <span>${escapeHtml(label)}</span></label>`).join('')}<small>${guidedText('Tick every item to confirm your plan.', 'Đánh dấu mọi mục để xác nhận dàn ý.')}</small>`;
+        el.guidedChecklist.classList.toggle('is-complete', complete);
+        el.guidedChecklist.classList.toggle('is-open', open);
+        el.guidedChecklist.innerHTML = `
+            <button type="button" class="essay-guided-checklist-toggle" data-guided-checklist-toggle aria-expanded="${open ? 'true' : 'false'}">
+                <span class="essay-guided-checklist-title">${guidedText('Before you submit', 'Trước khi nộp bài')}</span>
+                <span class="essay-guided-checklist-count${complete ? ' is-complete' : ''}">${done}/${checks.length}</span>
+                <span class="essay-guided-group-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="essay-guided-checklist-body"${open ? '' : ' hidden'}>
+                ${checks.map((label, index) => `<label class="${guidedChecklistState.has(index) ? 'is-checked' : ''}"><input type="checkbox" data-guided-check="${index}"${guidedChecklistState.has(index) ? ' checked' : ''}> <span>${escapeHtml(label)}</span></label>`).join('')}
+                <small>${guidedText('Tick every item to unlock Submit.', 'Đánh dấu mọi mục để mở khoá nút Nộp bài.')}</small>
+            </div>`;
     }
 
-    function updateGuidedChecklistState() {
+    /**
+     * Updated in place rather than re-rendered: rebuilding the list on every
+     * tick would throw keyboard focus back to the body mid-checklist.
+     */
+    function updateGuidedChecklistState(event) {
         if (!el.guidedChecklist) return;
-        el.guidedChecklist.classList.toggle('is-complete', isGuidedChecklistComplete());
+        const input = event?.target?.closest?.('[data-guided-check]');
+        if (!input) return;
+        const index = Number(input.dataset.guidedCheck);
+        if (input.checked) guidedChecklistState.add(index); else guidedChecklistState.delete(index);
+        input.closest('label')?.classList.toggle('is-checked', input.checked);
+        const total = buildGuidedChecklistLabels().length;
+        const done = el.guidedChecklist.querySelectorAll('[data-guided-check]:checked').length;
+        const complete = total > 0 && done === total;
+        const counter = el.guidedChecklist.querySelector('.essay-guided-checklist-count');
+        if (counter) {
+            counter.textContent = `${done}/${total}`;
+            counter.classList.toggle('is-complete', complete);
+        }
+        el.guidedChecklist.classList.toggle('is-complete', complete);
+    }
+
+    function onGuidedChecklistClick(event) {
+        const toggle = event.target.closest('[data-guided-checklist-toggle]');
+        if (!toggle) return;
+        guidedChecklistOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        renderGuidedChecklist();
     }
 
     function isGuidedChecklistComplete() {
-        if (practiceKind !== 'guided' || !el.guidedChecklist) return true;
-        const checks = [...el.guidedChecklist.querySelectorAll('[data-guided-check]')];
-        return checks.length > 0 && checks.every(check => check.checked);
+        if (practiceKind !== 'guided' || !el.guidedChecklist || !guidedPack) return true;
+        const checks = buildGuidedChecklistLabels();
+        return checks.length > 0 && checks.every((_, index) => guidedChecklistState.has(index));
+    }
+
+    /** Blocking Submit silently is hostile; open the list and point at it. */
+    function revealGuidedChecklist() {
+        guidedChecklistOpen = true;
+        renderGuidedChecklist();
+        el.guidedChecklist?.classList.add('is-attention');
+        el.guidedChecklist?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => el.guidedChecklist?.classList.remove('is-attention'), 1600);
     }
 
     function renderGuidedRecycle(levelData) {
         if (!el.guidedRecycle || !window.WriteEssaySupport?.getRecycledTargetIds) return;
-        const currentIds = (levelData?.coreTargets || []).map(item => String(item.id));
+        const currentIds = (levelData?.coreTargets || []).map(guidedTargetKey);
         const ids = window.WriteEssaySupport.getRecycledTargetIds({ exclude: currentIds, limit: 2 });
         el.guidedRecycle.hidden = ids.length === 0;
-        el.guidedRecycle.innerHTML = ids.length ? `<strong>${guidedText('Recycle from your last Guided lesson', 'Ôn lại từ bài Guided trước')}</strong><span>${ids.map(escapeHtml).join(' · ')}</span>` : '';
+        el.guidedRecycle.innerHTML = ids.length ? `<strong>${guidedText('Recycle from your last Guided lesson', 'Ôn lại từ bài Guided trước')}</strong><span>${ids.map(id => `<span class="essay-guided-chip">${escapeHtml(id)}</span>`).join('')}</span>` : '';
     }
 
     async function requestGuidedHelpMidAttempt() {
@@ -1165,6 +1587,7 @@
             return;
         }
         if (!isGuidedChecklistComplete()) {
+            revealGuidedChecklist();
             alert(guidedText('Please complete the pre-submission checklist first.', 'Vui lòng hoàn thành bảng kiểm trước khi nộp bài.'));
             startTimer();
             return;

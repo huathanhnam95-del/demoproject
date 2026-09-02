@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v25-guided-fix';
+const CACHE_VERSION = 'bel-offline-v26-guided-ux';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -11,7 +11,7 @@ const SHELL_URLS = [
   '/style.css?v=20260508_practice_router_fix',
   '/script.js?v=20260802_browser_cache_fix',
   '/js/write-essay-support.js?v=20260902_integrity_fix',
-  '/write-essay-mode.js?v=20260821_guided_support',
+  '/write-essay-mode.js?v=20260902_guided_ux',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',

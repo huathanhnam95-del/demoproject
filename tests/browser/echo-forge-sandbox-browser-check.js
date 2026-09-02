@@ -297,7 +297,7 @@ async function installHooks(page, { includePromptHook = true } = {}) {
     }
     assert.notEqual(await page.evaluate(() => window.echoForgeSandbox.getState().status), 'active', 'run reaches terminal summary');
     await page.waitForSelector('#summary:not([hidden])');
-    assert.match(await page.locator('#summary-outcome').textContent(), /Victory|Defeat|abandoned/i);
+    assert.match(await page.locator('#summary-outcome').textContent(), /Victory|Defeat|retreated/i);
     assert.equal(await page.evaluate(() => document.activeElement.id), 'summary-heading');
     await page.click('#play-again-btn');
     await page.waitForFunction(() => window.echoForgeSandbox.getState().status === 'active');

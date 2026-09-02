@@ -1794,4 +1794,14 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 800,2026-09-02,Check UI changes and deploy Release V1.8.87 to production,Done,2026-09-02
 801,2026-09-02,Refactor Echo Forge UI: fix overlapping silhouette circles and streamline text and action controls,Done,2026-09-02
 802,2026-09-02,Fix CRM Teaching Sessions Storage rules 403 & API 401 and add drag-and-drop audio upload,Done,2026-09-02
-803,2026-09-02,Update CRM lead source dropdown option from Zalo + Personal to Zalo - Personal,In Progress,
+803,2026-09-02,Update CRM lead source dropdown option from Zalo + Personal to Zalo - Personal,Done,2026-09-02
+804,2026-09-02,Add external test link input field to CRM entrance tests section,Done,2026-09-02
+805,2026-09-02,Investigate missing converted lead Tran Van Hanh in CRM enquiry and student management,Done,2026-09-02
+806,2026-09-02,Analyze potential vs student data split and unification in CRM,Done,2026-09-02
+807,2026-09-02,Unify CRM Student Management into a single consolidated directory,Done,2026-09-02
+808,2026-09-02,Echo Forge UI redesign — game feel + sprites + gameplay flow,Done,2026-09-02
+809,2026-09-02,Design standalone A/B/C voice cloning testing suite (F5-TTS CosyVoice 2 GPT-SoVITS),Done,2026-09-02
+810,2026-09-02,Redesign PTE Write Essay Guided Practice support rail UX (wall of text + tiny fonts),Done,2026-09-02
+811,2026-09-02,Execute V4 follow-up handoff plan - Packages B C D (Evaluation Smoke Firebase Upgrade),Done,2026-09-02
+812,2026-09-02,Echo Forge: fix V3 Cloud Run endpoint connection + add Parry prompt audio and word masking + auto-record and 1s silence VAD,Done,2026-09-02
+813,2026-09-02,Deploy Release V1.8.88 with Write Essay Guided Support UI Redesign and Echo Forge improvements to production,In Progress,

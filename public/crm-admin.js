@@ -19,10 +19,7 @@
     dashboard: { label: 'Dashboard', subTabs: [] },
     students: {
       label: 'Student Management',
-      subTabs: [
-        { id: 'potential', label: 'Potential Students' },
-        { id: 'data', label: 'Student Data' }
-      ]
+      subTabs: []
     },
     courses: {
       label: 'Courses & Classes',
@@ -202,24 +199,16 @@
   }
 
   function getStudentListSubRoute(student) {
-    const classifier = window.CrmStudents && typeof window.CrmStudents.classify === 'function'
-      ? window.CrmStudents.classify(student)
-      : '';
-    if (classifier === 'studentData') return 'data';
-
-    const stage = String(student?.lifecycleStage || '').trim().toLowerCase();
-    const enrolledStages = new Set(['enrolled', 'paused', 'completed', 'alumni']);
-    if (enrolledStages.has(stage)) return 'data';
-    return 'potential';
+    return '';
   }
 
   function getStudentReturnRoute(student) {
     const route = state.studentReturnRoute;
     if (route && normalizeRouteToken(route.main)) {
-      if (normalizeRouteToken(route.main) === 'students' && !isStudentListSubRoute(route.sub)) {
+      if (normalizeRouteToken(route.main) === 'students') {
         return {
           main: 'students',
-          sub: getStudentListSubRoute(student)
+          sub: ''
         };
       }
       return {
@@ -229,7 +218,7 @@
     }
     return {
       main: 'students',
-      sub: getStudentListSubRoute(student)
+      sub: ''
     };
   }
 
@@ -307,8 +296,15 @@
     elements.navItems = Array.from(document.querySelectorAll('.crm-nav-item[data-main]'));
     elements.dropdownItems = Array.from(document.querySelectorAll('.crm-dropdown-menu button[data-sub]'));
     elements.panels = Array.from(document.querySelectorAll('.crm-panel[data-panel]'));
-    elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
-    elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
+    elements.studentsContainer = document.querySelector('[data-panel="students"] .crm-table-host')
+      || document.querySelector('[data-panel="students"] .crm-placeholder-card')
+      || document.querySelector('[data-panel="students/potential"] .crm-table-host')
+      || document.querySelector('[data-panel="students/potential"] .crm-placeholder-card')
+      || document.querySelector('[data-panel="students/data"] .crm-table-host')
+      || document.querySelector('[data-panel="students/data"] .crm-placeholder-card')
+      || document.querySelector('[data-panel="students"]');
+    elements.potentialStudentsContainer = elements.studentsContainer;
+    elements.studentDataContainer = elements.studentsContainer;
     elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
     elements.recycleBinWorkspace = document.getElementById('recycle-bin-workspace');
     elements.btnRefreshRecycleBin = document.getElementById('btn-refresh-recycle-bin');
@@ -358,6 +354,8 @@
     elements.btnCopyLeadEntranceTestLink = document.getElementById('btn-copy-lead-entrance-test-link');
     elements.btnOpenLeadEntranceTestLink = document.getElementById('btn-open-lead-entrance-test-link');
     elements.leadEntranceTestLinkNote = document.getElementById('lead-entrance-test-link-note');
+    elements.inputLeadExternalTestLink = document.getElementById('lead-external-test-link');
+    elements.btnOpenLeadExternalTestLink = document.getElementById('btn-open-lead-external-test-link');
     elements.leadEntranceTestsList = document.getElementById('lead-entrance-tests-list');
     elements.dashboardSummaryCards = document.getElementById('dashboard-summary-cards');
     elements.dashboardFunnel = document.getElementById('dashboard-funnel');
@@ -471,6 +469,8 @@
     elements.btnCopyEntranceTestLink = document.getElementById('btn-copy-entrance-test-link');
     elements.btnOpenEntranceTestLink = document.getElementById('btn-open-entrance-test-link');
     elements.entranceTestLinkNote = document.getElementById('entrance-test-link-note');
+    elements.inputStudentExternalTestLink = document.getElementById('student-external-test-link');
+    elements.btnOpenStudentExternalTestLink = document.getElementById('btn-open-student-external-test-link');
     elements.entranceTestsList = document.getElementById('entrance-tests-list');
     elements.btnRefreshStudentPteAttempts = document.getElementById('btn-refresh-student-pte-attempts');
     elements.studentPteAttemptsList = document.getElementById('student-pte-attempts-list');
@@ -1968,6 +1968,24 @@
       });
     }
 
+    if (elements.inputStudentExternalTestLink) {
+      elements.inputStudentExternalTestLink.addEventListener('input', () => {
+        const link = String(elements.inputStudentExternalTestLink?.value || '').trim();
+        if (elements.btnOpenStudentExternalTestLink) {
+          elements.btnOpenStudentExternalTestLink.disabled = !link;
+        }
+      });
+    }
+
+    if (elements.btnOpenStudentExternalTestLink) {
+      elements.btnOpenStudentExternalTestLink.addEventListener('click', () => {
+        const link = String(elements.inputStudentExternalTestLink?.value || '').trim();
+        if (!link) return;
+        const target = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(link) ? link : `https://${link}`;
+        window.open(target, '_blank', 'noopener,noreferrer');
+      });
+    }
+
     // Identity Tab Listeners
     if (elements.btnGenerateClassCode) {
       elements.btnGenerateClassCode.addEventListener('click', async () => {
@@ -2202,7 +2220,7 @@
 
     const val = String(inputLeadSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
-    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
+    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo - Personal' || val === 'Zalo + Personal';
     const isAgent = val === 'Agent';
 
     if (groupUrl) {
@@ -2236,7 +2254,7 @@
 
     const val = String(inputStudentSource?.value || '').trim();
     const isFacebook = val.startsWith('Facebook');
-    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
+    const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo - Personal' || val === 'Zalo + Personal';
     const isAgent = val === 'Agent';
 
     if (groupUrl) {
@@ -2750,9 +2768,15 @@
     dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
 
     if (dataCache.students.length) {
-      const buckets = window.CrmStudents.splitStudents(dataCache.students);
-      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+      const target = elements.studentsContainer || elements.studentDataContainer || elements.potentialStudentsContainer;
+      if (target) {
+        renderStudentsTable(target, dataCache.students, 'No students in database yet.');
+      }
+      if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== target) {
+        const buckets = window.CrmStudents.splitStudents(dataCache.students);
+        renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+        renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+      }
     }
 
     if (dataCache.leads.length) {
@@ -2781,9 +2805,15 @@
     );
 
     if (dataCache.students.length) {
-      const buckets = window.CrmStudents.splitStudents(dataCache.students);
-      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+      const target = elements.studentsContainer || elements.studentDataContainer || elements.potentialStudentsContainer;
+      if (target) {
+        renderStudentsTable(target, dataCache.students, 'No students in database yet.');
+      }
+      if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== target) {
+        const buckets = window.CrmStudents.splitStudents(dataCache.students);
+        renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+        renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+      }
     }
   }
 
@@ -4264,14 +4294,20 @@
       }
     }
 
-    const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
-      ? window.CrmStudents.splitStudents(students)
-      : { potential: students, studentData: [] };
-
     dataCache.students = students;
 
-    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    const target = elements.studentsContainer || elements.studentDataContainer || elements.potentialStudentsContainer;
+    if (target) {
+      renderStudentsTable(target, students, 'No students in database yet.');
+    }
+
+    if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== target) {
+      const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
+        ? window.CrmStudents.splitStudents(students)
+        : { potential: students, studentData: [] };
+      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    }
     await populateAttendanceStudentOptions();
   }
 
@@ -4782,15 +4818,6 @@
     }
 
     if (main === 'students') {
-      if (isStudentListSubRoute(sub)) {
-        if (state.studentLookup) {
-          clearStudentProfileState();
-        }
-        state.main = 'students';
-        state.sub = sub;
-        return;
-      }
-
       if (isValidCrmId(sub)) {
         const crmId = normalizeCrmId(sub);
         const currentLookup = normalizeCrmId(state.studentLookup);
@@ -4820,14 +4847,12 @@
         const fallbackRoute = routeSnapshot.main === 'students'
           ? {
             main: 'students',
-            sub: isStudentListSubRoute(routeSnapshot.sub)
-              ? routeSnapshot.sub
-              : getStudentListSubRoute(modalState.studentProfile)
+            sub: ''
           }
           : routeSnapshot;
 
         state.main = 'students';
-        state.sub = isStudentListSubRoute(routeSnapshot.sub) ? routeSnapshot.sub : getStudentListSubRoute(modalState.studentProfile);
+        state.sub = '';
         state.studentLookup = crmId;
         state.studentReturnRoute = initial ? null : fallbackRoute;
 
@@ -4841,8 +4866,8 @@
           showToast(error?.message || 'Failed to open student profile.', 'error');
           clearStudentProfileState();
           state.main = 'students';
-          state.sub = 'potential';
-          if (window.location.hash !== '#students/potential') {
+          state.sub = '';
+          if (window.location.hash !== '#students') {
             updateHash();
           }
         });
@@ -4853,9 +4878,13 @@
         clearStudentProfileState();
       }
       state.main = 'students';
-      state.sub = 'potential';
-      if (window.location.hash !== '#students/potential') {
-        updateHash();
+      state.sub = '';
+      if (window.location.hash !== '#students' && (sub === 'potential' || sub === 'data' || !sub)) {
+        try {
+          window.history.replaceState(null, '', '#students');
+        } catch (_) {
+          updateHash();
+        }
       }
       return;
     }

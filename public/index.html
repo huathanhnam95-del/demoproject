@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="rmcsa-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="swt-mode.css">
-  <link rel="stylesheet" href="write-essay-mode.css">
+  <link rel="stylesheet" href="write-essay-mode.css?v=20260902_guided_ux">
   <link rel="stylesheet" href="css/practice-audio-player.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.87</div>
+  <div id="version-indicator" class="version-indicator">V1.8.88</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4598,21 +4598,22 @@
             <div id="essay-guided-workspace" class="essay-guided-workspace">
               <aside id="essay-guided-rail" class="essay-guided-rail" hidden aria-label="Guided essay support">
                 <div class="essay-guided-rail-header">
-                  <div>
-                    <span class="essay-kicker">Guided support</span>
-                    <strong id="essay-guided-rail-title">Understand the prompt</strong>
+                  <strong id="essay-guided-rail-title">Guided support</strong>
+                  <div class="essay-guided-rail-actions">
+                    <button id="essay-guided-language-toggle" class="essay-guided-language-toggle" type="button" aria-label="Switch support language" title="Switch support language">VI</button>
+                    <button id="essay-guided-mobile-toggle" class="essay-guided-mobile-toggle" type="button" aria-expanded="true">Collapse</button>
                   </div>
-                  <button id="essay-guided-language-toggle" class="essay-guided-language-toggle" type="button" aria-label="Switch support language">VI</button>
-                  <button id="essay-guided-mobile-toggle" class="essay-guided-mobile-toggle" type="button" aria-expanded="true">Collapse</button>
                 </div>
+                <div id="essay-guided-progress" class="essay-guided-progress" hidden aria-hidden="true"></div>
                 <div id="essay-guided-unavailable" class="essay-guided-unavailable" hidden role="status" aria-live="polite"></div>
+                <!-- Rebuilt by renderGuidedNav() so step labels follow the support language. -->
                 <nav id="essay-guided-nav" class="essay-guided-nav" aria-label="Support steps">
-                  <button type="button" data-guided-section="understand" class="is-active">1. Understand the prompt</button>
-                  <button type="button" data-guided-section="direction">2. Choose a direction</button>
-                  <button type="button" data-guided-section="language">3. Language kit</button>
-                  <button type="button" data-guided-section="plan">4. Make a plan</button>
-                  <button type="button" data-guided-section="further">5. Further Support</button>
-                  <button type="button" data-guided-section="faq">6. FAQ</button>
+                  <button type="button" data-guided-section="understand" class="is-active"><span class="essay-guided-nav-index" aria-hidden="true">1</span><span class="essay-guided-nav-label">Understand the prompt</span></button>
+                  <button type="button" data-guided-section="direction"><span class="essay-guided-nav-index" aria-hidden="true">2</span><span class="essay-guided-nav-label">Choose a direction</span></button>
+                  <button type="button" data-guided-section="language"><span class="essay-guided-nav-index" aria-hidden="true">3</span><span class="essay-guided-nav-label">Language kit</span></button>
+                  <button type="button" data-guided-section="plan"><span class="essay-guided-nav-index" aria-hidden="true">4</span><span class="essay-guided-nav-label">Make a plan</span></button>
+                  <button type="button" data-guided-section="further"><span class="essay-guided-nav-index" aria-hidden="true">5</span><span class="essay-guided-nav-label">Sentence support</span></button>
+                  <button type="button" data-guided-section="faq"><span class="essay-guided-nav-index" aria-hidden="true">6</span><span class="essay-guided-nav-label">FAQ</span></button>
                 </nav>
                 <div id="essay-guided-content" class="essay-guided-content"></div>
                 <div id="essay-guided-checklist" class="essay-guided-checklist" hidden></div>
@@ -6110,12 +6111,12 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.87"></script>
+  <script src="/read-aloud-mode.js?v=1.8.88"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/js/write-essay-support.js?v=20260902_integrity_fix"></script>
-  <script src="/write-essay-mode.js?v=20260821_guided_support"></script>
+  <script src="/write-essay-mode.js?v=20260902_guided_ux"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

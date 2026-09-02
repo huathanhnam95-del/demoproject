@@ -229,7 +229,7 @@ async function main() {
         now: TEST_NOW
     });
     assert.deepStrictEqual(studentPreview.archiveableIds, ['student-1']);
-    assert.strictEqual(studentPreview.impactSummary[0].sourcePanel, 'students/potential');
+    assert.strictEqual(studentPreview.impactSummary[0].sourcePanel, 'students');
 
     const archived = await archiveRecords(db, 'leads', ['lead-1'], {
         now: TEST_NOW,

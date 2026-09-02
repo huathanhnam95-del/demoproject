@@ -3,60 +3,106 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Echo Forge Combat Sandbox</title>
+  <title>Echo Forge — Pronunciation Combat</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/css/echo-forge-sandbox.css">
-  <!-- prefers-reduced-motion uses the static-equivalent CSS path in the external stylesheet. -->
-  <!-- Interactive controls keep min-height:44px and visible focus in that stylesheet. -->
+  <style>
+    /* Critical accessibility and reduced motion defaults */
+    button, select, input { min-height:44px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
 </head>
 <body>
   <main id="echo-forge-root" data-state="loading">
     <header>
-      <div><div class="eyebrow">Pronunciation combat lab</div><h1>Echo Forge</h1><p>Manual A1–C1 speaking and listening sandbox. Progress stays in this run.</p></div>
-      <button id="abandon-btn" type="button" class="danger" hidden>Abandon run</button>
+      <div>
+        <h1>Echo Forge</h1>
+        <p class="tagline">Battle the Echo Warden with your voice</p>
+      </div>
+      <button id="abandon-btn" type="button" class="danger" hidden>Retreat</button>
     </header>
-    <div id="system-status" role="status" aria-live="polite">Checking sandbox availability…</div>
+    <div id="system-status" role="status" aria-live="polite">Preparing the arena&hellip;</div>
     <section id="setup" aria-labelledby="setup-heading">
-      <h2 id="setup-heading" tabindex="-1">Choose your run</h2>
+      <h2 id="setup-heading" tabindex="-1">Prepare for Battle</h2>
       <div class="setup-row">
-        <label class="setup-field">CEFR level
+        <label class="setup-field">Difficulty
           <select id="level-select" aria-describedby="level-help"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select>
           <span class="field-help" id="level-help">Everyday words and short exchanges.</span>
         </label>
-        <label class="setup-field">Support
+        <label class="setup-field">Support Mode
           <select id="support-select" aria-describedby="support-help"><option value="guided">Guided</option><option value="standard" selected>Standard</option><option value="challenge">Challenge</option></select>
           <span class="field-help" id="support-help">Before you attempt: meaning. Afterward: corrective feedback and engine evidence.</span>
         </label>
-        <button id="start-btn" type="button" class="primary" disabled>Enter the forge</button>
+        <button id="start-btn" type="button" class="primary start-btn" disabled>Begin Battle</button>
       </div>
     </section>
     <section id="battle" hidden aria-labelledby="battle-heading">
-      <h2 id="battle-heading">Echo Warden encounter</h2>
+      <h2 id="battle-heading" class="sr-only">Combat</h2>
       <div class="meter-grid">
-        <div><div class="meter-line"><strong>Hero</strong><span id="hero-hp-text"></span></div><progress id="hero-hp" max="100" aria-label="Hero health"></progress><div class="meter-line"><span>Focus <b id="focus-value"></b></span><span>Resonance <b id="resonance-value"></b>%</span></div></div>
-        <div><div class="meter-line"><strong>Echo Warden</strong><span id="enemy-hp-text"></span></div><progress id="enemy-hp" max="120" aria-label="Echo Warden health"></progress><div class="meter-line"><span>Combo <b id="combo-value"></b></span><span>Round <b id="round-value"></b></span></div></div>
+        <div class="meter-card hero-meter">
+          <div class="meter-line"><strong>Resonant</strong><span id="hero-hp-text"></span></div>
+          <progress id="hero-hp" max="100" aria-label="Hero health"></progress>
+          <div class="meter-stats"><span>Focus <b id="focus-value"></b></span><span>Resonance <b id="resonance-value"></b>%</span></div>
+        </div>
+        <div class="meter-card enemy-meter">
+          <div class="meter-line"><strong>Echo Warden</strong><span id="enemy-hp-text"></span></div>
+          <progress id="enemy-hp" max="120" aria-label="Echo Warden health"></progress>
+          <div class="meter-stats"><span>Combo <b id="combo-value"></b></span><span>Round <b id="round-value"></b></span></div>
+        </div>
       </div>
-      <div class="battle-stage" aria-label="Battle stage">
+      <div class="battle-stage" aria-label="Battle arena">
         <div class="echo-visual-layer" aria-hidden="true"><img data-visual="effect" alt="" hidden></div>
         <div class="fighter hero"><div class="fighter-mark"><img data-visual="hero" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Resonant</strong></div>
         <div class="challenge"><div id="challenge-text">Choose an action</div><div id="challenge-support"></div></div>
         <div class="fighter enemy"><div class="fighter-mark"><img data-visual="enemy" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Echo Warden</strong></div>
       </div>
       <div class="controls">
-        <div id="attack-controls"><div class="section-label">Attack turn</div><div class="action-row">
-          <button type="button" data-card="precision_strike" aria-describedby="card-precision-description"><span class="action-title">Precision Strike</span><span class="action-meta">Azure word · 20 base damage · no Focus cost</span></button><span id="card-precision-description" class="action-description" hidden>Azure word evidence; low resource risk.</span>
-          <button type="button" data-card="stress_breaker" aria-describedby="card-stress-description"><span class="action-title">Stress Breaker</span><span class="action-meta">V3 word · 24 base damage · 1 Focus</span></button><span id="card-stress-description" class="action-description" hidden>V3 count and stress evidence; spends Focus even when incorrect.</span>
-          <button type="button" data-card="echo_chain" aria-describedby="card-echo-description"><span class="action-title">Echo Chain</span><span class="action-meta">Azure phrase · 26 base damage · 1 Focus</span></button><span id="card-echo-description" class="action-description" hidden>Azure phrase accuracy, fluency, and completeness; spends Focus even when incorrect.</span>
-          <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Use Resonance Burst</span></label>
-        </div></div>
-        <div id="record-controls" hidden><div class="section-label" id="record-label">Speak the target</div><div class="record-row"><button id="record-btn" type="button" class="primary">Start recording</button><button id="stop-btn" type="button" class="success" disabled>Stop and analyze</button><button id="cancel-btn" type="button">Cancel</button></div></div>
-        <div id="defend-controls" hidden><div class="section-label">Defend turn</div><div id="parry-countdown" role="status" aria-live="polite" aria-atomic="true"></div><div class="action-row"><button id="block-btn" type="button">Block · listen and choose</button><button id="parry-btn" type="button">Parry · repeat within 4 seconds</button></div></div>
+        <div id="attack-controls">
+          <div class="section-label">Choose Your Attack</div>
+          <div class="action-row">
+            <button type="button" data-card="precision_strike" class="ability-card" aria-describedby="card-precision-description"><span class="card-icon">&#9876;</span><span class="action-title">Precision Strike</span><span class="action-meta">Word &middot; 20 DMG</span></button><span id="card-precision-description" class="action-description" hidden>Azure word evidence; low resource risk.</span>
+            <button type="button" data-card="stress_breaker" class="ability-card" aria-describedby="card-stress-description"><span class="card-icon">&#128165;</span><span class="action-title">Stress Breaker</span><span class="action-meta">Stress &middot; 24 DMG &middot; 1 Focus</span></button><span id="card-stress-description" class="action-description" hidden>V3 count and stress evidence; spends Focus even when incorrect.</span>
+            <button type="button" data-card="echo_chain" class="ability-card" aria-describedby="card-echo-description"><span class="card-icon">&#9939;</span><span class="action-title">Echo Chain</span><span class="action-meta">Phrase &middot; 26 DMG &middot; 1 Focus</span></button><span id="card-echo-description" class="action-description" hidden>Azure phrase accuracy, fluency, and completeness; spends Focus even when incorrect.</span>
+            <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Resonance Burst</span></label>
+          </div>
+        </div>
+        <div id="record-controls" hidden>
+          <div class="section-label" id="record-label">Speak the target</div>
+          <div class="record-row">
+            <button id="record-btn" type="button" class="primary">&#127908; Record</button>
+            <button id="stop-btn" type="button" class="success" disabled>&#9209; Stop &amp; Analyze</button>
+            <button id="cancel-btn" type="button">Cancel</button>
+          </div>
+        </div>
+        <div id="defend-controls" hidden>
+          <div class="section-label">Defend!</div>
+          <div id="parry-countdown" role="status" aria-live="polite" aria-atomic="true"></div>
+          <div class="action-row">
+            <button id="block-btn" type="button" class="ability-card defend-card"><span class="card-icon">&#128737;</span><span class="action-title">Block</span><span class="action-meta">Listen &amp; choose</span></button>
+            <button id="parry-btn" type="button" class="ability-card defend-card parry-card"><span class="card-icon">&#9889;</span><span class="action-title">Parry</span><span class="action-meta">Repeat within 4s</span></button>
+          </div>
+        </div>
         <div id="block-options" tabindex="-1" hidden><div class="section-label">Choose the word you heard</div><div class="option-row" id="option-row"></div></div>
-        <div class="toolbar"><button id="replay-btn" type="button">Replay state</button><button id="export-json-btn" type="button">Export timing JSON</button><button id="export-csv-btn" type="button">Export timing CSV</button></div>
+        <div class="dev-tools" aria-label="Developer diagnostics">
+          <div class="toolbar">
+            <button id="replay-btn" type="button" class="subtle-btn">Replay state</button>
+            <button id="export-json-btn" type="button" class="subtle-btn">Export JSON</button>
+            <button id="export-csv-btn" type="button" class="subtle-btn">Export CSV</button>
+          </div>
+        </div>
       </div>
-      <section id="feedback" data-tone="neutral" aria-labelledby="feedback-heading"><h3 id="feedback-heading">Attempt feedback</h3><p id="feedback-text">Choose an action to receive pronunciation feedback.</p></section>
-      <ol id="event-log" aria-label="Recent combat events"></ol>
+      <section id="feedback" data-tone="neutral" aria-labelledby="feedback-heading"><h3 id="feedback-heading">Battle Result</h3><p id="feedback-text">Choose an action to begin.</p></section>
+      <ol id="event-log" aria-label="Combat feed"></ol>
     </section>
-    <section id="summary" hidden aria-labelledby="summary-heading"><h2 id="summary-heading" tabindex="-1">Run summary</h2><p id="summary-outcome"></p><dl><dt>Rounds</dt><dd id="summary-rounds"></dd><dt>Scored attempts</dt><dd id="summary-scored"></dd><dt>Average / best score</dt><dd id="summary-scores"></dd><dt>Successful actions</dt><dd id="summary-actions"></dd><dt>Pronunciation focus review</dt><dd id="summary-focus"></dd></dl><div class="toolbar"><button id="play-again-btn" type="button" class="primary">Play Again (same settings)</button><button id="change-settings-btn" type="button">Change level or support</button></div></section>
+    <section id="summary" hidden aria-labelledby="summary-heading">
+      <h2 id="summary-heading" tabindex="-1">Battle Complete</h2>
+      <p id="summary-outcome"></p>
+      <dl><dt>Rounds</dt><dd id="summary-rounds"></dd><dt>Scored attempts</dt><dd id="summary-scored"></dd><dt>Average / best score</dt><dd id="summary-scores"></dd><dt>Successful actions</dt><dd id="summary-actions"></dd><dt>Pronunciation focus</dt><dd id="summary-focus"></dd></dl>
+      <div class="toolbar summary-actions">
+        <button id="play-again-btn" type="button" class="primary">Play Again</button>
+        <button id="change-settings-btn" type="button">Change Settings</button>
+      </div>
+    </section>
   </main>
   <script type="module" src="/js/echo-forge/sandbox-entry.js"></script>
 </body>

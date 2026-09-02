@@ -3,9 +3,9 @@
  * Centralized configuration for backend URL and feature flags
  */
 
-// Keep one switch for local development. When false, localhost/127.0.0.1 uses
-// the HTTPS Flask backend on port 8081; non-local hosts still use Cloud Run.
-const FORCE_CLOUD_RUN = false;
+// Keep one switch for local development. When true or default, localhost/127.0.0.1
+// uses the deployed Cloud Run Praat HTTPS backend to avoid local 8081 TLS mismatch.
+const FORCE_CLOUD_RUN = true;
 
 export const config = {
     // Backend URL - Cloud Run (set to true only when local development must

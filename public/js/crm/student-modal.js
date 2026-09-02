@@ -93,11 +93,15 @@ window.CrmStudentModal = (function () {
                 elements.inputDocumentRefs,
                 elements.inputCounselingNotes,
                 elements.inputClassCodeDisplay,
-                elements.inputHandshakeEmail
+                elements.inputHandshakeEmail,
+                elements.inputStudentExternalTestLink,
+                elements.inputLeadExternalTestLink
             ];
             inputs.forEach((el) => {
                 if (el) el.value = '';
             });
+            if (elements.btnOpenStudentExternalTestLink) elements.btnOpenStudentExternalTestLink.disabled = true;
+            if (elements.btnOpenLeadExternalTestLink) elements.btnOpenLeadExternalTestLink.disabled = true;
             if (window.CrmStudents && typeof window.CrmStudents.syncScoreDecorations === 'function') {
                 window.CrmStudents.syncScoreDecorations(elements);
             }
@@ -271,6 +275,24 @@ window.CrmStudentModal = (function () {
                     const link = String(elements.entranceTestLinkInput?.value || '').trim();
                     if (!link) return;
                     window.open(link, '_blank', 'noopener');
+                });
+            }
+
+            if (elements.inputStudentExternalTestLink) {
+                elements.inputStudentExternalTestLink.addEventListener('input', () => {
+                    const link = String(elements.inputStudentExternalTestLink?.value || '').trim();
+                    if (elements.btnOpenStudentExternalTestLink) {
+                        elements.btnOpenStudentExternalTestLink.disabled = !link;
+                    }
+                });
+            }
+
+            if (elements.btnOpenStudentExternalTestLink) {
+                elements.btnOpenStudentExternalTestLink.addEventListener('click', () => {
+                    const link = String(elements.inputStudentExternalTestLink?.value || '').trim();
+                    if (!link) return;
+                    const target = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(link) ? link : `https://${link}`;
+                    window.open(target, '_blank', 'noopener,noreferrer');
                 });
             }
 

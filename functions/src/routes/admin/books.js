@@ -1011,6 +1011,22 @@ module.exports = function registerBookRoutes(router, deps) {
             const sourcePath = req.body?.sourcePath || bookData.source?.storagePath || bookData.storagePath || bookData.sourcePath;
             if (!sourcePath) return sendError(res, 400, 'MISSING_SOURCE_PATH', 'No source path found on book.');
 
+            let processorConfig = req.body?.processor;
+            if (!processorConfig || typeof processorConfig !== 'object') {
+                try {
+                    const { resolveDocumentAiConfig } = require('../../crm/book-document-ocr-service');
+                    processorConfig = resolveDocumentAiConfig();
+                } catch {
+                    const projectId = process.env.GCLOUD_PROJECT || 'listening-tasks-3ae34';
+                    const location = process.env.CRM_BOOKS_DOCUMENT_AI_LOCATION || 'us';
+                    processorConfig = {
+                        processor: process.env.CRM_BOOKS_DOCUMENT_AI_PROCESSOR || `projects/${projectId}/locations/${location}/processors/ocr-v2`,
+                        location,
+                        processorVersion: process.env.CRM_BOOKS_DOCUMENT_AI_PROCESSOR_VERSION || `projects/${projectId}/locations/${location}/processors/ocr-v2/processorVersions/pretrained-ocr-v2.0-2023-06-02`
+                    };
+                }
+            }
+
             const revision = await createRevision({
                 db,
                 bucket,
@@ -1019,7 +1035,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 sourcePath,
                 sourceSha256: req.body?.expectedSourceSha256,
                 expectedPageCount: req.body?.pageCount || bookData.pageCount,
-                processor: req.body?.processor,
+                processor: processorConfig,
                 reason: cleanStr(req.body?.reason) || 'Admin queued text revision'
             });
 

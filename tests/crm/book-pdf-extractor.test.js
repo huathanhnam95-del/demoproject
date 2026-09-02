@@ -1,5 +1,6 @@
 const assert = require('assert');
 const { extractPdfPages } = require('../../functions/src/crm/book-pdf-extractor');
+const { buildCorruptTextLayerPdf } = require('./fixtures/build-corrupt-text-layer-pdf');
 
 function escapePdfText(text) {
     return String(text).replace(/([\\()])/g, '\\$1');
@@ -40,17 +41,41 @@ function buildTinyPdf(pageTexts) {
 }
 
 async function main() {
-    const extracted = await extractPdfPages(buildTinyPdf(['First page text', 'Second page text']));
+    // 1. Normal clean PDF extraction
+    const extracted = await extractPdfPages(buildTinyPdf([
+        'First page text with normal words and punctuation.',
+        'Second page text with clean sentence boundaries and spacing.'
+    ]));
 
     assert.strictEqual(extracted.totalPages, 2);
     assert.strictEqual(extracted.pages.length, 2);
     assert.match(extracted.pages[0], /First page text/);
     assert.match(extracted.pages[1], /Second page text/);
     assert.ok(extracted.avgCharsPerPage > 0);
+    assert.strictEqual(extracted.isScanned, false);
+    assert.strictEqual(extracted.isSuspect, false, 'Clean text must not be flagged as suspect');
 
+    // 2. Corrupt text layer fixture (passes char count but fails quality check)
+    const corruptPdf = buildCorruptTextLayerPdf();
+    const corruptExtracted = await extractPdfPages(corruptPdf);
+
+    assert.strictEqual(corruptExtracted.totalPages, 2);
+    assert.ok(corruptExtracted.avgCharsPerPage > 0, 'Character volume gate sees characters');
+    assert.strictEqual(
+        corruptExtracted.isSuspect,
+        true,
+        'Corrupt text layer must be flagged as suspect despite passing character-count check'
+    );
+    assert.ok(corruptExtracted.textQuality, 'Quality assessment object must be present');
+    assert.ok(
+        corruptExtracted.textQuality.suspectPagesCount > 0,
+        'At least one page must be marked suspect due to corruption'
+    );
+
+    // 3. Error case
     await assert.rejects(() => extractPdfPages(Buffer.from('not a PDF')));
 
-    console.log('book PDF extractor page/text/error contract passed');
+    console.log('book PDF extractor page/text/error/quality contract passed');
 }
 
 main().catch((error) => {

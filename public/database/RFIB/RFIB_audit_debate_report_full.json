@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 370,
-  "round1_pass_count": 317,
-  "debate_revised_count": 51,
-  "unresolved_count": 2,
+  "processed_questions": 389,
+  "round1_pass_count": 329,
+  "debate_revised_count": 57,
+  "unresolved_count": 3,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -8289,6 +8289,1505 @@
             }
           ],
           "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 213,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+            "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Coordinating Conjunction / Parallel Structure' is factually incorrect for 'as well as'. 'As well as' is a prepositional phrase, not a coordinating conjunction. Coordinating conjunctions are 'and', 'but', 'or', etc., while 'as well as' functions as a preposition introducing a parallel element.",
+                "affected_text": "Coordinating Conjunction / Parallel Structure",
+                "correction": "Prepositional Phrase / Parallel Structure"
+              }
+            ],
+            "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+            "overall_notes": "The grammar tag is factually incorrect. 'As well as' is a prepositional phrase, not a coordinating conjunction. The rest of the explanation is logically sound and semantically accurate."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'as well as' because it links two parallel gerund phrases (activities) that drones can be used for: 1) providing timely warnings and 2) monitoring long-term impacts. This structure adds information without creating a contrast. * Why 'except' is incorrect: 'Except' means 'excluding,' which would imply one activity was not included, but both are listed as uses. * Why 'despite' is incorrect: 'Despite' introduces a concession or contrast (e.g., *despite the cold, they work*). The sentence simply adds another use case, so no contrast is needed. * Why 'as long as' is incorrect: 'As long as' means 'provided that' and introduces a condition, which is not the function of the word here. The grammar tag is 'Prepositional Phrase / Parallel Structure' because 'as well as' functions as a preposition introducing a parallel element, not a coordinating conjunction. Coordinating conjunctions are 'and', 'but', 'or', etc., while 'as well as' introduces a parallel structure through a prepositional relationship.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was reconciled to 'Prepositional Phrase / Parallel Structure' based on qwen3:14b's critique that 'as well as' is a prepositional phrase, not a coordinating conjunction. The explanation was updated to clarify this distinction while maintaining the original logical structure and addressing all distractors.",
+          "candidate_explanation": "The correct answer is 'as well as' because it links two parallel gerund phrases (activities) that drones can be used for: 1) providing timely warnings and 2) monitoring long-term impacts. This structure adds information without creating a contrast. * Why 'except' is incorrect: 'Except' means 'excluding,' which would imply one activity was not included, but both are listed as uses. * Why 'despite' is incorrect: 'Despite' introduces a concession or contrast (e.g., *despite the cold, they work*). The sentence simply adds another use case, so no contrast is needed. * Why 'as long as' is incorrect: 'As long as' means 'provided that' and introduces a condition, which is not the function of the word here. The grammar tag is 'Prepositional Phrase / Parallel Structure' because 'as well as' functions as a preposition introducing a parallel element, not a coordinating conjunction. Coordinating conjunctions are 'and', 'but', 'or', etc., while 'as well as' introduces a parallel structure through a prepositional relationship.",
+          "candidate_grammar_tag": "Prepositional Phrase / Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurately assigned, all distractors are correctly analyzed for grammatical form and semantic fit, and the reasoning avoids logical flaws or gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'as well as' because it links two parallel gerund phrases (activities) that drones can be used for: 1) providing timely warnings and 2) monitoring long-term impacts. This structure adds information without creating a contrast. * Why 'except' is incorrect: 'Except' means 'excluding,' which would imply one activity was not included, but both are listed as uses. * Why 'despite' is incorrect: 'Despite' introduces a concession or contrast (e.g., *despite the cold, they work*). The sentence simply adds another use case, so no contrast is needed. * Why 'as long as' is incorrect: 'As long as' means 'provided that' and introduces a condition, which is not the function of the word here. The grammar tag is 'Prepositional Phrase / Parallel Structure' because 'as well as' functions as a preposition introducing a parallel element, not a coordinating conjunction. Coordinating conjunctions are 'and', 'but', 'or', etc., while 'as well as' introduces a parallel structure through a prepositional relationship.",
+          "candidate_grammar_tag": "Prepositional Phrase / Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Prepositional Phrase / Parallel Structure' is factually incorrect for 'as well as' in this context. While 'as well as' can function as a preposition, in this sentence it acts as a coordinating conjunction linking two parallel gerund phrases, not as a prepositional phrase.",
+                  "affected_text": "The grammar tag is 'Prepositional Phrase / Parallel Structure' because 'as well as' functions as a preposition introducing a parallel element, not a coordinating conjunction.",
+                  "correction": "The grammar tag should be 'Coordinating Conjunction / Parallel Structure' because 'as well as' functions as a conjunction linking two parallel gerund phrases, not as a preposition."
+                }
+              ],
+              "verified_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+              "overall_notes": "The explanation correctly identifies the reasoning for distractors but incorrectly labels 'as well as' as a prepositional phrase. In this context, it functions as a coordinating conjunction, not a preposition."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The original explanation incorrectly labeled 'as well as' as a preposition. Models agreed it functions as a coordinating conjunction in this context, linking parallel elements, not as a preposition. The grammar tag was updated to reflect this accurate classification.",
+          "candidate_explanation": "The correct answer is 'as well as' because it links two parallel gerund phrases (activities) that drones can be used for: 1) providing timely warnings and 2) monitoring long-term impacts. This structure adds information without creating a contrast. * Why 'except' is incorrect: 'Except' means 'excluding,' which would imply one activity was not included, but both are listed as uses. * Why 'despite' is incorrect: 'Despite' introduces a concession or contrast (e.g., *despite the cold, they work*). The sentence simply adds another use case, so no contrast is needed. * Why 'as long as' is incorrect: 'As long as' means 'provided that' and introduces a condition, which is not the function of the word here. The grammar tag is 'Coordinating Conjunction / Parallel Structure' because 'as well as' functions as a conjunction linking two parallel gerund phrases, not as a preposition. Coordinating conjunctions are 'and', 'but', 'or', etc., while 'as well as' introduces a parallel structure through a conjunctive relationship, not a prepositional one.",
+          "candidate_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Coordinating Conjunction / Parallel Structure' is factually incorrect for 'as well as'. 'As well as' is not a coordinating conjunction but a prepositional phrase that introduces parallel structure.",
+                  "affected_text": "Coordinating Conjunction / Parallel Structure",
+                  "correction": "Prepositional Phrase / Parallel Structure"
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase / Parallel Structure",
+              "overall_notes": "The grammar tag is incorrect because 'as well as' functions as a prepositional phrase, not a coordinating conjunction. The rest of the explanation is logically sound and semantically accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Coordinating Conjunction / Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 213,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Present Participle (Participial Phrase)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the 'make' distractor, which is a base form verb. The subject 'mosses' cannot logically perform the action of 'make' in this context, as the participial phrase requires a result clause, not a base verb.",
+                "affected_text": "Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence.",
+                "correction": "Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence. Why 'make' is incorrect: This base form verb cannot function as a participial phrase here, as the subject 'mosses' cannot logically perform the action of 'making' the imagery important."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address whether the subject 'mosses' can logically perform the action of 'making' the imagery important, which is necessary for participial phrase logic.",
+                "affected_text": "The occurrence of mosses in patches *causes* the need for accurate imagery.",
+                "correction": "The occurrence of mosses in patches *causes* the need for accurate imagery. The participial phrase 'making' correctly reflects this causal relationship, as the subject 'mosses' logically leads to the result of requiring accurate imagery."
+              }
+            ],
+            "verified_grammar_tag": "Present Participle (Participial Phrase)",
+            "overall_notes": "The grammar tag is correct, but the explanation fails to address the 'make' distractor and lacks explicit semantic analysis of the subject-action relationship in the participial phrase."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Participle (Participial Phrase)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'making' because it introduces a participial phrase that shows the direct consequence or result of the preceding clause. The occurrence of mosses in patches *causes* the need for accurate imagery. \n\n* Why 'made' is incorrect: This is the simple past tense, which would imply the cause and effect happened at a specific point in the past, not an ongoing reality. \n\n* Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence. \n\n* Why 'make' is incorrect: This is the base form of the verb, which would require a subject and verb to form a complete clause. However, in this context, the subject (mosses) does not perform the action of 'making' the imagery important; instead, the occurrence of mosses in patches causes the need for accurate imagery. The participial phrase 'making it important' logically connects the cause (mosses in patches) to the effect (need for accurate imagery).",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'making' because it introduces a participial phrase that shows the direct consequence or result of the preceding clause. The occurrence of mosses in patches *causes* the need for accurate imagery.\n* Why 'made' is incorrect: This is the simple past tense, which would imply the cause and effect happened at a specific point in the past, not an ongoing reality.\n* Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence.",
+          "candidate_grammar_tag": "Present Participle (Participial Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels and logical reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not address the 'make' distractor, which is listed as an option but not analyzed in the explanation.",
+                  "affected_text": "The explanation only discusses 'made' and 'to make', omitting 'make' entirely.",
+                  "correction": "The explanation should also clarify why 'make' is incorrect, noting that it is a base form verb requiring a subject and verb, which is not appropriate here."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address whether the subject (mosses) logically performs the action of 'making' in the context of the sentence.",
+                  "affected_text": "The explanation states that 'making' shows the consequence but does not clarify that 'make' as a verb would require the subject to perform the action, which is not logically possible here.",
+                  "correction": "The explanation should note that 'make' as a verb would imply the subject (mosses) is performing the action, which is semantically incorrect because mosses do not 'make' the imagery important; the occurrence of mosses in patches causes the need for accurate imagery."
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The grammar tag is correct, but the explanation fails to address the 'make' distractor and lacks a semantic clarification about the subject's role in the action."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the missing analysis of the 'make' distractor, ensuring completeness and semantic clarity. The grammar tag was confirmed as 'Present Participle (Participial Phrase)' by all models that responded, with no conflicting information.",
+          "candidate_explanation": "The correct answer is 'making' because it introduces a participial phrase that shows the direct consequence or result of the preceding clause. The occurrence of mosses in patches *causes* the need for accurate imagery. \n\n* Why 'made' is incorrect: This is the simple past tense, which would imply the cause and effect happened at a specific point in the past, not an ongoing reality. \n\n* Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence. \n\n* Why 'make' is incorrect: This is the base form of the verb, which would require a subject and verb to form a complete clause. However, in this context, the subject (mosses) does not perform the action of 'making' the imagery important; instead, the occurrence of mosses in patches causes the need for accurate imagery. The participial phrase 'making it important' logically connects the cause (mosses in patches) to the effect (need for accurate imagery).",
+          "candidate_grammar_tag": "Present Participle (Participial Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed for their grammatical forms, and the semantic relationships are clearly explained without gaps or contradictions."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correct answer and grammar tag. The explanation was already accurate and complete, with no significant disagreements requiring resolution. The timeout from gemma4:12b did not affect the consensus reached by the other two models.",
+          "candidate_explanation": "The correct answer is 'making' because it introduces a participial phrase that shows the direct consequence or result of the preceding clause. The occurrence of mosses in patches *causes* the need for accurate imagery. \n\n* Why 'made' is incorrect: This is the simple past tense, which would imply the cause and effect happened at a specific point in the past, not an ongoing reality. \n\n* Why 'to make' is incorrect: This infinitive form cannot introduce a consequence or result clause; it must be followed by a subject and verb to function as a full sentence. \n\n* Why 'make' is incorrect: This is the base form of the verb, which would require a subject and verb to form a complete clause. However, in this context, the subject (mosses) does not perform the action of 'making' the imagery important; instead, the occurrence of mosses in patches causes the need for accurate imagery. The participial phrase 'making it important' logically connects the cause (mosses in patches) to the effect (need for accurate imagery).",
+          "candidate_grammar_tag": "Present Participle (Participial Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The explanation is accurate, logical, and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and free of logical flaws, semantic and collocation considerations are appropriately addressed, and all distractors receive complete explanations."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Participial Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 214,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to explicitly address whether the subject ('human development') can logically be the receiver of the action for passive voice distractors. For example, 'anticipated' is a past participle (grammatically valid), but the explanation should clarify that the subject cannot logically be 'anticipated' by indicators (semantic impossibility).",
+                "affected_text": "Why 'anticipated' is incorrect: Using this would imply that human development predicts its own assessment, which is grammatically and logically unsound.",
+                "correction": "Why 'anticipated' is incorrect: While 'anticipated' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to anticipate' in this context. Indicators do not anticipate human development; they measure it."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation for 'excluded' does not clarify that the subject ('human development') cannot logically be 'excluded' by indicators (semantic impossibility).",
+                "affected_text": "Why 'excluded' is incorrect: This means kept out, failing to explain how the development level is determined.",
+                "correction": "Why 'excluded' is incorrect: While 'excluded' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to exclude' in this context. Indicators do not exclude human development; they measure it."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation for 'composed' does not clarify that the subject ('human development') cannot logically be 'composed' by indicators (semantic impossibility).",
+                "affected_text": "Why 'composed' is incorrect: This suggests being made up of parts, which does not fit the context of evaluation or measurement.",
+                "correction": "Why 'composed' is incorrect: While 'composed' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to compose' in this context. Indicators do not compose human development; they measure it."
+              }
+            ],
+            "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to explicitly address semantic impossibility for passive voice distractors. It conflates grammatical form with semantic appropriateness without clarifying that the subject cannot logically be the receiver of the action in the context of 'as [V3] by...'."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'measured' because the structure 'as [V3] by...' requires a past participle to form a passive clause, indicating that human development is assessed or calculated using specific indicators. This means the subject ('human development') receives the action. * Why 'anticipated' is incorrect: While 'anticipated' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to anticipate' in this context. Indicators do not anticipate human development; they measure it. * Why 'excluded' is incorrect: Although 'excluded' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to exclude' in this context. Indicators do not exclude human development; they measure it. * Why 'composed' is incorrect: While 'composed' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to compose' in this context. Indicators do not compose human development; they measure it.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address semantic impossibility for passive voice distractors, clarifying that while they are grammatically valid, they are semantically inappropriate in this context. The grammar tag was retained as accurate.",
+          "candidate_explanation": "The correct answer is 'measured' because the structure 'as [V3] by...' requires a past participle to form a passive clause, indicating that human development is assessed or calculated using specific indicators. This means the subject ('human development') receives the action. * Why 'anticipated' is incorrect: While 'anticipated' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to anticipate' in this context. Indicators do not anticipate human development; they measure it. * Why 'excluded' is incorrect: Although 'excluded' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to exclude' in this context. Indicators do not exclude human development; they measure it. * Why 'composed' is incorrect: While 'composed' is grammatically a past participle, the subject 'human development' cannot logically be the receiver of the action 'to compose' in this context. Indicators do not compose human development; they measure it.",
+          "candidate_grammar_tag": "Grammatical Voice (Passive Construction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the passive construction of 'measured' and correctly explains why the other options are semantically and grammatically inappropriate in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammatical Voice (Passive Construction)",
+              "overall_notes": "The explanation is factually correct and logically sound. It correctly identifies the grammatical form of the distractors (past participles) and provides a clear semantic justification for why they are incorrect by explaining the subject-verb relationship in the passive construction."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 215,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Collocation/Gerund Noun",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Noun Collocation/Gerund Noun' is factually incorrect. 'Wait' is a noun (not a gerund) in this context. Gerunds are verb forms ending in -ing that function as nouns (e.g., 'waiting'), but 'wait' here is a concrete noun referring to the act of waiting, not a gerund.",
+                "affected_text": "The grammar_tag 'Noun Collocation/Gerund Noun' for the word 'wait'",
+                "correction": "The correct grammar tag should be 'Noun Collocation' (without 'Gerund Noun'), as 'wait' functions as a concrete noun, not a gerund."
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation",
+            "overall_notes": "The explanation is logically sound in its semantic and collocation analysis but incorrectly labels 'wait' as a gerund. This misclassification undermines the accuracy of the grammar tag."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation/Gerund Noun",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'wait' because it functions as a concrete noun that represents the *act* of waiting. This noun collocates perfectly with the adjective 'agonizing,' describing the feeling associated with that action. * Why 'sleep' is incorrect: While related to rest, 'sleep' does not represent the specific act of delayed gratification described here. * Why 'walk' is incorrect: It is a verb and does not fit grammatically or semantically as the noun representing the waiting period. * Why 'time' is incorrect: Although time passes, the phrase requires a noun that describes the *experience* or *action* (the wait), not just the abstract concept of duration. The grammar tag 'Noun Collocation' is accurate here, as 'wait' is a concrete noun, not a gerund. Gerunds are verb forms ending in -ing that function as nouns (e.g., 'waiting'), but 'wait' here is a concrete noun referring to the act of waiting, not a gerund.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to clarify that 'wait' is a concrete noun, not a gerund, aligning with the grammar tag 'Noun Collocation' as agreed by the models. The initial misclassification of 'wait' as a gerund was corrected based on the feedback from qwen3:14b, ensuring accuracy in the grammar tag and explanation.",
+          "candidate_explanation": "The correct answer is 'wait' because it functions as a concrete noun that represents the *act* of waiting. This noun collocates perfectly with the adjective 'agonizing,' describing the feeling associated with that action. * Why 'sleep' is incorrect: While related to rest, 'sleep' does not represent the specific act of delayed gratification described here. * Why 'walk' is incorrect: It is a verb and does not fit grammatically or semantically as the noun representing the waiting period. * Why 'time' is incorrect: Although time passes, the phrase requires a noun that describes the *experience* or *action* (the wait), not just the abstract concept of duration. The grammar tag 'Noun Collocation' is accurate here, as 'wait' is a concrete noun, not a gerund. Gerunds are verb forms ending in -ing that function as nouns (e.g., 'waiting'), but 'wait' here is a concrete noun referring to the act of waiting, not a gerund.",
+          "candidate_grammar_tag": "Noun Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Noun Collocation' is factually incorrect. The explanation focuses on selecting a noun that semantically fits with 'agonizing', not on collocational patterns between words. The correct grammar tag should be 'Concrete Noun' or 'Noun Choice', as the question tests semantic appropriateness rather than collocation.",
+                  "affected_text": "The grammar tag 'Noun Collocation' is accurate here, as 'wait' is a concrete noun, not a gerund.",
+                  "correction": "The grammar tag 'Noun Collocation' is factually incorrect. The correct tag should be 'Concrete Noun' or 'Noun Choice', as the question tests semantic appropriateness rather than collocational patterns."
+                }
+              ],
+              "verified_grammar_tag": "Concrete Noun",
+              "overall_notes": "The explanation is logically sound in its reasoning for distractors but incorrectly labels the grammar tag. The term 'Noun Collocation' does not apply here, as the focus is on semantic fit, not collocational patterns."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'wait' because it functions as a concrete noun that represents the *act* of waiting. This noun collocates perfectly with the adjective 'agonizing,' describing the feeling associated with that action. * Why 'sleep' is incorrect: While related to rest, 'sleep' does not represent the specific act of delayed gratification described here. * Why 'walk' is incorrect: It is a verb and does not fit grammatically or semantically as the noun representing the waiting period. * Why 'time' is incorrect: Although time passes, the phrase requires a noun that describes the *experience* or *action* (the wait), not just the abstract concept of duration. The grammar tag 'Noun Collocation' is accurate here, as 'wait' is a concrete noun, not a gerund. Gerunds are verb forms ending in -ing that function as nouns (e.g., 'waiting'), but 'wait' here is a concrete noun referring to the act of waiting, not a gerund.",
+          "candidate_grammar_tag": "Noun Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag 'Noun Collocation' is accurate for 'wait' as it pairs naturally with 'agonizing.' Distractors are correctly analyzed for grammatical form (verb vs. noun), semantic fit, and collocation. No semantic or logical gaps are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag 'Noun Collocation.' The only issue was that one model failed to respond, but the consensus among the two responding models was that the explanation was accurate and complete. The revised explanation clarifies the distinction between 'wait' as a concrete noun and 'waiting' as a gerund, ensuring clarity for learners.",
+          "candidate_explanation": "The correct answer is 'wait' because it is a concrete noun that represents the *act* of waiting, which fits perfectly with the adjective 'agonizing' to describe the experience of delaying gratification. * Why 'sleep' is incorrect: While 'sleep' is a noun, it refers to rest, not the specific act of waiting, and does not match the context of delayed gratification. * Why 'walk' is incorrect: 'Walk' is a verb, not a noun, and does not fit grammatically or semantically as the noun representing the waiting period. * Why 'time' is incorrect: 'Time' refers to the abstract concept of duration, not the *experience* or *action* of waiting, which is what the sentence requires. The grammar tag 'Noun Collocation' is accurate here, as 'wait' is a concrete noun that naturally pairs with 'agonizing,' unlike the other options which either do not fit grammatically or semantically. The explanation also clarifies that 'wait' is not a gerund (which would be 'waiting'), but a concrete noun referring to the act of waiting itself.",
+          "candidate_grammar_tag": "Noun Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "The explanation is accurate, with correct grammar labels, logical reasoning, and thorough analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag 'Noun Collocation' is appropriately applied, and each distractor is correctly analyzed for both grammatical form and semantic fit. No semantic or collocation gaps are present, and all explanations are complete and logically consistent."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 224,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+            "overall_notes": "The explanation is accurate, with correct grammar labels, logical reasoning, and thorough analysis of each distractor."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Verb Collocation/Meaning (Infinitive)' is factually incorrect. The word 'cling' appears in the base form (not infinitive) in the sentence, and the collocation 'cling to' is being tested, not the infinitive form.",
+                "affected_text": "Verb Collocation/Meaning (Infinitive)",
+                "correction": "Verb Collocation/Meaning (Base Form)"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address collocation, which is part of the grammar tag. The collocation 'cling to' is critical to the correct answer, but the explanation only focuses on meaning without mentioning this natural pairing.",
+                "affected_text": "The correct answer is 'cling' because it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls.",
+                "correction": "The correct answer is 'cling' because it collocates naturally with 'to' in the phrase 'cling to a wall,' and it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls."
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Base Form)",
+            "overall_notes": "The grammar tag is incorrect (infinitive vs. base form), and the explanation lacks explicit collocation analysis despite it being part of the original grammar tag."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'cling' because it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls. \n* Why 'fly' is incorrect: 'Fly' refers to movement through the air and does not convey the sense of sticking. \n* Why 'hang' is incorrect: 'Hang' usually implies suspension from above (like clothes on a line), not adhesion to a vertical surface.\n* Why 'hover' is incorrect: 'Hover' means to remain suspended in mid-air without moving, which contradicts the action of adhering to a wall.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'cling' because it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls. \n* Why 'fly' is incorrect: 'Fly' refers to movement through the air and does not convey the sense of sticking. \n* Why 'hang' is incorrect: 'Hang' usually implies suspension from above (like clothes on a line), not adhesion to a vertical surface.\n* Why 'hover' is incorrect: 'Hover' means to remain suspended in mid-air without moving, which contradicts the action of adhering to a wall.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Verb Collocation/Meaning (Infinitive)' is factually incorrect because the word 'cling' appears in the base form (not the infinitive) in the sentence. The infinitive form would be 'to cling', but the correct grammatical form here is the base verb.",
+                  "affected_text": "Verb Collocation/Meaning (Infinitive)",
+                  "correction": "Verb Collocation/Meaning (Base Form)"
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Base Form)",
+              "overall_notes": "The grammar tag is incorrect because 'cling' is used in the base form, not the infinitive. The rest of the explanation is logically sound and semantically accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'cling' because it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls. \n* Why 'fly' is incorrect: 'Fly' refers to movement through the air and does not convey the sense of sticking. \n* Why 'hang' is incorrect: 'Hang' usually implies suspension from above (like clothes on a line), not adhesion to a vertical surface.\n* Why 'hover' is incorrect: 'Hover' means to remain suspended in mid-air without moving, which contradicts the action of adhering to a wall.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Verb Collocation/Meaning (Infinitive)' is factually incorrect. The verb 'cling' appears in the base form (not infinitive) in the sentence 'cling to a wall'. The correct tag should be 'Verb Collocation/Meaning (Base Form)' or 'Verb Collocation/Meaning (Infinitive)' only if the infinitive form were being tested.",
+                  "affected_text": "Verb Collocation/Meaning (Infinitive)",
+                  "correction": "Verb Collocation/Meaning (Base Form)"
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Base Form)",
+              "overall_notes": "The explanation is logically sound and semantically accurate, but the grammar tag is factually incorrect. The verb 'cling' is used in its base form, not infinitive, in the sentence."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'cling' because it means to stick tightly or adhere firmly to a surface, which accurately describes how mosquitoes attach themselves to walls. \n* Why 'fly' is incorrect: 'Fly' refers to movement through the air and does not convey the sense of sticking. \n* Why 'hang' is incorrect: 'Hang' usually implies suspension from above (like clothes on a line), not adhesion to a vertical surface.\n* Why 'hover' is incorrect: 'Hover' means to remain suspended in mid-air without moving, which contradicts the action of adhering to a wall.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Verb Collocation/Meaning (Infinitive)' is incorrect because the word 'cling' appears in its base form (not infinitive) in the sentence. The correct tag should reflect the base form of the verb.",
+                  "affected_text": "Verb Collocation/Meaning (Infinitive)",
+                  "correction": "Verb Collocation/Meaning (Base Form)"
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Base Form)",
+              "overall_notes": "The explanation is logically sound and semantically accurate, but the grammar tag is factually incorrect. The word 'cling' appears in its base form, not infinitive, in the sentence."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 226,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+            "overall_notes": "The explanation is accurate, factually correct, and logically sound with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly claims 'an era' is grammatically incompatible with 'over... of.' The actual issue is semantic, not grammatical. 'An era' is semantically inappropriate because it refers to a broad historical period, not a business cycle's duration.",
+                "affected_text": "Why 'an era' is incorrect: An era refers to a vast period in history (e.g., the Bronze Age) and does not fit grammatically with the structure 'over... of.'",
+                "correction": "Why 'an era' is incorrect: An era refers to a vast period in history (e.g., the Bronze Age) and does not fit semantically with the context of a business cycle, which requires a more specific and shorter time frame."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation incorrectly states the structure is 'over... of,' but the correct collocation is 'over the course of.' This misrepresentation of the phrase's structure weakens the explanation's accuracy.",
+                "affected_text": "The correct phrase is 'over the course of.' This fixed collocation ('over the course of') is standard English usage when referring to the entire duration or span of time that a process, like a business cycle, unfolds.",
+                "correction": "The correct phrase is 'over the course of.' This fixed collocation ('over the course of') is standard English usage when referring to the entire duration or span of time that a process, like a business cycle, unfolds."
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+            "overall_notes": "The grammar tag is accurate, but the explanation contains reasoning errors and a collocation gap. The 'an era' explanation incorrectly frames the issue as grammatical rather than semantic, and the structure 'over... of' is misrepresented as the correct collocation."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct phrase is 'over the course of.' This fixed collocation ('over the course of') is standard English usage when referring to the entire duration or span of time that a process, like a business cycle, unfolds. * Why 'an era' is incorrect: An era refers to a vast period in history (e.g., the Bronze Age) and does not fit semantically with the context of a business cycle, which requires a more specific and shorter time frame. * Why 'a tally' is incorrect: A tally is merely a count or record, not a measure of time. * Why 'the year' is incorrect: While it specifies a period of time, it is too limited; the business cycle can span many years, making 'the course' the necessary general term.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic inaccuracy in the 'an era' critique, ensuring the focus is on semantic appropriateness rather than grammatical incompatibility. The collocation structure was clarified to emphasize 'over the course of' as the correct phrase, aligning with all models' consensus on the grammar tag and explanation accuracy.",
+          "candidate_explanation": "The correct phrase is 'over the course of.' This fixed collocation ('over the course of') is standard English usage when referring to the entire duration or span of time that a process, like a business cycle, unfolds. * Why 'an era' is incorrect: An era refers to a vast period in history (e.g., the Bronze Age) and does not fit semantically with the context of a business cycle, which requires a more specific and shorter time frame. * Why 'a tally' is incorrect: A tally is merely a count or record, not a measure of time. * Why 'the year' is incorrect: While it specifies a period of time, it is too limited; the business cycle can span many years, making 'the course' the necessary general term.",
+          "candidate_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all semantic, collocational, and contextual aspects of the distractors without gaps or errors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiomatic Phrase (Lexical Choice)",
+              "overall_notes": "The explanation is factually correct and logically sound. It correctly identifies 'over the course of' as a fixed collocation and provides distinct, logical reasons for why each distractor is incorrect based on semantic and lexical context."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 227,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Collocation/Fixed Phrase (Participle as Adjective)' is factually incorrect for the correct answer 'drinking'. While 'drinking' is a participle used as an adjective, the primary grammatical focus here is on collocation, not the participle function. The tag conflates two distinct grammatical concepts.",
+                "affected_text": "Collocation/Fixed Phrase (Participle as Adjective)",
+                "correction": "Collocation/Fixed Phrase"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to explicitly address the semantic incompatibility of the distractors with the context. For example, 'dimming' is a verb, not an adjective, and thus cannot logically modify 'water supply' in the same way 'drinking' does. This grammatical mismatch is not clearly explained.",
+                "affected_text": "The other options are incorrect: 'dimming' means reducing light intensity; 'stingy' describes someone who is unwilling to spend money; and 'lacquering' refers to applying a shiny coating, none of which relate to the suitability or type of water supply.",
+                "correction": "The other options are incorrect: 'dimming' is a verb meaning to reduce light intensity, which cannot function as an adjective to describe a water supply; 'stingy' is an adjective but refers to financial behavior, not water; and 'lacquering' is a verb meaning to apply a coating, which is unrelated to water supply types."
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Fixed Phrase",
+            "overall_notes": "The grammar tag incorrectly combines collocation with participle function. The explanation lacks explicit semantic analysis of distractors' grammatical incompatibility with the context."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'drinking' because 'drinking water' is a fixed collocation used to describe water intended for human consumption. The other options are incorrect: 'dimming' means reducing light intensity; 'stingy' describes someone who is unwilling to spend money; and 'lacquering' refers to applying a shiny coating, none of which relate to the suitability or type of water supply.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'drinking' because 'drinking water' is a fixed collocation used to describe water intended for human consumption. The other options are incorrect: 'dimming' means reducing light intensity; 'stingy' describes someone who is unwilling to spend money; and 'lacquering' refers to applying a shiny coating, none of which relate to the suitability or type of water supply.",
+          "candidate_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag accurately identifies 'drinking' as a participle used as an adjective in a fixed collocation. All distractors are correctly analyzed for their semantic incompatibility with the context. No gaps in reasoning, grammar, or collocation analysis are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation and the grammar tag. The timeout from gemma4:12b did not affect the consensus, and no valid critiques were raised by the other models requiring changes.",
+          "candidate_explanation": "The correct answer is 'drinking' because 'drinking water' is a fixed collocation used to describe water intended for human consumption. The other options are incorrect: 'dimming' means reducing light intensity and is typically used in contexts like lighting or screens, not water supplies; 'stingy' describes someone who is unwilling to spend money and is unrelated to water types; 'lacquering' refers to applying a shiny coating, which is not relevant to water supply functions. All distractors fail to match the context of a water supply's purpose, making 'drinking' the only appropriate choice.",
+          "candidate_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag accurately identifies 'drinking' as a participle used as an adjective in a fixed collocation. Distractors are correctly analyzed for their semantic and grammatical inappropriateness. No gaps in reasoning or completeness are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'drinking' because 'drinking water' is a fixed collocation used to describe water intended for human consumption. The other options are incorrect: 'dimming' means reducing light intensity and is typically used in contexts like lighting or screens, not water supplies; 'stingy' describes someone who is unwilling to spend money and is unrelated to water types; 'lacquering' refers to applying a shiny coating, which is not relevant to water supply functions. All distractors fail to match the context of a water supply's purpose, making 'drinking' the only appropriate choice.",
+          "candidate_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag incorrectly identifies 'drinking' as a 'Participle as Adjective' when it is actually a gerund/noun in the fixed collocation 'drinking water'.",
+                  "affected_text": "Collocation/Fixed Phrase (Participle as Adjective)",
+                  "correction": "Collocation/Fixed Phrase (Gerund/Noun)"
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Gerund/Noun)",
+              "overall_notes": "The grammar tag is factually incorrect because 'drinking' in 'drinking water' functions as a gerund/noun, not a participle. The explanation is otherwise semantically sound but fails due to the misapplied grammar label."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Fixed Phrase (Participle as Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 227,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject (municipal water treatment plant) can logically perform the actions implied by the distractors (fill, fulfill, fancy). This is a critical semantic analysis gap.",
+                "affected_text": "The other options are incorrect: 'fill' means to make something full; 'fulfil' means to complete an obligation or task; and 'fancy' means to have a whimsical idea.",
+                "correction": "The other options are incorrect: 'fill' (to make something full) is semantically incompatible with the subject's role (the plant cannot 'fill' herbicides from water); 'fulfil' (to complete an obligation) does not align with the action of removing contaminants; and 'fancy' (to have a whimsical idea) is unrelated to the technical process of water treatment."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation fails to explicitly connect the grammatical correctness of the base form with the semantic appropriateness of the verb in context. This creates an incomplete analysis.",
+                "affected_text": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb.",
+                "correction": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb, and 'filter' is the only option that both grammatically fits (base form) and semantically aligns with the water treatment plant's function (removing contaminants)."
+              }
+            ],
+            "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic analysis of the subject-verb relationship for distractors and fails to explicitly connect grammatical form with contextual appropriateness."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb, and 'filter' is the only option that both grammatically fits and semantically aligns with the water treatment plant's function of removing contaminants. The other options are incorrect: 'fill' (to make something full) is semantically incompatible with the plant's role (it cannot 'fill' herbicides from water); 'fulfil' (to complete an obligation) does not align with the action of removing contaminants; and 'fancy' (to have a whimsical idea) is unrelated to the technical process of water treatment. Additionally, the subject (municipal water treatment plant) must perform an action that directly relates to removing impurities, which only 'filter' accomplishes. The other options do not logically fit the context of water treatment processes.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic compatibility of each distractor with the subject's role, as highlighted by Model qwen3:14b. The grammar tag was confirmed as accurate by all models, and the timeout from Model gemma4:12b did not affect the reconciliation process.",
+          "candidate_explanation": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb, and 'filter' is the only option that both grammatically fits and semantically aligns with the water treatment plant's function of removing contaminants. The other options are incorrect: 'fill' (to make something full) is semantically incompatible with the plant's role (it cannot 'fill' herbicides from water); 'fulfil' (to complete an obligation) does not align with the action of removing contaminants; and 'fancy' (to have a whimsical idea) is unrelated to the technical process of water treatment. Additionally, the subject (municipal water treatment plant) must perform an action that directly relates to removing impurities, which only 'filter' accomplishes. The other options do not logically fit the context of water treatment processes.",
+          "candidate_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and contextually appropriate, and the semantic and collocation analysis is complete. No gaps or errors were identified."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation, with no significant disagreements. The grammar tag was confirmed as correct, and the explanation was found to be logically sound and complete.",
+          "candidate_explanation": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb, and 'filter' is the only option that both grammatically fits and semantically aligns with the water treatment plant's function of removing contaminants. The other options are incorrect: 'fill' (to make something full) is semantically incompatible with the plant's role (it cannot 'fill' herbicides from water); 'fulfil' (to complete an obligation) does not align with the action of removing contaminants; and 'fancy' (to have a whimsical idea) is unrelated to the technical process of water treatment. Additionally, the subject (municipal water treatment plant) must perform an action that directly relates to removing impurities, which only 'filter' accomplishes. The other options do not logically fit the context of water treatment processes.",
+          "candidate_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is correct and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and contextually appropriate, and all semantic/collocation gaps are addressed. No errors or omissions detected."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the explanation's accuracy and grammar tag. The timeout from gemma4:12b did not affect the consensus, and no valid critiques were raised by the other models.",
+          "candidate_explanation": "The correct answer is 'filter' because the modal verb 'must' requires a base form of the main verb, and 'filter' is the only option that both grammatically fits and semantically aligns with the water treatment plant's function of removing contaminants. The other options are incorrect: 'fill' (to make something full) is semantically incompatible with the plant's role (it cannot 'fill' herbicides from water); 'fulfil' (to complete an obligation) does not align with the action of removing contaminants; and 'fancy' (to have a whimsical idea) is unrelated to the technical process of water treatment. Additionally, the subject (municipal water treatment plant) must perform an action that directly relates to removing impurities, which only 'filter' accomplishes. The other options do not logically fit the context of water treatment processes.",
+          "candidate_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and clear semantic and collocation analysis."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and contextually appropriate, and all semantic/collocation gaps are addressed. No errors or omissions were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Grammar/Syntax (Modal Verb + Base Form)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 231,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective (Descriptive)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address the collocation between 'alone' and 'parent' in this context. While 'alone' can function as an adjective, 'lone parent' is a standard collocation, whereas 'alone parent' is less idiomatic and less commonly used in formal writing.",
+                "affected_text": "Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.",
+                "correction": "Why 'alone' is incorrect: While 'alone' can function as an adjective, it is less idiomatic in this context compared to 'lone.' The phrase 'lone parent' is a standard collocation, whereas 'alone parent' is less commonly used in formal writing."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly implies that 'alone' cannot function as an adjective in this context. While 'lone' is more appropriate, 'alone' can still function as an adjective here, though it is less idiomatic.",
+                "affected_text": "Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.",
+                "correction": "Why 'alone' is incorrect: While 'alone' can function as an adjective, it is less idiomatic in this context compared to 'lone.' The phrase 'lone parent' is a standard collocation, whereas 'alone parent' is less commonly used in formal writing."
+              }
+            ],
+            "verified_grammar_tag": "Adjective (Descriptive)",
+            "overall_notes": "The grammar tag is correct, but the explanation has semantic and reasoning gaps regarding the use of 'alone' as an adjective and its collocation with 'parent.'"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective (Descriptive)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner. This usage is specific and fits the structure 'a [adjective] parent.' \n* Why 'lonely' is incorrect: This adjective describes a *feeling* (e.g., I feel lonely), not the factual state of being single.\n* Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.\n* Why 'full' is incorrect: This adjective means completely filled and does not relate to being single or without a partner.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner. This usage is specific and fits the structure 'a [adjective] parent.' \n* Why 'lonely' is incorrect: This adjective describes a *feeling* (e.g., I feel lonely), not the factual state of being single.\n* Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.\n* Why 'full' is incorrect: This adjective means completely filled and does not relate to being single or without a partner.",
+          "candidate_grammar_tag": "Adjective (Descriptive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'lone' as the appropriate adjective for 'a lone parent,' distinguishes it from 'lonely' (emotional state), 'alone' (less idiomatic in this context), and 'full' (semantically unrelated). All grammatical, semantic, and collocational considerations are addressed without gaps or errors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner. This usage is specific and fits the structure 'a [adjective] parent.' \n* Why 'lonely' is incorrect: This adjective describes a *feeling* (e.g., I feel lonely), not the factual state of being single.\n* Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.\n* Why 'full' is incorrect: This adjective means completely filled and does not relate to being single or without a partner.",
+          "candidate_grammar_tag": "Adjective (Descriptive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and semantically appropriate, and the collocation and semantic context are properly addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner. This usage is specific and fits the structure 'a [adjective] parent.' \n* Why 'lonely' is incorrect: This adjective describes a *feeling* (e.g., I feel lonely), not the factual state of being single.\n* Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.\n* Why 'full' is incorrect: This adjective means completely filled and does not relate to being single or without a partner.",
+          "candidate_grammar_tag": "Adjective (Descriptive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address the collocation of 'lone parent' as a standard phrase, which is critical for semantic accuracy in this context.",
+                  "affected_text": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner.",
+                  "correction": "The correct answer is 'lone' because it is an adjective used to describe a parent who is single or without a partner, and 'lone parent' is a standard collocation in sociological and demographic contexts."
+                },
+                {
+                  "type": "collocation_gap",
+                  "description": "The explanation fails to explicitly contrast 'lone parent' with 'alone parent,' which is a common collocation gap in this context.",
+                  "affected_text": "Why 'alone' is incorrect: While 'alone' can describe a person, it often functions as an adverb or requires different phrasing; here, 'lone' is the specific descriptive adjective needed for this context.",
+                  "correction": "Why 'alone' is incorrect: While 'alone' can function as an adjective, 'lone parent' is the standard collocation in this context, whereas 'alone parent' is grammatically possible but semantically less precise and less commonly used in formal writing."
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The grammar tag is correct, but the explanation lacks critical collocation and semantic analysis, leading to a failure in completeness and semantic accuracy."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "The explanation correctly identifies the grammatical and semantic differences between the options. It accurately distinguishes 'lone' (attributive adjective) from 'alone' (predicative adjective/adverb) and 'lonely' (emotion-based adjective), while correctly identifying 'full' as a semantic mismatch."
+            }
+          ],
+          "pass_count": 2
         }
       ]
     }

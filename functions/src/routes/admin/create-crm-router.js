@@ -36,6 +36,7 @@ const registerPronunciationReferenceAudioRoutes = require('./pronunciation-refer
 const registerGovernanceRoutes = require('./governance');
 const registerLiveSessionRoutes = require('./live-sessions');
 const registerBookRoutes = require('./books');
+const registerTeachingSessionRoutes = require('./teaching-sessions');
 const { buildAuditLogEntry } = require('../../crm/governance-service');
 const {
     buildClassroomCreateData,
@@ -304,6 +305,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);
     registerBookRoutes(router, routeDeps);
+    registerTeachingSessionRoutes(router, routeDeps);
 
     // --- Teacher list (bypasses client Firestore security rules) ---
     router.get('/teachers', ...requireAdminHandlers, async (req, res) => {

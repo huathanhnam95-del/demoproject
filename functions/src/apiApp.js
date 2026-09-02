@@ -57,6 +57,11 @@ app.get(['/config', '/api/config'], (req, res) => {
     });
 });
 
+// Ingest beacon on page unload cleanly without 404
+app.post(['/session-end', '/api/session-end'], (_req, res) => {
+    return res.status(204).end();
+});
+
 // Emails allowed to self-promote to admin on first sign-in. Keep this to real,
 // controlled mailboxes only: any address listed here becomes an escalation path
 // for whoever can register it. Placeholder/test addresses must never appear —

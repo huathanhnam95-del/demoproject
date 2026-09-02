@@ -32,8 +32,8 @@
 
   const PROGRESS_STORAGE_PREFIX = 'entrance_test_progress_v1:';
   const LISTENING_AUDIO_BY_QUESTION = {
-    listen_write_q1: 'database/Entrance Test/Listening Q1.mp3',
-    listen_write_q2: 'database/Entrance Test/Listening Q2.mp3'
+    listen_write_q1: '/database/Entrance Test/Listening Q1.mp3',
+    listen_write_q2: '/database/Entrance Test/Listening Q2.mp3'
   };
 
   document.addEventListener('DOMContentLoaded', () => {

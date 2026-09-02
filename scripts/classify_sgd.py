@@ -11,8 +11,8 @@ import re
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODELS = ["gemma4:latest"]
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODELS = [os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")]
 TIMEOUT = 120
 
 RUBRIC = """Classify this group discussion transcript's difficulty for a PTE "Summarize Group Discussion" task.

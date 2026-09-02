@@ -132,3 +132,21 @@
     grid-column: 2 / -1;
   }
 }
+
+/* ── Companion Meta Row ──
+   Status that belongs to the clip but not inside the player grid — Repeat
+   Sentence's remaining-replays badge, for instance. Sits directly under the
+   box and shares its centred width. */
+.practice-audio-meta {
+  width: min(470px, 100%);
+  margin: -12px auto 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+}
+
+.practice-audio-meta:empty {
+  display: none;
+}

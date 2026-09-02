@@ -70,6 +70,8 @@ async function openNotes(page, route, entries) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   context.addInitScript(() => {
+    window.sessionStorage.setItem('guestMode', 'true');
+    window.sessionStorage.setItem('welcomeModalDismissed', 'true');
     window.localStorage.setItem('userStatus', 'guest');
     window.localStorage.setItem('hasSeenScopeTutorial', 'true');
     window.localStorage.setItem('notesModeFirstUse', 'true');
@@ -109,7 +111,10 @@ async function openNotes(page, route, entries) {
     await page.evaluate(() => document.querySelector('.spc-picker-prev')?.click());
     await page.waitForFunction(() => document.getElementById('current-question-id-notes')?.textContent?.trim() === '2');
     await page.evaluate(() => document.getElementById('play-notes-btn')?.click());
-    await page.waitForFunction(() => /\/2\.mp3(?:\?|$)/.test(document.getElementById('notes-audio')?.src || ''), { timeout: 30000 });
+    await page.waitForFunction(() => {
+      const audio = document.getElementById('notes-audio');
+      return /\/2\.mp3(?:\?|$)/.test(audio?.src || '') && (audio?.readyState || 0) >= 1;
+    }, { timeout: 30000 });
 
     const playback = await page.evaluate(() => ({
       url: window.location.pathname,

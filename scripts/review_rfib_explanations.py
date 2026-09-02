@@ -12,8 +12,8 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 
 INPUT_FILE = r"public\database\RFIB\RFIB Final ver.xlsx"
 SIDECAR_FILE = r"public\database\RFIB\RFIB_cohesion_enrichment.jsonl"

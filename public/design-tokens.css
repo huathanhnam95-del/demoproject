@@ -112,12 +112,27 @@
   --border-default: var(--gray-200);
   --border-light:   var(--gray-200);
 
-  /* Spacing scale */
+  /* Spacing scale.
+     The original five steps (4/8/16/24/32) doubled from 8 to 16 with nothing between,
+     which is why the rendered pages use 6, 10, 12, 14 and 18 far more often than the
+     scale itself — 10px appears 46 times as a gap, 16px four times as a padding. The
+     answer is a scale that covers the range real UI needs, not forcing components onto
+     an inadequate one. Existing off-scale values are being migrated incrementally;
+     new work should reference these. */
+  /* The five original steps keep their values — they have live consumers. */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
+
+  /* Added steps, covering the range the pages actually use. */
+  --space-2xs: 2px;
+  --space-xs-plus: 6px;
+  --space-sm-plus: 10px;
+  --space-ms: 12px;
+  --space-ml: 20px;
+  --space-2xl: 40px;
 
   /* Typography */
   --font-display: 'Outfit', system-ui, sans-serif;
@@ -125,10 +140,29 @@
   --font-content: 'Lora', Georgia, serif;
   --font-mono:    'Roboto Mono', monospace;
 
-  /* Elevations */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Type scale.
+     The practice page rendered twenty distinct sizes, five of them inside a 1.1px band
+     (14.4 / 14 / 13.8 / 13.6 / 13.3). No reader can tell those apart, but each is a
+     separate decision to maintain and a separate chance for two adjacent labels to
+     disagree by a fraction of a pixel — which is what makes a page feel unresolved
+     without any single element looking wrong. Six steps, fixed px so nested rem values
+     cannot compound into new sizes. */
+  --text-2xs: 12px;  /* badges, version stamp, dense meta */
+  --text-xs:  13px;  /* captions, footnotes, table meta   */
+  --text-sm:  15px;  /* secondary UI, controls            */
+  --text-md:  16px;  /* body                              */
+  --text-lg:  18px;  /* card titles, lead paragraphs      */
+  --text-xl:  24px;  /* section headings                  */
+  --text-2xl: 40px;  /* page title                        */
+
+  /* Elevations — three steps, one shadow colour.
+     Nine distinct shadows rendered on the practice page, in four different tints
+     (neutral, Google Blue #1a73e8, emerald, and Google's own Material elevation via a
+     third-party widget). Depth reads as a single physical rule; four rules at once stop
+     the page reading as one plane. The tint is now the slate ink used everywhere else. */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 10px 30px -4px rgba(15, 23, 42, 0.12);
 
   /* Focus — one ring for the whole app. A keyboard walk of the practice page found five
      different treatments (1px auto black, 3px blue at 35% alpha, 3px near-black, 2px

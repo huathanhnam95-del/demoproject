@@ -400,7 +400,7 @@ const ColloDictateMode = (() => {
 
     const phraseAtStart = currentPhrase;
     const key = getColloAudioKey(phraseAtStart);
-    const url = `database/collo-dictate/audio/${key}.wav`;
+    const url = `/database/collo-dictate/audio/${key}.wav`;
     const sessionId = (playbackSession += 1);
 
     els.playBtn.disabled = true;

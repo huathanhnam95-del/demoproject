@@ -196,14 +196,23 @@ class AsqMode {
   }
 
   async loadAudioManifestIfNeeded() {
-    if (this.audioManifest) return;
-    const res = await fetch(`/database/quiz/ASQ/audio/manifest.json?v=${Date.now()}`);
-    if (!res.ok) {
+    // The manifest is optional — every clip is named `<id>.mp3` and getAudioSrcForId
+    // falls back to that convention. The old guard was `if (this.audioManifest) return`,
+    // which never short-circuits when the fetch failed (null is falsy), so a missing
+    // manifest was re-requested — and re-404'd — on every question.
+    if (this.audioManifestLoaded) return;
+    this.audioManifestLoaded = true;
+    try {
+      const res = await fetch(`/database/quiz/ASQ/audio/manifest.json?v=${Date.now()}`);
+      if (!res.ok) {
+        this.audioManifest = null;
+        return;
+      }
+      const payload = await res.json().catch(() => null);
+      this.audioManifest = this.normalizeManifestPayload(payload);
+    } catch (_error) {
       this.audioManifest = null;
-      return;
     }
-    const payload = await res.json().catch(() => null);
-    this.audioManifest = this.normalizeManifestPayload(payload);
   }
 
   // ---------------------------------------------------------------------------
@@ -284,11 +293,22 @@ class AsqMode {
   }
 
   pausePromptAudio() {
-    const { promptAudio, playBtn } = this.els;
+    const { promptAudio } = this.els;
     if (promptAudio) {
       try { promptAudio.pause(); } catch (_) { /* intentional */ }
     }
-    if (playBtn) playBtn.textContent = 'Play';
+    // The audio element's own `pause` event repaints the button, but a stubbed
+    // element (tests) or a pause before any src is set never fires it.
+    this.setPlayButtonLabel('Play');
+  }
+
+  /** Repaint the shared audio-player button. Falls back to textContent when the
+   *  icon/label spans are missing, so a bare button still reads correctly. */
+  setPlayButtonLabel(label) {
+    const { playBtn, playIcon, playLabel } = this.els;
+    if (playLabel) playLabel.textContent = label;
+    else if (playBtn && !playIcon) playBtn.textContent = label;
+    if (playIcon) playIcon.textContent = label === 'Pause' ? 'pause' : 'play_arrow';
   }
 
   resetRecordingControls({ showRecordButton = true, showRedoButton = false } = {}) {
@@ -324,6 +344,8 @@ class AsqMode {
     audioEl.src = src || '';
     audioEl.load();
     this.hasAudioSrc = !!src;
+    this.audioPlayer?.reset();
+    this.audioPlayer?.setEnabled(this.hasAudioSrc);
 
     // Show record button and hide redo button when loading a new question
     if (recordBtn) recordBtn.style.display = '';
@@ -369,7 +391,6 @@ class AsqMode {
 
   playPrompt() {
     const audioEl = this.els.promptAudio;
-    const playBtn = this.els.playBtn;
     if (!audioEl) return;
     if (!this.hasAudioSrc) {
       this.setStatus('Prompt audio is not available yet for this question.', 'error');
@@ -377,13 +398,14 @@ class AsqMode {
     }
 
     if (audioEl.paused) {
+      if (this.els.volume) audioEl.volume = Number(this.els.volume.value);
       audioEl.play().catch(() => { /* intentional */ });
-      if (playBtn) playBtn.textContent = 'Pause';
+      this.setPlayButtonLabel('Pause');
       return;
     }
 
     audioEl.pause();
-    if (playBtn) playBtn.textContent = 'Play';
+    this.setPlayButtonLabel('Play');
   }
 
   // ---------------------------------------------------------------------------
@@ -727,6 +749,10 @@ class AsqMode {
       stopBtn: document.getElementById('asq-stop-btn'),
       redoBtn: document.getElementById('asq-redo-btn'),
       promptAudio: document.getElementById('asq-prompt-audio'),
+      playIcon: document.getElementById('asq-play-icon'),
+      playLabel: document.getElementById('asq-play-label'),
+      seek: document.getElementById('asq-seek'),
+      volume: document.getElementById('asq-volume'),
       questionText: document.getElementById('asq-question-text'),
       statusMessage: document.getElementById('asq-status-message'),
       userAudioBox: document.getElementById('asq-user-audio-box'),
@@ -744,10 +770,20 @@ class AsqMode {
     if (stopBtn) stopBtn.addEventListener('click', () => this.stopRecording());
     if (redoBtn) redoBtn.addEventListener('click', () => this.redoQuestion());
 
+    // Progress track, timestamp and volume come from the shared component. The mode
+    // keeps ownership of the Play click so it can report a missing clip, so the
+    // component is attached with bindPlayButton disabled.
+    this.audioPlayer = window.PracticeAudioPlayer?.attach({
+      prefix: 'asq',
+      audio: promptAudio,
+      playButtonId: 'asq-play-prompt-btn',
+      bindPlayButton: false
+    }) || null;
+
     // Fix: assign onended once to avoid listener accumulation
     if (promptAudio) {
       promptAudio.addEventListener('ended', () => {
-        if (playBtn) playBtn.textContent = 'Play';
+        this.setPlayButtonLabel('Play');
       });
     }
 

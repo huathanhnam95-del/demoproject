@@ -86,8 +86,9 @@
       next: () => shiftSelectOption('asq-question-select', 1)
     },
     legacyContainerSelector: '#mode-asq > .question-selector',
+    // The prompt Play control now lives inside the shared .practice-audio-player box
+    // in the panel body, so it is deliberately not hoisted into the toolbar.
     controls: [
-      { sourceId: 'asq-play-prompt-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
       { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record' },
       { sourceId: 'asq-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop' },
       { sourceId: 'asq-redo-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'retry' }
@@ -273,12 +274,12 @@
       previousButtonId: 'back-btn-speak',
       nextButtonId: 'next-btn-speak'
     },
+    // Play and the replay counter now live inside the shared .practice-audio-player
+    // box in the panel body, so neither is hoisted into the toolbar.
     controls: [
-      { sourceId: 'play-btn-speak', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
       { sourceId: 'record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record' },
       { sourceId: 'check-btn-speak', slot: 'attempt', level: 'basic', order: 2, actionRole: 'primary' },
       { sourceId: 'retry-btn-speak', slot: 'attempt', level: 'basic', order: 3, actionRole: 'retry' },
-      { sourceId: 'replay-counter-speak', slot: 'media', level: 'basic', order: 2 },
       { sourceId: 'shadow-mode-btn', slot: 'advanced-action', level: 'advanced', order: 2, actionRole: 'support' },
       { sourceId: 'recommended-btn-speak', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
       { sourceId: 'progress-bar-speak', slot: 'advanced-setting', level: 'advanced', order: 1 },

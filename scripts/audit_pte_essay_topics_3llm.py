@@ -14,9 +14,9 @@ if hasattr(sys.stdout, 'reconfigure'):
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 MODELS = {
-    "gm": "gemma4:latest",
-    "qw": "qwen3:14b",
-    "dr": "deepseek-r1:14b"
+    "gm": os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b"),
+    "qw": os.getenv("LOCAL_QWEN_MODEL", "qwen3:14b"),
+    "dr": os.getenv("LOCAL_DEEPSEEK_MODEL", "deepseek-r1:14b")
 }
 
 ALLOWED_TOPICS = [
@@ -77,7 +77,7 @@ def clean_response(raw: str) -> str:
 
 def query_ollama(model_name: str, prompt: str, temperature: float = 0.1, max_retries: int = 3, timeout: int = 90) -> dict | None:
     eff_prompt = prompt
-    if "qwen3" in model_name.lower():
+    if "qwen" in model_name.lower():
         eff_prompt = "/no_think\n\n" + prompt
 
     payload = {

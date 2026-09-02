@@ -11,8 +11,8 @@ from html.parser import HTMLParser
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 EXCEL_PATH = r"C:\Cursor AI\public\database\Highlight Incorrect Words\HIW\HIW.xlsx"
 ALLOWED_HTML_TAGS = {"p", "strong", "b", "em", "i", "ul", "ol", "li", "br", "h3", "h4"}
 SANITIZE_EXISTING_ONLY = "--sanitize-existing-only" in sys.argv

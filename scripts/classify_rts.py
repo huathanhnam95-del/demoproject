@@ -17,8 +17,8 @@ BACKUP_PATH = r"C:\Cursor AI\public\database\RTS\rts_questions_backup.json"
 LOG_PATH = r"C:\Cursor AI\scratch\rts_classification_log.json"
 
 # Models
-MODELS = ["gemma4:latest"]
-API_URL = "http://localhost:11434/api/chat"
+MODELS = [os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")]
+API_URL = os.getenv("OLLAMA_CHAT_URL", "http://localhost:11434/api/chat")
 
 RUBRIC = """RTS Classification Rubric:
 | Factor | Weight | Level 1 (Easy) | Level 2 (Medium) | Level 3 (Hard) |

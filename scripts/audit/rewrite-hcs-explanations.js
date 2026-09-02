@@ -6,7 +6,7 @@ const ExcelJS = require('exceljs');
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
 const WORKBOOK_PATH = path.join(ROOT_DIR, 'public', 'database', 'HCS', 'HCS', 'HCS.xlsx');
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma4:latest';
+const OLLAMA_MODEL = process.env.LOCAL_GEMMA_MODEL || process.env.OLLAMA_MODEL || 'gemma4:12b';
 const ALLOWED_TAGS = new Set(['p', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'br', 'h3', 'h4']);
 const POSITION_REFERENCE_RE = /\b((first|second|third|fourth|1st|2nd|3rd|4th)\s+(choice|option|paragraph|summary|distractor|one)|(choice|option|paragraph|summary|distractor)\s*(1|2|3|4|one|two|three|four|first|second|third|fourth))\b/i;
 

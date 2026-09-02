@@ -990,17 +990,22 @@
   font-family: var(--font-content) !important;
 }
 
-/* Read-aloud measure.
-   The prompt rendered 900px wide at 18.4px — about 98 characters per line — while the
-   instruction directly above it sat at 480px (~65ch) on the same left edge. Long measure
-   causes line-tracking errors: the eye returns to the wrong line. Reading silently you
-   recover invisibly; reading aloud under a timer you stumble, and the attempt is scored
-   on the stumble. Family is unchanged — the serif treatment above is deliberate. */
+/* Read-aloud measure — PRODUCT DECISION, do not re-narrow without asking.
+
+   History: the prompt was capped at 50ch, then at 52ch with the box centred, on the
+   argument that a long measure causes line-tracking errors and that reading aloud under
+   a timer is scored on the resulting stumble. That is a real effect, but the owner
+   reviewed both versions on 2026-09-01 and chose the full column: a passage that stops
+   short of its container reads as a broken layout, and a centred 65-character column
+   still reads as short.
+
+   The line is not unbounded — `.ra-zone-passage` caps the column at 900px (860px inside
+   its padding), which is what actually limits the measure here. If that zone width ever
+   grows, reintroduce a cap on this rule rather than letting the line run.
+   Family is unchanged — the serif treatment above is deliberate. */
 #mode-read-aloud #ra-text-prompt,
 #mode-read-aloud .ra-text {
-  /* `ch` is the width of "0", which in Lora is wider than its average lowercase glyph,
-     so 62ch still measured ~77 rendered characters. 50ch lands at ~63. */
-  max-width: 50ch;
+  max-width: none;
 }
 
 /* Repeat Sentence keeps its replay status beside Play instead of leaving an

@@ -15,8 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
-const https = require('https');
-const { chromium } = require('playwright');
+const { chromium } = require(path.resolve(__dirname, '../../node_modules/playwright'));
 
 // Load local env defaults (ADMIN_EMAIL etc.) for audit helpers.
 require('dotenv').config();

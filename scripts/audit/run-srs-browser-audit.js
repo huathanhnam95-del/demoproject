@@ -5,9 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const { spawn } = require('child_process');
-
-const { chromium } = require('playwright');
+const { chromium } = require(path.resolve(__dirname, '../../node_modules/playwright'));
 
 const {
     createAuditUser,

@@ -88,6 +88,7 @@ async function main() {
         `);
         await page.evaluate(installMemoryLocalStorage);
         await page.addStyleTag({ path: path.join(ROOT, 'public', 'crm-admin.css') });
+        await page.addScriptTag({ path: path.join(ROOT, 'public', 'js', 'crm', 'books-word-segmenter.js') });
         await page.addScriptTag({ path: path.join(ROOT, 'public', 'js', 'crm', 'books-workspace.js') });
 
         await page.evaluate(async ({ book, summary, existingThread, citedText, legacyCitationText, legacyCitationSnippet, longNoteText }) => {

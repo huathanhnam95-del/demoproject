@@ -1394,22 +1394,19 @@
     }
   }
 
-  async function maybeEnableAsqModeInLauncher() {
-    try {
-      const response = await fetch('/database/quiz/ASQ/audio/manifest.json', { method: 'HEAD' });
-      if (!response.ok) return;
-
-    // The PTE scope config now includes 'asq' in its visibleModes Set by default
-    // We only need to ensure the manifest is actually usable
+  function maybeEnableAsqModeInLauncher() {
+    // This used to HEAD-probe /database/quiz/ASQ/audio/manifest.json and only reveal ASQ
+    // if it returned 200. The gate stopped doing anything once 'asq' became part of the
+    // PTE scope's default visibleModes, but the probe stayed — and the manifest does not
+    // exist, so every page load logged a 404. It is optional by design: all 2,344 ASQ
+    // clips are named `<id>.mp3` and asq-mode.js falls back to exactly that convention,
+    // so a manifest would only restate it. Probe removed; the mode is enabled directly.
     const pteVisible = PRACTICE_SCOPE_CONFIG?.[SCOPE_PTE]?.visibleModes;
     if (pteVisible instanceof Set) {
       pteVisible.add('asq');
     }
 
-      renderPracticeLauncher();
-    } catch (_) {
-      // Keep ASQ hidden when assets are missing/unreachable.
-    }
+    renderPracticeLauncher();
   }
 
   function setPracticeScope(scope, { persist = true } = {}) {
@@ -2199,8 +2196,12 @@
       } else if (mode === 'speak' && speakDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);
-      } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
-        await window.TakeNotesMode.loadEntries();
+      } else if (mode === 'notes') {
+        if (window.TakeNotesMode && typeof window.TakeNotesMode.onEnter === 'function') {
+          await window.TakeNotesMode.onEnter();
+        } else if (window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
+          await window.TakeNotesMode.loadEntries();
+        }
       } else if (mode === 'rmcsa' && window.RMCSAMode && typeof window.RMCSAMode.activate === 'function') {
         await window.RMCSAMode.activate();
       } else if (mode === 'rmcma' && window.RMCMAMode && typeof window.RMCMAMode.activate === 'function') {
@@ -2555,7 +2556,9 @@
       const playBtnSpeak = document.getElementById('play-btn-speak');
       if (playBtnSpeak) {
         playBtnSpeak.disabled = false;
-        playBtnSpeak.style.display = 'inline-block';
+        // '' restores the stylesheet display; the shared audio-player button is a flex
+        // row (icon + label), so forcing inline-block here would break its layout.
+        playBtnSpeak.style.display = '';
         playBtnSpeak.title = 'Play audio';
       }
 
@@ -3722,6 +3725,19 @@
   const recordBtn = document.getElementById("record-btn");
   const checkBtnSpeak = document.getElementById("check-btn-speak");
   const retryBtnSpeak = document.getElementById("retry-btn-speak"); // NEW
+
+  // Repeat Sentence shows the shared Listening audio surface (position, duration,
+  // volume) around its existing Play control. The click handler stays in this file
+  // because Play here spends a replay rather than toggling playback, and the track
+  // is read-only for the same reason.
+  window.speakAudioPlayer = window.PracticeAudioPlayer?.attach({
+    prefix: "speak",
+    audio,
+    playButtonId: "play-btn-speak",
+    bindPlayButton: false,
+    updatePlayLabel: false,
+    allowSeek: false
+  }) || null;
 
   // Mastery status remove buttons
   const removeMasteryTypeBtn = document.getElementById("remove-mastery-type-btn");
@@ -6098,7 +6114,7 @@
     for (let i = 0; i < tryExtensions.length; i++) {
       const ext = tryExtensions[i];
       const testFile = `${baseFilename}.${ext}`;
-      const testPath = `database/extended/audio/${testFile}`;
+      const testPath = `/database/extended/audio/${testFile}`;
 
       const exists = await checkFileExists(testPath);
       if (isStaleModeLoadRequest('extended', requestId)) {
@@ -6120,7 +6136,7 @@
       return;
     }
 
-    const audioPath = `database/extended/audio/${foundFile}?t=${Date.now()}`;
+    const audioPath = `/database/extended/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
 
     // Clear any existing source elements
@@ -7371,7 +7387,7 @@
       const checkIndex = (startIndex + i) % tryExtensions.length;
       const ext = tryExtensions[checkIndex];
       const testFile = `${baseFilename}.${ext}`;
-      const testPath = `database/${mode}/audio/${testFile}`;
+      const testPath = `/database/${mode}/audio/${testFile}`;
 
       log.debug(`[playSameVocabAudio] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testFile}`);
       const exists = await checkFileExists(testPath);
@@ -7389,7 +7405,7 @@
       return;
     }
 
-    const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
+    const audioPath = `/database/${mode}/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
 
     log.debug(`Playing audio: ${audioPath} (MIME type: ${mimeType})`);
@@ -8379,7 +8395,7 @@
               if (retryBtnSpeak) retryBtnSpeak.style.display = 'none';
               if (checkBtnSpeak) checkBtnSpeak.style.display = 'none';
               resetScaffolding();
-              if (playBtnSpeak) playBtnSpeak.style.display = 'inline-block';
+              if (playBtnSpeak) playBtnSpeak.style.display = '';
               window.SpeakingPracticeController?.sync?.('speak');
             }
           });
@@ -8480,7 +8496,7 @@
       const checkIndex = (startIndex + i) % tryExtensions.length;
       const ext = tryExtensions[checkIndex];
       const testFile = `${baseFilename}.${ext}`;
-      const testPath = `database/${mode}/audio/${testFile}`;
+      const testPath = `/database/${mode}/audio/${testFile}`;
 
       log.debug(`[loadQuestion] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testPath}`);
       const exists = await checkFileExists(testPath);
@@ -8511,7 +8527,7 @@
       correctSentenceSpeak = question.correctSentence;
     }
 
-    const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
+    const audioPath = `/database/${mode}/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
 
     // Clear any existing source elements
@@ -8568,7 +8584,7 @@
       if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
       if (retryBtnSpeak) retryBtnSpeak.style.display = "none";
       if (recordBtn) recordBtn.style.display = "inline-block";
-      if (playBtnSpeak) playBtnSpeak.style.display = "inline-block"; // Reset Play button
+      if (playBtnSpeak) playBtnSpeak.style.display = ""; // Reset Play button
     }
 
     // Reset scores and hide panels
@@ -9930,7 +9946,7 @@
           }
         }
 
-        playBtnSpeak.style.display = (timesLeft === null || timesLeft > 0) ? 'inline-block' : 'none';
+        playBtnSpeak.style.display = (timesLeft === null || timesLeft > 0) ? '' : 'none';
       }
 
       startAttemptContext('speak', currentSpeakQuestionId);

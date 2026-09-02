@@ -163,6 +163,16 @@
 
     }
 
+    function getAudioPlayer() {
+        if (!el.audioPlayer && window.PracticeAudioPlayer) {
+            el.audioPlayer = window.PracticeAudioPlayer.attach({
+                prefix: 'sgd',
+                audioId: 'sgd-audio'
+            });
+        }
+        return el.audioPlayer;
+    }
+
     function reset() {
         currentAudioLoadToken += 1;
         hide(el.practiceArea);
@@ -173,6 +183,11 @@
             el.audio.pause();
             el.audio.removeAttribute('src');
             el.audio.load();
+        }
+        const player = getAudioPlayer();
+        if (player) {
+            player.reset();
+            player.setEnabled(true);
         }
         if (el.audio && el.audio.parentElement) {
             el.audio.parentElement.classList.remove('sgd-audio-loading');
@@ -244,6 +259,7 @@
         el.topicDisplay = document.getElementById('sgd-topic');
         el.audio = document.getElementById('sgd-audio');
         el.audioStatus = document.getElementById('sgd-audio-status');
+        getAudioPlayer();
         el.speakerTabs = document.getElementById('sgd-speaker-tabs');
         el.notePanels = document.getElementById('sgd-note-panels');
         el.nextStepBtn = document.getElementById('sgd-next-step-btn');
@@ -557,7 +573,7 @@
                 }
 
                 // Fallback: Excel
-                const excelPath = 'database/SGD/SGD/SGD.xlsx';
+                const excelPath = '/database/SGD/SGD/SGD.xlsx';
                 const resp = await fetch(excelPath);
                 if (!resp.ok) throw new Error(`Excel not found (${resp.status})`);
                 const ab = await resp.arrayBuffer();
@@ -908,6 +924,11 @@
             el.audio.removeAttribute('src');
             el.audio.load();
         }
+        const player = getAudioPlayer();
+        if (player) {
+            player.reset();
+            player.setEnabled(false);
+        }
 
         const cachedAudio = audioAvailabilityCache.get(String(audioId));
         if (cachedAudio !== undefined) {
@@ -916,9 +937,13 @@
                     el.audio.src = cachedAudio;
                     el.audio.load();
                 }
+                const activePlayer = getAudioPlayer();
+                if (activePlayer) activePlayer.setEnabled(true);
                 setAudioStatus('');
                 setProceedEnabled(true);
             } else {
+                const inactivePlayer = getAudioPlayer();
+                if (inactivePlayer) inactivePlayer.setEnabled(false);
                 setAudioStatus('Audio not available for this question yet.', 'unavailable');
                 setProceedEnabled(false);
             }
@@ -935,6 +960,8 @@
                     el.audio.src = currentEntry.audioUrl;
                     el.audio.load();
                 }
+                const activePlayer = getAudioPlayer();
+                if (activePlayer) activePlayer.setEnabled(true);
                 audioAvailabilityCache.set(String(audioId), currentEntry.audioUrl);
                 setAudioStatus('');
                 setProceedEnabled(true);
@@ -944,7 +971,7 @@
         }
 
         const tryExts = ['mp3', 'm4a', 'wav', 'aac', 'ogg'];
-        const basePath = `database/SGD/audio/${audioId}`;
+        const basePath = `/database/SGD/audio/${audioId}`;
         let found = false;
         let resolvedPath = '';
         for (const ext of tryExts) {
@@ -956,6 +983,8 @@
                     el.audio.src = path;
                     el.audio.load();
                 }
+                const activePlayer = getAudioPlayer();
+                if (activePlayer) activePlayer.setEnabled(true);
                 resolvedPath = path;
                 found = true;
                 break;
@@ -969,6 +998,8 @@
                 el.audio.removeAttribute('src');
                 el.audio.load();
             }
+            const inactivePlayer = getAudioPlayer();
+            if (inactivePlayer) inactivePlayer.setEnabled(false);
             setAudioStatus('Audio not available for this question yet.', 'unavailable');
             setProceedEnabled(false);
         } else {

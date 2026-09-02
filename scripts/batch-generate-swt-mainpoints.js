@@ -13,8 +13,8 @@ const fs = require('fs');
 const path = require('path');
 
 // ── Config ──
-const OLLAMA_URL = 'http://localhost:11434/api/generate';
-const MODEL = 'gemma4:latest';
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
+const MODEL = process.env.LOCAL_GEMMA_MODEL || process.env.OLLAMA_MODEL || 'gemma4:12b';
 const SWT_JSON_PATH = path.resolve(__dirname, '../public/database/Summarize Written Text/SWT/swt-questions.json');
 
 const CONCURRENCY = parseInt(process.env.CONCURRENCY || '1', 10);

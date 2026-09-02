@@ -934,9 +934,9 @@
         </div>
         <div id="difficulty-badge" class="difficulty-badge" style="display: none;"
           title="Tap to configure Smart Difficulty" role="button" tabindex="0" aria-label="Smart Difficulty settings">
-          <span class="diff-icon">🎯</span>
+          <span class="diff-icon material-symbols-outlined" aria-hidden="true">target</span>
           <span id="diff-level-text" class="diff-level-text">Guided</span>
-          <span class="diff-settings-hint">⚙</span>
+          <span class="diff-settings-hint material-symbols-outlined" aria-hidden="true">tune</span>
         </div>
       </div>
 
@@ -1742,7 +1742,7 @@
             </div>
             <div class="whats-this-container-compact">
               <button id="what-is-this-btn" class="btn-secondary btn-compact">
-                <span class="icon">💡</span> Help me choose a mode
+                <span class="icon material-symbols-outlined" aria-hidden="true">lightbulb</span> Help me choose a mode
               </button>
             </div>
           </div>
@@ -2582,7 +2582,6 @@
         <div class="unified-controls">
           <div class="control-toolbar">
             <div class="function-group">
-              <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
               <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
               <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
                 style="display: none;">Check</button>
@@ -2593,10 +2592,33 @@
             <div class="utility-group">
               <button id="shadow-mode-btn" class="tool-btn" title="Shadow Mode (Cost: 5c)"
                 style="display: none;">🎙️</button>
-              <span id="replay-counter-speak" class="badge-status badge-replay"
-                title="Audio replays remaining for this question"></span>
             </div>
           </div>
+        </div>
+
+        <!-- Sentence audio uses the shared Listening player component. Repeat Sentence
+             keeps exam replay semantics — every Play spends one replay and restarts the
+             clip — so the track is a read-only progress bar with seeking disabled. -->
+        <section class="speak-audio practice-audio-player" aria-label="Sentence audio">
+          <button id="play-btn-speak" class="speak-play-btn" type="button" title="Play audio"
+            aria-label="Play sentence audio">
+            <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span>Play</span>
+          </button>
+          <div class="speak-progress-wrap">
+            <div class="speak-progress" aria-hidden="true">
+              <div id="speak-progress-fill" class="speak-progress-fill"></div>
+            </div>
+            <input id="speak-seek" class="speak-seek" type="range" min="0" max="100" step="0.1" value="0" disabled
+              aria-label="Sentence audio timeline; replays are limited so seeking is disabled">
+          </div>
+          <span id="speak-audio-time" class="speak-audio-time">00:00 / 00:00</span>
+          <label class="speak-volume-label" for="speak-volume">Volume</label>
+          <input id="speak-volume" class="speak-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
+        <div class="practice-audio-meta">
+          <span id="replay-counter-speak" class="badge-status badge-replay"
+            title="Audio replays remaining for this question"></span>
         </div>
         <div id="score-speak" class="score" data-spc-level="advanced" hidden>Points: 0</div>
 
@@ -3475,9 +3497,13 @@
 <!-- SST Mode Panel -->
 <div id="mode-sst" class="mode-panel" style="display: none;">
   <div class="sst-nav" role="group" aria-label="Summarize Spoken Text question navigation">
-    <button id="sst-prev-btn" class="ra-v7-icon-btn" type="button" aria-label="Previous question">Previous</button>
+    <button id="sst-prev-btn" class="ra-v7-icon-btn" type="button" aria-label="Previous question" title="Previous question">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+    </button>
     <select id="sst-question-select" class="sst-question-select" aria-label="Select a question"></select>
-    <button id="sst-next-btn" class="ra-v7-icon-btn" type="button" aria-label="Next question">Next</button>
+    <button id="sst-next-btn" class="ra-v7-icon-btn" type="button" aria-label="Next question" title="Next question">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+    </button>
   </div>
   <div class="sst-container">
     <p class="sst-instructions">You will hear a short lecture. Write a summary for a fellow student who was not present at the lecture. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.</p>
@@ -4188,8 +4214,28 @@
           <button id="play-notes-btn" class="modern-btn modern-btn--play" type="button">Play</button>
         </div>
 
-        <!-- Practice Area (hidden until Play clicked) -->
-        <div id="notes-practice-area" style="display: none;">
+        <!-- Practice Area -->
+        <div id="notes-practice-area">
+          <!-- Step 0: Lecture Overview / Ready -->
+          <div id="notes-step-ready" class="notes-step">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Overview</span>
+              <h4 id="notes-ready-title">Lecture Overview</h4>
+            </div>
+            <div class="notes-ready-body">
+              <p id="notes-ready-desc" class="notes-ready-desc">Listen to the lecture audio and type your key notes as you listen.</p>
+              <div class="notes-ready-tags" id="notes-ready-tags">
+                <span id="notes-ready-video-tag" class="notes-tag notes-tag--video" style="display: none;">🎥 Guiding Video Available</span>
+                <span id="notes-ready-audio-tag" class="notes-tag notes-tag--audio">🎧 Lecture Audio Ready</span>
+              </div>
+            </div>
+            <div class="notes-ready-controls">
+              <button id="notes-start-btn" class="modern-btn modern-btn--play" type="button">
+                Start Lecture ▶
+              </button>
+            </div>
+          </div>
+
           <!-- Step 1: Guiding Video (if available) -->
           <div id="notes-step-video" class="notes-step" style="display: none;">
             <div class="notes-step-header">
@@ -4201,7 +4247,7 @@
             </div>
             <div class="notes-video-controls">
               <button id="notes-skip-video-btn" class="modern-btn modern-btn--hint" type="button">
-                Skip Guiding Video →
+                Proceed to Notes →
               </button>
             </div>
           </div>
@@ -4212,16 +4258,33 @@
               <span class="notes-step-badge">Step 2</span>
               <h4>Listen and Take Notes</h4>
             </div>
-            <div class="notes-audio-player">
-              <audio id="notes-audio" controls></audio>
-              <p id="notes-audio-status" class="notes-audio-status" role="status" hidden></p>
-            </div>
+            <section class="notes-audio practice-audio-player" aria-label="Lecture audio">
+              <button id="notes-play-btn" class="notes-play-btn" type="button" aria-label="Play lecture audio">
+                <span id="notes-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                <span id="notes-play-label">Play</span>
+              </button>
+              <div class="notes-progress-wrap">
+                <div class="notes-progress" aria-hidden="true">
+                  <div id="notes-progress-fill" class="notes-progress-fill"></div>
+                </div>
+                <input id="notes-seek" class="notes-seek" type="range" min="0" max="100" step="0.1" value="0"
+                  aria-label="Lecture audio timeline">
+              </div>
+              <span id="notes-audio-time" class="notes-audio-time">00:00 / 00:00</span>
+              <label class="notes-volume-label" for="notes-volume">Volume</label>
+              <input id="notes-volume" class="notes-volume" type="range" min="0" max="1" step="0.05" value="1">
+            </section>
+            <audio id="notes-audio" preload="auto"></audio>
+            <p id="notes-audio-status" class="notes-audio-status" role="status" hidden></p>
             <div class="notes-textarea-wrapper">
               <label for="notes-user-input">Your Notes:</label>
               <textarea id="notes-user-input" rows="8" placeholder="Type your notes here as you listen..."></textarea>
             </div>
             <div class="notes-submit-controls">
               <button id="notes-submit-btn" class="modern-btn modern-btn--check" type="button">
+                Submit Notes
+              </button>
+              <button id="notes-in-card-submit-btn" class="modern-btn modern-btn--check" type="button">
                 Submit Notes
               </button>
             </div>
@@ -4252,6 +4315,9 @@
             </div>
             <div class="notes-results-controls">
               <button id="notes-retry-btn" class="modern-btn modern-btn--retry" type="button">
+                Try Again
+              </button>
+              <button id="notes-in-card-retry-btn" class="modern-btn modern-btn--retry" type="button">
                 Try Again
               </button>
             </div>
@@ -4334,9 +4400,23 @@
               <h4>Listen & Take Notes</h4>
             </div>
             <div id="sgd-topic" class="sgd-topic-display"></div>
-            <div class="notes-audio-player">
-              <audio id="sgd-audio" controls></audio>
-            </div>
+            <section class="sgd-audio practice-audio-player" aria-label="Discussion audio">
+              <button id="sgd-play-btn" class="sgd-play-btn" type="button" aria-label="Play discussion audio">
+                <span id="sgd-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                <span id="sgd-play-label">Play</span>
+              </button>
+              <div class="sgd-progress-wrap">
+                <div class="sgd-progress" aria-hidden="true">
+                  <div id="sgd-progress-fill" class="sgd-progress-fill"></div>
+                </div>
+                <input id="sgd-seek" class="sgd-seek" type="range" min="0" max="100" step="0.1" value="0"
+                  aria-label="Discussion audio timeline">
+              </div>
+              <span id="sgd-audio-time" class="sgd-audio-time">00:00 / 00:00</span>
+              <label class="sgd-volume-label" for="sgd-volume">Volume</label>
+              <input id="sgd-volume" class="sgd-volume" type="range" min="0" max="1" step="0.05" value="1">
+            </section>
+            <audio id="sgd-audio" preload="auto"></audio>
             <div id="sgd-audio-status" class="sgd-audio-status" role="status" aria-live="polite" hidden></div>
             <div id="sgd-speaker-notes" class="sgd-speaker-notes">
               <div class="sgd-speaker-tabs" id="sgd-speaker-tabs"></div>
@@ -4997,14 +5077,31 @@
               style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
               <option value="random">Random Question</option>
             </select>
-            <button id="asq-play-prompt-btn" class="modern-btn modern-btn--play" type="button"
-              style="min-height: 40px; min-width: 90px; padding: 6px 16px; font-size: 0.9rem;">Play</button>
           </div>
-          <audio id="asq-prompt-audio" preload="auto"></audio>
         </div>
 
         <div
           style="width: 100%; max-width: 900px; margin: 0 auto; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
+          <!-- Prompt audio uses the shared Listening player component so Speaking shows the
+               same audio surface: position, duration and volume, not a bare Play button. -->
+          <section class="asq-audio practice-audio-player" aria-label="Prompt audio">
+            <button id="asq-play-prompt-btn" class="asq-play-btn" type="button" aria-label="Play prompt audio">
+              <span id="asq-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+              <span id="asq-play-label">Play</span>
+            </button>
+            <div class="asq-progress-wrap">
+              <div class="asq-progress" aria-hidden="true">
+                <div id="asq-progress-fill" class="asq-progress-fill"></div>
+              </div>
+              <input id="asq-seek" class="asq-seek" type="range" min="0" max="100" step="0.1" value="0"
+                aria-label="Prompt audio timeline">
+            </div>
+            <span id="asq-audio-time" class="asq-audio-time">00:00 / 00:00</span>
+            <label class="asq-volume-label" for="asq-volume">Volume</label>
+            <input id="asq-volume" class="asq-volume" type="range" min="0" max="1" step="0.05" value="1">
+          </section>
+          <audio id="asq-prompt-audio" preload="auto"></audio>
+
           <div id="asq-question-text"
             style="text-align: center; font-size: 1.35rem; font-weight: 700; color: var(--text-main); line-height: 1.4; min-height: 1.8em;">
           </div>
@@ -6003,6 +6100,7 @@
 
   </script>
   <script src="js/sw-register.js"></script>
+  <script src="/js/practice-audio-player.js"></script>
   <script src="/js/speaking-practice-steps.js"></script>
   <script src="/js/speaking-practice-controller.js"></script>
   <script src="/js/speaking-practice-adapters.js"></script>

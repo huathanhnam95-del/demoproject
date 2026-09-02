@@ -33,8 +33,8 @@ if sys.stdout.encoding != 'utf-8':
 DB_PATH = Path("public/database/Describe Image/describe-image-questions.json")
 LOG_PATH = Path("scratch/di_classification_log.json")
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_CHAT_URL", "http://localhost:11434/api/chat")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 TIMEOUT = 60  # Seconds per classification call
 
 # ============================================================================

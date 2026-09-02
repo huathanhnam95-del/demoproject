@@ -822,7 +822,7 @@
     if (now - _ollamaHealth.lastCheck < 30000) return _ollamaHealth;
     _ollamaHealth.checking = true;
     const baseUrl = String(localStorage.getItem('crm:ollama_base_url') || 'http://localhost:11434').replace(/\/+$/, '');
-    const model = localStorage.getItem('crm:ollama_model') || 'gemma4:latest';
+    const model = localStorage.getItem('crm:ollama_model') || 'gemma4:12b';
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -931,7 +931,7 @@
 
   async function fetchGemmaJSON(prompt, opts = {}) {
     const baseUrl = localStorage.getItem('crm:ollama_base_url') || 'http://localhost:11434';
-    const model = localStorage.getItem('crm:ollama_model') || 'gemma4:latest';
+    const model = localStorage.getItem('crm:ollama_model') || 'gemma4:12b';
 
     // URL guardrail: refuse non-localhost unless explicitly allowed
     if (!isLocalhostUrl(baseUrl) && localStorage.getItem('crm:allow_remote_ollama') !== 'true') {
@@ -1170,7 +1170,7 @@
       checkOllamaHealth().catch(() => { });
     } else {
       _ollamaHealth.online = false;
-      _ollamaHealth.model = localStorage.getItem('crm:ollama_model') || 'gemma4:latest';
+      _ollamaHealth.model = localStorage.getItem('crm:ollama_model') || 'gemma4:12b';
       _ollamaHealth.lastCheck = Date.now();
       updateOllamaStatusUI();
     }

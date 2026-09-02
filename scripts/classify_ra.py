@@ -9,8 +9,12 @@ import io
 # Fix encoding for Windows
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
 
-MODELS = ['gemma4:latest', 'qwen3:14b', 'deepseek-r1:14b']
-OLLAMA_URL = "http://localhost:11434/api/generate"
+MODELS = [
+    os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b"),
+    os.getenv("LOCAL_QWEN_MODEL", "qwen3:14b"),
+    os.getenv("LOCAL_DEEPSEEK_MODEL", "deepseek-r1:14b")
+]
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
 RUBRIC = """
 Evaluate the difficulty of the following Read Aloud (RA) prompt.

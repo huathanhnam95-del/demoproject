@@ -148,8 +148,11 @@ async function runExtractStage(db, job, deps) {
     }
 
     const pagesJson = JSON.stringify({
+        schemaVersion: '1.0',
+        rendererContract: 'legacy',
         totalPages: result.totalPages,
-        pages: result.pages
+        pages: result.pages,
+        textQuality: result.textQuality || null
     });
     const pagesPath = `crm-books/${bookId}/pages.json`;
     await bucket.file(pagesPath).save(Buffer.from(pagesJson), {
@@ -159,6 +162,8 @@ async function runExtractStage(db, job, deps) {
 
     await db.collection(CRM_BOOKS).doc(bookId).update({
         pageCount: result.totalPages,
+        'source.textQuality': result.textQuality || null,
+        'source.isSuspect': Boolean(result.isSuspect),
         'source.uploadedAt': FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
     });

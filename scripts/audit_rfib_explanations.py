@@ -30,9 +30,9 @@ logging.basicConfig(
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 MODELS = {
-    "dr": "deepseek-r1:14b",
-    "qw": "qwen3:14b",
-    "gm": "gemma4:latest",
+    "dr": os.getenv("LOCAL_DEEPSEEK_MODEL", "deepseek-r1:14b"),
+    "qw": os.getenv("LOCAL_QWEN_MODEL", "qwen3:14b"),
+    "gm": os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b"),
 }
 
 INPUT_REVISION = r"C:\Cursor AI\public\database\RFIB\RFIB_3model_revision.jsonl"
@@ -69,7 +69,7 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                  max_retries: int = 5, timeout: int = 450,
                  json_mode: bool = True) -> str | None:
     effective_prompt = prompt
-    if "qwen3" in model.lower():
+    if "qwen" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
 
     num_ctx = 8192 if "gemma" in model.lower() else 16384

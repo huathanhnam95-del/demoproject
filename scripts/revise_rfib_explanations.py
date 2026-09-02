@@ -19,9 +19,9 @@ logging.basicConfig(
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 MODELS = {
-    "dr": "deepseek-r1:14b",
-    "qw": "qwen3:14b",
-    "gm": "gemma4:latest",
+    "dr": os.getenv("LOCAL_DEEPSEEK_MODEL", "deepseek-r1:14b"),
+    "qw": os.getenv("LOCAL_QWEN_MODEL", "qwen3:14b"),
+    "gm": os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b"),
 }
 
 INPUT_WORKBOOK = r"C:\Cursor AI\public\database\RFIB\RFIB Final ver.xlsx"
@@ -64,7 +64,7 @@ def clean_model_response(raw: str) -> str:
 def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                  max_retries: int = 5, timeout: int = 450) -> str | None:
     effective_prompt = prompt
-    if "qwen3" in model.lower():
+    if "qwen" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
 
     # Adjust context size per model architecture to prevent CUDA VRAM memory bounds
@@ -108,7 +108,7 @@ def query_ollama_text(model: str, prompt: str, temperature: float = 0.3,
                       max_retries: int = 3, timeout: int = 120) -> str | None:
     """Query Ollama for free-text output (no JSON format constraint)."""
     effective_prompt = prompt
-    if "qwen3" in model.lower():
+    if "qwen" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
 
     for attempt in range(1, max_retries + 1):
@@ -731,7 +731,7 @@ def process_question(
         return None
     logging.info(f"  Phase 1 OK ({t1_elapsed:.1f}s)")
 
-    logging.info("  Phase 2 [QW] qwen3:14b ...")
+    logging.info(f"  Phase 2 [QW] {MODELS['qw']} ...")
     p2_prompt = build_phase2_prompt(answer_text, full_text, blanks, p1_data)
     t2 = time.time()
     p2_raw = query_ollama(MODELS["qw"], p2_prompt, temperature=0.2, timeout=300, max_retries=4)
@@ -739,11 +739,11 @@ def process_question(
     t2_elapsed = time.time() - t2
 
     if p2_data is None:
-        logging.error(f"  Phase 2 FAILED for Question {qid}: No valid response from qwen3:14b")
+        logging.error(f"  Phase 2 FAILED for Question {qid}: No valid response from {MODELS['qw']}")
         return None
     logging.info(f"  Phase 2 OK ({t2_elapsed:.1f}s)")
 
-    logging.info("  Phase 3 [GM] gemma4:latest ...")
+    logging.info(f"  Phase 3 [GM] {MODELS['gm']} ...")
     p3_prompt = build_phase3_prompt(answer_text, full_text, blanks, p2_data, existing_explanation)
     t3 = time.time()
     p3_raw = query_ollama(MODELS["gm"], p3_prompt, temperature=0.1, timeout=300, max_retries=4)
@@ -751,7 +751,7 @@ def process_question(
     t3_elapsed = time.time() - t3
 
     if p3_data is None:
-        logging.error(f"  Phase 3 FAILED for Question {qid}: No valid response from gemma4:latest")
+        logging.error(f"  Phase 3 FAILED for Question {qid}: No valid response from {MODELS['gm']}")
         return None
     logging.info(f"  Phase 3 OK ({t3_elapsed:.1f}s)")
 

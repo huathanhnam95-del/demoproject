@@ -1747,3 +1747,47 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 760,2026-09-01,Enquiry Tracking stage cards as clickable filters for lead list,Done,2026-09-01
 761,2026-09-01,CRM Accounts: add archive/restore + permanent delete (single and bulk with select-all and search filter) and rename admin toggle to Grant/Revoke admin; guards for bootstrap admin self-mutation and still-admin deletion; audit logged,Done,2026-09-01
 762,2026-09-01,Deploy Release V1.8.85 with Practice Modes UI Audit Remediation Audio Player CSS Unification CRM Lead Stage Filtering and Accounts Role Management to production,Done,2026-09-01
+763,2026-09-01,Implement Elaborate multi-selection highlight tool for Books and Summary,Done,2026-09-01
+764,2026-09-01,Harden Elaborate tool: fix newline regex add length and count caps and expand behavioral tests,Done,2026-09-01
+765,2026-09-01,Fix Elaborate tool mind map node selection/deselection and sync styling,Done,2026-09-01
+766,2026-09-01,Wire textRevisionId into book-summary-service and complete candidate chunking/summarization stages in text-revision pipeline,Done,2026-09-01
+
+755,2026-08-31,UI/UX remediation Phase 2-4: CRM nav drawer skip-link h1 funnel bars shared stage list empty states; mode card CTA + skill colour; Your Journey stylesheet; dialog-a11y adoption; motion/z-index; radii Books chrome badges emoji,Done,2026-08-31
+756,2026-08-31,Correction: Visual Language report claimed 7 duplicate mode icons - probe truncated SVGs at 70 chars so only the shared family motif was compared; all 9 sampled icons are geometrically unique; report corrected,Done,2026-08-31
+757,2026-09-01,UI/UX remediation Phase 4 remainder: type scale + spacing scale adoption, shadow consolidation, remaining UI emoji, load-cost 404s and splash-on-navigation,Done,2026-09-01
+764,2026-09-01,Investigate and fix crash and broken UI when navigating to Retell Lecture,Done,2026-09-01
+765,2026-09-01,Streamline Books BGM button: rename header button to Manage Music and remove duplicate button from pages tab,Done,2026-09-01
+766,2026-09-01,Speaking practice UI fixes: restored SST Previous/Next as icon buttons; added shared practice-audio-player box (play/progress/time/volume) to ASQ and Repeat Sentence via new js/practice-audio-player.js; Read Aloud measure widened then superseded by a concurrent session that centred a 52ch column,Done,2026-09-01
+767,2026-09-01,Check if sidecar/worktree folders are unused,Done,2026-09-01
+768,2026-09-01,Implement CRM Books text accuracy recovery and revisioned Document AI OCR pipeline,Done,2026-09-01
+769,2026-09-01,Remediate Retell Lecture review findings: audio content-type check English scope duplicate buttons overview availability and relative paths across 5 modes,Done,2026-09-01
+770,2026-09-01,Read Aloud passage set to fill its column (owner decision superseding the 52ch centred measure) and handoff plan written for Retell Lecture/SGD audio player unification and SST browser check repair,Done,2026-09-01
+771,2026-09-01,Implement and verify bilingual audio teaching session transcription and 3-model local LLM consensus analysis pipeline with AB testing,Done,2026-09-01
+772,2026-09-01,Execute Speaking audio surface handoff (Retell Lecture and SGD shared audio player + SST browser check repair),Done,2026-09-01
+773,2026-09-01,Execute BEL Remediation Handoff Plan (Phase 4 landing promote audit harness and establish baseline verification),Done,2026-09-01
+774,2026-09-01,Review debug and refactor Speaking audio surface integration and SST browser check,Done,2026-09-01
+775,2026-09-01,Review debug and refactor BEL UI/UX remediation and audit suite,Done,2026-09-01
+776,2026-09-01,Audit newer model releases for 3 local LLMs against device hardware constraints,Done,2026-09-01
+777,2026-09-01,Evaluate upgrade impact and benchmark performance delta for local LLM triad,Done,2026-09-01
+778,2026-09-01,Create implementation plan for Gemma and Qwen local LLM upgrade and script migration,Done,2026-09-01
+779,2026-09-01,Execute Gemma4 12B upgrade and codebase migration across 30+ AI scripts,Done,2026-09-01
+780,2026-09-01,Verify bilingual teaching session audio analysis pipeline with upgraded Gemma4 12B local consensus,Done,2026-09-01
+781,2026-09-01,Fix Pipeline B critical bottlenecks (context window + transcript truncation + output tokens) and re-run A/B test,Done,2026-09-01
+782,2026-09-01,Explain zero cost billing appearance for Book functions in Google Cloud Billing,Done,2026-09-01
+783,2026-09-02,Add transcript chunking to Pipeline B for improved coverage across full lesson,Done,2026-09-02
+784,2026-09-02,Deploy Release V1.8.86 with PTE Write Essay Guided Support and 453 multi-model audited packs to production,Done,2026-09-02
+785,2026-09-02,Fix older audit scripts Playwright resolution and author comprehensive BEL Remediation walkthrough,Done,2026-09-02
+786,2026-09-02,Execute V4 follow-up handoff plan - Package A V4-A2-AVAIL-01 recognizer availability,Done,2026-09-02
+787,2026-09-02,Enhance Teacher Pre-Class Briefing format in Pipeline A with Gemini 3.7 Flash and rerun on Zoom audio recording,Done,2026-09-02
+788,2026-09-02,Enhance Pre-Class Briefing to natural bilingual Vietnamese-English format and rerun with Gemini 3.7 Flash,Done,2026-09-02
+789,2026-09-02,Refactor Teacher Pre-Class Briefing prompt for natural pragmatic conversational Vietnamese coaching tone and rerun,Done,2026-09-02
+790,2026-09-02,Standardize Teacher Pre-Class Briefing prompt with professional polished pedagogical Vietnamese tone and rerun,Done,2026-09-02
+791,2026-09-02,Plan CRM Teaching Session Logger: visual Mermaid mindmap + audio upload + report viewer integration,Done,2026-09-02
+792,2026-09-02,Check disk presence and codebase usage of old Gemma and Qwen models,Done,2026-09-02
+793,2026-09-02,Replace SequenceMatcher consensus with embedding-based semantic similarity using nomic-embed-text,Done,2026-09-02
+794,2026-09-02,Remove deprecated legacy Gemma4 8B model from local Ollama storage,Done,2026-09-02
+795,2026-09-02,Review Echo Forge game development status and roadmap next steps,Done,2026-09-02
+796,2026-09-02,Echo Forge Phase 1: expand A1-C1 challenge catalog and verify listening pipeline,Done,2026-09-02
+797,2026-09-02,Review debug refactor Phase 1 Mermaid generation and integrate into Pipeline B,Done,2026-09-02
+798,2026-09-02,Configure local environment and verify Echo Forge sandbox readiness for testing,Done,2026-09-02
+799,2026-09-02,Implement CRM Teaching Sessions UI: student modal tab + audio upload + live Mermaid mindmap/flowchart viewer,Done,2026-09-02

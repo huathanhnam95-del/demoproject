@@ -1211,8 +1211,8 @@
      * Load audio file for Take Notes entry with extension fallback
      */
     async function loadNotesAudio(audioId) {
-        const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
-        const basePath = `database/Take Notes/RL/audio/${audioId}`;
+        const tryExtensions = ['mp3', 'm4a', 'wav', 'aac', 'ogg'];
+        const basePath = `/database/Take%20Notes/RL/audio/${encodeURIComponent(audioId)}`;
 
         for (const ext of tryExtensions) {
             const audioPath = `${basePath}.${ext}`;

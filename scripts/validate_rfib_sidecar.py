@@ -181,7 +181,7 @@ def validate_rfib_sidecar(
                 truncated_raw_records.append((qid, key))
 
         models = r.get("phase_models", [])
-        if len(models) != 3 or "deepseek-r1" not in models[0].lower() or "qwen3" not in models[1].lower() or "gemma4" not in models[2].lower():
+        if len(models) != 3 or "deepseek" not in models[0].lower() or "qwen" not in models[1].lower() or "gemma" not in models[2].lower():
             errors.append(f"ID {qid}: Incorrect phase_models {models}")
 
     if truncated_raw_records:

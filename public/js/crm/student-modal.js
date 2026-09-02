@@ -39,6 +39,12 @@ window.CrmStudentModal = (function () {
                 });
                 return;
             }
+            if (tabId === 'teaching-sessions' && modalState.studentId) {
+                if (window.CrmTeachingSessions && typeof window.CrmTeachingSessions.loadStudentSessions === 'function') {
+                    window.CrmTeachingSessions.loadStudentSessions(modalState.studentId);
+                }
+                return;
+            }
             if (tabId === 'info') {
                 renderStudentSchedulePrompt();
             }

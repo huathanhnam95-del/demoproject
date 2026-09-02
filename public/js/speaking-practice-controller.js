@@ -1492,10 +1492,13 @@
 
     hideLegacyPicker(config, state);
 
-    // Insert controller as first child of panel
+    // Steps first, then the controller. The step indicator used to be inserted *after*
+    // the control bar, so the primary action ("Start recording now") appeared before the
+    // thing that tells you which phase you are in — the reader met the button before the
+    // context for it.
     panel.insertBefore(dom.controller, panel.firstChild);
     if (steps?.element) {
-      panel.insertBefore(steps.element, dom.controller.nextSibling);
+      panel.insertBefore(steps.element, dom.controller);
     }
 
     // Build picker

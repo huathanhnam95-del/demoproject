@@ -37,8 +37,8 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 
 INPUT_FILE = r"C:\Cursor AI\public\database\RFIB\RFIB Final ver.xlsx"
 DEFAULT_OUTPUT = INPUT_FILE

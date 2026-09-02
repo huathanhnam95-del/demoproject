@@ -2075,7 +2075,7 @@ class ReadAloudMode {
     const instructionEl = document.getElementById('ra-guide-instruction') || document.getElementById('ra-prompt-instruction-text');
     if (instructionEl) {
       if (viewMode === 'basic') {
-        instructionEl.textContent = 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
+        instructionEl.textContent = this.getBasicPhaseInstruction();
       } else {
         const activeGuides = [];
         if (this.chunkingEnabled && chunkAvailable) activeGuides.push('chunking');
@@ -2137,7 +2137,7 @@ class ReadAloudMode {
       if (viewMode === 'advanced') {
         instText.textContent = 'Use chunking for pause groups and connected speech for linking, reduced words, and sound changes.';
       } else {
-        instText.textContent = 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
+        instText.textContent = this.getBasicPhaseInstruction();
       }
     }
 
@@ -3117,7 +3117,9 @@ class ReadAloudMode {
         recordBtn.disabled = false;
         recordBtn.style.display = '';
       }
-      if (statusMsg) statusMsg.textContent = 'Read the text silently to prepare.';
+      // The guide instruction above the passage now carries the prep guidance
+      // (getBasicPhaseInstruction), so this line no longer repeats it.
+      if (statusMsg) statusMsg.textContent = '';
       if (resultBox) resultBox.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'none';
       if (checkBtn) checkBtn.style.display = 'none';
@@ -3238,6 +3240,19 @@ class ReadAloudMode {
     if (checkBtn) checkBtn.style.display = 'none';
     if (retryBtn) retryBtn.style.display = 'inline-flex';
     this.updateRecordedAudioControl();
+  }
+
+  /**
+   * The basic-mode instruction used to read "Read the text aloud into your microphone…"
+   * in every phase — including Prep, where the status line directly below the passage
+   * says "Read the text silently to prepare." Both were on screen at once, telling the
+   * learner to do opposite things. The instruction now follows the phase.
+   */
+  getBasicPhaseInstruction() {
+    if (this.state === 'PREP') {
+      return 'Read silently and plan your phrasing. Recording starts when the prep timer ends.';
+    }
+    return 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
   }
 
   startPrepTimer() {

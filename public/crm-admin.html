@@ -30,7 +30,7 @@
           <span class="crm-nav-toggle-bars" aria-hidden="true"></span>
         </button>
         <div class="crm-logo-box">
-          <img src="database/Logo.png" alt="BEL" class="crm-logo-img">
+          <img src="/database/Logo.png" alt="BEL" class="crm-logo-img">
         </div>
 
         <nav id="crm-nav" class="crm-nav" aria-label="CRM Main Navigation">
@@ -1314,6 +1314,7 @@
           <button class="crm-sidebar-item" data-tab="courses">Courses</button>
           <button class="crm-sidebar-item" data-tab="finance">Finance</button>
           <button class="crm-sidebar-item" data-tab="identity">Identity</button>
+          <button class="crm-sidebar-item" data-tab="teaching-sessions">Teaching Sessions</button>
         </div>
         <div class="crm-modal-content">
           <!-- Info Section -->
@@ -1807,6 +1808,84 @@
                 <!-- Dynamically populated -->
                 <li class="text-muted">No accounts linked yet.</li>
               </ul>
+            </div>
+          </div>
+
+          <!-- Teaching Sessions Section -->
+          <div id="student-teaching-sessions" class="crm-tab-content" style="display: none;">
+            <div class="crm-section-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div>
+                <h3>🎙️ Teaching Sessions & Pre-Class Briefings</h3>
+                <p class="text-muted">Audio recordings, pedagogical analysis cards, and visual mindmaps.</p>
+              </div>
+              <button id="btn-toggle-teaching-upload" class="crm-btn-primary" type="button" style="display: flex; align-items: center; gap: 6px;">
+                <span>+ Upload Audio & Analyze</span>
+              </button>
+            </div>
+
+            <!-- Upload Composer Drawer -->
+            <div id="teaching-session-upload-drawer" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 15px; color: #1e293b;">Upload Lesson Recording</h4>
+              <div class="crm-form-grid">
+                <div class="crm-form-group">
+                  <label for="teaching-session-title">Lesson Topic / Title <span style="color:#dc2626;">*</span></label>
+                  <input type="text" id="teaching-session-title" class="crm-input" placeholder="e.g. Academic Writing: Lexical Cohesion" required>
+                </div>
+                <div class="crm-form-group">
+                  <label for="teaching-session-skill">Focus Skill</label>
+                  <select id="teaching-session-skill" class="crm-input">
+                    <option value="Writing" selected>Writing</option>
+                    <option value="Speaking">Speaking</option>
+                    <option value="Reading">Reading</option>
+                    <option value="Listening">Listening</option>
+                    <option value="Grammar">Grammar / Pronunciation</option>
+                    <option value="General">General Coaching</option>
+                  </select>
+                </div>
+                <div class="crm-form-group">
+                  <label for="teaching-session-date">Session Date & Time</label>
+                  <input type="datetime-local" id="teaching-session-date" class="crm-input">
+                </div>
+                <div class="crm-form-group">
+                  <label for="teaching-session-audio-file">Audio Recording File (.m4a, .mp3, .wav) <span style="color:#dc2626;">*</span></label>
+                  <input type="file" id="teaching-session-audio-file" class="crm-input" accept="audio/*,.m4a,.mp3,.wav" required>
+                </div>
+                <div class="crm-form-group" style="grid-column: 1 / -1;">
+                  <label for="teaching-session-notes">Teacher Notes / Context (Optional)</label>
+                  <textarea id="teaching-session-notes" class="crm-input" rows="2" placeholder="Notes about student goals, homework assigned, or particular focus areas..."></textarea>
+                </div>
+              </div>
+
+              <!-- Upload Progress Indicator -->
+              <div id="teaching-session-progress-box" style="display: none; margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #475569; margin-bottom: 4px;">
+                  <span id="teaching-session-progress-label">Uploading audio recording...</span>
+                  <span id="teaching-session-progress-pct">0%</span>
+                </div>
+                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                  <div id="teaching-session-progress-bar" style="width: 0%; height: 100%; background: #3b82f6; transition: width 0.2s;"></div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
+                <button id="btn-cancel-teaching-upload" type="button" class="crm-btn-secondary">Cancel</button>
+                <button id="btn-submit-teaching-upload" type="button" class="crm-btn-primary">Save & Run AI Analysis</button>
+              </div>
+            </div>
+
+            <!-- Sessions List Container -->
+            <div id="teaching-sessions-list-container">
+              <div id="teaching-sessions-loading" style="display: none; text-align: center; padding: 24px; color: #64748b;">
+                Loading teaching sessions...
+              </div>
+              <div id="teaching-sessions-empty" style="display: none; text-align: center; padding: 32px; background: #f8fafc; border-radius: 8px; color: #64748b; border: 1px dashed #cbd5e1;">
+                <div style="font-size: 28px; margin-bottom: 8px;">🎙️</div>
+                <div style="font-weight: 500; color: #334155;">No teaching sessions recorded yet.</div>
+                <div style="font-size: 13px; margin-top: 4px;">Click "Upload Audio & Analyze" to record or import your first 1-on-1 coaching session.</div>
+              </div>
+              <div id="teaching-sessions-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Dynamically populated session cards -->
+              </div>
             </div>
           </div>
         </div>
@@ -2543,6 +2622,58 @@
     </div>
   </div>
 
+  <!-- Teaching Session Report & Mindmap Modal -->
+  <div id="crm-teaching-session-modal" class="crm-modal-overlay" aria-hidden="true" style="display: none;">
+    <div class="crm-modal-container" style="max-width: 1100px; width: 95vw; height: 90vh; display: flex; flex-direction: column;">
+      <div class="crm-modal-header" style="flex-shrink: 0;">
+        <div class="crm-modal-title-row" style="display: flex; align-items: center; gap: 10px;">
+          <h2 id="teaching-session-modal-title" style="margin: 0; font-size: 18px;">Teaching Session Report</h2>
+          <span id="teaching-session-status-badge" class="crm-badge"></span>
+        </div>
+        <button id="btn-close-teaching-session-modal" class="crm-icon-btn text-dark" title="Close" type="button">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="crm-modal-body" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
+        <!-- Top Toolbar with Sub-tabs -->
+        <div class="crm-session-viewer-nav" style="display: flex; gap: 8px; padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+          <button class="crm-tab-btn active" data-view="mindmap" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">🧠 Visual Mindmap</button>
+          <button class="crm-tab-btn" data-view="flowchart" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📊 Teaching Flowchart</button>
+          <button class="crm-tab-btn" data-view="report" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📋 Pre-Class Briefing Card</button>
+          <button class="crm-tab-btn" data-view="audio" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">🎵 Audio Recording</button>
+          <button class="crm-tab-btn" data-view="json" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📝 Raw JSON</button>
+        </div>
+        <!-- Content Panes -->
+        <div class="crm-session-viewer-content" style="flex: 1; overflow-y: auto; padding: 20px; background: #f1f5f9;">
+          <div id="teaching-session-view-mindmap" class="teaching-session-view-pane" style="display: block;">
+            <div id="teaching-session-mindmap-container" class="mermaid-diagram-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; min-height: 450px; display: flex; justify-content: center; align-items: center; overflow: auto;"></div>
+          </div>
+          <div id="teaching-session-view-flowchart" class="teaching-session-view-pane" style="display: none;">
+            <div id="teaching-session-flowchart-container" class="mermaid-diagram-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; min-height: 450px; display: flex; justify-content: center; align-items: center; overflow: auto;"></div>
+          </div>
+          <div id="teaching-session-view-report" class="teaching-session-view-pane" style="display: none;">
+            <div id="teaching-session-report-html" class="teaching-session-markdown-content" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; line-height: 1.6; color: #1e293b;"></div>
+          </div>
+          <div id="teaching-session-view-audio" class="teaching-session-view-pane" style="display: none;">
+            <div id="teaching-session-audio-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 32px; text-align: center;">
+              <h4 style="margin-top: 0; margin-bottom: 12px; color: #334155;">Lesson Audio Recording</h4>
+              <audio id="teaching-session-audio-player" controls style="width: 100%; max-width: 600px; margin: 0 auto;"></audio>
+            </div>
+          </div>
+          <div id="teaching-session-view-json" class="teaching-session-view-pane" style="display: none;">
+            <pre id="teaching-session-json-raw" style="background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 8px; font-size: 12px; overflow: auto; max-height: 500px;"></pre>
+          </div>
+        </div>
+      </div>
+      <div class="crm-modal-footer" style="flex-shrink: 0; display: flex; justify-content: space-between;">
+        <button id="btn-copy-teaching-report" class="crm-btn-secondary" type="button">Copy Report Markdown</button>
+        <button id="btn-close-teaching-session-bottom" class="crm-btn-primary" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading / Access Gate -->
   <div id="crm-loading" class="crm-loading-overlay" aria-live="polite">
     <div class="crm-loading-card">
@@ -2605,8 +2736,10 @@
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
-  <script src="crm-admin.js?v=20260902-v1.8.86"></script>
-  <script src="js/crm/segmentation-study.js?v=20260902-v1.8.86" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="js/crm/teaching-sessions.js?v=20260902-v1.8.87"></script>
+  <script src="crm-admin.js?v=20260902-v1.8.87"></script>
+  <script src="js/crm/segmentation-study.js?v=20260902-v1.8.87" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
@@ -2653,6 +2786,9 @@
         <button id="crm-mindmap-physics-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Physics Layout">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="2.5"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(0 8 8)"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="7" ry="3" transform="rotate(120 8 8)"/></svg>
           Physics
+        </button>
+        <button id="crm-mindmap-elaborate-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Elaborate Mode">
+          ✨ Elaborate
         </button>
         <button id="crm-mindmap-heatmap-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Vote Heatmap">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="10" width="3" height="4" rx="0.5"/><rect x="6.5" y="6" width="3" height="8" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
@@ -2816,6 +2952,43 @@
         <canvas id="crm-mindmap-minimap-canvas" width="180" height="120"></canvas>
         <div id="crm-mindmap-minimap-viewport" class="crm-mindmap-minimap-viewport"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- CRM Books Elaborate Slide-Over Drawer -->
+  <div id="crm-books-elaborate-drawer" class="crm-books-elaborate-drawer" aria-hidden="true" style="display: none;">
+    <div class="crm-books-elaborate-drawer-header">
+      <div class="crm-books-elaborate-drawer-title-group">
+        <div class="crm-books-elaborate-drawer-badge">✨ Elaborate Deep Dive</div>
+        <h3 id="crm-books-elaborate-drawer-book-title" class="crm-books-elaborate-drawer-title">Source Grounding</h3>
+      </div>
+      <button id="crm-books-elaborate-drawer-close" class="crm-btn-close" type="button" aria-label="Close elaboration drawer">&times;</button>
+    </div>
+    <div id="crm-books-elaborate-drawer-body" class="crm-books-elaborate-drawer-body">
+      <!-- Dynamically populated -->
+    </div>
+    <div class="crm-books-elaborate-drawer-footer">
+      <button id="crm-books-elaborate-save-notes-btn" class="crm-btn crm-btn-primary crm-btn-sm" type="button" title="Save this elaboration to Notes">📝 Save to Notes</button>
+      <button id="crm-books-elaborate-chat-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Discuss in Chat">💬 Discuss in Chat</button>
+      <button id="crm-books-elaborate-copy-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Copy markdown">📋 Copy</button>
+    </div>
+  </div>
+
+  <!-- Floating Elaborate Selection Tray -->
+  <div id="crm-books-elaborate-tray" class="crm-books-elaborate-tray" style="display: none;" role="region" aria-label="Elaborate selection tray">
+    <div class="crm-books-elaborate-tray-header">
+      <span class="crm-books-elaborate-tray-icon">✨</span>
+      <span class="crm-books-elaborate-tray-label">Elaborate Mode</span>
+      <span id="crm-books-elaborate-tray-count" class="crm-books-elaborate-tray-count">0 selected</span>
+    </div>
+    <div id="crm-books-elaborate-tray-chips" class="crm-books-elaborate-tray-chips"></div>
+    <div class="crm-books-elaborate-tray-actions">
+      <button id="crm-books-elaborate-tray-done-btn" class="crm-btn crm-btn-primary crm-btn-sm" type="button" disabled title="Generate elaboration">
+        ✓ Done
+      </button>
+      <button id="crm-books-elaborate-tray-cancel-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Exit Elaborate Mode">
+        Cancel
+      </button>
     </div>
   </div>
 

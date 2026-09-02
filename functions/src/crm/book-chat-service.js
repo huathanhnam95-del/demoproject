@@ -153,7 +153,8 @@ function validateCitations(rawCitations, sentChunks) {
             pageStart: chunk.pageStart,
             pageEnd: chunk.pageEnd,
             snippet: chunk.text.slice(0, SNIPPET_LENGTH),
-            highlightText
+            highlightText,
+            textRevisionId: chunk.textRevisionId || 'legacy'
         });
     }
 
@@ -206,7 +207,10 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         throw Object.assign(new Error(`Daily chat limit (${quota.limit}) reached. Resets tomorrow.`), { code: 'resource-exhausted' });
     }
 
-    const chunks = await retrieveTopChunks(db, bookId, question, { bookTitle: bookData.title });
+    const chunks = await retrieveTopChunks(db, bookId, question, {
+        bookTitle: bookData.title,
+        textRevisionId: bookData.activeTextRevisionId || null
+    });
 
     const messagesCol = threadRef.collection('messages');
     const recentSnap = await messagesCol.orderBy('createdAt', 'desc').limit(MAX_HISTORY_MESSAGES).get();
@@ -245,10 +249,12 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         text: json.answer || '',
         citations,
         answered: json.answered !== false,
+        textRevisionId: bookData.activeTextRevisionId || 'legacy',
         retrieval: {
             chunkIds: chunks.map((c) => c.chunkId),
             distances: chunks.map((c) => c.distance),
-            strategy: chunks[0]?.strategy || 'unknown'
+            strategy: chunks[0]?.strategy || 'unknown',
+            textRevisionId: bookData.activeTextRevisionId || 'legacy'
         },
         model,
         latencyMs,

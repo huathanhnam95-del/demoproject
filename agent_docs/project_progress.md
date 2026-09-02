@@ -1,5 +1,14 @@
 # Project Progress
 
+## Active package: BOOKTXT-FIX-01 CRM Books text accuracy recovery
+
+- Goal: replace corrupt embedded-PDF text ingestion with an immutable, image-OCR-backed text-revision pipeline and verify every physical/rendered page before activation.
+- Scope: Books PDF diagnostics, Document AI adapter, fenced revision state machine, revision-scoped pages/chunks/embeddings/summaries/retrieval/chat, audited revision APIs, revision-aware renderer/cache, and fail-closed text-audit tooling.
+- Constraints: Heavy route in `C:\Cursor AI-books-text-accuracy-recovery` from baseline `6829be6c`; preserve the dirty primary checkout and unrelated Books features; test-first changes; no API enablement, processor creation, billable OCR, deployment, production reprocess, activation, push, or production mutation under the current approval.
+- Acceptance: immutable candidate data and atomic pointer activation/rollback; no mixed revision reads; all focused/broader/security/browser checks pass; production repair remains a separately authorized phase requiring all 211 source pages and all 211 rendered page texts to be approved.
+- Current state: execution approved. The isolated branch `codex/books-text-accuracy-recovery` is clean. The dirty primary checkout contains a pre-existing uncommitted candidate with overlapping planned filenames, so read-only specialists are classifying reusable plan hunks and validating the official Document AI contract before any candidate code is adopted.
+- Next action: complete the candidate-diff and official-API investigations, then execute the first test-first implementation batch in the isolated worktree.
+
 ## Released package: V4-A2-HARDEN-01 production follow-up hardening
 
 - Outcome: released the reviewed V4 A2 follow-up on top of the intervening Echo Forge and V1.8.85 mainline. Pronunciation API CORS now admits the custom domain plus both Firebase Hosting aliases; Firebase `api` runs on Node 22 with `firebase-functions` 7.3.2; generated `.firebase/` cache artifacts are ignored and untracked; PDF extraction moved to `unpdf` 1.8.1, removing the optional canvas/node-pre-gyp/tar chain. The reported CMU error was not reproducible and required no code change.

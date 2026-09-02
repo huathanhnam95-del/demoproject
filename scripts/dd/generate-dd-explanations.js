@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { callOllamaChatJson } = require('./ollama-json-client');
+const { callOllamaChatJson, OLLAMA_MODEL } = require('./ollama-json-client');
 
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const QUESTIONS_JSON_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'DD', 'dd-questions.json');
@@ -261,7 +261,7 @@ async function run() {
         blank.vocabGrammarCue = matchData.vocabGrammarCue || '';
         blank.contextNote = matchData.contextNote || '';
         blank.distractorNotes = matchData.competingOptionNotes || matchData.distractorNotes || [];
-        blank.model = 'gemma4:latest';
+        blank.model = OLLAMA_MODEL;
         blank.reviewPass = true;
         blank.batchVersion = 'OptionB-v1';
         blank.status = 'generated';
@@ -287,7 +287,7 @@ async function run() {
           blank.vocabGrammarCue = parsedFb.vocabGrammarCue || '';
           blank.contextNote = parsedFb.contextNote || '';
           blank.distractorNotes = parsedFb.competingOptionNotes || parsedFb.distractorNotes || [];
-          blank.model = 'gemma4:latest';
+          blank.model = OLLAMA_MODEL;
           blank.reviewPass = true;
           blank.batchVersion = 'OptionB-v1';
           blank.status = 'generated';

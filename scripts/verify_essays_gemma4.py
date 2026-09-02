@@ -28,8 +28,10 @@ ESSAY_JSON_DEFAULT = "public/database/Write Essay/essay-questions-with-vocab.jso
 SCORE_GUIDE_DEFAULT = "public/database/knowledge-base/Write Essay Score Guide.txt"
 REPORT_DEFAULT = "tmp/essay-verification-report.json"
 CHECKPOINT_DEFAULT = "tmp/essay-verification-checkpoint.json"
-OLLAMA_URL_DEFAULT = "http://localhost:11434"
-MODEL_DEFAULT = "gemma4:latest"
+import os
+
+OLLAMA_URL_DEFAULT = os.getenv("OLLAMA_URL", "http://localhost:11434")
+MODEL_DEFAULT = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 
 # ── CEFR Level Expected Score Ranges ──────────────────────────────────
 

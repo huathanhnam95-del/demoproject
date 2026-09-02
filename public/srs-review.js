@@ -3203,7 +3203,7 @@ const SRSReview = (function () {
 
         const word = currentWord.originalWord || currentWord.lemma;
         if (currentWord.entryType === 'phrase' && currentWord.phraseAudioKey) {
-            const audio = new Audio(`database/collo-dictate/audio/${currentWord.phraseAudioKey}.wav`);
+            const audio = new Audio(`/database/collo-dictate/audio/${currentWord.phraseAudioKey}.wav`);
             audio.play().catch(() => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();

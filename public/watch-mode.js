@@ -30,7 +30,7 @@ const WatchMode = (function () {
     // Constants
     const POINTS_MULTIPLE_CHOICE = 5;
     const POINTS_OPEN_ENDED = 10;
-    const EXCEL_PATH = 'database/watch/Videos.xlsx';
+    const EXCEL_PATH = '/database/watch/Videos.xlsx';
 
     // DOM Elements (cached)
     let elements = {};

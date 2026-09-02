@@ -22,7 +22,7 @@ logging.basicConfig(
 
 INPUT_FILE = r"public\database\RFIB\RFIB Final ver.xlsx"
 SIDECAR_FILE = r"public\database\RFIB\RFIB_cohesion_enrichment.jsonl"
-MODEL_NAME = "gemma4:latest"
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 
 PROMPT_TEMPLATE = """You are an expert English language learning content designer.
 Your task is to write a cohesive, professional "Cohesion Feature Details" text for a Reading Fill-in-the-Blanks passage, based on the existing details, verification notes, and specific cohesion ties.

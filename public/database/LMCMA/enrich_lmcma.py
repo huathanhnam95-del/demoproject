@@ -11,7 +11,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 # --- API Configuration ---
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
+OLLAMA_MODEL = os.environ.get("LOCAL_GEMMA_MODEL", os.environ.get("OLLAMA_MODEL", "gemma4:12b"))
 
 DEFAULT_EXCEL_PATH = r"C:\Cursor AI\public\database\LMCMA\LMCMA\LMCMA.xlsx"
 EXCEL_PATH = os.environ.get("LMCMA_EXCEL_PATH", DEFAULT_EXCEL_PATH)

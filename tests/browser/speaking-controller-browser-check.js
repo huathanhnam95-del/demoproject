@@ -328,11 +328,16 @@ async function runTest() {
         const speakLayout = await page3.evaluate(() => ({
             controllerCount: document.querySelectorAll('#mode-speak .spc-controller').length,
             legacyToolbarHidden: getComputedStyle(document.querySelector('#mode-speak > .unified-controls')).display === 'none',
-            replayInController: Boolean(document.querySelector('#mode-speak .spc-slot-media #replay-counter-speak'))
+            // Play and the replay badge moved out of the toolbar into the shared
+            // .practice-audio-player box, so the toolbar must no longer hold them.
+            replayInController: Boolean(document.querySelector('#mode-speak .spc-slot-media #replay-counter-speak')),
+            replayInAudioMeta: Boolean(document.querySelector('#mode-speak .practice-audio-meta #replay-counter-speak')),
+            playInAudioPlayer: Boolean(document.querySelector('#mode-speak .practice-audio-player #play-btn-speak'))
         }));
         assert('Repeat Sentence has one active controller', speakLayout.controllerCount === 1);
         assert('Repeat Sentence legacy toolbar is hidden', speakLayout.legacyToolbarHidden);
-        assert('Repeat Sentence replay status is in the controller', speakLayout.replayInController);
+        assert('Repeat Sentence replay status sits with the audio player', speakLayout.replayInAudioMeta && !speakLayout.replayInController);
+        assert('Repeat Sentence Play sits inside the audio player', speakLayout.playInAudioPlayer);
 
         // Inject a synthetic adapter and test the full contract
         const syntheticResults = await page3.evaluate(() => {
@@ -927,13 +932,14 @@ async function runTest() {
             SPC.activate('asq', { scope: 'pte' });
             const asqController = asqPanel?.querySelector('.spc-controller');
             results.asqMounted = !!asqController;
-            results.asqPlayAdopted = !!asqController?.querySelector('#asq-play-prompt-btn');
+            // Play now belongs to the .practice-audio-player box, not the toolbar.
+            results.asqPlayInAudioPlayer = !!asqPanel?.querySelector('.practice-audio-player #asq-play-prompt-btn')
+                && !asqController?.querySelector('#asq-play-prompt-btn');
             results.asqActionRoles = [
-                actionRole(asqController, 'asq-play-prompt-btn'),
                 actionRole(asqController, 'asq-record-btn'),
                 actionRole(asqController, 'asq-stop-btn'),
                 actionRole(asqController, 'asq-redo-btn')
-            ].join(',') === 'play,record,stop,retry';
+            ].join(',') === 'record,stop,retry';
             results.asqNoToggle = asqController?.hasAttribute('data-spc-no-toggle') === true;
             SPC.unmount('asq');
 
@@ -987,6 +993,7 @@ async function runTest() {
             const notesController = notesPanel?.querySelector('.spc-controller');
             results.notesMountedInPte = !!notesController;
             results.notesPlayAdopted = !!notesController?.querySelector('#play-notes-btn');
+            results.notesAudioPlayerPresent = !!notesPanel?.querySelector('.practice-audio-player #notes-play-btn');
             results.notesActionRoles = [
                 actionRole(notesController, 'play-notes-btn'),
                 actionRole(notesController, 'notes-submit-btn'),
@@ -1004,6 +1011,7 @@ async function runTest() {
             const sgdController = sgdPanel?.querySelector('.spc-controller');
             results.sgdMounted = !!sgdController;
             results.sgdPlayAdopted = !!sgdController?.querySelector('#play-sgd-btn');
+            results.sgdAudioPlayerPresent = !!sgdPanel?.querySelector('.practice-audio-player #sgd-play-btn');
             results.sgdActionRoles = [
                 actionRole(sgdController, 'play-sgd-btn'),
                 actionRole(sgdController, 'sgd-record-btn'),
@@ -1020,19 +1028,19 @@ async function runTest() {
             SPC.activate('speak', { scope: 'pte' });
             const speakController = speakPanel?.querySelector('.spc-controller');
             results.speakMounted = !!speakController;
-            results.speakPlayAdopted = !!speakController?.querySelector('#play-btn-speak');
+            results.speakPlayInAudioPlayer = !!speakPanel?.querySelector('.practice-audio-player #play-btn-speak')
+                && !speakController?.querySelector('#play-btn-speak');
             results.speakRecordAdopted = !!speakController?.querySelector('#record-btn');
             results.speakCheckAdopted = !!speakController?.querySelector('#check-btn-speak');
             results.speakRetryAdopted = !!speakController?.querySelector('#retry-btn-speak');
             results.speakActionRoles = [
-                actionRole(speakController, 'play-btn-speak'),
                 actionRole(speakController, 'record-btn'),
                 actionRole(speakController, 'check-btn-speak'),
                 actionRole(speakController, 'retry-btn-speak'),
                 actionRole(speakController, 'shadow-mode-btn'),
                 actionRole(speakController, 'recommended-btn-speak')
-            ].join(',') === 'play,record,primary,retry,support,support';
-            results.speakStatusBadgeHasNoActionRole = !speakController?.querySelector('#replay-counter-speak')?.dataset.spcActionRole;
+            ].join(',') === 'record,primary,retry,support,support';
+            results.speakStatusBadgeHasNoActionRole = !speakPanel?.querySelector('#replay-counter-speak')?.dataset.spcActionRole;
             results.speakRecommendedAdopted = !!speakController?.querySelector('#recommended-btn-speak');
             const speakSettingsSheet = document.querySelector('#spc-settings-sheet-speak');
             results.speakSettingsNodesHaveNoActionRole = !speakSettingsSheet?.querySelector('[data-spc-action-role]');
@@ -1101,7 +1109,7 @@ async function runTest() {
         await context8.close();
 
         assert('ASQ production adapter mounts', productionAdapterResults.asqMounted);
-        assert('ASQ Play control is adopted', productionAdapterResults.asqPlayAdopted);
+        assert('ASQ Play control sits in the audio player', productionAdapterResults.asqPlayInAudioPlayer);
         assert('ASQ action roles are mapped', productionAdapterResults.asqActionRoles);
         assert('ASQ omits Advanced toggle', productionAdapterResults.asqNoToggle);
         assert('RTS picker bridge API is available', productionAdapterResults.rtsApiAvailable);
@@ -1117,6 +1125,7 @@ async function runTest() {
         assert('Describe Image difficulty filter is adopted', productionAdapterResults.diDifficultyAdopted);
         assert('Retell Lecture mounts in PTE', productionAdapterResults.notesMountedInPte);
         assert('Retell Lecture Play control is adopted', productionAdapterResults.notesPlayAdopted);
+        assert('Retell Lecture audio player sits in Step 2', productionAdapterResults.notesAudioPlayerPresent);
         assert('Retell Lecture action roles are mapped', productionAdapterResults.notesActionRoles);
         assert('Retell Lecture exposes Advanced view', productionAdapterResults.notesHasAdvanced);
         assert('English Take Notes remains unmounted', productionAdapterResults.notesUnmountedInEnglish);
@@ -1124,11 +1133,12 @@ async function runTest() {
         assert('SGD dead status filter is removed', productionAdapterResults.sgdDeadStatusFilterRemoved);
         assert('SGD production adapter mounts', productionAdapterResults.sgdMounted);
         assert('SGD Play control is adopted', productionAdapterResults.sgdPlayAdopted);
+        assert('SGD audio player sits in Step 1', productionAdapterResults.sgdAudioPlayerPresent);
         assert('SGD action roles are mapped', productionAdapterResults.sgdActionRoles);
         assert('SGD exposes Advanced view', productionAdapterResults.sgdHasAdvanced);
         assert('SGD difficulty filter is adopted', productionAdapterResults.sgdDifficultyFilterAdopted);
         assert('Speak production adapter mounts', productionAdapterResults.speakMounted);
-        assert('Speak Play control is adopted', productionAdapterResults.speakPlayAdopted);
+        assert('Speak Play control sits in the audio player', productionAdapterResults.speakPlayInAudioPlayer);
         assert('Speak Record control is adopted', productionAdapterResults.speakRecordAdopted);
         assert('Speak Check control is adopted', productionAdapterResults.speakCheckAdopted);
         assert('Speak Retry control is adopted', productionAdapterResults.speakRetryAdopted);

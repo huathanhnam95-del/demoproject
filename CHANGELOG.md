@@ -1,3 +1,14 @@
+## [V1.8.87] - 2026-09-02
+
+### Added & Enhanced
+- **CRM Teaching Sessions & Visual Mermaid Mindmap System**:
+  - Integrated audio lesson analysis pipeline with Gemini 3.7 Flash API (Free Tier) generating executive pedagogical Pre-Class Briefing Cards and interactive Mermaid visual diagrams.
+  - Implemented single-pass unified generator (`MERMAID_UNIFIED_PROMPT`) returning structured JSON with both `mindmap` and `flowchart`, eliminating 503 rate limit spikes.
+  - Built pure-Python fallback diagram generator (`generate_mermaid_fallback`) ensuring zero data loss during offline runs or API quota limits.
+  - Created Firestore backend service (`functions/src/crm/teaching-session-service.js`) and REST endpoints (`functions/src/routes/admin/teaching-sessions.js`) supporting session creation, status lifecycle, retrieval, updates, and audit logging.
+  - Added "Teaching Sessions" tab to CRM Student Modal (`public/crm-admin.html` and `public/js/crm/teaching-sessions.js`) with an audio upload composer, live upload progress indicator, session history list, and full-screen multi-view modal (Visual Mindmap, Teaching Flowchart, Briefing Card, Audio Player, Raw JSON).
+  - Added full test suites across Python (`tests/test_audio_teaching_logger.py`) and Node (`tests/crm/teaching-session-service.test.js`, `tests/crm/teaching-sessions-frontend-contract.test.js`).
+
 ## [V1.8.76] - 2026-08-19
 
 ### Fixed & Enhanced

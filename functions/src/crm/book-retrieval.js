@@ -15,8 +15,22 @@ async function retrieveTopChunks(db, bookId, question, options = {}) {
     const strategy = options.strategy || getStrategy();
     const bookTitle = options.bookTitle || '';
 
+    let textRevisionId = options.textRevisionId;
+    if (textRevisionId === undefined) {
+        const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+        textRevisionId = bookSnap.data()?.activeTextRevisionId || null;
+    }
+
     const queryVector = await embedQuery(question, { title: bookTitle });
-    const chunksCol = db.collection(CRM_BOOKS).doc(bookId).collection('chunks');
+
+    let chunksCol;
+    if (textRevisionId) {
+        chunksCol = db.collection(CRM_BOOKS).doc(bookId)
+            .collection('textRevisions').doc(textRevisionId)
+            .collection('chunks');
+    } else {
+        chunksCol = db.collection(CRM_BOOKS).doc(bookId).collection('chunks');
+    }
 
     let results;
     if (strategy === 'bruteforce') {
@@ -25,7 +39,27 @@ async function retrieveTopChunks(db, bookId, question, options = {}) {
         results = await nativeSearch(chunksCol, queryVector, topK);
     }
 
+    if (results.length === 0 && textRevisionId) {
+        const rootChunksCol = db.collection(CRM_BOOKS).doc(bookId).collection('chunks');
+        if (strategy === 'bruteforce') {
+            results = await bruteforceSearch(rootChunksCol, queryVector, topK);
+        } else {
+            results = await nativeSearch(rootChunksCol, queryVector, topK);
+        }
+        if (results.length > 0) {
+            chunksCol = rootChunksCol;
+        }
+    }
+
+    results.forEach((r) => {
+        r.textRevisionId = r.textRevisionId || textRevisionId || 'legacy';
+    });
+
     const expanded = await expandNeighbours(chunksCol, results);
+    expanded.forEach((r) => {
+        r.textRevisionId = r.textRevisionId || textRevisionId || 'legacy';
+    });
+
     return trimToContextLimit(expanded, maxContextChars);
 }
 
@@ -50,7 +84,8 @@ async function nativeSearch(chunksCol, queryVector, topK) {
             pageEnd: data.pageEnd,
             charCount: data.charCount,
             distance: data._distance ?? null,
-            strategy: 'native'
+            strategy: 'native',
+            textRevisionId: data.textRevisionId || null
         };
     });
 }
@@ -75,7 +110,8 @@ async function bruteforceSearch(chunksCol, queryVector, topK) {
             pageEnd: data.pageEnd,
             charCount: data.charCount,
             distance: 1 - similarity,
-            strategy: 'bruteforce'
+            strategy: 'bruteforce',
+            textRevisionId: data.textRevisionId || null
         });
     }
 
@@ -116,7 +152,8 @@ async function expandNeighbours(chunksCol, results) {
                 pageEnd: data.pageEnd,
                 charCount: data.charCount,
                 distance: null,
-                strategy: 'neighbour'
+                strategy: 'neighbour',
+                textRevisionId: data.textRevisionId || null
             });
         }
     }

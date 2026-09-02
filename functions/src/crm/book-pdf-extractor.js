@@ -1,3 +1,5 @@
+const { assessBookTextQuality } = require('./book-text-quality');
+
 const MIN_AVG_CHARS_PER_PAGE = 50;
 
 async function extractPdfPages(buffer) {
@@ -11,14 +13,30 @@ async function extractPdfPages(buffer) {
     const totalPages = result.totalPages ?? pages.length;
 
     if (totalPages === 0) {
-        return { totalPages: 0, pages: [], avgCharsPerPage: 0, isScanned: true };
+        return {
+            totalPages: 0,
+            pages: [],
+            avgCharsPerPage: 0,
+            isScanned: true,
+            isSuspect: true,
+            textQuality: assessBookTextQuality([])
+        };
     }
 
     const totalChars = pages.reduce((sum, p) => sum + (p || '').length, 0);
     const avgCharsPerPage = Math.round(totalChars / totalPages);
     const isScanned = avgCharsPerPage < MIN_AVG_CHARS_PER_PAGE;
+    const textQuality = assessBookTextQuality(pages);
+    const isSuspect = textQuality.isSuspect;
 
-    return { totalPages, pages, avgCharsPerPage, isScanned };
+    return {
+        totalPages,
+        pages,
+        avgCharsPerPage,
+        isScanned,
+        isSuspect,
+        textQuality
+    };
 }
 
 module.exports = { extractPdfPages, MIN_AVG_CHARS_PER_PAGE };

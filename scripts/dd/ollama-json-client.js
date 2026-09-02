@@ -1,5 +1,5 @@
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma4:latest';
+const OLLAMA_MODEL = process.env.LOCAL_GEMMA_MODEL || process.env.OLLAMA_MODEL || 'gemma4:12b';
 
 async function callOllamaChatJson(messages, temperature = 0.3, retries = 2) {
   const url = `${OLLAMA_BASE_URL}/api/chat`;

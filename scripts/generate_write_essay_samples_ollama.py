@@ -10,10 +10,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-OLLAMA_BASE_URL_DEFAULT = "http://localhost:11434"
+import os
+
+OLLAMA_BASE_URL_DEFAULT = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_GENERATE_PATH = "/api/generate"
 OLLAMA_VERSION_PATH = "/api/version"
-MODEL_DEFAULT = "gemma4:latest"
+MODEL_DEFAULT = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 
 ESSAY_JSON_PATH_DEFAULT = "public/database/Write Essay/essay-questions-with-vocab.json"
 OXFORD_5000_CSV_DEFAULT = "The_Oxford_5000.csv"

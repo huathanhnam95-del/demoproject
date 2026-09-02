@@ -22,6 +22,30 @@
   gap: 10px;
 }
 
+/* The prev/next controls carry .ra-v7-icon-btn, which is transparent by design:
+   in the other modes it sits inside the .ra-v7-nav pill that supplies the chrome.
+   SST lays its nav out on the page background, so the buttons need their own
+   surface — without it they rendered as bare labels with no button affordance. */
+.sst-nav .ra-v7-icon-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--sst-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sst-accent);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.sst-nav .ra-v7-icon-btn:hover:not(:disabled) {
+  background: var(--sst-accent-soft);
+  color: var(--sst-accent);
+}
+
+.sst-nav .ra-v7-icon-btn:disabled {
+  color: var(--sst-muted);
+  box-shadow: none;
+}
+
 .sst-question-select {
   max-width: min(540px, 62vw);
   min-height: 42px;

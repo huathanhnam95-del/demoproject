@@ -14,7 +14,7 @@ exp = blank1['final_explanation']
 models = [
     ('DeepSeek-R1 (14B)', 'deepseek-r1:14b'),
     ('Qwen3 (14B)', 'qwen3:14b'),
-    ('Gemma4 (Latest)', 'gemma4:latest')
+    ('Gemma4 (12B)', 'gemma4:12b')
 ]
 
 prompt = f"""You are a warm, engaging, and expert English teacher having a 1-on-1 interactive conversation with a Vietnamese student studying PTE Reading Fill-in-the-Blanks.

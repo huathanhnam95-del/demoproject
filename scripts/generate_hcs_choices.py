@@ -7,8 +7,8 @@ import sys
 import re
 import openpyxl
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 EXCEL_PATH = r"c:\Cursor AI\public\database\HCS\HCS\HCS.xlsx"
 POSITION_REFERENCE_RE = r"\b((first|second|third|fourth|1st|2nd|3rd|4th)\s+(choice|option|paragraph|summary|distractor|one)|(choice|option|paragraph|summary|distractor)\s*(1|2|3|4|one|two|three|four|first|second|third|fourth))\b"
 

@@ -241,6 +241,11 @@ function createApp(options = {}) {
   app.use('/api/entrance-tests', routes.entranceTestRoutes);
   app.use('/api', routes.readingJourneyRoutes);
 
+  // Ingest beacon on page unload cleanly without 404
+  app.post(['/session-end', '/api/session-end'], (_req, res) => {
+    res.status(204).end();
+  });
+
   // To simulate Firebase Functions authentication in local dev server:
   // Normally Firebase passes a decoded token. In local dev, we need the authMiddleware.
   const functionsAuthMiddleware = require('../middleware/auth-user');

@@ -1,29 +1,31 @@
 // Quick lightweight script for the 2D Preloader
-// Shows on cold start (first load in session) or homepage.
-// Skips for returning logged-in users navigating directly to sub-routes.
+// Shows on cold start (first load in the browser session) only.
 
-const PRELOADER_MIN_DURATION_MS = 6500;
+// A hard 6500ms floor meant the splash held the screen for six and a half seconds even
+// when the app was ready in one — the dominant share of a measured 8.5-11.5s time to
+// interactive. 2200ms still reads as a deliberate brand beat and lets the fill animation
+// complete; tests/browser/preloader-browser-check.js samples at 1500ms, so cold start is
+// still showing it there.
+const PRELOADER_MIN_DURATION_MS = 2200;
 
 /**
  * Determine whether the preloader should display.
  * It should show when:
  *   1. This is the first page load in the browser session (cold start)
- *   2. The user is on the homepage ("/")
  * It should be skipped when:
- *   - The app has already loaded once in this session AND
- *     the user is navigating to a sub-route (not homepage)
+ *   - The app has already loaded once in this browser session, wherever the user is
+ *     navigating (index.html included — the practice app lives there).
  */
 function shouldShowPreloader() {
     const hasLoadedBefore = sessionStorage.getItem('bel_app_loaded') === '1';
-    const isHomepage = window.location.pathname === '/' || window.location.pathname === '/index.html';
 
     // First load in this session? Always show (cold start / tab opened).
     if (!hasLoadedBefore) return true;
 
-    // Returning to homepage? Show (brand entry point).
-    if (isHomepage) return true;
-
-    // Already loaded + navigating to a sub-route — skip.
+    // There used to be a second `if (isHomepage) return true` here. But the practice app
+    // IS /index.html, so every in-session return to it — including leaving a practice
+    // mode — replayed the full branded splash. The brand moment belongs to the cold
+    // start; after that, navigation should be immediate.
     return false;
 }
 

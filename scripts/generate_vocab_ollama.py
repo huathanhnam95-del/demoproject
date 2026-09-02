@@ -3,8 +3,10 @@ import urllib.request
 import urllib.error
 import time
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest" # Updated to match local tag
+import os
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 INPUT_FILE = "public/database/Write Essay/essay-questions.json"
 OUTPUT_FILE = "public/database/Write Essay/essay-questions-with-vocab.json"
 

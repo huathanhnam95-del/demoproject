@@ -13,13 +13,22 @@ async function setupFirebaseMocks(context) {
   await context.route('**/firebase-auth.js', (route) => route.fulfill({
     contentType: 'application/javascript',
     body: `
-      const mockUser = { uid: 'sst-user', email: 'sst@example.test', getIdTokenResult: () => Promise.resolve({ claims: {} }) };
+      const mockUser = {
+        uid: 'sst-user',
+        email: 'sst@example.test',
+        metadata: {
+          lastSignInTime: new Date().toISOString(),
+          creationTime: new Date().toISOString()
+        },
+        getIdTokenResult: () => Promise.resolve({ claims: {} })
+      };
       export const getAuth = () => ({ currentUser: mockUser });
       export const connectAuthEmulator = () => {};
       export const onAuthStateChanged = (auth, cb) => { setTimeout(() => cb(mockUser), 10); return () => {}; };
       export const setPersistence = () => Promise.resolve();
       export const browserLocalPersistence = 'local';
       export const signInWithEmailAndPassword = () => Promise.resolve({ user: mockUser });
+      export const signInWithCustomToken = () => Promise.resolve({ user: mockUser });
       export const signOut = () => Promise.resolve();
       export const createUserWithEmailAndPassword = () => Promise.resolve({ user: mockUser });
       export const sendPasswordResetEmail = () => Promise.resolve();
@@ -107,6 +116,12 @@ function summaryOfWords(count) {
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('crash', () => console.error('[PAGE CRASH] The page crashed!'));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' || msg.type() === 'warning') {
+      console.log(`[PAGE ${msg.type().toUpperCase()}]`, msg.text());
+    }
+  });
 
   await page.addInitScript(() => {
     window.__DISABLE_FIREBASE_EMULATORS__ = true;
@@ -295,8 +310,9 @@ function summaryOfWords(count) {
     await page.fill('#sst-response', validSummary);
     await page.click('#sst-play-btn');
     await page.waitForFunction(() => document.getElementById('sst-timer').textContent.trim() !== '10:00');
-    await page.evaluate(() => { window.confirm = () => true; });
-    await page.evaluate(async () => window.switchToMode('type'));
+    await page.evaluate(() => { window.__sstExitPromise = window.switchToMode('type'); });
+    await page.click('#custom-confirm-modal-confirm');
+    await page.evaluate(() => window.__sstExitPromise);
     assert.strictEqual(await page.evaluate(() => window.appState.currentMode), 'type', 'Confirmed exit should leave SST');
     await page.evaluate(async () => window.switchToMode('sst'));
     await page.waitForFunction(() => document.getElementById('sst-timer').textContent.trim() === '10:00');

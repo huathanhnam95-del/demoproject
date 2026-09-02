@@ -11,7 +11,7 @@ const REPORT_PATH = path.join(OUTPUT_DIR, 'sst-mainpoints-analysis-report.md');
 const JSON_OUTPUT_PATH = path.join(OUTPUT_DIR, 'sst-mainpoints-analysis.json');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma4:latest';
+const OLLAMA_MODEL = process.env.LOCAL_GEMMA_MODEL || process.env.OLLAMA_MODEL || 'gemma4:12b';
 
 // --- CLI Args ---
 const args = process.argv.slice(2);

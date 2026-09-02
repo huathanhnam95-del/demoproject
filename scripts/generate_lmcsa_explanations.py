@@ -6,8 +6,8 @@ import os
 import pandas as pd
 import openpyxl
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma4:latest"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b")
 EXCEL_PATH = r"c:\Cursor AI\public\database\LMCSA\LMCSA\LMCSA.xlsx"
 
 SYSTEM_PROMPT = """You are a premium PTE Academic teacher. Your task is to write a detailed, helpful explanation for a Listening Multiple Choice Single Answer question.

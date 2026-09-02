@@ -51,9 +51,9 @@ HEARTBEAT_SECONDS = 15
 HEARTBEAT_STALE_SECONDS = 45
 PAGE_SIZE = 200
 MAX_RETRIES = 3
-MODEL_PHASE_1 = os.getenv("MODEL_PHASE_1", "deepseek-r1:14b")
-MODEL_PHASE_2 = os.getenv("MODEL_PHASE_2", "qwen3:14b")
-MODEL_PHASE_3 = os.getenv("MODEL_PHASE_3", "gemma4:latest")
+MODEL_PHASE_1 = os.getenv("MODEL_PHASE_1", os.getenv("LOCAL_DEEPSEEK_MODEL", "deepseek-r1:14b"))
+MODEL_PHASE_2 = os.getenv("MODEL_PHASE_2", os.getenv("LOCAL_QWEN_MODEL", "qwen3:14b"))
+MODEL_PHASE_3 = os.getenv("MODEL_PHASE_3", os.getenv("LOCAL_GEMMA_MODEL", "gemma4:12b"))
 
 logging.basicConfig(
     level=logging.INFO,

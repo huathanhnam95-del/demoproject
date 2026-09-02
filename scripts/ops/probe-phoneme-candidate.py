@@ -159,7 +159,7 @@ def main():
     durations.sort()
 
     p50 = durations[len(durations) // 2] if durations else 0
-    p95 = durations[int(len(durations) * 0.95)] if durations else 0
+    p95 = durations[min(int(len(durations) * 0.95), len(durations) - 1)] if durations else 0
 
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
     out_dir = os.path.join("test-results", "v4-a2-availability", timestamp)

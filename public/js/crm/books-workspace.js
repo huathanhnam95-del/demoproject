@@ -56,6 +56,37 @@ window.CrmBooksWorkspace = (function () {
         return `${normalized.slice(0, AUTO_THREAD_TITLE_LENGTH - 1).trimEnd()}…`;
     }
 
+    function formatElaborateParagraphs(text, escaper = escapeHtml) {
+        if (!text) return '';
+        const escapeFn = typeof escaper === 'function' ? escaper : (s => String(s ?? ''));
+        const escaped = escapeFn(String(text));
+        return escaped
+            .replace(/(?:\r?\n\s*\r?\n|\\n\s*\\n)/g, '</p><p>')
+            .replace(/(?:\r?\n|\\n)/g, '<br>');
+    }
+
+    function generateElaborationMarkdown(result) {
+        if (!result) return '';
+        let md = `# Deep-Dive Elaboration: ${result.bookTitle || 'Book'}\n\n`;
+        if (result.bookAuthor) md += `*Author: ${result.bookAuthor}*\n\n`;
+        if (result.synthesis) {
+            md += `## 🎯 Conceptual Synthesis\n\n${result.synthesis}\n\n---\n\n`;
+        }
+        (result.elaborations || []).forEach((el, idx) => {
+            md += `### #${idx + 1} ${el.concept || 'Concept'} ${el.pageRef ? `(${el.pageRef})` : ''}\n\n`;
+            if (el.snippetText) md += `> "${el.snippetText}"\n\n`;
+            if (el.detailedExplanation) md += `${el.detailedExplanation}\n\n`;
+            if (el.sourceEvidence) {
+                md += `**📖 Source Grounding:**\n${el.sourceEvidence}\n\n`;
+            }
+            if (Array.isArray(el.keyTakeaways) && el.keyTakeaways.length > 0) {
+                md += `**💡 Key Takeaways:**\n` + el.keyTakeaways.map(t => `- ${t}`).join('\n') + '\n\n';
+            }
+            md += `---\n\n`;
+        });
+        return md;
+    }
+
     function reflowPageText(text) {
         const source = String(text ?? '').replace(/\r\n?/g, '\n').trim();
         if (!source) return '';
@@ -167,10 +198,11 @@ window.CrmBooksWorkspace = (function () {
 
     function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
-        const rawNormalized = String(text ?? '').replace(/\r\n?/g, '\n');
-        const isOcrV2 = options?.rendererContract === 'ocr-v2' || options?.preserveSpacing === true
-            || (typeof pagesData === 'object' && pagesData?.rendererContract === 'ocr-v2');
-        const repaired = isOcrV2 ? rawNormalized : repairMissingSpaces(rawNormalized);
+        const rendererContract = (typeof options === 'string' ? options : options?.rendererContract)
+            || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
+            || 'legacy';
+        const rawText = String(text ?? '').replace(/\r\n?/g, '\n');
+        const repaired = rendererContract === 'ocr-v2' ? rawText : repairMissingSpaces(rawText);
         const lines = repaired
             .split('\n')
             .map((line) => line.trim());
@@ -412,6 +444,8 @@ window.CrmBooksWorkspace = (function () {
                 title: clean(item?.title),
                 author: clean(item?.author),
                 description: clean(item?.description),
+                collectionId: clean(item?.collectionId),
+                tags: Array.isArray(item?.tags) ? item.tags.map(clean).filter(Boolean) : [],
                 pageCount: item?.pageCount ?? null,
                 sizeBytes: item?.sizeBytes ?? null,
                 sha256: item?.sha256 || null,
@@ -421,6 +455,50 @@ window.CrmBooksWorkspace = (function () {
                 createdAt: item?.createdAt || null
             }))
             .filter((item) => item.bookId);
+    }
+
+    function normalizeTagName(name) {
+        return clean(name).toLowerCase();
+    }
+
+    function filterBooksByTags(booksList, tagIds, matchMode = 'and') {
+        if (!Array.isArray(booksList)) return [];
+        if (!Array.isArray(tagIds) || tagIds.length === 0) return booksList;
+        const normalizedTargetTags = tagIds.map(t => clean(t).toLowerCase()).filter(Boolean);
+        if (normalizedTargetTags.length === 0) return booksList;
+
+        return booksList.filter(book => {
+            const bTags = (book.tags || []).map(t => clean(t).toLowerCase());
+            if (matchMode === 'or') {
+                return normalizedTargetTags.some(t => bTags.includes(t));
+            }
+            return normalizedTargetTags.every(t => bTags.includes(t));
+        });
+    }
+
+    function groupBooksByCollection(booksList, collectionsList) {
+        const result = {};
+        const safeCollections = Array.isArray(collectionsList) ? collectionsList : [];
+        const safeBooks = Array.isArray(booksList) ? booksList : [];
+
+        safeCollections.forEach(c => {
+            result[c.id] = [];
+        });
+
+        const pronunciationCol = safeCollections.find(c => (c.name || '').trim().toLowerCase() === 'pronunciation');
+        const fallbackColId = pronunciationCol ? pronunciationCol.id : (safeCollections[0]?.id || 'default');
+        if (!result[fallbackColId]) result[fallbackColId] = [];
+
+        safeBooks.forEach(b => {
+            const cId = b.collectionId;
+            if (cId && result[cId]) {
+                result[cId].push(b);
+            } else {
+                result[fallbackColId].push(b);
+            }
+        });
+
+        return result;
     }
 
     function buildIngestLabel(ingest, status) {
@@ -623,6 +701,24 @@ window.CrmBooksWorkspace = (function () {
         let messages = [];
         let renderListTimer = null;
         let searchQuery = '';
+        let bookTags = [];
+        let activeSidebarTagFilters = new Set();
+        let openFolderIds = new Set();
+
+        try {
+            const savedFolders = JSON.parse(localStorage.getItem('crm_books_open_folders') || '[]');
+            if (Array.isArray(savedFolders)) openFolderIds = new Set(savedFolders);
+        } catch (_ignored) {
+            // ignore localStorage read failure
+        }
+
+        function saveOpenFolders() {
+            try {
+                localStorage.setItem('crm_books_open_folders', JSON.stringify(Array.from(openFolderIds)));
+            } catch (_ignored) {
+                // ignore localStorage write failure
+            }
+        }
         let collapsedOutline = {};
         let expandedNotes = {};
         let currentPage = 1;
@@ -678,6 +774,10 @@ window.CrmBooksWorkspace = (function () {
         let summaryMode = '';
         let sectionDigests = null;
         let sectionsLoading = false;
+        let isElaborateModeActive = false;
+        let elaborateSnippets = [];
+        let isElaborating = false;
+        let lastElaborationResult = null;
 
         const panel = elements.booksPanel || document.querySelector('[data-panel="books"]');
 
@@ -710,49 +810,112 @@ window.CrmBooksWorkspace = (function () {
             return apiFetchJson(path, { method: 'DELETE' });
         }
 
+        function renderBookListItem(b) {
+            const isSelected = b.bookId === selectedBookId;
+            const statusIcon = b.status === 'ready' ? '<span class="crm-books-status-icon ready" title="Ready">&#10003;</span>'
+                : b.status === 'failed' ? '<span class="crm-books-status-icon failed" title="Failed">&#9888;</span>'
+                    : '';
+            const ingestLine = (b.status !== 'ready' && b.status !== 'awaiting_upload')
+                ? `<div class="crm-books-ingest-line"><div class="crm-books-progress-bar"><div class="crm-books-progress-fill" style="width:${ingestWeightedPercent(b.ingest, b.status)}%"></div></div><span class="crm-books-list-stage">${escapeHtml(buildIngestLabel(b.ingest, b.status))}</span></div>`
+                : b.status === 'awaiting_upload'
+                    ? `<div class="crm-books-ingest-line"><span class="crm-books-list-stage">Upload incomplete</span></div>`
+                    : '';
+            const progressLine = b.status === 'ready' ? renderProgressBar(b.bookId, b.pageCount) : '';
+
+            const tagChips = (b.tags || []).map(tId => {
+                const tObj = bookTags.find(t => t.id === tId || t.name.toLowerCase() === tId.toLowerCase());
+                const tName = tObj ? tObj.name : tId;
+                const tColor = tObj?.color || '#0f766e';
+                return `<span class="crm-books-tag-chip" style="border-color:${tColor}; color:${tColor}; background:${tColor}18;">🏷️ ${escapeHtml(tName)}</span>`;
+            }).join('');
+
+            return `<div class="crm-books-list-item${isSelected ? ' selected' : ''}" data-book-id="${escapeHtml(b.bookId)}">` +
+                `<div class="crm-books-list-item-header">` +
+                `<span class="crm-books-list-title">${escapeHtml(b.title)}</span>` +
+                `<div style="display:flex; align-items:center; gap:4px;">` +
+                `<button type="button" class="crm-books-card-quick-tag-btn" data-quick-tag-book-id="${escapeHtml(b.bookId)}" title="Add or manage tags">+🏷️</button>` +
+                statusIcon +
+                `</div>` +
+                `</div>` +
+                `<div class="crm-books-list-author">${escapeHtml(b.author || '')}</div>` +
+                (tagChips ? `<div class="crm-books-card-tags-row">${tagChips}</div>` : '') +
+                ingestLine +
+                progressLine +
+                `</div>`;
+        }
+
         // --- Render: Sources Panel (left) ---
         function renderSourcesPanel() {
             const list = qs('.crm-books-list');
             const countBadge = qs('.crm-books-sources-count');
             if (!list) return;
 
-            let filtered = searchQuery
-                ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.author.toLowerCase().includes(searchQuery.toLowerCase()))
-                : books;
+            renderSidebarTagFilter();
 
-            if (activeCollectionFilter) {
-                const col = bookCollections.find(c => c.id === activeCollectionFilter);
-                if (col) filtered = filtered.filter(b => col.bookIds.includes(b.bookId));
+            let filtered = books;
+            if (searchQuery) {
+                filtered = filtered.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.author.toLowerCase().includes(searchQuery.toLowerCase()));
+            }
+
+            if (activeSidebarTagFilters.size > 0) {
+                filtered = filtered.filter(b => {
+                    const bTags = b.tags || [];
+                    for (const tId of activeSidebarTagFilters) {
+                        if (bTags.includes(tId)) return true;
+                        const tObj = bookTags.find(t => t.id === tId);
+                        if (tObj && bTags.includes(tObj.name)) return true;
+                    }
+                    return false;
+                });
             }
 
             if (countBadge) countBadge.textContent = String(books.length);
-
-            const collectionHtml = renderCollectionFilter();
-            const filterContainer = qs('.crm-books-collection-filter-area');
-            if (filterContainer) filterContainer.innerHTML = collectionHtml;
 
             if (filtered.length === 0) {
                 list.innerHTML = `<li class="crm-books-empty-item">${books.length === 0 ? 'No books yet. Add a source to get started.' : 'No matching books.'}</li>`;
                 return;
             }
-            list.innerHTML = filtered.map((b) => {
-                const isSelected = b.bookId === selectedBookId;
-                const statusIcon = b.status === 'ready' ? '<span class="crm-books-status-icon ready" title="Ready">&#10003;</span>'
-                    : b.status === 'failed' ? '<span class="crm-books-status-icon failed" title="Failed">&#9888;</span>'
-                        : '';
-                const ingestLine = (b.status !== 'ready' && b.status !== 'awaiting_upload')
-                    ? `<div class="crm-books-ingest-line"><div class="crm-books-progress-bar"><div class="crm-books-progress-fill" style="width:${ingestWeightedPercent(b.ingest, b.status)}%"></div></div><span class="crm-books-list-stage">${escapeHtml(buildIngestLabel(b.ingest, b.status))}</span></div>`
-                    : b.status === 'awaiting_upload'
-                        ? `<div class="crm-books-ingest-line"><span class="crm-books-list-stage">Upload incomplete</span></div>`
-                        : '';
-                const progressLine = b.status === 'ready' ? renderProgressBar(b.bookId, b.pageCount) : '';
-                return `<li class="crm-books-list-item${isSelected ? ' selected' : ''}" data-book-id="${escapeHtml(b.bookId)}">` +
-                    `<div class="crm-books-list-item-header"><span class="crm-books-list-title">${escapeHtml(b.title)}</span>${statusIcon}</div>` +
-                    `<div class="crm-books-list-author">${escapeHtml(b.author || '')}</div>` +
-                    ingestLine +
-                    progressLine +
-                    `</li>`;
-            }).join('');
+
+            if (bookCollections.length === 0) {
+                list.innerHTML = filtered.map(renderBookListItem).join('');
+                return;
+            }
+
+            const grouped = groupBooksByCollection(filtered, bookCollections);
+            const hasFilter = searchQuery || activeSidebarTagFilters.size > 0;
+
+            let html = '<div class="crm-books-folders-container">';
+            bookCollections.forEach(col => {
+                const colBooks = grouped[col.id] || [];
+                const isExpanded = hasFilter ? (colBooks.length > 0) : openFolderIds.has(col.id);
+
+                const booksListHtml = colBooks.length === 0
+                    ? `<div class="crm-books-folder-empty">No books in this collection</div>`
+                    : colBooks.map(renderBookListItem).join('');
+
+                html += `
+                <div class="crm-books-folder" data-folder-id="${escapeHtml(col.id)}">
+                  <div class="crm-books-folder-header" data-folder-toggle="${escapeHtml(col.id)}">
+                    <div class="crm-books-folder-title-wrap">
+                      <span class="crm-books-folder-chevron${isExpanded ? '' : ' collapsed'}">▾</span>
+                      <span class="crm-books-folder-icon">📁</span>
+                      <span class="crm-books-folder-name" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</span>
+                      <span class="crm-books-folder-count">${colBooks.length}</span>
+                    </div>
+                    <div class="crm-books-folder-actions">
+                      <button type="button" class="crm-books-folder-btn rename" data-folder-rename="${escapeHtml(col.id)}" title="Rename collection">✏️</button>
+                      <button type="button" class="crm-books-folder-btn delete" data-folder-delete="${escapeHtml(col.id)}" title="Delete collection">✕</button>
+                    </div>
+                  </div>
+                  <div class="crm-books-folder-content${isExpanded ? '' : ' collapsed'}" data-folder-content="${escapeHtml(col.id)}">
+                    ${booksListHtml}
+                  </div>
+                </div>
+                `;
+            });
+            html += '</div>';
+
+            list.innerHTML = html;
         }
 
         // --- Render: Explorer Panel (center) ---
@@ -798,13 +961,32 @@ window.CrmBooksWorkspace = (function () {
                 ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>'
                 : '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
             const usageHtml = renderUsageIndicator();
+            const curCol = bookCollections.find(c => c.id === b.collectionId);
+            const colName = curCol ? curCol.name : 'Pronunciation';
+            const colBadge = `<span class="crm-books-header-folder-badge" data-book-id="${escapeHtml(b.bookId)}" title="Click to move to another collection">📁 ${escapeHtml(colName)} ▾</span>`;
+
+            const bookTagChips = (b.tags || []).map(tId => {
+                const tagObj = bookTags.find(t => t.id === tId || t.name.toLowerCase() === tId.toLowerCase());
+                const tagName = tagObj ? tagObj.name : tId;
+                const tagColor = tagObj?.color || '#0f766e';
+                return `<span class="crm-books-tag-chip" style="border-color:${tagColor}; color:${tagColor}; background:${tagColor}18;">` +
+                    `🏷️ ${escapeHtml(tagName)} ` +
+                    `<button type="button" class="crm-books-tag-chip-remove" data-book-id="${escapeHtml(b.bookId)}" data-tag-id="${escapeHtml(tId)}" title="Remove tag">✕</button>` +
+                    `</span>`;
+            }).join('');
+
+            const addTagBtn = `<button type="button" class="crm-books-header-add-tag-btn" data-book-id="${escapeHtml(b.bookId)}">+ Add Tag</button>`;
+            const tagsBarHtml = `<div class="crm-books-header-tags-bar">${colBadge}${bookTagChips}${addTagBtn}</div>`;
+
             const headerHtml = `<div class="crm-books-explorer-header">` +
                 `<div class="crm-books-explorer-title-group">` +
                 `<h3 class="crm-books-explorer-title">${escapeHtml(b.title)}</h3>` +
                 `<p class="crm-books-explorer-meta">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' \u00b7 ')}</p>` +
+                tagsBarHtml +
                 `</div>` +
                 usageHtml +
-                `<button class="crm-books-bgm-btn" data-book-id="${escapeHtml(b.bookId)}" title="Upload & manage background music (MP3)" aria-label="Background music">${ICON_MUSIC}<span>Background Music</span></button>` +
+                `<button class="crm-books-elaborate-btn${isElaborateModeActive ? ' active' : ''}" data-book-id="${escapeHtml(b.bookId)}" title="Elaborate tool: Highlight texts to deep dive with AI" aria-label="Elaborate tool">✨<span>Elaborate</span></button>` +
+                `<button class="crm-books-bgm-btn" data-book-id="${escapeHtml(b.bookId)}" title="Upload & manage background music (MP3)" aria-label="Manage music">${ICON_MUSIC}<span>Manage Music</span></button>` +
                 `<button class="crm-books-download-btn" data-book-id="${escapeHtml(b.bookId)}" title="Download source" aria-label="Download source">${ICON_DOWNLOAD}<span>Download source</span></button>` +
                 `<button class="crm-books-dark-toggle" title="Toggle dark mode">${darkIcon}</button>` +
                 `<button class="crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book">${ICON_TRASH}</button>` +
@@ -1288,8 +1470,6 @@ window.CrmBooksWorkspace = (function () {
                 `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
                 `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
                 `</label>` +
-                `<button class="crm-books-open-bgm" data-book-id="${escapeHtml(selectedBookId)}" title="Upload & manage background music (MP3)">` +
-                `${ICON_MUSIC}<span>Background music</span></button>` +
                 `<button class="crm-books-open-bookview" title="Open book view">` +
                 `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
                 `<span>Open book view</span></button>` +
@@ -1969,11 +2149,17 @@ window.CrmBooksWorkspace = (function () {
             });
         }
 
-        async function loadPagesMetadata() {
-            if (!selectedBookId || pagesData) return;
+        async function loadPagesMetadata(force = false) {
+            if (!selectedBookId) return;
+            const currentActiveRev = selectedBook?.activeTextRevisionId || null;
+            if (!force && pagesData && pagesData.bookId === selectedBookId && (!currentActiveRev || pagesData.textRevisionId === currentActiveRev)) {
+                return;
+            }
             try {
                 const res = await apiGet(`/api/admin/books/${selectedBookId}/pages`);
                 pagesData = res?.data || res;
+                if (!pagesData) pagesData = { totalPages: 0, pages: [] };
+                pagesData.bookId = selectedBookId;
                 const lastRead = readingProgress.lastPage;
                 currentPage = (lastRead && lastRead >= 1 && lastRead <= (pagesData.totalPages || 0))
                     ? lastRead
@@ -1985,7 +2171,7 @@ window.CrmBooksWorkspace = (function () {
                 }
             } catch (err) {
                 console.error('[CRM Books] Failed to load pages:', err);
-                pagesData = { totalPages: 0, pages: [] };
+                pagesData = { totalPages: 0, pages: [], bookId: selectedBookId };
                 if (activeTab === 'pages') renderExplorerPanel();
             }
         }
@@ -2113,7 +2299,7 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function saveBookNote(bookId, text) {
-            if (!bookId || !text) return;
+            if (!bookId || !text) return null;
             const notes = loadBookNotes(bookId);
             const newNote = {
                 id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -2126,13 +2312,17 @@ window.CrmBooksWorkspace = (function () {
             } catch (e) {
                 console.error('Failed to save book note:', e);
             }
-            apiPost(`/api/admin/books/${bookId}/notes`, { text }).then((res) => {
+            return apiPost(`/api/admin/books/${bookId}/notes`, { text }).then((res) => {
                 const saved = res?.note || res?.data?.note;
                 if (saved?.id) {
                     newNote.firestoreId = saved.id;
                     try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(loadBookNotes(bookId).map(n => n.id === newNote.id ? newNote : n))); } catch (err) { void err; }
                 }
-            }).catch(() => {});
+                return newNote;
+            }).catch((err) => {
+                console.warn('[CRM Books] Background note sync warning:', err);
+                return newNote;
+            });
         }
 
         function deleteBookNote(bookId, noteId) {
@@ -5865,6 +6055,7 @@ window.CrmBooksWorkspace = (function () {
                 `<div class="crm-form-grid" style="grid-template-columns:1fr;">` +
                 `<div class="crm-form-group"><label for="crm-book-title">Title <span style="color:var(--danger-color,#e53e3e);">*</span></label><input id="crm-book-title" class="crm-input" type="text" placeholder="e.g. Sound Foundations"></div>` +
                 `<div class="crm-form-group"><label for="crm-book-author">Author</label><input id="crm-book-author" class="crm-input" type="text" placeholder="e.g. Adrian Underhill"></div>` +
+                `<div class="crm-form-group"><label for="crm-book-collection">Collection</label><select id="crm-book-collection" class="crm-input">${bookCollections.map(c => `<option value="${escapeHtml(c.id)}"${selectedBook?.collectionId === c.id ? ' selected' : ''}>📁 ${escapeHtml(c.name)}</option>`).join('')}</select></div>` +
                 `<div class="crm-form-group"><label for="crm-book-file">PDF file <span style="color:var(--danger-color,#e53e3e);">*</span></label><input id="crm-book-file" class="crm-input" type="file" accept=".pdf,application/pdf"></div>` +
                 `<p class="crm-books-modal-error crm-muted" style="color:var(--danger-color,#e53e3e); display:none;"></p>` +
                 `</div></div>` +
@@ -5931,10 +6122,14 @@ window.CrmBooksWorkspace = (function () {
                 try {
                     const sha256 = await computeSha256(file);
 
+                    const collectionSelect = modal.querySelector('#crm-book-collection');
+                    const collectionId = collectionSelect ? collectionSelect.value : (bookCollections[0]?.id || '');
+
                     const res = await apiPost('/api/admin/books', {
                         title,
                         author,
                         sha256,
+                        collectionId,
                         originalFilename: file.name
                     });
 
@@ -5955,6 +6150,8 @@ window.CrmBooksWorkspace = (function () {
                         bookId: book.bookId,
                         title,
                         author,
+                        collectionId: book.collectionId || collectionId,
+                        tags: [],
                         status: 'awaiting_upload',
                         ingest: null,
                         pageCount: null,
@@ -5962,6 +6159,10 @@ window.CrmBooksWorkspace = (function () {
                         sha256,
                         source: { storagePath: book.storagePath }
                     });
+                    if (collectionId) {
+                        openFolderIds.add(collectionId);
+                        saveOpenFolders();
+                    }
                     renderSourcesPanel();
 
                     await startUpload(book.bookId, book.storagePath || `crm-books/${book.bookId}/source.pdf`, file);
@@ -6942,7 +7143,7 @@ window.CrmBooksWorkspace = (function () {
             }
         }
 
-        // ─── Phase 4: Shared Book Collections ───
+        // ─── Phase 4: Shared Book Collections & Tags ───
         let bookCollections = [];
         let activeCollectionFilter = '';
 
@@ -6950,55 +7151,1088 @@ window.CrmBooksWorkspace = (function () {
             try {
                 const res = await apiGet('/api/admin/book-collections');
                 bookCollections = Array.isArray(res?.collections) ? res.collections : [];
+                if (openFolderIds.size === 0 && bookCollections.length > 0) {
+                    bookCollections.forEach(c => openFolderIds.add(c.id));
+                    saveOpenFolders();
+                }
             } catch (_) {
                 bookCollections = [];
+            }
+        }
+
+        async function loadBookTags() {
+            try {
+                const res = await apiGet('/api/admin/book-tags');
+                bookTags = Array.isArray(res?.tags) ? res.tags : [];
+            } catch (_) {
+                bookTags = [];
             }
         }
 
         async function createBookCollection(name, description, bookIds) {
             try {
                 const res = await apiPost('/api/admin/book-collections', { name, description, bookIds });
-                bookCollections.push({ id: res.id, name, description, bookIds });
+                const newCol = { id: res.id, name, description, bookIds: bookIds || [] };
+                bookCollections.push(newCol);
+                openFolderIds.add(res.id);
+                saveOpenFolders();
+
+                if (Array.isArray(bookIds) && bookIds.length > 0) {
+                    bookIds.forEach(bId => {
+                        const b = books.find(item => item.bookId === bId);
+                        if (b) b.collectionId = res.id;
+                    });
+                    bookCollections.forEach(c => {
+                        if (c.id !== res.id && Array.isArray(c.bookIds)) {
+                            c.bookIds = c.bookIds.filter(id => !bookIds.includes(id));
+                        }
+                    });
+                }
+
                 showToast?.('Collection created.', 'info');
                 renderSourcesPanel();
+                if (selectedBook) renderExplorerPanel();
+                return newCol;
             } catch (err) {
                 showToast?.('Failed to create collection.', 'error');
+                return null;
+            }
+        }
+
+        async function renameBookCollection(collectionId) {
+            const col = bookCollections.find(c => c.id === collectionId);
+            if (!col) return;
+            const newName = prompt('New collection name:', col.name);
+            if (!newName || !newName.trim() || newName.trim() === col.name) return;
+            try {
+                await apiPatch(`/api/admin/book-collections/${collectionId}`, { name: newName.trim() });
+                col.name = newName.trim();
+                renderSourcesPanel();
+                if (selectedBook) renderExplorerPanel();
+                showToast?.('Collection renamed.', 'info');
+            } catch (err) {
+                showToast?.('Failed to rename collection.', 'error');
             }
         }
 
         async function deleteBookCollection(collectionId) {
-            try {
-                await apiDelete(`/api/admin/book-collections/${collectionId}`);
-                bookCollections = bookCollections.filter(c => c.id !== collectionId);
-                if (activeCollectionFilter === collectionId) activeCollectionFilter = '';
-                renderSourcesPanel();
-            } catch (err) {
-                showToast?.('Failed to delete collection.', 'error');
-            }
-        }
-
-        async function addBookToCollection(collectionId, bookId) {
             const col = bookCollections.find(c => c.id === collectionId);
             if (!col) return;
-            if (col.bookIds.includes(bookId)) return;
-            col.bookIds.push(bookId);
-            try {
-                await apiPatch(`/api/admin/book-collections/${collectionId}`, { bookIds: col.bookIds });
-            } catch (err) {
-                showToast?.('Failed to update collection.', 'error');
+            const bookCount = (col.bookIds || []).length;
+            if (bookCollections.length <= 1) {
+                showToast?.('Cannot delete the only collection. At least one collection must exist.', 'warning');
+                return;
+            }
+            if (bookCount > 0) {
+                const otherCol = bookCollections.find(c => c.id !== collectionId);
+                const confirmMsg = `Collection "${col.name}" contains ${bookCount} book(s). Move them to "${otherCol.name}" and delete this collection?`;
+                if (!confirm(confirmMsg)) return;
+                try {
+                    await apiDelete(`/api/admin/book-collections/${collectionId}`, { targetCollectionId: otherCol.id });
+                    col.bookIds.forEach(bId => {
+                        const b = books.find(item => item.bookId === bId);
+                        if (b) b.collectionId = otherCol.id;
+                    });
+                    if (!otherCol.bookIds) otherCol.bookIds = [];
+                    otherCol.bookIds = Array.from(new Set([...otherCol.bookIds, ...col.bookIds]));
+                    bookCollections = bookCollections.filter(c => c.id !== collectionId);
+                    openFolderIds.delete(collectionId);
+                    openFolderIds.add(otherCol.id);
+                    saveOpenFolders();
+                    showToast?.(`Collection deleted. Books moved to "${otherCol.name}".`, 'info');
+                    renderSourcesPanel();
+                    if (selectedBook) renderExplorerPanel();
+                } catch (err) {
+                    showToast?.('Failed to delete collection.', 'error');
+                }
+            } else {
+                if (!confirm(`Delete empty collection "${col.name}"?`)) return;
+                try {
+                    await apiDelete(`/api/admin/book-collections/${collectionId}`);
+                    bookCollections = bookCollections.filter(c => c.id !== collectionId);
+                    openFolderIds.delete(collectionId);
+                    saveOpenFolders();
+                    showToast?.('Collection deleted.', 'info');
+                    renderSourcesPanel();
+                } catch (err) {
+                    showToast?.('Failed to delete collection.', 'error');
+                }
             }
         }
 
-        function renderCollectionFilter() {
-            if (bookCollections.length === 0) return '';
-            let html = '<div class="crm-books-collection-filter">';
-            html += `<button class="crm-books-collection-chip${!activeCollectionFilter ? ' active' : ''}" data-collection-id="">All</button>`;
+        async function moveBookToCollection(bookId, targetCollectionId) {
+            const book = books.find(b => b.bookId === bookId);
+            if (!book) return;
+            const oldColId = book.collectionId;
+            if (oldColId === targetCollectionId) return;
+
+            book.collectionId = targetCollectionId;
+            openFolderIds.add(targetCollectionId);
+            saveOpenFolders();
+
             bookCollections.forEach(c => {
-                html += `<button class="crm-books-collection-chip${activeCollectionFilter === c.id ? ' active' : ''}" data-collection-id="${c.id}">${escapeHtml(c.name)} (${c.bookIds?.length || 0})</button>`;
-                html += `<button class="crm-books-collection-delete" data-collection-id="${c.id}" title="Delete collection">✕</button>`;
+                if (!Array.isArray(c.bookIds)) c.bookIds = [];
+                if (c.id === targetCollectionId && !c.bookIds.includes(bookId)) {
+                    c.bookIds.push(bookId);
+                } else if (c.id !== targetCollectionId && c.bookIds.includes(bookId)) {
+                    c.bookIds = c.bookIds.filter(id => id !== bookId);
+                }
             });
-            html += '</div>';
-            return html;
+
+            renderSourcesPanel();
+            if (selectedBookId === bookId) {
+                selectedBook = book;
+                renderExplorerPanel();
+            }
+
+            try {
+                await apiPatch(`/api/admin/books/${bookId}/collection`, { collectionId: targetCollectionId });
+                showToast?.('Book moved to collection.', 'info');
+            } catch (err) {
+                showToast?.('Failed to move book to collection.', 'error');
+            }
+        }
+
+        async function createBookTag(name, color = '#10b981') {
+            const cleanName = clean(name);
+            if (!cleanName) return null;
+            try {
+                const res = await apiPost('/api/admin/book-tags', { name: cleanName, color });
+                const tagObj = { id: res.id, name: cleanName, color };
+                const existingIdx = bookTags.findIndex(t => t.id === res.id || t.name.toLowerCase() === cleanName.toLowerCase());
+                if (existingIdx >= 0) {
+                    bookTags[existingIdx] = tagObj;
+                } else {
+                    bookTags.push(tagObj);
+                }
+                renderSidebarTagFilter();
+                renderSourcesPanel();
+                if (selectedBook) renderExplorerPanel();
+                return tagObj;
+            } catch (err) {
+                showToast?.('Failed to create tag: ' + (err.message || ''), 'error');
+                return null;
+            }
+        }
+
+        async function deleteBookTag(tagId) {
+            try {
+                await apiDelete(`/api/admin/book-tags/${tagId}`);
+                bookTags = bookTags.filter(t => t.id !== tagId);
+                activeSidebarTagFilters.delete(tagId);
+                books.forEach(b => {
+                    if (b.tags) b.tags = b.tags.filter(t => t !== tagId);
+                });
+                renderSidebarTagFilter();
+                renderSourcesPanel();
+                if (selectedBook) renderExplorerPanel();
+                showToast?.('Tag deleted.', 'info');
+            } catch (err) {
+                showToast?.('Failed to delete tag.', 'error');
+            }
+        }
+
+        async function toggleBookTag(bookId, tagIdOrName) {
+            const book = books.find(b => b.bookId === bookId);
+            if (!book) return;
+            if (!Array.isArray(book.tags)) book.tags = [];
+
+            let tagObj = bookTags.find(t => t.id === tagIdOrName || t.name.toLowerCase() === tagIdOrName.toLowerCase());
+            if (!tagObj) {
+                tagObj = await createBookTag(tagIdOrName);
+                if (!tagObj) return;
+            }
+
+            const tagId = tagObj.id;
+            const hasTag = book.tags.includes(tagId) || book.tags.includes(tagObj.name);
+
+            if (hasTag) {
+                book.tags = book.tags.filter(t => t !== tagId && t !== tagObj.name);
+            } else {
+                book.tags.push(tagId);
+            }
+
+            renderSourcesPanel();
+            renderSidebarTagFilter();
+            if (selectedBookId === bookId) {
+                selectedBook = book;
+                renderExplorerPanel();
+            }
+
+            try {
+                await apiPatch(`/api/admin/books/${bookId}/tags`, { tags: book.tags });
+            } catch (err) {
+                showToast?.('Failed to update book tags.', 'error');
+            }
+        }
+
+        function renderSidebarTagFilter() {
+            const bar = qs('.crm-books-sidebar-tag-filter-bar');
+            if (!bar) return;
+            if (bookTags.length === 0) {
+                bar.innerHTML = '';
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'flex';
+            let html = `<button type="button" class="crm-books-sidebar-tag-pill${activeSidebarTagFilters.size === 0 ? ' active' : ''}" data-sidebar-tag-id="">All</button>`;
+            bookTags.forEach(t => {
+                const count = books.filter(b => (b.tags || []).includes(t.id) || (b.tags || []).includes(t.name)).length;
+                const isActive = activeSidebarTagFilters.has(t.id);
+                html += `<button type="button" class="crm-books-sidebar-tag-pill${isActive ? ' active' : ''}" data-sidebar-tag-id="${escapeHtml(t.id)}" style="${isActive ? `background:${t.color || '#0f766e'}; border-color:${t.color || '#0f766e'}; color:#fff;` : ''}">🏷️ ${escapeHtml(t.name)} (${count})</button>`;
+            });
+            if (activeSidebarTagFilters.size > 0) {
+                html += `<button type="button" class="crm-books-sidebar-tag-pill clear-btn" data-clear-sidebar-tags="1">Clear</button>`;
+            }
+            bar.innerHTML = html;
+        }
+
+        function openNewCollectionModal() {
+            document.querySelector('#crm-books-new-collection-modal')?.remove();
+
+            const modalTagFilter = new Set();
+            let modalMatchMode = 'and';
+            let modalSearchQuery = '';
+            const selectedBookIds = new Set(selectedBookId ? [selectedBookId] : []);
+
+            function getFilteredModalBooks() {
+                let list = books;
+                if (modalSearchQuery) {
+                    const q = modalSearchQuery.toLowerCase();
+                    list = list.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
+                }
+                if (modalTagFilter.size > 0) {
+                    const tagIds = Array.from(modalTagFilter);
+                    list = filterBooksByTags(list, tagIds, modalMatchMode);
+                }
+                return list;
+            }
+
+            function renderModal() {
+                const filteredBooks = getFilteredModalBooks();
+                const tagChipsHtml = bookTags.map(t => {
+                    const isSelected = modalTagFilter.has(t.id) || modalTagFilter.has(t.name);
+                    const count = books.filter(b => (b.tags || []).includes(t.id) || (b.tags || []).includes(t.name)).length;
+                    return `<button type="button" class="crm-books-sidebar-tag-pill${isSelected ? ' active' : ''}" data-modal-tag-id="${escapeHtml(t.id)}">🏷️ ${escapeHtml(t.name)} (${count})</button>`;
+                }).join('');
+
+                const booksChecklistHtml = filteredBooks.length === 0
+                    ? `<div style="padding:16px; text-align:center; color:#94a3b8; font-size:0.8rem;">No books match the filters.</div>`
+                    : filteredBooks.map(b => {
+                        const isChecked = selectedBookIds.has(b.bookId);
+                        const curCol = bookCollections.find(c => c.id === b.collectionId);
+                        const colName = curCol ? curCol.name : 'Pronunciation';
+                        const tagsStr = (b.tags || []).map(tId => {
+                            const tObj = bookTags.find(t => t.id === tId || t.name.toLowerCase() === tId.toLowerCase());
+                            return tObj ? tObj.name : tId;
+                        }).join(', ');
+
+                        return `<label class="crm-books-candidate-item${isChecked ? ' selected' : ''}" data-modal-book-id="${escapeHtml(b.bookId)}">` +
+                            `<input type="checkbox" class="crm-books-candidate-cb" data-book-id="${escapeHtml(b.bookId)}"${isChecked ? ' checked' : ''}/>` +
+                            `<div class="crm-books-candidate-info">` +
+                            `<div class="crm-books-candidate-title">${escapeHtml(b.title)}</div>` +
+                            `<div class="crm-books-candidate-sub">` +
+                            `<span>${escapeHtml(b.author || 'Unknown author')}</span>` +
+                            `<span class="crm-books-candidate-current-col">📁 In ${escapeHtml(colName)}</span>` +
+                            (tagsStr ? `<span>🏷️ ${escapeHtml(tagsStr)}</span>` : '') +
+                            `</div>` +
+                            `</div>` +
+                            `</label>`;
+                    }).join('');
+
+                const html = `
+                <div id="crm-books-new-collection-modal" class="crm-books-modal-overlay">
+                  <div class="crm-books-modal-card">
+                    <div class="crm-books-modal-header">
+                      <h3>📁 Create New Collection</h3>
+                      <button type="button" class="crm-books-modal-close-btn" data-modal-close="1">✕</button>
+                    </div>
+                    <div class="crm-books-modal-body">
+                      <div style="margin-bottom: 14px;">
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Collection Name *</label>
+                        <input type="text" id="crm-books-new-col-name" class="crm-input" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:0.85rem;" placeholder="e.g. Acoustic Phonetics" autofocus />
+                      </div>
+
+                      <div style="margin-bottom: 8px;">
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Select Books for Collection</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                          <div style="display:flex; align-items:center; gap:8px; font-size:0.75rem; color:#64748b;">
+                            <span>Filter by Tag:</span>
+                            <label style="display:inline-flex; align-items:center; gap:3px; cursor:pointer;">
+                              <input type="radio" name="modal_match_mode" value="and" ${modalMatchMode === 'and' ? 'checked' : ''} /> Match All (AND)
+                            </label>
+                            <label style="display:inline-flex; align-items:center; gap:3px; cursor:pointer;">
+                              <input type="radio" name="modal_match_mode" value="or" ${modalMatchMode === 'or' ? 'checked' : ''} /> Match Any (OR)
+                            </label>
+                          </div>
+                        </div>
+                        <div class="crm-books-sidebar-tag-filter-bar" style="padding: 2px 0 6px;">
+                          ${tagChipsHtml || '<span style="color:#94a3b8; font-size:0.75rem;">No tags created yet.</span>'}
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                          <input type="text" id="crm-books-modal-search" class="crm-input" style="flex:1; padding:5px 8px; font-size:0.78rem;" placeholder="🔍 Search books in library..." value="${escapeHtml(modalSearchQuery)}" />
+                          <button type="button" class="crm-btn crm-btn-sm crm-btn-secondary" id="crm-books-modal-select-all">Select All Filtered</button>
+                          <button type="button" class="crm-btn crm-btn-sm crm-btn-secondary" id="crm-books-modal-deselect-all">Deselect All</button>
+                        </div>
+                      </div>
+
+                      <div class="crm-books-candidate-list">
+                        ${booksChecklistHtml}
+                      </div>
+                      <div style="font-size:0.72rem; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
+                        <span>Selected: <strong id="crm-books-selected-count">${selectedBookIds.size}</strong> book(s)</span>
+                        <span>Showing: ${filteredBooks.length} of ${books.length}</span>
+                      </div>
+                    </div>
+                    <div class="crm-books-modal-footer">
+                      <button type="button" class="crm-btn crm-btn-secondary" data-modal-close="1">Cancel</button>
+                      <button type="button" class="crm-btn crm-btn-primary" id="crm-books-modal-submit-btn">Create Collection</button>
+                    </div>
+                  </div>
+                </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', html);
+                bindModal();
+            }
+
+            function bindModal() {
+                const overlay = document.querySelector('#crm-books-new-collection-modal');
+                if (!overlay) return;
+
+                overlay.querySelectorAll('[data-modal-close]').forEach(btn => {
+                    btn.onclick = () => overlay.remove();
+                });
+                overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+                const nameInput = overlay.querySelector('#crm-books-new-col-name');
+                if (nameInput) setTimeout(() => nameInput.focus(), 50);
+
+                overlay.querySelectorAll('[data-modal-tag-id]').forEach(chip => {
+                    chip.onclick = () => {
+                        const tId = chip.dataset.modalTagId;
+                        if (modalTagFilter.has(tId)) modalTagFilter.delete(tId);
+                        else modalTagFilter.add(tId);
+                        refreshChecklist();
+                    };
+                });
+
+                overlay.querySelectorAll('input[name="modal_match_mode"]').forEach(radio => {
+                    radio.onchange = () => {
+                        modalMatchMode = radio.value;
+                        refreshChecklist();
+                    };
+                });
+
+                const searchInput = overlay.querySelector('#crm-books-modal-search');
+                if (searchInput) {
+                    searchInput.oninput = (e) => {
+                        modalSearchQuery = clean(e.target.value);
+                        refreshChecklist();
+                    };
+                }
+
+                const selectAllBtn = overlay.querySelector('#crm-books-modal-select-all');
+                if (selectAllBtn) {
+                    selectAllBtn.onclick = () => {
+                        getFilteredModalBooks().forEach(b => selectedBookIds.add(b.bookId));
+                        refreshChecklist();
+                    };
+                }
+                const deselectAllBtn = overlay.querySelector('#crm-books-modal-deselect-all');
+                if (deselectAllBtn) {
+                    deselectAllBtn.onclick = () => {
+                        getFilteredModalBooks().forEach(b => selectedBookIds.delete(b.bookId));
+                        refreshChecklist();
+                    };
+                }
+
+                overlay.querySelectorAll('.crm-books-candidate-cb').forEach(cb => {
+                    cb.onchange = () => {
+                        const bId = cb.dataset.bookId;
+                        if (cb.checked) selectedBookIds.add(bId);
+                        else selectedBookIds.delete(bId);
+                        const countEl = overlay.querySelector('#crm-books-selected-count');
+                        if (countEl) countEl.textContent = String(selectedBookIds.size);
+                        cb.closest('.crm-books-candidate-item')?.classList.toggle('selected', cb.checked);
+                    };
+                });
+
+                const submitBtn = overlay.querySelector('#crm-books-modal-submit-btn');
+                if (submitBtn) {
+                    submitBtn.onclick = async () => {
+                        const name = clean(nameInput?.value);
+                        if (!name) {
+                            alert('Please enter a collection name.');
+                            nameInput?.focus();
+                            return;
+                        }
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Creating...';
+                        await createBookCollection(name, '', Array.from(selectedBookIds));
+                        overlay.remove();
+                    };
+                }
+
+                function refreshChecklist() {
+                    const listContainer = overlay.querySelector('.crm-books-candidate-list');
+                    const filtered = getFilteredModalBooks();
+                    if (listContainer) {
+                        listContainer.innerHTML = filtered.length === 0
+                            ? `<div style="padding:16px; text-align:center; color:#94a3b8; font-size:0.8rem;">No books match the filters.</div>`
+                            : filtered.map(b => {
+                                const isChecked = selectedBookIds.has(b.bookId);
+                                const curCol = bookCollections.find(c => c.id === b.collectionId);
+                                const colName = curCol ? curCol.name : 'Pronunciation';
+                                const tagsStr = (b.tags || []).map(tId => {
+                                    const tObj = bookTags.find(t => t.id === tId || t.name.toLowerCase() === tId.toLowerCase());
+                                    return tObj ? tObj.name : tId;
+                                }).join(', ');
+
+                                return `<label class="crm-books-candidate-item${isChecked ? ' selected' : ''}" data-modal-book-id="${escapeHtml(b.bookId)}">` +
+                                    `<input type="checkbox" class="crm-books-candidate-cb" data-book-id="${escapeHtml(b.bookId)}"${isChecked ? ' checked' : ''}/>` +
+                                    `<div class="crm-books-candidate-info">` +
+                                    `<div class="crm-books-candidate-title">${escapeHtml(b.title)}</div>` +
+                                    `<div class="crm-books-candidate-sub">` +
+                                    `<span>${escapeHtml(b.author || 'Unknown author')}</span>` +
+                                    `<span class="crm-books-candidate-current-col">📁 In ${escapeHtml(colName)}</span>` +
+                                    (tagsStr ? `<span>🏷️ ${escapeHtml(tagsStr)}</span>` : '') +
+                                    `</div>` +
+                                    `</div>` +
+                                    `</label>`;
+                            }).join('');
+
+                        listContainer.querySelectorAll('.crm-books-candidate-cb').forEach(cb => {
+                            cb.onchange = () => {
+                                const bId = cb.dataset.bookId;
+                                if (cb.checked) selectedBookIds.add(bId);
+                                else selectedBookIds.delete(bId);
+                                const countEl = overlay.querySelector('#crm-books-selected-count');
+                                if (countEl) countEl.textContent = String(selectedBookIds.size);
+                                cb.closest('.crm-books-candidate-item')?.classList.toggle('selected', cb.checked);
+                            };
+                        });
+                    }
+
+                    const countEl = overlay.querySelector('#crm-books-selected-count');
+                    if (countEl) countEl.textContent = String(selectedBookIds.size);
+
+                    overlay.querySelectorAll('[data-modal-tag-id]').forEach(chip => {
+                        const tId = chip.dataset.modalTagId;
+                        chip.classList.toggle('active', modalTagFilter.has(tId));
+                    });
+                }
+            }
+
+            renderModal();
+        }
+
+        function openCreateTagModal() {
+            document.querySelector('#crm-books-create-tag-modal')?.remove();
+
+            const PRESET_COLORS = [
+                { name: 'Emerald', color: '#10b981' },
+                { name: 'Indigo', color: '#6366f1' },
+                { name: 'Amber', color: '#f59e0b' },
+                { name: 'Purple', color: '#a855f7' },
+                { name: 'Rose', color: '#f43f5e' },
+                { name: 'Cyan', color: '#06b6d4' }
+            ];
+            let selectedColor = PRESET_COLORS[0].color;
+
+            const colorDotsHtml = PRESET_COLORS.map((c, i) => `
+                <div class="crm-books-color-dot${i === 0 ? ' active' : ''}" data-color="${c.color}" style="background:${c.color};" title="${c.name}"></div>
+            `).join('');
+
+            const html = `
+            <div id="crm-books-create-tag-modal" class="crm-books-modal-overlay">
+              <div class="crm-books-modal-card" style="max-width: 420px;">
+                <div class="crm-books-modal-header">
+                  <h3>🏷️ Create New Tag</h3>
+                  <button type="button" class="crm-books-modal-close-btn" data-modal-close="1">✕</button>
+                </div>
+                <div class="crm-books-modal-body">
+                  <div style="margin-bottom: 14px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Tag Name *</label>
+                    <input type="text" id="crm-books-new-tag-name" class="crm-input" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:0.85rem;" placeholder="e.g. Phonetics" autofocus />
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Color</label>
+                    <div class="crm-books-color-picker">
+                      ${colorDotsHtml}
+                    </div>
+                  </div>
+                </div>
+                <div class="crm-books-modal-footer">
+                  <button type="button" class="crm-btn crm-btn-secondary" data-modal-close="1">Cancel</button>
+                  <button type="button" class="crm-btn crm-btn-primary" id="crm-books-create-tag-submit-btn">Create Tag</button>
+                </div>
+              </div>
+            </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', html);
+            const overlay = document.querySelector('#crm-books-create-tag-modal');
+            if (!overlay) return;
+
+            overlay.querySelectorAll('[data-modal-close]').forEach(btn => {
+                btn.onclick = () => overlay.remove();
+            });
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+            const input = overlay.querySelector('#crm-books-new-tag-name');
+            if (input) setTimeout(() => input.focus(), 50);
+
+            overlay.querySelectorAll('.crm-books-color-dot').forEach(dot => {
+                dot.onclick = () => {
+                    overlay.querySelectorAll('.crm-books-color-dot').forEach(d => d.classList.remove('active'));
+                    dot.classList.add('active');
+                    selectedColor = dot.dataset.color;
+                };
+            });
+
+            const submitBtn = overlay.querySelector('#crm-books-create-tag-submit-btn');
+            if (submitBtn) {
+                submitBtn.onclick = async () => {
+                    const name = clean(input?.value);
+                    if (!name) {
+                        alert('Please enter a tag name.');
+                        input?.focus();
+                        return;
+                    }
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                    await createBookTag(name, selectedColor);
+                    overlay.remove();
+                    showToast?.(`Tag "${name}" created.`, 'info');
+                };
+            }
+        }
+
+        function openQuickTagPopover(bookId, anchorEl) {
+            document.querySelector('#crm-books-quick-tag-popover')?.remove();
+            const book = books.find(b => b.bookId === bookId);
+            if (!book) return;
+            if (!Array.isArray(book.tags)) book.tags = [];
+
+            const rect = anchorEl.getBoundingClientRect();
+            let left = rect.left;
+            let top = rect.bottom + 4;
+            if (left + 250 > window.innerWidth) left = window.innerWidth - 260;
+            if (top + 260 > window.innerHeight) top = rect.top - 260;
+
+            const popover = document.createElement('div');
+            popover.id = 'crm-books-quick-tag-popover';
+            popover.className = 'crm-books-quick-tag-popover';
+            popover.style.left = `${Math.max(10, left)}px`;
+            popover.style.top = `${Math.max(10, top)}px`;
+
+            function renderPopoverContent() {
+                const bookTagsList = bookTags.map(t => {
+                    const isSelected = book.tags.includes(t.id) || book.tags.includes(t.name);
+                    return `<div class="crm-books-quick-tag-item${isSelected ? ' selected' : ''}" data-popover-tag-id="${escapeHtml(t.id)}">` +
+                        `<span><span class="crm-books-quick-tag-dot" style="background:${t.color || '#10b981'};"></span>${escapeHtml(t.name)}</span>` +
+                        `<span>${isSelected ? '✓' : ''}</span>` +
+                        `</div>`;
+                }).join('');
+
+                popover.innerHTML = `
+                    <div style="font-weight:600; margin-bottom:6px; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center;">
+                      <span>🏷️ Tags for Book</span>
+                      <span style="font-size:0.7rem; color:#94a3b8; cursor:pointer;" data-close-popover="1">✕</span>
+                    </div>
+                    <input type="text" class="crm-books-quick-tag-input" placeholder="Type tag & press Enter..." autofocus />
+                    <div class="crm-books-quick-tag-hint">Press Enter to create & assign immediately</div>
+                    <div class="crm-books-quick-tag-list">
+                      ${bookTagsList || '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No tags yet. Type above to create.</div>'}
+                    </div>
+                `;
+
+                const input = popover.querySelector('.crm-books-quick-tag-input');
+                if (input) {
+                    setTimeout(() => input.focus(), 50);
+                    input.onkeydown = async (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = clean(input.value);
+                            if (val) {
+                                await toggleBookTag(bookId, val);
+                                popover.remove();
+                            }
+                        } else if (e.key === 'Escape') {
+                            popover.remove();
+                        }
+                    };
+                }
+
+                popover.querySelectorAll('[data-popover-tag-id]').forEach(item => {
+                    item.onclick = async () => {
+                        const tId = item.dataset.popoverTagId;
+                        await toggleBookTag(bookId, tId);
+                        renderPopoverContent();
+                    };
+                });
+
+                popover.querySelector('[data-close-popover]')?.addEventListener('click', () => popover.remove());
+            }
+
+            renderPopoverContent();
+            document.body.appendChild(popover);
+
+            setTimeout(() => {
+                const outsideHandler = (e) => {
+                    if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
+                        popover.remove();
+                        document.removeEventListener('click', outsideHandler);
+                    }
+                };
+                document.addEventListener('click', outsideHandler);
+            }, 10);
+        }
+
+        function openCollectionMovePopover(bookId, anchorEl) {
+            document.querySelector('#crm-books-move-col-popover')?.remove();
+            const book = books.find(b => b.bookId === bookId);
+            if (!book) return;
+
+            const rect = anchorEl.getBoundingClientRect();
+            let left = rect.left;
+            let top = rect.bottom + 4;
+            if (left + 220 > window.innerWidth) left = window.innerWidth - 230;
+
+            const popover = document.createElement('div');
+            popover.id = 'crm-books-move-col-popover';
+            popover.className = 'crm-books-quick-tag-popover';
+            popover.style.width = '200px';
+            popover.style.left = `${Math.max(10, left)}px`;
+            popover.style.top = `${Math.max(10, top)}px`;
+
+            const colList = bookCollections.map(c => {
+                const isCur = c.id === book.collectionId;
+                return `<div class="crm-books-quick-tag-item${isCur ? ' selected' : ''}" data-move-col-id="${escapeHtml(c.id)}">` +
+                    `<span>📁 ${escapeHtml(c.name)}</span>` +
+                    `<span>${isCur ? '✓' : ''}</span>` +
+                    `</div>`;
+            }).join('');
+
+            popover.innerHTML = `
+                <div style="font-weight:600; margin-bottom:6px; font-size:0.78rem;">Move to Collection:</div>
+                <div class="crm-books-quick-tag-list">
+                  ${colList}
+                </div>
+            `;
+
+            popover.querySelectorAll('[data-move-col-id]').forEach(item => {
+                item.onclick = async () => {
+                    const cId = item.dataset.moveColId;
+                    await moveBookToCollection(bookId, cId);
+                    popover.remove();
+                };
+            });
+
+            document.body.appendChild(popover);
+            setTimeout(() => {
+                const outsideHandler = (e) => {
+                    if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
+                        popover.remove();
+                        document.removeEventListener('click', outsideHandler);
+                    }
+                };
+                document.addEventListener('click', outsideHandler);
+            }, 10);
+        }
+
+        // ─── Phase 5: Multi-Surface "Elaborate" Tool ───
+        function toggleElaborateMode(forceState) {
+            const nextState = typeof forceState === 'boolean' ? forceState : !isElaborateModeActive;
+            isElaborateModeActive = nextState;
+
+            if (panel) {
+                if (isElaborateModeActive) {
+                    panel.classList.add('crm-books-elaborate-active');
+                } else {
+                    panel.classList.remove('crm-books-elaborate-active');
+                }
+            }
+
+            const mmModal = docQs('#crm-books-mindmap-modal');
+            if (mmModal) {
+                if (isElaborateModeActive) {
+                    mmModal.classList.add('crm-books-elaborate-active');
+                } else {
+                    mmModal.classList.remove('crm-books-elaborate-active');
+                }
+            }
+
+            document.querySelectorAll('.crm-books-elaborate-btn, #crm-mindmap-elaborate-btn').forEach(btn => {
+                if (isElaborateModeActive) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (!isElaborateModeActive) {
+                clearElaborateMarks();
+                elaborateSnippets = [];
+                hideElaborateTray();
+            } else {
+                renderElaborateTray();
+                showToast?.('✨ Elaborate Mode active: Highlight text across Summary, Notes, Chat, or Mind Map.', 'info');
+            }
+        }
+
+        const MAX_ELABORATE_SNIPPETS = 12;
+        const MAX_SNIPPET_TEXT_LENGTH = 600;
+
+        function addElaborateSnippet(text, sourceTab, sectionTitle, targetRange, nodeId = null) {
+            let cleanText = String(text || '').trim();
+            if (!cleanText || cleanText.length < 2) return null;
+
+            if (elaborateSnippets.length >= MAX_ELABORATE_SNIPPETS) {
+                showToast?.(`Maximum of ${MAX_ELABORATE_SNIPPETS} highlights reached. Click Done to elaborate.`, 'warning');
+                return null;
+            }
+
+            if (cleanText.length > MAX_SNIPPET_TEXT_LENGTH) {
+                cleanText = cleanText.slice(0, MAX_SNIPPET_TEXT_LENGTH) + '…';
+            }
+
+            const snippetId = 'el_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            const index = elaborateSnippets.length + 1;
+
+            if (targetRange) {
+                try {
+                    const mark = document.createElement('mark');
+                    mark.className = 'crm-books-elaborate-mark';
+                    mark.dataset.snippetId = snippetId;
+                    const badge = document.createElement('span');
+                    badge.className = 'crm-books-elaborate-badge';
+                    badge.textContent = `#${index}`;
+                    
+                    const contents = targetRange.extractContents();
+                    mark.appendChild(badge);
+                    mark.appendChild(contents);
+                    targetRange.insertNode(mark);
+                } catch (e) {
+                    console.warn('[CRM Books] Could not wrap selection in mark element:', e);
+                }
+            }
+
+            const snippetObj = {
+                id: snippetId,
+                index,
+                text: cleanText,
+                sourceTab: sourceTab || activeTab || 'summary',
+                section: sectionTitle || '',
+                nodeId: nodeId ? String(nodeId) : null
+            };
+            elaborateSnippets.push(snippetObj);
+            renderElaborateTray();
+            return snippetId;
+        }
+
+        function removeElaborateSnippet(snippetOrNodeId) {
+            if (!snippetOrNodeId) return;
+            const targetSnippet = elaborateSnippets.find(s => s.id === snippetOrNodeId || (s.nodeId && s.nodeId === snippetOrNodeId));
+            if (!targetSnippet) return;
+
+            const snippetId = targetSnippet.id;
+            const associatedNodeId = targetSnippet.nodeId;
+
+            elaborateSnippets = elaborateSnippets.filter(s => s.id !== snippetId);
+
+            elaborateSnippets.forEach((s, idx) => {
+                s.index = idx + 1;
+            });
+
+            document.querySelectorAll(`mark.crm-books-elaborate-mark[data-snippet-id="${snippetId}"]`).forEach(mark => {
+                const parent = mark.parentNode;
+                if (!parent) return;
+                while (mark.firstChild) {
+                    if (mark.firstChild.classList && mark.firstChild.classList.contains('crm-books-elaborate-badge')) {
+                        mark.removeChild(mark.firstChild);
+                    } else {
+                        parent.insertBefore(mark.firstChild, mark);
+                    }
+                }
+                parent.removeChild(mark);
+                parent.normalize();
+            });
+
+            elaborateSnippets.forEach((s) => {
+                const mark = document.querySelector(`mark.crm-books-elaborate-mark[data-snippet-id="${s.id}"]`);
+                const badge = mark?.querySelector('.crm-books-elaborate-badge');
+                if (badge) badge.textContent = `#${s.index}`;
+            });
+
+            if (associatedNodeId) {
+                document.querySelectorAll(`.crm-mindmap-node[data-node-id="${associatedNodeId}"]`).forEach(n => {
+                    n.classList.remove('crm-mindmap-node-elaborate-selected');
+                });
+            }
+
+            renderElaborateTray();
+        }
+
+        function clearElaborateMarks() {
+            document.querySelectorAll('mark.crm-books-elaborate-mark').forEach((mark) => {
+                const parent = mark.parentNode;
+                if (!parent) return;
+                while (mark.firstChild) {
+                    if (mark.firstChild.classList && mark.firstChild.classList.contains('crm-books-elaborate-badge')) {
+                        mark.removeChild(mark.firstChild);
+                    } else {
+                        parent.insertBefore(mark.firstChild, mark);
+                    }
+                }
+                parent.removeChild(mark);
+                parent.normalize();
+            });
+            document.querySelectorAll('.crm-mindmap-node-elaborate-selected').forEach(n => {
+                n.classList.remove('crm-mindmap-node-elaborate-selected');
+            });
+        }
+
+        function renderElaborateTray() {
+            const tray = docQs('#crm-books-elaborate-tray');
+            if (!tray) return;
+
+            if (!isElaborateModeActive) {
+                tray.style.display = 'none';
+                return;
+            }
+
+            tray.style.display = 'flex';
+            const countEl = docQs('#crm-books-elaborate-tray-count');
+            if (countEl) {
+                countEl.textContent = `${elaborateSnippets.length} selected`;
+            }
+
+            const doneBtn = docQs('#crm-books-elaborate-tray-done-btn');
+            if (doneBtn) {
+                doneBtn.disabled = elaborateSnippets.length === 0 || isElaborating;
+                doneBtn.innerHTML = isElaborating
+                    ? `<span class="crm-spinner" style="width:12px;height:12px;display:inline-block;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:4px;"></span> Elaborating…`
+                    : `✓ Done (${elaborateSnippets.length})`;
+            }
+
+            const chipsContainer = docQs('#crm-books-elaborate-tray-chips');
+            if (chipsContainer) {
+                if (elaborateSnippets.length === 0) {
+                    chipsContainer.innerHTML = '<span class="crm-books-elaborate-tray-empty-hint">Highlight any text across Summary, Notes, Chat, or Mind Map</span>';
+                } else {
+                    chipsContainer.innerHTML = elaborateSnippets.map((s) => {
+                        const snippetPreview = s.text.length > 32 ? s.text.slice(0, 32) + '…' : s.text;
+                        return `<div class="crm-books-elaborate-chip" title="${escapeHtml(s.text)}">` +
+                            `<span class="crm-books-elaborate-chip-idx">#${s.index}</span>` +
+                            `<span class="crm-books-elaborate-chip-src">${escapeHtml(s.sourceTab)}</span>` +
+                            `<span class="crm-books-elaborate-chip-text">${escapeHtml(snippetPreview)}</span>` +
+                            `<button type="button" class="crm-books-elaborate-chip-remove" data-snippet-id="${escapeHtml(s.id)}" title="Remove this highlight">&times;</button>` +
+                            `</div>`;
+                    }).join('');
+                }
+            }
+        }
+
+        function hideElaborateTray() {
+            const tray = docQs('#crm-books-elaborate-tray');
+            if (tray) tray.style.display = 'none';
+        }
+
+        function openElaborationDrawer(loading = false) {
+            const drawer = docQs('#crm-books-elaborate-drawer');
+            if (!drawer) return;
+            drawer.style.display = 'flex';
+            requestAnimationFrame(() => {
+                drawer.classList.add('open');
+                drawer.setAttribute('aria-hidden', 'false');
+            });
+
+            const bookTitleEl = docQs('#crm-books-elaborate-drawer-book-title');
+            if (bookTitleEl) {
+                bookTitleEl.textContent = selectedBook?.title || 'Book Source Grounding';
+            }
+
+            if (loading) {
+                const body = docQs('#crm-books-elaborate-drawer-body');
+                if (body) {
+                    body.innerHTML = `<div class="crm-books-elaborate-loading">` +
+                        `<div class="crm-books-elaborate-spinner"></div>` +
+                        `<h4>Unpacking and Grounding Excerpts…</h4>` +
+                        `<p class="crm-muted">Retrieving source text from "${escapeHtml(selectedBook?.title || 'the book')}" and building source-grounded elaboration.</p>` +
+                        `</div>`;
+                }
+            }
+        }
+
+        function closeElaborationDrawer() {
+            const drawer = docQs('#crm-books-elaborate-drawer');
+            if (!drawer) return;
+            drawer.classList.remove('open');
+            drawer.setAttribute('aria-hidden', 'true');
+            setTimeout(() => {
+                if (!drawer.classList.contains('open')) {
+                    drawer.style.display = 'none';
+                }
+            }, 300);
+        }
+
+        function renderElaborationResult(result) {
+            openElaborationDrawer(false);
+            const body = docQs('#crm-books-elaborate-drawer-body');
+            if (!body || !result) return;
+
+            const synthesisHtml = result.synthesis ? (
+                `<div class="crm-books-elaborate-synthesis-card">` +
+                `<div class="crm-books-elaborate-card-header">` +
+                `<span class="crm-books-elaborate-synthesis-icon">🎯</span>` +
+                `<h4>Core Synthesis & Conceptual Framework</h4>` +
+                `</div>` +
+                `<div class="crm-books-elaborate-synthesis-text">` +
+                `<p>${formatElaborateParagraphs(result.synthesis)}</p>` +
+                `</div>` +
+                `</div>`
+            ) : '';
+
+            const itemsHtml = (result.elaborations || []).map((item, idx) => {
+                const takeawaysHtml = (Array.isArray(item.keyTakeaways) && item.keyTakeaways.length > 0) ? (
+                    `<div class="crm-books-elaborate-takeaways">` +
+                    `<div class="crm-books-elaborate-takeaways-label">💡 Key Takeaways:</div>` +
+                    `<ul>${item.keyTakeaways.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>` +
+                    `</div>`
+                ) : '';
+
+                const evidenceHtml = item.sourceEvidence ? (
+                    `<div class="crm-books-elaborate-evidence">` +
+                    `<div class="crm-books-elaborate-evidence-label">📖 Source Grounding & Direct Reference:</div>` +
+                    `<div class="crm-books-elaborate-evidence-text">${escapeHtml(item.sourceEvidence)}</div>` +
+                    `</div>`
+                ) : '';
+
+                const pageRefHtml = item.pageRef ? `<span class="crm-books-elaborate-item-pages">${escapeHtml(item.pageRef)}</span>` : '';
+
+                return `<div class="crm-books-elaborate-item-card">` +
+                    `<div class="crm-books-elaborate-item-header">` +
+                    `<span class="crm-books-elaborate-item-badge">#${idx + 1}</span>` +
+                    `<h4 class="crm-books-elaborate-item-title">${escapeHtml(item.concept || `Concept #${idx + 1}`)}</h4>` +
+                    pageRefHtml +
+                    `</div>` +
+                    `<blockquote class="crm-books-elaborate-quote">"${escapeHtml(item.snippetText || '')}"</blockquote>` +
+                    `<div class="crm-books-elaborate-explanation">` +
+                    `<p>${formatElaborateParagraphs(item.detailedExplanation)}</p>` +
+                    `</div>` +
+                    evidenceHtml +
+                    takeawaysHtml +
+                    `</div>`;
+            }).join('');
+
+            body.innerHTML = `<div class="crm-books-elaborate-content">` +
+                synthesisHtml +
+                `<div class="crm-books-elaborate-items-title">` +
+                `<h4>Detailed Elaboration (${(result.elaborations || []).length} excerpt${(result.elaborations || []).length === 1 ? '' : 's'})</h4>` +
+                `</div>` +
+                `<div class="crm-books-elaborate-items-list">${itemsHtml}</div>` +
+                `</div>`;
+        }
+
+        async function executeElaboration() {
+            if (!selectedBookId) {
+                showToast?.('Please select a book first.', 'warning');
+                return;
+            }
+            if (elaborateSnippets.length === 0) {
+                showToast?.('Please highlight at least one passage to elaborate.', 'warning');
+                return;
+            }
+
+            isElaborating = true;
+            renderElaborateTray();
+            openElaborationDrawer(true);
+
+            try {
+                const res = await apiPost(`/api/admin/books/${selectedBookId}/elaborate`, {
+                    snippets: elaborateSnippets
+                });
+                const data = res?.data || res;
+                lastElaborationResult = {
+                    bookId: selectedBookId,
+                    bookTitle: selectedBook?.title || 'Book',
+                    bookAuthor: selectedBook?.author || '',
+                    synthesis: data.synthesis || '',
+                    elaborations: Array.isArray(data.elaborations) ? data.elaborations : [],
+                    snippets: [...elaborateSnippets],
+                    model: data.model || ''
+                };
+                renderElaborationResult(lastElaborationResult);
+                showToast?.('Elaboration generated from source material.', 'success');
+            } catch (err) {
+                console.error('[CRM Books] Elaborate failed:', err);
+                const body = docQs('#crm-books-elaborate-drawer-body');
+                if (body) {
+                    body.innerHTML = `<div class="crm-books-elaborate-error">` +
+                        `<p class="crm-text-danger">⚠️ Failed to generate elaboration: ${escapeHtml(err?.message || 'Unknown error')}</p>` +
+                        `<button type="button" class="crm-btn crm-btn-secondary crm-btn-sm crm-books-elaborate-retry-btn">Retry</button>` +
+                        `</div>`;
+                }
+                showToast?.('Elaboration failed: ' + (err?.message || 'Error'), 'error');
+            } finally {
+                isElaborating = false;
+                renderElaborateTray();
+            }
+        }
+
+        async function saveElaborationToNotes() {
+            if (!lastElaborationResult || !selectedBookId) {
+                showToast?.('No elaboration result to save.', 'warning');
+                return;
+            }
+            const md = generateElaborationMarkdown(lastElaborationResult);
+            try {
+                await saveBookNote(selectedBookId, md);
+                showToast?.('Saved elaboration as a new note in Notes tab.', 'success');
+            } catch (err) {
+                showToast?.('Failed to save elaboration to notes: ' + (err?.message || 'Error'), 'error');
+            }
+        }
+
+        function discussElaborationInChat() {
+            if (!lastElaborationResult) {
+                showToast?.('No elaboration result to discuss.', 'warning');
+                return;
+            }
+            const concepts = (lastElaborationResult.elaborations || []).map(e => e.concept).filter(Boolean);
+            const topicStr = concepts.length > 0 ? concepts.slice(0, 2).map(c => `"${c}"`).join(' and ') : 'the highlighted concepts';
+            const starterMsg = `Can you elaborate further on how ${topicStr} in "${lastElaborationResult.bookTitle}" connect to real-world applications?`;
+
+            closeElaborationDrawer();
+            activeTab = 'chat';
+            renderExplorerPanel();
+
+            setTimeout(() => {
+                const composer = docQs('.crm-books-composer-input');
+                if (composer) {
+                    composer.value = starterMsg;
+                    composer.focus();
+                    composer.style.height = 'auto';
+                    composer.style.height = Math.min(composer.scrollHeight, 120) + 'px';
+                }
+            }, 100);
+            showToast?.('Switched to Chat with elaboration context.', 'info');
+        }
+
+        async function copyElaborationMarkdown() {
+            if (!lastElaborationResult) {
+                showToast?.('No elaboration result to copy.', 'warning');
+                return;
+            }
+            const md = generateElaborationMarkdown(lastElaborationResult);
+            try {
+                await navigator.clipboard.writeText(md);
+                showToast?.('Elaboration markdown copied to clipboard!', 'success');
+            } catch (err) {
+                showToast?.('Failed to copy to clipboard.', 'error');
+            }
         }
 
         // --- Event binding ---
@@ -7020,6 +8254,12 @@ window.CrmBooksWorkspace = (function () {
             });
 
             panel.addEventListener('click', async (e) => {
+                const quickTagBtn = e.target.closest('[data-quick-tag-book-id]');
+                if (quickTagBtn) {
+                    e.stopPropagation();
+                    openQuickTagPopover(quickTagBtn.dataset.quickTagBookId, quickTagBtn);
+                    return;
+                }
                 const target = e.target.closest('[data-book-id]');
                 if (target) {
                     const bookId = target.dataset.bookId;
@@ -7028,7 +8268,7 @@ window.CrmBooksWorkspace = (function () {
                         await deleteBook(bookId);
                         return;
                     }
-                    if (target.classList.contains('crm-books-bgm-btn') || target.classList.contains('crm-books-open-bgm')) {
+                    if (target.classList.contains('crm-books-bgm-btn')) {
                         e.stopPropagation();
                         openBookBgmModal(bookId || selectedBookId);
                         return;
@@ -7624,30 +8864,215 @@ window.CrmBooksWorkspace = (function () {
                 }
             });
 
-            // Knowledge Graph + Collections buttons in sources panel
-            panel.addEventListener('click', (e) => {
+            // Knowledge Graph + Collections + Tags buttons in sources panel
+            panel.addEventListener('click', async (e) => {
                 if (e.target.closest('.crm-books-kg-open-btn')) {
                     openKnowledgeGraph();
                     return;
                 }
                 if (e.target.closest('.crm-books-new-collection-btn')) {
-                    const name = prompt('Collection name:');
-                    if (name) {
-                        const selectedIds = selectedBookId ? [selectedBookId] : [];
-                        createBookCollection(name, '', selectedIds);
+                    openNewCollectionModal();
+                    return;
+                }
+                if (e.target.closest('.crm-books-create-tag-btn')) {
+                    openCreateTagModal();
+                    return;
+                }
+                const renameBtn = e.target.closest('[data-folder-rename]');
+                if (renameBtn) {
+                    e.stopPropagation();
+                    renameBookCollection(renameBtn.dataset.folderRename);
+                    return;
+                }
+                const deleteColBtn = e.target.closest('[data-folder-delete]');
+                if (deleteColBtn) {
+                    e.stopPropagation();
+                    deleteBookCollection(deleteColBtn.dataset.folderDelete);
+                    return;
+                }
+                const folderToggle = e.target.closest('[data-folder-toggle]');
+                if (folderToggle) {
+                    const fId = folderToggle.dataset.folderToggle;
+                    if (openFolderIds.has(fId)) openFolderIds.delete(fId);
+                    else openFolderIds.add(fId);
+                    saveOpenFolders();
+                    const fCard = folderToggle.closest('.crm-books-folder');
+                    if (fCard) {
+                        fCard.querySelector('.crm-books-folder-chevron')?.classList.toggle('collapsed', !openFolderIds.has(fId));
+                        fCard.querySelector('.crm-books-folder-content')?.classList.toggle('collapsed', !openFolderIds.has(fId));
                     }
                     return;
                 }
-                const colChip = e.target.closest('.crm-books-collection-chip');
-                if (colChip) {
-                    activeCollectionFilter = colChip.dataset.collectionId || '';
+                const sidebarTagPill = e.target.closest('[data-sidebar-tag-id]');
+                if (sidebarTagPill) {
+                    const tId = sidebarTagPill.dataset.sidebarTagId;
+                    if (!tId) {
+                        activeSidebarTagFilters.clear();
+                    } else if (activeSidebarTagFilters.has(tId)) {
+                        activeSidebarTagFilters.delete(tId);
+                    } else {
+                        activeSidebarTagFilters.add(tId);
+                    }
                     renderSourcesPanel();
                     return;
                 }
-                const colDel = e.target.closest('.crm-books-collection-delete');
-                if (colDel) {
-                    deleteBookCollection(colDel.dataset.collectionId);
+                if (e.target.closest('[data-clear-sidebar-tags]')) {
+                    activeSidebarTagFilters.clear();
+                    renderSourcesPanel();
                     return;
+                }
+                const folderBadge = e.target.closest('.crm-books-header-folder-badge');
+                if (folderBadge) {
+                    openCollectionMovePopover(folderBadge.dataset.bookId, folderBadge);
+                    return;
+                }
+                const headerAddTagBtn = e.target.closest('.crm-books-header-add-tag-btn');
+                if (headerAddTagBtn) {
+                    openQuickTagPopover(headerAddTagBtn.dataset.bookId, headerAddTagBtn);
+                    return;
+                }
+                const removeTagBtn = e.target.closest('.crm-books-tag-chip-remove');
+                if (removeTagBtn) {
+                    e.stopPropagation();
+                    await toggleBookTag(removeTagBtn.dataset.bookId, removeTagBtn.dataset.tagId);
+                    return;
+                }
+            });
+
+            // ─── Elaborate Mode: Text Selection & Highlighting (Non-Pages Surfaces) ───
+            document.addEventListener('mouseup', (e) => {
+                if (!isElaborateModeActive) return;
+                if (e.target.closest('.crm-books-elaborate-tray') || e.target.closest('.crm-books-elaborate-drawer')) return;
+                // Exclude Pages tab (source reading mode)
+                if (e.target.closest('.crm-books-page-content') || e.target.closest('.crm-books-page-stage')) return;
+
+                const mmModal = docQs('#crm-books-mindmap-modal');
+                const isInsideBooks = panel && panel.contains(e.target);
+                const isInsideMindMap = mmModal && mmModal.contains(e.target) && mmModal.style.display !== 'none';
+
+                if (!isInsideBooks && !isInsideMindMap) return;
+
+                const sel = window.getSelection();
+                const text = sel?.toString().trim();
+                if (!text || text.length < 2) return;
+
+                const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+                if (!range) return;
+
+                let sectionTitle = '';
+                const secCard = e.target.closest('.crm-books-section-card, .crm-books-chapter-card');
+                if (secCard) {
+                    sectionTitle = secCard.querySelector('.crm-books-section-title')?.textContent?.trim() || 'Summary';
+                } else if (activeTab === 'notes') {
+                    sectionTitle = 'Notes';
+                } else if (activeTab === 'chat') {
+                    sectionTitle = 'Chat';
+                } else if (isInsideMindMap) {
+                    sectionTitle = 'Mind Map';
+                } else {
+                    sectionTitle = activeTab ? activeTab.toUpperCase() : 'Summary';
+                }
+
+                addElaborateSnippet(text, isInsideMindMap ? 'mindmap' : (activeTab || 'summary'), sectionTitle, range);
+                sel.removeAllRanges();
+            });
+
+            // ─── Elaborate Mode: Click Delegations ───
+            document.addEventListener('click', async (e) => {
+                // Header / MindMap Elaborate Button
+                if (e.target.closest('.crm-books-elaborate-btn') || e.target.closest('#crm-mindmap-elaborate-btn')) {
+                    e.stopPropagation();
+                    toggleElaborateMode();
+                    return;
+                }
+
+                // Tray Cancel
+                if (e.target.closest('#crm-books-elaborate-tray-cancel-btn')) {
+                    e.stopPropagation();
+                    toggleElaborateMode(false);
+                    return;
+                }
+
+                // Tray Done
+                if (e.target.closest('#crm-books-elaborate-tray-done-btn')) {
+                    e.stopPropagation();
+                    await executeElaboration();
+                    return;
+                }
+
+                // Tray Chip Remove
+                const removeChipBtn = e.target.closest('.crm-books-elaborate-chip-remove');
+                if (removeChipBtn) {
+                    e.stopPropagation();
+                    removeElaborateSnippet(removeChipBtn.dataset.snippetId);
+                    return;
+                }
+
+                // Remove mark on direct click
+                const mark = e.target.closest('mark.crm-books-elaborate-mark');
+                if (mark && mark.dataset.snippetId) {
+                    e.stopPropagation();
+                    removeElaborateSnippet(mark.dataset.snippetId);
+                    return;
+                }
+
+                // Drawer Close
+                if (e.target.closest('#crm-books-elaborate-drawer-close')) {
+                    e.stopPropagation();
+                    closeElaborationDrawer();
+                    return;
+                }
+
+                // Drawer Save to Notes
+                if (e.target.closest('#crm-books-elaborate-save-notes-btn')) {
+                    e.stopPropagation();
+                    saveElaborationToNotes();
+                    return;
+                }
+
+                // Drawer Discuss in Chat
+                if (e.target.closest('#crm-books-elaborate-chat-btn')) {
+                    e.stopPropagation();
+                    discussElaborationInChat();
+                    return;
+                }
+
+                // Drawer Copy Markdown
+                if (e.target.closest('#crm-books-elaborate-copy-btn')) {
+                    e.stopPropagation();
+                    await copyElaborationMarkdown();
+                    return;
+                }
+
+                // Drawer Retry
+                if (e.target.closest('.crm-books-elaborate-retry-btn')) {
+                    e.stopPropagation();
+                    await executeElaboration();
+                    return;
+                }
+
+                // Mind Map Node Click in Elaborate Mode
+                if (isElaborateModeActive) {
+                    const node = e.target.closest('.crm-mindmap-node');
+                    if (node) {
+                        e.stopPropagation();
+                        const nodeId = node.dataset.nodeId || '';
+                        const existingSnippet = nodeId ? elaborateSnippets.find(s => s.nodeId === nodeId) : null;
+                        if (existingSnippet) {
+                            removeElaborateSnippet(existingSnippet.id);
+                        } else {
+                            const nodeTitle = node.dataset.title || node.querySelector('.crm-mindmap-node-title')?.textContent?.trim() || '';
+                            const nodeSummary = node.dataset.summary || node.querySelector('.crm-mindmap-node-summary')?.textContent?.trim() || '';
+                            const text = nodeSummary ? `${nodeTitle}: ${nodeSummary}` : nodeTitle;
+                            if (text) {
+                                const snippetId = addElaborateSnippet(text, 'mindmap', node.dataset.catTitle || nodeTitle, null, nodeId);
+                                if (snippetId) {
+                                    node.classList.add('crm-mindmap-node-elaborate-selected');
+                                }
+                            }
+                        }
+                        return;
+                    }
                 }
             });
         }
@@ -7812,9 +9237,15 @@ window.CrmBooksWorkspace = (function () {
                 panel.classList.add('books-dark');
             }
             bookmarks = loadBookmarks();
-            loadBookCollections().catch(() => {});
             bindEvents();
             loadUsage().catch(() => {});
+            try {
+                await apiPost('/api/admin/books/ensure-seed', {}).catch(() => {});
+            } catch (_) {}
+            await Promise.all([
+                loadBookCollections(),
+                loadBookTags()
+            ]).catch(() => {});
             await refresh();
         }
 
@@ -7843,7 +9274,13 @@ window.CrmBooksWorkspace = (function () {
             refresh,
             dispose,
             selectBook,
-            sendMessage
+            sendMessage,
+            toggleElaborateMode,
+            addElaborateSnippet,
+            removeElaborateSnippet,
+            clearElaborateMarks,
+            getElaborateSnippets: () => [...elaborateSnippets],
+            isElaborateModeActive: () => isElaborateModeActive
         };
     }
 
@@ -7855,6 +9292,8 @@ window.CrmBooksWorkspace = (function () {
         renderCitations,
         ingestWeightedPercent,
         deriveThreadTitle,
+        formatElaborateParagraphs,
+        generateElaborationMarkdown,
         reflowPageText,
         formatPageText,
         getReadablePageNumbers,
@@ -7863,6 +9302,9 @@ window.CrmBooksWorkspace = (function () {
         highlightPageText,
         normalizeCitationText,
         resolveCitationLocation,
-        clampReaderFontScale
+        clampReaderFontScale,
+        normalizeTagName,
+        filterBooksByTags,
+        groupBooksByCollection
     };
 })();

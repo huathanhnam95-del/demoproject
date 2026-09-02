@@ -17,6 +17,16 @@ window.CrmWordSegmenter = (function () {
             const w = words[i];
             wordCosts[w] = Math.log((i + 1) * logTotal);
         }
+        const extraWords = [
+            'mechanistic', 'organismic', 'propounders', 'propounder', 'inestimable',
+            'andragogy', 'andragogical', 'pedagogy', 'pedagogical', 'behaviorism',
+            'associationism', 'spatiotemporal', 'reinforcement', 'psychotherapy',
+            'knowles', 'nadler', 'eric', 'skinner', 'species', 'psychodynamics',
+            'intercollegiate', 'generalizations', 'experimentalism', 'representations'
+        ];
+        for (let i = 0; i < extraWords.length; i++) {
+            wordCosts[extraWords[i]] = 5.0;
+        }
     })();
 
     /**
@@ -92,6 +102,13 @@ window.CrmWordSegmenter = (function () {
             }
         }
 
+        // Never split words ending in standard morphological suffixes into tiny 1-3 letter pieces
+        if (/(istic|ismic|able|ible|tion|tions|ment|ments|ness|ology|ity|ies|ers|er|or|ors)$/.test(lower)) {
+            if (parts.some(p => p.length <= 3 && p !== 'the' && p !== 'and' && p !== 'for')) {
+                return s;
+            }
+        }
+
         // Re-case parts if original token was Capitalized or ALLCAPS
         const res = [];
         let charIdx = 0;
@@ -138,9 +155,23 @@ window.CrmWordSegmenter = (function () {
             return splitCompoundWord(word);
         });
 
-        // 5. Common English OCR bigram corrections
+        // 5. Common English OCR bigram and punctuation corrections
         t = t.replace(/\bareagooddeal\b/gi, 'are a good deal');
         t = t.replace(/\barea\s+(good deal|few|lot|great|better|much|little|number|part|result|wide|variety)\b/gi, 'are a $1');
+        t = t.replace(/\b(all kinds)(?:—|\s+)?(training directors)\b/gi, '$1 — $2');
+        t = t.replace(/\b(community developers)(?:—|\s+)?(to help them)\b/gi, '$1 — $2');
+        t = t.replace(/\bWhat Isa Theory\b/gi, 'What Is a Theory');
+        t = t.replace(/\bBased ona\b/gi, 'Based on a');
+        t = t.replace(/\bBased onan\b/gi, 'Based on an');
+        t = t.replace(/\bHR Dis based\b/gi, 'HRD is based');
+        t = t.replace(/\bin toa search\b/gi, 'into a search');
+        t = t.replace(/\bin es timable\b/gi, 'inestimable');
+        t = t.replace(/\bMe chan is tic\b/gi, 'Mechanistic');
+        t = t.replace(/\bOrgan is mic\b/gi, 'Organismic');
+        t = t.replace(/\bPro pounders\b/gi, 'Propounders');
+        t = t.replace(/\bSpec ias\b/gi, 'Species');
+        t = t.replace(/\bSpecias\b/gi, 'Species');
+        t = t.replace(/\bamore permanent\b/gi, 'a more permanent');
 
         return t;
     }

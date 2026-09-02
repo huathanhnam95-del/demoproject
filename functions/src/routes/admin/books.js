@@ -1179,6 +1179,17 @@ module.exports = function registerBookRoutes(router, deps) {
         }
     });
 
+    router.post('/books/run-text-revision-queue', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const { runBookTextRevisionQueue } = require('../../crm/book-text-revision-service');
+            const bucket = await getStorageBucket();
+            const results = await runBookTextRevisionQueue(db, { now: new Date(), getStorageBucket: async () => bucket });
+            return sendSuccess(res, { processedCount: results ? results.length : 0 }, 'Text revision queue processed.');
+        } catch (error) {
+            return sendError(res, 500, 'QUEUE_RUN_ERROR', error?.message || 'Failed to process queue');
+        }
+    });
+
     // ─── Background Music (Audio) ───
     router.get('/books/:bookId/audio', ...requireAdminHandlers, async (req, res) => {
         try {

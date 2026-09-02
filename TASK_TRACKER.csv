@@ -1817,9 +1817,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 823,2026-09-02,Enhance Write Essay Guided Support: in-context vocabulary examples + authentic collocations + 3-step sentence scaffolding guide,Done,2026-09-02
 824,2026-09-02,Fullscreen guided mode — sequential walkthrough (hide editor during steps + full-width guide + writing phase transition),Done,2026-09-02
 825,2026-09-02,Voice Cloning Lab audit & repair — fix F5-TTS dataclass bug + E2-TTS null guard + replace 3 stubs + honest UI + real evaluators,Done,2026-09-02
-826,2026-09-02,F5-TTS Voice Cloning 10 RA Question Batch Pipeline — synthesis + Whisper ASR verification + 3-LLM quality & naturalness assessment & tuning,In Progress,
+826,2026-09-02,F5-TTS Voice Cloning 10 RA Question Batch Pipeline — synthesis + Whisper ASR verification + 3-LLM quality & naturalness assessment & tuning,Done,2026-09-02
 827,2026-09-02,Write Essay Guided Mode: auto-activate handheld walkthrough without editor + generate strong draft at writing phase + deploy production guide,Done,2026-09-02
 828,2026-09-02,Fix CRM Books malformed text and missing punctuation markers in Pages tab,Done,2026-09-02
 829,2026-09-02,Implement CRM Books Collections folder structure and manual tagging system,Done,2026-09-02
 830,2026-09-02,Review debug and refactor Write Essay Guided Walkthrough and Deploy V1.8.90 to production,Done,2026-09-02
 831,2026-09-02,Restore and verify Books Elaborate multi-selection highlight tool across explorer and mindmap,Done,2026-09-02
+832,2026-09-02,High-fidelity ingest and text audit for Harmer 5th Edition on localhost and production with 100-page examination,Done,2026-09-02

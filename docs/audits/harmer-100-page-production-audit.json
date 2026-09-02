@@ -1,0 +1,813 @@
+{
+  "summary": {
+    "bookId": "FQavK9NnlrytB00F3WHy",
+    "contract": "ocr-v2",
+    "totalPagesAudited": 100,
+    "passedPages": 94,
+    "passRatePct": 94.0,
+    "averageWordOverlapPct": 96.5,
+    "averageCharSimilarityPct": 95.59
+  },
+  "results": [
+    {
+      "page": 1,
+      "gtWordsCount": 11,
+      "extWordsCount": 11,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 2,
+      "gtWordsCount": 458,
+      "extWordsCount": 460,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 3,
+      "gtWordsCount": 11,
+      "extWordsCount": 11,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 4,
+      "gtWordsCount": 124,
+      "extWordsCount": 124,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 5,
+      "gtWordsCount": 146,
+      "extWordsCount": 146,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 6,
+      "gtWordsCount": 123,
+      "extWordsCount": 123,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 7,
+      "gtWordsCount": 122,
+      "extWordsCount": 122,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 8,
+      "gtWordsCount": 214,
+      "extWordsCount": 214,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 9,
+      "gtWordsCount": 171,
+      "extWordsCount": 171,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 10,
+      "gtWordsCount": 216,
+      "extWordsCount": 215,
+      "wordOverlapPct": 98.61,
+      "charSimPct": 99.8,
+      "passed": true
+    },
+    {
+      "page": 11,
+      "gtWordsCount": 276,
+      "extWordsCount": 276,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 12,
+      "gtWordsCount": 125,
+      "extWordsCount": 125,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 13,
+      "gtWordsCount": 209,
+      "extWordsCount": 209,
+      "wordOverlapPct": 99.04,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 14,
+      "gtWordsCount": 274,
+      "extWordsCount": 273,
+      "wordOverlapPct": 99.64,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 15,
+      "gtWordsCount": 270,
+      "extWordsCount": 270,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 16,
+      "gtWordsCount": 254,
+      "extWordsCount": 256,
+      "wordOverlapPct": 99.61,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 17,
+      "gtWordsCount": 234,
+      "extWordsCount": 235,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 18,
+      "gtWordsCount": 248,
+      "extWordsCount": 248,
+      "wordOverlapPct": 99.6,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 19,
+      "gtWordsCount": 220,
+      "extWordsCount": 220,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 20,
+      "gtWordsCount": 248,
+      "extWordsCount": 246,
+      "wordOverlapPct": 98.79,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 21,
+      "gtWordsCount": 238,
+      "extWordsCount": 235,
+      "wordOverlapPct": 97.48,
+      "charSimPct": 99.9,
+      "passed": true
+    },
+    {
+      "page": 22,
+      "gtWordsCount": 207,
+      "extWordsCount": 208,
+      "wordOverlapPct": 99.52,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 23,
+      "gtWordsCount": 129,
+      "extWordsCount": 131,
+      "wordOverlapPct": 97.67,
+      "charSimPct": 87.6,
+      "passed": true
+    },
+    {
+      "page": 24,
+      "gtWordsCount": 20,
+      "extWordsCount": 16,
+      "wordOverlapPct": 55.0,
+      "charSimPct": 8.35,
+      "passed": false
+    },
+    {
+      "page": 25,
+      "gtWordsCount": 8,
+      "extWordsCount": 10,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 82.98,
+      "passed": true
+    },
+    {
+      "page": 26,
+      "gtWordsCount": 232,
+      "extWordsCount": 232,
+      "wordOverlapPct": 99.14,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 27,
+      "gtWordsCount": 230,
+      "extWordsCount": 229,
+      "wordOverlapPct": 99.57,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 28,
+      "gtWordsCount": 267,
+      "extWordsCount": 266,
+      "wordOverlapPct": 99.63,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 29,
+      "gtWordsCount": 201,
+      "extWordsCount": 202,
+      "wordOverlapPct": 99.0,
+      "charSimPct": 99.9,
+      "passed": true
+    },
+    {
+      "page": 30,
+      "gtWordsCount": 210,
+      "extWordsCount": 210,
+      "wordOverlapPct": 99.05,
+      "charSimPct": 99.8,
+      "passed": true
+    },
+    {
+      "page": 31,
+      "gtWordsCount": 242,
+      "extWordsCount": 242,
+      "wordOverlapPct": 99.59,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 32,
+      "gtWordsCount": 217,
+      "extWordsCount": 218,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 33,
+      "gtWordsCount": 214,
+      "extWordsCount": 215,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.9,
+      "passed": true
+    },
+    {
+      "page": 34,
+      "gtWordsCount": 212,
+      "extWordsCount": 211,
+      "wordOverlapPct": 99.53,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 35,
+      "gtWordsCount": 250,
+      "extWordsCount": 250,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 36,
+      "gtWordsCount": 242,
+      "extWordsCount": 242,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 37,
+      "gtWordsCount": 139,
+      "extWordsCount": 139,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.97,
+      "passed": true
+    },
+    {
+      "page": 38,
+      "gtWordsCount": 233,
+      "extWordsCount": 232,
+      "wordOverlapPct": 99.57,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 39,
+      "gtWordsCount": 219,
+      "extWordsCount": 219,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 40,
+      "gtWordsCount": 248,
+      "extWordsCount": 248,
+      "wordOverlapPct": 99.6,
+      "charSimPct": 99.75,
+      "passed": true
+    },
+    {
+      "page": 41,
+      "gtWordsCount": 179,
+      "extWordsCount": 178,
+      "wordOverlapPct": 99.44,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 42,
+      "gtWordsCount": 236,
+      "extWordsCount": 236,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 43,
+      "gtWordsCount": 106,
+      "extWordsCount": 105,
+      "wordOverlapPct": 99.06,
+      "charSimPct": 99.97,
+      "passed": true
+    },
+    {
+      "page": 44,
+      "gtWordsCount": 158,
+      "extWordsCount": 159,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.9,
+      "passed": true
+    },
+    {
+      "page": 45,
+      "gtWordsCount": 188,
+      "extWordsCount": 187,
+      "wordOverlapPct": 99.47,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 46,
+      "gtWordsCount": 222,
+      "extWordsCount": 222,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 47,
+      "gtWordsCount": 196,
+      "extWordsCount": 195,
+      "wordOverlapPct": 99.49,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 48,
+      "gtWordsCount": 242,
+      "extWordsCount": 242,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 49,
+      "gtWordsCount": 105,
+      "extWordsCount": 103,
+      "wordOverlapPct": 88.57,
+      "charSimPct": 73.17,
+      "passed": true
+    },
+    {
+      "page": 50,
+      "gtWordsCount": 17,
+      "extWordsCount": 13,
+      "wordOverlapPct": 35.29,
+      "charSimPct": 14.13,
+      "passed": false
+    },
+    {
+      "page": 51,
+      "gtWordsCount": 9,
+      "extWordsCount": 9,
+      "wordOverlapPct": 77.78,
+      "charSimPct": 98.05,
+      "passed": false
+    },
+    {
+      "page": 52,
+      "gtWordsCount": 221,
+      "extWordsCount": 220,
+      "wordOverlapPct": 99.1,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 53,
+      "gtWordsCount": 238,
+      "extWordsCount": 236,
+      "wordOverlapPct": 97.9,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 54,
+      "gtWordsCount": 234,
+      "extWordsCount": 232,
+      "wordOverlapPct": 98.72,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 55,
+      "gtWordsCount": 254,
+      "extWordsCount": 254,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 56,
+      "gtWordsCount": 266,
+      "extWordsCount": 265,
+      "wordOverlapPct": 99.62,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 57,
+      "gtWordsCount": 303,
+      "extWordsCount": 302,
+      "wordOverlapPct": 99.67,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 58,
+      "gtWordsCount": 293,
+      "extWordsCount": 294,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 59,
+      "gtWordsCount": 288,
+      "extWordsCount": 288,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 60,
+      "gtWordsCount": 255,
+      "extWordsCount": 254,
+      "wordOverlapPct": 99.61,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 61,
+      "gtWordsCount": 237,
+      "extWordsCount": 237,
+      "wordOverlapPct": 99.58,
+      "charSimPct": 99.9,
+      "passed": true
+    },
+    {
+      "page": 62,
+      "gtWordsCount": 248,
+      "extWordsCount": 248,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 63,
+      "gtWordsCount": 235,
+      "extWordsCount": 236,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 64,
+      "gtWordsCount": 198,
+      "extWordsCount": 198,
+      "wordOverlapPct": 99.49,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 65,
+      "gtWordsCount": 27,
+      "extWordsCount": 22,
+      "wordOverlapPct": 51.85,
+      "charSimPct": 32.74,
+      "passed": false
+    },
+    {
+      "page": 66,
+      "gtWordsCount": 165,
+      "extWordsCount": 164,
+      "wordOverlapPct": 98.18,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 67,
+      "gtWordsCount": 240,
+      "extWordsCount": 241,
+      "wordOverlapPct": 98.33,
+      "charSimPct": 99.7,
+      "passed": true
+    },
+    {
+      "page": 68,
+      "gtWordsCount": 209,
+      "extWordsCount": 208,
+      "wordOverlapPct": 99.52,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 69,
+      "gtWordsCount": 260,
+      "extWordsCount": 259,
+      "wordOverlapPct": 98.85,
+      "charSimPct": 99.8,
+      "passed": true
+    },
+    {
+      "page": 70,
+      "gtWordsCount": 228,
+      "extWordsCount": 227,
+      "wordOverlapPct": 98.68,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 71,
+      "gtWordsCount": 247,
+      "extWordsCount": 246,
+      "wordOverlapPct": 99.19,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 72,
+      "gtWordsCount": 270,
+      "extWordsCount": 271,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 73,
+      "gtWordsCount": 231,
+      "extWordsCount": 230,
+      "wordOverlapPct": 99.57,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 74,
+      "gtWordsCount": 302,
+      "extWordsCount": 302,
+      "wordOverlapPct": 99.34,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 75,
+      "gtWordsCount": 286,
+      "extWordsCount": 285,
+      "wordOverlapPct": 99.65,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 76,
+      "gtWordsCount": 273,
+      "extWordsCount": 269,
+      "wordOverlapPct": 95.97,
+      "charSimPct": 99.65,
+      "passed": true
+    },
+    {
+      "page": 77,
+      "gtWordsCount": 205,
+      "extWordsCount": 205,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 78,
+      "gtWordsCount": 242,
+      "extWordsCount": 241,
+      "wordOverlapPct": 99.59,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 79,
+      "gtWordsCount": 165,
+      "extWordsCount": 164,
+      "wordOverlapPct": 99.39,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 80,
+      "gtWordsCount": 263,
+      "extWordsCount": 263,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 81,
+      "gtWordsCount": 285,
+      "extWordsCount": 284,
+      "wordOverlapPct": 99.3,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 82,
+      "gtWordsCount": 261,
+      "extWordsCount": 260,
+      "wordOverlapPct": 99.62,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 83,
+      "gtWordsCount": 246,
+      "extWordsCount": 245,
+      "wordOverlapPct": 97.97,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 84,
+      "gtWordsCount": 237,
+      "extWordsCount": 236,
+      "wordOverlapPct": 99.58,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 85,
+      "gtWordsCount": 200,
+      "extWordsCount": 199,
+      "wordOverlapPct": 99.5,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 86,
+      "gtWordsCount": 217,
+      "extWordsCount": 216,
+      "wordOverlapPct": 99.54,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 87,
+      "gtWordsCount": 214,
+      "extWordsCount": 213,
+      "wordOverlapPct": 99.53,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 88,
+      "gtWordsCount": 208,
+      "extWordsCount": 207,
+      "wordOverlapPct": 99.04,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 89,
+      "gtWordsCount": 211,
+      "extWordsCount": 212,
+      "wordOverlapPct": 98.1,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 90,
+      "gtWordsCount": 24,
+      "extWordsCount": 21,
+      "wordOverlapPct": 50.0,
+      "charSimPct": 40.75,
+      "passed": false
+    },
+    {
+      "page": 91,
+      "gtWordsCount": 21,
+      "extWordsCount": 19,
+      "wordOverlapPct": 42.86,
+      "charSimPct": 27.07,
+      "passed": false
+    },
+    {
+      "page": 92,
+      "gtWordsCount": 214,
+      "extWordsCount": 213,
+      "wordOverlapPct": 99.07,
+      "charSimPct": 100.0,
+      "passed": true
+    },
+    {
+      "page": 93,
+      "gtWordsCount": 276,
+      "extWordsCount": 276,
+      "wordOverlapPct": 99.64,
+      "charSimPct": 99.85,
+      "passed": true
+    },
+    {
+      "page": 94,
+      "gtWordsCount": 201,
+      "extWordsCount": 200,
+      "wordOverlapPct": 99.5,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 95,
+      "gtWordsCount": 269,
+      "extWordsCount": 269,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 96,
+      "gtWordsCount": 245,
+      "extWordsCount": 244,
+      "wordOverlapPct": 99.59,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 97,
+      "gtWordsCount": 251,
+      "extWordsCount": 251,
+      "wordOverlapPct": 100.0,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 98,
+      "gtWordsCount": 249,
+      "extWordsCount": 246,
+      "wordOverlapPct": 97.59,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 99,
+      "gtWordsCount": 246,
+      "extWordsCount": 245,
+      "wordOverlapPct": 99.59,
+      "charSimPct": 99.95,
+      "passed": true
+    },
+    {
+      "page": 100,
+      "gtWordsCount": 223,
+      "extWordsCount": 222,
+      "wordOverlapPct": 99.55,
+      "charSimPct": 99.95,
+      "passed": true
+    }
+  ]
+}

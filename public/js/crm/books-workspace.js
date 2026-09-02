@@ -199,6 +199,7 @@ window.CrmBooksWorkspace = (function () {
     function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
         const rendererContract = (typeof options === 'string' ? options : options?.rendererContract)
+            || (typeof window !== 'undefined' && window.__currentBookRendererContract ? window.__currentBookRendererContract : null)
             || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
             || 'legacy';
         const rawText = String(text ?? '').replace(/\r\n?/g, '\n');
@@ -1297,7 +1298,7 @@ window.CrmBooksWorkspace = (function () {
             const pageText = pagesData?.pages?.[physicalPage - 1] ?? '';
             const citation = citationOverride === undefined ? activeCitation : citationOverride;
             const formattedText = clean(pageText)
-                ? formatPageText(pageText, escapeHtml, citation?.page === physicalPage ? citation.quote : '')
+                ? formatPageText(pageText, escapeHtml, citation?.page === physicalPage ? citation.quote : '', { rendererContract: pagesData?.rendererContract })
                 : '<p class="crm-books-page-empty">No extractable text was found on this physical page.</p>';
             const classes = ['crm-books-page-paper', 'crm-books-page-sheet', sheetClass].filter(Boolean).join(' ');
             return `<article class="${classes}" data-page-number="${physicalPage}" tabindex="-1" aria-label="Reading view page ${physicalPage} of ${pagesData?.totalPages || 0}">` +
@@ -1786,7 +1787,7 @@ window.CrmBooksWorkspace = (function () {
                     });
                     return;
                 }
-                const blocks = formatPageBlocks(rawText, escapeHtml, '');
+                const blocks = formatPageBlocks(rawText, escapeHtml, '', { rendererContract: pagesData?.rendererContract });
                 const subPages = splitBlocksIntoReaderPages(blocks, targetWords);
 
                 subPages.forEach((html, partIdx) => {
@@ -2160,6 +2161,7 @@ window.CrmBooksWorkspace = (function () {
                 pagesData = res?.data || res;
                 if (!pagesData) pagesData = { totalPages: 0, pages: [] };
                 pagesData.bookId = selectedBookId;
+                if (typeof window !== 'undefined') window.__currentBookRendererContract = pagesData?.rendererContract || null;
                 const lastRead = readingProgress.lastPage;
                 currentPage = (lastRead && lastRead >= 1 && lastRead <= (pagesData.totalPages || 0))
                     ? lastRead
@@ -5642,6 +5644,7 @@ window.CrmBooksWorkspace = (function () {
             sectionsLoading = false;
             collapsedOutline = {};
             pagesData = null;
+            if (typeof window !== 'undefined') window.__currentBookRendererContract = null;
             currentPage = 1;
             resetPageCitation();
             editingThreadId = '';

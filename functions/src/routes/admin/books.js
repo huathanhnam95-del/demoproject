@@ -5,11 +5,12 @@ const {
     CRM_RECYCLE_BIN,
     CRM_BOOK_LINKS,
     CRM_BOOK_COLLECTIONS,
+    CRM_BOOK_TAGS,
     CRM_BOOK_SHARES
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
 const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
-const { generateChapterStudyNotes, generateBookMindMap, expandMindMapNode, compileResearch } = require('../../crm/book-summary-service');
+const { generateChapterStudyNotes, generateBookMindMap, expandMindMapNode, compileResearch, elaborateBookSnippets } = require('../../crm/book-summary-service');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
 const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
@@ -39,6 +40,8 @@ function mapBookRecord(doc, docId) {
         title: d.title || '',
         author: d.author || '',
         description: d.description || '',
+        collectionId: d.collectionId || '',
+        tags: Array.isArray(d.tags) ? d.tags : [],
         pageCount: d.pageCount ?? null,
         sizeBytes: d.sizeBytes ?? null,
         sha256: d.sha256 || null,
@@ -215,6 +218,51 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { studyNotes }, 'Study notes generated successfully.');
         } catch (error) {
             return sendError(res, 500, 'GENERATE_STUDY_NOTES_ERROR', 'Failed to generate study notes.', error?.message || error);
+        }
+    });
+
+    // ─── Elaborate Highlighted Passages ───
+    router.post('/books/:bookId/elaborate', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const { bookId } = req.params;
+            const rawSnippets = Array.isArray(req.body?.snippets) ? req.body.snippets : [];
+            const snippets = rawSnippets
+                .filter(s => s && String(s.text || '').trim())
+                .slice(0, 15)
+                .map(s => ({
+                    id: String(s.id || '').trim(),
+                    text: String(s.text || '').trim().slice(0, 1000),
+                    sourceTab: String(s.sourceTab || '').trim(),
+                    section: String(s.section || '').trim()
+                }));
+
+            if (snippets.length === 0) {
+                return sendError(res, 400, 'INVALID_SNIPPETS', 'Please provide at least one text snippet to elaborate.');
+            }
+
+            const usage = await getUsageSummary(db);
+            if (usage && usage.isOverBudget && !usage.overageApproved) {
+                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
+            }
+
+            const result = await elaborateBookSnippets(db, bookId, snippets);
+
+            await writeAuditLog?.({
+                action: 'book.elaborate_snippets',
+                entityType: 'book',
+                entityId: bookId,
+                metadata: { snippetCount: snippets.length }
+            }, { user: req.user });
+
+            return sendSuccess(res, result, 'Elaboration generated successfully.');
+        } catch (error) {
+            if (error.code === 'not-found') {
+                return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            }
+            if (error.code === 'invalid-argument') {
+                return sendError(res, 400, 'INVALID_SNIPPETS', error.message);
+            }
+            return sendError(res, 500, 'ELABORATE_ERROR', 'Failed to elaborate snippets.', error?.message || error);
         }
     });
 
@@ -464,10 +512,15 @@ module.exports = function registerBookRoutes(router, deps) {
             const bookId = ref.id;
             const storagePath = `crm-books/${bookId}/source.pdf`;
 
+            const collectionId = cleanStr(req.body?.collectionId);
+            const tags = Array.isArray(req.body?.tags) ? req.body.tags.map(t => cleanStr(t)).filter(Boolean) : [];
+
             const payload = {
                 title,
                 author,
                 description,
+                collectionId: collectionId || null,
+                tags,
                 pageCount: null,
                 sizeBytes: null,
                 sha256: sha256 || null,
@@ -487,6 +540,19 @@ module.exports = function registerBookRoutes(router, deps) {
             };
 
             await ref.set(payload);
+
+            if (collectionId) {
+                const colRef = db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId);
+                const colSnap = await colRef.get().catch(() => null);
+                if (colSnap && colSnap.exists) {
+                    const cData = colSnap.data() || {};
+                    const bIds = Array.isArray(cData.bookIds) ? cData.bookIds : [];
+                    if (!bIds.includes(bookId)) {
+                        bIds.push(bookId);
+                        await colRef.update({ bookIds: bIds, updatedAt: serverTimestamp() }).catch(() => {});
+                    }
+                }
+            }
 
             await writeAuditLog?.({
                 action: 'book.create',
@@ -950,7 +1016,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 rendererContract = 'ocr-v2';
             } else {
                 pagesPath = `crm-books/${bookId}/pages.json`;
-                rendererContract = 'legacy';
+                rendererContract = 'ocr-v2';
             }
 
             const file = bucket.file(pagesPath);
@@ -1525,7 +1591,7 @@ module.exports = function registerBookRoutes(router, deps) {
         try {
             const name = cleanStr(req.body?.name);
             const description = cleanStr(req.body?.description);
-            const bookIds = Array.isArray(req.body?.bookIds) ? req.body.bookIds : [];
+            const bookIds = Array.isArray(req.body?.bookIds) ? req.body.bookIds.map(cleanStr).filter(Boolean) : [];
             if (!name) return sendError(res, 400, 'MISSING_NAME', 'Collection name is required.');
 
             const colDoc = {
@@ -1535,7 +1601,29 @@ module.exports = function registerBookRoutes(router, deps) {
                 updatedAt: serverTimestamp()
             };
             const ref = await db.collection(CRM_BOOK_COLLECTIONS).add(colDoc);
-            return sendSuccess(res, { id: ref.id, ...colDoc }, 'Collection created.');
+            const newCollectionId = ref.id;
+
+            // Re-file books: update each book's collectionId and remove from previous collections
+            if (bookIds.length > 0) {
+                for (const bId of bookIds) {
+                    await db.collection(CRM_BOOKS).doc(bId).update({
+                        collectionId: newCollectionId,
+                        updatedAt: serverTimestamp()
+                    }).catch(() => {});
+                }
+                const otherCols = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                for (const doc of otherCols.docs) {
+                    if (doc.id === newCollectionId) continue;
+                    const cData = doc.data() || {};
+                    const curBooks = Array.isArray(cData.bookIds) ? cData.bookIds : [];
+                    const filtered = curBooks.filter(id => !bookIds.includes(id));
+                    if (filtered.length !== curBooks.length) {
+                        await doc.ref.update({ bookIds: filtered, updatedAt: serverTimestamp() }).catch(() => {});
+                    }
+                }
+            }
+
+            return sendSuccess(res, { id: newCollectionId, ...colDoc }, 'Collection created.');
         } catch (error) {
             return sendError(res, 500, 'CREATE_COLLECTION_ERROR', 'Failed to create collection.', error?.message || error);
         }
@@ -1543,14 +1631,37 @@ module.exports = function registerBookRoutes(router, deps) {
 
     router.patch('/book-collections/:collectionId', ...requireAdminHandlers, async (req, res) => {
         try {
+            const collectionId = cleanStr(req.params.collectionId);
             const updates = {};
             if (req.body?.name !== undefined) updates.name = cleanStr(req.body.name);
             if (req.body?.description !== undefined) updates.description = cleanStr(req.body.description);
-            if (Array.isArray(req.body?.bookIds)) updates.bookIds = req.body.bookIds;
+            if (Array.isArray(req.body?.bookIds)) {
+                updates.bookIds = req.body.bookIds.map(cleanStr).filter(Boolean);
+            }
             updates.updatedAt = serverTimestamp();
 
-            await db.collection(CRM_BOOK_COLLECTIONS).doc(req.params.collectionId).update(updates);
-            return sendSuccess(res, { collectionId: req.params.collectionId }, 'Collection updated.');
+            await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).update(updates);
+
+            if (Array.isArray(updates.bookIds)) {
+                for (const bId of updates.bookIds) {
+                    await db.collection(CRM_BOOKS).doc(bId).update({
+                        collectionId,
+                        updatedAt: serverTimestamp()
+                    }).catch(() => {});
+                }
+                const otherCols = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                for (const doc of otherCols.docs) {
+                    if (doc.id === collectionId) continue;
+                    const cData = doc.data() || {};
+                    const curBooks = Array.isArray(cData.bookIds) ? cData.bookIds : [];
+                    const filtered = curBooks.filter(id => !updates.bookIds.includes(id));
+                    if (filtered.length !== curBooks.length) {
+                        await doc.ref.update({ bookIds: filtered, updatedAt: serverTimestamp() }).catch(() => {});
+                    }
+                }
+            }
+
+            return sendSuccess(res, { collectionId }, 'Collection updated.');
         } catch (error) {
             return sendError(res, 500, 'UPDATE_COLLECTION_ERROR', 'Failed to update collection.', error?.message || error);
         }
@@ -1562,10 +1673,205 @@ module.exports = function registerBookRoutes(router, deps) {
             if (!collectionId) return sendError(res, 400, 'MISSING_ID', 'Collection ID is required.');
             const snap = await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).get();
             if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Collection not found.');
+
+            const targetCollectionId = cleanStr(req.body?.targetCollectionId);
+            const colData = snap.data() || {};
+            const bookIds = Array.isArray(colData.bookIds) ? colData.bookIds : [];
+
+            if (bookIds.length > 0) {
+                let destColId = targetCollectionId;
+                if (!destColId) {
+                    const otherCols = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                    const another = otherCols.docs.find(d => d.id !== collectionId);
+                    if (another) destColId = another.id;
+                }
+                if (destColId) {
+                    for (const bId of bookIds) {
+                        await db.collection(CRM_BOOKS).doc(bId).update({
+                            collectionId: destColId,
+                            updatedAt: serverTimestamp()
+                        }).catch(() => {});
+                    }
+                    const targetRef = db.collection(CRM_BOOK_COLLECTIONS).doc(destColId);
+                    const targetSnap = await targetRef.get().catch(() => null);
+                    if (targetSnap && targetSnap.exists) {
+                        const targetData = targetSnap.data() || {};
+                        const existingIds = Array.isArray(targetData.bookIds) ? targetData.bookIds : [];
+                        const mergedIds = Array.from(new Set([...existingIds, ...bookIds]));
+                        await targetRef.update({ bookIds: mergedIds, updatedAt: serverTimestamp() }).catch(() => {});
+                    }
+                }
+            }
+
             await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).delete();
             return sendSuccess(res, { collectionId }, 'Collection deleted.');
         } catch (error) {
             return sendError(res, 500, 'DELETE_COLLECTION_ERROR', 'Failed to delete collection.', error?.message || error);
+        }
+    });
+
+    // Move book to a collection
+    router.patch('/books/:bookId/collection', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const collectionId = cleanStr(req.body?.collectionId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'Book ID is required.');
+            if (!collectionId) return sendError(res, 400, 'MISSING_COLLECTION_ID', 'Target Collection ID is required.');
+
+            const colSnap = await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).get();
+            if (!colSnap.exists) return sendError(res, 404, 'COLLECTION_NOT_FOUND', 'Target collection not found.');
+
+            await db.collection(CRM_BOOKS).doc(bookId).update({
+                collectionId,
+                updatedAt: serverTimestamp()
+            });
+
+            const allCols = await db.collection(CRM_BOOK_COLLECTIONS).get();
+            for (const doc of allCols.docs) {
+                const cData = doc.data() || {};
+                const cur = Array.isArray(cData.bookIds) ? cData.bookIds : [];
+                if (doc.id === collectionId) {
+                    if (!cur.includes(bookId)) {
+                        await doc.ref.update({ bookIds: [...cur, bookId], updatedAt: serverTimestamp() }).catch(() => {});
+                    }
+                } else if (cur.includes(bookId)) {
+                    await doc.ref.update({ bookIds: cur.filter(id => id !== bookId), updatedAt: serverTimestamp() }).catch(() => {});
+                }
+            }
+
+            return sendSuccess(res, { bookId, collectionId }, 'Book moved to collection.');
+        } catch (error) {
+            return sendError(res, 500, 'MOVE_BOOK_ERROR', 'Failed to move book to collection.', error?.message || error);
+        }
+    });
+
+    // ─── Book Tags Management ───
+    router.get('/book-tags', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const snap = await db.collection(CRM_BOOK_TAGS).orderBy('createdAt', 'asc').limit(200).get();
+            const tags = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return sendSuccess(res, { tags });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_TAGS_ERROR', 'Failed to list tags.', error?.message || error);
+        }
+    });
+
+    router.post('/book-tags', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const name = cleanStr(req.body?.name);
+            const color = cleanStr(req.body?.color, '#10b981');
+            if (!name) return sendError(res, 400, 'MISSING_NAME', 'Tag name is required.');
+
+            const snap = await db.collection(CRM_BOOK_TAGS).get();
+            const existing = snap.docs.find(d => cleanStr(d.data()?.name).toLowerCase() === name.toLowerCase());
+            if (existing) {
+                return sendSuccess(res, { id: existing.id, ...existing.data(), alreadyExists: true }, 'Tag already exists.');
+            }
+
+            const tagDoc = {
+                name,
+                color,
+                createdBy: req.user?.uid || '',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+            const ref = await db.collection(CRM_BOOK_TAGS).add(tagDoc);
+            return sendSuccess(res, { id: ref.id, ...tagDoc }, 'Tag created.');
+        } catch (error) {
+            return sendError(res, 500, 'CREATE_TAG_ERROR', 'Failed to create tag.', error?.message || error);
+        }
+    });
+
+    router.delete('/book-tags/:tagId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const tagId = cleanStr(req.params.tagId);
+            if (!tagId) return sendError(res, 400, 'MISSING_TAG_ID', 'Tag ID is required.');
+
+            await db.collection(CRM_BOOK_TAGS).doc(tagId).delete();
+
+            const booksSnap = await db.collection(CRM_BOOKS).get();
+            for (const doc of booksSnap.docs) {
+                const bData = doc.data() || {};
+                const tags = Array.isArray(bData.tags) ? bData.tags : [];
+                if (tags.includes(tagId)) {
+                    await doc.ref.update({
+                        tags: tags.filter(t => t !== tagId),
+                        updatedAt: serverTimestamp()
+                    }).catch(() => {});
+                }
+            }
+
+            return sendSuccess(res, { tagId }, 'Tag deleted.');
+        } catch (error) {
+            return sendError(res, 500, 'DELETE_TAG_ERROR', 'Failed to delete tag.', error?.message || error);
+        }
+    });
+
+    // Instant tag toggle / update on book
+    router.patch('/books/:bookId/tags', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'Book ID is required.');
+            const tags = Array.isArray(req.body?.tags) ? req.body.tags.map(cleanStr).filter(Boolean) : [];
+
+            await db.collection(CRM_BOOKS).doc(bookId).update({
+                tags,
+                updatedAt: serverTimestamp()
+            });
+
+            return sendSuccess(res, { bookId, tags }, 'Book tags updated.');
+        } catch (error) {
+            return sendError(res, 500, 'UPDATE_BOOK_TAGS_ERROR', 'Failed to update book tags.', error?.message || error);
+        }
+    });
+
+    // Auto-seed: ensures Pronunciation collection exists and unfiled books are placed into it
+    router.post('/books/ensure-seed', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const colsSnap = await db.collection(CRM_BOOK_COLLECTIONS).get();
+            let pronunciationCol = colsSnap.docs.find(d => (d.data()?.name || '').trim().toLowerCase() === 'pronunciation');
+            let colId = pronunciationCol ? pronunciationCol.id : '';
+
+            if (!pronunciationCol) {
+                const colDoc = {
+                    name: 'Pronunciation',
+                    description: 'Core pronunciation and phonetics literature',
+                    bookIds: [],
+                    createdBy: req.user?.uid || '',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+                const ref = await db.collection(CRM_BOOK_COLLECTIONS).add(colDoc);
+                colId = ref.id;
+            }
+
+            const booksSnap = await db.collection(CRM_BOOKS).get();
+            const unfiledBooks = booksSnap.docs.filter(d => {
+                const b = d.data() || {};
+                return b.status !== 'deleted' && (!b.collectionId || b.collectionId === '');
+            });
+
+            const unfiledIds = unfiledBooks.map(d => d.id);
+            if (unfiledIds.length > 0) {
+                for (const bId of unfiledIds) {
+                    await db.collection(CRM_BOOKS).doc(bId).update({
+                        collectionId: colId,
+                        updatedAt: serverTimestamp()
+                    }).catch(() => {});
+                }
+                const targetRef = db.collection(CRM_BOOK_COLLECTIONS).doc(colId);
+                const targetSnap = await targetRef.get().catch(() => null);
+                const cur = targetSnap?.exists && Array.isArray(targetSnap.data()?.bookIds) ? targetSnap.data().bookIds : [];
+                const merged = Array.from(new Set([...cur, ...unfiledIds]));
+                await targetRef.update({ bookIds: merged, updatedAt: serverTimestamp() }).catch(() => {});
+            }
+
+            return sendSuccess(res, {
+                collectionId: colId,
+                migratedCount: unfiledIds.length
+            }, 'Seed ensured.');
+        } catch (error) {
+            return sendError(res, 500, 'ENSURE_SEED_ERROR', 'Failed to ensure seed collection.', error?.message || error);
         }
     });
 

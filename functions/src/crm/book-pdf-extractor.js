@@ -16,7 +16,13 @@ async function extractPdfPages(buffer, options = {}) {
     const { extractText } = await import('unpdf');
 
     const result = await extractText(uint8, { mergePages: false });
-    const pages = result.text || [];
+    const rawPages = result.text || [];
+    const pages = rawPages.map((pageText) => {
+        if (!pageText || typeof pageText !== 'string') return '';
+        let t = pageText.replace(/([a-zA-Z]+)-\s*\n\s*([a-zA-Z]+)/g, '$1$2');
+        t = t.replace(/\r\n?/g, '\n');
+        return t.split('\n').map((line) => line.trimEnd()).join('\n');
+    });
     const totalPages = result.totalPages ?? pages.length;
     const physicalPageCount = Number.isInteger(totalPages) && totalPages >= 0 ? totalPages : pages.length;
 

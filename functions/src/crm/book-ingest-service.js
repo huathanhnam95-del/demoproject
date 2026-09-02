@@ -150,7 +150,9 @@ async function runExtractStage(db, job, deps) {
 
     const pagesJson = JSON.stringify({
         totalPages: result.totalPages,
-        pages: result.pages
+        pages: result.pages,
+        rendererContract: 'ocr-v2',
+        extractedAt: new Date().toISOString()
     });
     const pagesPath = `crm-books/${bookId}/pages.json`;
     await bucket.file(pagesPath).save(Buffer.from(pagesJson), {

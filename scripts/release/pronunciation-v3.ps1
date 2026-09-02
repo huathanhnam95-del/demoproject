@@ -93,7 +93,13 @@ function Invoke-Gcloud {
     param([string[]]$Arguments, [switch]$AllowFailure)
     Assert-NoLatest -Arguments $Arguments
     if ($PSCmdlet.ShouldProcess("gcloud $($Arguments -join ' ')", 'execute')) {
-        $out = & gcloud @Arguments 2>&1
+        $prevEap = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            $out = & gcloud @Arguments 2>&1
+        } finally {
+            $ErrorActionPreference = $prevEap
+        }
         if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
             throw "gcloud failed (exit $LASTEXITCODE): $($out | Select-Object -Last 5)"
         }

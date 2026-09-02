@@ -47,9 +47,20 @@ window.CrmTeachingSessions = (function () {
     async function getAuthHeaders() {
         const headers = { 'Content-Type': 'application/json' };
         try {
-            const user = window.firebase?.auth?.().currentUser || window.__FIREBASE_INTERNAL__?.auth?.currentUser;
-            if (user && typeof user.getIdToken === 'function') {
-                const token = await user.getIdToken();
+            let user = window.firebase?.auth?.().currentUser;
+            if (!user && window.__FIREBASE_INTERNAL__?.auth?.currentUser) {
+                user = window.__FIREBASE_INTERNAL__.auth.currentUser;
+            }
+            if (user) {
+                let token = null;
+                if (typeof user.getIdToken === 'function') {
+                    token = await user.getIdToken(true);
+                } else {
+                    try {
+                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                        token = await getIdToken(user, true);
+                    } catch (_) {}
+                }
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;
                 }
@@ -210,7 +221,7 @@ window.CrmTeachingSessions = (function () {
                 headers
             });
             const data = await resp.json();
-            const sessions = (data && data.data && data.data.sessions) || [];
+            const sessions = (data && (data.sessions || (data.data && data.data.sessions))) || [];
 
             if (loadingEl) loadingEl.style.display = 'none';
 
@@ -368,7 +379,7 @@ window.CrmTeachingSessions = (function () {
                 headers
             });
             const json = await resp.json();
-            const session = (json && json.data && json.data.session) || null;
+            const session = (json && (json.session || (json.data && json.data.session))) || null;
             if (!session) throw new Error('Session data not found');
 
             currentSession = session;

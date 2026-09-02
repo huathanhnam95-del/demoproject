@@ -719,25 +719,14 @@
         </div>
       </section>
 
-      <!-- Students Sub-panels -->
-      <section class="crm-panel" data-panel="students/potential">
+      <!-- Students Panel -->
+      <section class="crm-panel" data-panel="students">
         <div class="crm-panel-header">
           <div>
-            <h2>Potential Students</h2>
-            <p>Leads and enquiries waiting for conversion.</p>
+            <h2>Student Management</h2>
+            <p>Active, enrolled, and prospective student database.</p>
           </div>
-          <button id="btn-new-student-potential" class="crm-btn-primary btn-new-student-trigger">+ New Student</button>
-        </div>
-        <div class="crm-placeholder-card">List of potential students will appear here.</div>
-      </section>
-
-      <section class="crm-panel" data-panel="students/data">
-        <div class="crm-panel-header">
-          <div>
-            <h2>Student Data</h2>
-            <p>Active and past students database.</p>
-          </div>
-          <button id="btn-new-student-data" class="crm-btn-primary btn-new-student-trigger">+ New Student</button>
+          <button id="btn-new-student" class="crm-btn-primary btn-new-student-trigger">+ New Student</button>
         </div>
         <div class="crm-placeholder-card">Main student database here.</div>
       </section>
@@ -1415,6 +1404,15 @@
               <small id="lead-entrance-test-link-note" class="text-muted">Save the lead first to create a single-use
                 learner link.</small>
 
+              <div class="crm-form-group" style="margin-top: 14px; margin-bottom: 12px;">
+                <label for="lead-external-test-link" style="font-size: 13px; font-weight: 500; color: #334155; margin-bottom: 6px; display: block;">External / Other Test Link</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input id="lead-external-test-link" name="externalTestUrl" class="crm-input" type="url"
+                    placeholder="https://... (e.g. APEUni, PTE practice, or other testing site link)">
+                  <button id="btn-open-lead-external-test-link" class="crm-btn-secondary" type="button" disabled>Open</button>
+                </div>
+              </div>
+
               <div id="lead-entrance-tests-list" class="crm-entrance-tests-list">
                 <div class="crm-muted">No tests yet.</div>
               </div>
@@ -1556,6 +1554,15 @@
               <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner
                 link
                 you can send.</small>
+
+              <div class="crm-form-group" style="margin-top: 14px; margin-bottom: 12px;">
+                <label for="student-external-test-link" style="font-size: 13px; font-weight: 500; color: #334155; margin-bottom: 6px; display: block;">External / Other Test Link</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input id="student-external-test-link" name="externalTestUrl" class="crm-input" type="url"
+                    placeholder="https://... (e.g. APEUni, PTE practice, or other testing site link)">
+                  <button id="btn-open-student-external-test-link" class="crm-btn-secondary" type="button" disabled>Open</button>
+                </div>
+              </div>
 
               <div id="entrance-tests-list" class="crm-entrance-tests-list">
                 <div class="crm-muted">No tests yet.</div>
@@ -2754,9 +2761,9 @@
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260902-v1.8.87"></script>
-  <script src="crm-admin.js?v=20260902-v1.8.87"></script>
-  <script src="js/crm/segmentation-study.js?v=20260902-v1.8.87" defer></script>
+  <script src="js/crm/teaching-sessions.js?v=20260902-v1.8.88"></script>
+  <script src="crm-admin.js?v=20260902-v1.8.88"></script>
+  <script src="js/crm/segmentation-study.js?v=20260902-v1.8.88" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

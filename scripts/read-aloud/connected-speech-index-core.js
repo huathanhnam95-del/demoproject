@@ -65,12 +65,25 @@ function writeJsonIfChanged(filePath, data) {
   ensureDir(filePath);
   const next = `${JSON.stringify(data, null, 2)}\n`;
   if (fs.existsSync(filePath)) {
-    const current = fs.readFileSync(filePath, 'utf8');
-    if (current === next) {
-      return false;
+    try {
+      const current = fs.readFileSync(filePath, 'utf8');
+      if (current === next) {
+        return false;
+      }
+    } catch (_) {}
+  }
+  try {
+    fs.writeFileSync(filePath, next, 'utf8');
+  } catch (err) {
+    try {
+      const tmpPath = `${filePath}.tmp.${Date.now()}`;
+      fs.writeFileSync(tmpPath, next, 'utf8');
+      fs.copyFileSync(tmpPath, filePath);
+      fs.unlinkSync(tmpPath);
+    } catch (_) {
+      console.warn(`[Warning] Could not rewrite ${filePath}, preserving existing index.`);
     }
   }
-  fs.writeFileSync(filePath, next, 'utf8');
   return true;
 }
 

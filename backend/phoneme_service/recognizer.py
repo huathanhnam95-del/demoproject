@@ -13,10 +13,15 @@ Usage::
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import io
+import json
+import logging
+import os
 import struct
 import threading
 import time
+import uuid
 import wave
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -30,6 +35,8 @@ from backend.phoneme_service.backends import (
     RecognizerBackend,
     create_backend,
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Default manifest location (sibling to this module)
@@ -111,15 +118,6 @@ def _resample(samples: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
         )
     num_target = int(len(samples) * target_sr / orig_sr)
     return scipy_resample(samples, num_target).astype(np.float32)
-
-
-from dataclasses import dataclass
-import json
-import logging
-import os
-import uuid
-
-logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------

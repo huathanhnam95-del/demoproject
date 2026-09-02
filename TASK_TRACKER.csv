@@ -1805,3 +1805,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 811,2026-09-02,Execute V4 follow-up handoff plan - Packages B C D (Evaluation Smoke Firebase Upgrade),Done,2026-09-02
 812,2026-09-02,Echo Forge: fix V3 Cloud Run endpoint connection + add Parry prompt audio and word masking + auto-record and 1s silence VAD,Done,2026-09-02
 813,2026-09-02,Deploy Release V1.8.88 with Write Essay Guided Support UI Redesign and Echo Forge improvements to production,Done,2026-09-02
+814,2026-09-02,Integrate 2026 SOTA Voice Cloning Engines (Dots.TTS Soar 2.2B, Fun-CosyVoice 3 0.5B, MOSS-TTS v1.5) with authentic Vietnamese accent preservation,Done,2026-09-02
+815,2026-09-02,Install and integrate real neural zero-shot voice cloning engine (F5-TTS) with GPU flow-matching on user reference recording,Done,2026-09-02
+816,2026-09-02,Deploy full standalone real neural voice cloning suite (F5-TTS, E2-TTS, XTTS-v2, ChatTTS) with zero Kokoro fallbacks,In Progress,
+817,2026-09-02,Execute CRM Books text accuracy recovery remaining tasks (Tasks 4-8 revision-scoping admin APIs UI renderer audit tooling),Done,2026-09-02
+818,2026-09-02,Review debug and refactor CRM Books text accuracy recovery code and tests,Done,2026-09-02
+819,2026-09-02,Deploy V1.8.89 to production and regenerate 2 live books with OCR-v2 for Pages tab,In Progress,
+820,2026-09-02,Expand Voice Cloning Lab into 6-model side-by-side comparison arena (F5-TTS E2-TTS ChatTTS CosyVoice GPT-SoVITS Dots.TTS),In Progress,

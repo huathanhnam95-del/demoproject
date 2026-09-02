@@ -53,8 +53,8 @@ async function runTest() {
     const sourceOptions = await page.$$eval('#lead-source option', (options) => options.map((option) => option.value));
     assert.deepStrictEqual(
       sourceOptions,
-      ['', 'Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Zalo - Personal', 'Tiktok - Personal', 'Agent'],
-      'Source options should begin blank and include Zalo - Personal'
+      ['', 'Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Zalo + Personal', 'Tiktok - Personal', 'Agent'],
+      'Source options should begin blank and include Zalo + Personal'
     );
 
     // Check required blank default selection

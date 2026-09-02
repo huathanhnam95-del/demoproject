@@ -64,7 +64,7 @@ window.CrmLeadWorkspace = (function () {
 
             const val = String(inputLeadSource?.value || '').trim();
             const isFacebook = val.startsWith('Facebook');
-            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo - Personal' || val === 'Zalo + Personal';
+            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
             const isAgent = val === 'Agent';
 
             if (groupUrl) {
@@ -275,8 +275,6 @@ window.CrmLeadWorkspace = (function () {
             if (elements.leadEntranceTestLinkInput) elements.leadEntranceTestLinkInput.value = '';
             if (elements.btnCopyLeadEntranceTestLink) elements.btnCopyLeadEntranceTestLink.disabled = true;
             if (elements.btnOpenLeadEntranceTestLink) elements.btnOpenLeadEntranceTestLink.disabled = true;
-            if (elements.inputLeadExternalTestLink) elements.inputLeadExternalTestLink.value = '';
-            if (elements.btnOpenLeadExternalTestLink) elements.btnOpenLeadExternalTestLink.disabled = true;
             if (elements.leadEntranceTestLinkNote) {
                 elements.leadEntranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
             }
@@ -783,24 +781,6 @@ window.CrmLeadWorkspace = (function () {
                     const link = String(elements.leadEntranceTestLinkInput?.value || '').trim();
                     if (!link) return;
                     window.open(link, '_blank', 'noopener');
-                });
-            }
-
-            if (elements.inputLeadExternalTestLink) {
-                elements.inputLeadExternalTestLink.addEventListener('input', () => {
-                    const link = String(elements.inputLeadExternalTestLink?.value || '').trim();
-                    if (elements.btnOpenLeadExternalTestLink) {
-                        elements.btnOpenLeadExternalTestLink.disabled = !link;
-                    }
-                });
-            }
-
-            if (elements.btnOpenLeadExternalTestLink) {
-                elements.btnOpenLeadExternalTestLink.addEventListener('click', () => {
-                    const link = String(elements.inputLeadExternalTestLink?.value || '').trim();
-                    if (!link) return;
-                    const target = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(link) ? link : `https://${link}`;
-                    window.open(target, '_blank', 'noopener,noreferrer');
                 });
             }
 

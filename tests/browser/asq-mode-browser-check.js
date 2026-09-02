@@ -195,14 +195,10 @@ async function runTest() {
                 paused = true;
                 window.__asqPromptPauseCount += 1;
             };
-            const playLabel = document.getElementById('asq-play-label');
-            if (playLabel) playLabel.textContent = 'Play';
-            else if (playBtn) playBtn.textContent = 'Play';
+            if (playBtn) playBtn.textContent = 'Play';
         });
         await page.evaluate(() => window.ASQMode.playPrompt());
-        // The prompt button now lives in the shared .practice-audio-player box, so its
-        // label is a span beside the material icon rather than the button's own text.
-        const playLabelWhileActive = await page.innerText('#asq-play-label');
+        const playLabelWhileActive = await page.innerText('#asq-play-prompt-btn');
         if (playLabelWhileActive.trim() !== 'Pause') {
             throw new Error(`ASQ play button should switch to Pause while prompt audio is active, got "${playLabelWhileActive}"`);
         }
@@ -261,7 +257,7 @@ async function runTest() {
 
         const promptCleanupState = await page.evaluate(() => ({
             pauseCount: window.__asqPromptPauseCount || 0,
-            playLabel: document.getElementById('asq-play-label')?.textContent?.trim() || ''
+            playLabel: document.getElementById('asq-play-prompt-btn')?.textContent?.trim() || ''
         }));
         if (promptCleanupState.pauseCount < 1 || promptCleanupState.playLabel !== 'Play') {
             throw new Error(`ASQ prompt audio did not reset on exit: ${JSON.stringify(promptCleanupState)}`);

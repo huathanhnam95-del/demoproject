@@ -1,6 +1,7 @@
 const assert = require('assert');
+const crypto = require('crypto');
 const { extractPdfPages } = require('../../functions/src/crm/book-pdf-extractor');
-const { buildCorruptTextLayerPdf } = require('./fixtures/build-corrupt-text-layer-pdf');
+const { EXPECTED, buildCorruptTextLayerPdf } = require('./fixtures/build-corrupt-text-layer-pdf');
 
 function escapePdfText(text) {
     return String(text).replace(/([\\()])/g, '\\$1');
@@ -40,42 +41,87 @@ function buildTinyPdf(pageTexts) {
     return Buffer.from(pdf, 'ascii');
 }
 
+function extractAsciiHexImagePayloads(pdfBuffer) {
+    const source = Buffer.from(pdfBuffer).toString('ascii');
+    const images = [];
+    const imagePattern = /\/Subtype\s*\/Image\b[\s\S]*?\/Length\s+(\d+)\s*>>\s*stream\r?\n/g;
+    let match;
+    while ((match = imagePattern.exec(source))) {
+        const streamStart = imagePattern.lastIndex;
+        const streamEnd = source.indexOf('\nendstream', streamStart);
+        assert.ok(streamEnd > streamStart, 'image XObject must have a complete stream');
+        const payloadText = source.slice(streamStart, streamEnd).replace(/\s+/g, '').replace(/>$/, '');
+        const payloadOffset = source.indexOf(payloadText, streamStart);
+        images.push({
+            bytes: Buffer.from(payloadText, 'hex'),
+            payloadOffset
+        });
+        imagePattern.lastIndex = streamEnd + '\nendstream'.length;
+    }
+    return images;
+}
+
+function assertRasterPayloadsMatch(pdfBuffer, expectedPages) {
+    const images = extractAsciiHexImagePayloads(pdfBuffer);
+    assert.strictEqual(images.length, expectedPages.length, 'every expected physical page must have one raster payload');
+    images.forEach((image, index) => {
+        const actualSha256 = crypto.createHash('sha256').update(image.bytes).digest('hex');
+        assert.strictEqual(
+            actualSha256,
+            expectedPages[index].rasterSha256,
+            `raster SHA-256 mismatch on page ${index + 1}`
+        );
+    });
+    return images;
+}
+
 async function main() {
-    // 1. Normal clean PDF extraction
-    const extracted = await extractPdfPages(buildTinyPdf([
-        'First page text with normal words and punctuation.',
-        'Second page text with clean sentence boundaries and spacing.'
-    ]));
+    const corruptFixture = buildCorruptTextLayerPdf();
+    const rasterImages = assertRasterPayloadsMatch(corruptFixture, EXPECTED.pages);
+    const mutatedFixture = Buffer.from(corruptFixture);
+    mutatedFixture[rasterImages[0].payloadOffset] = '0'.charCodeAt(0);
+    mutatedFixture[rasterImages[0].payloadOffset + 1] = '0'.charCodeAt(0);
+    assert.throws(
+        () => assertRasterPayloadsMatch(mutatedFixture, EXPECTED.pages),
+        /raster SHA-256 mismatch/,
+        'a corrupt/white raster mutation must fail independent raster validation'
+    );
+    const allWhiteFixture = Buffer.from(corruptFixture);
+    rasterImages.forEach((image) => {
+        for (let index = 0; index < image.bytes.length; index++) {
+            allWhiteFixture[image.payloadOffset + index * 2] = 'F'.charCodeAt(0);
+            allWhiteFixture[image.payloadOffset + index * 2 + 1] = 'F'.charCodeAt(0);
+        }
+    });
+    assert.throws(
+        () => assertRasterPayloadsMatch(allWhiteFixture, EXPECTED.pages),
+        /raster SHA-256 mismatch/,
+        'an all-white raster mutation must fail independent raster validation'
+    );
+
+    const corruptExtracted = await extractPdfPages(corruptFixture);
+    assert.strictEqual(corruptExtracted.totalPages, EXPECTED.physicalPageCount);
+    assert.strictEqual(corruptExtracted.pages.length, EXPECTED.pages.length);
+    assert.match(corruptExtracted.pages[0], /ANeglectedSpecias/);
+    assert.match(corruptExtracted.pages[1], /IIMIWIN/);
+    assert.match(corruptExtracted.pages[1], /itt/);
+    assert.match(corruptExtracted.pages[1], /jof ASTD/);
+    assert.notStrictEqual(corruptExtracted.pages[0].trim(), EXPECTED.pages[0].rasterText);
+    assert.notStrictEqual(corruptExtracted.pages[1].trim(), EXPECTED.pages[1].rasterText);
+    assert.strictEqual(corruptExtracted.sourceAccuracyStatus, 'unverified');
+    assert.strictEqual(corruptExtracted.isSourceAccurate, null, 'corrupt native text must not be source-accurate');
+
+    const extracted = await extractPdfPages(buildTinyPdf(['First page text', 'Second page text']));
 
     assert.strictEqual(extracted.totalPages, 2);
     assert.strictEqual(extracted.pages.length, 2);
     assert.match(extracted.pages[0], /First page text/);
     assert.match(extracted.pages[1], /Second page text/);
     assert.ok(extracted.avgCharsPerPage > 0);
-    assert.strictEqual(extracted.isScanned, false);
-    assert.strictEqual(extracted.isSuspect, false, 'Clean text must not be flagged as suspect');
 
-    // 2. Corrupt text layer fixture (passes char count but fails quality check)
-    const corruptPdf = buildCorruptTextLayerPdf();
-    const corruptExtracted = await extractPdfPages(corruptPdf);
-
-    assert.strictEqual(corruptExtracted.totalPages, 2);
-    assert.ok(corruptExtracted.avgCharsPerPage > 0, 'Character volume gate sees characters');
-    assert.strictEqual(
-        corruptExtracted.isSuspect,
-        true,
-        'Corrupt text layer must be flagged as suspect despite passing character-count check'
-    );
-    assert.ok(corruptExtracted.textQuality, 'Quality assessment object must be present');
-    assert.ok(
-        corruptExtracted.textQuality.suspectPagesCount > 0,
-        'At least one page must be marked suspect due to corruption'
-    );
-
-    // 3. Error case
     await assert.rejects(() => extractPdfPages(Buffer.from('not a PDF')));
 
-    console.log('book PDF extractor page/text/error/quality contract passed');
+    console.log('book PDF extractor page/text/error contract passed');
 }
 
 main().catch((error) => {

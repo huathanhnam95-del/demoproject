@@ -50,7 +50,10 @@ const {
     purgeExpiredRecycleEntries
 } = require('./crm/recycle-bin-service');
 const { buildAttendanceRiskRows } = require('./crm/reporting-service');
-const { runBookIngestQueue } = require('./crm/book-ingest-service');
+const {
+    runBookIngestQueue,
+    runBookTextRevisionQueue
+} = require('./crm/book-ingest-service');
 const { getStorageBucket } = require('./utils/firebase_admin_init');
 
 async function runCrmAutomationQueue() {
@@ -153,5 +156,14 @@ module.exports = {
     }, async () => {
         const db = getFirestore();
         await runBookIngestQueue(db, { now: new Date(), getStorageBucket });
+    }),
+    crmBookTextRevisionRunner: onSchedule({
+        region: 'us-central1',
+        schedule: 'every 1 minutes',
+        timeoutSeconds: 540,
+        memory: '2GiB'
+    }, async () => {
+        const db = getFirestore();
+        await runBookTextRevisionQueue(db, { now: new Date(), getStorageBucket });
     })
 };

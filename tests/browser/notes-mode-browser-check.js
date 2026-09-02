@@ -18,8 +18,6 @@ async function waitForPageReady(page) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await context.addInitScript(() => {
-    window.sessionStorage.setItem('guestMode', 'true');
-    window.sessionStorage.setItem('welcomeModalDismissed', 'true');
     window.localStorage.setItem('userStatus', 'guest');
     window.localStorage.setItem('hasSeenScopeTutorial', 'true');
     window.localStorage.setItem('notesModeFirstUse', 'true');

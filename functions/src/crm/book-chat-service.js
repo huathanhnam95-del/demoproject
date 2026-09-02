@@ -134,7 +134,7 @@ function validateCitations(rawCitations, sentChunks) {
     const validated = [];
     const seenMarkers = new Set();
     for (const cit of rawCitations) {
-        const marker = String(cit.marker || '').trim();
+        const marker = String(cit.marker || '').replace(/[[\]()]/g, '').trim();
         const chunk = chunkMap.get(marker);
         if (!chunk) continue;
         if (seenMarkers.has(marker)) continue;
@@ -154,7 +154,7 @@ function validateCitations(rawCitations, sentChunks) {
             pageEnd: chunk.pageEnd,
             snippet: chunk.text.slice(0, SNIPPET_LENGTH),
             highlightText,
-            textRevisionId: chunk.textRevisionId || 'legacy'
+            textRevisionId: chunk.textRevisionId ?? null
         });
     }
 
@@ -209,7 +209,7 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
 
     const chunks = await retrieveTopChunks(db, bookId, question, {
         bookTitle: bookData.title,
-        textRevisionId: bookData.activeTextRevisionId || null
+        textRevisionId: bookData.activeTextRevisionId
     });
 
     const messagesCol = threadRef.collection('messages');
@@ -249,12 +249,11 @@ async function handleChatMessage(db, { bookId, threadId, question, uid }) {
         text: json.answer || '',
         citations,
         answered: json.answered !== false,
-        textRevisionId: bookData.activeTextRevisionId || 'legacy',
         retrieval: {
             chunkIds: chunks.map((c) => c.chunkId),
             distances: chunks.map((c) => c.distance),
-            strategy: chunks[0]?.strategy || 'unknown',
-            textRevisionId: bookData.activeTextRevisionId || 'legacy'
+            textRevisionId: chunks[0]?.textRevisionId || bookData.activeTextRevisionId || null,
+            strategy: chunks[0]?.strategy || 'unknown'
         },
         model,
         latencyMs,

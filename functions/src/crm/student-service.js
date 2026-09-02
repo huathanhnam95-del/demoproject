@@ -177,9 +177,6 @@ function normalizeStudentCore(input, fallback = {}) {
         counselingNotes: Object.prototype.hasOwnProperty.call(source, 'counselingNotes')
             ? cleanOptionalString(source.counselingNotes)
             : (base.counselingNotes ?? null),
-        externalTestUrl: Object.prototype.hasOwnProperty.call(source, 'externalTestUrl')
-            ? cleanOptionalString(source.externalTestUrl)
-            : (base.externalTestUrl ?? null),
         practiceAccessOverrideMode: Object.prototype.hasOwnProperty.call(source, 'practiceAccessOverrideMode')
             ? cleanOptionalString(source.practiceAccessOverrideMode)
             : (base.practiceAccessOverrideMode ?? null),
@@ -216,7 +213,6 @@ function hasRecognizedPatch(input) {
         'leadId',
         'ownerUid',
         'notes',
-        'externalTestUrl',
         'learningProfile',
         'targets',
         'preferredSchedule',

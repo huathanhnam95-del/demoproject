@@ -170,22 +170,9 @@ const blankLead = buildLeadCreateData({}, context);
 assert.strictEqual(blankLead.name, null);
 assert.strictEqual(blankLead.stage, 'new');
 
-const externalLinkLead = buildLeadCreateData({
-    name: 'External Test Lead',
-    externalTestUrl: 'https://apeuni.com/score/12345'
-}, context);
-assert.strictEqual(externalLinkLead.externalTestUrl, 'https://apeuni.com/score/12345');
-
-const patchedWithLink = buildLeadPatchData(externalLinkLead, {
-    externalTestUrl: 'https://pte.tools/result/67890'
-}, context);
-assert.strictEqual(patchedWithLink.externalTestUrl, 'https://pte.tools/result/67890');
-
-const convertedWithLink = buildLeadConversion({
-    leadId: 'lead-ext-1',
-    lead: patchedWithLink,
-    context
-});
-assert.strictEqual(convertedWithLink.student.externalTestUrl, 'https://pte.tools/result/67890');
+assert.throws(
+    () => buildLeadPatchData(created, { stage: 'invalid' }, context),
+    /Invalid lead stage/
+);
 
 console.log('lead service passed');

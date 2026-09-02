@@ -9,61 +9,51 @@ function getStrategy() {
     return (process.env.CRM_BOOKS_VECTOR_SEARCH || 'native').toLowerCase();
 }
 
+async function resolveChunksCollection(db, bookId, options = {}) {
+    const revisionId = options.textRevisionId || options.revisionId;
+    if (typeof revisionId === 'string' && revisionId.trim()) {
+        const trimmed = revisionId.trim();
+        return {
+            chunksCol: db.collection(CRM_BOOKS).doc(bookId).collection('textRevisions').doc(trimmed).collection('chunks'),
+            textRevisionId: trimmed
+        };
+    }
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    const activeRevisionId = bookSnap.data()?.activeTextRevisionId;
+    if (typeof activeRevisionId === 'string' && activeRevisionId.trim()) {
+        const trimmed = activeRevisionId.trim();
+        return {
+            chunksCol: db.collection(CRM_BOOKS).doc(bookId).collection('textRevisions').doc(trimmed).collection('chunks'),
+            textRevisionId: trimmed
+        };
+    }
+    return {
+        chunksCol: db.collection(CRM_BOOKS).doc(bookId).collection('chunks'),
+        textRevisionId: null
+    };
+}
+
 async function retrieveTopChunks(db, bookId, question, options = {}) {
     const topK = options.topK || DEFAULT_TOP_K;
     const maxContextChars = options.maxContextChars || MAX_CONTEXT_CHARS;
     const strategy = options.strategy || getStrategy();
     const bookTitle = options.bookTitle || '';
 
-    let textRevisionId = options.textRevisionId;
-    if (textRevisionId === undefined) {
-        const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
-        textRevisionId = bookSnap.data()?.activeTextRevisionId || null;
-    }
-
-    const queryVector = await embedQuery(question, { title: bookTitle });
-
-    let chunksCol;
-    if (textRevisionId) {
-        chunksCol = db.collection(CRM_BOOKS).doc(bookId)
-            .collection('textRevisions').doc(textRevisionId)
-            .collection('chunks');
-    } else {
-        chunksCol = db.collection(CRM_BOOKS).doc(bookId).collection('chunks');
-    }
+    const queryVector = options.queryVector || (await embedQuery(question, { title: bookTitle }));
+    const { chunksCol, textRevisionId } = await resolveChunksCollection(db, bookId, options);
 
     let results;
     if (strategy === 'bruteforce') {
-        results = await bruteforceSearch(chunksCol, queryVector, topK);
+        results = await bruteforceSearch(chunksCol, queryVector, topK, { textRevisionId });
     } else {
-        results = await nativeSearch(chunksCol, queryVector, topK);
+        results = await nativeSearch(chunksCol, queryVector, topK, { textRevisionId });
     }
 
-    if (results.length === 0 && textRevisionId) {
-        const rootChunksCol = db.collection(CRM_BOOKS).doc(bookId).collection('chunks');
-        if (strategy === 'bruteforce') {
-            results = await bruteforceSearch(rootChunksCol, queryVector, topK);
-        } else {
-            results = await nativeSearch(rootChunksCol, queryVector, topK);
-        }
-        if (results.length > 0) {
-            chunksCol = rootChunksCol;
-        }
-    }
-
-    results.forEach((r) => {
-        r.textRevisionId = r.textRevisionId || textRevisionId || 'legacy';
-    });
-
-    const expanded = await expandNeighbours(chunksCol, results);
-    expanded.forEach((r) => {
-        r.textRevisionId = r.textRevisionId || textRevisionId || 'legacy';
-    });
-
+    const expanded = await expandNeighbours(chunksCol, results, { textRevisionId });
     return trimToContextLimit(expanded, maxContextChars);
 }
 
-async function nativeSearch(chunksCol, queryVector, topK) {
+async function nativeSearch(chunksCol, queryVector, topK, extra = {}) {
     const snap = await chunksCol
         .findNearest({
             vectorField: 'embedding',
@@ -84,13 +74,13 @@ async function nativeSearch(chunksCol, queryVector, topK) {
             pageEnd: data.pageEnd,
             charCount: data.charCount,
             distance: data._distance ?? null,
-            strategy: 'native',
-            textRevisionId: data.textRevisionId || null
+            textRevisionId: extra.textRevisionId ?? data.textRevisionId ?? null,
+            strategy: 'native'
         };
     });
 }
 
-async function bruteforceSearch(chunksCol, queryVector, topK) {
+async function bruteforceSearch(chunksCol, queryVector, topK, extra = {}) {
     const snap = await chunksCol.orderBy('index').get();
     const scored = [];
 
@@ -110,8 +100,8 @@ async function bruteforceSearch(chunksCol, queryVector, topK) {
             pageEnd: data.pageEnd,
             charCount: data.charCount,
             distance: 1 - similarity,
-            strategy: 'bruteforce',
-            textRevisionId: data.textRevisionId || null
+            textRevisionId: extra.textRevisionId ?? data.textRevisionId ?? null,
+            strategy: 'bruteforce'
         });
     }
 
@@ -119,7 +109,7 @@ async function bruteforceSearch(chunksCol, queryVector, topK) {
     return scored.slice(0, topK);
 }
 
-async function expandNeighbours(chunksCol, results) {
+async function expandNeighbours(chunksCol, results, extra = {}) {
     if (results.length === 0) return results;
 
     const existingIndices = new Set(results.map((r) => r.index));
@@ -152,8 +142,8 @@ async function expandNeighbours(chunksCol, results) {
                 pageEnd: data.pageEnd,
                 charCount: data.charCount,
                 distance: null,
-                strategy: 'neighbour',
-                textRevisionId: data.textRevisionId || null
+                textRevisionId: extra.textRevisionId ?? data.textRevisionId ?? null,
+                strategy: 'neighbour'
             });
         }
     }
@@ -181,6 +171,7 @@ function trimToContextLimit(chunks, maxChars) {
 
 module.exports = {
     retrieveTopChunks,
+    resolveChunksCollection,
     nativeSearch,
     bruteforceSearch,
     expandNeighbours,

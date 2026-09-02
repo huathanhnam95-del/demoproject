@@ -1,23 +1,19 @@
 {
-  "totalPages": 2,
-  "pages": [
-    {
-      "pageNumber": 1,
-      "sourceGroundTruth": "A Neglected Species\nChapter 1\nBasics of Teaching Pronunciation",
-      "embeddedCorruptText": "ANeglectedSpecias\nChapter 1\nBasics of Teaching Pronunciation",
-      "expectedSegmenterOutput": "A Neglected Spec ias\nChapter 1\nBasics of Teaching Pronunciation",
-      "suspiciousTokens": ["Specias"],
-      "longestAlphaRun": 17,
-      "hasGlyphError": true
-    },
-    {
-      "pageNumber": 2,
-      "sourceGroundTruth": "Teaching Pronunciation in the Communicative Classroom",
-      "embeddedCorruptText": "jof ASTD itt Training IIMIWIN\nTeachingPronunciationintheCommunicativeClassroom",
-      "expectedSegmenterOutput": "jof ASTD itt Training IIMIW IN\nTeaching Pronunciation in the Communicative Classroom",
-      "suspiciousTokens": ["jof", "itt", "IIMIWIN", "TeachingPronunciationintheCommunicativeClassroom"],
-      "longestAlphaRun": 48,
-      "hasGlyphError": true
-    }
-  ]
+    "physicalPageCount": 2,
+    "pages": [
+        {
+            "pageNumber": 1,
+            "rasterText": "A Neglected Species",
+            "rasterSha256": "311169baac1aedb18b6a18af6f297d3feac5280eff7a1452bcdeead2d136a1fc",
+            "embeddedText": "ANeglectedSpecias",
+            "blank": false
+        },
+        {
+            "pageNumber": 2,
+            "rasterText": "Teaching Pronunciation in the Communicative Classroom",
+            "rasterSha256": "7cd9cce1423009292645900fb612f0834dd28402ad44ce6c77fa48129ffb9310",
+            "embeddedText": "IIMIWIN itt jof ASTD",
+            "blank": false
+        }
+    ]
 }

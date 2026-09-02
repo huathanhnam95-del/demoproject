@@ -34,7 +34,6 @@ const CLASSROOM_MODULES = 'modules';
 const CLASSROOM_CLASSWORK = 'classwork';
 const CLASSROOM_MEMBERS = 'members';
 const CLASSROOM_LIVE_SESSIONS = 'liveSessions';
-const CRM_TEACHING_SESSIONS = 'crmTeachingSessions';
 
 module.exports = {
     USERS,
@@ -66,7 +65,6 @@ module.exports = {
     CRM_BOOK_LINKS,
     CRM_BOOK_COLLECTIONS,
     CRM_BOOK_SHARES,
-    CRM_TEACHING_SESSIONS,
     ENTRANCE_TESTS,
     ENTRANCE_TEST_LINK_RECOVERY,
     CLASSROOM_MODULES,
@@ -74,4 +72,3 @@ module.exports = {
     CLASSROOM_MEMBERS,
     CLASSROOM_LIVE_SESSIONS
 };
-

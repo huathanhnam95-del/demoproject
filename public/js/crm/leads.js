@@ -75,7 +75,6 @@ window.CrmLeads = (function () {
             agentSourceId,
             stage,
             probability,
-            externalTestUrl: getValue(elements.inputLeadExternalTestLink || elements.inputStudentExternalTestLink) || null,
             learningProfile: {
                 overall: getNumberValue(elements.inputScoreOverall),
                 listening: getNumberValue(elements.inputScoreListening),
@@ -142,14 +141,6 @@ window.CrmLeads = (function () {
         if (elements.inputTargetLevel) elements.inputTargetLevel.value = String(learning.targetLevel || '');
         if (elements.inputTargetExam) elements.inputTargetExam.value = String(targets.exam || '');
         if (elements.inputTargetScore) elements.inputTargetScore.value = targets.score ?? '';
-
-        const targetExternalTestLink = elements.inputLeadExternalTestLink || elements.inputStudentExternalTestLink;
-        if (targetExternalTestLink) {
-            targetExternalTestLink.value = String(lead?.externalTestUrl || '');
-        }
-        if (elements.btnOpenLeadExternalTestLink) {
-            elements.btnOpenLeadExternalTestLink.disabled = !targetExternalTestLink?.value;
-        }
     }
 
     function buildStudentPayloadFromLead(lead) {
@@ -186,7 +177,6 @@ window.CrmLeads = (function () {
             acquisitionSource: String(lead?.source || '').trim(),
             agentSourceId: String(lead?.agentSourceId || '').trim(),
             lifecycleStage: 'potential',
-            externalTestUrl: String(lead?.externalTestUrl || '').trim() || null,
             learningProfile: lead?.learningProfile || null,
             targets: lead?.targets || null,
             notes: notesParts.join(' | '),

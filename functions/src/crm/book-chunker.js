@@ -87,8 +87,7 @@ function chunkPages(pages, options = {}) {
             text: trimmed,
             charCount: trimmed.length,
             pageStart: currentPageStart,
-            pageEnd: currentPageEnd,
-            textRevisionId: options.textRevisionId || null
+            pageEnd: currentPageEnd
         });
     }
 

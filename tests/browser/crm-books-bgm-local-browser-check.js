@@ -154,11 +154,9 @@ function installMemoryLocalStorage() {
         await page.waitForSelector('.crm-books-explorer-header', { timeout: 5000 });
         console.log('  ✓ Book selected.');
 
-        console.log('Step 3: Checking Manage Music button and opening modal...');
+        console.log('Step 3: Checking BGM button and opening modal...');
         const bgmBtn = await page.waitForSelector('.crm-books-bgm-btn', { timeout: 5000 });
-        assert(bgmBtn, 'Manage Music button should exist in header.');
-        const btnText = await bgmBtn.innerText();
-        assert(btnText.includes('Manage Music'), `Header button text should be "Manage Music", got "${btnText}"`);
+        assert(bgmBtn, 'BGM button should exist in header.');
         await bgmBtn.click();
 
         await page.waitForSelector('.crm-books-bgm-modal', { timeout: 5000 });
@@ -177,11 +175,11 @@ function installMemoryLocalStorage() {
 
         console.log('Step 4: Opening Pages tab and Fullscreen Book View...');
         await page.click('.crm-books-tab[data-books-tab="pages"]');
-        assert.strictEqual(await page.$('.crm-books-open-bgm'), null, 'Duplicate BGM button in pages tab should be removed.');
+        await page.waitForSelector('.crm-books-open-bgm', { timeout: 5000 });
         await page.waitForSelector('.crm-books-open-bookview', { timeout: 5000 });
         await page.waitForSelector('.crm-books-page-paper', { timeout: 5000 });
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'crm-bgm-local-04-pages-tab.png') });
-        console.log('  ✓ Pages tab active without duplicate BGM button. Screenshot saved.');
+        console.log('  ✓ Pages tab active with Background Music button. Screenshot saved.');
 
         await page.click('.crm-books-open-bookview');
         await page.waitForSelector('.crm-bv-overlay', { timeout: 5000 });

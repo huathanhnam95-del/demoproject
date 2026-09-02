@@ -224,7 +224,10 @@ function getEntitySubtitle(entityType, data, sourcePanel) {
 }
 
 function inferStudentSourcePanel(data) {
-    return 'students';
+    const stage = String(data?.lifecycleStage || 'potential').trim().toLowerCase() || 'potential';
+    if (ENROLLED_STAGES.has(stage)) return 'students/data';
+    if (PRE_ENROLLMENT_STAGES.has(stage)) return 'students/potential';
+    return 'students/potential';
 }
 
 function createEmptyBundle(entityType, rootId, sourcePanel) {

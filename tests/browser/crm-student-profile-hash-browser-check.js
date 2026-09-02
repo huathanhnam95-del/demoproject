@@ -19,7 +19,10 @@ function buildHarnessHtml() {
         <button type="button" class="btn-new-student-trigger">New Student</button>
 
         <section class="crm-panel" data-panel="dashboard"></section>
-        <section class="crm-panel" data-panel="students">
+        <section class="crm-panel" data-panel="students/potential">
+          <div class="crm-placeholder-card"></div>
+        </section>
+        <section class="crm-panel" data-panel="students/data">
           <div class="crm-placeholder-card"></div>
         </section>
         <section class="crm-panel" data-panel="enquiry">
@@ -147,34 +150,18 @@ function buildHarnessHtml() {
   const convertedLead = {
     leadId: 'lead-2',
     crmId: 'a0001',
-    stage: 'contacted',
+    stage: 'converted',
     name: 'Converted Lead',
     email: 'converted@example.com',
     probability: 100,
     createdAt: '2026-01-04T00:00:00.000Z',
-    studentId: null
+    studentId: 'student-1'
   };
-
-  page.on('pageerror', (err) => console.error('PAGE ERROR:', err));
 
   await page.addInitScript((payload) => {
     const clone = (value) => JSON.parse(JSON.stringify(value));
     const students = new Map(Object.entries(payload.students));
     const leads = Array.isArray(payload.leads) ? payload.leads.map((row) => clone(row)) : [];
-
-    const storageMock = () => {
-      const store = new Map();
-      return {
-        getItem: (k) => (store.has(k) ? store.get(k) : null),
-        setItem: (k, v) => store.set(k, String(v)),
-        removeItem: (k) => store.delete(k),
-        clear: () => store.clear()
-      };
-    };
-    try {
-      Object.defineProperty(window, 'localStorage', { value: storageMock(), configurable: true });
-      Object.defineProperty(window, 'sessionStorage', { value: storageMock(), configurable: true });
-    } catch (_) {}
 
     function jsonResponse(body, status = 200) {
       return new Response(JSON.stringify(body), {
@@ -244,7 +231,7 @@ function buildHarnessHtml() {
     window.fetch = async (input) => {
       const url = typeof input === 'string' ? input : String(input?.url || '');
 
-      if (url.includes('/api/config')) {
+      if (url === '/api/config') {
         return jsonResponse({
           success: true,
           config: {
@@ -253,7 +240,7 @@ function buildHarnessHtml() {
         });
       }
 
-      if (url.includes('/api/admin/status')) {
+      if (url === '/api/admin/status') {
         return jsonResponse({
           success: true,
           isAdmin: true,
@@ -261,7 +248,7 @@ function buildHarnessHtml() {
         });
       }
 
-      if (url.includes('/api/admin/students?limit=200')) {
+      if (url === '/api/admin/students?limit=200') {
         return jsonResponse({
           success: true,
           students: [
@@ -271,7 +258,7 @@ function buildHarnessHtml() {
         });
       }
 
-      if (url.includes('/api/admin/students/student-1')) {
+      if (url === '/api/admin/students/student-1') {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve(jsonResponse({ success: true, student: clone(payload.students['student-1']) }));
@@ -279,28 +266,28 @@ function buildHarnessHtml() {
         });
       }
 
-      if (url.includes('/api/admin/students/student-2')) {
+      if (url === '/api/admin/students/student-2') {
         return jsonResponse({ success: true, student: clone(payload.students['student-2']) });
       }
 
-      if (url.includes('/api/admin/students/by-crm-id/a0001')) {
+      if (url === '/api/admin/students/by-crm-id/a0001') {
         return jsonResponse({ success: true, student: clone(payload.students['student-1']) });
       }
 
-      if (url.includes('/api/admin/students/by-crm-id/a0002')) {
-        return jsonResponse({ success: true, student: clone(payload.students['student-2']) });
-      }
-
-      if (url.includes('/entrance-tests')) {
+      if (url === '/api/admin/students/student-1/entrance-tests') {
         return jsonResponse({ success: true, tests: [] });
       }
 
-      if (url.includes('/api/admin/leads?limit=200')) {
+      if (url === '/api/admin/students/student-2/entrance-tests') {
+        return jsonResponse({ success: true, tests: [] });
+      }
+
+      if (url === '/api/admin/leads?limit=200') {
         return jsonResponse({ success: true, leads: clone(leads) });
       }
 
-      if (url.includes('/api/admin/leads/lead-1/convert')) {
-        const idx = leads.findIndex((item) => item.leadId === 'lead-1');
+      if (url === '/api/admin/leads/lead-1/convert') {
+        const idx = leads.findIndex((row) => String(row?.leadId || '') === 'lead-1');
         if (idx >= 0) {
           leads[idx] = {
             ...leads[idx],
@@ -312,11 +299,11 @@ function buildHarnessHtml() {
         return jsonResponse({ success: true, student: clone(payload.students['student-2']), lead: idx >= 0 ? clone(leads[idx]) : null });
       }
 
-      if (url.includes('/api/admin/tasks')) {
+      if (url.startsWith('/api/admin/tasks')) {
         return jsonResponse({ success: true, tasks: [] });
       }
 
-      if (url.includes('/api/admin/activities')) {
+      if (url.startsWith('/api/admin/activities')) {
         return jsonResponse({ success: true, activities: [] });
       }
 
@@ -324,19 +311,11 @@ function buildHarnessHtml() {
     };
   }, { students: { 'student-1': student, 'student-2': studentTwo }, leads: [lead, convertedLead] });
 
-  await page.route('https://betterenglishlearning.test/**', async (route) => {
-    const url = route.request().url();
-    if (url.includes('crm-harness.html')) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'text/html; charset=utf-8',
-        body: buildHarnessHtml()
-      });
-    }
-    return route.continue();
+  await page.goto('about:blank');
+  await page.setContent(buildHarnessHtml());
+  await page.evaluate(() => {
+    window.location.hash = '#students/a0001';
   });
-
-  await page.goto('https://betterenglishlearning.test/crm-harness.html#students/a0001');
 
   for (const scriptPath of [
     'public/js/crm/leads.js',
@@ -359,15 +338,13 @@ function buildHarnessHtml() {
   });
 
   assert.strictEqual(page.url().endsWith('#students/a0001'), true, 'Direct deep link should keep the crmId hash.');
-  await page.waitForFunction(() => {
-    const code = document.querySelector('[data-panel="students"] code');
-    return code && code.textContent.includes('a0001');
-  });
-  assert.strictEqual(await page.locator('[data-panel="students"] code').first().textContent(), 'a0001');
+  assert.strictEqual(await page.locator('#crm-student-id-badge').textContent(), 'ID: a0001');
+  assert.strictEqual(await page.locator('#crm-student-modal').getAttribute('aria-hidden'), 'false');
+  assert.strictEqual(await page.locator('[data-panel="students/potential"] code').first().textContent(), 'a0001');
 
   await page.locator('#btn-close-student-modal').click();
-  await page.waitForFunction(() => window.location.hash === '#students');
-  assert.strictEqual(page.url().endsWith('#students'), true, 'Closing the profile should return to the students list.');
+  await page.waitForFunction(() => window.location.hash === '#students/potential');
+  assert.strictEqual(page.url().endsWith('#students/potential'), true, 'Closing the profile should return to the potential students list.');
   assert.strictEqual(await page.locator('#crm-student-modal').getAttribute('aria-hidden'), 'true');
 
   await page.locator('button.crm-student-link[data-student-id="student-1"]').click();
@@ -403,9 +380,8 @@ function buildHarnessHtml() {
   await page.waitForFunction(() => window.location.hash === '#enquiry');
   assert.strictEqual(page.url().endsWith('#enquiry'), true, 'Closing a profile opened from enquiry should return to enquiry.');
 
-  await page.evaluate(() => {
-    window.location.hash = '#students/a0001';
-  });
+  await page.locator('.crm-lead-link[data-lead-id="lead-2"]').click();
+  await page.waitForFunction(() => window.location.hash === '#students/a0001');
   await page.waitForFunction(() => document.getElementById('crm-student-id-badge')?.textContent === 'ID: a0001');
   await page.locator('#btn-close-student-modal').click();
   await page.waitForFunction(() => window.location.hash === '#enquiry');

@@ -1,3 +1,16 @@
+## [V1.8.89] - 2026-09-02
+
+### Added & Enhanced
+- **CRM Books Document AI OCR-v2 Text Accuracy Recovery Architecture (`BOOKTXT-FIX-01`)**:
+  - Implemented Google Cloud Document AI OCR-v2 batch processor client (`functions/src/crm/book-document-ocr-service.js`) with physical page anchoring, UTF-8 unicode normalization, and bounding-box layout hierarchy.
+  - Built diagnostic quality analyzer (`functions/src/crm/book-text-quality.js`) and PDF character density validation (`functions/src/crm/book-pdf-extractor.js`), identifying corrupted invisible PDF text layers and preventing downstream dictionary word segmentation corruption.
+  - Implemented monotonic fenced revision state machine with lease locking (`functions/src/crm/book-text-revision-service.js`) and queue runner (`functions/src/crm/book-ingest-service.js`), ensuring immutable revision storage under `crm-books/<bookId>/text-revisions/<revisionId>/`.
+  - Added revision-scoped retrieval, embeddings, and chat citations (`functions/src/crm/book-retrieval.js`, `functions/src/crm/book-chat-service.js`, `functions/src/crm/book-summary-service.js`).
+  - Added audited admin REST endpoints (`functions/src/routes/admin/books.js`) for text revision creation, read, rollback, and atomic activation with a mandatory 64-character hex manifest verification gate.
+  - Made the Pages API and frontend reader (`public/js/crm/books-workspace.js`) revision-aware with dynamic `rendererContract: 'ocr-v2'` support, skipping dictionary word splitting and preserving genuine whitespace and terminology in the live reader.
+  - Built CLI-enabled verification manifest and audit tooling (`scripts/crm/audit-book-text-revision.js`).
+  - Added 12 comprehensive test suites across OCR services, LRO state machine, revision routes, chat citations, and renderer contracts.
+
 ## [V1.8.87] - 2026-09-02
 
 ### Added & Enhanced

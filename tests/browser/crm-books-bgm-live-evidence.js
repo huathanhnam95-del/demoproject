@@ -77,25 +77,23 @@ async function signInOnPage(page, credentials) {
         console.log('  ✓ Books workspace loaded.');
 
         // Evidence 1: Header BGM Button
-        console.log('Step 3: Capturing Evidence 1 - Header Manage Music button...');
+        console.log('Step 3: Capturing Evidence 1 - Header Background Music button...');
         const headerBgmBtn = await page.waitForSelector('.crm-books-bgm-btn', { timeout: 10000 });
-        assert(headerBgmBtn, 'Header Manage Music button must exist.');
-        const btnText = await headerBgmBtn.innerText();
-        assert(btnText.includes('Manage Music'), `Header button text should be "Manage Music", got "${btnText}"`);
+        assert(headerBgmBtn, 'Header Background Music button must exist.');
         await page.screenshot({ path: SCREENSHOTS.evidence02_headerWithBgm });
-        console.log('  ✓ Header Manage Music button verified and screenshot captured.');
+        console.log('  ✓ Header BGM button verified and screenshot captured.');
 
-        // Evidence 2: Pages Tab (Confirm no duplicate BGM button)
+        // Evidence 2: Pages Tab Background Music Button
         console.log('Step 4: Opening Pages Tab and capturing Evidence 2...');
         await page.click('.crm-books-tab[data-books-tab="pages"]');
-        assert.strictEqual(await page.$('.crm-books-open-bgm'), null, 'Duplicate BGM button in pages tab should not exist.');
+        await page.waitForSelector('.crm-books-open-bgm', { timeout: 10000 });
         await page.waitForSelector('.crm-books-open-bookview', { timeout: 10000 });
         await page.screenshot({ path: SCREENSHOTS.evidence01_pagesTabWithBgm });
-        console.log('  ✓ Pages tab verified without duplicate button and screenshot captured.');
+        console.log('  ✓ Pages tab Background Music button verified and screenshot captured.');
 
-        // Evidence 3: Opening BGM Upload Modal via header button
+        // Evidence 3: Opening BGM Upload Modal
         console.log('Step 5: Opening BGM Upload Modal and capturing Evidence 3...');
-        await headerBgmBtn.click();
+        await page.click('.crm-books-open-bgm');
         await page.waitForSelector('.crm-books-bgm-modal', { timeout: 10000 });
         await page.waitForSelector('#crm-books-bgm-dropzone', { timeout: 10000 });
         await page.screenshot({ path: SCREENSHOTS.evidence03_bgmModalOpen });

@@ -8,13 +8,8 @@ const {
     CRM_BOOK_SHARES
 } = require('../../crm/collections');
 const { handleChatMessage } = require('../../crm/book-chat-service');
-const { generateChapterStudyNotes, generateBookMindMap, expandMindMapNode, compileResearch, elaborateBookSnippets } = require('../../crm/book-summary-service');
-const {
-    createCandidateRevision,
-    activateRevision,
-    rollbackRevision,
-    listBookRevisions
-} = require('../../crm/book-text-revision-service');
+const { getUsageSummary, approveOverage } = require('../../crm/book-usage-tracker');
+const { generateChapterStudyNotes, generateBookMindMap, expandMindMapNode, compileResearch } = require('../../crm/book-summary-service');
 
 const MAX_THREAD_TITLE_LENGTH = 120;
 const SOURCE_DOWNLOAD_TTL_MS = 5 * 60 * 1000;
@@ -933,10 +928,9 @@ module.exports = function registerBookRoutes(router, deps) {
             if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
 
             const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
-            if (!bookSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Book not found.');
             const bookData = bookSnap.data() || {};
-            const activeRevId = bookData.activeTextRevisionId || null;
-            const cacheKey = `${bookId}:${activeRevId || 'legacy'}`;
+            const activeRevisionId = bookData.activeTextRevisionId || null;
+            const cacheKey = `${bookId}:${activeRevisionId || 'legacy'}`;
 
             const cached = pagesCache.get(cacheKey);
             if (cached && Date.now() - cached.ts < PAGES_CACHE_TTL) {
@@ -946,55 +940,47 @@ module.exports = function registerBookRoutes(router, deps) {
             if (!getStorageBucket) return sendError(res, 500, 'NO_STORAGE', 'Storage not configured.');
 
             const bucket = await getStorageBucket();
-            const pagesPath = activeRevId
-                ? `crm-books/${bookId}/text-revisions/${activeRevId}/pages.json`
-                : `crm-books/${bookId}/pages.json`;
+            let pagesPath;
+            let rendererContract = 'legacy';
+            if (activeRevisionId) {
+                pagesPath = `crm-books/${bookId}/text-revisions/${activeRevisionId}/pages.json`;
+                rendererContract = 'ocr-v2';
+            } else {
+                pagesPath = `crm-books/${bookId}/pages.json`;
+                rendererContract = 'legacy';
+            }
 
             const file = bucket.file(pagesPath);
             const [exists] = await file.exists();
             if (!exists) {
-                if (activeRevId) {
-                    const fallbackFile = bucket.file(`crm-books/${bookId}/pages.json`);
-                    const [fallbackExists] = await fallbackFile.exists();
-                    if (fallbackExists) {
-                        const [fallbackBuffer] = await fallbackFile.download();
-                        const fallbackParsed = JSON.parse(fallbackBuffer.toString('utf8'));
-                        const fallbackResult = {
-                            totalPages: fallbackParsed.totalPages || 0,
-                            pages: fallbackParsed.pages || [],
-                            textRevisionId: 'legacy',
-                            schemaVersion: fallbackParsed.schemaVersion || '1.0',
-                            rendererContract: fallbackParsed.rendererContract || 'legacy',
-                            sourceSha256: bookData.source?.sha256 || null,
-                            pagesHash: fallbackParsed.pagesHash || null
+                if (activeRevisionId) {
+                    const legacyFile = bucket.file(`crm-books/${bookId}/pages.json`);
+                    const [legacyExists] = await legacyFile.exists();
+                    if (legacyExists) {
+                        const [legacyBuffer] = await legacyFile.download();
+                        const parsed = JSON.parse(legacyBuffer.toString('utf8'));
+                        const result = {
+                            totalPages: parsed.totalPages || (Array.isArray(parsed.pages) ? parsed.pages.length : 0),
+                            pages: parsed.pages || [],
+                            textRevisionId: null,
+                            rendererContract: 'legacy',
+                            sourceSha256: parsed.sourceSha256 || bookData.source?.sha256 || null
                         };
-                        pagesCache.set(cacheKey, { data: fallbackResult, ts: Date.now() });
-                        return sendSuccess(res, fallbackResult);
+                        pagesCache.set(cacheKey, { data: result, ts: Date.now() });
+                        return sendSuccess(res, result);
                     }
                 }
-                const emptyResult = {
-                    totalPages: 0,
-                    pages: [],
-                    textRevisionId: activeRevId || 'legacy',
-                    schemaVersion: '1.0',
-                    rendererContract: 'legacy',
-                    sourceSha256: bookData.source?.sha256 || null,
-                    pagesHash: null
-                };
-                return sendSuccess(res, emptyResult);
+                return sendSuccess(res, { totalPages: 0, pages: [], textRevisionId: activeRevisionId, rendererContract });
             }
 
             const [buffer] = await file.download();
             const parsed = JSON.parse(buffer.toString('utf8'));
             const result = {
-                totalPages: parsed.totalPages || 0,
+                totalPages: parsed.totalPages || (Array.isArray(parsed.pages) ? parsed.pages.length : 0),
                 pages: parsed.pages || [],
-                textRevisionId: activeRevId || 'legacy',
-                schemaVersion: parsed.schemaVersion || (activeRevId ? '2.0' : '1.0'),
-                rendererContract: parsed.rendererContract || (activeRevId ? 'ocr-v2' : 'legacy'),
-                sourceSha256: parsed.sourceSha256 || bookData.source?.sha256 || null,
-                pagesHash: parsed.pagesHash || null,
-                textQuality: parsed.textQuality || null
+                textRevisionId: activeRevisionId,
+                rendererContract: parsed.rendererContract || rendererContract,
+                sourceSha256: parsed.sourceSha256 || bookData.source?.sha256 || null
             };
 
             pagesCache.set(cacheKey, { data: result, ts: Date.now() });
@@ -1009,190 +995,170 @@ module.exports = function registerBookRoutes(router, deps) {
         }
     });
 
-    // ─── Text Revisions API ───
-
-    // List all text revisions for a book
-    router.get('/books/:bookId/text-revisions', ...requireAdminHandlers, async (req, res) => {
-        try {
-            const bookId = cleanStr(req.params.bookId);
-            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
-
-            const result = await listBookRevisions({ db, bookId });
-            return sendSuccess(res, result);
-        } catch (error) {
-            const status = error.code === 'BOOK_NOT_FOUND' ? 404 : 500;
-            return sendError(res, status, error.code || 'REVISIONS_ERROR', error.message || 'Failed to list text revisions.');
-        }
-    });
-
-    // Create a new candidate text revision (Reprocess / Repair OCR)
+    // ─── Text Revisions Management ───
     router.post('/books/:bookId/text-revisions', ...requireAdminHandlers, async (req, res) => {
         try {
             const bookId = cleanStr(req.params.bookId);
             if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
 
-            const {
-                expectedSourceSha256,
-                expectedSourceGeneration,
-                reason = 'OCR text accuracy recovery',
-                mode = 'ocr_recovery'
-            } = req.body || {};
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            if (!bookSnap.exists) return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
+            const bookData = bookSnap.data() || {};
 
-            const revision = await createCandidateRevision({
+            const bucket = await getStorageBucket();
+            const { createRevision } = require('../../crm/book-text-revision-service');
+
+            const sourcePath = req.body?.sourcePath || bookData.source?.storagePath || bookData.storagePath || bookData.sourcePath;
+            if (!sourcePath) return sendError(res, 400, 'MISSING_SOURCE_PATH', 'No source path found on book.');
+
+            const revision = await createRevision({
                 db,
+                bucket,
                 bookId,
-                expectedSourceSha256: cleanStr(expectedSourceSha256),
-                expectedSourceGeneration: expectedSourceGeneration ? String(expectedSourceGeneration) : null,
-                reason: cleanStr(reason),
-                requestedBy: req.user?.uid || 'admin'
+                sourcePath,
+                sourceSha256: req.body?.expectedSourceSha256,
+                expectedPageCount: req.body?.pageCount || bookData.pageCount,
+                processor: req.body?.processor,
+                reason: cleanStr(req.body?.reason) || 'Admin queued text revision'
             });
 
-            await writeAuditLog({
-                actor: req.user?.uid || 'admin',
-                action: 'create_text_revision',
-                targetType: 'crm_book_text_revision',
-                targetId: `${bookId}:${revision.revisionId}`,
-                details: { bookId, revisionId: revision.revisionId, mode, reason }
-            });
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_CREATED',
+                    bookId,
+                    revisionId: revision.revisionId,
+                    userId: req.user?.uid || 'admin'
+                });
+            }
 
-            return sendSuccess(res, { revision });
+            return sendSuccess(res, { revision }, 'Text revision created.');
         } catch (error) {
-            const status = error.code === 'BOOK_NOT_FOUND' ? 404
-                : (error.code === 'REVISION_ALREADY_IN_PROGRESS' || error.code === 'SOURCE_SHA_MISMATCH' || error.code === 'SOURCE_GENERATION_MISMATCH' ? 409 : 500);
+            const status = error.code && error.code.startsWith('REVISION_INPUT') ? 400 : 500;
             return sendError(res, status, error.code || 'CREATE_REVISION_ERROR', error.message || 'Failed to create text revision.');
         }
     });
 
-    // Get specific text revision details (never return temporary OCR URLs)
     router.get('/books/:bookId/text-revisions/:revisionId', ...requireAdminHandlers, async (req, res) => {
         try {
             const bookId = cleanStr(req.params.bookId);
             const revisionId = cleanStr(req.params.revisionId);
             if (!bookId || !revisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and revisionId are required.');
 
-            const revSnap = await db.collection(CRM_BOOKS).doc(bookId).collection('textRevisions').doc(revisionId).get();
-            if (!revSnap.exists) return sendError(res, 404, 'REVISION_NOT_FOUND', `Revision ${revisionId} not found.`);
+            const revSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                .collection('textRevisions').doc(revisionId).get();
+            if (!revSnap.exists) return sendError(res, 404, 'REVISION_NOT_FOUND', 'Text revision not found.');
 
-            const revData = revSnap.data();
-            const sanitized = {
-                revisionId: revData.revisionId,
-                bookId: revData.bookId,
-                stage: revData.stage,
-                status: revData.status,
-                source: revData.source,
-                ocr: {
-                    processor: revData.ocr?.processor || null,
-                    submittedAt: revData.ocr?.submittedAt || null,
-                    attempts: revData.ocr?.attempts || 0
-                },
-                totalPages: revData.totalPages || null,
-                pagesHash: revData.pagesHash || null,
-                manifest: revData.manifest || null,
-                textQuality: revData.textQuality || null,
-                reason: revData.reason,
-                requestedBy: revData.requestedBy,
-                createdAt: revData.createdAt,
-                updatedAt: revData.updatedAt,
-                activatedAt: revData.activatedAt || null,
-                activatedBy: revData.activatedBy || null
-            };
-
-            return sendSuccess(res, { revision: sanitized });
+            return sendSuccess(res, { revision: { id: revSnap.id, ...revSnap.data() } });
         } catch (error) {
-            return sendError(res, 500, 'GET_REVISION_ERROR', error.message || 'Failed to get text revision.');
+            return sendError(res, 500, 'GET_REVISION_ERROR', 'Failed to get text revision.', error.message || error);
         }
     });
 
-    // Activate a verified candidate revision
     router.post('/books/:bookId/text-revisions/:revisionId/activate', ...requireAdminHandlers, async (req, res) => {
         try {
             const bookId = cleanStr(req.params.bookId);
             const revisionId = cleanStr(req.params.revisionId);
+            const manifestHash = cleanStr(req.body?.manifestHash);
             if (!bookId || !revisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and revisionId are required.');
 
-            const {
-                expectedCurrentRevisionId,
-                expectedSourceSha256,
-                manifestHash
-            } = req.body || {};
-
-            const activated = await activateRevision({
-                db,
-                bookId,
-                revisionId,
-                expectedCurrentRevisionId: expectedCurrentRevisionId !== undefined ? cleanStr(expectedCurrentRevisionId) || null : undefined,
-                expectedSourceSha256: cleanStr(expectedSourceSha256) || null,
-                manifestHash: cleanStr(manifestHash) || null,
-                activatedBy: req.user?.uid || 'admin'
-            });
-
-            for (const key of pagesCache.keys()) {
-                if (key.startsWith(`${bookId}:`)) pagesCache.delete(key);
+            if (!manifestHash || !/^[a-f0-9]{64}$/i.test(manifestHash)) {
+                return sendError(res, 400, 'INVALID_MANIFEST_HASH', 'A valid 64-character hex manifestHash is required for activation.');
             }
 
-            await writeAuditLog({
-                actor: req.user?.uid || 'admin',
-                action: 'activate_text_revision',
-                targetType: 'crm_book_text_revision',
-                targetId: `${bookId}:${revisionId}`,
-                details: {
-                    bookId,
-                    revisionId,
-                    previousActiveTextRevisionId: activated.previousActiveTextRevisionId
+            const bookRef = db.collection(CRM_BOOKS).doc(bookId);
+            const revRef = bookRef.collection('textRevisions').doc(revisionId);
+
+            const result = await db.runTransaction(async (txn) => {
+                const bookDoc = await txn.get(bookRef);
+                if (!bookDoc.exists) throw Object.assign(new Error('Book not found'), { code: 'BOOK_NOT_FOUND', status: 404 });
+                const revDoc = await txn.get(revRef);
+                if (!revDoc.exists) throw Object.assign(new Error('Revision not found'), { code: 'REVISION_NOT_FOUND', status: 404 });
+                const revData = revDoc.data() || {};
+
+                if (revData.status === 'failed') {
+                    throw Object.assign(new Error('Cannot activate failed revision'), { code: 'REVISION_FAILED', status: 400 });
                 }
+
+                const expectedCurrent = req.body?.expectedCurrentRevisionId;
+                if (expectedCurrent !== undefined && bookDoc.data()?.activeTextRevisionId !== expectedCurrent) {
+                    throw Object.assign(new Error('Current active revision mismatch'), { code: 'REVISION_MISMATCH', status: 409 });
+                }
+
+                txn.update(bookRef, {
+                    activeTextRevisionId: revisionId,
+                    activeTextManifestHash: manifestHash,
+                    updatedAt: serverTimestamp()
+                });
+
+                txn.update(revRef, {
+                    activatedAt: serverTimestamp(),
+                    activatedBy: req.user?.uid || 'admin',
+                    manifestHash
+                });
+
+                return { bookId, activeTextRevisionId: revisionId, manifestHash };
             });
 
-            return sendSuccess(res, activated);
+            pagesCache.clear();
+
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_ACTIVATED',
+                    bookId,
+                    revisionId,
+                    manifestHash,
+                    userId: req.user?.uid || 'admin'
+                });
+            }
+
+            return sendSuccess(res, result, 'Text revision activated successfully.');
         } catch (error) {
-            const status = error.code === 'BOOK_NOT_FOUND' || error.code === 'REVISION_NOT_FOUND' ? 404
-                : (error.code === 'ACTIVE_REVISION_MISMATCH' || error.code === 'REVISION_NOT_READY' || error.code === 'SOURCE_SHA_MISMATCH' || error.code === 'MANIFEST_HASH_MISMATCH' ? 409 : 500);
-            return sendError(res, status, error.code || 'ACTIVATE_REVISION_ERROR', error.message || 'Failed to activate text revision.');
+            const status = error.status || (error.code === 'INVALID_MANIFEST_HASH' ? 400 : 500);
+            return sendError(res, status, error.code || 'ACTIVATE_REVISION_ERROR', error.message || 'Failed to activate revision.');
         }
     });
 
-    // Rollback to a prior text revision
     router.post('/books/:bookId/text-revisions/:revisionId/rollback', ...requireAdminHandlers, async (req, res) => {
         try {
             const bookId = cleanStr(req.params.bookId);
-            const targetRevisionId = cleanStr(req.params.revisionId);
-            if (!bookId || !targetRevisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and target revisionId are required.');
+            const targetRevisionId = req.body?.targetRevisionId !== undefined ? cleanStr(req.body.targetRevisionId) : null;
+            if (!bookId) return sendError(res, 400, 'MISSING_BOOK_ID', 'bookId is required.');
 
-            const {
-                expectedCurrentRevisionId,
-                reason = 'Rollback to prior text revision'
-            } = req.body || {};
+            const bookRef = db.collection(CRM_BOOKS).doc(bookId);
 
-            const rolledBack = await rollbackRevision({
-                db,
-                bookId,
-                targetRevisionId,
-                expectedCurrentRevisionId: expectedCurrentRevisionId !== undefined ? cleanStr(expectedCurrentRevisionId) || null : undefined,
-                rollbackBy: req.user?.uid || 'admin',
-                reason: cleanStr(reason)
+            const result = await db.runTransaction(async (txn) => {
+                const bookDoc = await txn.get(bookRef);
+                if (!bookDoc.exists) throw Object.assign(new Error('Book not found'), { code: 'BOOK_NOT_FOUND', status: 404 });
+
+                if (targetRevisionId) {
+                    const targetRevRef = bookRef.collection('textRevisions').doc(targetRevisionId);
+                    const targetRevDoc = await txn.get(targetRevRef);
+                    if (!targetRevDoc.exists) throw Object.assign(new Error('Target revision not found'), { code: 'TARGET_REVISION_NOT_FOUND', status: 404 });
+                }
+
+                txn.update(bookRef, {
+                    activeTextRevisionId: targetRevisionId || null,
+                    updatedAt: serverTimestamp()
+                });
+
+                return { bookId, activeTextRevisionId: targetRevisionId || null };
             });
 
-            for (const key of pagesCache.keys()) {
-                if (key.startsWith(`${bookId}:`)) pagesCache.delete(key);
+            pagesCache.clear();
+
+            if (writeAuditLog) {
+                await writeAuditLog({
+                    action: 'CRM_BOOK_TEXT_REVISION_ROLLED_BACK',
+                    bookId,
+                    targetRevisionId: targetRevisionId || 'legacy',
+                    userId: req.user?.uid || 'admin'
+                });
             }
 
-            await writeAuditLog({
-                actor: req.user?.uid || 'admin',
-                action: 'rollback_text_revision',
-                targetType: 'crm_book_text_revision',
-                targetId: `${bookId}:${targetRevisionId}`,
-                details: {
-                    bookId,
-                    targetRevisionId,
-                    previousActiveTextRevisionId: rolledBack.previousActiveTextRevisionId,
-                    reason
-                }
-            });
-
-            return sendSuccess(res, rolledBack);
+            return sendSuccess(res, result, 'Text revision rolled back successfully.');
         } catch (error) {
-            const status = error.code === 'BOOK_NOT_FOUND' || error.code === 'REVISION_NOT_FOUND' ? 404
-                : (error.code === 'ACTIVE_REVISION_MISMATCH' ? 409 : 500);
-            return sendError(res, status, error.code || 'ROLLBACK_REVISION_ERROR', error.message || 'Failed to rollback text revision.');
+            const status = error.status || 500;
+            return sendError(res, status, error.code || 'ROLLBACK_REVISION_ERROR', error.message || 'Failed to rollback revision.');
         }
     });
 
@@ -1374,51 +1340,6 @@ module.exports = function registerBookRoutes(router, deps) {
                 return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
             }
             return sendError(res, 500, 'COMPILE_ERROR', 'Failed to compile research.', error?.message || error);
-        }
-    });
-
-    // ─── Elaborate Highlighted Passages ───
-    router.post('/books/:bookId/elaborate', ...requireAdminHandlers, async (req, res) => {
-        try {
-            const { bookId } = req.params;
-            const rawSnippets = Array.isArray(req.body?.snippets) ? req.body.snippets : [];
-            const snippets = rawSnippets
-                .filter(s => s && String(s.text || '').trim())
-                .slice(0, 15)
-                .map(s => ({
-                    id: String(s.id || '').trim(),
-                    text: String(s.text || '').trim().slice(0, 1000),
-                    sourceTab: String(s.sourceTab || '').trim(),
-                    section: String(s.section || '').trim()
-                }));
-
-            if (snippets.length === 0) {
-                return sendError(res, 400, 'INVALID_SNIPPETS', 'Please provide at least one text snippet to elaborate.');
-            }
-
-            const usage = await getUsageSummary(db);
-            if (usage && usage.isOverBudget && !usage.overageApproved) {
-                return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
-            }
-
-            const result = await elaborateBookSnippets(db, bookId, snippets);
-
-            await writeAuditLog?.({
-                action: 'book.elaborate_snippets',
-                entityType: 'book',
-                entityId: bookId,
-                metadata: { snippetCount: snippets.length }
-            }, { user: req.user });
-
-            return sendSuccess(res, result, 'Elaboration generated successfully.');
-        } catch (error) {
-            if (error.code === 'not-found') {
-                return sendError(res, 404, 'BOOK_NOT_FOUND', 'Book not found.');
-            }
-            if (error.code === 'invalid-argument') {
-                return sendError(res, 400, 'INVALID_SNIPPETS', error.message);
-            }
-            return sendError(res, 500, 'ELABORATE_ERROR', 'Failed to elaborate snippets.', error?.message || error);
         }
     });
 

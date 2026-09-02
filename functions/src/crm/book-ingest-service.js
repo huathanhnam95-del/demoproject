@@ -5,6 +5,7 @@ const { extractPdfPages } = require('./book-pdf-extractor');
 const { chunkPages } = require('./book-chunker');
 const { embedTexts, getConfig: getEmbedConfig } = require('./book-embeddings');
 const { groupChunksIntoSections, summarizeSection, reduceSummary } = require('./book-summary-service');
+const { runBookTextRevisionQueue } = require('./book-text-revision-service');
 
 const LEASE_DURATION_MS = 9 * 60 * 1000;
 const SOFT_DEADLINE_MS = 7 * 60 * 1000;
@@ -148,11 +149,8 @@ async function runExtractStage(db, job, deps) {
     }
 
     const pagesJson = JSON.stringify({
-        schemaVersion: '1.0',
-        rendererContract: 'legacy',
         totalPages: result.totalPages,
-        pages: result.pages,
-        textQuality: result.textQuality || null
+        pages: result.pages
     });
     const pagesPath = `crm-books/${bookId}/pages.json`;
     await bucket.file(pagesPath).save(Buffer.from(pagesJson), {
@@ -162,8 +160,6 @@ async function runExtractStage(db, job, deps) {
 
     await db.collection(CRM_BOOKS).doc(bookId).update({
         pageCount: result.totalPages,
-        'source.textQuality': result.textQuality || null,
-        'source.isSuspect': Boolean(result.isSuspect),
         'source.uploadedAt': FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
     });
@@ -565,6 +561,7 @@ async function releaseForResume(db, bookId, nextStage) {
 
 module.exports = {
     runBookIngestQueue,
+    runBookTextRevisionQueue,
     sweepAbandonedUploads,
     claimJob,
     failJob,

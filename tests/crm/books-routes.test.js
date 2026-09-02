@@ -97,11 +97,7 @@ async function invoke(body) {
     assert(postNotesRoute, 'Books routes must register POST study-notes endpoint.');
     assert.strictEqual(postNotesRoute.routeHandlers[0], adminGuard, 'POST study-notes must have admin guard.');
 
-    const elaborateRoute = handlers.post.find((entry) => entry.pathname === '/books/:bookId/elaborate');
-    assert(elaborateRoute, 'Books routes must register POST elaborate endpoint.');
-    assert.strictEqual(elaborateRoute.routeHandlers[0], adminGuard, 'POST elaborate must have admin guard.');
-
-    console.log('books route rename, study-notes, and elaborate contracts passed');
+    console.log('books route rename and study-notes contracts passed');
 })().catch((error) => {
     console.error(error.stack || error);
     process.exitCode = 1;

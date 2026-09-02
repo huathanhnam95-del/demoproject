@@ -148,7 +148,6 @@ function normalizeLeadCore(input, fallback = {}) {
         lossReason: Object.prototype.hasOwnProperty.call(source, 'lossReason') ? cleanOptionalString(source.lossReason) : (base.lossReason ?? null),
         notes: Object.prototype.hasOwnProperty.call(source, 'notes') ? cleanOptionalString(source.notes) : (base.notes ?? null),
         studentId: Object.prototype.hasOwnProperty.call(source, 'studentId') ? cleanOptionalString(source.studentId) : (base.studentId ?? null),
-        externalTestUrl: Object.prototype.hasOwnProperty.call(source, 'externalTestUrl') ? cleanOptionalString(source.externalTestUrl) : (base.externalTestUrl ?? null),
         learningProfile: normalizeLearningProfile(source.learningProfile, base.learningProfile),
         targets: normalizeTargets(source.targets, base.targets)
     };
@@ -176,7 +175,7 @@ function buildLeadPatchData(existing, input, context = {}) {
         'learningNeeds', 'preferredLearningDays', 'preferredLearningHours',
         'messengerThreadUrl', 'messengerLastContactAt', 'messengerStatus', 'source', 'agentSourceId',
         'ownerUid', 'stage', 'probability', 'nextActionAt', 'lastContactAt',
-        'lossReason', 'notes', 'studentId', 'externalTestUrl', 'learningProfile', 'targets'
+        'lossReason', 'notes', 'studentId', 'learningProfile', 'targets'
     ].some((key) => Object.prototype.hasOwnProperty.call(input || {}, key));
     if (!recognized) {
         throw new Error('No lead fields provided for update.');
@@ -251,8 +250,7 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         preferredSchedule,
         preferredLearningDays: cleanOptionalArray(lead.preferredLearningDays),
         preferredLearningHours: cleanOptionalArray(lead.preferredLearningHours),
-        counselingNotes,
-        externalTestUrl: lead.externalTestUrl || null
+        counselingNotes
     }, context);
 
     return {

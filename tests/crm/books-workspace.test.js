@@ -24,8 +24,6 @@ const context = {
     clearTimeout,
     requestAnimationFrame: (callback) => callback()
 };
-const segmenterSource = fs.readFileSync(path.join(ROOT, 'public/js/crm/books-word-segmenter.js'), 'utf8');
-vm.runInNewContext(segmenterSource, context, { filename: 'books-word-segmenter.js' });
 vm.runInNewContext(source, context, { filename: 'books-workspace.js' });
 const workspace = context.window.CrmBooksWorkspace;
 
@@ -124,13 +122,13 @@ assert.match(citationHtml, /crm-books-citation-source/, 'Source citations must u
 assert.match(citationHtml, /crm-books-citation-button-page/, 'Source citation buttons must show their page range directly.');
 assert.match(citationHtml, /pp\. 52–53/, 'Citation buttons must show their page range directly.');
 
-// Renderer contract isolation: ocr-v2 does not segment words, legacy repairs missing spaces
-const rareWordSample = 'The phoneme /s/ is a voiceless alveolar sibilant in Specias and IIMIWIN.';
-const ocrV2Formatted = workspace.formatPageText(rareWordSample, (v) => String(v), '', { rendererContract: 'ocr-v2' });
-assert.match(ocrV2Formatted, /Specias and IIMIWIN/, 'OCR-v2 must preserve exact word spacing without dictionary segmenter splitting.');
-
-const collapsedSample = 'ANeglectedSpecias in the classroom.';
-const legacyFormatted = workspace.formatPageText(collapsedSample, (v) => String(v), '', { rendererContract: 'legacy' });
-assert.match(legacyFormatted, /A Neglected/, 'Legacy renderer contract must run space repair.');
+const ocrV2Text = workspace.formatPageText(
+    'Specias and specialized terminology remain intact under OCR-v2 contract.',
+    (value) => String(value),
+    '',
+    { rendererContract: 'ocr-v2' }
+);
+assert.match(ocrV2Text, /Specias and specialized terminology/, 'OCR-v2 contract must preserve genuine page text without segmenter word splitting.');
 
 console.log('books workspace helper contracts passed');
+

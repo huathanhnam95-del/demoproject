@@ -56,37 +56,6 @@ window.CrmBooksWorkspace = (function () {
         return `${normalized.slice(0, AUTO_THREAD_TITLE_LENGTH - 1).trimEnd()}…`;
     }
 
-    function formatElaborateParagraphs(text, escaper = escapeHtml) {
-        if (!text) return '';
-        const escapeFn = typeof escaper === 'function' ? escaper : (s => String(s ?? ''));
-        const escaped = escapeFn(String(text));
-        return escaped
-            .replace(/(?:\r?\n\s*\r?\n|\\n\s*\\n)/g, '</p><p>')
-            .replace(/(?:\r?\n|\\n)/g, '<br>');
-    }
-
-    function generateElaborationMarkdown(result) {
-        if (!result) return '';
-        let md = `# Deep-Dive Elaboration: ${result.bookTitle || 'Book'}\n\n`;
-        if (result.bookAuthor) md += `*Author: ${result.bookAuthor}*\n\n`;
-        if (result.synthesis) {
-            md += `## 🎯 Conceptual Synthesis\n\n${result.synthesis}\n\n---\n\n`;
-        }
-        (result.elaborations || []).forEach((el, idx) => {
-            md += `### #${idx + 1} ${el.concept || 'Concept'} ${el.pageRef ? `(${el.pageRef})` : ''}\n\n`;
-            if (el.snippetText) md += `> "${el.snippetText}"\n\n`;
-            if (el.detailedExplanation) md += `${el.detailedExplanation}\n\n`;
-            if (el.sourceEvidence) {
-                md += `**📖 Source Grounding:**\n${el.sourceEvidence}\n\n`;
-            }
-            if (Array.isArray(el.keyTakeaways) && el.keyTakeaways.length > 0) {
-                md += `**💡 Key Takeaways:**\n` + el.keyTakeaways.map(t => `- ${t}`).join('\n') + '\n\n';
-            }
-            md += `---\n\n`;
-        });
-        return md;
-    }
-
     function reflowPageText(text) {
         const source = String(text ?? '').replace(/\r\n?/g, '\n').trim();
         if (!source) return '';
@@ -198,11 +167,10 @@ window.CrmBooksWorkspace = (function () {
 
     function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
         const escape = typeof escHtml === 'function' ? escHtml : fallbackEscapeHtml;
-        const rendererContract = (typeof options === 'string' ? options : options?.rendererContract)
-            || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
-            || 'legacy';
-        const rawText = String(text ?? '').replace(/\r\n?/g, '\n');
-        const repaired = rendererContract === 'ocr-v2' ? rawText : repairMissingSpaces(rawText);
+        const rawNormalized = String(text ?? '').replace(/\r\n?/g, '\n');
+        const isOcrV2 = options?.rendererContract === 'ocr-v2' || options?.preserveSpacing === true
+            || (typeof pagesData === 'object' && pagesData?.rendererContract === 'ocr-v2');
+        const repaired = isOcrV2 ? rawNormalized : repairMissingSpaces(rawNormalized);
         const lines = repaired
             .split('\n')
             .map((line) => line.trim());
@@ -710,10 +678,6 @@ window.CrmBooksWorkspace = (function () {
         let summaryMode = '';
         let sectionDigests = null;
         let sectionsLoading = false;
-        let isElaborateModeActive = false;
-        let elaborateSnippets = [];
-        let isElaborating = false;
-        let lastElaborationResult = null;
 
         const panel = elements.booksPanel || document.querySelector('[data-panel="books"]');
 
@@ -840,8 +804,7 @@ window.CrmBooksWorkspace = (function () {
                 `<p class="crm-books-explorer-meta">${[escapeHtml(b.author), pageLabel].filter(Boolean).join(' \u00b7 ')}</p>` +
                 `</div>` +
                 usageHtml +
-                `<button class="crm-books-elaborate-btn${isElaborateModeActive ? ' active' : ''}" data-book-id="${escapeHtml(b.bookId)}" title="Elaborate tool: Highlight texts to deep dive with AI" aria-label="Elaborate tool">✨<span>Elaborate</span></button>` +
-                `<button class="crm-books-bgm-btn" data-book-id="${escapeHtml(b.bookId)}" title="Upload & manage background music (MP3)" aria-label="Manage music">${ICON_MUSIC}<span>Manage Music</span></button>` +
+                `<button class="crm-books-bgm-btn" data-book-id="${escapeHtml(b.bookId)}" title="Upload & manage background music (MP3)" aria-label="Background music">${ICON_MUSIC}<span>Background Music</span></button>` +
                 `<button class="crm-books-download-btn" data-book-id="${escapeHtml(b.bookId)}" title="Download source" aria-label="Download source">${ICON_DOWNLOAD}<span>Download source</span></button>` +
                 `<button class="crm-books-dark-toggle" title="Toggle dark mode">${darkIcon}</button>` +
                 `<button class="crm-books-delete-btn" data-book-id="${escapeHtml(b.bookId)}" title="Delete this book">${ICON_TRASH}</button>` +
@@ -1325,6 +1288,8 @@ window.CrmBooksWorkspace = (function () {
                 `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
                 `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
                 `</label>` +
+                `<button class="crm-books-open-bgm" data-book-id="${escapeHtml(selectedBookId)}" title="Upload & manage background music (MP3)">` +
+                `${ICON_MUSIC}<span>Background music</span></button>` +
                 `<button class="crm-books-open-bookview" title="Open book view">` +
                 `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
                 `<span>Open book view</span></button>` +
@@ -2004,17 +1969,11 @@ window.CrmBooksWorkspace = (function () {
             });
         }
 
-        async function loadPagesMetadata(force = false) {
-            if (!selectedBookId) return;
-            const currentActiveRev = selectedBook?.activeTextRevisionId || null;
-            if (!force && pagesData && pagesData.bookId === selectedBookId && (!currentActiveRev || pagesData.textRevisionId === currentActiveRev)) {
-                return;
-            }
+        async function loadPagesMetadata() {
+            if (!selectedBookId || pagesData) return;
             try {
                 const res = await apiGet(`/api/admin/books/${selectedBookId}/pages`);
                 pagesData = res?.data || res;
-                if (!pagesData) pagesData = { totalPages: 0, pages: [] };
-                pagesData.bookId = selectedBookId;
                 const lastRead = readingProgress.lastPage;
                 currentPage = (lastRead && lastRead >= 1 && lastRead <= (pagesData.totalPages || 0))
                     ? lastRead
@@ -2026,7 +1985,7 @@ window.CrmBooksWorkspace = (function () {
                 }
             } catch (err) {
                 console.error('[CRM Books] Failed to load pages:', err);
-                pagesData = { totalPages: 0, pages: [], bookId: selectedBookId };
+                pagesData = { totalPages: 0, pages: [] };
                 if (activeTab === 'pages') renderExplorerPanel();
             }
         }
@@ -2154,7 +2113,7 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function saveBookNote(bookId, text) {
-            if (!bookId || !text) return null;
+            if (!bookId || !text) return;
             const notes = loadBookNotes(bookId);
             const newNote = {
                 id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -2167,17 +2126,13 @@ window.CrmBooksWorkspace = (function () {
             } catch (e) {
                 console.error('Failed to save book note:', e);
             }
-            return apiPost(`/api/admin/books/${bookId}/notes`, { text }).then((res) => {
+            apiPost(`/api/admin/books/${bookId}/notes`, { text }).then((res) => {
                 const saved = res?.note || res?.data?.note;
                 if (saved?.id) {
                     newNote.firestoreId = saved.id;
                     try { localStorage.setItem(`crm_books_notes_${bookId}`, JSON.stringify(loadBookNotes(bookId).map(n => n.id === newNote.id ? newNote : n))); } catch (err) { void err; }
                 }
-                return newNote;
-            }).catch((err) => {
-                console.warn('[CRM Books] Background note sync warning:', err);
-                return newNote;
-            });
+            }).catch(() => {});
         }
 
         function deleteBookNote(bookId, noteId) {
@@ -7046,399 +7001,6 @@ window.CrmBooksWorkspace = (function () {
             return html;
         }
 
-        // ─── Phase 5: Multi-Surface "Elaborate" Tool ───
-        function toggleElaborateMode(forceState) {
-            const nextState = typeof forceState === 'boolean' ? forceState : !isElaborateModeActive;
-            isElaborateModeActive = nextState;
-
-            if (panel) {
-                if (isElaborateModeActive) {
-                    panel.classList.add('crm-books-elaborate-active');
-                } else {
-                    panel.classList.remove('crm-books-elaborate-active');
-                }
-            }
-
-            const mmModal = docQs('#crm-books-mindmap-modal');
-            if (mmModal) {
-                if (isElaborateModeActive) {
-                    mmModal.classList.add('crm-books-elaborate-active');
-                } else {
-                    mmModal.classList.remove('crm-books-elaborate-active');
-                }
-            }
-
-            document.querySelectorAll('.crm-books-elaborate-btn, #crm-mindmap-elaborate-btn').forEach(btn => {
-                if (isElaborateModeActive) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-
-            if (!isElaborateModeActive) {
-                clearElaborateMarks();
-                elaborateSnippets = [];
-                hideElaborateTray();
-            } else {
-                renderElaborateTray();
-                showToast?.('✨ Elaborate Mode active: Highlight text across Summary, Notes, Chat, or Mind Map.', 'info');
-            }
-        }
-
-        const MAX_ELABORATE_SNIPPETS = 12;
-        const MAX_SNIPPET_TEXT_LENGTH = 600;
-
-        function addElaborateSnippet(text, sourceTab, sectionTitle, targetRange, nodeId = null) {
-            let cleanText = String(text || '').trim();
-            if (!cleanText || cleanText.length < 2) return null;
-
-            if (elaborateSnippets.length >= MAX_ELABORATE_SNIPPETS) {
-                showToast?.(`Maximum of ${MAX_ELABORATE_SNIPPETS} highlights reached. Click Done to elaborate.`, 'warning');
-                return null;
-            }
-
-            if (cleanText.length > MAX_SNIPPET_TEXT_LENGTH) {
-                cleanText = cleanText.slice(0, MAX_SNIPPET_TEXT_LENGTH) + '…';
-            }
-
-            const snippetId = 'el_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-            const index = elaborateSnippets.length + 1;
-
-            if (targetRange) {
-                try {
-                    const mark = document.createElement('mark');
-                    mark.className = 'crm-books-elaborate-mark';
-                    mark.dataset.snippetId = snippetId;
-                    const badge = document.createElement('span');
-                    badge.className = 'crm-books-elaborate-badge';
-                    badge.textContent = `#${index}`;
-                    
-                    const contents = targetRange.extractContents();
-                    mark.appendChild(badge);
-                    mark.appendChild(contents);
-                    targetRange.insertNode(mark);
-                } catch (e) {
-                    console.warn('[CRM Books] Could not wrap selection in mark element:', e);
-                }
-            }
-
-            const snippetObj = {
-                id: snippetId,
-                index,
-                text: cleanText,
-                sourceTab: sourceTab || activeTab || 'summary',
-                section: sectionTitle || '',
-                nodeId: nodeId ? String(nodeId) : null
-            };
-            elaborateSnippets.push(snippetObj);
-            renderElaborateTray();
-            return snippetId;
-        }
-
-        function removeElaborateSnippet(snippetOrNodeId) {
-            if (!snippetOrNodeId) return;
-            const targetSnippet = elaborateSnippets.find(s => s.id === snippetOrNodeId || (s.nodeId && s.nodeId === snippetOrNodeId));
-            if (!targetSnippet) return;
-
-            const snippetId = targetSnippet.id;
-            const associatedNodeId = targetSnippet.nodeId;
-
-            elaborateSnippets = elaborateSnippets.filter(s => s.id !== snippetId);
-
-            elaborateSnippets.forEach((s, idx) => {
-                s.index = idx + 1;
-            });
-
-            document.querySelectorAll(`mark.crm-books-elaborate-mark[data-snippet-id="${snippetId}"]`).forEach(mark => {
-                const parent = mark.parentNode;
-                if (!parent) return;
-                while (mark.firstChild) {
-                    if (mark.firstChild.classList && mark.firstChild.classList.contains('crm-books-elaborate-badge')) {
-                        mark.removeChild(mark.firstChild);
-                    } else {
-                        parent.insertBefore(mark.firstChild, mark);
-                    }
-                }
-                parent.removeChild(mark);
-                parent.normalize();
-            });
-
-            elaborateSnippets.forEach((s) => {
-                const mark = document.querySelector(`mark.crm-books-elaborate-mark[data-snippet-id="${s.id}"]`);
-                const badge = mark?.querySelector('.crm-books-elaborate-badge');
-                if (badge) badge.textContent = `#${s.index}`;
-            });
-
-            if (associatedNodeId) {
-                document.querySelectorAll(`.crm-mindmap-node[data-node-id="${associatedNodeId}"]`).forEach(n => {
-                    n.classList.remove('crm-mindmap-node-elaborate-selected');
-                });
-            }
-
-            renderElaborateTray();
-        }
-
-        function clearElaborateMarks() {
-            document.querySelectorAll('mark.crm-books-elaborate-mark').forEach((mark) => {
-                const parent = mark.parentNode;
-                if (!parent) return;
-                while (mark.firstChild) {
-                    if (mark.firstChild.classList && mark.firstChild.classList.contains('crm-books-elaborate-badge')) {
-                        mark.removeChild(mark.firstChild);
-                    } else {
-                        parent.insertBefore(mark.firstChild, mark);
-                    }
-                }
-                parent.removeChild(mark);
-                parent.normalize();
-            });
-            document.querySelectorAll('.crm-mindmap-node-elaborate-selected').forEach(n => {
-                n.classList.remove('crm-mindmap-node-elaborate-selected');
-            });
-        }
-
-        function renderElaborateTray() {
-            const tray = docQs('#crm-books-elaborate-tray');
-            if (!tray) return;
-
-            if (!isElaborateModeActive) {
-                tray.style.display = 'none';
-                return;
-            }
-
-            tray.style.display = 'flex';
-            const countEl = docQs('#crm-books-elaborate-tray-count');
-            if (countEl) {
-                countEl.textContent = `${elaborateSnippets.length} selected`;
-            }
-
-            const doneBtn = docQs('#crm-books-elaborate-tray-done-btn');
-            if (doneBtn) {
-                doneBtn.disabled = elaborateSnippets.length === 0 || isElaborating;
-                doneBtn.innerHTML = isElaborating
-                    ? `<span class="crm-spinner" style="width:12px;height:12px;display:inline-block;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:4px;"></span> Elaborating…`
-                    : `✓ Done (${elaborateSnippets.length})`;
-            }
-
-            const chipsContainer = docQs('#crm-books-elaborate-tray-chips');
-            if (chipsContainer) {
-                if (elaborateSnippets.length === 0) {
-                    chipsContainer.innerHTML = '<span class="crm-books-elaborate-tray-empty-hint">Highlight any text across Summary, Notes, Chat, or Mind Map</span>';
-                } else {
-                    chipsContainer.innerHTML = elaborateSnippets.map((s) => {
-                        const snippetPreview = s.text.length > 32 ? s.text.slice(0, 32) + '…' : s.text;
-                        return `<div class="crm-books-elaborate-chip" title="${escapeHtml(s.text)}">` +
-                            `<span class="crm-books-elaborate-chip-idx">#${s.index}</span>` +
-                            `<span class="crm-books-elaborate-chip-src">${escapeHtml(s.sourceTab)}</span>` +
-                            `<span class="crm-books-elaborate-chip-text">${escapeHtml(snippetPreview)}</span>` +
-                            `<button type="button" class="crm-books-elaborate-chip-remove" data-snippet-id="${escapeHtml(s.id)}" title="Remove this highlight">&times;</button>` +
-                            `</div>`;
-                    }).join('');
-                }
-            }
-        }
-
-        function hideElaborateTray() {
-            const tray = docQs('#crm-books-elaborate-tray');
-            if (tray) tray.style.display = 'none';
-        }
-
-        function openElaborationDrawer(loading = false) {
-            const drawer = docQs('#crm-books-elaborate-drawer');
-            if (!drawer) return;
-            drawer.style.display = 'flex';
-            requestAnimationFrame(() => {
-                drawer.classList.add('open');
-                drawer.setAttribute('aria-hidden', 'false');
-            });
-
-            const bookTitleEl = docQs('#crm-books-elaborate-drawer-book-title');
-            if (bookTitleEl) {
-                bookTitleEl.textContent = selectedBook?.title || 'Book Source Grounding';
-            }
-
-            if (loading) {
-                const body = docQs('#crm-books-elaborate-drawer-body');
-                if (body) {
-                    body.innerHTML = `<div class="crm-books-elaborate-loading">` +
-                        `<div class="crm-books-elaborate-spinner"></div>` +
-                        `<h4>Unpacking and Grounding Excerpts…</h4>` +
-                        `<p class="crm-muted">Retrieving source text from "${escapeHtml(selectedBook?.title || 'the book')}" and building source-grounded elaboration.</p>` +
-                        `</div>`;
-                }
-            }
-        }
-
-        function closeElaborationDrawer() {
-            const drawer = docQs('#crm-books-elaborate-drawer');
-            if (!drawer) return;
-            drawer.classList.remove('open');
-            drawer.setAttribute('aria-hidden', 'true');
-            setTimeout(() => {
-                if (!drawer.classList.contains('open')) {
-                    drawer.style.display = 'none';
-                }
-            }, 300);
-        }
-
-        function renderElaborationResult(result) {
-            openElaborationDrawer(false);
-            const body = docQs('#crm-books-elaborate-drawer-body');
-            if (!body || !result) return;
-
-            const synthesisHtml = result.synthesis ? (
-                `<div class="crm-books-elaborate-synthesis-card">` +
-                `<div class="crm-books-elaborate-card-header">` +
-                `<span class="crm-books-elaborate-synthesis-icon">🎯</span>` +
-                `<h4>Core Synthesis & Conceptual Framework</h4>` +
-                `</div>` +
-                `<div class="crm-books-elaborate-synthesis-text">` +
-                `<p>${formatElaborateParagraphs(result.synthesis)}</p>` +
-                `</div>` +
-                `</div>`
-            ) : '';
-
-            const itemsHtml = (result.elaborations || []).map((item, idx) => {
-                const takeawaysHtml = (Array.isArray(item.keyTakeaways) && item.keyTakeaways.length > 0) ? (
-                    `<div class="crm-books-elaborate-takeaways">` +
-                    `<div class="crm-books-elaborate-takeaways-label">💡 Key Takeaways:</div>` +
-                    `<ul>${item.keyTakeaways.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>` +
-                    `</div>`
-                ) : '';
-
-                const evidenceHtml = item.sourceEvidence ? (
-                    `<div class="crm-books-elaborate-evidence">` +
-                    `<div class="crm-books-elaborate-evidence-label">📖 Source Grounding & Direct Reference:</div>` +
-                    `<div class="crm-books-elaborate-evidence-text">${escapeHtml(item.sourceEvidence)}</div>` +
-                    `</div>`
-                ) : '';
-
-                const pageRefHtml = item.pageRef ? `<span class="crm-books-elaborate-item-pages">${escapeHtml(item.pageRef)}</span>` : '';
-
-                return `<div class="crm-books-elaborate-item-card">` +
-                    `<div class="crm-books-elaborate-item-header">` +
-                    `<span class="crm-books-elaborate-item-badge">#${idx + 1}</span>` +
-                    `<h4 class="crm-books-elaborate-item-title">${escapeHtml(item.concept || `Concept #${idx + 1}`)}</h4>` +
-                    pageRefHtml +
-                    `</div>` +
-                    `<blockquote class="crm-books-elaborate-quote">"${escapeHtml(item.snippetText || '')}"</blockquote>` +
-                    `<div class="crm-books-elaborate-explanation">` +
-                    `<p>${formatElaborateParagraphs(item.detailedExplanation)}</p>` +
-                    `</div>` +
-                    evidenceHtml +
-                    takeawaysHtml +
-                    `</div>`;
-            }).join('');
-
-            body.innerHTML = `<div class="crm-books-elaborate-content">` +
-                synthesisHtml +
-                `<div class="crm-books-elaborate-items-title">` +
-                `<h4>Detailed Elaboration (${(result.elaborations || []).length} excerpt${(result.elaborations || []).length === 1 ? '' : 's'})</h4>` +
-                `</div>` +
-                `<div class="crm-books-elaborate-items-list">${itemsHtml}</div>` +
-                `</div>`;
-        }
-
-        async function executeElaboration() {
-            if (!selectedBookId) {
-                showToast?.('Please select a book first.', 'warning');
-                return;
-            }
-            if (elaborateSnippets.length === 0) {
-                showToast?.('Please highlight at least one passage to elaborate.', 'warning');
-                return;
-            }
-
-            isElaborating = true;
-            renderElaborateTray();
-            openElaborationDrawer(true);
-
-            try {
-                const res = await apiPost(`/api/admin/books/${selectedBookId}/elaborate`, {
-                    snippets: elaborateSnippets
-                });
-                const data = res?.data || res;
-                lastElaborationResult = {
-                    bookId: selectedBookId,
-                    bookTitle: selectedBook?.title || 'Book',
-                    bookAuthor: selectedBook?.author || '',
-                    synthesis: data.synthesis || '',
-                    elaborations: Array.isArray(data.elaborations) ? data.elaborations : [],
-                    snippets: [...elaborateSnippets],
-                    model: data.model || ''
-                };
-                renderElaborationResult(lastElaborationResult);
-                showToast?.('Elaboration generated from source material.', 'success');
-            } catch (err) {
-                console.error('[CRM Books] Elaborate failed:', err);
-                const body = docQs('#crm-books-elaborate-drawer-body');
-                if (body) {
-                    body.innerHTML = `<div class="crm-books-elaborate-error">` +
-                        `<p class="crm-text-danger">⚠️ Failed to generate elaboration: ${escapeHtml(err?.message || 'Unknown error')}</p>` +
-                        `<button type="button" class="crm-btn crm-btn-secondary crm-btn-sm crm-books-elaborate-retry-btn">Retry</button>` +
-                        `</div>`;
-                }
-                showToast?.('Elaboration failed: ' + (err?.message || 'Error'), 'error');
-            } finally {
-                isElaborating = false;
-                renderElaborateTray();
-            }
-        }
-
-        async function saveElaborationToNotes() {
-            if (!lastElaborationResult || !selectedBookId) {
-                showToast?.('No elaboration result to save.', 'warning');
-                return;
-            }
-            const md = generateElaborationMarkdown(lastElaborationResult);
-            try {
-                await saveBookNote(selectedBookId, md);
-                showToast?.('Saved elaboration as a new note in Notes tab.', 'success');
-            } catch (err) {
-                showToast?.('Failed to save elaboration to notes: ' + (err?.message || 'Error'), 'error');
-            }
-        }
-
-        function discussElaborationInChat() {
-            if (!lastElaborationResult) {
-                showToast?.('No elaboration result to discuss.', 'warning');
-                return;
-            }
-            const concepts = (lastElaborationResult.elaborations || []).map(e => e.concept).filter(Boolean);
-            const topicStr = concepts.length > 0 ? concepts.slice(0, 2).map(c => `"${c}"`).join(' and ') : 'the highlighted concepts';
-            const starterMsg = `Can you elaborate further on how ${topicStr} in "${lastElaborationResult.bookTitle}" connect to real-world applications?`;
-
-            closeElaborationDrawer();
-            activeTab = 'chat';
-            renderExplorerPanel();
-
-            setTimeout(() => {
-                const composer = docQs('.crm-books-composer-input');
-                if (composer) {
-                    composer.value = starterMsg;
-                    composer.focus();
-                    composer.style.height = 'auto';
-                    composer.style.height = Math.min(composer.scrollHeight, 120) + 'px';
-                }
-            }, 100);
-            showToast?.('Switched to Chat with elaboration context.', 'info');
-        }
-
-        async function copyElaborationMarkdown() {
-            if (!lastElaborationResult) {
-                showToast?.('No elaboration result to copy.', 'warning');
-                return;
-            }
-            const md = generateElaborationMarkdown(lastElaborationResult);
-            try {
-                await navigator.clipboard.writeText(md);
-                showToast?.('Elaboration markdown copied to clipboard!', 'success');
-            } catch (err) {
-                showToast?.('Failed to copy to clipboard.', 'error');
-            }
-        }
-
         // --- Event binding ---
         function bindEvents() {
             if (bound || !panel) return;
@@ -7466,7 +7028,7 @@ window.CrmBooksWorkspace = (function () {
                         await deleteBook(bookId);
                         return;
                     }
-                    if (target.classList.contains('crm-books-bgm-btn')) {
+                    if (target.classList.contains('crm-books-bgm-btn') || target.classList.contains('crm-books-open-bgm')) {
                         e.stopPropagation();
                         openBookBgmModal(bookId || selectedBookId);
                         return;
@@ -8088,143 +7650,6 @@ window.CrmBooksWorkspace = (function () {
                     return;
                 }
             });
-
-            // ─── Elaborate Mode: Text Selection & Highlighting (Non-Pages Surfaces) ───
-            document.addEventListener('mouseup', (e) => {
-                if (!isElaborateModeActive) return;
-                if (e.target.closest('.crm-books-elaborate-tray') || e.target.closest('.crm-books-elaborate-drawer')) return;
-                // Exclude Pages tab (source reading mode)
-                if (e.target.closest('.crm-books-page-content') || e.target.closest('.crm-books-page-stage')) return;
-
-                const mmModal = docQs('#crm-books-mindmap-modal');
-                const isInsideBooks = panel && panel.contains(e.target);
-                const isInsideMindMap = mmModal && mmModal.contains(e.target) && mmModal.style.display !== 'none';
-
-                if (!isInsideBooks && !isInsideMindMap) return;
-
-                const sel = window.getSelection();
-                const text = sel?.toString().trim();
-                if (!text || text.length < 2) return;
-
-                const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-                if (!range) return;
-
-                let sectionTitle = '';
-                const secCard = e.target.closest('.crm-books-section-card, .crm-books-chapter-card');
-                if (secCard) {
-                    sectionTitle = secCard.querySelector('.crm-books-section-title')?.textContent?.trim() || 'Summary';
-                } else if (activeTab === 'notes') {
-                    sectionTitle = 'Notes';
-                } else if (activeTab === 'chat') {
-                    sectionTitle = 'Chat';
-                } else if (isInsideMindMap) {
-                    sectionTitle = 'Mind Map';
-                } else {
-                    sectionTitle = activeTab ? activeTab.toUpperCase() : 'Summary';
-                }
-
-                addElaborateSnippet(text, isInsideMindMap ? 'mindmap' : (activeTab || 'summary'), sectionTitle, range);
-                sel.removeAllRanges();
-            });
-
-            // ─── Elaborate Mode: Click Delegations ───
-            document.addEventListener('click', async (e) => {
-                // Header / MindMap Elaborate Button
-                if (e.target.closest('.crm-books-elaborate-btn') || e.target.closest('#crm-mindmap-elaborate-btn')) {
-                    e.stopPropagation();
-                    toggleElaborateMode();
-                    return;
-                }
-
-                // Tray Cancel
-                if (e.target.closest('#crm-books-elaborate-tray-cancel-btn')) {
-                    e.stopPropagation();
-                    toggleElaborateMode(false);
-                    return;
-                }
-
-                // Tray Done
-                if (e.target.closest('#crm-books-elaborate-tray-done-btn')) {
-                    e.stopPropagation();
-                    await executeElaboration();
-                    return;
-                }
-
-                // Tray Chip Remove
-                const removeChipBtn = e.target.closest('.crm-books-elaborate-chip-remove');
-                if (removeChipBtn) {
-                    e.stopPropagation();
-                    removeElaborateSnippet(removeChipBtn.dataset.snippetId);
-                    return;
-                }
-
-                // Remove mark on direct click
-                const mark = e.target.closest('mark.crm-books-elaborate-mark');
-                if (mark && mark.dataset.snippetId) {
-                    e.stopPropagation();
-                    removeElaborateSnippet(mark.dataset.snippetId);
-                    return;
-                }
-
-                // Drawer Close
-                if (e.target.closest('#crm-books-elaborate-drawer-close')) {
-                    e.stopPropagation();
-                    closeElaborationDrawer();
-                    return;
-                }
-
-                // Drawer Save to Notes
-                if (e.target.closest('#crm-books-elaborate-save-notes-btn')) {
-                    e.stopPropagation();
-                    saveElaborationToNotes();
-                    return;
-                }
-
-                // Drawer Discuss in Chat
-                if (e.target.closest('#crm-books-elaborate-chat-btn')) {
-                    e.stopPropagation();
-                    discussElaborationInChat();
-                    return;
-                }
-
-                // Drawer Copy Markdown
-                if (e.target.closest('#crm-books-elaborate-copy-btn')) {
-                    e.stopPropagation();
-                    await copyElaborationMarkdown();
-                    return;
-                }
-
-                // Drawer Retry
-                if (e.target.closest('.crm-books-elaborate-retry-btn')) {
-                    e.stopPropagation();
-                    await executeElaboration();
-                    return;
-                }
-
-                // Mind Map Node Click in Elaborate Mode
-                if (isElaborateModeActive) {
-                    const node = e.target.closest('.crm-mindmap-node');
-                    if (node) {
-                        e.stopPropagation();
-                        const nodeId = node.dataset.nodeId || '';
-                        const existingSnippet = nodeId ? elaborateSnippets.find(s => s.nodeId === nodeId) : null;
-                        if (existingSnippet) {
-                            removeElaborateSnippet(existingSnippet.id);
-                        } else {
-                            const nodeTitle = node.dataset.title || node.querySelector('.crm-mindmap-node-title')?.textContent?.trim() || '';
-                            const nodeSummary = node.dataset.summary || node.querySelector('.crm-mindmap-node-summary')?.textContent?.trim() || '';
-                            const text = nodeSummary ? `${nodeTitle}: ${nodeSummary}` : nodeTitle;
-                            if (text) {
-                                const snippetId = addElaborateSnippet(text, 'mindmap', node.dataset.catTitle || nodeTitle, null, nodeId);
-                                if (snippetId) {
-                                    node.classList.add('crm-mindmap-node-elaborate-selected');
-                                }
-                            }
-                        }
-                        return;
-                    }
-                }
-            });
         }
 
         async function handleGenerateOrViewStudyNotes(sectionIndex, buttonEl, forceRegenerate = false) {
@@ -8418,13 +7843,7 @@ window.CrmBooksWorkspace = (function () {
             refresh,
             dispose,
             selectBook,
-            sendMessage,
-            toggleElaborateMode,
-            addElaborateSnippet,
-            removeElaborateSnippet,
-            clearElaborateMarks,
-            getElaborateSnippets: () => [...elaborateSnippets],
-            isElaborateModeActive: () => isElaborateModeActive
+            sendMessage
         };
     }
 
@@ -8436,8 +7855,6 @@ window.CrmBooksWorkspace = (function () {
         renderCitations,
         ingestWeightedPercent,
         deriveThreadTitle,
-        formatElaborateParagraphs,
-        generateElaborationMarkdown,
         reflowPageText,
         formatPageText,
         getReadablePageNumbers,

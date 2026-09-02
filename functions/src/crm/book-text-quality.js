@@ -1,213 +1,178 @@
-/**
- * CRM Books — Text Quality and Corruption Diagnostics
- * Evaluates embedded and OCR text quality, whitespace ratio, alphabetic runs,
- * suspicious tokens, and calculates line-dehyphenation-tolerant CER/WER.
- */
+const TOKEN_PATTERN = /[A-Za-z][A-Za-z'-]*/g;
+const ALPHA_PATTERN = /[A-Za-z]+/g;
 
-function calculateWhitespaceRatio(text) {
-    if (!text || typeof text !== 'string') return 0;
+function asText(value) {
+    return typeof value === 'string' ? value : String(value ?? '');
+}
+
+function normalizeText(value) {
+    return asText(value)
+        .replace(/-\s+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function normalizedCharacters(value) {
+    return normalizeText(value).replace(/\s/g, '');
+}
+
+function tokenize(value) {
+    return normalizeText(value).match(TOKEN_PATTERN) || [];
+}
+
+function editDistance(left, right) {
+    const a = Array.isArray(left) ? left : [...asText(left)];
+    const b = Array.isArray(right) ? right : [...asText(right)];
+    let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+
+    for (let row = 1; row <= a.length; row++) {
+        const current = [row];
+        for (let column = 1; column <= b.length; column++) {
+            const substitution = previous[column - 1] + (a[row - 1] === b[column - 1] ? 0 : 1);
+            const insertion = current[column - 1] + 1;
+            const deletion = previous[column] + 1;
+            current[column] = Math.min(substitution, insertion, deletion);
+        }
+        previous = current;
+    }
+
+    return previous[b.length];
+}
+
+function errorRate(distance, referenceLength) {
+    if (referenceLength === 0) return distance === 0 ? 0 : 1;
+    return Number((distance / referenceLength).toFixed(6));
+}
+
+function compareTextQuality(embeddedText, referenceText) {
+    const embeddedCharacters = normalizedCharacters(embeddedText);
+    const referenceCharacters = normalizedCharacters(referenceText);
+    const embeddedWords = tokenize(embeddedText);
+    const referenceWords = tokenize(referenceText);
+    const characterDistance = editDistance(embeddedCharacters, referenceCharacters);
+    const wordDistance = editDistance(embeddedWords, referenceWords);
+
+    return {
+        cer: errorRate(characterDistance, referenceCharacters.length),
+        wer: errorRate(wordDistance, referenceWords.length),
+        characterDistance,
+        wordDistance,
+        normalizedEmbeddedText: normalizeText(embeddedText),
+        normalizedReferenceText: normalizeText(referenceText)
+    };
+}
+
+function whitespaceRatio(value) {
+    const text = asText(value);
     if (text.length === 0) return 0;
-    const whitespaceMatches = text.match(/\s/g);
-    const whitespaceCount = whitespaceMatches ? whitespaceMatches.length : 0;
-    return whitespaceCount / text.length;
+    const whitespaceCount = (text.match(/\s/g) || []).length;
+    return Number((whitespaceCount / text.length).toFixed(6));
 }
 
-function calculateLongestAlphabeticRun(text) {
-    if (!text || typeof text !== 'string') return 0;
-    const runs = text.match(/[A-Za-z]+/g);
-    if (!runs || runs.length === 0) return 0;
-    return Math.max(...runs.map((r) => r.length));
+function longestAlphaRun(value) {
+    const runs = asText(value).match(ALPHA_PATTERN) || [];
+    return runs.reduce((longest, run) => Math.max(longest, run.length), 0);
 }
 
-const SUSPICIOUS_TOKEN_PATTERNS = [
-    /\b(?:jof|itt|IIMIWIN|Specias)\b/,
-    /[a-z][A-Z]/, // Internal camel-case fusion e.g. NeglectedSpecias, PronunciationInThe
-    /\b[A-Z]{2,}[a-z]{2,}/, // Double capital prefix artifact e.g. ANeglected
-    /[A-Za-z]{20,}/ // Excessive fused alphabetic run
-];
-
-function detectSuspiciousTokens(text) {
-    if (!text || typeof text !== 'string') return [];
-    const tokens = text.split(/\s+/).filter(Boolean);
-    const detected = [];
-
-    for (const token of tokens) {
-        for (const pattern of SUSPICIOUS_TOKEN_PATTERNS) {
-            if (pattern.test(token)) {
-                detected.push(token);
-                break;
-            }
-        }
-    }
-    return detected;
+function unique(values) {
+    return [...new Set(values)];
 }
 
-function normalizeForMetrics(text, options = {}) {
-    if (!text || typeof text !== 'string') return '';
-    const { dehyphenate = true, caseSensitive = false } = options;
-    let normalized = text;
-    if (dehyphenate) {
-        // Fix line breaks with hyphens: "com-\nmunication" -> "communication"
-        normalized = normalized.replace(/(\b[A-Za-z]+)-\s*\r?\n\s*([A-Za-z]+\b)/g, '$1$2');
-    }
-    // Collapse newlines and whitespace
-    normalized = normalized.replace(/\s+/g, ' ').trim();
-    if (!caseSensitive) {
-        normalized = normalized.toLowerCase();
-    }
-    return normalized;
+function heuristicSuspiciousTokens(value) {
+    const text = asText(value);
+    const tokens = text.match(TOKEN_PATTERN) || [];
+    return tokens.filter((token) => {
+        const hasCaseBreak = /[a-z][A-Z]/.test(token);
+        const isLongAllCaps = token.length >= 4 && token === token.toUpperCase();
+        const isLongUnspacedToken = token.length >= 15 && !/\s/.test(text);
+        return hasCaseBreak || isLongAllCaps || isLongUnspacedToken;
+    });
 }
 
-function levenshteinDistance(a, b) {
-    const m = a.length;
-    const n = b.length;
-    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
-
-    for (let i = 1; i <= m; i++) {
-        for (let j = 1; j <= n; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            dp[i][j] = Math.min(
-                dp[i - 1][j] + 1, // deletion
-                dp[i][j - 1] + 1, // insertion
-                dp[i - 1][j - 1] + cost // substitution
-            );
-        }
-    }
-    return dp[m][n];
+function referenceDisagreementTokens(embeddedText, referenceText) {
+    const referenceTokens = new Set(tokenize(referenceText));
+    return (asText(embeddedText).match(TOKEN_PATTERN) || [])
+        .filter((token) => !referenceTokens.has(token.toLowerCase()));
 }
 
-function calculateCER(reference, hypothesis, options = {}) {
-    const normRef = normalizeForMetrics(reference, options);
-    const normHyp = normalizeForMetrics(hypothesis, options);
-    if (!normRef && !normHyp) return 0;
-    if (!normRef) return 1.0;
-    const dist = levenshteinDistance(normRef, normHyp);
-    return dist / normRef.length;
-}
+function analyzeTextQuality({ pages = [], referencePages = [], physicalPageCount } = {}) {
+    const embeddedPages = Array.isArray(pages) ? pages : [];
+    const references = Array.isArray(referencePages) ? referencePages : [];
+    const count = Number.isInteger(physicalPageCount) && physicalPageCount >= 0
+        ? physicalPageCount
+        : Math.max(embeddedPages.length, references.length);
+    const diagnostics = Array.from({ length: count }, (_, index) => {
+        const embeddedText = asText(embeddedPages[index]);
+        const referenceText = references[index] === undefined ? null : asText(references[index]);
+        const comparison = referenceText === null
+            ? { cer: null, wer: null, characterDistance: null, wordDistance: null }
+            : compareTextQuality(embeddedText, referenceText);
+        const suspicious = heuristicSuspiciousTokens(embeddedText);
+        const disagreementTokens = referenceText === null
+            ? []
+            : referenceDisagreementTokens(embeddedText, referenceText);
 
-function calculateWER(reference, hypothesis, options = {}) {
-    const normRef = normalizeForMetrics(reference, options);
-    const normHyp = normalizeForMetrics(hypothesis, options);
-    const refWords = normRef ? normRef.split(' ') : [];
-    const hypWords = normHyp ? normHyp.split(' ') : [];
-    if (refWords.length === 0 && hypWords.length === 0) return 0;
-    if (refWords.length === 0) return 1.0;
-    const dist = levenshteinDistance(refWords, hypWords);
-    return dist / refWords.length;
-}
-
-function detectDisagreement(embeddedText, ocrText, options = {}) {
-    const cer = calculateCER(embeddedText, ocrText, options);
-    const wer = calculateWER(embeddedText, ocrText, options);
-    const cerThreshold = options.cerThreshold ?? 0.05;
-    const werThreshold = options.werThreshold ?? 0.10;
-    return {
-        cer,
-        wer,
-        disagrees: cer > cerThreshold || wer > werThreshold
-    };
-}
-
-const QUALITY_THRESHOLDS = {
-    MIN_WHITESPACE_RATIO: 0.05, // less than 5% spaces is highly suspect
-    MAX_ALPHABETIC_RUN: 20,     // word > 20 chars without spaces/punct is suspect
-    CRITICAL_CORRUPT_SPACE_RATIO: 0.01 // < 1% spaces is definitely corrupt
-};
-
-function assessPageTextQuality(text, pageNumber = 1) {
-    const str = String(text || '');
-    const charCount = str.length;
-    const isBlank = charCount === 0 || str.trim().length === 0;
-    const whitespaceRatio = calculateWhitespaceRatio(str);
-    const longestAlphaRun = calculateLongestAlphabeticRun(str);
-    const suspiciousTokens = detectSuspiciousTokens(str);
-
-    const reasons = [];
-    if (!isBlank) {
-        if (whitespaceRatio < QUALITY_THRESHOLDS.CRITICAL_CORRUPT_SPACE_RATIO) {
-            reasons.push(`Collapsed whitespace: ${(whitespaceRatio * 100).toFixed(2)}% spaces`);
-        } else if (whitespaceRatio < QUALITY_THRESHOLDS.MIN_WHITESPACE_RATIO) {
-            reasons.push(`Low whitespace ratio: ${(whitespaceRatio * 100).toFixed(2)}%`);
-        }
-        if (longestAlphaRun >= QUALITY_THRESHOLDS.MAX_ALPHABETIC_RUN) {
-            reasons.push(`Long alphabetic run: ${longestAlphaRun} characters`);
-        }
-        if (suspiciousTokens.length > 0) {
-            reasons.push(`Suspicious tokens found: ${suspiciousTokens.slice(0, 3).join(', ')}`);
-        }
-    }
-
-    const isSuspect = reasons.length > 0;
-
-    return {
-        pageNumber,
-        charCount,
-        isBlank,
-        whitespaceRatio,
-        longestAlphaRun,
-        suspiciousTokens,
-        isSuspect,
-        reasons
-    };
-}
-
-function assessBookTextQuality(pages) {
-    if (!Array.isArray(pages) || pages.length === 0) {
         return {
-            totalPages: 0,
-            suspectPagesCount: 0,
-            isSuspect: true,
-            reasons: ['No pages provided'],
-            pageDiagnostics: []
+            pageNumber: index + 1,
+            embeddedText,
+            referenceText,
+            isBlank: embeddedText.trim().length === 0,
+            extractedTextBlank: embeddedText.trim().length === 0,
+            confirmedPhysicalBlank: referenceText === null ? null : referenceText.trim().length === 0,
+            whitespaceRatio: whitespaceRatio(embeddedText),
+            longestAlphaRun: longestAlphaRun(embeddedText),
+            suspiciousTokens: unique([...suspicious, ...disagreementTokens]),
+            cer: comparison.cer,
+            wer: comparison.wer,
+            embeddedVsReferenceDisagreement: referenceText !== null && comparison.cer > 0,
+            referenceProvided: referenceText !== null
         };
-    }
-
-    const pageDiagnostics = pages.map((pageText, idx) => assessPageTextQuality(pageText, idx + 1));
-    const nonBlankPages = pageDiagnostics.filter((d) => !d.isBlank);
-    const suspectPages = nonBlankPages.filter((d) => d.isSuspect);
-
-    const totalWhitespaceRatio = nonBlankPages.reduce((sum, d) => sum + d.whitespaceRatio, 0);
-    const avgWhitespaceRatio = nonBlankPages.length > 0 ? totalWhitespaceRatio / nonBlankPages.length : 0;
-    const maxAlphaRun = nonBlankPages.reduce((max, d) => Math.max(max, d.longestAlphaRun), 0);
-    const totalSuspiciousTokens = nonBlankPages.reduce((sum, d) => sum + d.suspiciousTokens.length, 0);
-
-    const bookReasons = [];
-    if (suspectPages.length > 0) {
-        bookReasons.push(`${suspectPages.length}/${pages.length} pages flagged as suspect`);
-    }
-    if (avgWhitespaceRatio < QUALITY_THRESHOLDS.MIN_WHITESPACE_RATIO && nonBlankPages.length > 0) {
-        bookReasons.push(`Average whitespace ratio too low (${(avgWhitespaceRatio * 100).toFixed(2)}%)`);
-    }
-    if (maxAlphaRun >= QUALITY_THRESHOLDS.MAX_ALPHABETIC_RUN) {
-        bookReasons.push(`Maximum alphabetic run ${maxAlphaRun} chars exceeds limit`);
-    }
-
-    const isSuspect = suspectPages.length > 0 || avgWhitespaceRatio < QUALITY_THRESHOLDS.MIN_WHITESPACE_RATIO;
+    });
+    const pagesWithReference = diagnostics.filter((page) => page.referenceProvided);
+    const disagreement = pagesWithReference.some((page) => page.embeddedVsReferenceDisagreement);
+    const suspiciousTokens = unique(diagnostics.flatMap((page) => page.suspiciousTokens));
+    const cerValues = pagesWithReference.map((page) => page.cer).filter((value) => value !== null);
+    const werValues = pagesWithReference.map((page) => page.wer).filter((value) => value !== null);
+    const average = (values) => values.length === 0
+        ? null
+        : Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(6));
+    const extractedTextBlankPages = diagnostics
+        .filter((page) => page.extractedTextBlank)
+        .map((page) => page.pageNumber);
+    const blankPages = diagnostics
+        .filter((page) => page.confirmedPhysicalBlank === true)
+        .map((page) => page.pageNumber);
+    const hasCompleteReferences = count > 0 && references.length === count &&
+        diagnostics.every((page) => page.referenceProvided);
+    const sourceAccuracyStatus = hasCompleteReferences && !disagreement ? 'verified' : 'unverified';
 
     return {
-        totalPages: pages.length,
-        suspectPagesCount: suspectPages.length,
-        avgWhitespaceRatio,
-        maxAlphaRun,
-        totalSuspiciousTokens,
-        isSuspect,
-        reasons: bookReasons,
-        pageDiagnostics
+        physicalPageCount: count,
+        extractedPageCount: embeddedPages.length,
+        blankPageCount: blankPages.length,
+        blankPages,
+        extractedTextBlankCount: extractedTextBlankPages.length,
+        extractedTextBlankPages,
+        pages: diagnostics,
+        whitespaceRatio: diagnostics.length === 0
+            ? 0
+            : Number((diagnostics.reduce((sum, page) => sum + page.whitespaceRatio, 0) / diagnostics.length).toFixed(6)),
+        longestAlphaRun: diagnostics.reduce((longest, page) => Math.max(longest, page.longestAlphaRun), 0),
+        suspiciousTokens,
+        cer: average(cerValues),
+        wer: average(werValues),
+        embeddedVsReferenceDisagreement: disagreement,
+        sourceAccuracyStatus,
+        sourceAccurate: sourceAccuracyStatus === 'verified' ? true : null
     };
 }
 
 module.exports = {
-    calculateWhitespaceRatio,
-    calculateLongestAlphabeticRun,
-    detectSuspiciousTokens,
-    normalizeForMetrics,
-    calculateCER,
-    calculateWER,
-    detectDisagreement,
-    assessPageTextQuality,
-    assessBookTextQuality,
-    QUALITY_THRESHOLDS
+    analyzeTextQuality,
+    compareTextQuality,
+    editDistance,
+    longestAlphaRun,
+    normalizeText,
+    whitespaceRatio
 };

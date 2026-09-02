@@ -96,7 +96,7 @@ window.CrmStudents = (function () {
             elements.inputStudentFacebookProfileUrl.value = facebookLink;
         }
         if (elements.inputStudentAcquisitionSource) elements.inputStudentAcquisitionSource.value = String(student?.acquisitionSource || 'Facebook - Personal');
-        if (elements.inputStudentFacebookPersonalOwner) elements.inputStudentFacebookPersonalOwner.value = String(student?.facebookPersonalOwner || 'Nam');
+        if (elements.inputStudentFacebookPersonalOwner) elements.inputStudentFacebookPersonalOwner.value = String(student?.facebookPersonalOwner || '');
         if (elements.inputStudentAgentSource) elements.inputStudentAgentSource.value = String(student?.agentSourceId || '');
         if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
         if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';

@@ -1702,8 +1702,48 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 718,2026-08-21,Review debug and refactor PTE Write Essay filter system and UI components,Done,2026-08-21
 719,2026-08-21,Review debug and refactor mind map code - fix 7 bugs from code review,Done,2026-08-21
 720,2026-08-21,Deploy Release V1.8.81 with CRM Header Refactor and Write Essay Topic Filters to production,Done,2026-08-21
+721,2026-08-21,Fix Write Essay UI bugs - hide prompt card during practice and add filter settings button to picker bar,Done,2026-08-21
+722,2026-08-21,Fix SPC controller sticky header in Read Aloud mode - change overflow-x hidden to clip,Done,2026-08-21
+723,2026-08-21,Modernize mastery progress tracker UI - replace boxy progress bar with stepped milestone design,Done,2026-08-21
+724,2026-08-21,Deploy Release V1.8.82 with Stepped Progress Tracker and Sticky Header fixes to production,Done,2026-08-21
+725,2026-08-23,Deploy Release V1.8.83 with CRM Pronunciation Sample Study V2 Automatic Judgment and Production Hardening,Done,2026-08-23
+726,2026-08-21,Execute Write Essay Guided Support Handoff Plan (source repair representative generation and validation gate),Done,2026-08-21
+727,2026-08-21,Generate PTE 453 Guided Support packs using 3-model local LLM consensus audit (DeepSeek Qwen Gemma) - 453/453 published (100%),Done,2026-08-23
+728,2026-08-22,Redesign CRM lead form to 2 columns and remove legacy fields,Done,2026-08-22
+729,2026-08-22,Check and correct all IPA transcriptions in student_handout_u_sounds.docx per Oxford rules,Done,2026-08-22
+730,2026-08-23,Redesign listening task audio controllers to SST style and fix HIW transcription/explanation UI,Done,2026-08-23
+731,2026-08-23,Normalize listening task fonts to match reading task font choices,Done,2026-08-23
+732,2026-08-23,Fix audio player time clipping and redesign listening explanation layout for side-by-side comparison,Done,2026-08-23
+733,2026-08-23,Execute Echo Forge Gemini 3.7 Flash asset handoff package,Done,2026-08-23
+734,2026-08-23,Check and correct all IPA transcriptions in student_handout_ei_ai_sounds.docx per Oxford rules,Done,2026-08-23
+735,2026-08-24,Echo Forge Gemini 3.7 Flash Asset Handoff audit and Stage A verification,Done,2026-08-24
+736,2026-08-24,Echo Forge deep review debug: fix 3 bugs (missing deliverables + stateEvents drift + express dep),Done,2026-08-24
+737,2026-08-24,Vocab Book + Vocab Practice UI design review (audit of modals.js/vocab-book.js/style.css),Done,2026-08-24
+738,2026-08-24,Vocab Book UI rework Step 1: decouple progress-attempts-modal from .vocab-list-modal classes,Done,2026-08-24
+739,2026-08-24,Vocab Book UI rework Step 7: srs-review.js add startReviewSession mode option + getTierCounts + getNextReviewSummary,Done,2026-08-24
+740,2026-08-24,Vocab Book UI rework Step 8: vocab-tutorial.js fix positional selectors + open/expanded bug + rebind hook,Done,2026-08-24
+741,2026-08-24,Vocab Book UI rework Step 2: vocab-item-model.js canonical view-model + sorts + empty states,Done,2026-08-24
+742,2026-08-24,Vocab Book UI rework Step 3+4: vocab-list-view.js shared card renderer + toolbar (search/sort/filter),Done,2026-08-24
+743,2026-08-24,Vocab Book UI rework Steps 5+6+10: unify surfaces + practice dashboard + dialog a11y,Done,2026-08-24
+744,2026-08-24,Vocab Book UI rework Step 9: consolidate CSS (remove 11 conflicting legacy blocks) + fix mobile modal z-index/overflow,Done,2026-08-24
+745,2026-08-25,Vocab Book UI rework audit: fix 5 defects (practice-tab refresh routing + reopen race + no-match empty state + duplicate-key hydration + guest-path render ordering) and badge double-writer,Done,2026-08-25
+746,2026-08-25,Track Progress UI redesign: real vocab SRS tab + Type/Speak toggle + remove redundant donut chart + token-based CSS,Done,2026-08-25
+747,2026-08-31,V4 pronunciation sample review UI/UX redesign: flattened full-bleed layout + version lane strip + ghost boundaries + A-B loop playback + V4 diagnostics table + manual-vs-auto deltas + save checklist,Done,2026-08-31
+748,2026-08-31,Audit of task 747: fix WaveSurfer 7 region event bindings (plugin not instance; region-update/region-updated - pre-existing dead binding since v7 upgrade) + rAF-coalesce live drag renders + memoise completeComparisonReady + sticky transport under CRM header + faithful WaveSurfer stub in browser check + real-library drag probe,Done,2026-08-31
+749,2026-08-31,Review/debug/refactor of V4 review page: fix startRecording not clearing playback+A-B (drifted from redoRecording) - single resetRecordingState; unify span accessor across panel/overlay/lanes; WaveSurfer canvas heights read from CSS tokens; A-B resized below minimum now dropped; fix pre-existing dead end where Previous samples could never be saved (mode-aware save requirements as single source of truth); drawRegions reuses regions instead of rebuild,Done,2026-08-31
+750,2026-08-31,UI/UX audit of full web app (learner) and CRM admin: catalogue improvement opportunities,Done,2026-08-31
+751,2026-08-31,Aesthetic/visual-design audit of learner app and CRM: type scale spacing colour depth motion and brand coherence,Done,2026-08-31
+752,2026-08-31,Deploy Release V1.8.84 with Vocab Book Rework Track Progress UI and V4 Review Redesign to production,Done,2026-08-31
 
 
+753,2026-08-31,UI/UX remediation Phase 0-1: control reset token reconciliation CRM nav fix prep-timer guard leading measure and contrast,Done,2026-08-31
+754,2026-09-01,Fix Write From Dictation Play button not playing audio - WFD player guard checked audio.src which is empty when source is a child source element,Done,2026-09-01
+755,2026-09-01,Fix listening mode audio player right-side clipping - content-box sizing made the 470px player 518px wide overflowing two-column layouts (HCS LMCSA LMCMA SMW) and mobile (SST HIW WFD),Done,2026-09-01
 
-
-
+758,2026-08-31,BLOCKED: unresolved git merge conflict in public/crm-admin.html Segmentation Study panel (lines 524-562) - duplicate segmentation-study-timeline id; needs product decision on which side to keep,Done,2026-09-01
+756,2026-09-01,Full UI audit of all main app practice modes (28 surfaces) - built re-runnable geometry/interaction harness; fixed invisible Write Essay filter dropdowns (1.00:1) vocab panel z-index inversion global box-sizing reset collo-dictate toolbar overflow and 10 contrast failures; 110 findings resolved,Done,2026-09-01
+757,2026-09-01,Task 756 handoff: clean audit re-run after stash contamination (110 resolved P2 569 to 2 contrast 64 to 0); split working tree into 2 commits excluding unresolved crm-admin.html conflict; wrote docs/plans/2026-09-01-practice-modes-ui-audit-handoff.md,Done,2026-09-01
+759,2026-09-01,Execute handoff open threads: fix 5 stale browser tests + resolve CRM merge conflict + unify 7 duplicated audio player CSS + renumber duplicate task 754 + rebase onto origin/main,Done,2026-09-01
+760,2026-09-01,Enquiry Tracking stage cards as clickable filters for lead list,Done,2026-09-01
+761,2026-09-01,CRM Accounts: add archive/restore + permanent delete (single and bulk with select-all and search filter) and rename admin toggle to Grant/Revoke admin; guards for bootstrap admin self-mutation and still-admin deletion; audit logged,Done,2026-09-01
+762,2026-09-01,Deploy Release V1.8.85 with Practice Modes UI Audit Remediation Audio Player CSS Unification CRM Lead Stage Filtering and Accounts Role Management to production,Done,2026-09-01

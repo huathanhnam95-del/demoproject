@@ -13,8 +13,9 @@
 }
 
 :root {
-  /* Brand */
-  --crm-primary: #1b8a4f;
+  /* Brand — one step deeper than #1b8a4f so white 13px text on the header and on
+     primary buttons clears AA (was 4.38:1, now 5.38:1). Hover stays distinguishable. */
+  --crm-primary: #177a44;
   --crm-primary-hover: #156d3e;
   --crm-primary-light: #f0fdf4;
 
@@ -24,10 +25,14 @@
   --crm-surface-dim: #f8f9fa;
   --crm-surface-input: #f1f5f9;
 
-  /* Text */
-  --crm-text-main: #2c3e50;
-  --crm-text-muted: #7f8c8d;
-  --crm-text-dark: #1e293b;
+  /* Text — one neutral family, shared with the learner app's slate ramp.
+     Previously #2c3e50 / #7f8c8d (a warmer Flat-UI pair) ran alongside slate #1e293b,
+     giving the CRM two competing greys. #7f8c8d also measured 3.48:1 on white, below
+     the 4.5:1 AA floor, and it carries every KPI label, footnote and empty-state line. */
+  --crm-text-main: var(--gray-800, #1e293b);
+  --crm-text-muted: #5b6b73;
+  /* 5.53:1 on #ffffff, 5.15:1 on --crm-bg */
+  --crm-text-dark: var(--gray-900, #0f172a);
 
   /* Borders */
   --crm-border: #e2e8f0;
@@ -49,6 +54,13 @@
   --crm-neutral-bg: #f1f5f9;
   --crm-neutral-text: #475569;
 
+  /* One focus ring for the whole CRM. The previous `2px rgba(255,255,255,0.4)` was only
+     legible on the green header and vanished the moment focus moved onto white content;
+     several inputs resolved to `outline: none` with nothing in its place. A two-tone ring
+     (dark core + light halo) stays visible on both grounds. */
+  --crm-focus-ring: 2px solid #1d4ed8;
+  --crm-focus-halo: 0 0 0 4px rgba(255, 255, 255, 0.9);
+
   /* Layout */
   --crm-nav-height: 64px;
   --crm-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -63,6 +75,16 @@ body {
   color: var(--crm-text-main);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Leading computed to `normal` (~1.2) on 27 of 39 CRM text blocks. At 13.6px that is
+     cramped for the descriptive copy under every panel heading. */
+  line-height: 1.5;
+}
+
+.crm-admin h1,
+.crm-admin h2,
+.crm-admin h3,
+.crm-admin h4 {
+  line-height: 1.25;
 }
 
 .crm-admin {
@@ -132,14 +154,25 @@ body {
   display: flex;
   gap: clamp(4px, 0.5vw, 10px);
   height: 100%;
-  align-items: center;
+  align-items: stretch;
+}
+
+/* `.crm-nav-item` sets `height: 100%`, which resolves against its <li>. Without an
+   explicit height here the <li> shrinks to its text line box and the button's hit area
+   collapses to 16px inside a 64px header. `.crm-nav-dropdown` already sets this; plain
+   items were missing it. */
+.crm-nav-list>li {
+  display: flex;
+  height: 100%;
 }
 
 .crm-nav-item {
   appearance: none;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.55);
+  /* 0.55 alpha measured ~2.7:1 against the header green — well under AA for a label
+     that is the only way to see where you can navigate. */
+  color: rgba(255, 255, 255, 0.88);
   font-family: inherit;
   font-weight: 500;
   font-size: 0.85rem;
@@ -156,34 +189,83 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent width shift on weight change */
+/* Prevent width shift on weight change.
+   MUST stay out of flow: `.crm-nav-item` is a flex container, so a `display: block`
+   pseudo-element becomes a second flex item laid out BESIDE the label, doubling every
+   nav button's width (measured: nav intrinsic width 1021px in a 790px slot at 1440,
+   clipping Agents and Books). Absolute positioning keeps the width reservation without
+   consuming horizontal space. */
 .crm-nav-item::after {
   content: attr(data-label);
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block;
   font-weight: 600;
   height: 0;
   overflow: hidden;
   visibility: hidden;
+  pointer-events: none;
+}
+
+/* The background sits on an inset pseudo-element rather than the button itself: the
+   button is the full 64px header height for a usable hit area, but a 64px-tall tinted
+   block with a 6px radius reads as a hard slab. Painting an inset pill keeps the target
+   large while the highlight stays proportionate. */
+.crm-nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 12px 0;
+  border-radius: 8px;
+  background: transparent;
+  transition: background 0.18s ease;
+  pointer-events: none;
 }
 
 .crm-nav-item:hover {
-  color: rgba(255, 255, 255, 0.88);
-  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
 }
 
+.crm-nav-item:hover::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Active is the persistent state, so it must read louder than hover — previously hover
+   produced a heavier full-height block than the active item's faint pill, inverting
+   what each is meant to communicate. */
 .crm-nav-item.active {
   color: #ffffff;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.12);
 }
+
+.crm-nav-item.active::before {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 
 .crm-nav-item:focus {
   outline: none;
 }
 
 .crm-nav-item:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.4);
-  outline-offset: -2px;
+  outline: 2px solid #ffffff;
+  outline-offset: -3px;
+}
+
+/* Every other focusable in the CRM gets one ring, visible on white and on green. */
+.crm-admin a:focus-visible,
+.crm-admin button:not(.crm-nav-item):focus-visible,
+.crm-admin input:focus-visible,
+.crm-admin select:focus-visible,
+.crm-admin textarea:focus-visible,
+.crm-admin [tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: var(--crm-focus-ring);
+  outline-offset: 2px;
+}
+
+.crm-header button:not(.crm-nav-item):focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .crm-nav-item[disabled],
@@ -229,6 +311,198 @@ body {
   .crm-nav-item {
     font-size: 0.8rem;
     padding: 0 clamp(6px, 0.5vw, 10px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Skip link + drawer navigation
+
+   Below 1100px the header's other content (logo, Ollama badge, icon buttons,
+   user block) squeezes the nav list until items clip with no affordance —
+   `.crm-nav` hides its own scrollbar. Below ~900px it collapsed to zero width
+   and there was no menu control at all, so the CRM was enterable but not
+   navigable on tablet portrait and phone.
+   ───────────────────────────────────────────────────────────────────────── */
+.crm-skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 1200;
+  padding: 10px 16px;
+  border-radius: var(--crm-radius);
+  background: var(--crm-surface);
+  color: var(--crm-text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: var(--crm-shadow);
+  transition: top 0.15s ease;
+}
+
+.crm-skip-link:focus-visible {
+  top: 12px;
+  outline: var(--crm-focus-ring);
+  outline-offset: 2px;
+}
+
+.crm-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--crm-radius);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.crm-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.crm-nav-toggle-bars,
+.crm-nav-toggle-bars::before,
+.crm-nav-toggle-bars::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.crm-nav-toggle-bars {
+  position: relative;
+}
+
+.crm-nav-toggle-bars::before,
+.crm-nav-toggle-bars::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+.crm-nav-toggle-bars::before {
+  top: -6px;
+}
+
+.crm-nav-toggle-bars::after {
+  top: 6px;
+}
+
+.crm-nav-scrim {
+  position: fixed;
+  inset: var(--crm-nav-height) 0 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.crm-nav-scrim[hidden] {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .crm-nav-toggle {
+    display: inline-flex;
+  }
+
+  .crm-nav {
+    position: fixed;
+    left: 0;
+    top: var(--crm-nav-height);
+    bottom: 0;
+    z-index: 1001;
+    width: min(300px, 84vw);
+    height: auto;
+    padding: 12px 0 24px;
+    overflow-y: auto;
+    background: var(--crm-primary);
+    box-shadow: 6px 0 24px rgba(15, 23, 42, 0.24);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+
+  .crm-admin.crm-nav-open .crm-nav {
+    transform: translateX(0);
+  }
+
+  /* Keep the drawer out of the tab order while it is off-screen. */
+  .crm-admin:not(.crm-nav-open) .crm-nav {
+    visibility: hidden;
+  }
+
+  .crm-nav-list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    height: auto;
+  }
+
+  .crm-nav-list>li {
+    height: auto;
+    display: block;
+  }
+
+  .crm-nav-list .crm-nav-item {
+    width: 100%;
+    height: auto;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  /* Full-bleed rows in the drawer, so the inset pill used in the bar does not apply. */
+  .crm-nav .crm-nav-item::before {
+    inset: 0;
+    border-radius: 0;
+  }
+
+  /* The hover-reveal dropdown has no equivalent on touch — show submenu items
+     inline as a nested list instead. */
+  .crm-nav-dropdown .crm-dropdown-menu {
+    position: static;
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.14);
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .crm-dropdown-menu li button {
+    width: 100%;
+    min-height: 44px;
+    padding-left: 36px;
+    text-align: left;
+  }
+
+  /* JS relocates the More dropdown into the drawer below 1100px (see crm-admin.js),
+     so Dev Tools and Pronunciation Samples stay reachable instead of being hidden. */
+  .crm-nav .crm-nav-more-dropdown {
+    display: block;
+    height: auto;
+  }
+
+  .crm-nav .crm-nav-more-dropdown>.crm-nav-item {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 0;
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1101px) {
+  .crm-nav-scrim {
+    display: none;
   }
 }
 
@@ -347,8 +621,19 @@ body {
 
 .ollama-status-badge.online {
   background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.85);
+  /* 0.85 alpha measured 4.37:1 at 11px against the header green. */
+  color: #ffffff;
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Model/infra status is developer information. Below 1100px the header has to fit the
+   drawer toggle, so it yields to navigation. */
+@media (max-width: 1100px) {
+
+  .ollama-status-badge,
+  .crm-ollama-refresh-btn {
+    display: none;
+  }
 }
 
 .ollama-status-badge.online::before {
@@ -474,6 +759,18 @@ body {
   animation: crmFadeIn 0.25s ease-out;
 }
 
+/* Panel titles carry no explicit type, so they were rendering at the UA default. The
+   active panel's title is promoted to <h1> at runtime (crm-admin.js) to give the document
+   an outline; styling both tags identically keeps that swap visually neutral. */
+.crm-panel-header h1,
+.crm-panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--crm-text-dark);
+}
+
 @keyframes crmFadeIn {
   from {
     opacity: 0;
@@ -492,6 +789,92 @@ body {
   grid-template-columns: 1fr minmax(300px, 340px);
   gap: 24px;
   align-items: start;
+}
+
+/* A fixed two-column shell was applied whether or not the right column had content, so
+   several panels (Staff, Agents) rendered one small card beside ~800px of empty column.
+   Collapse to one column when the rail is thin on its own. */
+@media (max-width: 1100px) {
+  .crm-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Funnel ──────────────────────────────────────────────────────────────
+   Was nine identical rows with a right-aligned count — a table wearing a funnel's
+   name. Proportion and stage-to-stage drop-off are the information a funnel carries. */
+.crm-funnel-row {
+  padding: 12px 14px;
+  border-radius: var(--crm-radius);
+  background: var(--crm-surface-dim);
+}
+
+.crm-funnel-row+.crm-funnel-row {
+  margin-top: 8px;
+}
+
+.crm-funnel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.crm-funnel-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--crm-text-dark);
+}
+
+.crm-funnel-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--crm-border);
+  overflow: hidden;
+}
+
+.crm-funnel-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--crm-primary);
+  transition: width 0.3s ease;
+}
+
+.crm-funnel-drop {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--crm-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Empty states ────────────────────────────────────────────────────────
+   Every panel ships empty to a new tenant, so these are the first screens an admin
+   sees. Previously each was one grey sentence in a dashed box with the relevant
+   action sitting outside and above it — a dead end at the moment of onboarding. */
+.crm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 24px;
+  text-align: center;
+}
+
+.crm-empty-state-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--crm-text-dark);
+}
+
+.crm-empty-state .crm-muted {
+  margin: 0;
+  max-width: 46ch;
+}
+
+.crm-empty-state .crm-btn {
+  margin-top: 10px;
 }
 
 
@@ -711,12 +1094,16 @@ body {
   background-color: var(--crm-primary-hover);
 }
 
+/* Disabled must not read as "secondary" or as a broken primary. The previous grey-on-grey
+   fill measured 3.28:1 and looked like a rendering fault on a button still carrying the
+   .crm-btn-primary class. An outline with legible muted text reads as inert but intact. */
 .crm-btn-primary:disabled {
-  background-color: #d1d5db !important;
-  border-color: #9ca3af !important;
-  color: #6b7280 !important;
+  background-color: transparent !important;
+  border: 1px dashed var(--crm-border) !important;
+  color: var(--crm-text-muted) !important;
   cursor: not-allowed !important;
-  opacity: 0.7;
+  box-shadow: none !important;
+  opacity: 1;
 }
 
 .crm-btn-secondary {
@@ -1341,6 +1728,24 @@ body {
   color: #333;
 }
 
+#lead-composer.crm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 20px;
+  align-items: start;
+}
+
+#lead-composer .crm-form-group {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  #lead-composer.crm-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 .skill-icon {
   color: #999;
 }
@@ -1456,6 +1861,20 @@ body {
   padding: 14px 16px;
   text-align: left;
   box-shadow: var(--crm-shadow);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.crm-lead-stage-card:hover {
+  border-color: var(--crm-primary, #2c5f2d);
+  background: #f7faf7;
+}
+
+.crm-lead-stage-card.active {
+  border-color: var(--crm-primary, #2c5f2d);
+  background: #eef5ee;
+  box-shadow: 0 0 0 2px var(--crm-primary, #2c5f2d);
 }
 
 .crm-lead-stage-card strong {
@@ -2828,8 +3247,25 @@ body {
 /* ============================================
    Segmentation Study
    ============================================ */
+/* ── Segmentation Study (V4 sample review) ──
+   Flat layout: everything flows on the parent panel background. No wrapper
+   cards, so the timeline gets the full panel width. */
 .segmentation-study-workspace {
   padding: 0;
+  --study-v2: #2563eb;
+  --study-v3: #10b981;
+  --study-v4: #8b5cf6;
+  --study-manual: #f59e0b;
+  /* The waveform, the ruler, the spectrogram and every comparison lane share
+     one left gutter and one right margin, so a boundary at the same time sits
+     at the same x in all of them. Changing these keeps them aligned. */
+  --lane-label-w: 58px;
+  --lane-note-w: 190px;
+  --lane-gap: 10px;
+  /* Read back by segmentation-study.js when it sizes the WaveSurfer canvases,
+     so the rendered signal always fills its container. */
+  --waveform-height: 140px;
+  --spectrogram-height: 180px;
 }
 
 /* Header row */
@@ -2839,9 +3275,15 @@ body {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-.segmentation-study-header h3 { margin: 0 0 4px; }
+.segmentation-study-header-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.segmentation-study-header h3 { margin: 0; }
 .segmentation-study-identity {
   display: flex;
   align-items: center;
@@ -2855,9 +3297,7 @@ body {
   letter-spacing: 0.04em;
   color: #64748b;
 }
-.segmentation-study-identity .crm-input {
-  max-width: 180px;
-}
+.segmentation-study-identity .crm-input { max-width: 180px; }
 
 /* Mode tabs — pill style matching pv-sub-tabs */
 .segmentation-study-modes {
@@ -2866,7 +3306,7 @@ body {
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
-  margin: 0 0 16px;
+  margin: 0;
   border-bottom: none;
 }
 .segmentation-study-mode {
@@ -2893,48 +3333,146 @@ body {
   border-bottom-color: transparent;
 }
 
-/* Stats bar */
+/* Step rail — reflects real state, not a fixed script */
+.segmentation-study-steps {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+.segmentation-study-stepitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 150px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #64748b;
+}
+.segmentation-study-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.segmentation-study-step-label { font-weight: 600; color: #334155; }
+.segmentation-study-step-note {
+  margin-left: auto;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.segmentation-study-stepitem.is-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.segmentation-study-stepitem.is-done .segmentation-study-step-index {
+  background: #16a34a;
+  color: #fff;
+}
+.segmentation-study-stepitem.is-current {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+.segmentation-study-stepitem.is-current .segmentation-study-step-index {
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+}
+
+/* Word heading + task actions */
+.segmentation-study-task-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.segmentation-study-task-identity { min-width: 0; }
+.segmentation-study-task-heading h4 { margin: 0 0 2px; font-size: 22px; font-weight: 700; }
+.segmentation-study-reference {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 13px;
+  color: #475569;
+}
+.segmentation-study-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.segmentation-study-claim-status {
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #64748b;
+}
+.segmentation-study-step-hint { margin: 0 0 2px; font-size: 12px; }
+.segmentation-study-status { margin: 0 0 14px; font-size: 13px; min-height: 18px; }
+
+/* Queue disclosure — collapsed by default so the timeline gets the width */
+.segmentation-study-queue-details {
+  margin: 0 0 14px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.segmentation-study-queue-details > summary {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  list-style-position: inside;
+}
+.segmentation-study-queue-details > summary:focus-visible {
+  outline: 2px solid var(--accent-color, #3b82f6);
+  outline-offset: -2px;
+}
+.segmentation-study-queue-details[open] > summary {
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+.segmentation-study-queue-details > *:not(summary) { margin-left: 14px; margin-right: 14px; }
 .segmentation-study-stats {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 10px;
+  padding: 12px 0 4px;
   font-size: 13px;
-  margin-bottom: 16px;
 }
 .segmentation-study-stats strong {
   color: var(--accent-color, #3b82f6);
   font-size: 16px;
 }
-
-/* Toolbar */
-.segmentation-study-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 0 0 20px;
-}
-
-/* Two-column layout */
-.segmentation-study-queue-layout {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-.segmentation-study-queue-pane {
-  min-width: 0;
-}
-.segmentation-study-queue-pane h4 { margin: 0 0 6px; font-size: 13px; }
-.segmentation-study-queue-pane > .crm-muted { font-size: 12px; line-height: 1.5; }
+.segmentation-study-queue-details p.crm-muted { font-size: 12px; line-height: 1.5; margin: 0 14px 10px; }
 .segmentation-study-queue {
-  max-height: 480px;
+  max-height: 240px;
   overflow-y: auto;
-  margin: 10px 0 0;
+  margin: 0 14px 14px;
   padding: 0;
   list-style: none;
   border: 1px solid var(--border-color, #e2e8f0);
@@ -2954,50 +3492,61 @@ body {
   color: var(--accent-color, #3b82f6);
 }
 
-/* Review pane */
-.segmentation-study-review-pane {
-  min-width: 0;
-}
-.segmentation-study-task-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.segmentation-study-task-heading h4 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
-.segmentation-study-reference {
-  margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 13px;
-}
-.segmentation-study-claim-status {
-  padding: 4px 10px;
-  background: #f1f5f9;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #64748b;
-}
-
-/* Recording controls */
-.segmentation-study-record-controls {
+/* Transport — stays in view while scrolling the timeline */
+.segmentation-study-transport {
+  position: sticky;
+  /* .crm-header is itself sticky at top:0 with z-index 1000, so the transport
+     has to park below it rather than slide underneath. */
+  top: var(--crm-nav-height, 64px);
+  z-index: 4;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8px 18px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(6px);
 }
+.segmentation-study-transport-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.segmentation-study-transport .segmentation-study-ab { margin-left: auto; }
+.segmentation-study-toggle.is-active {
+  background: var(--accent-color, #3b82f6);
+  border-color: var(--accent-color, #3b82f6);
+  color: #fff;
+}
+.segmentation-study-speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+.segmentation-study-speed select { min-height: 30px; }
+#segmentation-study-ab-readout {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+#segmentation-study-ab-readout.is-set { color: #0f172a; font-weight: 600; }
+.segmentation-study-transport audio { max-width: 280px; height: 32px; }
+
+.segmentation-study-capture-row,
 .segmentation-study-analysis-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
 }
+.segmentation-study-playback-confirm { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Version tabs — pill style */
 .segmentation-study-tabs {
@@ -3006,7 +3555,7 @@ body {
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   border-bottom: none;
 }
 .segmentation-study-tab {
@@ -3032,56 +3581,287 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   border-bottom-color: transparent;
 }
+.segmentation-study-tab[hidden] { display: none; }
 
 /* Timeline / waveform */
 .segmentation-study-timeline {
   position: relative;
-  min-height: 180px;
-  margin: 12px 0;
-  border: 1px solid var(--border-color, #e2e8f0);
+  min-height: 260px;
+  margin: 0 0 10px;
+  padding-left: calc(var(--lane-label-w) + var(--lane-gap));
+  padding-right: calc(var(--lane-note-w) + var(--lane-gap));
+  /* Inset shadow rather than a border, so the padding box the waveform is laid
+     out in starts at the same x as the lane tracks below. */
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--border-color, #e2e8f0);
   border-radius: 8px;
   background: #fafbfc;
   overflow: hidden;
 }
+.segmentation-study-waveform-stack { position: relative; width: 100%; }
 .segmentation-study-waveform,
 .segmentation-study-spectrogram { width: 100%; }
-.segmentation-study-waveform { min-height: 96px; }
-.segmentation-study-spectrogram { min-height: 128px; }
+.segmentation-study-waveform { min-height: var(--waveform-height); }
+.segmentation-study-spectrogram { min-height: var(--spectrogram-height); }
 .segmentation-study-time-ruler { min-height: 20px; width: 100%; }
-.segmentation-study-speed {
+.segmentation-study-timeline:focus-visible {
+  outline: 3px solid var(--accent-color, #2563eb);
+  outline-offset: 2px;
+}
+.segmentation-study-timeline-empty {
+  padding: 96px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* Ghost boundary ticks — every non-active version, on the signal itself */
+.segmentation-study-ghosts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.segmentation-study-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--ghost-color, #94a3b8);
+  opacity: .55;
+  transform: translateX(-1px);
+}
+
+/* Lane strip — the four segmentations on one shared time axis */
+.segmentation-study-lanes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.segmentation-study-lanes-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+.segmentation-study-ghost-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
+  color: #64748b;
 }
-.segmentation-study-speed select { min-height: 30px; }
+.segmentation-study-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.segmentation-study-lanes > p.crm-muted { margin: 0; font-size: 12px; }
+.segmentation-study-lane {
+  display: grid;
+  grid-template-columns: var(--lane-label-w) minmax(0, 1fr) var(--lane-note-w);
+  align-items: center;
+  gap: var(--lane-gap);
+}
+.segmentation-study-lane-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lane-color, #64748b);
+  text-transform: uppercase;
+}
+.segmentation-study-lane.is-active .segmentation-study-lane-label { text-decoration: underline; }
+.segmentation-study-lane-track {
+  position: relative;
+  height: 26px;
+  /* Drawn as an inset shadow, not a border: a border would inset the padding
+     box by 1px and the lane would stop sharing the waveform's time axis. */
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--border-color, #e2e8f0);
+  border-radius: 6px;
+  background: #f8fafc;
+  overflow: hidden;
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+.segmentation-study-lane.is-active .segmentation-study-lane-track {
+  box-shadow: inset 0 0 0 2px var(--lane-color, #cbd5e1);
+}
+.segmentation-study-lane-track.is-locked {
+  background-image: repeating-linear-gradient(45deg, #f1f5f9 0 6px, #e2e8f0 6px 12px);
+}
+.segmentation-study-lane-block {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border: 0;
+  border-left: 2px solid var(--lane-color, #64748b);
+  background: rgba(100, 116, 139, .16);
+  background: color-mix(in srgb, var(--lane-color, #64748b) 18%, transparent);
+  color: #0f172a;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  text-align: left;
+}
+.segmentation-study-lane-block:hover {
+  background: rgba(100, 116, 139, .3);
+  background: color-mix(in srgb, var(--lane-color, #64748b) 34%, transparent);
+}
+.segmentation-study-lane-block:focus-visible {
+  outline: 2px solid var(--accent-color, #3b82f6);
+  outline-offset: -2px;
+}
+.segmentation-study-lane-note {
+  font-size: 11px;
+  color: #64748b;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Version detail panels */
+.segmentation-study-version-panel {
+  min-height: 44px;
+  padding: 8px 0;
+}
+.segmentation-study-ipa-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
 .segmentation-study-playback {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 10px;
 }
-.segmentation-study-timeline-empty {
-  padding: 48px 16px;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 13px;
-}
-.segmentation-study-version-panel {
-  min-height: 44px;
-  padding: 8px 0;
-}
-.segmentation-study-ipa-labels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+.segmentation-study-legend {
+  display: flex;
   gap: 6px 16px;
-  margin: 10px 0 0;
-  padding-left: 22px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.segmentation-study-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+.segmentation-study-ipa-labels [data-syllable-id] {
+  font-variant-numeric: tabular-nums;
+}
+.segmentation-study-v4-provenance {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.segmentation-study-v4-input,
+.segmentation-study-v4-frozen-reference {
+  margin-top: 5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-v4-exact {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-left: 3px solid #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  color: #4c1d95;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-v4-mismatch {
+  margin-top: 6px;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 600;
+}
+.segmentation-study-v4-evidence {
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.segmentation-study-version-panel[data-version="v4"] .segmentation-study-ipa-labels {
+  color: #5b21b6;
+}
+.segmentation-study-version-panel[data-version="v4"] .segmentation-study-ipa-labels [data-syllable-id] {
+  overflow-wrap: anywhere;
 }
 .segmentation-study-timeline:focus-visible {
   outline: 3px solid var(--accent-color, #2563eb);
   outline-offset: 2px;
 }
+.segmentation-study-legend-item::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--lane-color, #64748b);
+  flex: 0 0 auto;
+}
+
+/* V4 diagnostics + manual-vs-automatic deltas */
+.segmentation-study-tablewrap { overflow-x: auto; margin-top: 8px; }
+.segmentation-study-diagnostics,
+.segmentation-study-delta-table {
+  border-collapse: collapse;
+  /* Columns hug their content; a full-width table strands the numbers far
+     apart and makes them hard to compare down a column. */
+  width: auto;
+  font-size: 12px;
+}
+.segmentation-study-delta-table tbody th,
+.segmentation-study-diagnostics tbody th { text-transform: none; font-size: 12px; color: #334155; }
+.segmentation-study-diagnostics th,
+.segmentation-study-diagnostics td,
+.segmentation-study-delta-table th,
+.segmentation-study-delta-table td {
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+.segmentation-study-diagnostics th,
+.segmentation-study-delta-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  font-weight: 600;
+}
+.segmentation-study-delta-table thead th { color: var(--lane-color, #64748b); }
+.segmentation-study-diagnostics tr.is-unchanged td { color: #94a3b8; }
+.segmentation-study-diagnostics td.is-later { color: #b45309; font-weight: 600; }
+.segmentation-study-diagnostics td.is-earlier { color: #0369a1; font-weight: 600; }
+.segmentation-study-diagnostics-headline { margin: 8px 0 0; font-size: 13px; font-weight: 600; }
+.segmentation-study-delta-table td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.segmentation-study-delta-table td.is-wide { color: #b91c1c; font-weight: 700; }
+.segmentation-study-delta-table tfoot td,
+.segmentation-study-delta-table tfoot th { font-weight: 700; border-bottom: 0; }
+.segmentation-study-deltas { margin: 6px 0 0; }
+.segmentation-study-deltas-title { margin: 0; font-size: 12px; color: #64748b; }
 
 /* Manual controls */
 .segmentation-study-manual-controls {
@@ -3092,27 +3872,68 @@ body {
   margin-top: 10px;
 }
 .segmentation-study-summary {
-  min-height: 24px;
+  min-height: 20px;
   margin-top: 8px;
   font-size: 13px;
 }
 
-/* Bottom actions */
+/* Bottom actions — checklist explains a disabled Save */
 .segmentation-study-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+.segmentation-study-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 2px 18px;
+  flex: 1 1 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.segmentation-study-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.segmentation-study-check.is-done { color: #15803d; }
+.segmentation-study-check-mark {
+  display: inline-flex;
+  justify-content: center;
+  width: 14px;
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.segmentation-study-action-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  padding-top: 16px;
-  margin-top: 8px;
-  border-top: 1px solid var(--border-color, #e2e8f0);
 }
 
 @media (max-width: 900px) {
-  .segmentation-study-queue-layout { grid-template-columns: 1fr; }
-  .segmentation-study-queue { max-height: 220px; }
+  .segmentation-study-workspace { --lane-label-w: 46px; --lane-note-w: 0px; }
+  .segmentation-study-timeline { padding-right: 0; }
+  .segmentation-study-queue { max-height: 200px; }
+  .segmentation-study-lane { grid-template-columns: var(--lane-label-w) minmax(0, 1fr); }
+  .segmentation-study-lane-note { grid-column: 2; text-align: left; }
+  .segmentation-study-transport { position: static; }
+  .segmentation-study-transport .segmentation-study-ab { margin-left: 0; }
+  .segmentation-study-actions { flex-direction: column; }
+  /* In a column flex container `flex-basis` sizes the height, which would
+     stretch the checklist rows apart. */
+  .segmentation-study-checklist { flex: 0 0 auto; width: 100%; }
+  .segmentation-study-action-buttons { width: 100%; justify-content: flex-end; }
 }
+
 
 /* ── Auto-advance Toggle ── */
 .corpus-auto-advance {
@@ -3146,30 +3967,49 @@ body {
    CRM Books
    ============================================ */
 
-/* Theme Variables scoped to books panel */
+/* Theme Variables scoped to books panel.
+
+   Books read as a different product inside the CRM: cream ground, brown body copy, a gold
+   primary button and a serif for chrome as well as content. Reading *content* deserves the
+   serif and a warm paper ground — that part is kept. The chrome does not: surfaces,
+   borders, primary actions and muted text now come from the CRM's own tokens so the
+   section is recognisably the same tool. */
 [data-panel="books"] {
   --books-bg: #FBF8F4;
-  --books-surface: #FFFFFF;
-  --books-surface-dim: #F3F0EA;
-  --books-surface-hover: #F7F4EE;
-  --books-border: #E8E2D9;
-  --books-text: #1B1B1F;
-  --books-text-muted: #6B6560;
-  --books-accent: #B8860B;
-  --books-accent-light: #FFF8E7;
-  --books-accent-hover: #9A7209;
-  --books-accent-blue: #4A6FA5;
-  --books-danger: #C53030;
-  --books-success: #2F855A;
-  --books-radius: 16px;
-  --books-radius-sm: 8px;
-  --books-radius-pill: 100px;
-  --books-font-display: 'DM Sans', 'Outfit', system-ui, sans-serif;
+  /* paper ground, kept for reading */
+  --books-surface: var(--crm-surface);
+  --books-surface-dim: var(--crm-surface-dim);
+  --books-surface-hover: var(--crm-primary-light);
+  --books-border: var(--crm-border);
+  --books-text: var(--crm-text-dark);
+  --books-text-muted: var(--crm-text-muted);
+  --books-accent: var(--crm-primary);
+  --books-accent-light: var(--crm-primary-light);
+  --books-accent-hover: var(--crm-primary-hover);
+  --books-accent-blue: var(--crm-info);
+  --books-danger: var(--crm-danger);
+  --books-success: var(--crm-success);
+  --books-radius: var(--crm-radius);
+  --books-radius-sm: 6px;
+  --books-radius-pill: 999px;
+  --books-font-display: 'Outfit', system-ui, sans-serif;
   --books-font-body: 'Lora', Georgia, serif;
 
   background-color: var(--books-bg);
   font-family: var(--books-font-body);
   color: var(--books-text);
+}
+
+/* Chrome uses the CRM's UI face; only book content keeps the reading serif. */
+[data-panel="books"] .crm-btn,
+[data-panel="books"] button,
+[data-panel="books"] input,
+[data-panel="books"] select,
+[data-panel="books"] textarea,
+[data-panel="books"] .crm-panel-header h1,
+[data-panel="books"] .crm-panel-header h2,
+[data-panel="books"] .crm-muted {
+  font-family: var(--books-font-display);
 }
 
 [data-panel="books"] .crm-panel-header {
@@ -9168,4 +10008,151 @@ mark.crm-highlight:hover {
   .pv-metadata-grid { grid-template-columns: 1fr; }
   .pv-action-bar { flex-direction: column; }
   .pv-action-bar .pv-console-output { margin-right: 0; }
+}
+
+/* ============================================
+   Staff → Accounts management
+   Toolbar, bulk selection and per-row lifecycle actions.
+   ============================================ */
+
+.crm-account-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.crm-account-toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.crm-account-search {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 340px;
+}
+
+.crm-account-status-filter {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.crm-account-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crm-account-selection-count {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.crm-account-toolbar-actions button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crm-account-table-wrap {
+  overflow-x: auto;
+}
+
+.crm-account-check-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.crm-account-check-cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--crm-primary);
+}
+
+.crm-account-check-cell input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.crm-account-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.crm-account-row-actions {
+  display: inline-flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.crm-account-row-archived td {
+  background-color: var(--crm-surface-dim);
+  color: var(--crm-text-muted);
+}
+
+.crm-account-badge {
+  display: inline-block;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.crm-account-badge-user {
+  background: #f1f3f4;
+  color: #5f6368;
+}
+
+.crm-account-badge-admin {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.crm-account-badge-teacher {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.crm-account-badge-archived {
+  background: #fdecea;
+  color: #b3261e;
+}
+
+.crm-account-status-active,
+.crm-account-protected {
+  font-size: 12px;
+}
+
+.crm-account-empty {
+  padding: 12px 0;
+}
+
+.crm-btn-danger-text {
+  color: #b3261e;
+}
+
+.crm-btn-danger-text:hover:not([disabled]) {
+  background-color: #fad2cf;
+}
+
+@media (max-width: 720px) {
+  .crm-account-toolbar {
+    align-items: stretch;
+  }
+
+  .crm-account-toolbar-filters,
+  .crm-account-toolbar-actions {
+    flex: 1 1 100%;
+  }
+
+  .crm-account-search {
+    max-width: none;
+  }
 }

@@ -51,16 +51,18 @@
   accountBtn.title = 'Account';
   accountBtn.setAttribute('aria-label', 'Account');
 
+  // The two most prominent controls in this header were emoji (\uD83D\uDC64 / \uD83D\uDD14). Emoji render as
+  // full-colour OS glyphs: they cannot inherit `color`, change shape between Windows,
+  // macOS, Android and iOS, and sit at a different optical weight from the monochrome
+  // Material Symbols used elsewhere in the app. Both now use that same set.
   let accountIcon = accountBtn.querySelector('.toggle-icon');
   if (!accountIcon) {
     accountIcon = document.createElement('span');
-    accountIcon.className = 'toggle-icon';
     accountBtn.replaceChildren(accountIcon);
   }
+  accountIcon.className = 'toggle-icon material-symbols-outlined';
   accountIcon.setAttribute('aria-hidden', 'true');
-  if (!accountIcon.textContent.trim() || accountIcon.textContent.trim() === '??') {
-    accountIcon.textContent = '\uD83D\uDC64';
-  }
+  accountIcon.textContent = 'account_circle';
   nav.appendChild(accountBtn);
 
   const notificationBtn = document.createElement('button');
@@ -69,7 +71,7 @@
   notificationBtn.type = 'button';
   notificationBtn.setAttribute('aria-label', 'Notifications');
   notificationBtn.setAttribute('aria-expanded', 'false');
-  notificationBtn.innerHTML = '<span aria-hidden="true">🔔</span><span id="notification-center-badge" class="site-header__notification-badge" hidden>0</span>';
+  notificationBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">notifications</span><span id="notification-center-badge" class="site-header__notification-badge" hidden>0</span>';
   nav.appendChild(notificationBtn);
 
   const notificationPanel = document.createElement('div');

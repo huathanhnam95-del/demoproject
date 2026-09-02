@@ -230,19 +230,48 @@ window.CrmDashboardWorkspace = (function () {
 
             if (elements.dashboardFunnel) {
                 const rows = window.CrmDashboard.buildFunnelRows(funnel);
-                elements.dashboardFunnel.innerHTML = rows.map((row) => `
-        <div class="crm-task-item">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
-            <span class="crm-task-priority medium">${escapeHtml(String(row.count || 0))}</span>
-          </div>
+                const peak = rows.reduce((max, row) => Math.max(max, Number(row.count) || 0), 0);
+
+                if (!peak) {
+                    // Nine identical rows of "0" told an operator nothing and offered
+                    // nowhere to go — and a fresh tenant sees only this.
+                    elements.dashboardFunnel.innerHTML = `
+        <div class="crm-empty-state">
+          <p class="crm-empty-state-title">No leads in the pipeline yet</p>
+          <p class="crm-muted">Stage counts appear here once enquiries are recorded.</p>
+          <button type="button" class="crm-btn crm-btn-primary" data-goto-main="enquiry">Add the first lead</button>
         </div>
-      `).join('');
+      `;
+                } else {
+                    // Proportional bars plus stage-to-stage drop-off — the information a
+                    // funnel exists to carry, which a flat count list cannot.
+                    elements.dashboardFunnel.innerHTML = rows.map((row, index) => {
+                        const count = Number(row.count) || 0;
+                        const width = peak ? Math.max((count / peak) * 100, count > 0 ? 2 : 0) : 0;
+                        const prev = index > 0 ? Number(rows[index - 1].count) || 0 : null;
+                        const drop = (prev && prev > 0) ? Math.round((1 - count / prev) * 100) : null;
+                        const dropLine = drop === null
+                            ? ''
+                            : `<div class="crm-funnel-drop">${drop > 0 ? `−${drop}% from previous stage` : 'no drop-off'}</div>`;
+                        return `
+        <div class="crm-funnel-row">
+          <div class="crm-funnel-head">
+            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
+            <span class="crm-funnel-count">${escapeHtml(String(count))}</span>
+          </div>
+          <div class="crm-funnel-track">
+            <div class="crm-funnel-bar" style="width: ${width.toFixed(1)}%"></div>
+          </div>
+          ${dropLine}
+        </div>
+      `;
+                    }).join('');
+                }
             }
 
             if (elements.dashboardRevenue) {
                 if (!revenue.length) {
-                    elements.dashboardRevenue.innerHTML = '<div class="crm-muted" style="padding: 18px;">No invoice activity yet.</div>';
+                    elements.dashboardRevenue.innerHTML = '<div class="crm-empty-state"><p class="crm-empty-state-title">No invoice activity yet</p><p class="crm-muted">Course revenue, collections and outstanding balances appear here once invoices are raised.</p></div>';
                 } else {
                     elements.dashboardRevenue.innerHTML = `
           <div class="crm-table-container">
@@ -273,7 +302,7 @@ window.CrmDashboardWorkspace = (function () {
 
             if (elements.dashboardDuplicates) {
                 if (!duplicates.length) {
-                    elements.dashboardDuplicates.innerHTML = '<div class="crm-muted">No duplicate candidates found.</div>';
+                    elements.dashboardDuplicates.innerHTML = '<div class="crm-empty-state"><p class="crm-empty-state-title">No duplicates found</p><p class="crm-muted">Students sharing an email or phone number are flagged here for review.</p></div>';
                 } else {
                     elements.dashboardDuplicates.innerHTML = duplicates.slice(0, 10).map((group) => {
                         const item = window.CrmGovernance
@@ -299,7 +328,7 @@ window.CrmDashboardWorkspace = (function () {
 
             if (elements.dashboardAuditLogs) {
                 if (!auditLogs.length) {
-                    elements.dashboardAuditLogs.innerHTML = '<div class="crm-muted">No audit logs yet.</div>';
+                    elements.dashboardAuditLogs.innerHTML = '<div class="crm-empty-state"><p class="crm-empty-state-title">No audit logs yet</p><p class="crm-muted">Admin changes to student, course and finance records are recorded here.</p></div>';
                 } else {
                     elements.dashboardAuditLogs.innerHTML = auditLogs.slice(0, 12).map((entry) => `
           <div class="crm-timeline-item">

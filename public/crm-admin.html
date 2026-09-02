@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260821-v1.8.81">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260901-v1.8.85">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,19 +16,24 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260821-v1.8.81&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260821-v1.8.81&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260901-v1.8.85&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260901-v1.8.85&bgm=v2" />
 </head>
 
 <body>
+  <a class="crm-skip-link" href="#crm-main">Skip to main content</a>
   <div class="crm-admin">
     <header class="crm-header">
       <div class="crm-header-left">
+        <button id="crm-nav-toggle" class="crm-nav-toggle" type="button" aria-expanded="false"
+          aria-controls="crm-nav" aria-label="Main menu">
+          <span class="crm-nav-toggle-bars" aria-hidden="true"></span>
+        </button>
         <div class="crm-logo-box">
           <img src="database/Logo.png" alt="BEL" class="crm-logo-img">
         </div>
 
-        <nav class="crm-nav" aria-label="CRM Main Navigation">
+        <nav id="crm-nav" class="crm-nav" aria-label="CRM Main Navigation">
           <ul class="crm-nav-list">
             <li><button class="crm-nav-item active" data-main="dashboard" data-label="Dashboard">Dashboard</button></li>
             <li><button class="crm-nav-item" data-main="students" data-label="Student Management">Student
@@ -92,7 +97,9 @@
 
     <!-- Content -->
     <!-- Content -->
-    <main class="crm-content" aria-live="polite">
+    <div id="crm-nav-scrim" class="crm-nav-scrim" hidden></div>
+
+    <main id="crm-main" class="crm-content" aria-live="polite" tabindex="-1">
       <!-- Dev Tools (Local Only) -->
       <section class="crm-panel" data-panel="devtools" style="display: none;">
         <div class="crm-panel-header">
@@ -166,6 +173,32 @@
                     style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">
                     Open Firebase Emulator UI ↗
                   </a>
+                </div>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Read Aloud Connected Speech</h3>
+                  <p class="crm-muted">Prompt inventory, sample coverage, and recent usage telemetry.</p>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Prompt Inventory</label>
+                <div id="read-aloud-prompt-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading prompt summary...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Representative Prompts</label>
+                <div id="read-aloud-prompt-samples" class="crm-stack-list">
+                  <div class="crm-muted">Loading prompt examples...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Usage Last 7 Days</label>
+                <div id="read-aloud-usage-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading usage summary...</div>
                 </div>
               </div>
             </section>
@@ -425,114 +458,157 @@
         <div class="pv-tab-panel" id="pv-panel-study" data-pv-panel="study" role="tabpanel" aria-labelledby="pv-tab-study">
         <section id="segmentation-study-workspace" class="segmentation-study-workspace" aria-labelledby="segmentation-study-title">
           <div class="segmentation-study-header">
-            <div>
+            <div class="segmentation-study-header-main">
               <h3 id="segmentation-study-title">Segmentation Study</h3>
-              <p class="crm-muted">Record one clear word, compare V2/V3/V4, then mark the shared syllable boundaries.</p>
+              <nav class="segmentation-study-modes" aria-label="Segmentation study mode">
+                <button type="button" class="segmentation-study-mode is-active" data-study-mode="record">Record &amp; review</button>
+                <button type="button" class="segmentation-study-mode" data-study-mode="previous">Previous samples</button>
+              </nav>
             </div>
             <div class="segmentation-study-identity">
-              <label for="segmentation-study-operator">Your name</label>
+              <label for="segmentation-study-operator">Reviewer</label>
               <input id="segmentation-study-operator" class="crm-input" type="text" autocomplete="name" placeholder="Enter your name" />
               <span id="segmentation-study-identity-status" class="crm-muted" role="status" aria-live="polite"></span>
             </div>
           </div>
 
-          <nav class="segmentation-study-modes" aria-label="Segmentation study mode">
-            <button type="button" class="segmentation-study-mode is-active" data-study-mode="record">Record &amp; review</button>
-            <button type="button" class="segmentation-study-mode" data-study-mode="previous">Previous samples</button>
-          </nav>
+          <ol id="segmentation-study-steps" class="segmentation-study-steps" aria-label="Review progress">
+            <li class="segmentation-study-stepitem" data-step="claim"><span class="segmentation-study-step-index">1</span><span class="segmentation-study-step-label">Claim</span><span class="segmentation-study-step-note"></span></li>
+            <li class="segmentation-study-stepitem" data-step="record"><span class="segmentation-study-step-index">2</span><span class="segmentation-study-step-label">Record</span><span class="segmentation-study-step-note"></span></li>
+            <li class="segmentation-study-stepitem" data-step="analyze"><span class="segmentation-study-step-index">3</span><span class="segmentation-study-step-label">Analyze</span><span class="segmentation-study-step-note"></span></li>
+            <li class="segmentation-study-stepitem" data-step="compare"><span class="segmentation-study-step-index">4</span><span class="segmentation-study-step-label">Compare</span><span class="segmentation-study-step-note"></span></li>
+            <li class="segmentation-study-stepitem" data-step="mark"><span class="segmentation-study-step-index">5</span><span class="segmentation-study-step-label">Mark &amp; save</span><span class="segmentation-study-step-note"></span></li>
+          </ol>
 
-          <div class="segmentation-study-stats" aria-label="Segmentation study progress">
-            <span><strong id="segmentation-study-available">0</strong> available</span>
-            <span><strong id="segmentation-study-reserved">0</strong> reserved</span>
-            <span><strong id="segmentation-study-completed">0</strong> completed</span>
-            <span><strong id="segmentation-study-uncertain">0</strong> uncertain</span>
-            <span><strong id="segmentation-study-failed">0</strong> failed</span>
-          </div>
-
-          <div class="segmentation-study-toolbar">
-            <button id="segmentation-study-claim" class="crm-btn crm-btn-primary" type="button">Claim next word</button>
-            <button id="segmentation-study-release" class="crm-btn crm-btn-secondary" type="button" disabled>Skip / release word</button>
-            <button id="segmentation-study-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
-            <span id="segmentation-study-status" class="crm-muted" role="status" aria-live="polite">Enter your name to join the study.</span>
-          </div>
-
-          <div class="segmentation-study-queue-layout">
-            <div class="segmentation-study-queue-pane">
-              <h4>Study queue</h4>
-              <p class="crm-muted">The shared queue reserves one word at a time. Previous samples are shown after you choose that mode.</p>
-              <ol id="segmentation-study-queue" class="segmentation-study-queue" aria-label="Segmentation study words"></ol>
+          <div class="segmentation-study-task-heading">
+            <div class="segmentation-study-task-identity">
+              <h4 id="segmentation-study-word">No word claimed</h4>
+              <p id="segmentation-study-reference" class="segmentation-study-reference">The selected word and IPA will appear here.</p>
             </div>
+            <div class="segmentation-study-task-meta">
+              <span id="segmentation-study-claim-status" class="segmentation-study-claim-status">Not reserved</span>
+              <button id="segmentation-study-claim" class="crm-btn crm-btn-primary" type="button">Claim next word</button>
+              <button id="segmentation-study-release" class="crm-btn crm-btn-secondary" type="button" disabled>Skip / release word</button>
+              <button id="segmentation-study-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
+            </div>
+          </div>
+          <p id="segmentation-study-step" class="segmentation-study-step-hint crm-muted">Step 1 · Claim a word</p>
+          <p id="segmentation-study-status" class="segmentation-study-status crm-muted" role="status" aria-live="polite">Enter your name to join the study.</p>
 
-            <div class="segmentation-study-review-pane" aria-live="polite">
-              <div class="segmentation-study-task-heading">
-                <div>
-                  <span class="crm-muted" id="segmentation-study-step">Step 1 · Claim a word</span>
-                  <h4 id="segmentation-study-word">No word claimed</h4>
-                  <p id="segmentation-study-reference" class="segmentation-study-reference">The selected word and IPA will appear here.</p>
-                </div>
-                <span id="segmentation-study-claim-status" class="segmentation-study-claim-status">Not reserved</span>
-              </div>
+          <details id="segmentation-study-queue-details" class="segmentation-study-queue-details">
+            <summary>Study queue <span id="segmentation-study-queue-count" class="crm-muted">(0 available)</span></summary>
+            <div class="segmentation-study-stats" aria-label="Segmentation study progress">
+              <span><strong id="segmentation-study-available">0</strong> available</span>
+              <span><strong id="segmentation-study-reserved">0</strong> reserved</span>
+              <span><strong id="segmentation-study-completed">0</strong> completed</span>
+              <span><strong id="segmentation-study-uncertain">0</strong> uncertain</span>
+              <span><strong id="segmentation-study-failed">0</strong> failed</span>
+            </div>
+            <p class="crm-muted">The shared queue reserves one word at a time. Previous samples are listed here after you choose that mode.</p>
+            <ol id="segmentation-study-queue" class="segmentation-study-queue" aria-label="Segmentation study words"></ol>
+          </details>
 
-              <div class="segmentation-study-record-controls">
-                <button id="segmentation-study-record" class="crm-btn crm-btn-primary" type="button" disabled>Record</button>
-                <button id="segmentation-study-stop" class="crm-btn crm-btn-secondary" type="button" disabled>Stop</button>
-                <button id="segmentation-study-redo" class="crm-btn crm-btn-secondary" type="button" disabled>Redo</button>
-                <audio id="segmentation-study-audio" controls preload="metadata" hidden></audio>
-                <label class="segmentation-study-speed">Playback speed
-                  <select id="segmentation-study-playback-speed" aria-label="Playback speed">
-                    <option value="0.5">0.5×</option>
-                    <option value="0.75">0.75×</option>
-                    <option value="1" selected>1×</option>
-                    <option value="1.25">1.25×</option>
-                  </select>
-                </label>
-                <label class="segmentation-study-playback-confirm"><input id="segmentation-study-playback-confirmed" type="checkbox" /> I listened to the saved recording</label>
-                <span id="segmentation-study-record-status" class="crm-muted" role="status" aria-live="polite">No recording yet.</span>
-                <span id="segmentation-study-capture-status" class="crm-muted" role="status" aria-live="polite">Capture settings unavailable.</span>
-              </div>
+          <div id="segmentation-study-transport" class="segmentation-study-transport">
+            <div class="segmentation-study-transport-group">
+              <button id="segmentation-study-record" class="crm-btn crm-btn-primary" type="button" disabled>● Record</button>
+              <button id="segmentation-study-stop" class="crm-btn crm-btn-secondary" type="button" disabled>■ Stop</button>
+              <button id="segmentation-study-redo" class="crm-btn crm-btn-secondary" type="button" disabled>↻ Redo</button>
+            </div>
+            <div class="segmentation-study-transport-group">
+              <button id="segmentation-study-play" class="crm-btn crm-btn-secondary" type="button" disabled>▶ Play</button>
+              <button id="segmentation-study-loop" class="crm-btn crm-btn-secondary segmentation-study-toggle" type="button" aria-pressed="false" disabled>🔁 Loop</button>
+              <label class="segmentation-study-speed">Speed
+                <select id="segmentation-study-playback-speed" aria-label="Playback speed">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.35">0.35×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="0.75">0.75×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="1.25">1.25×</option>
+                </select>
+              </label>
+              <label class="segmentation-study-speed">Loop gap
+                <select id="segmentation-study-loop-gap" aria-label="Silence between loop repeats">
+                  <option value="0">0 ms</option>
+                  <option value="150">150 ms</option>
+                  <option value="300" selected>300 ms</option>
+                  <option value="500">500 ms</option>
+                </select>
+              </label>
+            </div>
+            <div class="segmentation-study-transport-group segmentation-study-ab">
+              <span id="segmentation-study-ab-readout" class="crm-muted">A–B · drag across the waveform to select a slice</span>
+              <button id="segmentation-study-ab-clear" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Clear A–B</button>
+            </div>
+            <audio id="segmentation-study-audio" controls preload="metadata" hidden></audio>
+          </div>
 
-              <div class="segmentation-study-analysis-actions">
-                <button id="segmentation-study-analyze" class="crm-btn crm-btn-secondary" type="button" disabled>Analyze V2/V3/V4</button>
-                <span id="segmentation-study-analysis-status" class="crm-muted" role="status" aria-live="polite">Analysis is required before review.</span>
-              </div>
+          <div class="segmentation-study-capture-row">
+            <label class="segmentation-study-playback-confirm"><input id="segmentation-study-playback-confirmed" type="checkbox" /> I listened to the saved recording</label>
+            <span id="segmentation-study-record-status" class="crm-muted" role="status" aria-live="polite">No recording yet.</span>
+            <span id="segmentation-study-capture-status" class="crm-muted" role="status" aria-live="polite">Capture settings unavailable.</span>
+          </div>
 
-              <div class="segmentation-study-tabs" role="tablist" aria-label="Automatic and manual boundaries">
-                <button id="segmentation-study-tab-v2" class="segmentation-study-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="segmentation-study-panel-v2" data-study-version="v2">V2</button>
-                <button id="segmentation-study-tab-v3" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v3" data-study-version="v3">V3</button>
-                <button id="segmentation-study-tab-v4" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v4" data-study-version="v4">V4</button>
-                <button id="segmentation-study-tab-manual" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-manual" data-study-version="manual">Manual review</button>
-              </div>
+          <div class="segmentation-study-analysis-actions">
+            <button id="segmentation-study-analyze" class="crm-btn crm-btn-secondary" type="button" disabled>Analyze V2/V3/V4</button>
+            <span id="segmentation-study-analysis-status" class="crm-muted" role="status" aria-live="polite">Analysis is required before review.</span>
+          </div>
 
-              <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
-                <div id="segmentation-study-waveform" class="segmentation-study-waveform"></div>
-                <div id="segmentation-study-time-ruler" class="segmentation-study-time-ruler" aria-hidden="true"></div>
-                <div id="segmentation-study-spectrogram" class="segmentation-study-spectrogram"></div>
-                <div id="segmentation-study-timeline-empty" class="crm-muted">Record or load a sample to see its waveform and spectrogram.</div>
-              </div>
 
-              <div class="segmentation-study-version-panels">
-                <div id="segmentation-study-panel-v2" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v2"></div>
-                <div id="segmentation-study-panel-v3" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v3" hidden></div>
-                <div id="segmentation-study-panel-v4" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v4" hidden></div>
-                <div id="segmentation-study-panel-manual" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-manual" hidden>
-                  <p id="segmentation-study-manual-instructions">Mark the start, each shared internal boundary, and the end of the word.</p>
-                  <p class="crm-muted">Keyboard: use ←/→ for 5 ms steps; hold Shift for 1 ms fine steps. Focus the timeline first.</p>
-                  <p id="segmentation-study-manual-summary" class="crm-muted" aria-live="polite">No manual segments marked yet.</p>
-                  <div class="segmentation-study-manual-controls">
-                    <button id="segmentation-study-manual-undo" class="crm-btn crm-btn-secondary" type="button" disabled>Undo</button>
-                    <button id="segmentation-study-manual-clear" class="crm-btn crm-btn-secondary" type="button" disabled>Clear</button>
-                    <label><input id="segmentation-study-manual-certainty" type="radio" name="segmentation-study-certainty" value="certain" /> Certain</label>
-                    <label><input type="radio" name="segmentation-study-certainty" value="uncertain" /> Unsure</label>
-                    <span id="segmentation-study-manual-count" class="crm-muted">0 boundaries</span>
-                  </div>
-                </div>
-              </div>
 
-              <div class="segmentation-study-summary" id="segmentation-study-summary" role="status" aria-live="polite"></div>
-              <div class="segmentation-study-actions">
-                <button id="segmentation-study-save" class="crm-btn crm-btn-primary" type="button" disabled>Save sample</button>
-                <button id="segmentation-study-next" class="crm-btn crm-btn-secondary" type="button" disabled>Next word</button>
+          <div class="segmentation-study-tabs" role="tablist" aria-label="Automatic and manual boundaries">
+            <button id="segmentation-study-tab-v2" class="segmentation-study-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="segmentation-study-panel-v2" data-study-version="v2">V2</button>
+            <button id="segmentation-study-tab-v3" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v3" data-study-version="v3">V3</button>
+            <button id="segmentation-study-tab-v4" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v4" data-study-version="v4">V4</button>
+            <button id="segmentation-study-tab-manual" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-manual" data-study-version="manual">Manual review</button>
+            <button id="segmentation-study-tab-compare" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-compare" data-study-version="compare" hidden>Compare all</button>
+          </div>
+
+          <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
+            <div class="segmentation-study-waveform-stack">
+              <div id="segmentation-study-waveform" class="segmentation-study-waveform"></div>
+              <div id="segmentation-study-ghosts" class="segmentation-study-ghosts" aria-hidden="true"></div>
+            </div>
+            <div id="segmentation-study-time-ruler" class="segmentation-study-time-ruler" aria-hidden="true"></div>
+            <div id="segmentation-study-spectrogram" class="segmentation-study-spectrogram"></div>
+            <div id="segmentation-study-timeline-empty" class="segmentation-study-timeline-empty crm-muted">Record or load a sample to see its waveform and spectrogram.</div>
+          </div>
+
+          <div class="segmentation-study-lanes-header">
+            <span class="segmentation-study-lanes-title">Boundary comparison</span>
+            <label class="segmentation-study-ghost-toggle"><input id="segmentation-study-ghost-toggle" type="checkbox" checked /> Show reference lines</label>
+          </div>
+          <div id="segmentation-study-lanes" class="segmentation-study-lanes" aria-label="Version boundary comparison"></div>
+
+          <div class="segmentation-study-version-panels">
+            <div id="segmentation-study-panel-v2" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v2"></div>
+            <div id="segmentation-study-panel-v3" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v3" hidden></div>
+            <div id="segmentation-study-panel-v4" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v4" hidden></div>
+            <div id="segmentation-study-panel-manual" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-manual" hidden>
+              <p id="segmentation-study-manual-instructions">Mark the start, each shared internal boundary, and the end of the word.</p>
+              <p class="crm-muted">Keyboard: use ←/→ for 5 ms steps; hold Shift for 1 ms fine steps. Focus the timeline first.</p>
+              <p id="segmentation-study-manual-summary" class="crm-muted" aria-live="polite">No manual segments marked yet.</p>
+              <div class="segmentation-study-manual-controls">
+                <button id="segmentation-study-manual-undo" class="crm-btn crm-btn-secondary" type="button" disabled>Undo</button>
+                <button id="segmentation-study-manual-clear" class="crm-btn crm-btn-secondary" type="button" disabled>Clear</button>
+                <label><input id="segmentation-study-manual-certainty" type="radio" name="segmentation-study-certainty" value="certain" /> Certain</label>
+                <label><input type="radio" name="segmentation-study-certainty" value="uncertain" /> Unsure</label>
+                <span id="segmentation-study-manual-count" class="crm-muted">0 boundaries</span>
               </div>
+            </div>
+            <div id="segmentation-study-panel-compare" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-compare" hidden></div>
+          </div>
+
+          <!-- Not aria-live: this table is rebuilt on every boundary edit, and
+               announcing it each time would bury the status messages. -->
+          <div id="segmentation-study-deltas" class="segmentation-study-deltas" aria-label="Automatic boundaries compared with your manual boundaries"></div>
+          <div class="segmentation-study-summary" id="segmentation-study-summary" role="status" aria-live="polite"></div>
+
+          <div class="segmentation-study-actions">
+            <ul id="segmentation-study-checklist" class="segmentation-study-checklist" aria-label="Requirements before saving"></ul>
+            <div class="segmentation-study-action-buttons">
+              <button id="segmentation-study-save" class="crm-btn crm-btn-primary" type="button" disabled>Save sample</button>
+              <button id="segmentation-study-next" class="crm-btn crm-btn-secondary" type="button" disabled>Next word</button>
             </div>
           </div>
         </section>
@@ -637,32 +713,6 @@
               </div>
               <div id="dashboard-audit-logs" class="crm-stack-list">
                 <div class="crm-muted">Loading audit logs...</div>
-              </div>
-            </section>
-            <section class="crm-workspace-card">
-              <div class="crm-section-header">
-                <div>
-                  <h3>Read Aloud Connected Speech</h3>
-                  <p class="crm-muted">Prompt inventory, sample coverage, and recent usage telemetry.</p>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Prompt Inventory</label>
-                <div id="read-aloud-prompt-summary-cards" class="crm-summary-grid">
-                  <div class="crm-muted">Loading prompt summary...</div>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Representative Prompts</label>
-                <div id="read-aloud-prompt-samples" class="crm-stack-list">
-                  <div class="crm-muted">Loading prompt examples...</div>
-                </div>
-              </div>
-              <div class="crm-form-group">
-                <label>Usage Last 7 Days</label>
-                <div id="read-aloud-usage-summary-cards" class="crm-summary-grid">
-                  <div class="crm-muted">Loading usage summary...</div>
-                </div>
               </div>
             </section>
           </div>
@@ -1289,7 +1339,7 @@
             <div id="lead-composer" class="crm-form-grid">
               <div class="crm-form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <label for="lead-name" style="margin-bottom: 0;">Full Name</label>
+                  <label for="lead-name" style="margin-bottom: 0;">Full Name <span style="color:#dc2626;">*</span></label>
                   <div class="crm-salutation-group" style="display: flex; gap: 12px; align-items: center; font-size: 13px;">
                     <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500; color: #4b5563;">
                       <input type="radio" name="salutation" id="lead-salutation-mr" value="Mr" class="salutation-radio"> Mr
@@ -1299,23 +1349,19 @@
                     </label>
                   </div>
                 </div>
-                <input type="text" id="lead-name" name="name" class="crm-input" placeholder="Lead name">
+                <input type="text" id="lead-name" name="name" class="crm-input" placeholder="Lead name" required>
               </div>
               <div class="crm-form-group">
-                <label for="lead-label">Label</label>
-                <input type="text" id="lead-label" name="label" class="crm-input" placeholder="e.g. High Priority">
-              </div>
-              <div class="crm-form-group">
-                <label for="lead-phone">Phone Number</label>
-                <input type="tel" id="lead-phone" name="phone" class="crm-input" placeholder="Phone number">
+                <label for="lead-phone">Phone/Zalo number</label>
+                <input type="tel" id="lead-phone" name="phone" class="crm-input" placeholder="Phone or Zalo number">
               </div>
               <div class="crm-form-group">
                 <label for="lead-email">Email</label>
                 <input type="email" id="lead-email" name="email" class="crm-input" placeholder="lead@example.com">
               </div>
               <div class="crm-form-group">
-                <label for="lead-zalo">Zalo Number</label>
-                <input type="text" id="lead-zalo" name="zalo" class="crm-input" placeholder="Enter Zalo number">
+                <label for="lead-facebook">Social Media Account Name</label>
+                <input type="text" id="lead-facebook" name="facebook" class="crm-input" placeholder="Enter social media account name">
               </div>
               <div class="crm-form-group">
                 <label for="lead-source">Source <span style="color:#dc2626;">*</span></label>
@@ -1329,44 +1375,14 @@
                   <option value="Agent">Agent</option>
                 </select>
               </div>
-              <div class="crm-form-group">
-                <label for="lead-facebook">Facebook Name</label>
-                <input type="text" id="lead-facebook" name="facebook" class="crm-input" placeholder="Enter Facebook name">
-              </div>
-              <div class="crm-form-group" id="lead-facebook-profile-url-group">
-                <label for="lead-facebook-profile-url">Student's FB link</label>
-                <input type="text" id="lead-facebook-profile-url" name="facebookProfileUrl" class="crm-input" placeholder="https://facebook.com/username_or_id">
-              </div>
               <div class="crm-form-group" id="lead-facebook-personal-owner-group">
-                <label for="lead-facebook-personal-owner">Personal Social Media Account</label>
-                <select id="lead-facebook-personal-owner" name="facebookPersonalOwner" class="crm-input">
+                <label for="lead-facebook-personal-owner">Source Account <span style="color:#dc2626;">*</span></label>
+                <select id="lead-facebook-personal-owner" name="facebookPersonalOwner" class="crm-input" required>
+                  <option value="" disabled selected>Select source account...</option>
                   <option value="Nam">Nam</option>
                   <option value="Thành">Thành</option>
                   <option value="Quỳnh">Quỳnh</option>
                 </select>
-              </div>
-              <div class="crm-form-group" id="lead-agent-source-group">
-                <label for="lead-agent-source">Agent Source</label>
-                <select id="lead-agent-source" name="agent_source_id" class="crm-input">
-                  <option value="">No agent source</option>
-                </select>
-              </div>
-              <div class="crm-form-group" id="lead-stage-group">
-                <label for="lead-stage">Stage</label>
-                <select id="lead-stage" name="stage" class="crm-input">
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="test_scheduled">Test Scheduled</option>
-                  <option value="test_completed">Test Completed</option>
-                  <option value="counseling">Counseling</option>
-                  <option value="trial">Trial</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
-                </select>
-              </div>
-              <div class="crm-form-group" id="lead-probability-group">
-                <label for="lead-probability">Probability (%)</label>
-                <input type="number" id="lead-probability" name="probability" class="crm-input" min="0" max="100" placeholder="e.g. 50">
               </div>
             </div>
             <section id="lead-entrance-test-section" class="crm-entrance-test-panel" style="margin-top: 24px;">
@@ -1402,78 +1418,6 @@
                 <div class="crm-muted">No tests yet.</div>
               </div>
             </section>
-            <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
-              <section class="crm-workspace-card">
-                <div class="crm-section-header">
-                  <div>
-                    <h3>Next Actions</h3>
-                    <p id="student-task-meta" class="crm-muted">Save the profile to schedule follow-ups.</p>
-                  </div>
-                  <span id="student-task-badge" class="crm-reminder-badge quiet">No reminders</span>
-                </div>
-                <div class="crm-form-grid crm-compact-grid">
-                  <div class="crm-form-group">
-                    <label for="student-task-title">Task</label>
-                    <input type="text" id="student-task-title" class="crm-input"
-                      placeholder="Counseling call, payment reminder">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="student-task-due-at">Due At</label>
-                    <input type="datetime-local" id="student-task-due-at" class="crm-input">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="student-task-priority">Priority</label>
-                    <select id="student-task-priority" class="crm-input">
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-save-student-task" class="crm-btn-primary" type="button">Add Task</button>
-                </div>
-                <div id="student-task-list" class="crm-stack-list">
-                  <div class="crm-muted">No tasks yet.</div>
-                </div>
-              </section>
-              <section class="crm-workspace-card">
-                <div class="crm-section-header">
-                  <div>
-                    <h3>Timeline</h3>
-                    <p class="crm-muted">Keep counselor and teacher context in one place.</p>
-                  </div>
-                </div>
-                <div class="crm-form-grid crm-compact-grid">
-                  <div class="crm-form-group">
-                    <label for="student-activity-type">Type</label>
-                    <select id="student-activity-type" class="crm-input">
-                      <option value="note">Note</option>
-                      <option value="call">Call</option>
-                      <option value="email">Email</option>
-                      <option value="zalo">Zalo</option>
-                      <option value="facebook">Facebook</option>
-                      <option value="meeting">Meeting</option>
-                    </select>
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="student-activity-subject">Subject</label>
-                    <input type="text" id="student-activity-subject" class="crm-input" placeholder="Counseling outcome">
-                  </div>
-                </div>
-                <div class="crm-form-group">
-                  <label for="student-activity-body">Details</label>
-                  <textarea id="student-activity-body" class="crm-input" rows="3"
-                    placeholder="Notes, commitments, concerns"></textarea>
-                </div>
-                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-save-student-activity" class="crm-btn-secondary" type="button">Log Activity</button>
-                </div>
-                <div id="student-activity-list" class="crm-stack-list">
-                  <div class="crm-muted">No activity yet.</div>
-                </div>
-              </section>
-            </div>
           </div>
 
           <!-- Learning Profile Section -->
@@ -2614,54 +2558,55 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260821-v1.8.81"></script>
-  <script src="js/classroom-api.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/utils.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/state.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/dom.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/courses.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/students.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/student-360.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/classrooms.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/leads.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/activities.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/enrollments.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/attendance.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/finance-workflow.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/finance.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/communications.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/staff-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/student-finance.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/live-delivery.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/classroom-modal.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/student-modal.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/course-modal.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/lead-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/communications-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/books-workspace.js?v=20260821-v1.8.81&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/dashboard.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/governance.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/index.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/devtools-access.js?v=20260821-v1.8.81&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260821-v1.8.81"></script>
-  <script src="arpabet-ipa-map.js?v=20260821-v1.8.81"></script>
-  <script src="phonetics.js?v=20260821-v1.8.81"></script>
+  <script src="js/auth-session-guard.js?v=20260901-v1.8.85"></script>
+  <script src="js/classroom-api.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/utils.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/state.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/dom.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/courses.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/students.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/student-360.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/classrooms.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/leads.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/activities.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/enrollments.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/attendance.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/finance-workflow.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/finance.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/communications.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/staff-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/student-finance.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/live-delivery.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/classroom-modal.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/student-modal.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/course-modal.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/lead-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/communications-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/books-workspace.js?v=20260901-v1.8.85&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/dashboard.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/governance.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/index.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/devtools-access.js?v=20260901-v1.8.85&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260901-v1.8.85"></script>
+  <script src="arpabet-ipa-map.js?v=20260901-v1.8.85"></script>
+  <script src="phonetics.js?v=20260901-v1.8.85"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
-  <script src="crm-admin.js?v=20260821-v1.8.81"></script>
-  <script src="js/crm/segmentation-study.js?v=20260821-v1.8.81" defer></script>
+  <script src="crm-admin.js?v=20260901-v1.8.85"></script>
+  <script src="js/crm/segmentation-study.js?v=20260901-v1.8.85" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

@@ -199,6 +199,15 @@ body.has-site-header[data-site-section="home"] .hero {
 }
 
 .site-header__notification-btn,
+/* Both header icons are Material Symbols now, so they inherit `color` and sit at a
+   consistent optical size instead of being OS-drawn colour emoji. */
+.site-header__account-btn .material-symbols-outlined,
+.site-header__notification-btn .material-symbols-outlined {
+  font-size: 21px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .site-header__account-btn {
   position: relative;
   display: inline-flex;
@@ -227,10 +236,18 @@ body.has-site-header[data-site-section="home"] .hero {
 .notification-center-item__body { margin-top: 4px; color: var(--site-header-muted); font-size: 0.8rem; line-height: 1.35; }
 .site-header__muted { margin: 10px; color: var(--site-header-muted); font-size: 0.82rem; }
 
-.site-header__account-btn:hover,
+.site-header__account-btn:hover {
+  background: var(--site-header-accent-soft);
+  border-color: rgba(51, 65, 85, 0.24);
+  color: var(--site-header-accent);
+}
+
+/* `outline: none` here removed the only focus indicator this button had, leaving a
+   background tint that reads as hover rather than focus. Keep the tint, restore the ring. */
 .site-header__account-btn:focus-visible {
   background: var(--site-header-accent-soft);
   border-color: rgba(51, 65, 85, 0.24);
   color: var(--site-header-accent);
-  outline: none;
+  outline: var(--focus-ring, 2px solid #2563eb);
+  outline-offset: var(--focus-ring-offset, 2px);
 }

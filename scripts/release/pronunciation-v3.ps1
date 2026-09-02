@@ -28,8 +28,12 @@
 .EXAMPLE
   pwsh -File scripts/release/pronunciation-v3.ps1 -Action Describe
   pwsh -File scripts/release/pronunciation-v3.ps1 -Action DeployCandidate -Service praat-api -Sha 18b65ed4 -Digest sha256:... -WhatIf
+  pwsh -File scripts/release/pronunciation-v3.ps1 -Action DeployCandidate -Service praat-api -Sha 18b65ed4 -Digest sha256:... -PronunciationV3Mode active
   pwsh -File scripts/release/pronunciation-v3.ps1 -Action Promote -Service praat-api -Revision praat-api-00057-fiv
   pwsh -File scripts/release/pronunciation-v3.ps1 -Action Rollback -Service praat-api
+
+  Selecting active creates a zero-traffic candidate only. It never promotes
+  that revision; smoke-test /health and /analyze/v3 before an explicit Promote.
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -38,6 +42,7 @@ param(
     [string]$Sha,
     [string]$Digest,
     [string]$Revision,
+    [ValidateSet('shadow','active')][string]$PronunciationV3Mode,
     [string]$ConfigPath
 )
 
@@ -61,6 +66,27 @@ function Assert-NoLatest {
             }
         }
     }
+}
+
+function Get-SafeCandidateTag {
+    param(
+        [Parameter(Mandatory)][string]$ServiceName,
+        [Parameter(Mandatory)][string]$SourceSha
+    )
+
+    # Cloud Run's tagged hostname combines the tag and service name. Keep the
+    # candidate identity readable while bounding that combined name to the
+    # reviewed 46-character limit.
+    $combinedNameLimit = 46
+    $tagServiceSeparatorLength = 3 # '---'
+    $tagPrefix = 'cand'
+    $maxTagLength = $combinedNameLimit - $ServiceName.Length - $tagServiceSeparatorLength
+    $shaLength = [Math]::Min(12, $SourceSha.Length)
+    $shaLength = [Math]::Min($shaLength, $maxTagLength - $tagPrefix.Length)
+    if ($shaLength -lt 1) {
+        throw "Service name '$ServiceName' leaves no room for a valid candidate tag"
+    }
+    return "$tagPrefix$($SourceSha.Substring(0, $shaLength))"
 }
 
 function Invoke-Gcloud {
@@ -118,7 +144,13 @@ switch ($Action) {
 
   'DeployCandidate' {
     if (-not $Service -or -not $Sha -or -not $Digest) { throw 'DeployCandidate requires -Service, -Sha and -Digest' }
+    if ($Sha -notmatch '^[0-9a-f]{7,40}$') { throw 'DeployCandidate -Sha must be 7-40 lowercase hexadecimal characters' }
+    if ($Digest -notmatch '^sha256:[0-9a-f]{64}$') { throw 'DeployCandidate -Digest must be an immutable lowercase sha256 digest' }
+    if ($Service -eq 'phoneme-recognizer' -and $PronunciationV3Mode) {
+        throw '-PronunciationV3Mode applies only to praat-api'
+    }
     $svc = $cfg.services.$Service
+    $candidateTag = Get-SafeCandidateTag -ServiceName $Service -SourceSha $Sha
 
     # Snapshot and verify access BEFORE any mutation. Never repair it here.
     Write-Host "Verifying access mechanism is unchanged..." -ForegroundColor Cyan
@@ -131,18 +163,29 @@ switch ($Action) {
         "--region=$($cfg.region)",
         "--project=$($cfg.project)",
         '--no-traffic',
-        "--tag=cand$Sha",
+        "--tag=$candidateTag",
         "--timeout=$($svc.timeoutSeconds)",
         "--cpu=$($svc.cpu)",
         "--memory=$($svc.memory)",
         "--max-instances=$($svc.maxScale)"
     )
+    if ($Service -eq 'praat-api') {
+        $effectiveV3Mode = if ($PronunciationV3Mode) { $PronunciationV3Mode } else { [string]$svc.env.PRONUNCIATION_V3_MODE }
+        if ($effectiveV3Mode -notin @('shadow', 'active')) { throw "Unsupported declared V3 mode: $effectiveV3Mode" }
+        $recognizerUrl = [string]$svc.env.PHONEME_SERVICE_URL
+        $recognizerAuth = [string]$svc.env.PHONEME_SERVICE_AUTH
+        if ($recognizerUrl -notmatch '^https://[^,\s]+$' -or $recognizerAuth -ne 'google') {
+            throw 'praat-api recognizer wiring is invalid'
+        }
+        $envFlag = "--update-env-vars=PRONUNCIATION_V3_MODE=$effectiveV3Mode,PHONEME_SERVICE_URL=$recognizerUrl,PHONEME_SERVICE_AUTH=$recognizerAuth,GIT_SHA=$Sha,BUILD_SHA=$Sha"
+        $deployArgs += $envFlag
+    }
     # Deliberately NO --no-allow-unauthenticated and NO IAM flags for either
     # service: gcloud run deploy preserves the existing binding, and passing the
     # flag to praat-api would take the public API offline.
     Invoke-Gcloud -Arguments $deployArgs | Out-Null
-    Write-Host "Candidate deployed at 0% traffic. Smoke-test before promoting:" -ForegroundColor Yellow
-    Write-Host "  https://cand$Sha---$Service-oq3kyypf4q-uc.a.run.app/health"
+    Write-Host "Candidate deployed at 0% traffic. No production traffic changed. Smoke-test before promoting:" -ForegroundColor Yellow
+    Write-Host "  https://$candidateTag---$Service-oq3kyypf4q-uc.a.run.app/health"
   }
 
   'Promote' {

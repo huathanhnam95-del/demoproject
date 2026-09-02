@@ -26,6 +26,16 @@ This plan verifies the CRM admin staff surface and the class-management modal af
   - Creates a teacher account with `POST /api/admin/teachers` and refreshes the list.
   - Opens `#courses/class-management`, loads classroom cards, and opens the classroom modal.
   - Fills the teacher search dropdown, selects a teacher, and saves the classroom with `PATCH /api/admin/classrooms/:classId`.
+  - Exercises the Accounts table: search filtering, archive/restore via `PATCH /api/admin/accounts/:uid/status`,
+    per-row delete via `DELETE /api/admin/accounts/:uid`, and select-all bulk delete via `POST /api/admin/accounts/bulk`.
+  - Asserts the signed-in admin row exposes no selection checkbox (protected accounts cannot be bulk-targeted).
+
+### 2) Accounts route guards (unit)
+- Command:
+  - `node tests/crm/accounts-role-management.test.js`
+- Expected:
+  - Promote/demote, archive/restore, delete and bulk routes all pass.
+  - Bootstrap admin, self-mutation and still-admin deletion attempts are rejected with 403.
 
 ## Manual Checks
 
@@ -49,7 +59,20 @@ This plan verifies the CRM admin staff surface and the class-management modal af
   - `Copy` copies the password.
   - The new teacher appears in the list after save.
 
-### 3) Class-management modal
+### 3) Accounts cleanup and admin grants
+- In Staff → Accounts:
+  - Type part of a dummy email (e.g. `bel.audit`) in the search box.
+  - Archive one row, switch the status filter to `Archived`, then restore it.
+  - Tick several dummy rows and use the toolbar `Delete`.
+  - Use `Grant admin` on a normal account, then `Revoke admin`.
+- Expected:
+  - Search narrows the table without losing focus between keystrokes.
+  - Archived accounts leave the `Active` view, show an `Archived` badge under `Archived`, and cannot log in until restored.
+  - Bulk delete removes only the ticked rows; the toolbar buttons are disabled when nothing is selected.
+  - `huathanhnam95@gmail.com` and the signed-in admin show `Protected` with no checkbox.
+  - An account holding admin shows a disabled `Delete` until admin access is revoked.
+
+### 4) Class-management modal
 - Open:
   - `#courses/class-management`
 - Expected:

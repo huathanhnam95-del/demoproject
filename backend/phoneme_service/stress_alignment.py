@@ -32,6 +32,11 @@ VOWEL_MARKERS = set("aeiouɐɑɒɔəɚɛɜɝɞɟɪʊʌæœɨɵɶː")
 MODEL_IGNORABLE_DIACRITICS = {"̬"}
 
 
+def _classifier_symbol(value: str) -> str:
+    """Normalize the only accepted IPA classifier equivalence (g/ɡ)."""
+    return unicodedata.normalize("NFC", value).replace("ɡ", "g")
+
+
 def derive_contiguous_partition_spans(
     syllable_spans: list[dict],
     *,
@@ -112,7 +117,15 @@ def tokenize_ipa(ipa: str, symbol_table: Sequence[str]) -> list[int]:
     ids: list[int] = []
     cursor = 0
     while cursor < len(text):
-        match = next((item for item in tokens if text.startswith(item[0], cursor)), None)
+        match = next(
+            (
+                item
+                for item in tokens
+                if text.startswith(item[0], cursor)
+                or _classifier_symbol(text[cursor:cursor + len(item[0])]) == _classifier_symbol(item[0])
+            ),
+            None,
+        )
         if match is None:
             raise ValueError(f"IPA character sequence is not in model vocabulary: {text[cursor:]!r}")
         ids.append(match[1])

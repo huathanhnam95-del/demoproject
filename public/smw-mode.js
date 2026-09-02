@@ -101,10 +101,9 @@
   }
 
   function resetAudioProgress() {
-    if (elements.timeCurrent) elements.timeCurrent.textContent = '00:00';
-    if (elements.timeDuration) elements.timeDuration.textContent = '00:00';
-    if (elements.timelineFill) elements.timelineFill.style.width = '0%';
-    if (elements.timelineThumb) elements.timelineThumb.style.left = '0%';
+    if (elements.progressFill) elements.progressFill.style.width = '0';
+    if (elements.seek) elements.seek.value = '0';
+    if (elements.audioTime) elements.audioTime.textContent = '00:00 / 00:00';
   }
 
   function setAudioControlsEnabled(enabled) {
@@ -112,8 +111,8 @@
       elements.playBtn.disabled = !enabled;
       elements.playBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
     }
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    if (elements.seek) {
+      elements.seek.disabled = !enabled;
     }
   }
 
@@ -149,20 +148,15 @@
 
     // audio element and player elements
     elements.audioElement = document.getElementById('smw-audio-element');
-    elements.visualizer = document.getElementById('smw-visualizer');
     elements.playBtn = document.getElementById('smw-play-btn');
     elements.playIcon = document.getElementById('smw-play-icon');
-    elements.pauseIcon = document.getElementById('smw-pause-icon');
-    elements.timelineWrapper = document.getElementById('smw-timeline-wrapper');
-    elements.timelineFill = document.getElementById('smw-timeline-fill');
-    elements.timelineThumb = document.getElementById('smw-timeline-thumb');
-    elements.timeCurrent = document.getElementById('smw-time-current');
-    elements.timeDuration = document.getElementById('smw-time-duration');
+    elements.playLabel = document.getElementById('smw-play-label');
+    elements.progressFill = document.getElementById('smw-progress-fill');
+    elements.seek = document.getElementById('smw-seek');
+    elements.audioTime = document.getElementById('smw-audio-time');
     elements.voiceSelect = document.getElementById('smw-voice-select');
     elements.speedBtns = document.querySelectorAll('.smw-speed-btn');
-    elements.volumeSlider = document.getElementById('smw-volume-slider');
-    elements.volumeText = document.getElementById('smw-volume-text');
-    elements.volumeIcon = document.getElementById('smw-volume-icon');
+    elements.volume = document.getElementById('smw-volume');
 
     // practice card elements
     elements.passageText = document.getElementById('smw-passage-text'); // audio transcript text container
@@ -172,12 +166,12 @@
     // action buttons
     elements.submitBtn = document.getElementById('smw-submit-btn');
     elements.retryBtn = document.getElementById('smw-retry-btn');
-    elements.explanationToggle = document.getElementById('smw-explanation-toggle');
 
     // results and explanations
     elements.resultBox = document.getElementById('smw-result-box');
-    elements.explanationPanel = document.getElementById('smw-explanation-panel');
+    elements.reviewContent = document.getElementById('smw-review-content');
     elements.explanationContent = document.getElementById('smw-explanation-content');
+    elements.containerEl = document.querySelector('.smw-container');
   }
 
   function setupEventListeners() {
@@ -243,10 +237,6 @@
       });
     }
 
-    if (elements.explanationToggle) {
-      elements.explanationToggle.addEventListener('click', toggleExplanation);
-    }
-
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && state.pickerOpen) {
         closePicker();
@@ -266,8 +256,8 @@
       elements.audioElement.addEventListener('pause', onAudioPause);
     }
 
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.addEventListener('click', seekAudio);
+    if (elements.seek) {
+      elements.seek.addEventListener('input', seekAudio);
     }
 
     if (elements.voiceSelect) {
@@ -283,14 +273,9 @@
       });
     });
 
-    if (elements.volumeSlider) {
-      elements.volumeSlider.value = state.volume;
-      if (elements.volumeText) {
-        elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-      }
-      updateVolumeIcon(state.volume);
-
-      elements.volumeSlider.addEventListener('input', (e) => {
+    if (elements.volume) {
+      elements.volume.value = state.volume;
+      elements.volume.addEventListener('input', (e) => {
         const vol = parseFloat(e.target.value);
         if (Number.isFinite(vol)) {
           state.volume = vol;
@@ -298,42 +283,8 @@
           if (elements.audioElement) {
             elements.audioElement.volume = vol;
           }
-          if (elements.volumeText) {
-            elements.volumeText.textContent = `${Math.round(vol * 100)}%`;
-          }
-          updateVolumeIcon(vol);
         }
       });
-    }
-
-    if (elements.volumeIcon) {
-      elements.volumeIcon.addEventListener('click', () => {
-        if (!elements.audioElement || !elements.volumeSlider) return;
-        if (state.volume > 0) {
-          state.preMuteVolume = state.volume;
-          state.volume = 0;
-        } else {
-          state.volume = state.preMuteVolume || 1.0;
-        }
-        elements.volumeSlider.value = state.volume;
-        elements.audioElement.volume = state.volume;
-        if (elements.volumeText) {
-          elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-        }
-        updateVolumeIcon(state.volume);
-        localStorage.setItem('smw-volume', String(state.volume));
-      });
-    }
-  }
-
-  function updateVolumeIcon(vol) {
-    if (!elements.volumeIcon) return;
-    if (vol === 0) {
-      elements.volumeIcon.textContent = '🔈';
-    } else if (vol < 0.5) {
-      elements.volumeIcon.textContent = '🔉';
-    } else {
-      elements.volumeIcon.textContent = '🔊';
     }
   }
 
@@ -343,7 +294,7 @@
 
     if (elements.audioElement.paused) {
       elements.audioElement.playbackRate = state.currentSpeed;
-      elements.audioElement.volume = state.volume;
+      elements.audioElement.volume = Number(elements.volume?.value ?? 1);
       elements.audioElement.play().catch((err) => {
         console.error('[SMWMode] Play failed:', err);
       });
@@ -353,15 +304,13 @@
   }
 
   function onAudioPlay() {
-    if (elements.playIcon) elements.playIcon.style.display = 'none';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'block';
-    if (elements.visualizer) elements.visualizer.classList.add('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'pause';
+    if (elements.playLabel) elements.playLabel.textContent = 'Pause';
   }
 
   function onAudioPause() {
-    if (elements.playIcon) elements.playIcon.style.display = 'block';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'none';
-    if (elements.visualizer) elements.visualizer.classList.remove('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'play_arrow';
+    if (elements.playLabel) elements.playLabel.textContent = 'Play';
   }
 
   function onAudioEnded() {
@@ -372,33 +321,30 @@
     resetAudioProgress();
   }
 
-  // Visual feedback update of timeline progress
   function updateAudioProgress() {
     const audio = elements.audioElement;
     if (!audio || !audio.duration) return;
 
     const percentage = (audio.currentTime / audio.duration) * 100;
-    if (elements.timelineFill) elements.timelineFill.style.width = `${percentage}%`;
-    if (elements.timelineThumb) elements.timelineThumb.style.left = `${percentage}%`;
-    if (elements.timeCurrent) elements.timeCurrent.textContent = formatTime(audio.currentTime);
+    if (elements.progressFill) elements.progressFill.style.width = `${percentage}%`;
+    if (elements.seek) elements.seek.value = percentage;
+    if (elements.audioTime) {
+      elements.audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
   }
 
   function updateAudioDuration() {
     const audio = elements.audioElement;
     if (!audio || !audio.duration) return;
-    if (elements.timeDuration) elements.timeDuration.textContent = formatTime(audio.duration);
+    if (elements.audioTime) {
+      elements.audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
   }
 
-  function seekAudio(e) {
+  function seekAudio() {
     const audio = elements.audioElement;
-    const wrapper = elements.timelineWrapper;
-    if (!audio || !audio.duration || !wrapper) return;
-
-    const rect = wrapper.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    audio.currentTime = percentage * audio.duration;
+    if (!audio || !audio.duration || !elements.seek) return;
+    audio.currentTime = (elements.seek.value / 100) * audio.duration;
     updateAudioProgress();
   }
 
@@ -492,20 +438,18 @@
 
   function resetFeedbackUI() {
     state.explanationVisible = false;
+    if (elements.containerEl) {
+      elements.containerEl.classList.remove('is-reviewed');
+    }
     if (elements.retryBtn) {
       elements.retryBtn.style.display = 'none';
-    }
-    if (elements.explanationToggle) {
-      elements.explanationToggle.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
     }
     if (elements.resultBox) {
       elements.resultBox.style.display = 'none';
       elements.resultBox.replaceChildren();
     }
-    if (elements.explanationPanel) {
-      elements.explanationPanel.style.display = 'none';
+    if (elements.reviewContent) {
+      elements.reviewContent.style.display = 'none';
     }
     if (elements.explanationContent) {
       elements.explanationContent.replaceChildren();
@@ -742,7 +686,6 @@
       }
     }
 
-    // Reset progress text and visualizer
     resetAudioProgress();
 
     // Apply speed settings to player
@@ -919,29 +862,15 @@
       safeRenderHtml(rawTranscript, elements.passageText);
     }
 
-    if (elements.explanationToggle && (state.currentQuestion.explanation || state.currentQuestion.transcript)) {
-      elements.explanationToggle.style.display = 'block';
+    if (state.currentQuestion.explanation || state.currentQuestion.transcript) {
       if (elements.explanationContent) {
         const explanation = state.currentQuestion.explanation ||
           '<p>No detailed explanation is available for this question yet. Use the transcript to review the evidence before retrying.</p>';
         safeRenderHtml(explanation, elements.explanationContent);
       }
-    }
-  }
-
-  function toggleExplanation() {
-    if (!elements.explanationPanel || !elements.explanationToggle) return;
-
-    state.explanationVisible = !state.explanationVisible;
-    if (state.explanationVisible) {
-      elements.explanationPanel.style.display = 'flex';
-      elements.explanationToggle.textContent = 'Hide explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'true');
-      elements.explanationPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else {
-      elements.explanationPanel.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
+      if (elements.containerEl) {
+        elements.containerEl.classList.add('is-reviewed');
+      }
     }
   }
 
@@ -962,13 +891,9 @@
       state.initialized = true;
     }
 
-    if (elements.volumeSlider) {
-      elements.volumeSlider.value = state.volume;
+    if (elements.volume) {
+      elements.volume.value = state.volume;
     }
-    if (elements.volumeText) {
-      elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-    }
-    updateVolumeIcon(state.volume);
     if (elements.audioElement) {
       elements.audioElement.volume = state.volume;
     }

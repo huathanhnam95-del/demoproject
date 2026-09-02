@@ -12,222 +12,164 @@ const VocabListModalTemplate = `
         <button id="vocab-list-close" class="vocab-add-close">×</button>
       </div>
 
-      <div class="vocab-tabs">
-        <button class="vocab-tab-btn active" data-tab="bookmarks">Bookmarked Words</button>
-        <button class="vocab-tab-btn" data-tab="missed">Frequently Missed</button>
-        <button class="vocab-tab-btn" data-tab="practice">Vocabulary Practice</button>
+      <div class="vocab-tabs" role="tablist" aria-label="Vocabulary sections">
+        <button class="vocab-tab-btn active" data-tab="bookmarks" role="tab" type="button"
+          id="vocab-tab-bookmarks" aria-selected="true" aria-controls="tab-content-bookmarks">Bookmarked Words</button>
+        <button class="vocab-tab-btn" data-tab="missed" role="tab" type="button"
+          id="vocab-tab-missed" aria-selected="false" aria-controls="tab-content-missed" tabindex="-1">Frequently Missed</button>
+        <button class="vocab-tab-btn" data-tab="practice" role="tab" type="button"
+          id="vocab-tab-practice" aria-selected="false" aria-controls="tab-content-practice" tabindex="-1">Vocabulary Practice</button>
       </div>
 
-      <div class="vocab-tab-content active" id="tab-content-bookmarks">
-        <table class="vocab-table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Pronunciation</th>
-              <th>Vietnamese</th>
-              <th>Examples</th>
-              <th>Source</th>
-              <th>Form</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="vocab-table-body-bookmarks">
-            <!-- Rows injected by JS -->
-          </tbody>
-        </table>
+      <div class="vocab-tab-content active" id="tab-content-bookmarks" role="tabpanel"
+        aria-labelledby="vocab-tab-bookmarks" tabindex="0">
+        <div id="vocab-toolbar-bookmarks"></div>
+        <div id="vocab-list-bookmarks"></div>
       </div>
 
-      <div class="vocab-tab-content" id="tab-content-missed">
-        <table class="vocab-table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Pronunciation</th>
-              <th>Vietnamese</th>
-              <th>Examples</th>
-              <th>Source</th>
-              <th>Form</th>
-              <th>Date</th>
-              <th>Times Missed</th>
-            </tr>
-          </thead>
-          <tbody id="vocab-table-body-missed">
-            <!-- Rows injected by JS -->
-          </tbody>
-        </table>
+      <div class="vocab-tab-content" id="tab-content-missed" role="tabpanel"
+        aria-labelledby="vocab-tab-missed" tabindex="0">
+        <div id="vocab-toolbar-missed"></div>
+        <div id="vocab-list-missed"></div>
       </div>
-      <div class="vocab-tab-content" id="tab-content-practice">
-        <div class="vocab-practice-container" style="padding: 24px; text-align: center;">
-          <div class="practice-card"
-            style="background: var(--bg-input); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border-light);">
-            <div style="font-size: 48px; margin-bottom: 16px;">🔄</div>
-            <h3>Spaced Repetition Review</h3>
-            <p style="color: var(--text-muted); margin-bottom: 24px;">Review your vocabulary at optimal intervals to maximize
-              retention.</p>
-
-            <button id="srs-start-review-btn" class="btn-primary"
-              style="padding: 12px 32px; font-size: 1.1rem; width: 100%; max-width: 300px;"
-              onclick="if(window.SRSReview) window.SRSReview.launchReviewFromDashboard()">
-              Open Daily Review <span id="srs-due-badge" class="badge-count"
-                style="display:none; background: var(--danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 8px;">0</span>
-            </button>
-
-            <div id="srs-next-review-info" class="srs-next-review"
-              style="margin-top: 16px; color: var(--text-muted); font-size: 0.9rem; display: none;">
-              Next review: <span id="srs-next-date">-</span>
-            </div>
-          </div>
-
-          <!-- Tutorial Replay Settings -->
-          <div class="tutorial-replay-section">
-            <h4 class="tutorial-replay-header">📘 Play Tutorial Next Time</h4>
-            <p class="tutorial-replay-desc">Enable to replay the tutorial for any mode you'd like to review.</p>
-            <div class="tutorial-toggle-list">
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">🔊 Listen and Type</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-listen">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">🎙️ Listen and Repeat</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-speak">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">📝 Fill in the Blank</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-cloze">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">✍️ Writing Challenge</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-writing">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Rendered by js/vocab/vocab-practice-view.js when this tab is first shown.
+           Kept as an empty mount point so the dashboard can read live SRS state
+           (due count, streak, mastery) instead of being static markup. -->
+      <div class="vocab-tab-content" id="tab-content-practice" role="tabpanel"
+        aria-labelledby="vocab-tab-practice" tabindex="0"></div>
     </div>
   </div>
 `;
 
 const ProgressAttemptsModalTemplate = `
-  <div id="progress-attempts-modal" class="vocab-list-modal" style="display: none;">
-    <div class="vocab-list-content-modal progress-attempts-content-modal" style="max-width: 750px;">
-      <div class="vocab-list-header">
-        <h2>Progress & Attempts</h2>
-        <button id="progress-attempts-close" class="vocab-add-close">×</button>
+  <div id="progress-attempts-modal" class="progress-modal" style="display: none;">
+    <div class="progress-modal-content progress-attempts-content-modal">
+      <div class="progress-modal-header">
+        <h2>Progress</h2>
+        <button id="progress-attempts-close" class="vocab-add-close" type="button" aria-label="Close progress">×</button>
       </div>
 
-      <div class="progress-tabs">
-        <button class="progress-tab-btn active" data-tab="vocab-progress">Vocabulary Progress</button>
-        <button class="progress-tab-btn" data-tab="pte-attempts">PTE Attempts</button>
+      <div class="progress-tabs" role="tablist" aria-label="Progress sections">
+        <button class="progress-tab-btn active" data-tab="vocabulary" role="tab" type="button"
+          id="progress-tab-vocabulary" aria-selected="true"
+          aria-controls="progress-tab-content-vocabulary">Vocabulary</button>
+        <button class="progress-tab-btn" data-tab="question-mastery" role="tab" type="button"
+          id="progress-tab-question-mastery" aria-selected="false"
+          aria-controls="progress-tab-content-question-mastery" tabindex="-1">Question Mastery</button>
+        <button class="progress-tab-btn" data-tab="pte-attempts" role="tab" type="button"
+          id="progress-tab-pte-attempts" aria-selected="false"
+          aria-controls="progress-tab-content-attempts" tabindex="-1">PTE Attempts</button>
       </div>
 
-      <div class="progress-tab-content active" id="progress-tab-content-vocab">
+      <!-- Vocabulary: real SRS data. Rendered by pte-attempt-archive.js on first
+           open via readPracticeState() so the numbers can never drift from the
+           Vocab Book dashboard, which reads the same helper. -->
+      <div class="progress-tab-content active" id="progress-tab-content-vocabulary"
+        data-tab-panel="vocabulary" role="tabpanel"
+        aria-labelledby="progress-tab-vocabulary" tabindex="0">
+        <div id="tp-vocabulary-mount"></div>
+      </div>
+
+      <div class="progress-tab-content" id="progress-tab-content-question-mastery"
+        data-tab-panel="question-mastery" role="tabpanel"
+        aria-labelledby="progress-tab-question-mastery" tabindex="0">
+        <!-- Question tiers come from Firestore only, so guests genuinely have
+             nothing here. The Vocabulary tab has no such gate: SRS supports
+             guests through localStorage. -->
         <div id="progress-guest-notice" class="progress-guest-notice" style="display: none;">
           <div class="guest-notice-content">
-            <span class="guest-notice-icon">🔒</span>
+            <span class="guest-notice-icon" aria-hidden="true">🔒</span>
             <p>Log in to save and track your progress across sessions.</p>
           </div>
         </div>
         <div id="progress-content-wrapper" class="progress-content-wrapper">
-          <div class="progress-mode-indicator">
-            <span id="progress-mode-label">Type Mode</span>
+          <div class="tp-segmented" role="group" aria-label="Practice mode">
+            <button type="button" class="tp-segmented-btn is-active" data-qm-mode="type">Type</button>
+            <button type="button" class="tp-segmented-btn" data-qm-mode="speak">Speak</button>
           </div>
+          <span id="progress-mode-label" class="tp-sr-only">Type Mode</span>
 
-          <div class="progress-summary">
-            <h4>Stats</h4>
-            <div class="tier-counts">
-              <div class="tier-count completed-count">
-                <span class="tier-count-number" id="completed-count">0</span>
-                <span class="tier-count-label">Completed</span>
+          <section class="tp-section">
+            <h4 class="tp-section-title">Stats</h4>
+            <div class="tp-stat-row">
+              <div class="tp-stat">
+                <span class="tp-stat-value" id="tp-total-count">0</span>
+                <span class="tp-stat-label">Total</span>
               </div>
-              <div class="tier-count consolidated-count">
-                <span class="tier-count-number" id="consolidated-count">0</span>
-                <span class="tier-count-label">Consolidated</span>
+              <div class="tp-stat">
+                <span class="tp-stat-value" id="tp-not-started-count">0</span>
+                <span class="tp-stat-label">Not started</span>
               </div>
-              <div class="tier-count mastered-count">
-                <span class="tier-count-number" id="mastered-count">0</span>
-                <span class="tier-count-label">Mastered</span>
+              <div class="tp-stat">
+                <span class="tp-stat-value" id="completed-count">0</span>
+                <span class="tp-stat-label">Completed</span>
+              </div>
+              <div class="tp-stat">
+                <span class="tp-stat-value" id="consolidated-count">0</span>
+                <span class="tp-stat-label">Consolidated</span>
+              </div>
+              <div class="tp-stat">
+                <span class="tp-stat-value" id="mastered-count">0</span>
+                <span class="tp-stat-label">Mastered</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="tier-distribution">
-            <h4>Distribution</h4>
-            <div class="tier-bar">
-              <div id="tier-bar-not-started" class="tier-bar-segment not-started" style="width: 0%;"></div>
-              <div id="tier-bar-in-progress" class="tier-bar-segment in-progress" style="width: 0%;"></div>
-              <div id="tier-bar-completed" class="tier-bar-segment completed" style="width: 0%;"></div>
-              <div id="tier-bar-consolidated" class="tier-bar-segment consolidated" style="width: 0%;"></div>
-              <div id="tier-bar-mastered" class="tier-bar-segment mastered" style="width: 0%;"></div>
+          <section class="tp-section">
+            <h4 class="tp-section-title">Distribution</h4>
+            <div class="tp-bar" role="img" aria-label="Question mastery distribution">
+              <div id="tier-bar-not-started" class="tp-bar-segment" data-tier="not-started" style="width: 0%;"></div>
+              <div id="tier-bar-in-progress" class="tp-bar-segment" data-tier="in-progress" style="width: 0%;"></div>
+              <div id="tier-bar-completed" class="tp-bar-segment" data-tier="completed" style="width: 0%;"></div>
+              <div id="tier-bar-consolidated" class="tp-bar-segment" data-tier="consolidated" style="width: 0%;"></div>
+              <div id="tier-bar-mastered" class="tp-bar-segment" data-tier="mastered" style="width: 0%;"></div>
             </div>
+            <ul class="tp-legend">
+              <li class="tp-legend-item">
+                <span class="tp-legend-dot" data-tier="not-started"></span>
+                <span class="tp-legend-label">Not started</span>
+                <span class="tp-legend-value" id="tp-legend-not-started">0</span>
+              </li>
+              <li class="tp-legend-item">
+                <span class="tp-legend-dot" data-tier="in-progress"></span>
+                <span class="tp-legend-label">In progress</span>
+                <span class="tp-legend-value" id="tp-legend-in-progress">0</span>
+              </li>
+              <li class="tp-legend-item">
+                <span class="tp-legend-dot" data-tier="completed"></span>
+                <span class="tp-legend-label">Completed</span>
+                <span class="tp-legend-value" id="tp-legend-completed">0</span>
+              </li>
+              <li class="tp-legend-item">
+                <span class="tp-legend-dot" data-tier="consolidated"></span>
+                <span class="tp-legend-label">Consolidated</span>
+                <span class="tp-legend-value" id="tp-legend-consolidated">0</span>
+              </li>
+              <li class="tp-legend-item">
+                <span class="tp-legend-dot" data-tier="mastered"></span>
+                <span class="tp-legend-label">Mastered</span>
+                <span class="tp-legend-value" id="tp-legend-mastered">0</span>
+              </li>
+            </ul>
+          </section>
 
-            <div class="distribution-pie-chart">
-              <div class="pie-chart-container">
-                <svg id="distribution-pie" viewBox="0 0 100 100" class="pie-chart-svg">
-                  <circle cx="50" cy="50" r="40" fill="#e5e7eb" />
-                </svg>
-                <div class="pie-chart-center">
-                  <span id="pie-total-count" class="pie-total-number">0</span>
-                  <span class="pie-total-label">Total</span>
-                </div>
-              </div>
-              <div class="pie-chart-legend">
-                <div class="pie-legend-item">
-                  <span class="pie-legend-dot not-started"></span>
-                  <span class="pie-legend-label">Not Started</span>
-                  <span id="pie-legend-not-started" class="pie-legend-value">0% (0)</span>
-                </div>
-                <div class="pie-legend-item">
-                  <span class="pie-legend-dot in-progress"></span>
-                  <span class="pie-legend-label">In Progress</span>
-                  <span id="pie-legend-in-progress" class="pie-legend-value">0% (0)</span>
-                </div>
-                <div class="pie-legend-item">
-                  <span class="pie-legend-dot completed"></span>
-                  <span class="pie-legend-label">Completed</span>
-                  <span id="pie-legend-completed" class="pie-legend-value">0% (0)</span>
-                </div>
-                <div class="pie-legend-item">
-                  <span class="pie-legend-dot consolidated"></span>
-                  <span class="pie-legend-label">Consolidated</span>
-                  <span id="pie-legend-consolidated" class="pie-legend-value">0% (0)</span>
-                </div>
-                <div class="pie-legend-item">
-                  <span class="pie-legend-dot mastered"></span>
-                  <span class="pie-legend-label">Mastered</span>
-                  <span id="pie-legend-mastered" class="pie-legend-value">0% (0)</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <section class="tp-section">
+            <h4 class="tp-section-title">Next goal</h4>
+            <p id="next-goal-text" class="tp-goal-text">Complete a question to start tracking!</p>
+          </section>
 
-          <div class="next-goal">
-            <h4>Next Goal</h4>
-            <p id="next-goal-text" class="next-goal-text">Complete a question to start tracking!</p>
-          </div>
-
-          <div class="recent-progress">
-            <h4>Recent</h4>
+          <section class="tp-section">
+            <h4 class="tp-section-title">Recent</h4>
             <ul id="recent-progress-list" class="recent-progress-list">
               <li class="no-progress">No recent progress</li>
             </ul>
-          </div>
+          </section>
         </div>
       </div>
 
-      <div class="progress-tab-content" id="progress-tab-content-attempts">
+      <div class="progress-tab-content" id="progress-tab-content-attempts"
+        data-tab-panel="pte-attempts" role="tabpanel"
+        aria-labelledby="progress-tab-pte-attempts" tabindex="0">
         <div class="pte-attempt-history__bar">
           <h3 class="pte-attempt-history__title">My PTE Attempts</h3>
           <button type="button" id="pte-attempts-modal-refresh" class="pte-attempts-refresh-btn">Refresh</button>

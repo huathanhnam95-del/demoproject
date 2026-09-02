@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { STUDIES, syncManifest, validateManifest } = require('../../scripts/segmentation-study/sync-manifest');
-const { buildTaskDocument, dryRunSeed, readManifest, summary } = require('../../scripts/segmentation-study/seed-study');
+const { applySeed, buildTaskDocument, dryRunSeed, main, readManifest, summary } = require('../../scripts/segmentation-study/seed-study');
 
 const root = path.resolve(__dirname, '../..');
 const source = path.join(root, 'scripts/data/segmentation-study-v2.json');
@@ -36,9 +36,104 @@ assert.strictEqual(task.referenceLabelProvenance, 'explicit-reviewed-en-US-v1');
 assert.deepStrictEqual(task.referenceProvenance, manifest.entries[0].referenceProvenance);
 assert.deepStrictEqual(task.transitionFamilies, manifest.entries[0].transitionFamilies);
 assert.strictEqual(summary(manifest, 'dry-run').destructiveOperations, 0);
-dryRunSeed(manifest).then((result) => {
-  assert.strictEqual(result.creates, 100);
-  assert.strictEqual(result.existing, 0);
-  assert.strictEqual(result.writes, 0);
+const fakeDb = {
+  collection(collectionName) {
+    assert.strictEqual(collectionName, 'pronunciationSegmentationStudyTasks');
+    return {
+      doc(taskId) {
+        return {
+          async get() {
+            return { exists: taskId === manifest.entries[0].taskId };
+          },
+          async create() {
+            throw new Error('dry-run must not write');
+          }
+        };
+      }
+    };
+  }
+};
+const fakeAdmin = {
+  apps: [],
+  credential: {
+    applicationDefault() {
+      fakeAdmin.credentialCalls = (fakeAdmin.credentialCalls || 0) + 1;
+      return { type: 'application-default' };
+    }
+  },
+  initializeApp(options) {
+    assert.deepStrictEqual(options, { credential: { type: 'application-default' } });
+    fakeAdmin.initializeCalls = (fakeAdmin.initializeCalls || 0) + 1;
+    fakeAdmin.apps.push({});
+  },
+  firestore() {
+    fakeAdmin.firestoreCalls = (fakeAdmin.firestoreCalls || 0) + 1;
+    return fakeDb;
+  }
+};
+
+const applyManifest = { ...manifest, entries: manifest.entries.slice(0, 3) };
+const raceCreateCalls = [];
+const raceDb = {
+  collection() {
+    return {
+      doc(taskId) {
+        return {
+          async get() {
+            return { exists: false };
+          },
+          async create() {
+            raceCreateCalls.push(taskId);
+            if (taskId === applyManifest.entries[0].taskId) throw { code: 6 };
+            if (taskId === applyManifest.entries[1].taskId) throw { code: '6' };
+          }
+        };
+      }
+    };
+  }
+};
+const nonRaceError = { code: 'PERMISSION_DENIED' };
+const nonRaceDb = {
+  collection() {
+    return {
+      doc() {
+        return {
+          async get() {
+            return { exists: false };
+          },
+          async create() {
+            throw nonRaceError;
+          }
+        };
+      }
+    };
+  }
+};
+
+Promise.all([
+  dryRunSeed(manifest).then((result) => {
+    assert.strictEqual(result.creates, 100);
+    assert.strictEqual(result.existing, 0);
+    assert.strictEqual(result.writes, 0);
+  }),
+  main(['--study-version', 'v2'], { firebaseAdmin: fakeAdmin }).then((result) => {
+    assert.strictEqual(result.mode, 'dry-run');
+    assert.strictEqual(result.creates, 99);
+    assert.strictEqual(result.existing, 1);
+    assert.strictEqual(result.writes, 0);
+    assert.strictEqual(fakeAdmin.credentialCalls, 1);
+    assert.strictEqual(fakeAdmin.initializeCalls, 1);
+    assert.strictEqual(fakeAdmin.firestoreCalls, 1);
+  }),
+  applySeed(applyManifest, { db: raceDb, timestamp: new Date('2026-08-23T00:00:00Z') }).then((result) => {
+    assert.deepStrictEqual(result, { created: 1, existing: 2, deleted: 0 });
+    assert.deepStrictEqual(raceCreateCalls, applyManifest.entries.map((entry) => entry.taskId));
+  }),
+  applySeed({ ...manifest, entries: [manifest.entries[0]] }, { db: nonRaceDb }).then(() => {
+    throw new Error('non-ALREADY_EXISTS errors must be rethrown');
+  }, (error) => {
+    assert.strictEqual(error, nonRaceError);
+  })
+]).then(() => {
   console.log('segmentation study-v2 manifest, bundle sync, and dry-run seed contracts passed');
 }).catch((error) => { console.error(error); process.exitCode = 1; });

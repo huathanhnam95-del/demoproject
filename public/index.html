@@ -18,6 +18,9 @@
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css?v=20260508_practice_router_fix">
+  <!-- Must load after style.css: intentionally overrides the legacy
+       .vocab-phonetic pill treatment. -->
+  <link rel="stylesheet" href="vocab-book.css">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -31,6 +34,7 @@
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="swt-mode.css">
   <link rel="stylesheet" href="write-essay-mode.css">
+  <link rel="stylesheet" href="css/practice-audio-player.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
   <link rel="stylesheet" href="hcs-mode.css">
@@ -40,6 +44,7 @@
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="speaking-practice-controller.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="progress-roadmap.css">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
   <!-- Scripts moved to end of body for performance -->
@@ -207,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.81</div>
+  <div id="version-indicator" class="version-indicator">V1.8.85</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -428,21 +433,24 @@
   <!-- Level Selection Modal (shown on first login) -->
   <div id="level-selection-modal" class="entry-modal" style="display: none;">
     <div class="entry-modal-content">
-      <h2>Choose Your English Level</h2>
-      <p style="margin-bottom: 24px; color: #4b5563;">Select your current level to customize your practice experience.
-      </p>
+      <h2 id="level-selection-title">Choose Your English Level</h2>
+      <p class="entry-modal-lede">This sets how hard your first questions are. You can change it any time from the
+        level badge at the top of the practice page.</p>
       <div class="entry-options">
         <button class="entry-btn level-btn" data-level="beginner">
           <span class="entry-icon">🌱</span>
           <span class="entry-label">Beginner</span>
+          <span class="entry-hint">Short sentences, slower audio</span>
         </button>
         <button class="entry-btn level-btn" data-level="intermediate">
           <span class="entry-icon">🌿</span>
           <span class="entry-label">Intermediate</span>
+          <span class="entry-hint">Exam-length prompts at natural pace</span>
         </button>
         <button class="entry-btn level-btn" data-level="expert">
           <span class="entry-icon">🌳</span>
           <span class="entry-label">Expert</span>
+          <span class="entry-hint">Long, dense passages and fast speech</span>
         </button>
       </div>
     </div>
@@ -481,7 +489,7 @@
       </div>
 
       <!-- Bookmarked Words Section -->
-      <div class="vocab-section">
+      <div id="vocab-section-bookmarked" class="vocab-section">
         <h4>📌 Bookmarked Words</h4>
         <p class="vocab-section-desc">Words you've manually saved</p>
         <div id="vocab-bookmarked-list" class="vocab-word-list">
@@ -490,7 +498,7 @@
       </div>
 
       <!-- Frequently Missed Section -->
-      <div class="vocab-section">
+      <div id="vocab-section-missed" class="vocab-section">
         <h4>⚠️ Frequently Missed</h4>
         <p class="vocab-section-desc">Words missed 3+ times (auto-tracked)</p>
         <div id="vocab-frequent-list" class="vocab-word-list">
@@ -1049,7 +1057,6 @@
               <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('read-aloud')" tabindex="0" role="button"
                 aria-label="Read Aloud mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1114,7 +1121,6 @@
               <!-- 3. Describe Image Mode Card (PTE 3) -->
               <div id="mode-btn-describe-image" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-describe-image">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1137,7 +1143,6 @@
               <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('notes')" tabindex="0" role="button"
                 aria-label="Retell Lecture mode">
-                <span class="badge">New</span>
                 <div class="card-visual visual-notes">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1172,7 +1177,6 @@
               <!-- 5. ASQ (Quiz) Mode Card (PTE 5: Answer Short Question) -->
               <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Answer Short Questions mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1196,7 +1200,6 @@
               <!-- 6. Discussion Mode Card (PTE 6: SGD) -->
               <div id="mode-btn-sgd" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Summarize Group Discussion mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1224,7 +1227,6 @@
               <!-- 7. Respond To Situation Mode Card (PTE 7: RTS) -->
               <div id="mode-btn-rts" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
                 onclick="window.switchToMode('rts')" tabindex="0" role="button" aria-label="Respond To Situation mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1249,7 +1251,6 @@
               <div id="mode-btn-sst" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('sst')" tabindex="0" role="button"
                 aria-label="Summarize Spoken Text mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
                     <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1269,7 +1270,6 @@
               <!-- LMCMA Mode Card -->
               <div id="mode-btn-lmcma" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('lmcma')" tabindex="0" role="button" aria-label="Multiple Choice, Multiple Answers mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-lmcma">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1325,7 +1325,6 @@
               <!-- HCS Mode Card -->
               <div id="mode-btn-hcs" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('hcs')" tabindex="0" role="button" aria-label="Highlight Correct Summary mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-hcs">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1347,7 +1346,6 @@
               <!-- LMCSA Mode Card -->
               <div id="mode-btn-lmcsa" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('lmcsa')" tabindex="0" role="button" aria-label="Multiple Choice, Single Answer mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-lmcsa">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1372,7 +1370,6 @@
               <!-- SMW Mode Card -->
               <div id="mode-btn-smw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('smw')" tabindex="0" role="button" aria-label="Select Missing Word mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-smw">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1392,7 +1389,6 @@
               <!-- HIW Mode Card -->
               <div id="mode-btn-hiw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
                 onclick="window.switchToMode('hiw')" tabindex="0" role="button" aria-label="Highlight Incorrect Words mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-hiw">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1460,7 +1456,6 @@
               <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('collo-dictate')" tabindex="0"
                 role="button" aria-label="Collo-dictate mode (Collocation dictation)">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-collo">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1706,7 +1701,6 @@
               <!-- Essay Mode Card -->
               <div id="mode-btn-essay" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
                 onclick="window.switchToMode('essay')" tabindex="0" role="button" aria-label="Write Essay mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1728,7 +1722,6 @@
               <!-- SWT Mode Card -->
               <div id="mode-btn-swt" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
                 onclick="window.switchToMode('swt')" tabindex="0" role="button" aria-label="Summarize Written Text mode">
-                <span class="badge new">New</span>
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1824,7 +1817,7 @@
                 </div>
                 <div class="card-body">
                   <h3>Track Progress</h3>
-                  <p>Visualize your vocabulary growth and mastery tiers.</p>
+                  <p>Track your vocabulary mastery and question practice tiers.</p>
                   <div class="card-ctas" style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
                     <button class="card-cta primary" style="flex: 1; margin: 0; padding: 6px 12px; font-size: 0.85rem;"
                       onclick="event.stopPropagation(); if(window.PTEAttemptArchive?.openProgressModal) { window.PTEAttemptArchive.openProgressModal('vocab-progress'); }">
@@ -2127,19 +2120,31 @@
 
           <!-- Progress Bar UI (logged-in users only) -->
           <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-type" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-type" class="progress-label progress-target" data-step="3">Completed</span>
+            <div class="progress-steps">
+              <div class="progress-step" data-tier="completed">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Completed</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="consolidated">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Consolidated</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="mastered">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Mastered</span>
+              </div>
             </div>
             <div class="progress-tier-info">
               <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
+              <span id="progress-target-type" class="progress-target-text"></span>
+              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;"
+                aria-label="Reset progress">↺ Reset</button>
             </div>
           </div>
 
@@ -2268,10 +2273,26 @@
         <div class="question-total" data-spc-level="advanced">
           <span>Total number of questions: <span id="total-questions-type">1</span></span>
         </div>
+        <section class="wfd-audio practice-audio-player" aria-label="Audio player">
+          <button id="wfd-play-btn" class="wfd-play-btn" type="button" aria-label="Play audio">
+            <span id="wfd-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="wfd-play-label">Play</span>
+          </button>
+          <div class="wfd-progress-wrap">
+            <div class="wfd-progress" aria-hidden="true">
+              <div id="wfd-progress-fill" class="wfd-progress-fill"></div>
+            </div>
+            <input id="wfd-seek" class="wfd-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline" disabled>
+          </div>
+          <span id="wfd-audio-time" class="wfd-audio-time">00:00 / 00:00</span>
+          <label class="wfd-volume-label" for="wfd-volume">Volume</label>
+          <input id="wfd-volume" class="wfd-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
+
         <div class="unified-controls">
           <div class="control-toolbar">
             <div class="function-group">
-              <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+              <button id="play-btn" class="modern-btn modern-btn--play" type="button" style="display: none;">Play</button>
               <button id="check-btn" class="modern-btn modern-btn--check" type="button"
                 style="display: none;">Check</button>
               <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
@@ -2411,19 +2432,31 @@
 
           <!-- Progress Bar UI (logged-in users only) -->
           <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-speak" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-speak" class="progress-label progress-target" data-step="3">Completed</span>
+            <div class="progress-steps">
+              <div class="progress-step" data-tier="completed">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Completed</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="consolidated">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Consolidated</span>
+              </div>
+              <div class="progress-connector">
+                <div class="progress-connector-fill"></div>
+              </div>
+              <div class="progress-step" data-tier="mastered">
+                <div class="progress-step-dot"></div>
+                <span class="progress-step-label">Mastered</span>
+              </div>
             </div>
             <div class="progress-tier-info">
               <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
+              <span id="progress-target-speak" class="progress-target-text"></span>
+              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;"
+                aria-label="Reset progress">↺ Reset</button>
             </div>
           </div>
 
@@ -3365,60 +3398,57 @@
             Listening Player
           </span>
         </div>
-        <div class="lmcma-audio-player-card">
-          <!-- Animated visualizer bars -->
-          <div class="lmcma-visualizer" id="lmcma-visualizer">
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
-            <span class="lmcma-vis-bar"></span>
+        <section class="lmcma-audio practice-audio-player" aria-label="Audio player">
+          <button id="lmcma-play-btn" class="lmcma-play-btn" type="button" disabled aria-label="Play audio">
+            <span id="lmcma-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="lmcma-play-label">Play</span>
+          </button>
+          <div class="lmcma-progress-wrap">
+            <div class="lmcma-progress" aria-hidden="true">
+              <div id="lmcma-progress-fill" class="lmcma-progress-fill"></div>
+            </div>
+            <input id="lmcma-seek" class="lmcma-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline">
           </div>
+          <span id="lmcma-audio-time" class="lmcma-audio-time">00:00 / 00:00</span>
+          <label class="lmcma-volume-label" for="lmcma-volume">Volume</label>
+          <input id="lmcma-volume" class="lmcma-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
 
-          <!-- Controls row -->
-          <div class="lmcma-audio-controls-row">
-            <button id="lmcma-play-btn" class="lmcma-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
-              <!-- Play Icon -->
-              <svg id="lmcma-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
-              <!-- Pause Icon -->
-              <svg id="lmcma-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-
-            <div class="lmcma-progress-container">
-              <div id="lmcma-timeline-wrapper" class="lmcma-timeline-wrapper">
-                <div class="lmcma-timeline">
-                  <div id="lmcma-timeline-fill" class="lmcma-timeline-fill"></div>
-                  <div id="lmcma-timeline-thumb" class="lmcma-timeline-thumb"></div>
-                </div>
-              </div>
-              <div class="lmcma-time-display">
-                <span id="lmcma-time-current">00:00</span>
-                <span id="lmcma-time-duration">00:00</span>
-              </div>
+        <div class="lmcma-settings-row">
+          <div class="lmcma-setting-group">
+            <span class="lmcma-setting-label">Voice Accent</span>
+            <div class="lmcma-voice-select-wrapper">
+              <select id="lmcma-voice-select" class="lmcma-voice-select" aria-label="Select voice model"></select>
             </div>
           </div>
+          <div class="lmcma-setting-group">
+            <span class="lmcma-setting-label">Playback Speed</span>
+            <div class="lmcma-speed-group">
+              <button class="lmcma-speed-btn" data-speed="0.8" type="button">0.8x</button>
+              <button class="lmcma-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+              <button class="lmcma-speed-btn" data-speed="1.2" type="button">1.2x</button>
+            </div>
+          </div>
+        </div>
 
-          <!-- Settings selectors -->
-          <div class="lmcma-settings-row">
-            <!-- Voice Picker -->
-            <div class="lmcma-setting-group">
-              <span class="lmcma-setting-label">Voice Accent</span>
-              <div class="lmcma-voice-select-wrapper">
-                <select id="lmcma-voice-select" class="lmcma-voice-select" aria-label="Select voice model">
-                  <!-- Option will be populated dynamically -->
-                </select>
+        <!-- Review content: transcript + explanation (shown after submit) -->
+        <div id="lmcma-review-content" class="lmcma-review-content" style="display: none;">
+          <div class="lmcma-transcript-section">
+            <div class="lmcma-transcript-header">Audio Transcript</div>
+            <div id="lmcma-passage-text" class="lmcma-transcript-text"></div>
+          </div>
+          <div class="lmcma-explanation-detail">
+            <div class="lmcma-explanation-header">
+              <span class="lmcma-explanation-title">Detailed Explanation</span>
+              <div class="lmcma-explanation-font-controls">
+                <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-decrease" aria-label="Decrease font size">A-</button>
+                <span class="lmcma-explanation-font-label" id="lmcma-font-label">100%</span>
+                <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-increase" aria-label="Increase font size">A+</button>
               </div>
             </div>
-
-            <!-- Speed selector -->
-            <div class="lmcma-setting-group">
-              <span class="lmcma-setting-label">Playback Speed</span>
-              <div class="lmcma-speed-group">
-                <button class="lmcma-speed-btn" data-speed="0.8" type="button">0.8x</button>
-                <button class="lmcma-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
-                <button class="lmcma-speed-btn" data-speed="1.2" type="button">1.2x</button>
+            <div class="lmcma-explanation-body">
+              <div id="lmcma-explanation-content" class="lmcma-explanation-content">
+                <!-- HTML Explanation will be populated here -->
               </div>
             </div>
           </div>
@@ -3431,34 +3461,10 @@
       <div class="lmcma-buttons-row">
         <button id="lmcma-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
         <button id="lmcma-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
-        <button id="lmcma-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" aria-expanded="false" style="display: none;">Show explanation</button>
       </div>
 
       <!-- Score Banner -->
       <div id="lmcma-result-box" class="lmcma-result-box" role="status" aria-live="polite" style="display: none;"></div>
-
-      <!-- Explanation Panel — DD/RFIB-style warm card -->
-      <div id="lmcma-explanation-panel" class="lmcma-explanation-panel" style="display: none;">
-        <div class="lmcma-transcript-section" style="margin-bottom: 20px;">
-          <div class="lmcma-transcript-header">Audio Transcript</div>
-          <div id="lmcma-passage-text" class="lmcma-transcript-text"></div>
-        </div>
-        <div class="lmcma-explanation-card">
-          <div class="lmcma-explanation-header">
-            <span class="lmcma-explanation-title">Detailed Explanation</span>
-            <div class="lmcma-explanation-font-controls">
-              <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-decrease" aria-label="Decrease font size">A-</button>
-              <span class="lmcma-explanation-font-label" id="lmcma-font-label">100%</span>
-              <button type="button" class="lmcma-explanation-font-btn" id="lmcma-font-increase" aria-label="Increase font size">A+</button>
-            </div>
-          </div>
-          <div class="lmcma-explanation-body">
-            <div id="lmcma-explanation-content" class="lmcma-explanation-content">
-              <!-- HTML Explanation will be populated here -->
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -3479,7 +3485,7 @@
       <h2 id="sst-question-title">Loading Summarize Spoken Text...</h2>
       <span id="sst-timer" class="sst-timer" aria-live="polite">10:00</span>
     </div>
-    <section class="sst-audio" aria-label="Lecture audio">
+    <section class="sst-audio practice-audio-player" aria-label="Lecture audio">
       <button id="sst-play-btn" class="sst-play-btn" type="button" disabled aria-label="Play lecture once">
         <span id="sst-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
         <span id="sst-play-label">Play lecture</span>
@@ -3575,60 +3581,59 @@
             Listening Player
           </span>
         </div>
-        <div class="lmcsa-audio-player-card">
-          <!-- Animated visualizer bars -->
-          <div class="lmcsa-visualizer" id="lmcsa-visualizer">
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
-            <span class="lmcsa-vis-bar"></span>
+        <section class="lmcsa-audio practice-audio-player" aria-label="Audio player">
+          <button id="lmcsa-play-btn" class="lmcsa-play-btn" type="button" disabled aria-label="Play audio">
+            <span id="lmcsa-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="lmcsa-play-label">Play</span>
+          </button>
+          <div class="lmcsa-progress-wrap">
+            <div class="lmcsa-progress" aria-hidden="true">
+              <div id="lmcsa-progress-fill" class="lmcsa-progress-fill"></div>
+            </div>
+            <input id="lmcsa-seek" class="lmcsa-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline">
           </div>
+          <span id="lmcsa-audio-time" class="lmcsa-audio-time">00:00 / 00:00</span>
+          <label class="lmcsa-volume-label" for="lmcsa-volume">Volume</label>
+          <input id="lmcsa-volume" class="lmcsa-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
 
-          <!-- Controls row -->
-          <div class="lmcsa-audio-controls-row">
-            <button id="lmcsa-play-btn" class="lmcsa-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
-              <!-- Play Icon -->
-              <svg id="lmcsa-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
-              <!-- Pause Icon -->
-              <svg id="lmcsa-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
+        <div class="lmcsa-settings-row">
+          <div class="lmcsa-setting-group">
+            <span class="lmcsa-setting-label">Voice Accent</span>
+            <div class="lmcsa-voice-select-wrapper">
+              <select id="lmcsa-voice-select" class="lmcsa-voice-select" aria-label="Select voice model"></select>
+            </div>
+          </div>
+          <div class="lmcsa-setting-group">
+            <span class="lmcsa-setting-label">Playback Speed</span>
+            <div class="lmcsa-speed-group">
+              <button class="lmcsa-speed-btn" data-speed="0.8" type="button">0.8x</button>
+              <button class="lmcsa-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+              <button class="lmcsa-speed-btn" data-speed="1.2" type="button">1.2x</button>
+            </div>
+          </div>
+        </div>
 
-            <div class="lmcsa-progress-container">
-              <div id="lmcsa-timeline-wrapper" class="lmcsa-timeline-wrapper">
-                <div class="lmcsa-timeline">
-                  <div id="lmcsa-timeline-fill" class="lmcsa-timeline-fill"></div>
-                  <div id="lmcsa-timeline-thumb" class="lmcsa-timeline-thumb"></div>
+        <!-- Review content: transcript + explanation (shown after submit) -->
+        <div id="lmcsa-review-content" class="lmcsa-review-content" style="display: none;">
+          <div class="lmcsa-transcript-section">
+            <div class="lmcsa-transcript-header">Audio Transcript</div>
+            <div id="lmcsa-passage-text" class="lmcsa-transcript-text"></div>
+          </div>
+          <div class="lmcsa-explanation-detail">
+            <div class="lmcsa-explanation-card">
+              <div class="lmcsa-explanation-header">
+                <span class="lmcsa-explanation-title">Detailed Explanation</span>
+                <div class="lmcsa-explanation-font-controls">
+                  <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-decrease" aria-label="Decrease font size">A-</button>
+                  <span class="lmcsa-explanation-font-label" id="lmcsa-font-label">100%</span>
+                  <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-increase" aria-label="Increase font size">A+</button>
                 </div>
               </div>
-              <div class="lmcsa-time-display">
-                <span id="lmcsa-time-current">00:00</span>
-                <span id="lmcsa-time-duration">00:00</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Settings selectors -->
-          <div class="lmcsa-settings-row">
-            <!-- Voice Picker -->
-            <div class="lmcsa-setting-group">
-              <span class="lmcsa-setting-label">Voice Accent</span>
-              <div class="lmcsa-voice-select-wrapper">
-                <select id="lmcsa-voice-select" class="lmcsa-voice-select" aria-label="Select voice model">
-                  <!-- Option will be populated dynamically -->
-                </select>
-              </div>
-            </div>
-
-            <!-- Speed selector -->
-            <div class="lmcsa-setting-group">
-              <span class="lmcsa-setting-label">Playback Speed</span>
-              <div class="lmcsa-speed-group">
-                <button class="lmcsa-speed-btn" data-speed="0.8" type="button">0.8x</button>
-                <button class="lmcsa-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
-                <button class="lmcsa-speed-btn" data-speed="1.2" type="button">1.2x</button>
+              <div class="lmcsa-explanation-body">
+                <div id="lmcsa-explanation-content" class="lmcsa-explanation-content">
+                  <!-- HTML Explanation will be populated here -->
+                </div>
               </div>
             </div>
           </div>
@@ -3641,34 +3646,10 @@
       <div class="lmcsa-buttons-row">
         <button id="lmcsa-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
         <button id="lmcsa-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
-        <button id="lmcsa-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" aria-expanded="false" style="display: none;">Show explanation</button>
       </div>
 
       <!-- Score Banner -->
       <div id="lmcsa-result-box" class="lmcsa-result-box" role="status" aria-live="polite" style="display: none;"></div>
-
-      <!-- Explanation Panel — DD/RFIB-style warm card -->
-      <div id="lmcsa-explanation-panel" class="lmcsa-explanation-panel" style="display: none;">
-        <div class="lmcsa-transcript-section" style="margin-bottom: 20px;">
-          <div class="lmcsa-transcript-header">Audio Transcript</div>
-          <div id="lmcsa-passage-text" class="lmcsa-transcript-text"></div>
-        </div>
-        <div class="lmcsa-explanation-card">
-          <div class="lmcsa-explanation-header">
-            <span class="lmcsa-explanation-title">Detailed Explanation</span>
-            <div class="lmcsa-explanation-font-controls">
-              <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-decrease" aria-label="Decrease font size">A-</button>
-              <span class="lmcsa-explanation-font-label" id="lmcsa-font-label">100%</span>
-              <button type="button" class="lmcsa-explanation-font-btn" id="lmcsa-font-increase" aria-label="Increase font size">A+</button>
-            </div>
-          </div>
-          <div class="lmcsa-explanation-body">
-            <div id="lmcsa-explanation-content" class="lmcsa-explanation-content">
-              <!-- HTML Explanation will be populated here -->
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -3741,71 +3722,55 @@
             Select Missing Word
           </span>
         </div>
-        <div class="smw-audio-player-card">
-          <!-- Animated visualizer bars -->
-          <div class="smw-visualizer" id="smw-visualizer">
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
-            <span class="smw-vis-bar"></span>
+        <section class="smw-audio practice-audio-player" aria-label="Audio player">
+          <button id="smw-play-btn" class="smw-play-btn" type="button" disabled aria-label="Play audio">
+            <span id="smw-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="smw-play-label">Play</span>
+          </button>
+          <div class="smw-progress-wrap">
+            <div class="smw-progress" aria-hidden="true">
+              <div id="smw-progress-fill" class="smw-progress-fill"></div>
+            </div>
+            <input id="smw-seek" class="smw-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline">
           </div>
+          <span id="smw-audio-time" class="smw-audio-time">00:00 / 00:00</span>
+          <label class="smw-volume-label" for="smw-volume">Volume</label>
+          <input id="smw-volume" class="smw-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
 
-          <!-- Controls row -->
-          <div class="smw-audio-controls-row">
-            <button id="smw-play-btn" class="smw-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
-              <!-- Play Icon -->
-              <svg id="smw-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
-              <!-- Pause Icon -->
-              <svg id="smw-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-
-            <div class="smw-progress-container">
-              <div id="smw-timeline-wrapper" class="smw-timeline-wrapper">
-                <div class="smw-timeline">
-                  <div id="smw-timeline-fill" class="smw-timeline-fill"></div>
-                  <div id="smw-timeline-thumb" class="smw-timeline-thumb"></div>
-                </div>
-              </div>
-              <div class="smw-time-display">
-                <span id="smw-time-current">00:00</span>
-                <span id="smw-time-duration">00:00</span>
-              </div>
+        <!-- Settings selectors -->
+        <div class="smw-settings-row">
+          <!-- Voice Picker -->
+          <div class="smw-setting-group">
+            <span class="smw-setting-label">Voice Accent</span>
+            <div class="smw-voice-select-wrapper">
+              <select id="smw-voice-select" class="smw-voice-select" aria-label="Select voice model">
+                <!-- Option will be populated dynamically -->
+              </select>
             </div>
           </div>
 
-          <!-- Settings selectors -->
-          <div class="smw-settings-row">
-            <!-- Voice Picker -->
-            <div class="smw-setting-group">
-              <span class="smw-setting-label">Voice Accent</span>
-              <div class="smw-voice-select-wrapper">
-                <select id="smw-voice-select" class="smw-voice-select" aria-label="Select voice model">
-                  <!-- Option will be populated dynamically -->
-                </select>
-              </div>
+          <!-- Speed selector -->
+          <div class="smw-setting-group">
+            <span class="smw-setting-label">Playback Speed</span>
+            <div class="smw-speed-group">
+              <button class="smw-speed-btn" data-speed="0.8" type="button">0.8x</button>
+              <button class="smw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+              <button class="smw-speed-btn" data-speed="1.2" type="button">1.2x</button>
             </div>
+          </div>
+        </div>
 
-            <!-- Speed selector -->
-            <div class="smw-setting-group">
-              <span class="smw-setting-label">Playback Speed</span>
-              <div class="smw-speed-group">
-                <button class="smw-speed-btn" data-speed="0.8" type="button">0.8x</button>
-                <button class="smw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
-                <button class="smw-speed-btn" data-speed="1.2" type="button">1.2x</button>
-              </div>
-            </div>
-
-            <!-- Volume selector -->
-            <div class="smw-setting-group">
-              <span class="smw-setting-label">Volume</span>
-              <div class="smw-volume-container">
-                <span id="smw-volume-icon" class="smw-volume-icon">🔊</span>
-                <input type="range" id="smw-volume-slider" class="smw-volume-slider" min="0" max="1" step="0.05" value="1.0" aria-label="Volume">
-                <span id="smw-volume-text" class="smw-volume-text">100%</span>
-              </div>
+        <!-- Review content (shown after submit, replaces audio player) -->
+        <div id="smw-review-content" class="smw-review-content" style="display: none;">
+          <div class="smw-transcript-section">
+            <div class="smw-transcript-header">Audio Transcript</div>
+            <div id="smw-passage-text" class="smw-transcript-text"></div>
+          </div>
+          <div class="smw-explanation-detail">
+            <div class="smw-explanation-header">Detailed Explanation</div>
+            <div id="smw-explanation-content" class="smw-explanation-content">
+              <!-- HTML Explanation will be populated here -->
             </div>
           </div>
         </div>
@@ -3817,25 +3782,10 @@
       <div class="smw-buttons-row">
         <button id="smw-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
         <button id="smw-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
-        <button id="smw-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" aria-expanded="false" style="display: none;">Show explanation</button>
       </div>
 
       <!-- Score Banner -->
       <div id="smw-result-box" class="smw-result-box" role="status" aria-live="polite" style="display: none;"></div>
-
-      <!-- Accordion Explanation Panel -->
-      <div id="smw-explanation-panel" class="smw-explanation-panel" style="display: none;">
-        <div class="smw-transcript-section" style="margin-bottom: 20px;">
-          <div class="smw-transcript-header">Audio Transcript</div>
-          <div id="smw-passage-text" class="smw-transcript-text"></div>
-        </div>
-        <div class="smw-explanation-card">
-          <div class="smw-explanation-header">Detailed Explanation</div>
-          <div id="smw-explanation-content" class="smw-explanation-content">
-            <!-- HTML Explanation will be populated here -->
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -3892,71 +3842,35 @@
             Audio Source
           </span>
         </div>
-        <div class="hiw-audio-player-card">
-          <!-- Animated visualizer bars -->
-          <div class="hiw-visualizer" id="hiw-visualizer">
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
-            <span class="hiw-vis-bar"></span>
+        <section class="hiw-audio practice-audio-player" aria-label="Audio player">
+          <button id="hiw-play-btn" class="hiw-play-btn" type="button" disabled aria-label="Play audio">
+            <span id="hiw-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="hiw-play-label">Play</span>
+          </button>
+          <div class="hiw-progress-wrap">
+            <div class="hiw-progress" aria-hidden="true">
+              <div id="hiw-progress-fill" class="hiw-progress-fill"></div>
+            </div>
+            <input id="hiw-seek" class="hiw-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline">
           </div>
+          <span id="hiw-audio-time" class="hiw-audio-time">00:00 / 00:00</span>
+          <label class="hiw-volume-label" for="hiw-volume">Volume</label>
+          <input id="hiw-volume" class="hiw-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
 
-          <!-- Controls row -->
-          <div class="hiw-audio-controls-row">
-            <button id="hiw-play-btn" class="hiw-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
-              <!-- Play Icon -->
-              <svg id="hiw-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
-              <!-- Pause Icon -->
-              <svg id="hiw-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-
-            <div class="hiw-progress-container">
-              <div id="hiw-timeline-wrapper" class="hiw-timeline-wrapper">
-                <div class="hiw-timeline">
-                  <div id="hiw-timeline-fill" class="hiw-timeline-fill"></div>
-                  <div id="hiw-timeline-thumb" class="hiw-timeline-thumb"></div>
-                </div>
-              </div>
-              <div class="hiw-time-display">
-                <span id="hiw-time-current">00:00</span>
-                <span id="hiw-time-duration">00:00</span>
-              </div>
+        <div class="hiw-settings-row">
+          <div class="hiw-setting-group">
+            <span class="hiw-setting-label">Voice Accent</span>
+            <div class="hiw-voice-select-wrapper">
+              <select id="hiw-voice-select" class="hiw-voice-select" aria-label="Select voice model"></select>
             </div>
           </div>
-
-          <!-- Settings selectors -->
-          <div class="hiw-settings-row">
-            <!-- Voice Picker -->
-            <div class="hiw-setting-group">
-              <span class="hiw-setting-label">Voice Accent</span>
-              <div class="hiw-voice-select-wrapper">
-                <select id="hiw-voice-select" class="hiw-voice-select" aria-label="Select voice model">
-                  <!-- Option will be populated dynamically -->
-                </select>
-              </div>
-            </div>
-
-            <!-- Speed selector -->
-            <div class="hiw-setting-group">
-              <span class="hiw-setting-label">Playback Speed</span>
-              <div class="hiw-speed-group">
-                <button class="hiw-speed-btn" data-speed="0.8" type="button">0.8x</button>
-                <button class="hiw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
-                <button class="hiw-speed-btn" data-speed="1.2" type="button">1.2x</button>
-              </div>
-            </div>
-
-            <!-- Volume selector -->
-            <div class="hiw-setting-group">
-              <span class="hiw-setting-label">Volume</span>
-              <div class="hiw-volume-container">
-                <span id="hiw-volume-icon" class="hiw-volume-icon">🔊</span>
-                <input type="range" id="hiw-volume-slider" class="hiw-volume-slider" min="0" max="1" step="0.05" value="1.0" aria-label="Volume">
-                <span id="hiw-volume-text" class="hiw-volume-text">100%</span>
-              </div>
+          <div class="hiw-setting-group">
+            <span class="hiw-setting-label">Playback Speed</span>
+            <div class="hiw-speed-group">
+              <button class="hiw-speed-btn" data-speed="0.8" type="button">0.8x</button>
+              <button class="hiw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+              <button class="hiw-speed-btn" data-speed="1.2" type="button">1.2x</button>
             </div>
           </div>
         </div>
@@ -4062,7 +3976,6 @@
           <div class="hcs-buttons-row">
             <button id="hcs-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
             <button id="hcs-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Try Again</button>
-            <button id="hcs-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Show explanation</button>
           </div>
         </div>
       </div>
@@ -4076,81 +3989,61 @@
           </span>
         </div>
         
-        <div class="hcs-audio-player">
-          <!-- Visualizer -->
-          <div class="hcs-visualizer" id="hcs-visualizer">
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
-            <span class="hcs-vis-bar"></span>
+        <section class="hcs-audio practice-audio-player" aria-label="Audio player">
+          <button id="hcs-play-btn" class="hcs-play-btn" type="button" disabled aria-label="Play audio">
+            <span id="hcs-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+            <span id="hcs-play-label">Play</span>
+          </button>
+          <div class="hcs-progress-wrap">
+            <div class="hcs-progress" aria-hidden="true">
+              <div id="hcs-progress-fill" class="hcs-progress-fill"></div>
+            </div>
+            <input id="hcs-seek" class="hcs-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Audio timeline">
           </div>
+          <span id="hcs-audio-time" class="hcs-audio-time">00:00 / 00:00</span>
+          <label class="hcs-volume-label" for="hcs-volume">Volume</label>
+          <input id="hcs-volume" class="hcs-volume" type="range" min="0" max="1" step="0.05" value="1">
+        </section>
 
-          <!-- Controls row -->
-          <div class="hcs-audio-controls-row">
-            <button id="hcs-play-btn" class="hcs-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
-              <svg id="hcs-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
-              <svg id="hcs-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-            <div class="hcs-progress-container">
-              <div id="hcs-timeline-wrapper" class="hcs-timeline-wrapper" aria-disabled="true">
-                <div class="hcs-timeline">
-                  <div id="hcs-timeline-fill" class="hcs-timeline-fill"></div>
-                  <div id="hcs-timeline-thumb" class="hcs-timeline-thumb"></div>
-                </div>
-              </div>
-              <div class="hcs-time-display">
-                <span id="hcs-time-current">00:00</span>
-                <span id="hcs-time-duration">00:00</span>
-              </div>
+        <!-- Speed & Voice Settings -->
+        <div class="hcs-settings-row">
+          <div class="hcs-setting-group">
+            <span class="hcs-setting-label">Voice Accent</span>
+            <div class="hcs-voice-select-wrapper">
+              <select id="hcs-voice-select" class="hcs-voice-select" aria-label="Select voice accent">
+                <option value="">No voice available</option>
+              </select>
             </div>
           </div>
 
-          <!-- Speed & Voice Settings -->
-          <div class="hcs-settings-row">
-            <div class="hcs-setting-group">
-              <span class="hcs-setting-label">Voice Accent</span>
-              <div class="hcs-voice-select-wrapper">
-                <select id="hcs-voice-select" class="hcs-voice-select" aria-label="Select voice accent">
-                  <option value="">No voice available</option>
-                </select>
-              </div>
+          <div class="hcs-setting-group" style="flex-grow: 0; align-items: flex-end;">
+            <span class="hcs-setting-label" style="margin-right: 4px;">Speed</span>
+            <div class="hcs-speed-group" role="group" aria-label="Playback speed">
+              <button class="hcs-speed-btn" type="button" data-speed="0.75">0.75x</button>
+              <button class="hcs-speed-btn is-active" type="button" data-speed="1.0">1.0x</button>
+              <button class="hcs-speed-btn" type="button" data-speed="1.25">1.25x</button>
+              <button class="hcs-speed-btn" type="button" data-speed="1.5">1.5x</button>
             </div>
-            
-            <div class="hcs-setting-group" style="flex-grow: 0; align-items: flex-end;">
-              <span class="hcs-setting-label" style="margin-right: 4px;">Speed</span>
-              <div class="hcs-speed-group" role="group" aria-label="Playback speed">
-                <button class="hcs-speed-btn" type="button" data-speed="0.75">0.75x</button>
-                <button class="hcs-speed-btn is-active" type="button" data-speed="1.0">1.0x</button>
-                <button class="hcs-speed-btn" type="button" data-speed="1.25">1.25x</button>
-                <button class="hcs-speed-btn" type="button" data-speed="1.5">1.5x</button>
-              </div>
-            </div>
+          </div>
+        </div>
+
+        <!-- Review content (shown after submit, replaces audio player) -->
+        <div id="hcs-review-content" class="hcs-review-content" style="display: none;">
+          <div class="hcs-transcript-section">
+            <div class="hcs-transcript-header">Audio Transcript</div>
+            <div id="hcs-passage-text" class="hcs-transcript-text"></div>
+          </div>
+          <div class="hcs-explanation-detail">
+            <div class="hcs-explanation-header">Detailed Explanation</div>
+            <div id="hcs-explanation-content" class="hcs-explanation-content"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Explanations and Transcript disclosure -->
-    <div class="hcs-explanation-section" style="margin-top: 0; padding-top: 0;">
-      <!-- Score Banner -->
+    <!-- Score Banner + Buttons (below split layout) -->
+    <div class="hcs-footer-results">
       <div id="hcs-result-box" class="hcs-result-box" role="status" aria-live="polite" style="display: none;"></div>
-
-      <!-- Accordion Explanation Panel -->
-      <div id="hcs-explanation-panel" class="hcs-explanation-panel" style="display: none;">
-        <div class="hcs-transcript-section" style="margin-bottom: 20px;">
-          <div class="hcs-transcript-header">Audio Transcript</div>
-          <div id="hcs-passage-text" class="hcs-transcript-text"></div>
-        </div>
-        <div class="hcs-explanation-section">
-          <div class="hcs-explanation-header">Detailed Explanation</div>
-          <div id="hcs-explanation-content" class="hcs-explanation-content">
-            <!-- HTML Explanation will be populated here -->
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -5488,6 +5381,7 @@
   </script>
   <script src="js/points-logic.js"></script>
   <script src="js/skill-catalog.js"></script>
+  <script type="module" src="js/dialog-a11y-bridge.js"></script>
   <script type="module" src="js/difficulty-manager.js"></script>
   <script src="js/adaptive-engine-ui.js"></script>
   <script src="js/performance-tracker.js"></script>
@@ -6118,7 +6012,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.81"></script>
+  <script src="/read-aloud-mode.js?v=1.8.85"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
@@ -6153,7 +6047,7 @@
   <style>
     /* --- Hide the default Dialogflow bubble --- */
     df-messenger {
-      z-index: 998;
+      z-index: 899;
       position: fixed;
       --df-messenger-font-color: #000;
       --df-messenger-font-family: Google Sans, sans-serif;
@@ -6174,7 +6068,11 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      z-index: 1000;
+      /* Sat at 1000 against a mobile toolbar at 998 and a df-messenger host also at 998,
+         so it covered the toolbar's "Account" tab and the version indicator, and stayed
+         fully lit above modal dimmers while everything else was darkened. Its own band,
+         below dialogs. */
+      z-index: 900;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -6185,6 +6083,18 @@
 
     .bel-chat-trigger:hover {
       transform: scale(1.1) translateY(-5px);
+    }
+
+    /* Now that the trigger sits below the mobile toolbar's band, lift it clear of the
+       toolbar rather than letting the toolbar cover it. */
+    @media (max-width: 768px) {
+      .bel-chat-trigger {
+        bottom: 84px;
+      }
+
+      df-messenger {
+        bottom: 84px;
+      }
     }
 
     /* Speech bubble - 2x larger */
@@ -6200,7 +6110,10 @@
       margin-bottom: 12px;
       position: relative;
       box-shadow: 0 4px 12px rgba(26, 115, 232, 0.45);
-      animation: bel-bubble-bounce 2.5s ease-in-out infinite;
+      /* The bubble bounced on a permanent 2.5s loop, out of phase with five other
+         infinite animations, so the periphery never settled. It now animates once on
+         load to draw the eye, then rests. */
+      animation: bel-bubble-bounce 2.5s ease-in-out 3;
     }
 
     /* Triangle pointer below the bubble */

@@ -91,10 +91,9 @@
   }
 
   function resetAudioProgress() {
-    if (elements.timeCurrent) elements.timeCurrent.textContent = '00:00';
-    if (elements.timeDuration) elements.timeDuration.textContent = '00:00';
-    if (elements.timelineFill) elements.timelineFill.style.width = '0%';
-    if (elements.timelineThumb) elements.timelineThumb.style.left = '0%';
+    if (elements.progressFill) elements.progressFill.style.width = '0';
+    if (elements.seek) elements.seek.value = '0';
+    if (elements.audioTime) elements.audioTime.textContent = '00:00 / 00:00';
   }
 
   function setAudioControlsEnabled(enabled) {
@@ -102,8 +101,8 @@
       elements.playBtn.disabled = !enabled;
       elements.playBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
     }
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    if (elements.seek) {
+      elements.seek.disabled = !enabled;
     }
   }
 
@@ -139,15 +138,13 @@
 
     // audio element and player elements
     elements.audioElement = document.getElementById('lmcsa-audio-element');
-    elements.visualizer = document.getElementById('lmcsa-visualizer');
     elements.playBtn = document.getElementById('lmcsa-play-btn');
     elements.playIcon = document.getElementById('lmcsa-play-icon');
-    elements.pauseIcon = document.getElementById('lmcsa-pause-icon');
-    elements.timelineWrapper = document.getElementById('lmcsa-timeline-wrapper');
-    elements.timelineFill = document.getElementById('lmcsa-timeline-fill');
-    elements.timelineThumb = document.getElementById('lmcsa-timeline-thumb');
-    elements.timeCurrent = document.getElementById('lmcsa-time-current');
-    elements.timeDuration = document.getElementById('lmcsa-time-duration');
+    elements.playLabel = document.getElementById('lmcsa-play-label');
+    elements.progressFill = document.getElementById('lmcsa-progress-fill');
+    elements.seek = document.getElementById('lmcsa-seek');
+    elements.audioTime = document.getElementById('lmcsa-audio-time');
+    elements.volume = document.getElementById('lmcsa-volume');
     elements.voiceSelect = document.getElementById('lmcsa-voice-select');
     elements.speedBtns = document.querySelectorAll('.lmcsa-speed-btn');
 
@@ -159,11 +156,11 @@
     // action buttons
     elements.submitBtn = document.getElementById('lmcsa-submit-btn');
     elements.retryBtn = document.getElementById('lmcsa-retry-btn');
-    elements.explanationToggle = document.getElementById('lmcsa-explanation-toggle');
 
     // results and explanations
     elements.resultBox = document.getElementById('lmcsa-result-box');
-    elements.explanationPanel = document.getElementById('lmcsa-explanation-panel');
+    elements.reviewContent = document.getElementById('lmcsa-review-content');
+    elements.containerEl = document.querySelector('.lmcsa-container');
     elements.explanationContent = document.getElementById('lmcsa-explanation-content');
     elements.fontDecrease = document.getElementById('lmcsa-font-decrease');
     elements.fontIncrease = document.getElementById('lmcsa-font-increase');
@@ -233,9 +230,6 @@
       });
     }
 
-    if (elements.explanationToggle) {
-      elements.explanationToggle.addEventListener('click', toggleExplanation);
-    }
     if (elements.fontDecrease) {
       elements.fontDecrease.addEventListener('click', () => adjustFontSize(-10));
     }
@@ -262,8 +256,16 @@
       elements.audioElement.addEventListener('pause', onAudioPause);
     }
 
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.addEventListener('click', seekAudio);
+    if (elements.seek) {
+      elements.seek.addEventListener('input', seekAudio);
+    }
+
+    if (elements.volume) {
+      elements.volume.addEventListener('input', () => {
+        if (elements.audioElement) {
+          elements.audioElement.volume = Number(elements.volume.value);
+        }
+      });
     }
 
     if (elements.voiceSelect) {
@@ -285,6 +287,7 @@
     if (!elements.audioElement || !elements.audioElement.src) return;
 
     if (elements.audioElement.paused) {
+      elements.audioElement.volume = Number(elements.volume?.value ?? 1);
       elements.audioElement.playbackRate = state.currentSpeed;
       elements.audioElement.play().catch((err) => {
         console.error('[LMCSAMode] Play failed:', err);
@@ -295,15 +298,13 @@
   }
 
   function onAudioPlay() {
-    if (elements.playIcon) elements.playIcon.style.display = 'none';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'block';
-    if (elements.visualizer) elements.visualizer.classList.add('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'pause';
+    if (elements.playLabel) elements.playLabel.textContent = 'Pause';
   }
 
   function onAudioPause() {
-    if (elements.playIcon) elements.playIcon.style.display = 'block';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'none';
-    if (elements.visualizer) elements.visualizer.classList.remove('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'play_arrow';
+    if (elements.playLabel) elements.playLabel.textContent = 'Play';
   }
 
   function onAudioEnded() {
@@ -316,30 +317,24 @@
 
   function updateAudioProgress() {
     const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
-
-    const percentage = (audio.currentTime / audio.duration) * 100;
-    if (elements.timelineFill) elements.timelineFill.style.width = `${percentage}%`;
-    if (elements.timelineThumb) elements.timelineThumb.style.left = `${percentage}%`;
-    if (elements.timeCurrent) elements.timeCurrent.textContent = formatTime(audio.currentTime);
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const percentage = Math.min(100, (audio.currentTime / audio.duration) * 100);
+    if (elements.progressFill) elements.progressFill.style.width = `${percentage}%`;
+    if (elements.seek) elements.seek.value = String(percentage);
+    if (elements.audioTime) {
+      elements.audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
   }
 
   function updateAudioDuration() {
-    const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
-    if (elements.timeDuration) elements.timeDuration.textContent = formatTime(audio.duration);
+    updateAudioProgress();
   }
 
-  function seekAudio(e) {
+  function seekAudio() {
     const audio = elements.audioElement;
-    const wrapper = elements.timelineWrapper;
-    if (!audio || !audio.duration || !wrapper) return;
-
-    const rect = wrapper.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    audio.currentTime = percentage * audio.duration;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const percentage = Math.min(100, Math.max(0, Number(elements.seek.value) || 0));
+    audio.currentTime = (percentage / 100) * audio.duration;
     updateAudioProgress();
   }
 
@@ -420,17 +415,15 @@
     if (elements.retryBtn) {
       elements.retryBtn.style.display = 'none';
     }
-    if (elements.explanationToggle) {
-      elements.explanationToggle.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
-    }
     if (elements.resultBox) {
       elements.resultBox.style.display = 'none';
       elements.resultBox.replaceChildren();
     }
-    if (elements.explanationPanel) {
-      elements.explanationPanel.style.display = 'none';
+    if (elements.containerEl) {
+      elements.containerEl.classList.remove('is-reviewed');
+    }
+    if (elements.reviewContent) {
+      elements.reviewContent.style.display = 'none';
     }
     if (elements.explanationContent) {
       elements.explanationContent.replaceChildren();
@@ -804,28 +797,15 @@
       elements.passageText.textContent = state.currentQuestion.transcript || 'No transcript available for this audio.';
     }
 
-    if (elements.explanationToggle && (state.currentQuestion.explanation || state.currentQuestion.transcript)) {
-      elements.explanationToggle.style.display = 'block';
+    if (state.currentQuestion.explanation || state.currentQuestion.transcript) {
       if (elements.explanationContent) {
         const explanation = state.currentQuestion.explanation ||
           '<p>No detailed explanation is available for this question yet. Use the transcript to review the evidence before retrying.</p>';
         safeRenderHtml(explanation, elements.explanationContent);
       }
-    }
-  }
-
-  function toggleExplanation() {
-    if (!elements.explanationPanel || !elements.explanationToggle) return;
-
-    state.explanationVisible = !state.explanationVisible;
-    if (state.explanationVisible) {
-      elements.explanationPanel.style.display = 'block';
-      elements.explanationToggle.textContent = 'Hide explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'true');
-    } else {
-      elements.explanationPanel.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-      elements.explanationToggle.setAttribute('aria-expanded', 'false');
+      if (elements.containerEl) {
+        elements.containerEl.classList.add('is-reviewed');
+      }
     }
   }
 

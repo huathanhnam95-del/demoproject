@@ -44,27 +44,27 @@ async function main() {
     }
 
     // ===== Test 1: New Lead Form Fields =====
-    console.log('\n[Test 1] New Lead form fields (DOM structure)');
+    console.log('\n[Test 1] New Lead form fields (DOM structure & 2-column layout)');
     
     const expectedFields = [
-        { id: 'lead-source', label: 'Source' },
         { id: 'lead-name', label: 'Full Name' },
-        { id: 'lead-label', label: 'Label' },
-        { id: 'lead-phone', label: 'Phone Number' },
+        { id: 'lead-phone', label: 'Phone/Zalo number' },
         { id: 'lead-email', label: 'Email' },
-        { id: 'lead-zalo', label: 'Zalo Number' },
-        { id: 'lead-facebook', label: 'Facebook Name' },
-        { id: 'lead-facebook-profile-url', label: "Student's FB link" },
-        { id: 'lead-facebook-personal-owner', label: 'Personal Social Media Account' },
-        { id: 'lead-agent-source', label: 'Agent Source' },
-        { id: 'lead-stage', label: 'Stage' },
-        { id: 'lead-probability', label: 'Probability' }
+        { id: 'lead-facebook', label: 'Social Media Account Name' },
+        { id: 'lead-source', label: 'Source' },
+        { id: 'lead-facebook-personal-owner', label: 'Source Account' }
     ];
     
     for (const field of expectedFields) {
         const exists = await page.$(`#${field.id}`) !== null;
         assert(`Field "${field.label}" (${field.id}) exists`, exists);
     }
+
+    // Verify removed fields
+    assert('Field "Label" (lead-label) is removed', await page.$('#lead-label') === null);
+    assert('Field "Stage" (lead-stage) is removed from composer', await page.$('#lead-composer #lead-stage') === null);
+    assert('Field "Probability" (lead-probability) is removed', await page.$('#lead-probability') === null);
+    assert('Next Actions & Timeline panels (student-activity-hub) are removed', await page.$('#student-activity-hub') === null);
 
     // Verify field order inside lead-composer
     const fieldOrder = await page.evaluate(() => {
@@ -74,9 +74,14 @@ async function main() {
         return Array.from(inputs).map(el => el.id);
     });
     
-    const expectedOrder = ['lead-salutation-mr', 'lead-salutation-ms', 'lead-name', 'lead-label', 'lead-phone', 'lead-email', 'lead-zalo', 'lead-source', 'lead-facebook', 'lead-facebook-profile-url', 'lead-facebook-personal-owner', 'lead-agent-source', 'lead-stage', 'lead-probability'];
-    assert('Form fields are in correct order', JSON.stringify(fieldOrder) === JSON.stringify(expectedOrder));
-    assert('Templates and automations sections are removed', await page.$('#lead-templates-automations') === null);
+    const expectedOrder = ['lead-salutation-mr', 'lead-salutation-ms', 'lead-name', 'lead-phone', 'lead-email', 'lead-facebook', 'lead-source', 'lead-facebook-personal-owner'];
+    assert('Form fields are in correct 2-column order', JSON.stringify(fieldOrder) === JSON.stringify(expectedOrder));
+
+    // Verify Source Account blank default and required
+    const ownerValue = await page.$eval('#lead-facebook-personal-owner', el => el.value);
+    const ownerRequired = await page.$eval('#lead-facebook-personal-owner', el => el.required);
+    assert('Source Account is blank by default', ownerValue === '');
+    assert('Source Account requires input (required)', ownerRequired === true);
 
     // ===== Test 2: Workspace section IDs =====
     console.log('\n[Test 2] Workspace section IDs');
@@ -102,9 +107,9 @@ async function main() {
     assert('lead-workspace.js hides leadActivitySection', leadWorkspaceJs.includes("elements.leadActivitySection") && leadWorkspaceJs.includes("display = 'none'"));
     assert('crm-admin.js binds leadTaskSection', crmAdminJs.includes("elements.leadTaskSection = document.getElementById('lead-task-section')"));
     assert('crm-admin.js binds leadActivitySection', crmAdminJs.includes("elements.leadActivitySection = document.getElementById('lead-activity-section')"));
-    assert('crm-admin.js binds inputLeadLabel', crmAdminJs.includes("elements.inputLeadLabel = document.getElementById('lead-label')"));
-    assert('crm-admin.js binds inputLeadZalo', crmAdminJs.includes("elements.inputLeadZalo = document.getElementById('lead-zalo')"));
+    assert('crm-admin.js binds inputLeadPhone', crmAdminJs.includes("elements.inputLeadPhone = document.getElementById('lead-phone')"));
     assert('crm-admin.js binds inputLeadFacebook', crmAdminJs.includes("elements.inputLeadFacebook = document.getElementById('lead-facebook')"));
+    assert('crm-admin.js binds inputLeadFacebookPersonalOwner', crmAdminJs.includes("elements.inputLeadFacebookPersonalOwner = document.getElementById('lead-facebook-personal-owner')"));
     
     // Fallback refresh also hides sections
     assert('crm-admin.js fallback hides taskSection', crmAdminJs.includes("elements.leadTaskSection") && crmAdminJs.includes("display = 'none'"));
@@ -114,15 +119,9 @@ async function main() {
     
     const leadsJs = fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'js', 'crm', 'leads.js'), 'utf8');
     
-    assert('leads.js uses inputLeadFacebookProfileUrl', leadsJs.includes('inputLeadFacebookProfileUrl'));
     assert('leads.js uses inputLeadFacebook', leadsJs.includes('inputLeadFacebook'));
-    assert('leads.js uses inputLeadLabel', leadsJs.includes('inputLeadLabel'));
-    assert('leads.js uses inputLeadZalo', leadsJs.includes('inputLeadZalo'));
-    
     assert('lead-workspace.js no longer references inputLeadFacebookDisplayName', !leadWorkspaceJs.includes('inputLeadFacebookDisplayName'));
     assert('lead-workspace.js no longer references inputLeadMessengerStatus', !leadWorkspaceJs.includes('inputLeadMessengerStatus'));
-    assert('lead-workspace.js uses inputLeadLabel', leadWorkspaceJs.includes('inputLeadLabel'));
-    assert('lead-workspace.js uses inputLeadZalo', leadWorkspaceJs.includes('inputLeadZalo'));
     assert('lead-workspace.js uses inputLeadFacebook', leadWorkspaceJs.includes('inputLeadFacebook'));
 
     // Summary

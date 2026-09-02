@@ -1117,10 +1117,14 @@
 
     await initFirebaseFromServer();
 
+    // Preserve where the admin was heading. Without this the intended path is discarded,
+    // so after logging in they land on the learner home and have to navigate back by hand.
+    const returnTo = encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+
     const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
     if (!user) {
-      showGateMessage('Please log in first.', 'Redirecting to the app…');
-      setTimeout(() => window.location.replace('index.html'), 1800);
+      showGateMessage('Please log in first.', 'Taking you to sign in…');
+      setTimeout(() => window.location.replace(`index.html?next=${returnTo}`), 1800);
       return;
     }
 
@@ -1749,7 +1753,13 @@
         }
         const nextMain = btn.dataset.main;
         if (nextMain === 'courses') {
-          // Courses is a dropdown parent, maybe do nothing or open first sub
+          // Courses is a dropdown parent. It previously returned here, so clicking it
+          // looked identical to its siblings but produced no navigation and no feedback.
+          // Land on its first sub-route; the dropdown still opens for the other three.
+          state.main = 'courses';
+          state.sub = (ROUTES.courses?.subTabs[0]?.id) || 'courses';
+          updateHash();
+          render();
           return;
         }
         state.main = nextMain;
@@ -2203,10 +2213,7 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = isPersonalSocialMedia ? '' : 'none';
-    }
-    if (!isPersonalSocialMedia && inputOwner) {
-      inputOwner.value = 'Nam';
+      groupOwner.style.display = '';
     }
 
     if (groupAgent) {
@@ -2240,10 +2247,7 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = isPersonalSocialMedia ? '' : 'none';
-    }
-    if (!isPersonalSocialMedia && inputOwner) {
-      inputOwner.value = 'Nam';
+      groupOwner.style.display = '';
     }
 
     if (groupAgent) {
@@ -2281,7 +2285,7 @@
       elements.inputLeadSource.value = '';
     }
     if (elements.inputLeadFacebookPersonalOwner) {
-      elements.inputLeadFacebookPersonalOwner.value = 'Nam';
+      elements.inputLeadFacebookPersonalOwner.value = '';
     }
     if (elements.inputLeadStage) {
       elements.inputLeadStage.value = 'new';
@@ -2839,7 +2843,7 @@
     }
 
     if (window.CrmLeads && typeof window.CrmLeads.applyToForm === 'function') {
-      window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: '', facebookPersonalOwner: 'Nam' });
+      window.CrmLeads.applyToForm(elements, lead || { stage: 'new', source: '', facebookPersonalOwner: '' });
     }
     if (elements.leadComposer) elements.leadComposer.style.display = '';
 
@@ -3780,19 +3784,44 @@
 
     if (elements.dashboardFunnel) {
       const rows = window.CrmDashboard.buildFunnelRows(funnel);
-      elements.dashboardFunnel.innerHTML = rows.map((row) => `
-        <div class="crm-task-item">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
-            <span class="crm-task-priority medium">${escapeHtml(String(row.count || 0))}</span>
+      const total = rows.reduce((max, row) => Math.max(max, Number(row.count) || 0), 0);
+
+      if (!total) {
+        // A flat list of nine zeroes told an operator nothing and offered nowhere to go.
+        elements.dashboardFunnel.innerHTML = `
+          <div class="crm-empty-state">
+            <p class="crm-empty-state-title">No leads in the pipeline yet</p>
+            <p class="crm-muted">Stage counts appear here once enquiries are recorded.</p>
+            <button type="button" class="crm-btn crm-btn-primary" data-goto-main="enquiry">Add the first lead</button>
           </div>
+        `;
+      } else {
+        // Proportional bars plus the drop-off between consecutive stages — the one thing
+        // a funnel exists to show, and the thing a flat count list cannot.
+        elements.dashboardFunnel.innerHTML = rows.map((row, index) => {
+          const count = Number(row.count) || 0;
+          const width = total ? Math.max(count / total * 100, count > 0 ? 2 : 0) : 0;
+          const prev = index > 0 ? Number(rows[index - 1].count) || 0 : null;
+          const drop = (prev && prev > 0) ? Math.round((1 - count / prev) * 100) : null;
+          return `
+        <div class="crm-funnel-row">
+          <div class="crm-funnel-head">
+            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
+            <span class="crm-funnel-count">${escapeHtml(String(count))}</span>
+          </div>
+          <div class="crm-funnel-track">
+            <div class="crm-funnel-bar" style="width: ${width.toFixed(1)}%"></div>
+          </div>
+          ${drop === null ? '' : `<div class="crm-funnel-drop">${drop > 0 ? `−${drop}% from previous stage` : 'no drop-off'}</div>`}
         </div>
-      `).join('');
+      `;
+        }).join('');
+      }
     }
 
     if (elements.dashboardRevenue) {
       if (!revenue.length) {
-        elements.dashboardRevenue.innerHTML = '<div class="crm-muted" style="padding: 18px;">No invoice activity yet.</div>';
+        elements.dashboardRevenue.innerHTML = `<div class="crm-empty-state"><p class="crm-empty-state-title">No invoice activity yet</p><p class="crm-muted">Course revenue, collections and outstanding balances appear here once invoices are raised.</p></div>`;
       } else {
         elements.dashboardRevenue.innerHTML = `
           <div class="crm-table-container">
@@ -3823,7 +3852,7 @@
 
     if (elements.dashboardDuplicates) {
       if (!duplicates.length) {
-        elements.dashboardDuplicates.innerHTML = '<div class="crm-muted">No duplicate candidates found.</div>';
+        elements.dashboardDuplicates.innerHTML = '<div class="crm-empty-state"><p class="crm-empty-state-title">No duplicates found</p><p class="crm-muted">Students sharing an email or phone number are flagged here for review.</p></div>';
       } else {
         elements.dashboardDuplicates.innerHTML = duplicates.slice(0, 10).map((group) => {
           const item = window.CrmGovernance
@@ -3849,7 +3878,7 @@
 
     if (elements.dashboardAuditLogs) {
       if (!auditLogs.length) {
-        elements.dashboardAuditLogs.innerHTML = '<div class="crm-muted">No audit logs yet.</div>';
+        elements.dashboardAuditLogs.innerHTML = '<div class="crm-empty-state"><p class="crm-empty-state-title">No audit logs yet</p><p class="crm-muted">Admin changes to student, course and finance records are recorded here.</p></div>';
       } else {
         elements.dashboardAuditLogs.innerHTML = auditLogs.slice(0, 12).map((entry) => `
           <div class="crm-timeline-item">
@@ -4258,7 +4287,13 @@
     }
     if (!elements.leadListContainer) return;
     if (!Array.isArray(leads) || !leads.length) {
-      elements.leadListContainer.innerHTML = 'No leads yet.';
+      elements.leadListContainer.innerHTML = `
+        <div class="crm-empty-state">
+          <p class="crm-empty-state-title">No leads yet</p>
+          <p class="crm-muted">Enquiries you record here move through the stages above until they convert into enrolled students.</p>
+          <button type="button" class="crm-btn crm-btn-primary" data-click-proxy="btn-new-lead">+ New Lead</button>
+        </div>
+      `;
       return;
     }
 
@@ -4897,6 +4932,21 @@
       const matches = panelId === activePanel
         || (state.main === 'books' && panelId === 'books');
       panel.style.display = matches ? 'block' : 'none';
+    });
+
+    // The document had no <h1> at all across 14 panels — every panel title was an <h2>,
+    // so assistive tech got no page title and no top of the outline. Promote whichever
+    // panel is showing, and demote the rest so there is never more than one.
+    elements.panels.forEach((panel) => {
+      const title = panel.querySelector('.crm-panel-header h1, .crm-panel-header h2');
+      if (!title) return;
+      const shouldBeH1 = panel.style.display !== 'none';
+      const wantedTag = shouldBeH1 ? 'H1' : 'H2';
+      if (title.tagName === wantedTag) return;
+      const replacement = document.createElement(wantedTag.toLowerCase());
+      replacement.className = title.className;
+      while (title.firstChild) replacement.appendChild(title.firstChild);
+      title.replaceWith(replacement);
     });
 
     if (activePanel === 'dashboard') {
@@ -7141,6 +7191,21 @@
     }
   });
 
+  // Empty-state actions delegate to the existing control rather than duplicating its
+  // wiring, so the CTA inside an empty state stays in step with the toolbar button.
+  document.addEventListener('click', (event) => {
+    const proxy = event.target.closest('[data-click-proxy]');
+    if (proxy) {
+      const target = document.getElementById(proxy.dataset.clickProxy);
+      if (target) { target.click(); return; }
+    }
+    const goto = event.target.closest('[data-goto-main]');
+    if (goto) {
+      const navBtn = document.querySelector(`.crm-nav-item[data-main="${goto.dataset.gotoMain}"]`);
+      if (navBtn) navBtn.click();
+    }
+  });
+
   // Nav dropdown click-to-toggle (supplements CSS hover)
   (function initNavDropdowns() {
     document.querySelectorAll('.crm-nav-dropdown').forEach((dropdown) => {
@@ -7156,6 +7221,73 @@
     document.addEventListener('click', () => {
       document.querySelectorAll('.crm-nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
     });
+  })();
+
+  // Drawer navigation below 1100px. Above that the nav bar fits inline; below it the
+  // header's logo, status badge, icon buttons and user block squeeze the list until
+  // items clip silently (`.crm-nav` hides its own scrollbar), and below ~900px it
+  // collapsed to zero width with no menu control at all.
+  (function initNavDrawer() {
+    const shell = document.querySelector('.crm-admin');
+    const toggle = document.getElementById('crm-nav-toggle');
+    const nav = document.getElementById('crm-nav');
+    const scrim = document.getElementById('crm-nav-scrim');
+    const more = document.querySelector('.crm-nav-more-dropdown');
+    if (!shell || !toggle || !nav || !scrim) return;
+
+    const moreHome = more ? more.parentElement : null;
+    const compact = window.matchMedia('(max-width: 1100px)');
+
+    function setOpen(open) {
+      shell.classList.toggle('crm-nav-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      scrim.hidden = !open;
+      if (open) {
+        const first = nav.querySelector('.crm-nav-item');
+        if (first) first.focus();
+      }
+    }
+
+    // Keep "More" (Dev Tools, Pronunciation Samples) reachable by relocating it into the
+    // drawer rather than hiding it — it is a DOM sibling of the nav, so CSS alone cannot
+    // move it into a fixed-position panel.
+    function placeMore() {
+      if (!more || !moreHome) return;
+      if (compact.matches) {
+        if (more.parentElement !== nav) nav.appendChild(more);
+      } else if (more.parentElement !== moreHome) {
+        moreHome.appendChild(more);
+      }
+    }
+
+    function syncViewport() {
+      placeMore();
+      if (!compact.matches) setOpen(false);
+    }
+
+    toggle.addEventListener('click', () => setOpen(!shell.classList.contains('crm-nav-open')));
+    scrim.addEventListener('click', () => setOpen(false));
+
+    // Choosing a destination should dismiss the drawer; dropdown parents only reveal a
+    // submenu, so they must not.
+    nav.addEventListener('click', (event) => {
+      const item = event.target.closest('button');
+      if (!item || !compact.matches) return;
+      if (item.closest('.crm-nav-dropdown') && !item.dataset.sub && !item.dataset.main) return;
+      if (item.getAttribute('aria-haspopup') === 'true') return;
+      setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && shell.classList.contains('crm-nav-open')) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    if (typeof compact.addEventListener === 'function') compact.addEventListener('change', syncViewport);
+    else if (typeof compact.addListener === 'function') compact.addListener(syncViewport);
+    syncViewport();
   })();
 
   // Pronunciation Verification sub-tab switching (runs independently of admin init)

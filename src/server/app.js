@@ -1,4 +1,5 @@
 const express = require('express');
+const { buildPublicFeatures } = require('./public-feature-config');
 const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
@@ -139,7 +140,8 @@ function createApp(options = {}) {
     readingJourneyRoutes: require('../routes/reading-journey'),
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
     pronunciationAiRoutes: require('../routes/pronunciation-ai'),
-    readAloudRoutes: require('../routes/read-aloud')
+    readAloudRoutes: require('../routes/read-aloud'),
+    echoForgeRoutes: require('../routes/echo-forge').createEchoForgeRouter()
   };
   const routes = { ...defaultRoutes, ...(options.routes || {}) };
 
@@ -277,11 +279,13 @@ function createApp(options = {}) {
   };
 
   app.use('/api/read-aloud/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
+  app.use('/api/echo-forge/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/pronunciation-test/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/pronunciation-test/vowel-hint', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   if (routes.pronunciationTestRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationTestRoutes);
   if (routes.pronunciationAiRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
   if (routes.readAloudRoutes) app.use('/api', optionalAuthUserMiddleware, routes.readAloudRoutes);
+  if (routes.echoForgeRoutes) app.use('/api', optionalAuthUserMiddleware, routes.echoForgeRoutes);
 
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
@@ -350,7 +354,8 @@ function createApp(options = {}) {
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
         appId: process.env.FIREBASE_APP_ID,
         measurementId: process.env.FIREBASE_MEASUREMENT_ID
-      }
+      },
+      features: buildPublicFeatures(process.env)
     });
   });
 

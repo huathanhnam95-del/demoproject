@@ -1,4 +1,5 @@
 import io
+import hashlib
 import json
 import os
 import tempfile
@@ -69,6 +70,46 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
             response.headers.get("Access-Control-Allow-Origin"),
             "https://betterenglishlearning.com",
         )
+
+    def test_listening_tasks_origins_are_cors_allowed_for_get(self):
+        origins = [
+            "https://listening-tasks-3ae34.web.app",
+            "https://listening-tasks-3ae34.firebaseapp.com",
+        ]
+
+        for origin in origins:
+            with self.subTest(origin=origin):
+                response = self.client.get("/health", headers={"Origin": origin})
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.headers.get("Access-Control-Allow-Origin"),
+                    origin,
+                )
+                self.assertNotEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+
+    def test_listening_tasks_origins_are_cors_allowed_for_options(self):
+        origins = [
+            "https://listening-tasks-3ae34.web.app",
+            "https://listening-tasks-3ae34.firebaseapp.com",
+        ]
+
+        for origin in origins:
+            with self.subTest(origin=origin):
+                response = self.client.options(
+                    "/health",
+                    headers={
+                        "Origin": origin,
+                        "Access-Control-Request-Method": "GET",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.headers.get("Access-Control-Allow-Origin"),
+                    origin,
+                )
+                self.assertIn("GET", response.headers.get("Access-Control-Allow-Methods", ""))
 
     def test_car_returns_one_valid_canonical_variant(self):
         with patch.object(
@@ -559,12 +600,107 @@ class PronunciationV3ApiTest(unittest.TestCase):
         }
 
     def _comparison_v3_pipeline(self, **overrides):
+        v4_syllables = [
+            {
+                'index': 0,
+                'syllableId': 'v4-syllable-1',
+                'ipa': 'ˈhɛ',
+                'onset': ['h'],
+                'nucleus': 'ɛ',
+                'coda': [],
+                'stress': 'primary',
+                'phoneIndexes': [0, 1],
+                'phoneOwnership': {'indexes': [0, 1], 'startIndex': 0, 'endIndex': 2},
+                'alignmentTokenRange': {'start': 0, 'end': 2, 'endExclusive': 2},
+                'timingSpanIndex': 0,
+                'rule': 'maximal-legal-onset',
+                'ambiguity': {'status': 'deterministic', 'candidates': []},
+                'startTime': 0.05,
+                'endTime': 0.3,
+                'partitionStartTime': 0.05,
+                'partitionEndTime': 0.3,
+            },
+            {
+                'index': 1,
+                'syllableId': 'v4-syllable-2',
+                'ipa': 'loʊ',
+                'onset': ['l'],
+                'nucleus': 'oʊ',
+                'coda': [],
+                'stress': None,
+                'phoneIndexes': [2, 3],
+                'phoneOwnership': {'indexes': [2, 3], 'startIndex': 2, 'endIndex': 4},
+                'alignmentTokenRange': {'start': 2, 'end': 4, 'endExclusive': 4},
+                'timingSpanIndex': 1,
+                'rule': 'maximal-legal-onset',
+                'ambiguity': {'status': 'deterministic', 'candidates': []},
+                'startTime': 0.3,
+                'endTime': 0.55,
+                'partitionStartTime': 0.3,
+                'partitionEndTime': 0.55,
+            },
+        ]
+        v4_structural_syllables = [
+            {
+                key: item[key]
+                for key in (
+                    'index', 'syllableId', 'ipa', 'onset', 'nucleus', 'coda', 'stress',
+                    'phoneIndexes', 'phoneOwnership', 'alignmentTokenRange', 'timingSpanIndex',
+                    'rule', 'ambiguity',
+                )
+            }
+            for item in v4_syllables
+        ]
+        v4_structural = {
+            'schemaVersion': 'pronunciation-syllabification-v1',
+            'analysisVersion': 'pronunciation-analysis-v4.1',
+            'ruleVersion': 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+            'onsetInventoryVersion': 'en-US-onsets-v1',
+            'dialect': 'en-US',
+            'originalIpa': '/ˈhɛ.loʊ/',
+            'normalizedIpa': 'ˈhɛ.loʊ',
+            'displayIpa': '/ˈhɛ.loʊ/',
+            'displaySyllabification': '/ˈhɛ.loʊ/',
+            'exactSyllabification': '/ˈhɛ.loʊ/',
+            'rule': {
+                'id': 'weighted-maximal-onset',
+                'stressPolicy': 'primary-secondary-stressed-lax',
+                'onsetPolicy': 'maximal-legal-onset',
+            },
+            'ambiguity': {'status': 'deterministic', 'candidates': []},
+            'timingSpanContractVersion': 'ctc-alignment-v2',
+            'syllables': v4_structural_syllables,
+        }
+        structural_hash = hashlib.sha256(
+            json.dumps(v4_structural, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+        ).hexdigest()
+        v4_structural['contentHash'] = structural_hash
+        v4_structural['content_hash'] = structural_hash
         value = {
             'praat_result': dict(_V2_FAKE_RESULT),
             'phoneme_result': dict(_PHONEME_FAKE_RESULT),
             'phoneme_error': None,
             'elapsed': 0.12,
             'request_reference_id': '0123456789abcdef',
+        }
+        value['phoneme_result']['v4_alignment'] = {
+            'aligned': True,
+            'schemaVersion': 'pronunciation-syllabification-v1',
+            'analysisVersion': 'pronunciation-analysis-v4.1',
+            'syllabificationVersion': 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+            'ruleVersion': 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+            'onsetInventoryVersion': 'en-US-onsets-v1',
+            'dialect': 'en-US',
+            'originalIpa': '/ˈhɛ.loʊ/',
+            'normalizedIpa': 'ˈhɛ.loʊ',
+            'syllable_count': 2,
+            'syllables': v4_syllables,
+            'displaySyllabification': '/ˈhɛ.loʊ/',
+            'exactSyllabification': '/ˈhɛ.loʊ/',
+            'contentHash': structural_hash,
+            'content_hash': structural_hash,
+            'v4Syllabification': v4_structural,
+            'provenance': v4_structural,
         }
         value.update(overrides)
         return value
@@ -756,9 +892,9 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(body['v3']['analysis']['analysisVersion'], 'pronunciation-analysis-v3')
         v3_variants = body['v3']['analysis']['partitionVariants']
         self.assertEqual(v3_variants['schemaVersion'], 'pronunciation-partition-variants-v2')
-        self.assertEqual(v3_variants['v4AnalysisVersion'], 'pronunciation-analysis-v4')
+        self.assertEqual(v3_variants['v4AnalysisVersion'], 'pronunciation-analysis-v4.1')
         v4_analysis = body['v4']['analysis']
-        self.assertEqual(v4_analysis['analysisVersion'], 'pronunciation-analysis-v4')
+        self.assertEqual(v4_analysis['analysisVersion'], 'pronunciation-analysis-v4.1')
         self.assertEqual(v4_analysis['source'], 'partitionVariants.v4')
         self.assertEqual(v4_analysis['provenance']['source'], 'partitionVariants.v4')
         self.assertEqual(v4_analysis['provenance']['variant'], 'v4')
@@ -899,6 +1035,40 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(body['schemaVersion'], 'pronunciation-comparison-v2')
         self.assertEqual(body['status'], 'partial_failure')
         self.assertEqual(body['v2']['status'], 'complete')
+        self.assertEqual(body['v3']['status'], 'complete')
+        self.assertEqual(body['v4']['status'], 'unavailable')
+        self.assertEqual(body['v4']['reason'], 'PARTITION_VARIANT_V4_UNAVAILABLE')
+        self.assertIsNone(body['v4']['analysis'])
+
+    def test_compare_without_remote_v4_alignment_does_not_copy_v3_spans(self):
+        pipeline = self._comparison_v3_pipeline()
+        pipeline['phoneme_result'].pop('v4_alignment', None)
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=pipeline):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['v3']['status'], 'complete')
+        self.assertEqual(body['v4']['status'], 'unavailable')
+        self.assertEqual(body['v4']['reason'], 'PARTITION_VARIANT_V4_UNAVAILABLE')
+        self.assertIsNone(body['v4']['analysis'])
+
+    def test_compare_malformed_v4_alignment_fails_closed(self):
+        pipeline = self._comparison_v3_pipeline()
+        pipeline['phoneme_result']['v4_alignment']['analysisVersion'] = 'pronunciation-analysis-v3'
+        with patch.object(server, 'analyze_audio_v2', return_value=dict(_V2_FAKE_RESULT)), \
+             patch.object(server, 'run_v3_pipeline', return_value=pipeline):
+            response = self.client.post(
+                "/analyze/compare",
+                data=self._valid_comparison_form(),
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
         self.assertEqual(body['v3']['status'], 'complete')
         self.assertEqual(body['v4']['status'], 'unavailable')
         self.assertEqual(body['v4']['reason'], 'PARTITION_VARIANT_V4_UNAVAILABLE')

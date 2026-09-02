@@ -49,6 +49,7 @@ function main() {
 
     const checks = [
         ['node', ['tests/crm/admin-router-contract.test.js']],
+        ['node', ['tests/crm/accounts-role-management.test.js']],
         ['node', ['tests/crm/collection-contracts.test.js']],
         ['node', ['tests/crm/agent-source-service.test.js']],
         ['node', ['tests/crm/agent-source-workspace.test.js']],

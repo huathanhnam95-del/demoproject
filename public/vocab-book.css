@@ -1,0 +1,956 @@
+/* ============================================================
+   vocab-book.css — Vocabulary Book & Vocabulary Practice
+   ------------------------------------------------------------
+   Reference implementation: read-mode-base.css
+   Load order: AFTER style.css (it intentionally overrides the
+   legacy .vocab-phonetic pill treatment).
+
+   THE FOUR RULES
+   1. Colour comes from tokens. No raw hex below the token block.
+   2. One radius per role: row, control, pill. Nothing else.
+   3. One motion curve (--vb-ease) and two durations.
+   4. Every new class is namespaced `vb-`. The only legacy class
+      kept is `.vocab-phonetic`, which browser tests select on
+      (tests/browser/oxford-ipa-visual-check.js).
+   ============================================================ */
+
+.vb-list-host,
+.vb-toolbar,
+.vb-practice {
+  /* Surfaces */
+  --vb-surface: var(--bg-card, #ffffff);
+  --vb-surface-sunken: var(--bg-main, #f8f9fa);
+  --vb-surface-hover: var(--gray-50, #f8f9fa);
+
+  /* Ink */
+  --vb-ink: var(--text-main, #0f172a);
+  --vb-ink-soft: var(--text-secondary, #475569);
+  --vb-ink-muted: var(--text-muted, #64748b);
+
+  /* Lines */
+  --vb-line: var(--border-light, #e2e8f0);
+  --vb-line-strong: var(--gray-300, #cbd5e1);
+
+  /* Accents */
+  --vb-accent: var(--primary, #2563eb);
+  --vb-accent-tonal: var(--primary-tonal, #eff6ff);
+  --vb-danger: var(--danger, #dc2626);
+  --vb-danger-tonal: var(--danger-light, #fee2e2);
+  --vb-warn-tonal: var(--gold-100, #fef3c7);
+  --vb-warn-ink: var(--gold-800, #92400e);
+  --vb-ok-tonal: var(--green-100, #dcfce7);
+  --vb-ok-ink: var(--green-800, #166534);
+
+  /* Radii — one per role */
+  --vb-radius-row: 14px;
+  --vb-radius-control: 10px;
+  --vb-radius-pill: 999px;
+
+  /* Motion */
+  --vb-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --vb-fast: 0.15s;
+  --vb-slow: 0.25s;
+}
+
+/* ------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------ */
+
+.vb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------
+   List + rows
+   ------------------------------------------------------------ */
+
+.vb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vb-row {
+  background: var(--vb-surface);
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-row);
+  transition: border-color var(--vb-fast) var(--vb-ease),
+              background var(--vb-fast) var(--vb-ease),
+              box-shadow var(--vb-fast) var(--vb-ease);
+}
+
+.vb-row:hover {
+  border-color: var(--vb-line-strong);
+  background: var(--vb-surface-hover);
+}
+
+.vb-row:focus-within {
+  border-color: var(--vb-accent);
+}
+
+/* Desktop: one reflowing grid. No table, so no nth-child column coupling. */
+.vb-row-main {
+  display: grid;
+  grid-template-columns:
+    minmax(130px, 1.1fr)   /* word + tags   */
+    minmax(120px, 1fr)     /* pronunciation */
+    minmax(110px, 1.1fr)   /* translation   */
+    auto                   /* meta badges   */
+    auto;                  /* actions       */
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.vb-word-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.vb-word {
+  font-weight: 600;
+  color: var(--vb-ink);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.vb-pron-block {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* IPA: plain monospace text. The legacy rule rendered this as a grey pill in
+   Consolas, which read as a code block rather than a dictionary entry. */
+.vocab-phonetic {
+  font-family: var(--font-mono, 'Roboto Mono', monospace);
+  font-size: 0.9rem;
+  color: var(--vb-ink-soft);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.vb-ipa-more {
+  border: 1px solid var(--vb-line);
+  background: var(--vb-surface-sunken);
+  color: var(--vb-ink-muted);
+  border-radius: var(--vb-radius-pill);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: all var(--vb-fast) var(--vb-ease);
+}
+
+.vb-ipa-more:hover {
+  border-color: var(--vb-accent);
+  color: var(--vb-accent);
+}
+
+.vb-ipa-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+
+.vb-ipa-variant {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.vb-ipa-variant-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vb-ink-muted);
+  min-width: 52px;
+}
+
+.vb-translation {
+  color: var(--vb-accent);
+  font-weight: 500;
+  font-size: 0.94rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.vb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vb-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-self: end;
+}
+
+/* ------------------------------------------------------------
+   Tags, badges, icon buttons
+   ------------------------------------------------------------ */
+
+.vb-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--vb-radius-pill);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  background: var(--vb-surface-sunken);
+  color: var(--vb-ink-muted);
+  border: 1px solid var(--vb-line);
+}
+
+.vb-tag-pos-noun { background: var(--blue-50); color: var(--blue-800); border-color: var(--blue-200); }
+.vb-tag-pos-verb { background: var(--green-100); color: var(--green-800); border-color: var(--green-200); }
+.vb-tag-pos-adjective { background: var(--gold-100); color: var(--gold-800); border-color: var(--gold-200); }
+.vb-tag-pos-adverb { background: var(--vb-accent-tonal); color: var(--blue-800); border-color: var(--blue-200); }
+
+.vb-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--vb-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.vb-badge-miss { background: var(--vb-danger-tonal); color: var(--vb-danger); }
+.vb-badge-warn { background: var(--vb-warn-tonal); color: var(--vb-warn-ink); }
+.vb-badge-ok { background: var(--vb-ok-tonal); color: var(--vb-ok-ink); }
+
+.vb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--vb-radius-control);
+  color: var(--vb-ink-muted);
+  cursor: pointer;
+  transition: background var(--vb-fast) var(--vb-ease), color var(--vb-fast) var(--vb-ease);
+}
+
+.vb-icon-btn:hover {
+  background: var(--vb-accent-tonal);
+  color: var(--vb-accent);
+}
+
+.vb-icon-btn:focus-visible {
+  outline: 2px solid var(--vb-accent);
+  outline-offset: 2px;
+}
+
+/* Destructive action is de-emphasised until hover — it used to be the most
+   saturated thing on the screen. */
+.vb-icon-btn-danger:hover {
+  background: var(--vb-danger-tonal);
+  color: var(--vb-danger);
+}
+
+.vb-expand svg {
+  transition: transform var(--vb-slow) var(--vb-ease);
+}
+
+.vb-expand.is-open svg {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------------------------------------
+   Detail region
+   ------------------------------------------------------------ */
+
+.vb-row-details {
+  border-top: 1px solid var(--vb-line);
+  padding: 10px 14px 12px;
+}
+
+.vb-sentence {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+}
+
+.vb-sentence + .vb-sentence {
+  border-top: 1px dashed var(--vb-line);
+}
+
+.vb-sentence-en {
+  color: var(--vb-ink);
+  font-family: var(--font-content, Georgia, serif);
+}
+
+.vb-sentence-vi {
+  color: var(--vb-ink-muted);
+  font-size: 0.88rem;
+}
+
+/* Source + date live here now instead of taking two top-level columns that
+   showed raw internal values like `type` / `Q107`. */
+.vb-provenance {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--vb-ink-muted);
+}
+
+.vb-more-note {
+  margin: 10px 2px 0;
+  font-size: 0.8rem;
+  color: var(--vb-ink-muted);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------
+   Empty state
+   ------------------------------------------------------------ */
+
+.vb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px dashed var(--vb-line-strong);
+  border-radius: var(--vb-radius-row);
+  background: var(--vb-surface-sunken);
+}
+
+.vb-empty-icon { color: var(--vb-line-strong); line-height: 0; }
+.vb-empty-title { margin: 0; font-weight: 600; color: var(--vb-ink); }
+.vb-empty-body { margin: 0; font-size: 0.88rem; color: var(--vb-ink-muted); max-width: 34rem; }
+
+.vb-empty-cta {
+  margin-top: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vb-empty-cta:hover { background: var(--primary-hover, #1d4ed8); }
+
+/* ------------------------------------------------------------
+   Toolbar
+   ------------------------------------------------------------ */
+
+.vb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 0 14px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--vb-surface);
+}
+
+.vb-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.vb-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--vb-ink-muted);
+  line-height: 0;
+  pointer-events: none;
+}
+
+.vb-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 34px 0 34px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-surface);
+  color: var(--vb-ink);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.vb-search-input:focus {
+  outline: none;
+  border-color: var(--vb-accent);
+  box-shadow: 0 0 0 3px var(--vb-accent-tonal);
+}
+
+.vb-search-input::-webkit-search-cancel-button { display: none; }
+
+.vb-search-clear {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  border: none;
+  background: none;
+  color: var(--vb-ink-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--vb-radius-pill);
+}
+
+.vb-search-clear:hover { color: var(--vb-ink); }
+
+.vb-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.vb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-pill);
+  background: var(--vb-surface);
+  color: var(--vb-ink-soft);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--vb-fast) var(--vb-ease);
+}
+
+.vb-chip:hover { border-color: var(--vb-line-strong); background: var(--vb-surface-hover); }
+
+.vb-chip.is-active {
+  border-color: var(--vb-accent);
+  background: var(--vb-accent-tonal);
+  color: var(--vb-accent);
+}
+
+.vb-chip:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: 2px; }
+
+.vb-chip-count { font-size: 0.72rem; opacity: 0.75; font-variant-numeric: tabular-nums; }
+.vb-chip-count:empty { display: none; }
+
+.vb-sort-select {
+  height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-surface);
+  color: var(--vb-ink-soft);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+
+.vb-sort-select:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: 2px; }
+
+.vb-result-count {
+  margin: 0;
+  flex-basis: 100%;
+  font-size: 0.8rem;
+  color: var(--vb-ink-muted);
+}
+
+/* ------------------------------------------------------------
+   Compact density (side panel, 420px)
+   ------------------------------------------------------------ */
+
+.vb-compact .vb-list { gap: 6px; }
+
+.vb-compact .vb-row-main {
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.vb-compact .vb-pron-block,
+.vb-compact .vb-translation { display: none; }
+
+.vb-compact .vb-word { font-size: 0.94rem; }
+.vb-compact .vb-meta { grid-column: 1; }
+
+/* ------------------------------------------------------------
+   Mobile — rows stack; nothing scrolls sideways
+   ------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+  .vb-row-main {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "word    actions"
+      "pron    actions"
+      "trans   meta";
+    gap: 6px 10px;
+  }
+
+  .vb-word-block { grid-area: word; }
+  .vb-pron-block { grid-area: pron; }
+  .vb-translation { grid-area: trans; }
+  .vb-meta { grid-area: meta; justify-self: end; }
+  .vb-actions { grid-area: actions; align-self: start; }
+
+  .vb-toolbar { gap: 8px; padding: 10px 0; }
+  .vb-search { flex-basis: 100%; }
+  .vb-filters { flex: 1 1 auto; }
+  .vb-sort-select { flex: 0 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-row,
+  .vb-icon-btn,
+  .vb-chip,
+  .vb-expand svg {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Vocabulary Practice dashboard
+   ============================================================ */
+
+.vb-practice {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0 8px;
+}
+
+.vb-practice-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 22px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-row);
+  background: var(--vb-surface-sunken);
+}
+
+.vb-practice-headline { min-width: 0; }
+
+.vb-practice-due {
+  margin: 0;
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--vb-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.vb-practice-due-label {
+  margin: 6px 0 0;
+  font-weight: 600;
+  color: var(--vb-ink);
+}
+
+.vb-practice-next {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+  color: var(--vb-ink-muted);
+}
+
+/* Conic-gradient ring — same technique as .progress-ring-mini, no SVG needed. */
+.vb-ring {
+  --vb-ring-p: 0;
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(var(--vb-accent) calc(var(--vb-ring-p) * 1%), var(--vb-line) 0);
+}
+
+.vb-ring::before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--vb-surface-sunken);
+}
+
+.vb-ring-value {
+  position: relative;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--vb-ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.vb-ring-unit { font-size: 0.8rem; }
+
+.vb-ring-label {
+  position: relative;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vb-ink-muted);
+  margin-top: 2px;
+}
+
+.vb-practice-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--vb-fast) var(--vb-ease);
+}
+
+.vb-practice-cta:hover:not(:disabled) { background: var(--primary-hover, #1d4ed8); }
+.vb-practice-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+.vb-practice-cta:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: 2px; }
+
+.vb-practice-cta-badge {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: var(--vb-radius-pill);
+  padding: 2px 10px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.vb-practice-hint {
+  margin: -8px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--vb-ink-muted);
+}
+
+.vb-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.vb-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-surface);
+}
+
+.vb-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--vb-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.vb-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vb-ink-muted);
+  text-align: center;
+}
+
+.vb-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.vb-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-row);
+  background: var(--vb-surface);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--vb-fast) var(--vb-ease),
+              background var(--vb-fast) var(--vb-ease),
+              transform var(--vb-fast) var(--vb-ease);
+}
+
+.vb-mode-card:hover:not(:disabled) {
+  border-color: var(--vb-accent);
+  background: var(--vb-accent-tonal);
+  transform: translateY(-1px);
+}
+
+.vb-mode-card:disabled { opacity: 0.5; cursor: not-allowed; }
+.vb-mode-card:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: 2px; }
+
+.vb-mode-icon { color: var(--vb-accent); line-height: 0; }
+.vb-mode-label { font-weight: 600; color: var(--vb-ink); }
+.vb-mode-blurb { font-size: 0.8rem; color: var(--vb-ink-muted); }
+
+/* Settings demoted to a disclosure — it used to occupy most of the tab. */
+.vb-settings {
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-surface);
+}
+
+.vb-settings-summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--vb-ink-soft);
+  font-size: 0.9rem;
+}
+
+.vb-settings-summary:focus-visible { outline: 2px solid var(--vb-accent); outline-offset: -2px; }
+.vb-settings-body { padding: 0 16px 16px; }
+
+.vb-settings-desc {
+  margin: 0 0 12px;
+  font-size: 0.84rem;
+  color: var(--vb-ink-muted);
+}
+
+.vb-toggle-list { display: flex; flex-direction: column; gap: 8px; }
+
+.vb-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--vb-line);
+  border-radius: var(--vb-radius-control);
+  background: var(--vb-surface-sunken);
+}
+
+.vb-toggle-label { font-size: 0.9rem; color: var(--vb-ink-soft); cursor: pointer; }
+
+/* Side-panel footer (View All / Reset Cache) */
+.vb-panel-footer { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.vb-panel-footer:empty { display: none; }
+
+@media (max-width: 767px) {
+  .vb-stat-row { grid-template-columns: repeat(2, 1fr); }
+  .vb-practice-due { font-size: 2.4rem; }
+  .vb-practice-hero { padding: 16px; }
+}
+
+/* ============================================================
+   Vocabulary List modal shell
+   ------------------------------------------------------------
+   Single authoritative definition. style.css previously declared
+   .vocab-list-modal FOUR times (lines ~5150, ~9282, ~9290, ~10627)
+   with rules that actively fought each other:
+     - z-index: 1002 !important  vs  z-index: 2000
+     - rgba(255,255,255,0.4)  vs  rgba(0,0,0,0.5) marked "NO blur"
+       vs  rgba(0,0,0,0.75) + backdrop-filter: blur(4px)
+   The values below are the ones that actually won the cascade,
+   captured from the live page before those blocks were removed.
+   ============================================================ */
+
+.vocab-list-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1002;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.vocab-list-modal.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.vocab-list-content-modal {
+  background: var(--bg-card);
+  width: 95%;
+  max-width: 1100px;
+  height: auto;
+  max-height: 90vh;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  position: relative;
+}
+
+.vocab-list-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-main);
+}
+
+.vocab-list-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-main);
+}
+
+/* ------------------------------------------------------------
+   Tabs — pill pattern, matching the newest control in the app
+   (.pv-sub-tabs, crm-admin.css). Replaces the 2015-era underline
+   tabs with a blue tint fill.
+   ------------------------------------------------------------ */
+
+.vocab-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  margin: 16px 0 4px;
+  border-radius: var(--vb-radius-pill, 999px);
+  background: var(--bg-input, #f1f5f9);
+  align-self: flex-start;
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.vocab-tab-btn {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: var(--vb-radius-pill, 999px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.vocab-tab-btn:hover {
+  color: var(--text-main, #334155);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.vocab-tab-btn:focus-visible {
+  outline: 2px solid var(--primary, #2563eb);
+  outline-offset: 1px;
+}
+
+.vocab-tab-btn.active {
+  background: var(--bg-card, #fff);
+  color: var(--primary, #2563eb);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.vocab-tab-content {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vocab-tab-content.active {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  /* The site header is position:fixed with z-index 1100. At this width the modal
+     goes full-screen, so at the inherited z-index (1002) the header sat on top of
+     it and hid the modal's own title, tabs and close button — they were
+     unreachable on a phone. A full-screen dialog must outrank the page chrome. */
+  .vocab-list-modal {
+    z-index: 1200;
+  }
+
+  .vocab-list-content-modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    /* Without border-box, the 24px padding is ADDED to height:100%, making the
+       panel 860px tall in an 812px viewport and pushing its header off-screen. */
+    box-sizing: border-box;
+    padding: 0;
+  }
+
+  .vocab-list-header {
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+
+  .vocab-tabs {
+    align-self: stretch;
+    margin: 10px 12px 4px;
+    flex-shrink: 0;
+  }
+
+  .vocab-tab-btn {
+    padding: 7px 14px;
+    font-size: 0.82rem;
+  }
+
+  .vocab-tab-content {
+    padding: 4px 12px 12px;
+  }
+}

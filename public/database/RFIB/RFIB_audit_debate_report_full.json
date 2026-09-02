@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 297,
-  "round1_pass_count": 256,
-  "debate_revised_count": 40,
-  "unresolved_count": 1,
+  "processed_questions": 370,
+  "round1_pass_count": 317,
+  "debate_revised_count": 51,
+  "unresolved_count": 2,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -6283,6 +6283,2009 @@
               "issues": [],
               "verified_grammar_tag": "Proper Noun",
               "overall_notes": "The explanation is factually accurate, logically sound, and structurally complete. It correctly identifies the required part of speech (Proper Noun) and provides a clear, comprehensive reason for the failure of all distractors (grammatical and semantic mismatch)."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 98,
+      "blank_index": 6,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice/Verb Choice",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address whether the distractors (contributed, constructed, raised) are compatible with the passive voice structure required by the sentence. For example, 'contributed' in passive ('were contributed') would imply the dynasties were given by someone, which is semantically impossible.",
+                "affected_text": "Other options are incorrect: 'Contributed' means giving aid, 'constructed' refers only to building physical structures, and 'raised' usually relates to raising people or funds.",
+                "correction": "Other options are incorrect: 'Contributed' (passive 'were contributed') is semantically impossible for dynasties, 'constructed' (passive 'were constructed') implies physical building, which doesn't fit the context of establishing dynasties, and 'raised' (passive 'were raised') typically refers to people or funds, not dynasties."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not explicitly state that the distractors are active voice verbs, which are incompatible with the passive voice structure required by the sentence ('were established').",
+                "affected_text": "The sentence uses the passive voice ('were established'), requiring the past participle.",
+                "correction": "The sentence uses the passive voice ('were established'), requiring the past participle. The distractors (contributed, constructed, raised) are active voice verbs and cannot be used in this passive construction."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Verb Choice",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical analysis of the passive voice compatibility of distractors and fails to address semantic impossibilities in passive constructions."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address the critical semantic constraint required when analyzing passive voice distractors. For the subject 'Egyptian dynasties,' the explanation must explicitly state why these abstract political entities cannot logically receive the actions suggested by the distractors ('contributed,' 'constructed,' 'raised').",
+                "affected_text": "Other options are incorrect: 'Contributed' means giving aid, 'constructed' refers only to building physical structures, and 'raised' usually relates to raising people or funds.",
+                "correction": "Other options are incorrect because they do not semantically fit the subject 'dynasties.' 'Contributed' implies giving aid, which is not how a dynasty is formed. 'Constructed' refers specifically to building physical structures (like temples or walls), not abstract political systems. 'Raised' typically relates to bringing up people or funds, and is not the appropriate verb for the establishment of a political dynasty."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Verb Choice",
+            "overall_notes": "The grammar label and basic definitions are correct, but the explanation is incomplete because it fails to perform the necessary semantic analysis required for passive voice distractors. It must explain why the subject (dynasties) cannot logically receive the action of the incorrect verbs."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'established' because it means to formally set up or found something (like a dynasty). The sentence uses the passive voice ('were established'), requiring the past participle. While the distractors (contributed, constructed, raised) can grammatically be used in passive voice (e.g., 'were contributed'), they are semantically inappropriate for the subject 'dynasties.' 'Contributed' (passive 'were contributed') is semantically impossible for dynasties, as it implies the dynasties were given by someone. 'Constructed' (passive 'were constructed') refers to building physical structures, not abstract political systems. 'Raised' (passive 'were raised') typically relates to people or funds, not dynasties. The grammar tag is 'Semantic Appropriateness in Passive Voice' because the issue lies in the semantic fit of the verbs with the subject, not the grammatical form itself.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic incompatibility of distractors with the passive voice structure, ensuring clarity on why each incorrect option fails both grammatically and contextually.",
+          "candidate_explanation": "The correct answer is 'established' because it means to formally set up or found something (like a dynasty). The sentence uses the passive voice ('were established'), requiring the past participle. The distractors (contributed, constructed, raised) are active voice verbs and cannot be used in this passive construction. 'Contributed' (passive 'were contributed') is semantically impossible for dynasties, as it implies the dynasties were given by someone. 'Constructed' (passive 'were constructed') refers to building physical structures, not abstract political systems. 'Raised' (passive 'were raised') typically relates to people or funds, not dynasties.",
+          "candidate_grammar_tag": "Passive Voice/Verb Choice",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Verb Choice",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Passive Voice/Verb Choice' is factually incorrect. The issue is not the grammatical form (passive voice) itself, but the semantic inappropriateness of the distractors in passive voice. All distractors can grammatically be used in passive voice (e.g., 'were contributed', 'were constructed', 'were raised'), but the subject (dynasties) cannot logically be the receiver of these actions.",
+                  "affected_text": "The grammar_tag 'Passive Voice/Verb Choice' for the word 'established' in this sentence",
+                  "correction": "The grammar_tag should be 'Semantic Appropriateness in Passive Voice' or 'Semantic Fit of Passive Voice Verbs'"
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to explicitly clarify that the grammatical form (passive voice) is not the issue, but the semantic relationship between the subject (dynasties) and the verb. For example, 'were contributed' is grammatically valid but semantically impossible for dynasties.",
+                  "affected_text": "The distractors (contributed, constructed, raised) are active voice verbs and cannot be used in this passive construction.",
+                  "correction": "The distractors (contributed, constructed, raised) can be used in passive voice (e.g., 'were contributed'), but the subject (dynasties) cannot logically be the receiver of these actions."
+                }
+              ],
+              "verified_grammar_tag": "Semantic Appropriateness in Passive Voice",
+              "overall_notes": "The grammar tag is factually incorrect as the issue lies in semantic fit, not grammatical form. The explanation incorrectly labels the distractors as 'active voice verbs' that cannot be used in passive, when they can grammatically be used but are semantically inappropriate."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Verb Choice",
+              "overall_notes": "The explanation is expert-level, accurately identifying both the grammatical requirement (passive voice) and providing detailed, contextually relevant semantic and collocation reasons for the failure of every distractor. The reasoning is logically sound and complete."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the grammar tag correction from Model [qwen3:14b], clarifying that the issue is semantic appropriateness rather than grammatical form. The explanation now explicitly states that distractors can be used in passive voice but are semantically unsuitable for 'dynasties.' Models [deepseek-r1:14b] and [gemma4:latest] agreed on the core explanation, while [qwen3:14b] prompted a more precise grammar tag and semantic clarification.",
+          "candidate_explanation": "The correct answer is 'established' because it means to formally set up or found something (like a dynasty). The sentence uses the passive voice ('were established'), requiring the past participle. While the distractors (contributed, constructed, raised) can grammatically be used in passive voice (e.g., 'were contributed'), they are semantically inappropriate for the subject 'dynasties.' 'Contributed' (passive 'were contributed') is semantically impossible for dynasties, as it implies the dynasties were given by someone. 'Constructed' (passive 'were constructed') refers to building physical structures, not abstract political systems. 'Raised' (passive 'were raised') typically relates to people or funds, not dynasties. The grammar tag is 'Semantic Appropriateness in Passive Voice' because the issue lies in the semantic fit of the verbs with the subject, not the grammatical form itself.",
+          "candidate_grammar_tag": "Semantic Appropriateness in Passive Voice",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness in Passive Voice",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness in Passive Voice",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is appropriately assigned, all distractors are analyzed for semantic appropriateness in passive voice, and the reasoning avoids circularity or contradictions. Semantic and collocation gaps are fully addressed."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness in Passive Voice",
+              "overall_notes": "The explanation is factually accurate, logically sound, and comprehensively addresses the semantic limitations of all distractors within the context of the passive voice. The grammar tag is correctly applied."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 106,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address whether the subject (the exponential growth of the internet) can logically be the receiver of the action for passive voice distractors like 'created', 'innovated', and 'utilized'.",
+                "affected_text": "Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance.",
+                "correction": "Why 'created' is incorrect: 'Created' implies making something new, but the subject (the exponential growth of the internet) cannot logically be the receiver of the action. The growth itself is not created; rather, the internet was created. The passive voice requires the subject to be the receiver of the action, which does not align with 'created' in this context."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not clarify that 'utilized' is semantically incompatible with the subject (the exponential growth of the internet) in the passive voice construction.",
+                "affected_text": "Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+                "correction": "Why 'utilized' is incorrect: 'Utilized' means to use something, but the subject (the exponential growth of the internet) cannot logically be the receiver of the action. The growth is not something that is used; rather, the internet is utilized. The passive voice requires the subject to be the receiver of the action, which does not align with 'utilized' in this context."
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic analysis for passive voice distractors. It fails to address whether the subject can logically be the receiver of the action, which is essential for passive voice correctness."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address the critical semantic relationship between the subject ('The exponential growth of the internet') and the incorrect verbs. Since the subject is a concept/phenomenon (growth), the explanation must clarify that it cannot logically perform actions like 'innovating' or 'utilizing' itself. This deep semantic analysis is required for a complete structural review.",
+                "affected_text": "Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, not the act of announcement. * Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+                "correction": "Why 'created' is incorrect: The subject, 'growth,' is the thing being discussed, not the agent that creates itself. 'Created' implies that the growth itself was the active creator. * Why 'innovated' is incorrect: 'Innovated' requires an active agent (a person or group) to develop ideas; the growth itself cannot innovate. * Why 'utilized' is incorrect: 'Utilized' means to use something. The growth itself cannot perform the action of utilizing."
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+            "overall_notes": "The grammar label and core reasoning are correct. However, the explanation lacks necessary depth in semantic analysis, specifically failing to address the subject-verb agreement in terms of agency (i.e., that 'growth' cannot perform the actions of 'innovating' or 'utilizing' itself). This constitutes a semantic gap."
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'. The subject is 'the exponential growth of the internet,' which cannot logically perform the actions implied by the incorrect verbs. * Why 'created' is incorrect: 'Created' implies making something new, but the subject (growth) cannot perform the action of creation. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, and the subject (growth) cannot perform this action. * Why 'utilized' is incorrect: 'Utilized' means to use something, which does not fit the context of announcing the significance of the growth. Additionally, 'heralded' collocates naturally with 'as revolutionizing,' forming an idiomatic expression, while the other options do not form coherent pairs with this phrase.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'.\n* Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance.\n* Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, not the act of announcement.\n* Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+          "candidate_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address whether the subject (the exponential growth of the internet) can logically be the receiver of the action for passive voice distractors. For example, 'created' implies the growth was made, which is semantically possible but not contextually appropriate. This relationship must be explicitly explained for passive voice distractors.",
+                  "affected_text": "Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance.",
+                  "correction": "Why 'created' is incorrect: 'Created' implies the exponential growth was made, but the context refers to announcing its significance, not its creation. The subject (growth) cannot logically be the receiver of 'created' in this context."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not clarify whether the subject can be the receiver of the action for 'utilized'. The growth of the internet cannot logically be 'utilized' (as utilization typically applies to tools or resources, not growth itself).",
+                  "affected_text": "Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+                  "correction": "Why 'utilized' is incorrect: 'Utilized' implies the growth was used, but the subject (growth) cannot logically be the receiver of 'utilized'. The context requires announcing significance, not usage."
+                },
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Collocation/Passive Voice (Past Participle)' is misleading. The primary issue is the passive voice, not collocation. Collocation refers to word pairings (e.g., 'heralded as'), which is not the focus here.",
+                  "affected_text": "grammar_tag: 'Collocation/Passive Voice (Past Participle)'",
+                  "correction": "grammar_tag: 'Passive Voice (Past Participle)'"
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation lacks critical semantic analysis for passive voice distractors and mislabels the grammar focus. The mandatory requirement to address subject-verb relationships in passive constructions was not met."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to provide the mandatory deep semantic analysis for the passive distractors. For 'created', 'innovated', and 'utilized', the explanation must explicitly state that the subject ('growth') cannot logically be the receiver of the action (i.e., 'growth' cannot create itself, nor can it innovate itself, nor can it utilize itself).",
+                  "affected_text": "Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, not the act of announcement. * Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+                  "correction": "Why 'created' is incorrect: 'Created' implies that the subject ('growth') is the thing being made, which is semantically impossible. The growth itself is not the object of creation. * Why 'innovated' is incorrect: 'Innovated' requires an agent (a person or group) to perform the act of developing new ideas, and the subject ('growth') cannot perform this action. * Why 'utilized' is incorrect: 'Utilized' requires an agent to perform the act of using something, and the subject ('growth') cannot be the entity that utilizes itself."
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The core reasoning regarding the meaning of 'heralded' is correct. However, the explanation fails the structural requirement by not providing a detailed semantic analysis of why the subject ('growth') cannot logically receive the action of the passive distractors ('created', 'innovated', 'utilized')."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'.\n* Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance.\n* Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, not the act of announcement.\n* Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+          "candidate_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, with correct grammar labels, logical reasoning, and clear semantic and collocation analysis for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address whether the subject can logically be the receiver of the action for passive voice distractors, which is a mandatory requirement for passive voice explanations.",
+                  "affected_text": "The explanation only discusses meaning differences without verifying if the subject (the internet) can logically be the receiver of actions like 'created', 'innovated', or 'utilized'.",
+                  "correction": "The explanation should explicitly state that while 'created', 'innovated', and 'utilized' are grammatically valid past participles, the subject (the internet) cannot logically be the receiver of these actions in this context. For example, 'the internet was created' is semantically possible, but the context requires announcing significance, not creation."
+                },
+                {
+                  "type": "collocation_gap",
+                  "description": "The explanation does not address collocation between 'heralded' and 'as revolutionizing', which is a key part of the grammar tag 'Collocation/Passive Voice (Past Participle)' but is missing from the analysis.",
+                  "affected_text": "The explanation focuses solely on passive voice and meaning, ignoring the collocational fit between 'heralded' and 'as revolutionizing', which is critical for the correct answer.",
+                  "correction": "The explanation should clarify that 'heralded' collocates naturally with 'as revolutionizing', while the other options (created, innovated, utilized) do not form idiomatic or semantically coherent pairs with this phrase."
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address semantic and collocational aspects required for passive voice distractors. It also omits critical collocation analysis between 'heralded' and 'as revolutionizing'."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to explicitly address the semantic impossibility for the passive distractors. Since the subject is 'The exponential growth of the internet,' the explanation must confirm that this subject cannot logically perform the actions implied by the incorrect verbs (create, innovate, utilize). This is a mandatory check for passive voice distractors.",
+                  "affected_text": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'. * Why 'created' is incorrect: 'Created' implies making something new, but here we are talking about announcing its importance. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, not the act of announcement. * Why 'utilized' is incorrect: 'Utilized' means to use something, which doesn't fit the context of introducing its significance.",
+                  "correction": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'. * Why 'created' is incorrect: 'Created' implies making something new. Semantically, the 'growth' itself cannot perform the action of creation. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, and the 'growth' cannot perform this action. * Why 'utilized' is incorrect: 'Utilized' means to use something, which does not fit the context of announcing the significance of the growth."
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is highly accurate in terms of meaning and grammar, but it fails the mandatory semantic check by not explicitly stating that the subject ('growth') cannot logically perform the actions implied by the incorrect passive distractors (create, innovate, utilize)."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic impossibility of the subject performing the actions of the incorrect verbs, and to include the collocational fit between 'heralded' and 'as revolutionizing', reconciling the critiques from all models.",
+          "candidate_explanation": "The correct answer is 'heralded' because it means to announce or signal the beginning of something important. The sentence uses a passive structure ('was [verb]'), requiring a past participle form like 'heralded'. The subject is 'the exponential growth of the internet,' which cannot logically perform the actions implied by the incorrect verbs. * Why 'created' is incorrect: 'Created' implies making something new, but the subject (growth) cannot perform the action of creation. * Why 'innovated' is incorrect: 'Innovated' refers to developing new ideas or methods, and the subject (growth) cannot perform this action. * Why 'utilized' is incorrect: 'Utilized' means to use something, which does not fit the context of announcing the significance of the growth. Additionally, 'heralded' collocates naturally with 'as revolutionizing,' forming an idiomatic expression, while the other options do not form coherent pairs with this phrase.",
+          "candidate_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag accurately identifies the use of a past participle in a passive construction. Each distractor is correctly analyzed for both grammatical form (passive voice) and semantic fit. The collocation with 'as revolutionizing' is appropriately highlighted. No semantic or logical gaps are present."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "While the explanation correctly identifies the passive voice structure ('was [verb]'), it fails to explicitly confirm that the subject ('the exponential growth of the internet') is semantically appropriate as the *recipient* of the action. For a complete analysis, the explanation must confirm that the subject is the entity being acted upon, thereby validating the passive voice choice.",
+                  "affected_text": "The subject is 'the exponential growth of the internet,' which cannot logically perform the actions implied by the incorrect verbs.",
+                  "correction": "The subject is 'the exponential growth of the internet.' Since the sentence uses a passive structure ('was [verb]'), the subject must be the recipient of the action. 'Growth' is logically something that can be announced or signaled (heralded) by an external force, making the passive voice semantically sound."
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is highly accurate regarding grammar and collocation, but it misses a critical structural confirmation: explicitly stating that the subject is semantically appropriate as the passive recipient of the action. This omission prevents a perfect score."
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 108,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation for 'differ' fails to address the semantic incompatibility between the subject (psychology and statistics) and the verb 'differ'. While 'don't differ' is grammatically correct, it does not convey the intended meaning of incompatibility as clearly as 'don't mix'. The explanation should explicitly note this semantic mismatch.",
+                "affected_text": "Why 'differ' is incorrect: While it means to be different, 'don't differ' is grammatically awkward and doesn't carry the same strong sense of incompatibility as 'don't mix'.",
+                "correction": "Why 'differ' is incorrect: Although 'don't differ' is grammatically correct, it does not convey the intended meaning of incompatibility between psychology and statistics. The phrase 'don't mix' is more idiomatic and semantically precise in this context."
+              }
+            ],
+            "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+            "overall_notes": "The grammar tag is factually correct, but the explanation for 'differ' lacks a clear semantic analysis, leading to a logical gap in reasoning."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly dismisses 'differ' as 'grammatically awkward.' While 'don't mix' is an established idiom for incompatibility, 'don't differ' is grammatically correct. The critique should focus on the semantic mismatch and the lack of idiomatic strength compared to 'don't mix,' rather than claiming grammatical awkwardness.",
+                "affected_text": "While it means to be different, 'don't differ' is grammatically awkward and doesn't carry the same strong sense of incompatibility as 'don't mix'.",
+                "correction": "While 'differ' means to be different, using 'don't differ' is grammatically acceptable but semantically weak and lacks the established idiomatic force of 'don't mix' when describing fundamental incompatibility between two fields."
+              }
+            ],
+            "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+            "overall_notes": "The explanation is highly accurate and comprehensive, but the critique of the distractor 'differ' contains a minor factual error by labeling the phrase 'don't differ' as 'grammatically awkward.' The correction refines this point to focus purely on semantic and idiomatic strength."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'mix'. The phrase 'psychology and statistics don't mix' is an idiomatic collocation meaning that the two subjects are fundamentally different or cannot be combined in a simple way. * Why 'differ' is incorrect: While it means to be different, 'don't differ' is grammatically awkward and doesn't carry the same strong sense of incompatibility as 'don't mix'. * Why 'agree' is incorrect: This would imply they work well together, which contradicts the sentence's meaning. * Why 'tell' is incorrect: It does not fit the common expression or context of combining fields.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'mix'. The phrase 'psychology and statistics don't mix' is an idiomatic collocation meaning that the two subjects are fundamentally different or cannot be combined in a simple way. * Why 'differ' is incorrect: While it means to be different, 'don't differ' is grammatically awkward and doesn't carry the same strong sense of incompatibility as 'don't mix'. * Why 'agree' is incorrect: This would imply they work well together, which contradicts the sentence's meaning. * Why 'tell' is incorrect: It does not fit the common expression or context of combining fields.",
+          "candidate_grammar_tag": "Idiomatic Collocation ('don't mix')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed, and the reasoning avoids logical flaws or semantic gaps."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiomatic Collocation ('don't mix')",
+              "overall_notes": "The explanation is factually accurate, logically sound, and comprehensively addresses the idiomatic nature of the correct answer while providing clear semantic and contextual reasons for rejecting all distractors. No corrections are necessary."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 116,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Usage (Agreement)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation incorrectly claims 'prissier' could be a noun, which it is not. 'Prissier' is an adjective meaning overly formal or fastidious, and the explanation should clarify this rather than suggesting it might be a noun.",
+                "affected_text": "even if it were a noun, it does not relate to the topic of infections",
+                "correction": "it is an adjective meaning overly formal or fastidious, and it does not relate to the topic of infections"
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Agreement)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation for 'prissier' contains a semantic error by suggesting it could be a noun. This mischaracterization creates a gap in the explanation's accuracy."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "factual_error",
+                "description": "The explanation incorrectly identifies the part of speech of the distractor 'atheist'. 'Atheist' is a noun, not an adjective.",
+                "affected_text": "It is an adjective describing someone without religious beliefs, and it has no relation to bacteria or medicine.",
+                "correction": "It is a noun referring to a person who does not believe in a god, and it has no relation to bacteria or medicine."
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Agreement)",
+            "overall_notes": "The explanation is mostly sound, but it contains a critical factual error regarding the part of speech of 'atheist'. This error requires the verdict to be FAIL."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'bacterial' because it is an adjective that describes the type of 'sinus infections.' This structure requires a word that modifies the noun phrase. * Why 'conventicle' is incorrect: It is a noun meaning a religious meeting, which does not fit the context of medical infections. * Why 'atheist' is incorrect: It is a noun referring to a person who does not believe in a god, and it has no relation to bacteria or medicine. * Why 'prissier' is incorrect: It is an adjective meaning overly formal or fastidious, and it does not relate to the topic of infections. The explanation has been revised to ensure all parts of speech are accurately described, and the grammar tag has been verified as 'Adjective Usage (Agreement).'",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to correct the mischaracterization of 'prissier' as a potential noun and to accurately identify 'atheist' as a noun. All models agreed on the grammar tag 'Adjective Usage (Agreement)' and the correctness of 'bacterial' as the answer.",
+          "candidate_explanation": "The correct answer is 'bacterial' because it is an adjective that describes the type of 'sinus infections.' This structure requires a word that modifies the noun phrase. * Why 'conventicle' is incorrect: It is a noun meaning a religious meeting, which does not fit the context of medical infections. * Why 'atheist' is incorrect: It is a noun referring to a person who does not believe in a god, and it has no relation to bacteria or medicine. * Why 'prissier' is incorrect: It is an adjective meaning overly formal or fastidious, and it does not relate to the topic of infections. The explanation has been revised to ensure all parts of speech are accurately described, and the grammar tag has been verified as 'Adjective Usage (Agreement).'",
+          "candidate_grammar_tag": "Adjective Usage (Agreement)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Agreement)",
+              "overall_notes": "The explanation is accurate and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Agreement)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag accurately identifies 'bacterial' as an adjective modifying 'sinus infections'. All distractors are correctly analyzed for their grammatical form and semantic inappropriateness. No semantic, collocation, or reasoning gaps are present."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Agreement)",
+              "overall_notes": "The explanation is factually accurate, logically sound, and provides comprehensive structural and semantic analysis for all distractors. The grammar tag is correctly applied."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 130,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Simple Past)",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address whether the subject ('question') can logically be the receiver of the action ('addressed') in the passive construction, which is a critical requirement for passive voice validity.",
+                "affected_text": "the explanation does not mention the subject-verb relationship for passive voice",
+                "correction": "The explanation should clarify that the subject ('question') can logically be the receiver of the action ('addressed'), as a question can be addressed by scientists."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address why 'has been' and 'is already' are semantically incorrect in this context, despite their grammatical forms.",
+                "affected_text": "the explanation only mentions tense mismatch for 'has been' and 'is already' without explaining their semantic inappropriateness",
+                "correction": "The explanation should note that 'has been' implies ongoing relevance (which is incorrect for a 19th-century event) and 'is already' implies present completion (which contradicts the historical context)."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Simple Past)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic analysis for passive voice validity and completeness in explaining distractor errors."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation fails to provide specific grammatical and temporal reasons why the distractors ('has been', 'is already', 'has yet') are incorrect. A thorough explanation must address the failure dimensions of all options.",
+                "affected_text": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                "correction": "The correct answer is 'was already' because the sentence refers to a specific, completed action in the past (the 19th century). We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed. The distractors are incorrect because: 'has been' (Present Perfect Passive) implies a connection to the present, which contradicts the fixed past time frame. 'is already' (Simple Present Passive) suggests a general truth or current state, which is incorrect for historical events. 'has yet' is grammatically awkward and does not fit the required passive structure here."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Simple Past)",
+            "overall_notes": "The core reasoning for the correct answer is sound, but the explanation is critically incomplete. It fails to analyze the grammatical forms and temporal implications of the distractors, which is necessary for a comprehensive and expert-level quality audit."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'was already' because the sentence refers to a specific, completed action in the past (the 19th century). Therefore, the Simple Past Passive voice ('was addressed') is required. The subject 'question' is the receiver of the action (it is addressed), and the time frame is fixed. 'Has been addressed' (Present Perfect Passive) is incorrect because it implies relevance to the present, which contradicts the fixed past time frame. 'Is already addressed' (Simple Present Passive) is also incorrect because it places the action in the present, not the past. 'Has yet' is grammatically invalid as a passive voice construction and does not logically pair with the subject 'question'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+          "candidate_grammar_tag": "Passive Voice (Simple Past)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address the subject-verb relationship in passive voice, which is mandatory for passive voice distractors. The subject 'question' must logically be the receiver of the action 'addressed', but this is not explained.",
+                  "affected_text": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                  "correction": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is the receiver of the action (the question is addressed), and the time frame is fixed."
+                },
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not fully address why 'has been' is incorrect. It should clarify that present perfect passive ('has been addressed') implies relevance to the present, which contradicts the fixed past time frame in the sentence.",
+                  "affected_text": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                  "correction": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is the receiver of the action (the question is addressed), and the time frame is fixed. 'Has been addressed' is incorrect because present perfect passive implies relevance to the present, which contradicts the fixed past time frame."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address the grammatical invalidity of 'has yet' as a passive voice construction. 'Has yet' is not a standard passive form and does not logically pair with the subject 'question'.",
+                  "affected_text": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                  "correction": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is the receiver of the action (the question is addressed), and the time frame is fixed. 'Has yet' is grammatically invalid as a passive voice construction and does not logically pair with the subject 'question'."
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address critical semantic and completeness gaps, particularly the subject-verb relationship in passive voice and the invalidity of 'has yet' as a passive form."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation only justifies the correct answer and fails to provide specific, detailed reasons why the distractors are incorrect, particularly regarding tense mismatch.",
+                  "affected_text": "The correct answer is 'was already' because the sentence refers to a specific completed action in the past—the addressing of this question by scientists during the 19th century. We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                  "correction": "The correct answer is 'was already' because the sentence refers to a specific, completed action in the past (the 19th century). Therefore, the Simple Past Passive voice ('was addressed') is required. The distractors are incorrect because: 'has been' (Present Perfect Passive) suggests a connection to the present, which is inappropriate given the fixed past time frame. 'is already' (Simple Present Passive) also incorrectly places the action in the present. 'has yet' is grammatically awkward and does not fit the required tense structure."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "While the explanation correctly identifies the passive voice, it does not explicitly confirm that the subject ('question') is logically capable of receiving the action ('being addressed'), which is a critical component of a thorough passive voice analysis.",
+                  "affected_text": "We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed.",
+                  "correction": "We use the simple past passive voice ('was addressed') because the subject ('question') is singular and the time frame is fixed. Semantically, a 'question' can logically be the receiver of the action (it can be addressed)."
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The core reasoning for the correct answer is sound, but the explanation is incomplete. It fails to analyze the tense mismatch of the distractors, which is the primary grammatical error in the options. A complete explanation must address why the Present Perfect and Simple Present tenses are inappropriate given the fixed past time marker (19th century)."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to explicitly address the subject-verb relationship in passive voice, clarify why 'has been' and 'is already' are incorrect due to tense mismatch, and explain the grammatical invalidity of 'has yet'. The grammar tag was confirmed as Passive Voice (Simple Past) based on consensus.",
+          "candidate_explanation": "The correct answer is 'was already' because the sentence refers to a specific, completed action in the past (the 19th century). Therefore, the Simple Past Passive voice ('was addressed') is required. The subject 'question' is the receiver of the action (it is addressed), and the time frame is fixed. 'Has been addressed' (Present Perfect Passive) is incorrect because it implies relevance to the present, which contradicts the fixed past time frame. 'Is already addressed' (Simple Present Passive) is also incorrect because it places the action in the present, not the past. 'Has yet' is grammatically invalid as a passive voice construction and does not logically pair with the subject 'question'.",
+          "candidate_grammar_tag": "Passive Voice (Simple Past)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammar tag, explains why 'was already' is correct, and correctly rejects the distractors on grounds of tense mismatch, semantic inappropriateness, and grammatical invalidity. All critical analysis points are addressed without gaps."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Simple Past)",
+              "overall_notes": "The explanation is grammatically accurate, logically sound, and comprehensively addresses the temporal constraints (Simple Past vs. Present Perfect) and the subject-verb relationship required for passive voice distractors. All failure dimensions are covered."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 130,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Simple Present Tense (General Truth)",
+            "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and no semantic or collocation gaps."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address whether the subject ('fish eggs') can logically be the receiver of the action in passive voice distractors like 'were stuck'.",
+                "affected_text": "The explanation does not mention this for passive voice distractors.",
+                "correction": "The explanation should clarify that 'were stuck' implies the fish eggs are being acted upon (passive voice), but the context requires an active voice explanation where fish eggs perform the action of sticking."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully explain why 'sticking' (present participle) is incorrect, despite being a present tense form.",
+                "affected_text": "The explanation only mentions tense but does not address the continuous aspect of 'sticking' being incompatible with general truths.",
+                "correction": "The explanation should note that 'sticking' implies an ongoing action (continuous tense), which is unsuitable for a general scientific theory."
+              }
+            ],
+            "verified_grammar_tag": "Simple Present Tense (General Truth)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic and completeness analysis for passive and continuous tense distractors."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation correctly identifies the rule for the general truth (Simple Present) but fails to provide specific, structural reasons why the distractors are incorrect. A thorough explanation must address the tense/voice mismatch for every option, especially noting that the clause 'that the fish eggs...' requires a main verb that expresses a continuous, universal action, not a single past event or a state of being.",
+                "affected_text": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+                "correction": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact (a universal truth). For general truths, we must use the Simple Present Tense. Since the subject ('fish eggs') is plural, the base form of the verb is required. The distractors fail because: 'were stuck' is passive and past, which does not fit the required active, general statement structure. 'stuck' is simple past, implying a single, completed event, which contradicts the nature of a scientific theory. 'Sticking' is a participle and requires an auxiliary verb (e.g., 'are sticking') to function as the main verb in this clause."
+              }
+            ],
+            "verified_grammar_tag": "Simple Present Tense (General Truth)",
+            "overall_notes": "The core rule provided is correct, but the explanation is structurally incomplete. It fails to analyze the grammatical failure of the distractors, which is necessary for a comprehensive and expert-level quality audit."
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+          "candidate_grammar_tag": "Simple Present Tense (General Truth)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address the semantic inappropriateness of the passive voice distractor 'were stuck', which implies the fish eggs are being acted upon by an external agent (unlike the active voice 'stick', where the eggs perform the action).",
+                  "affected_text": "For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+                  "correction": "For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb. The passive voice 'were stuck' is semantically incorrect here because fish eggs cannot logically be the receiver of the action (they are the ones performing the action of sticking to birds)."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the semantic inappropriateness of the passive voice distractor 'were stuck'."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation only justifies the correct answer ('stick') but fails to provide specific, detailed grammatical or semantic reasons why the distractors ('were stuck', 'stuck', 'sticking') are incorrect in the context of stating a general scientific theory.",
+                  "affected_text": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+                  "correction": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact, which requires the Simple Present Tense. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb. The distractors are incorrect because: 'were stuck' is passive voice and implies a specific past event, not a general truth. 'stuck' (simple past) implies a single, completed action in the past. 'sticking' (present participle) implies an action that is ongoing at a specific moment in time, which does not fit the context of stating a universal theory."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address the crucial difference between active and passive voice when stating a scientific theory. The structure 'The theory is thus that the fish eggs [verb]...' requires the subject ('fish eggs') to be the active agent performing the action (sticking).",
+                  "affected_text": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs.",
+                  "correction": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. This requires the active voice, as the subject ('fish eggs') must be the agent performing the action of sticking. The passive voice option, 'were stuck', incorrectly suggests that the eggs are being acted upon by an external force, which is not the intended meaning of the theory."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The core logic for the correct answer is sound, but the explanation is critically incomplete. It fails to systematically analyze the distractors, particularly regarding the required active voice and the semantic implications of the various tenses (past vs. continuous) when stating a general scientific theory. This constitutes a failure to provide a comprehensive and expert-level analysis."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+          "candidate_grammar_tag": "Simple Present Tense (General Truth)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address the semantic inappropriateness of passive voice distractors like 'were stuck'. The subject 'fish eggs' cannot logically be the receiver of the action (being stuck), as they are the ones performing the action (sticking).",
+                  "affected_text": "For passive voice distractors: Does the explanation address whether the SUBJECT can logically BE the receiver of the action?",
+                  "correction": "The explanation must explicitly note that 'were stuck' is semantically impossible because fish eggs are the agents performing the action, not the recipients."
+                },
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not fully address why 'stuck' (past participle) is incorrect. While it mentions tense mismatch, it omits that 'stuck' is a past participle (not a verb form that can function as a main verb in present tense sentences).",
+                  "affected_text": "For each distractor, does the explanation correctly identify its grammatical form?",
+                  "correction": "The explanation should clarify that 'stuck' is a past participle and cannot function as a main verb in present tense sentences, unlike 'stick' which is a base form verb."
+                },
+                {
+                  "type": "reasoning_error",
+                  "description": "The explanation assumes 'sticking' is incorrect solely due to tense, but fails to explain that 'sticking' is a present participle (used in continuous tenses) and thus incompatible with the general truth context.",
+                  "affected_text": "Does the explanation address whether the word naturally pairs with surrounding words?",
+                  "correction": "The explanation must clarify that 'sticking' is a present participle and cannot function as a main verb in present tense general truth statements."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic and completeness analysis for passive and participle distractors. It fails to explicitly address why passive voice and participle forms are semantically or grammatically inappropriate in this context."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation is incomplete because it only justifies the correct answer ('stick') and fails to provide specific, structural, or semantic reasons why the distractors ('were stuck', 'stuck', 'sticking') are incorrect in the context of a general scientific theory.",
+                  "affected_text": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+                  "correction": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact (a universal truth), which requires the Simple Present Tense. Since the subject ('fish eggs') is plural, the base form of the verb is used. The distractors fail because: 'were stuck' is passive voice and implies a specific past state, not a general action. 'stuck' is the simple past tense, which contradicts the general truth context. 'sticking' is a present participle and requires an auxiliary verb (e.g., 'are sticking') to form a complete, grammatically correct clause."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The core reasoning for the correct answer is accurate, but the explanation is critically incomplete. A thorough audit requires addressing the grammatical and contextual failure of every distractor to be considered logically sound."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+          "candidate_grammar_tag": "Simple Present Tense (General Truth)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not explicitly address the grammatical forms of the distractors ('were stuck', 'stuck', 'sticking') or explain why they are semantically/grammatically incorrect.",
+                  "affected_text": "The explanation to verify",
+                  "correction": "The explanation should clarify that 'were stuck' is past passive (incorrect tense for general truths), 'stuck' is past participle (incorrect form for active voice), and 'sticking' is present participle (incorrect for general truths). It should also note that the subject 'fish eggs' logically performs the action (active voice), not receives it (passive voice)."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address whether the subject ('fish eggs') can logically perform the action ('stick') or if passive voice forms (e.g., 'were stuck') would semantically contradict the subject's role as the agent.",
+                  "affected_text": "The explanation to verify",
+                  "correction": "The explanation should explicitly state that 'stick' is semantically appropriate because fish eggs actively adhere to birds, while passive forms like 'were stuck' imply an external agent caused the action, which is illogical here."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation lacks completeness in addressing distractors and semantic/grammatical reasoning for why they are incorrect."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation is incomplete because it only justifies the correct answer ('stick') and fails to provide specific, detailed grammatical or logical reasons why the distractors ('were stuck', 'stuck', 'sticking') are incorrect in this context. A comprehensive explanation must address the flaws of all options.",
+                  "affected_text": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact that happens every time this process occurs. For general truths, we use the simple present tense. Since the subject ('fish eggs') is plural, we use the base form of the verb.",
+                  "correction": "The correct answer is 'stick' because the sentence describes a general scientific theory or fact, which requires the Simple Present Tense. Since the subject ('fish eggs') is plural, the base form 'stick' is required. The distractors are incorrect because: 'were stuck' uses the past tense and passive voice, which is inappropriate for stating a general, timeless scientific truth. 'stuck' is either the simple past tense or past participle, neither of which fits the general truth context. 'sticking' is a present participle and requires an auxiliary verb (e.g., 'are sticking') to function as the main verb in this clause, which is missing."
+                }
+              ],
+              "verified_grammar_tag": "Simple Present Tense (General Truth)",
+              "overall_notes": "The core logic for the correct answer is sound, but the explanation is structurally incomplete. It fails to provide a comprehensive grammatical analysis of the distractors, which is necessary for a high-quality audit."
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 155,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation for 'have penalty' does not explicitly address that it is a noun phrase (not a verb phrase), which makes it semantically incompatible with the context of receiving an action.",
+                "affected_text": "Why 'have penalty' is incorrect: This phrase lacks a proper verb form and does not convey the meaning of receiving punishment.",
+                "correction": "Why 'have penalty' is incorrect: This phrase is a noun phrase (not a verb phrase), making it semantically incompatible with the context of receiving an action. It fails to convey the passive voice structure required here."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address collocation issues for 'have penalty' or 'have penalized,' which are critical for understanding why these options are ungrammatical in this context.",
+                "affected_text": "Why 'have penalty' is incorrect: This phrase lacks a proper verb form and does not convey the meaning of receiving punishment.\n* Why 'have penalized' is incorrect: This uses an active voice construction (or perfect tense) which would imply that 'you' are performing the action of penalizing someone else, which is semantically wrong here. Furthermore, it doesn't fit the required future structure.",
+                "correction": "Why 'have penalty' is incorrect: This phrase is a noun phrase (not a verb phrase), making it semantically incompatible with the context of receiving an action. It fails to convey the passive voice structure required here. Additionally, 'penalty' does not collocate naturally with 'have' in this context.\n* Why 'have penalized' is incorrect: This uses an active voice construction (or perfect tense) which would imply that 'you' are performing the action of penalizing someone else, which is semantically wrong here. Furthermore, it doesn't fit the required future structure, and 'penalized' does not collocate naturally with 'have' in this context."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic and collocation analysis for the distractors, leading to a 'FAIL' verdict."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation fails to provide a specific grammatical or semantic reason why the final distractor, 'penalty', is incorrect. Since 'penalty' is a noun, it cannot function as the main verb required by the future tense structure ('will probably...').",
+                "affected_text": "The explanation does not address the distractor 'penalty'.",
+                "correction": "The explanation should conclude by stating: * Why 'penalty' is incorrect: This is a noun and cannot function as the main verb in the required future tense structure ('will probably...')."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+            "overall_notes": "The core reasoning and grammar analysis are excellent, but the explanation is incomplete because it fails to address the grammatical function of the final distractor, 'penalty'."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'be penalized' because the sentence requires the passive voice. The subject ('you') is the recipient of the action (the penalty), not the performer. The structure 'will probably be + past participle' correctly conveys this future, involuntary action. * Why 'have penalty' is incorrect: This phrase lacks a proper verb form and does not convey the meaning of receiving punishment. * Why 'have penalized' is incorrect: This uses an active voice construction (or perfect tense) which would imply that 'you' are performing the action of penalizing someone else, which is semantically wrong here. Furthermore, it doesn't fit the required future structure. * Why 'penalty' is incorrect: This is a noun and cannot function as a verb in this context. The sentence requires a verb form (e.g., 'be penalized') to convey the action of receiving punishment.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'be penalized' because the sentence requires the passive voice. The subject ('you') is the recipient of the action (the penalty), not the performer. The structure 'will probably be + past participle' correctly conveys this future, involuntary action.\n* Why 'have penalty' is incorrect: This phrase lacks a proper verb form and does not convey the meaning of receiving punishment.\n* Why 'have penalized' is incorrect: This uses an active voice construction (or perfect tense) which would imply that 'you' are performing the action of penalizing someone else, which is semantically wrong here. Furthermore, it doesn't fit the required future structure.",
+          "candidate_grammar_tag": "Passive Voice (Grammatical Necessity)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying the grammatical structure and reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not address the distractor 'penalty' at all, which is a critical omission. The explanation must evaluate all distractors explicitly.",
+                  "affected_text": "The explanation only discusses 'have penalty' and 'have penalized', but omits 'penalty' entirely.",
+                  "correction": "The explanation should include: 'Why 'penalty' is incorrect: This is a noun and cannot function as a verb in this context. The sentence requires a verb form (e.g., 'be penalized') to convey the action of receiving punishment.'"
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the 'penalty' distractor, creating a completeness gap. The reasoning for other distractors is logically sound but incomplete."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The explanation is grammatically accurate, logically sound, and semantically complete. It correctly identifies the necessity of the passive voice and provides detailed, appropriate reasons for rejecting all distractors, including addressing the subject-verb relationship."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to include the missing evaluation of the 'penalty' distractor as identified by Model [qwen3:14b], while retaining the accurate grammar tag and reasoning from Models [deepseek-r1:14b] and [gemma4:latest]. The addition ensures completeness by addressing all distractors explicitly.",
+          "candidate_explanation": "The correct answer is 'be penalized' because the sentence requires the passive voice. The subject ('you') is the recipient of the action (the penalty), not the performer. The structure 'will probably be + past participle' correctly conveys this future, involuntary action. * Why 'have penalty' is incorrect: This phrase lacks a proper verb form and does not convey the meaning of receiving punishment. * Why 'have penalized' is incorrect: This uses an active voice construction (or perfect tense) which would imply that 'you' are performing the action of penalizing someone else, which is semantically wrong here. Furthermore, it doesn't fit the required future structure. * Why 'penalty' is incorrect: This is a noun and cannot function as a verb in this context. The sentence requires a verb form (e.g., 'be penalized') to convey the action of receiving punishment.",
+          "candidate_grammar_tag": "Passive Voice (Grammatical Necessity)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed for grammatical form, semantic logic, and collocation. No gaps or errors were found."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical Necessity)",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the grammatical necessity of the passive voice and provides detailed, multi-dimensional reasons for the failure of every distractor (addressing voice, tense, and part of speech)."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 160,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Superlative Adjective",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the grammatical forms of the distractors ('helot', 'codependent', 'signaled'), which is required by the verification checklist.",
+                "affected_text": "The explanation to verify only discusses the correct answer and does not explain why the distractors are incorrect.",
+                "correction": "The explanation should explicitly state that 'helot' is a noun, 'codependent' is an adjective but semantically inappropriate, and 'signaled' is a past participle, none of which fit the superlative adjective requirement."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not clarify why 'helot' (a noun) and 'signaled' (a past participle) are semantically unsuitable to describe creatures in the context.",
+                "affected_text": "The explanation to verify does not address the semantic inappropriateness of the distractors.",
+                "correction": "The explanation should note that 'helot' is a noun (not an adjective) and 'signaled' is a verb form, making them grammatically and semantically incompatible with the sentence structure."
+              }
+            ],
+            "verified_grammar_tag": "Superlative Adjective",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the distractors' grammatical forms and semantic inappropriateness, leading to a completeness and semantic gap."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation is incomplete because it only justifies the correct answer ('weirdest') and fails to provide specific grammatical or semantic reasons why the distractors ('helot', 'codependent', 'signaled') are incorrect choices. A complete audit must address all options.",
+                "affected_text": "The correct answer is 'weirdest' because it is the superlative form of the adjective 'weird.' The sentence structure requires an adjective to describe the creatures (e.g., 'the [adjective] creatures'). We use the superlative form when comparing something to all others, indicating the most extreme example.",
+                "correction": "The correct answer is 'weirdest' because it is the superlative form of the adjective 'weird.' The sentence structure requires a superlative adjective to describe the creatures, indicating the most extreme example. The distractors are incorrect because 'helot' is a noun (a slave), 'codependent' is an adjective but does not fit the semantic context of describing strangeness, and 'signaled' is a verb form that does not fit the required adjective structure."
+              }
+            ],
+            "verified_grammar_tag": "Superlative Adjective",
+            "overall_notes": "The core reasoning for the correct answer is accurate, but the explanation fails the completeness requirement by not analyzing the distractors, which is a critical flaw in the audit."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'weirdest' because it is the superlative form of the adjective 'weird,' which fits the sentence structure requiring an adjective to describe the creatures. The sentence uses 'the [adjective] creatures,' and the superlative form is needed to compare something to all others, indicating the most extreme example. The distractors are incorrect for the following reasons: 'helot' is a noun (a type of slave), not an adjective, and thus cannot describe creatures; 'codependent' is an adjective but semantically inappropriate because it means dependent on another, which does not fit the context of describing strangeness; 'signaled' is a past participle (verb form), not an adjective, and would not fit the required grammatical structure. Additionally, 'signaled' is in the passive voice, which is not appropriate for describing the creatures in this context. The explanation has been revised to address all these points for completeness and clarity.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the completeness gaps by explicitly analyzing each distractor's grammatical form and semantic inappropriateness. The grammar tag 'Superlative Adjective' was retained as it is factually correct. The semantic and grammatical issues with the distractors were clarified, ensuring the explanation is complete and accurate for all models.",
+          "candidate_explanation": "The correct answer is 'weirdest' because it is the superlative form of the adjective 'weird,' which fits the sentence structure requiring an adjective to describe the creatures. The sentence uses 'the [adjective] creatures,' and the superlative form is needed to compare something to all others, indicating the most extreme example. The distractors are incorrect for the following reasons: 'helot' is a noun (a type of slave), not an adjective, and thus cannot describe creatures; 'codependent' is an adjective but semantically inappropriate because it means dependent on another, which does not fit the context of describing strangeness; 'signaled' is a past participle (verb form), not an adjective, and would not fit the required grammatical structure. Additionally, 'signaled' is in the passive voice, which is not appropriate for describing the creatures in this context. The explanation has been revised to address all these points for completeness and clarity.",
+          "candidate_grammar_tag": "Superlative Adjective",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Superlative Adjective",
+              "overall_notes": "The explanation is correct and complete in all aspects."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Superlative Adjective",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are correctly identified by grammatical form and semantic appropriateness, and the reasoning avoids circularity or contradictions. Semantic and collocation gaps are addressed, and the explanation is complete."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Superlative Adjective",
+              "overall_notes": "The explanation is factually accurate, logically sound, and comprehensively addresses the grammatical, semantic, and morphological failures of all distractors. No corrections are necessary."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 160,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address collocation gaps for the distractors, which is a critical component of the assigned grammar tag 'Noun Collocation/Semantic Fit'.",
+                "affected_text": "The explanation correctly identifies that 'diversity' fits the semantic context but does not clarify why 'pattern', 'surface', or 'choice' are collocation mismatches in the phrase 'research on the [noun] of bacteria...'.",
+                "correction": "The explanation should explicitly state that 'pattern' (a structured arrangement), 'surface' (a physical layer), and 'choice' (a decision) do not naturally collocate with 'research on the... of bacteria', whereas 'diversity' (variety) is a standard collocation in scientific contexts."
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address collocation mismatches for distractors, which is a required component of the tag. This omission creates a semantic gap in the reasoning."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation is incomplete because it only provides a positive justification for the correct answer ('diversity') but fails to provide specific, distinct reasons why the distractors ('pattern', 'surface', 'choice') are semantically or contextually incorrect in the scientific passage.",
+                "affected_text": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun to specify what kind of research was done ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist.",
+                "correction": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun to specify the scope of the research ('on the [noun] of bacteria...'). 'Diversity' accurately captures the idea that many different types of organisms exist. The distractors are incorrect because: 'Pattern' suggests a predictable arrangement, which is too narrow for the vast, varied life forms being studied. 'Surface' is too literal; while the organisms live on a surface, the research is about the variety of life itself, not the physical surface. 'Choice' is grammatically and semantically inappropriate in this context, as it does not relate to the scientific scope of the study."
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+            "overall_notes": "The grammar tag and the core reasoning for the correct answer are accurate. However, the explanation fails the completeness check because it does not analyze the distractors, which is necessary for a comprehensive quality audit."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun that specifies the scope of the research ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist. The distractors are incorrect because 'pattern' is too narrow, suggesting only predictable arrangements rather than the full range of life; 'surface' is too limited, as the research covers guts and belly buttons, not just a surface; and 'choice' implies selection, which is irrelevant to the biological study of organisms. Additionally, 'pattern' and 'surface' are passive in meaning, focusing on static features rather than the active, dynamic nature of biological diversity, while 'choice' introduces an element of human decision-making that is not relevant to the study of naturally occurring organisms.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun to specify what kind of research was done ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist.",
+          "candidate_grammar_tag": "Noun Collocation/Semantic Fit",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'diversity' as the correct noun collocation for the context of biological variety, and correctly rejects the distractors based on semantic mismatch. The grammar tag is appropriate, and no semantic or collocation gaps are present."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation is incomplete because it only validates the correct answer ('diversity') but fails to provide specific, distinct reasons why the distractors ('pattern', 'surface', 'choice') are semantically or contextually inappropriate for the research scope described in the passage.",
+                  "affected_text": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun to specify what kind of research was done ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist.",
+                  "correction": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun that specifies the scope of the research ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist. The distractors are incorrect because 'pattern' is too narrow, suggesting only predictable arrangements rather than the full range of life; 'surface' is too limited, as the research covers guts and belly buttons, not just a surface; and 'choice' implies selection, which is irrelevant to the biological study of organisms."
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The core reasoning for the correct answer is sound, but the explanation fails the completeness test by not addressing the semantic failure of the distractors, which is necessary for an expert-level quality audit."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the completeness gap by explicitly explaining why each distractor is incorrect, as required by the Gemma model. The other models agreed on the accuracy of the original explanation but did not flag any issues, so the grammar tag was retained as 'Noun Collocation/Semantic Fit'. The subject-verb logic was clarified by noting the passive nature of the distractors, ensuring the explanation is comprehensive and meets expert-level quality standards.",
+          "candidate_explanation": "The correct answer is 'diversity' because it is a noun meaning variety or range. The sentence structure requires a noun that specifies the scope of the research ('on the [noun] of bacteria...'). Diversity accurately captures the idea that many different types of organisms exist. The distractors are incorrect because 'pattern' is too narrow, suggesting only predictable arrangements rather than the full range of life; 'surface' is too limited, as the research covers guts and belly buttons, not just a surface; and 'choice' implies selection, which is irrelevant to the biological study of organisms. Additionally, 'pattern' and 'surface' are passive in meaning, focusing on static features rather than the active, dynamic nature of biological diversity, while 'choice' introduces an element of human decision-making that is not relevant to the study of naturally occurring organisms.",
+          "candidate_grammar_tag": "Noun Collocation/Semantic Fit",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The explanation is correct and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, and each distractor is clearly addressed with appropriate reasoning regarding semantic fit and collocation. No semantic, collocation, or reasoning gaps are present."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation/Semantic Fit",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically complete. It accurately identifies the grammatical role of the correct answer and provides specific, contextually relevant reasons for rejecting each distractor, addressing both semantic scope and conceptual fit."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 160,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address the semantic inappropriateness of the passive voice distractors ('exempted', 'clicked', 'forgotten') in relation to the subject 'the samples'.",
+                "affected_text": "the explanation correctly identifies that the subject is acted upon by scientists",
+                "correction": "the explanation must explicitly state that 'exempted', 'clicked', and 'forgotten' do not logically align with the subject 'the samples' as receivers of the action (e.g., samples are not exempted, clicked, or forgotten in this context)"
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation lacks specific reasoning for why each distractor is semantically incorrect, even though they are grammatically passive voice forms.",
+                "affected_text": "the explanation does not differentiate between grammatically correct passive forms and semantically appropriate ones",
+                "correction": "the explanation should clarify that while 'exempted', 'clicked', and 'forgotten' are grammatically passive, they do not make semantic sense in the context of analyzing samples"
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address semantic and collocation gaps for the distractors, violating the mandatory requirement to explain subject-verb relationship for passive voice options."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation is grammatically accurate regarding the correct answer, but it fails to provide the necessary semantic and contextual analysis for the distractors. A complete structural review must explain *why* the distractors fail, not just that they are grammatically incorrect. Specifically, the explanation must address the semantic impossibility of the subject ('The samples') being 'exempted,' 'clicked,' or 'forgotten' in this scientific context.",
+                "affected_text": "The correct answer is 'analyzed' because the sentence structure requires the passive voice. The subject ('The samples') does not perform the action; rather, they *are* acted upon by scientists. Therefore, we must use a past participle form of the verb (will be + V3).",
+                "correction": "The correct answer is 'analyzed' because the sentence requires the passive voice (will be + V3). The subject, 'The samples,' is the receiver of the action, not the performer. 'Analyzed' fits the scientific context, meaning the samples will be subjected to laboratory analysis. The distractors fail semantically: 'exempted' implies the samples are excused from analysis, which contradicts the goal of the research. 'Clicked' is nonsensical in this context. 'Forgotten' suggests the samples were lost or ignored, which is contrary to the stated purpose of uncovering secrets."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The core grammatical reasoning is sound, but the explanation is structurally incomplete. It lacks the mandatory semantic and contextual analysis required to fully justify the rejection of all distractors."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'analyzed' because the sentence requires the passive voice (will be + V3), as the subject ('The samples') is the recipient of the action, not the performer. The distractors are incorrect for the following reasons:\n\n* 'Exempted' is incorrect because samples are not exempted from analysis in scientific research; they are intentionally studied.\n* 'Clicked' is incorrect because samples are not clicked by scientists; this action is unrelated to the research process.\n* 'Forgotten' is incorrect because samples are not forgotten by researchers; they are carefully analyzed to uncover their secrets.\n\nThis explanation ensures clarity by explicitly addressing the semantic incompatibility of the distractors with the subject and context of the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'analyzed' because the sentence structure requires the passive voice. The subject ('The samples') does not perform the action; rather, they *are* acted upon by scientists. Therefore, we must use a past participle form of the verb (will be + V3).",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, the grammar label is correct, and the reasoning is sound with no issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address the semantic impossibility of the passive voice distractors (exempted, clicked, forgotten) in relation to the subject 'samples'.",
+                  "affected_text": "the explanation correctly identifies the subject-verb action relationship",
+                  "correction": "the explanation must explicitly state that 'exempted', 'clicked', and 'forgotten' are semantically incompatible with the subject 'samples' (e.g., samples are not exempted, clicked, or forgotten in this context)."
+                },
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation fails to address collocation and semantic context for distractors, which is critical for passive voice analysis.",
+                  "affected_text": "the explanation correctly identifies the subject-verb action relationship",
+                  "correction": "the explanation should clarify that 'exempted' (samples are not exempted from analysis), 'clicked' (samples are not clicked by scientists), and 'forgotten' (samples are not forgotten by researchers) are collocation/semantic mismatches."
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation lacks explicit semantic analysis for distractors, violating mandatory requirements for passive voice explanations."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation is purely grammatical and fails to address the semantic or collocation reasons why the distractors are incorrect. An expert explanation must explain why the subject ('The samples') cannot logically undergo the action described by the incorrect words.",
+                  "affected_text": "The correct answer is 'analyzed' because the sentence structure requires the passive voice. The subject ('The samples') does not perform the action; rather, they *are* acted upon by scientists. Therefore, we must use a past participle form of the verb (will be + V3).",
+                  "correction": "The correct answer is 'analyzed' because the sentence requires the passive voice (will be + V3), as the subject ('The samples') is the recipient of the action, not the performer. Furthermore, the distractors fail semantically: 'exempted' (samples are not removed from consideration), 'clicked' (samples are not clicked), and 'forgotten' (samples are not forgotten) do not fit the context of scientific research designed to 'uncover the secrets' of the samples."
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The grammatical reasoning for the correct answer is sound, but the explanation is incomplete. It fails to provide the necessary semantic and collocation analysis for the distractors, which is required for a comprehensive, expert-level audit."
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic incompatibility of the distractors with the subject 'samples', as required by the models. The grammar tag was confirmed as 'Passive Voice (Past Participle)' by all models, ensuring consistency.",
+          "candidate_explanation": "The correct answer is 'analyzed' because the sentence requires the passive voice (will be + V3), as the subject ('The samples') is the recipient of the action, not the performer. The distractors are incorrect for the following reasons:\n\n* 'Exempted' is incorrect because samples are not exempted from analysis in scientific research; they are intentionally studied.\n* 'Clicked' is incorrect because samples are not clicked by scientists; this action is unrelated to the research process.\n* 'Forgotten' is incorrect because samples are not forgotten by researchers; they are carefully analyzed to uncover their secrets.\n\nThis explanation ensures clarity by explicitly addressing the semantic incompatibility of the distractors with the subject and context of the sentence.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and clear semantic explanations for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all semantic, grammatical, and contextual aspects of the distractors. The grammar tag is accurate, and each distractor is appropriately rejected based on both grammatical form and semantic compatibility with the subject."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually accurate, logically sound, and semantically complete. It correctly identifies the required grammatical structure (Passive Voice) and provides detailed, context-specific reasons for rejecting all distractors, addressing both grammar and meaning."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 180,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically receive the action in the passive voice.",
+                "affected_text": "The explanation does not mention that the park can receive the action of being launched.",
+                "correction": "The explanation should note that the park is the recipient of the action, making the passive voice appropriate."
+              }
+            ],
+            "verified_grammar_tag": "Future Passive Voice",
+            "overall_notes": "The explanation is mostly correct but misses addressing the semantic appropriateness of the passive voice."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address whether the subject (the park) can logically be the receiver of the action for the passive voice distractors, as required by the rules.",
+                "affected_text": "Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event.",
+                "correction": "Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event. Additionally, while the park can logically be the receiver of the action (a park can be launched), the form 'launched' alone does not convey the future tense or passive voice."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address whether the subject (the park) can logically be the receiver of the action for the passive voice distractors, as required by the rules.",
+                "affected_text": "Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will').",
+                "correction": "Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will'). Additionally, while the park can logically be the receiver of the action (a park can be launched), the form 'be launched' alone does not convey the future tense or passive voice."
+              }
+            ],
+            "verified_grammar_tag": "Future Passive Voice",
+            "overall_notes": "The grammar tag is correct, but the explanation fails to address the semantic relationship between the subject and the action for passive voice distractors, as mandated by the rules."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Future Passive Voice",
+            "overall_notes": "The explanation is factually accurate, logically sound, and structurally complete. It correctly identifies the grammatical structure (Future Passive) and thoroughly addresses the semantic necessity of the passive voice by confirming that the subject (the park) is the receiver of the action, not the performer."
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'will be launched' because the sentence describes a future action where the subject (the park) will *receive* the action of being launched by others. This requires the Future Passive structure: Subject + will be + Past Participle.\n* Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event.\n* Why 'will be launching' is incorrect: This is Future Continuous, implying an ongoing action in the future, which does not fit the context of a single launch event.\n* Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will').",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'will be launched' because the sentence describes a future action where the subject (the park) will *receive* the action of being launched by others. This requires the Future Passive structure: Subject + will be + Past Participle.\n* Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event.\n* Why 'will be launching' is incorrect: This is Future Continuous, implying an ongoing action in the future, which does not fit the context of a single launch event.\n* Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will').",
+          "candidate_grammar_tag": "Future Passive Voice",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying the grammatical forms and providing logical reasons for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to explicitly address whether the subject (the park) can logically be the receiver of the action in the passive voice construction, which is a mandatory requirement for passive voice distractors.",
+                  "affected_text": "The explanation does not mention that the park (subject) is logically the receiver of the action (being launched) in the passive voice construction.",
+                  "correction": "The explanation should explicitly state that the park (subject) is logically the receiver of the action (being launched) in the passive voice construction, making the passive voice semantically appropriate here."
+                }
+              ],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The grammar tag is factually correct, but the explanation misses a critical semantic analysis for passive voice distractors, violating the mandatory requirement to address subject-verb relationship validity."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the required grammatical structure (Future Passive) and provides precise, distinct reasons for the failure of every distractor, including addressing the semantic relationship between the subject and the action."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'will be launched' because the sentence describes a future action where the subject (the park) will *receive* the action of being launched by others. This requires the Future Passive structure: Subject + will be + Past Participle.\n* Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event.\n* Why 'will be launching' is incorrect: This is Future Continuous, implying an ongoing action in the future, which does not fit the context of a single launch event.\n* Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will').",
+          "candidate_grammar_tag": "Future Passive Voice",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address whether the subject (the park) can logically be the receiver of the action 'launched', which is a mandatory requirement for passive voice distractors.",
+                  "affected_text": "The explanation to verify does not mention the subject-verb relationship for passive voice distractors.",
+                  "correction": "The explanation should explicitly state that 'the park' is a logical receiver of the action 'launched', as it is a tangible entity that can be launched."
+                }
+              ],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the semantic relationship between the subject and the passive action, which is a mandatory requirement for passive voice distractors."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is grammatically precise, logically sound, and correctly identifies the necessary passive voice structure (Future Passive) based on the semantic context (the park is receiving the action). All distractors are correctly analyzed for their grammatical form and why they fail to fit the context."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'will be launched' because the sentence describes a future action where the subject (the park) will *receive* the action of being launched by others. This requires the Future Passive structure: Subject + will be + Past Participle.\n* Why 'launched' is incorrect: This form lacks the necessary auxiliary verbs to indicate a future passive event.\n* Why 'will be launching' is incorrect: This is Future Continuous, implying an ongoing action in the future, which does not fit the context of a single launch event.\n* Why 'be launched' is incorrect: This structure is incomplete and misses the primary future marker ('will').",
+          "candidate_grammar_tag": "Future Passive Voice",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and no semantic or collocation gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address whether the subject (the park) can logically be the receiver of the action in the passive voice construction, which is a mandatory requirement for passive voice distractors.",
+                  "affected_text": "The explanation to verify does not mention whether the subject (the park) can logically be the receiver of the action in the passive voice construction.",
+                  "correction": "The explanation should explicitly state that the park (as a subject) can logically be the receiver of the action 'launched' because the park is being launched by others, making the passive voice semantically valid."
+                }
+              ],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the mandatory semantic requirement for passive voice distractors, resulting in a semantic gap."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Future Passive Voice",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the necessity of the passive voice (the park receives the action) and the future tense (indicated by 'soon'). All distractors are correctly analyzed for their grammatical flaws."
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 193,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address whether the subject (scientists) can logically perform the actions implied by the distractors (e.g., 'contacted', 'configured', 'designed').",
+                "affected_text": "Why 'contacted' is incorrect: While grammatically possible, 'observed' is the standard scientific verb used when discussing detection of physical phenomena like dark matter.",
+                "correction": "Why 'contacted' is incorrect: While grammatically possible, 'contacted' is semantically inappropriate because scientists do not 'contact' dark matter (which is invisible and non-interactive). The subject (scientists) cannot logically perform the action of contacting dark matter."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not clarify that 'configured' and 'designed' are semantically mismatched with the context of observing dark matter, even though they are grammatically possible in present perfect tense.",
+                "affected_text": "Why 'configured' is incorrect: To configure means to set up or arrange something (like a machine), which does not apply to observing natural matter.",
+                "correction": "Why 'configured' is incorrect: While 'configured' is grammatically possible in present perfect tense, it is semantically inappropriate because scientists do not 'configure' dark matter (which is not a machine or system to be set up)."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic inappropriateness of 'designed' in the context of observing dark matter, despite its grammatical compatibility with present perfect tense.",
+                "affected_text": "Why 'designed' is incorrect: To design means to plan or create, and scientists do not 'design' the act of observation.",
+                "correction": "Why 'designed' is incorrect: While 'designed' is grammatically possible in present perfect tense, it is semantically inappropriate because scientists do not 'design' dark matter (which is not a product or system to be created)."
+              }
+            ],
+            "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic analysis for distractors, failing to address whether the subject can logically perform the actions implied by the distractors. This creates gaps in reasoning and completeness."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation for 'contacted' is insufficient. It merely states that 'observed' is the standard scientific verb without providing a clear semantic reason why 'contacted' fails in this specific scientific context. The explanation must address the difference between physical 'contact' and scientific 'observation/detection'.",
+                "affected_text": "Why 'contacted' is incorrect: While grammatically possible, 'observed' is the standard scientific verb used when discussing detection of physical phenomena like dark matter.",
+                "correction": "Why 'contacted' is incorrect: 'Contacted' implies a direct physical interaction or communication, which is not the scientific process of detection. Since dark matter is invisible and does not interact with electromagnetic radiation, the appropriate scientific term for determining its existence is 'observed' (i.e., detected through its gravitational effects)."
+              }
+            ],
+            "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+            "overall_notes": "The grammar tag and the explanations for 'configured' and 'designed' are accurate. However, the reasoning for the distractor 'contacted' is semantically weak and incomplete, failing to explain the specific contextual mismatch between 'contact' and scientific detection."
+          }
+        ]
+      },
+      "debate_rounds": 2,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'observed' because the phrase 'have not yet observed' uses the Present Perfect tense, which is appropriate for actions that were expected or planned but have not happened up to the present moment. * Why 'contacted' is incorrect: 'Contacted' implies direct physical interaction or communication, which is not the scientific process of detection. Since dark matter is invisible and does not interact with electromagnetic radiation, the appropriate scientific term for determining its existence is 'observed' (i.e., detected through its gravitational effects). * Why 'configured' is incorrect: While 'configured' is not typically used in present perfect tense with this subject-verb relationship, it is semantically inappropriate because 'configured' implies modifying a system or object, but dark matter is a natural phenomenon that cannot be modified or set up by scientists. * Why 'designed' is incorrect: 'Designed' implies intentional creation, but dark matter is a natural, uncreated phenomenon that scientists do not design. The present perfect tense is used here to describe an action that was expected but has not yet occurred, making 'observed' the most accurate and contextually appropriate choice.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address semantic gaps by explicitly explaining why each distractor is semantically inappropriate in the context of scientific detection, ensuring clarity and completeness for B1-B2 learners. The grammar tag was confirmed as accurate, and all models' critiques were incorporated to ensure a comprehensive and logically sound explanation.",
+          "candidate_explanation": "The correct answer is 'observed' because the phrase 'have not yet observed' uses the Present Perfect tense, which is appropriate for actions that were expected or planned but have not happened up to the present moment. * Why 'contacted' is incorrect: 'Contacted' implies direct physical interaction or communication, which is not the scientific process of detection. Since dark matter is invisible and does not interact with electromagnetic radiation, the appropriate scientific term for determining its existence is 'observed' (i.e., detected through its gravitational effects). * Why 'configured' is incorrect: While 'configured' is grammatically possible in present perfect tense, it is semantically inappropriate because scientists do not 'configure' dark matter (which is not a machine or system to be set up). * Why 'designed' is incorrect: While 'designed' is grammatically possible in present perfect tense, it is semantically inappropriate because scientists do not 'design' dark matter (which is not a product or system to be created).",
+          "candidate_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation for 'configured' fails to explicitly address whether the subject (scientists) can logically perform the action of 'configuring' dark matter. While the explanation mentions semantic inappropriateness, it does not clarify that 'configured' implies modifying a system or object, which dark matter is not.",
+                  "affected_text": "it is semantically inappropriate because scientists do not 'configure' dark matter (which is not a machine or system to be set up)",
+                  "correction": "it is semantically inappropriate because 'configured' implies modifying a system or object, but dark matter is a natural phenomenon that cannot be modified or set up by scientists."
+                },
+                {
+                  "type": "collocation_gap",
+                  "description": "The explanation for 'designed' does not address whether the verb collocates naturally with 'dark matter' in this context. While it notes semantic inappropriateness, it should clarify that 'designed' implies intentional creation, which contradicts the passive, uncreated nature of dark matter.",
+                  "affected_text": "it is semantically inappropriate because scientists do not 'design' dark matter (which is not a product or system to be created)",
+                  "correction": "it is semantically inappropriate because 'designed' implies intentional creation, but dark matter is a natural, uncreated phenomenon that scientists do not design."
+                },
+                {
+                  "type": "reasoning_error",
+                  "description": "The explanation for 'configured' incorrectly claims 'configured' is grammatically possible in present perfect tense. In reality, 'configured' is not typically used in present perfect tense with this subject-verb relationship, making the grammatical possibility claim misleading.",
+                  "affected_text": "While 'configured' is grammatically possible in present perfect tense, it is semantically inappropriate because scientists do not 'configure' dark matter",
+                  "correction": "While 'configured' is not typically used in present perfect tense with this subject-verb relationship, it is semantically inappropriate because scientists do not 'configure' dark matter."
+                }
+              ],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The grammar tag is factually correct, but the explanation has semantic and collocation gaps for 'configured' and 'designed', and contains a minor reasoning error regarding grammatical possibility for 'configured'."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The explanation is exceptionally thorough, combining accurate grammatical analysis (Present Perfect tense) with sophisticated semantic and collocational reasoning. It correctly identifies why the distractors fail both grammatically and, more importantly, contextually within the scientific domain. The logic is sound and complete."
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocation gaps for 'configured' and 'designed' by clarifying that 'configured' implies modifying a system, which dark matter is not, and 'designed' implies intentional creation, which contradicts dark matter's natural existence. The grammatical possibility of 'configured' was corrected to reflect that it is not typically used in present perfect tense with this subject-verb relationship, aligning with the critique from Model [qwen3:14b].",
+          "candidate_explanation": "The correct answer is 'observed' because the phrase 'have not yet observed' uses the Present Perfect tense, which is appropriate for actions that were expected or planned but have not happened up to the present moment. * Why 'contacted' is incorrect: 'Contacted' implies direct physical interaction or communication, which is not the scientific process of detection. Since dark matter is invisible and does not interact with electromagnetic radiation, the appropriate scientific term for determining its existence is 'observed' (i.e., detected through its gravitational effects). * Why 'configured' is incorrect: While 'configured' is not typically used in present perfect tense with this subject-verb relationship, it is semantically inappropriate because 'configured' implies modifying a system or object, but dark matter is a natural phenomenon that cannot be modified or set up by scientists. * Why 'designed' is incorrect: 'Designed' implies intentional creation, but dark matter is a natural, uncreated phenomenon that scientists do not design. The present perfect tense is used here to describe an action that was expected but has not yet occurred, making 'observed' the most accurate and contextually appropriate choice.",
+          "candidate_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and semantically appropriate, and all semantic/collocation gaps are addressed. The explanation correctly identifies the present perfect tense usage and explains why the other verbs are semantically unsuitable in this context."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Tense and Verb Collocation (Present Perfect)",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the grammatical structure (Present Perfect) while providing robust semantic and collocation reasoning that grounds the choice in the scientific context of the passage. No factual or logical errors were found."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 194,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the distractor 'contrast' at all, which is required by the checklist.",
+                "affected_text": "The explanation only discusses 'coordinate' and 'accordance', omitting 'contrast'.",
+                "correction": "The explanation should include a specific reason why 'contrast' is incorrect, such as: 'Why 'contrast' is incorrect: This word implies opposition or difference, which is semantically incompatible with the context of collaboration between institutions.'"
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation for 'coordinate' is incomplete. While it correctly notes that 'coordinate' does not form the required prepositional phrase, it fails to clarify that 'coordinate with' is a valid collocation (though not the one required here). This creates a potential ambiguity.",
+                "affected_text": "Why 'coordinate' is incorrect: This word can be a verb (to coordinate) or an adjective, but it does not form the required prepositional phrase for collaboration.",
+                "correction": "Why 'coordinate' is incorrect: While 'coordinate with' is a valid collocation, the sentence structure requires a noun meaning 'jointly,' making 'conjunction' necessary here. 'Coordinate' as a verb or adjective does not fit the prepositional phrase 'run in coordinate with,' which is not standard."
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the 'contrast' distractor and has a minor collocation gap regarding 'coordinate'."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation fails to provide any analysis or reasoning for the distractor 'contrast,' leaving the analysis incomplete.",
+                "affected_text": "The correct answer is 'conjunction' because it completes the fixed and standard collocation 'run in conjunction with,' meaning operated or conducted jointly. * Why 'coordinate' is incorrect: This word can be a verb (to coordinate) or an adjective, but it does not form the required prepositional phrase for collaboration. * Why 'accordance' is incorrect: While 'in accordance with' is a correct phrase, the sentence structure requires a noun that means 'jointly,' making 'conjunction' necessary here. Furthermore, 'accordance' primarily refers to agreement or conformity, not joint operation.",
+                "correction": "The correct answer is 'conjunction' because it completes the fixed and standard collocation 'run in conjunction with,' meaning operated or conducted jointly. * Why 'coordinate' is incorrect: While 'coordinate' can function as a noun, it does not form the required prepositional phrase for joint operation in this context. * Why 'accordance' is incorrect: Although 'in accordance with' is a grammatically correct phrase, the sentence requires a noun that specifically denotes joint operation or partnership, which 'conjunction' provides. 'Accordance' primarily refers to agreement or conformity. * Why 'contrast' is incorrect: 'Contrast' is used to show difference (e.g., 'in contrast to'). Using it here would imply that the degree course was run in opposition to the Glasgow School of Art, which is semantically illogical."
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+            "overall_notes": "The explanation is logically sound for the distractors it addresses, but it fails the completeness check by omitting any analysis of the distractor 'contrast.' This omission requires a failure verdict."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'conjunction' because it completes the fixed and standard collocation 'run in conjunction with,' meaning operated or conducted jointly. * Why 'coordinate' is incorrect: While 'coordinate' can function as a noun, it does not form the required prepositional phrase for joint operation in this context. 'Run in coordinate with' is not a standard collocation, unlike 'run in conjunction with.' * Why 'accordance' is incorrect: Although 'in accordance with' is a grammatically correct phrase, the sentence requires a noun that specifically denotes joint operation or partnership, which 'conjunction' provides. 'Accordance' primarily refers to agreement or conformity, not joint operation. * Why 'contrast' is incorrect: 'Contrast' is used to show difference (e.g., 'in contrast to'). Using it here would imply that the degree course was run in opposition to the Glasgow School of Art, which is semantically illogical and incompatible with the context of collaboration.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the completeness gaps by explicitly analyzing the 'contrast' distractor and clarifying the distinction between 'coordinate' and 'conjunction' as collocations. All models agreed on the grammar tag, and the revised explanation now fully addresses all distractors with clear reasoning.",
+          "candidate_explanation": "The correct answer is 'conjunction' because it completes the fixed and standard collocation 'run in conjunction with,' meaning operated or conducted jointly. * Why 'coordinate' is incorrect: While 'coordinate' can function as a noun, it does not form the required prepositional phrase for joint operation in this context. 'Run in coordinate with' is not a standard collocation, unlike 'run in conjunction with.' * Why 'accordance' is incorrect: Although 'in accordance with' is a grammatically correct phrase, the sentence requires a noun that specifically denotes joint operation or partnership, which 'conjunction' provides. 'Accordance' primarily refers to agreement or conformity, not joint operation. * Why 'contrast' is incorrect: 'Contrast' is used to show difference (e.g., 'in contrast to'). Using it here would imply that the degree course was run in opposition to the Glasgow School of Art, which is semantically illogical and incompatible with the context of collaboration.",
+          "candidate_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all semantic, collocational, and grammatical aspects of the distractors. The grammar tag is accurate, and the reasoning for each distractor is clear and contextually appropriate."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Prepositional Phrase",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the required fixed collocation ('run in conjunction with') and provides precise grammatical and semantic reasons for the rejection of every distractor."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 197,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic inappropriateness of the distractors (frittering, glistening, heralding) in the context of 'capabilities of...' even if they were grammatically correct. For example, 'frittering' (wasting) and 'heralding' (announcing) are semantically unrelated to the concept of measuring.",
+                "affected_text": "The other options are incorrect: * 'Frittering,' 'glistening,' and 'heralding' are all present participles, but they do not fit the grammatical requirement of following the preposition 'of' in this specific construction.",
+                "correction": "The other options are incorrect: * 'Frittering,' 'glistening,' and 'heralding' are all present participles, but they do not fit the grammatical requirement of following the preposition 'of' in this specific construction. Additionally, these words are semantically unrelated to the context of 'capabilities of...' (e.g., 'frittering' implies wasting, 'heralding' implies announcing, which are not actions that can be 'measured' in this context)."
+              }
+            ],
+            "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address the semantic inappropriateness of the distractors, which is a critical gap in completeness."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation is grammatically accurate but structurally incomplete. An expert audit must address both the grammatical rule (gerund after preposition) AND the semantic/collocational fit. The current explanation only addresses the grammar, failing to explain why the distractors are semantically nonsensical in the context of scientific measurement capabilities.",
+                "affected_text": "The other options are incorrect: * 'Frittering,' 'glistening,' and 'heralding' are all present participles, but they do not fit the grammatical requirement of following the preposition 'of' in this specific construction.",
+                "correction": "The correct answer is 'measuring' because the phrase 'the capabilities of...' requires a gerund (-ing form) to follow the preposition 'of.' This structure indicates that the capability itself is an action. Furthermore, 'measuring' is the only option that semantically fits the context of scientific analysis and measurement. The distractors ('frittering,' 'glistening,' and 'heralding') are all present participles, but they are also semantically inappropriate, meaning they do not logically relate to the concept of scientific measurement capabilities."
+              }
+            ],
+            "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+            "overall_notes": "The grammar tag and the core grammatical reasoning are correct. However, the explanation is incomplete because it fails to provide the necessary semantic and collocation analysis required for a comprehensive expert audit. The failure to address the semantic mismatch of the distractors constitutes a structural flaw."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'measuring' because the phrase 'the capabilities of...' requires a gerund (-ing form) to follow the preposition 'of.' This structure indicates that the capability itself is an action. Furthermore, 'measuring' is the only option that semantically fits the context of scientific analysis and measurement. The other options are incorrect: * 'Frittering,' 'glistening,' and 'heralding' are all present participles, but they do not fit the grammatical requirement of following the preposition 'of' in this specific construction. Additionally, these words are semantically unrelated to the concept of 'capabilities of...' (e.g., 'frittering' implies wasting, 'heralding' implies announcing, which are not actions that can be 'measured' in this context).",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to include both grammatical and semantic reasoning, addressing the concerns raised by the models. The grammar tag was retained as 'Gerund Form (Grammatical Structure)' since it accurately describes the required structure. The semantic inappropriateness of the distractors was explicitly explained to ensure completeness.",
+          "candidate_explanation": "The correct answer is 'measuring' because the phrase 'the capabilities of...' requires a gerund (-ing form) to follow the preposition 'of.' This structure indicates that the capability itself is an action. Furthermore, 'measuring' is the only option that semantically fits the context of scientific analysis and measurement. The other options are incorrect: * 'Frittering,' 'glistening,' and 'heralding' are all present participles, but they do not fit the grammatical requirement of following the preposition 'of' in this specific construction. Additionally, these words are semantically unrelated to the concept of 'capabilities of...' (e.g., 'frittering' implies wasting, 'heralding' implies announcing, which are not actions that can be 'measured' in this context).",
+          "candidate_grammar_tag": "Gerund Form (Grammatical Structure)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag accurately identifies the gerund form required after the preposition 'of'. The distractors are correctly identified as present participles, and their semantic inappropriateness is clearly explained. No grammatical, logical, or semantic gaps are present."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Grammatical Structure)",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly identifies the grammatical requirement (gerund following a preposition) and provides strong semantic reasoning for why the distractors fail both the grammatical and contextual tests."
+            }
+          ],
+          "pass_count": 3
+        }
+      ]
+    },
+    {
+      "question_id": 204,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 0,
+        "fail": 3,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation fails to address the semantic inappropriateness of the distractors.",
+                "affected_text": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition.",
+                "correction": "The other options are incorrect for two reasons: first, they are verbs and do not fit the required gerund structure after the preposition 'in'; second, semantically, they do not make sense in the context of the sentence. 'Nursing,' 'adopting,' and 'planting' are not appropriate actions for the amygdala to take in response to threats."
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+            "overall_notes": "The explanation correctly identifies the grammar but fails to address the semantic inappropriateness of the distractors, leading to a completeness gap."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address the semantic inappropriateness of the distractors 'nursing', 'adopting', and 'planting' in the context of the amygdala's function. While the grammatical structure is correctly identified, the explanation does not clarify that these verbs are semantically incompatible with the amygdala's role in responding to threats.",
+                "affected_text": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition.",
+                "correction": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition, and they are semantically incompatible with the amygdala's role in responding to threats (e.g., 'nursing' and 'planting' are unrelated to threat detection)."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address whether the distractors naturally collocate with the surrounding words. For example, 'responding to threats' is a common collocation, whereas 'nursing to threats' or 'planting to threats' are not.",
+                "affected_text": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition.",
+                "correction": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition, and they do not collocate naturally with 'to threats' (e.g., 'responding to threats' is a standard collocation, whereas 'nursing to threats' or 'planting to threats' are not)."
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation lacks critical semantic and collocation analysis for the distractors, leading to an incomplete justification for why 'responding' is the correct answer."
+          },
+          {
+            "model": "gemma4:latest",
+            "model_key": "gm",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation correctly identifies the grammatical rule (gerund after a preposition) but fails to provide specific semantic or collocation reasons why the distractors ('nursing', 'adopting', 'planting') are contextually inappropriate for the subject (amygdala) and the object (threats). A complete explanation must address both the grammatical requirement and the semantic fit.",
+                "affected_text": "The other options are incorrect: while they are all verbs, they do not fit the required grammatical structure after the preposition.",
+                "correction": "The correct answer is 'responding' because the structure requires a gerund (the -ing form of a verb) following the preposition 'in,' which acts as the object of the role. This means the amygdala plays a role *in* [doing something]. While all options are grammatically gerunds, only 'responding' makes semantic sense, as the amygdala is biologically known to respond to threats. The other options ('nursing', 'adopting', 'planting') do not fit the context of the amygdala's function."
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+            "overall_notes": "The grammatical analysis is correct, but the explanation is incomplete because it fails to provide the necessary semantic and contextual analysis for the distractors, which is required for a comprehensive expert audit."
+          }
+        ]
+      },
+      "debate_rounds": 1,
+      "consensus_type": "UNANIMOUS_MUTUAL_CONSENT",
+      "final_explanation": "The correct answer is 'responding' because the structure requires a gerund (the -ing form of a verb) following the preposition 'in,' which acts as the object of the role. This means the amygdala plays a role *in* [doing something]. While all options are grammatically gerunds, only 'responding' makes semantic sense, as the amygdala is biologically known to respond to threats. The other options are incorrect for the following reasons: 'nursing' is incorrect because it refers to caring for someone or something, which is unrelated to the amygdala's function; 'adopting' is incorrect because it means to take in or accept something, which does not fit the context of reacting to threats; and 'planting' is incorrect because it refers to putting something in the ground, which is not related to the amygdala's role in responding to threats. Additionally, 'responding to threats' is a common collocation, whereas 'nursing to threats,' 'adopting to threats,' and 'planting to threats' are not natural phrases in English.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The models agreed on the grammar tag but disagreed on the need for semantic and collocation analysis. The synthesis incorporates all three models' critiques by explicitly addressing the semantic inappropriateness of the distractors and explaining why 'responding' is the only option that fits both grammatically and contextually.",
+          "candidate_explanation": "The correct answer is 'responding' because the structure requires a gerund (the -ing form of a verb) following the preposition 'in,' which acts as the object of the role. This means the amygdala plays a role *in* [doing something]. While all options are grammatically gerunds, only 'responding' makes semantic sense, as the amygdala is biologically known to respond to threats. The other options are incorrect for the following reasons: 'nursing' is incorrect because it refers to caring for someone or something, which is unrelated to the amygdala's function; 'adopting' is incorrect because it means to take in or accept something, which does not fit the context of reacting to threats; and 'planting' is incorrect because it refers to putting something in the ground, which is not related to the amygdala's role in responding to threats. Additionally, 'responding to threats' is a common collocation, whereas 'nursing to threats,' 'adopting to threats,' and 'planting to threats' are not natural phrases in English.",
+          "candidate_grammar_tag": "Gerund/Present Participle (Complement)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed for grammatical form and semantic fit, and the explanation addresses collocations and biological context effectively."
+            },
+            {
+              "model": "gemma4:latest",
+              "model_key": "gm",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Present Participle (Complement)",
+              "overall_notes": "The explanation is highly accurate, logically sound, and structurally complete. It correctly addresses both the grammatical requirement (gerund after a preposition) and the necessary semantic/collocational fit for the context (amygdala's function)."
             }
           ],
           "pass_count": 3

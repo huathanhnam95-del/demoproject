@@ -419,6 +419,76 @@ class TestRecognizeV1(unittest.TestCase):
             self.assertGreaterEqual(timing["total_ms"], 0)
 
 
+class TestRecognizeV2V4Alignment(unittest.TestCase):
+    """V4 alignment is additive and reuses the one recognizer logit call."""
+
+    def test_optional_reference_ipa_returns_v4_alignment_without_second_inference(self):
+        from backend.phoneme_service.app import create_app
+
+        app, backend = _create_test_app(ready=True)
+        symbols = ["<pad>", "k", "æ", "m", "ə", "r"]
+        probabilities = [[0.01] * len(symbols) for _ in range(16)]
+        for row in probabilities:
+            row[0] = 0.8
+        backend.recognize_with_logits.return_value = {
+            "phonemes": [{"symbol": "k", "confidence": 0.9}],
+            "symbol_table": symbols,
+            "blank_id": 0,
+            "log_probs": __import__("numpy").log(__import__("numpy").asarray(probabilities)),
+            "model_revision": "abc1234",
+        }
+        wav_bytes = _make_wav_bytes()
+        with app.test_client() as client:
+            response = client.post(
+                "/recognize/v2",
+                data={
+                    "audio": (io.BytesIO(wav_bytes), "test.wav"),
+                    "reference_syllables": json.dumps(["kæm", "ərə"], ensure_ascii=False),
+                    "expected_syllable_count": "2",
+                    "reference_ipa": "/ˈkæmərə/",
+                },
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        payload = response.get_json()
+        self.assertEqual(payload["contract_version"], "recognize-v2")
+        self.assertEqual(payload["v4_alignment"]["analysisVersion"], "pronunciation-analysis-v4.1")
+        self.assertEqual(payload["v4_alignment"]["syllabificationVersion"], "pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1")
+        backend.recognize_with_logits.assert_called_once()
+
+    def test_conflicting_reference_ipa_returns_fail_closed_v4_alignment(self):
+        from backend.phoneme_service.app import create_app
+
+        app, backend = _create_test_app(ready=True)
+        symbols = ["<pad>", "k", "æ", "m", "ə", "r"]
+        probabilities = [[0.01] * len(symbols) for _ in range(16)]
+        for row in probabilities:
+            row[0] = 0.8
+        backend.recognize_with_logits.return_value = {
+            "phonemes": [{"symbol": "k", "confidence": 0.9}],
+            "symbol_table": symbols,
+            "blank_id": 0,
+            "log_probs": __import__("numpy").log(__import__("numpy").asarray(probabilities)),
+            "model_revision": "abc1234",
+        }
+        with app.test_client() as client:
+            response = client.post(
+                "/recognize/v2",
+                data={
+                    "audio": (io.BytesIO(_make_wav_bytes()), "test.wav"),
+                    "reference_syllables": json.dumps(["kæ", "ərə"], ensure_ascii=False),
+                    "expected_syllable_count": "2",
+                    "reference_ipa": "/ˈkæmərə/",
+                },
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        payload = response.get_json()
+        self.assertFalse(payload["v4_alignment"]["aligned"])
+        self.assertEqual(payload["v4_alignment"]["reason"], "V4_TOKEN_SEQUENCE_MISMATCH")
+        backend.recognize_with_logits.assert_called_once()
+
+
 class EagerLoadTest(unittest.TestCase):
     """Cloud Run gates traffic on /readyz, so the model must load at startup.
 

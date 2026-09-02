@@ -64,49 +64,18 @@ async function runTest() {
     // Source is required and blank by default.
     assert.strictEqual(await page.$eval('#lead-source', (el) => el.value), '', 'Source should be blank by default');
     assert.strictEqual(await page.$eval('#lead-source', (el) => el.required), true, 'Source should be required');
-    const isUrlVisiblePersonal = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isUrlVisiblePersonal, false, "Student's FB link field should be hidden for a blank source");
-
-    const isOwnerVisiblePersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisiblePersonal, false, 'Personal Social Media Account dropdown should be hidden for a blank source');
-
-    const isAgentVisiblePersonal = await page.$eval('#lead-agent-source-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isAgentVisiblePersonal, true, "Agent Source dropdown should be hidden for Facebook - Personal");
-
+    // Check Source Account dropdown options and blank default
     const ownerOptions = await page.$$eval('#lead-facebook-personal-owner option', (els) => els.map((el) => el.value));
-    assert.deepStrictEqual(ownerOptions, ['Nam', 'Thành', 'Quỳnh'], 'Owner options should be Nam, Thành, Quỳnh');
+    assert.deepStrictEqual(ownerOptions, ['', 'Nam', 'Thành', 'Quỳnh'], 'Owner options should be blank prompt, Nam, Thành, Quỳnh');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), '', 'Source Account should be blank by default');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.required), true, 'Source Account should be required');
 
     // Select Tiktok - Personal
     await page.selectOption('#lead-source', 'Tiktok - Personal');
-    const isOwnerVisibleTiktok = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleTiktok, true, "Personal Social Media Account dropdown should be visible for Tiktok - Personal");
+    await page.selectOption('#lead-facebook-personal-owner', 'Thành');
+    assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), 'Thành', 'Selected owner should be Thành');
 
-    await page.selectOption('#lead-source', 'Zalo + Personal');
-    const isOwnerVisibleZaloPersonal = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isOwnerVisibleZaloPersonal, true, 'Personal Social Media Account dropdown should be visible for Zalo + Personal');
-
-    // Select Agent
-    await page.selectOption('#lead-source', 'Agent');
-    const isAgentVisibleAgent = await page.$eval('#lead-agent-source-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isAgentVisibleAgent, true, "Agent Source dropdown should be visible for Agent source");
-
-    // Select Facebook - Page
-    await page.selectOption('#lead-source', 'Facebook - Page');
-    const isUrlVisiblePage = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display !== 'none' && getComputedStyle(el).display !== 'none');
-    assert.strictEqual(isUrlVisiblePage, true, "Student's FB link field should be visible for Facebook - Page");
-
-    const isOwnerVisiblePage = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isOwnerVisiblePage, true, "FB Personal Account dropdown should be hidden for Facebook - Page");
-
-    // Select Zalo - Page
-    await page.selectOption('#lead-source', 'Zalo - Page');
-    const isUrlVisibleZalo = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isUrlVisibleZalo, true, "Student's FB link field should be hidden for Zalo - Page");
-
-    const isOwnerVisibleZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display === 'none' || getComputedStyle(el).display === 'none');
-    assert.strictEqual(isOwnerVisibleZalo, true, "FB Personal Account dropdown should be hidden for Zalo - Page");
-
-    console.log('✓ Student Management acquisition source, FB link, FB Personal Account owner, and Agent source dropdown browser check PASSED');
+    console.log('✓ Student acquisition source and Source Account dropdown browser check PASSED');
   } finally {
     await browser.close();
     server.close();

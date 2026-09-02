@@ -651,7 +651,6 @@ async function main() {
 
     await page.goto(ENQUIRY_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#lead-list-container');
-    await page.waitForFunction(() => !!document.querySelector('#lead-agent-source option[value="agent-source-1"]'));
 
     assert.strictEqual(
       await page.locator('#student-info #lead-entrance-test-section').count(),
@@ -670,10 +669,9 @@ async function main() {
     await page.fill('#lead-name', 'Lead One');
     await page.fill('#lead-email', 'lead.one@example.com');
     await page.fill('#lead-phone', '0900000001');
-    await page.selectOption('#lead-source', 'Agent');
-    await page.selectOption('#lead-agent-source', 'agent-source-1');
-    await page.selectOption('#lead-stage', 'contacted');
-    await page.fill('#lead-probability', '55');
+    await page.fill('#lead-facebook', 'Lead FB Account');
+    await page.selectOption('#lead-source', 'Facebook - Personal');
+    await page.selectOption('#lead-facebook-personal-owner', 'Nam');
     await page.click('#btn-save-lead');
     await page.waitForSelector('.crm-lead-link[data-lead-id="lead-1"]');
     await page.waitForFunction(() => document.getElementById('crm-student-modal')?.getAttribute('aria-hidden') === 'false');
@@ -685,9 +683,9 @@ async function main() {
       (entry) => entry.path === '/api/admin/leads' && entry.method === 'POST',
       'Expected lead create request.'
     );
-    assert.strictEqual(leadCreateRequest.body.agentSourceId, 'agent-source-1');
-    assert.strictEqual(leadCreateRequest.body.stage, 'contacted');
-    assert.strictEqual(leadCreateRequest.body.source, 'Agent');
+    assert.strictEqual(leadCreateRequest.body.name, 'Lead One');
+    assert.strictEqual(leadCreateRequest.body.source, 'Facebook - Personal');
+    assert.strictEqual(leadCreateRequest.body.facebookPersonalOwner, 'Nam');
 
     await page.selectOption('#lead-entrance-test-type', 'segmental_screening_v1');
     await page.click('#btn-add-lead-entrance-test');
@@ -805,7 +803,7 @@ async function main() {
     assert.ok(convertRequest);
     assert.strictEqual(state.students[0].leadId, 'lead-1');
     assert.strictEqual(state.students[0].crmId, 'a0001');
-    assert.strictEqual(state.students[0].agentSourceId, 'agent-source-1');
+    assert.strictEqual(state.students[0].agentSourceId, null);
     assert.strictEqual(state.entranceTests[0].studentId, 'student-1');
 
     await page.goto(COURSES_URL, { waitUntil: 'domcontentloaded' });

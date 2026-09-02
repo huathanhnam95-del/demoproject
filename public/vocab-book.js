@@ -20,6 +20,19 @@ import {
     getDocs
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+// Shared vocab rendering pipeline. The side panel and the full list modal are
+// both driven from these, so a change only has to be made once.
+import {
+    EMPTY_STATES,
+    filterItems,
+    sortItems,
+    toVocabItems
+} from './js/vocab/vocab-item-model.js';
+import { renderVocabList } from './js/vocab/vocab-list-view.js';
+import { applyStatusFilter, createVocabToolbar } from './js/vocab/vocab-toolbar.js';
+import { renderPracticeDashboard } from './js/vocab/vocab-practice-view.js';
+import { makeDialogAccessible } from './js/dialog-a11y.js';
+
 // No IIFE needed for module
 const VocabularyBook = (function () {
     'use strict';
@@ -100,7 +113,25 @@ const VocabularyBook = (function () {
     // New Modal Elements
     let vocabListModal, vocabListClose;
     let vocabTabs, vocabTabContents;
-    let vocabTableBodyBookmarks, vocabTableBodyMissed;
+    let vocabListBookmarks, vocabListMissed;
+    let vocabToolbarBookmarks, vocabToolbarMissed;
+    // Toolbar controller instances (created lazily, one per tab).
+    let toolbarBookmarks = null;
+    let toolbarMissed = null;
+    // Which tab of the full list modal is on screen.
+    let activeListTab = 'bookmarks';
+    // Accessible-dialog controller for the full list modal.
+    let listModalA11y = null;
+    // Pending display:none timer from hideListModal(), so a reopen can cancel it.
+    let listModalHideTimer = null;
+    // lemma -> Vietnamese translation, so search can match meanings without
+    // refetching the dictionary on every keystroke.
+    const translationIndex = new Map();
+    // Toolbar state per tab, so search/sort/filter survive a re-render.
+    const listViewState = {
+        bookmarks: { query: '', sort: 'default', filter: 'all' },
+        missed: { query: '', sort: 'default', filter: 'all' }
+    };
 
     // Current missed words for the add modal
     let currentMissedWords = [];
@@ -153,10 +184,6 @@ const VocabularyBook = (function () {
             vocabCache = createEmptyVocabCache();
         }
 
-        renderBookmarkedWords();
-        renderFrequentlyMissed();
-        renderUsedToMiss();
-
         if (window.SRSReview && typeof window.SRSReview.initializeWord === 'function') {
             const allWordsToSync = [...vocabCache.bookmarkedWords];
             const syncedLemmas = new Set();
@@ -176,6 +203,12 @@ const VocabularyBook = (function () {
                 syncedLemmas.add(lemma);
             });
         }
+
+        // Render AFTER the SRS sync, not before it. The Practice dashboard reads
+        // its numbers from SRSReview, so rendering first showed the previous
+        // session's word counts until something else forced a re-render. The
+        // Firestore path already had this order.
+        renderAll();
     }
 
     function getCaptureKey(word) {
@@ -424,8 +457,10 @@ const VocabularyBook = (function () {
         vocabListClose = document.getElementById('vocab-list-close');
         vocabTabs = document.querySelectorAll('.vocab-tab-btn');
         vocabTabContents = document.querySelectorAll('.vocab-tab-content');
-        vocabTableBodyBookmarks = document.getElementById('vocab-table-body-bookmarks');
-        vocabTableBodyMissed = document.getElementById('vocab-table-body-missed');
+        vocabListBookmarks = document.getElementById('vocab-list-bookmarks');
+        vocabListMissed = document.getElementById('vocab-list-missed');
+        vocabToolbarBookmarks = document.getElementById('vocab-toolbar-bookmarks');
+        vocabToolbarMissed = document.getElementById('vocab-toolbar-missed');
 
         log.debug('Init - Elements found:', {
             toggle: !!vocabPanelToggle,
@@ -551,24 +586,45 @@ const VocabularyBook = (function () {
         }
 
         // Refresh list if open
-        if (document.getElementById('vocab-panel-side')?.classList.contains('expanded')) {
-            renderBookmarkedWords();
-        }
+        renderAll();
     }
 
     /**
      * Switch Tabs in List Modal
      */
     function switchTab(tabName) {
-        // Update Buttons
-        vocabTabs.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        activeListTab = tabName;
+
+        // Re-query rather than using the NodeLists captured at init: the modal is
+        // injected by js/modals.js and its contents are re-rendered, so a snapshot
+        // taken once would go stale.
+        const tabButtons = vocabListModal
+            ? vocabListModal.querySelectorAll('.vocab-tab-btn')
+            : document.querySelectorAll('.vocab-tab-btn');
+        const tabPanels = vocabListModal
+            ? vocabListModal.querySelectorAll('.vocab-tab-content')
+            : document.querySelectorAll('.vocab-tab-content');
+
+        tabButtons.forEach(btn => {
+            const selected = btn.dataset.tab === tabName;
+            btn.classList.toggle('active', selected);
+            btn.setAttribute('aria-selected', String(selected));
+            // Roving tabindex: only the selected tab is in the tab order.
+            btn.tabIndex = selected ? 0 : -1;
         });
 
-        // Update Content
-        vocabTabContents.forEach(content => {
+        tabPanels.forEach(content => {
             content.classList.toggle('active', content.id === `tab-content-${tabName}`);
         });
+
+        // Render lazily. The old implementation eagerly rendered BOTH tables and
+        // ran both network hydration passes every time the modal opened.
+        if (tabName === 'bookmarks' || tabName === 'missed') {
+            ensureToolbar(tabName);
+            renderListTable(tabName);
+        } else if (tabName === 'practice') {
+            renderPracticeTab();
+        }
     }
 
     /**
@@ -579,16 +635,59 @@ const VocabularyBook = (function () {
         closePanel();
 
         if (vocabListModal) {
+            ensureListModalA11y();
+
+            // A close schedules display:none 300ms later. Reopening inside that
+            // window would otherwise let the stale timer hide the modal again,
+            // leaving it .active but invisible.
+            if (listModalHideTimer) {
+                clearTimeout(listModalHideTimer);
+                listModalHideTimer = null;
+            }
+
             vocabListModal.style.display = 'flex';
-            // Small timeout to allow display transition if needed, but primarily for class
+            // Two-phase reveal (display, then .active on a tick). Asserted by
+            // tests/browser/ui-refactor-check.js — do not collapse into one step.
             setTimeout(() => {
                 vocabListModal.classList.add('active');
+                listModalA11y?.handleOpened();
             }, 10);
 
             switchTab(initialTab);
-            renderListTable('bookmarks');
-            renderListTable('missed');
         }
+    }
+
+    /** Attach dialog semantics, focus trapping and ESC handling, once. */
+    function ensureListModalA11y() {
+        if (listModalA11y || !vocabListModal) return;
+
+        const heading = vocabListModal.querySelector('.vocab-list-header h2');
+        if (heading && !heading.id) heading.id = 'vocab-list-title';
+
+        listModalA11y = makeDialogAccessible(vocabListModal, {
+            labelledBy: heading?.id,
+            onRequestClose: hideListModal
+        });
+
+        // Arrow-key navigation between tabs, per the WAI-ARIA tabs pattern.
+        vocabListModal.querySelector('.vocab-tabs')?.addEventListener('keydown', (event) => {
+            const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+            if (!keys.includes(event.key)) return;
+
+            const tabs = Array.from(vocabListModal.querySelectorAll('.vocab-tab-btn'));
+            const current = tabs.indexOf(document.activeElement);
+            if (current === -1) return;
+
+            event.preventDefault();
+            let next;
+            if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = tabs.length - 1;
+            else if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+            else next = (current + 1) % tabs.length;
+
+            switchTab(tabs[next].dataset.tab);
+            tabs[next].focus();
+        });
     }
 
     /**
@@ -597,9 +696,12 @@ const VocabularyBook = (function () {
     function hideListModal() {
         if (vocabListModal) {
             vocabListModal.classList.remove('active');
+            listModalA11y?.handleClosed();
             // Wait for transition to finish before hiding
-            setTimeout(() => {
+            if (listModalHideTimer) clearTimeout(listModalHideTimer);
+            listModalHideTimer = setTimeout(() => {
                 vocabListModal.style.display = 'none';
+                listModalHideTimer = null;
             }, 300);
         }
     }
@@ -657,22 +759,6 @@ const VocabularyBook = (function () {
         return '';
     }
 
-    function formatPronunciationDisplay(pronunciations) {
-        if (typeof pronunciations === 'string') return escapeHtml(pronunciations || '-');
-        const forms = Array.isArray(pronunciations?.forms) ? pronunciations.forms : [];
-        if (!forms.length) return '-';
-        return forms
-            .filter((form) => form?.ipa)
-            .map((form) => {
-                const label = form.formRole === 'weak'
-                    ? 'Weak'
-                    : form.formRole === 'strong'
-                        ? 'Strong'
-                        : 'Citation';
-                return `<span class="vocab-phonetic-form vocab-phonetic-form--${label.toLowerCase()}"><span class="vocab-phonetic-form-label">${label}:</span> ${escapeHtml(form.ipa)}</span>`;
-            })
-            .join('<br>') || '-';
-    }
 
     /**
      * Play Pronunciation using specific female voice if available
@@ -703,156 +789,125 @@ const VocabularyBook = (function () {
     }
 
     /**
-     * Render the Data Table for a tab
+     * Build the canonical item list for a tab from the raw cache.
+     */
+    function buildItemsFor(tabName) {
+        const raw = tabName === 'bookmarks' ? vocabCache.bookmarkedWords : vocabCache.frequentlyMissed;
+        return toVocabItems(raw, tabName, { resolveModeMeta: window.getModeMeta });
+    }
+
+    /**
+     * Look up a word's SRS card so the status filter chips can work.
+     * Returns null when SRS has never seen the word.
+     */
+    function getCardStatusFor(key) {
+        const card = window.SRSReview?.getWordData?.(key);
+        if (!card) return null;
+        const due = card.nextReviewDate ? new Date(card.nextReviewDate) <= new Date() : false;
+        return { status: card.status || null, isDue: card.status !== 'mastered' && due };
+    }
+
+    /**
+     * Render one tab of the full list modal.
+     *
+     * Replaces the old 8-column table renderer. The table showed raw internal
+     * values (`type`, `Q107`) in a "Source" column, a "Form" column that printed
+     * "-" whenever the part of speech was unknown, and an "Examples" column whose
+     * only content was a chevron hidden until an async fetch resolved. All three
+     * are gone; see js/vocab/vocab-list-view.js.
      */
     async function renderListTable(tabName) {
-        const tbody = tabName === 'bookmarks' ? vocabTableBodyBookmarks : vocabTableBodyMissed;
-        if (!tbody) return;
+        if (tabName !== 'bookmarks' && tabName !== 'missed') return;
+        const container = tabName === 'bookmarks' ? vocabListBookmarks : vocabListMissed;
+        if (!container) return;
 
-        // --- True Event Delegation: Attach single listener once ---
-        if (!tbody.hasAttribute('data-delegated')) {
-            tbody.setAttribute('data-delegated', 'true');
-            tbody.addEventListener('click', (e) => {
-                const target = e.target;
+        const state = listViewState[tabName] || { query: '', sort: 'default', filter: 'all' };
+        const all = sortItems(buildItemsFor(tabName), tabName, state.sort);
 
-                // Handle Remove
-                const removeBtn = target.closest('[data-action="remove-word"]');
-                if (removeBtn) {
-                    removeViaModal(removeBtn.dataset.lemma);
-                    return;
-                }
-
-                // Handle Audio
-                const audioBtn = target.closest('[data-action="play-audio"]');
-                if (audioBtn) {
-                    playPronunciation(audioBtn.dataset.word);
-                    return;
-                }
-
-                // Handle Example Toggle
-                const expandBtn = target.closest('[data-action="toggle-examples"]');
-                if (expandBtn) {
-                    const row = expandBtn.closest('tr');
-                    const detailsRow = row.nextElementSibling;
-                    if (detailsRow && detailsRow.classList.contains('vocab-row-details')) {
-                        const isVisible = detailsRow.style.display === 'table-row';
-                        detailsRow.style.display = isVisible ? 'none' : 'table-row';
-                        expandBtn.textContent = isVisible ? '▼' : '▲';
-                        expandBtn.classList.toggle('active', !isVisible);
-                    }
-                }
-            });
+        let visible = applyStatusFilter(all, state.filter, getCardStatusFor);
+        if (state.query) {
+            visible = filterItems(visible, state.query, (key) => translationIndex.get(key) || null);
         }
 
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
-
-        let items = [];
-        if (tabName === 'bookmarks') {
-            items = [...vocabCache.bookmarkedWords].sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
-        } else {
-            items = [...vocabCache.frequentlyMissed].sort((a, b) => b.missCount - a.missCount);
+        const toolbar = tabName === 'bookmarks' ? toolbarBookmarks : toolbarMissed;
+        if (toolbar) {
+            toolbar.setResultCount(visible.length, all.length);
+            toolbar.setCounts(countByFilter(all));
         }
 
-        if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;">No words found.</td></tr>';
-            return;
-        }
+        const isFiltered = Boolean(state.query) || state.filter !== 'all';
 
-        // Generate Rows
-        const rowsHtml = items.map((item, index) => {
-            const wordText = item.word || item.originalWord;
-            const rowId = `vocab-row-${tabName}-${index}`;
-            const mode = item.mode || '-';
-            const questionId = item.questionId || '-';
-            const pos = item.partOfSpeech || 'unknown';
-            const posLabel = pos === 'unknown' ? '-' : pos;
-            const posClass = pos !== 'unknown' ? `vocab-badge-pos vocab-badge-pos-${pos}` : 'vocab-badge-pos';
-
-            const dateAdded = item.addedAt ? new Date(item.addedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-';
-
-            return `
-                <tr id="${rowId}" class="vocab-row-main">
-                    <td class="vocab-word-cell">
-                        <span class="vocab-word-text">${escapeHtml(wordText)}</span>
-                    </td>
-                    <td class="pronunciation-cell" data-word="${escapeHtml(wordText)}">
-                        <span class="vocab-phonetic">...</span>
-                        <button class="vocab-audio-btn-inline" data-action="play-audio" data-word="${escapeHtml(wordText)}" title="Listen">🔊</button>
-                    </td>
-                    <td class="translation-cell" data-word="${escapeHtml(wordText)}">
-                        <span class="vocab-vietnamese" style="color:#3B82F6;font-weight:500;">...</span>
-                    </td>
-                    <td class="examples-action-cell" data-word="${escapeHtml(wordText)}">
-                        <button class="vocab-table-expand-btn" data-action="toggle-examples" style="display:none;" title="Show Examples" type="button">▼</button>
-                    </td>
-                    <td>
-                        <span class="vocab-badge vocab-badge-mode">${escapeHtml(mode)}</span>
-                        ${mode === 'collo-dictate' ? '' : `<span class="vocab-badge vocab-badge-q">Q${escapeHtml(questionId)}</span>`}
-                    </td>
-                    <td><span class="${posClass}">${escapeHtml(posLabel)}</span></td>
-                    <td class="date-cell" style="white-space:nowrap;font-size:12px;color:#64748b;">${dateAdded}</td>
-                    <td>
-                        ${tabName === 'missed'
-                    ? `<span class="vocab-badge vocab-badge-miss">${item.missCount}</span>`
-                    : `<button class="btn-icon-remove" data-action="remove-word" data-lemma="${escapeHtml(item.lemma)}" title="Remove">
-                                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                               </button>`
-                }
-                    </td>
-                </tr>
-                <tr id="${rowId}-details" class="vocab-row-details" style="display: none;">
-                    <td colspan="8">
-                        <div class="vocab-table-details-content"></div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        tbody.innerHTML = rowsHtml;
-
-        // Use mapLimit to fetch Phonetics and translations in background with concurrency control
-        await mapLimit(items, 8, async (item) => {
-            const wordText = item.word || item.originalWord;
-            const escapedWord = CSS.escape(wordText);
-
-            const [phonetic, entry] = await Promise.all([
-                fetchPhonetics(wordText),
-                window.DictionaryService ? window.DictionaryService.getVietnameseEntry(wordText) : Promise.resolve({ translation: '-', sentences: [] })
-            ]);
-
-            // Update UI via selectors (Safe and efficient)
-            const pCells = tbody.querySelectorAll(`.pronunciation-cell[data-word="${escapedWord}"] .vocab-phonetic`);
-            pCells.forEach(cell => { cell.innerHTML = formatPronunciationDisplay(phonetic); });
-
-            const tCells = tbody.querySelectorAll(`.translation-cell[data-word="${escapedWord}"] .vocab-vietnamese`);
-            tCells.forEach(cell => cell.textContent = entry.translation || '-');
-
-            const expandBtns = tbody.querySelectorAll(`.examples-action-cell[data-word="${escapedWord}"] .vocab-table-expand-btn`);
-            if (entry.sentences && entry.sentences.length > 0) {
-                expandBtns.forEach(btn => btn.style.display = 'inline-block');
-
-                // Populate content once
-                const detailCells = tbody.querySelectorAll(`.examples-action-cell[data-word="${escapedWord}"]`);
-                detailCells.forEach(cell => {
-                    const detailsRow = cell.closest('tr').nextElementSibling;
-                    if (detailsRow && detailsRow.classList.contains('vocab-row-details')) {
-                        const container = detailsRow.querySelector('.vocab-table-details-content');
-                        if (container && !container.innerHTML) {
-                            container.innerHTML = `
-                                <div class="vocab-table-sentences">
-                                    ${entry.sentences.slice(0, 3).map(s => `
-                                        <div class="vocab-table-sentence">
-                                            <div class="vi">${escapeHtml(s.vi)}</div>
-                                            <div class="en">${escapeHtml(s.en)}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `;
-                        }
-                    }
-                });
+        await renderVocabList(container, visible, {
+            density: 'comfortable',
+            listKind: tabName,
+            showRemove: tabName === 'bookmarks',
+            emptyKind: isFiltered ? 'no-matches' : 'empty',
+            emptyHint: tabName === 'bookmarks'
+                ? 'Bookmark a word during practice, or use the + button in the Vocabulary Book panel.'
+                : 'Words you miss three or more times during practice show up here automatically.',
+            onRemove: (key) => removeViaModal(key),
+            onPlayAudio: (word) => playPronunciation(word),
+            hydration: {
+                fetchPhonetics,
+                getEntry: async (word) => {
+                    const entry = window.DictionaryService
+                        ? await window.DictionaryService.getVietnameseEntry(word)
+                        : null;
+                    return entry;
+                },
+                mapLimit
             }
         });
+
+        // Cache translations so search can match Vietnamese without refetching.
+        cacheTranslationsFor(container);
+    }
+
+    /** Count how many words sit behind each filter chip. */
+    function countByFilter(items) {
+        const counts = { all: items.length, due: 0, learning: 0, mastered: 0 };
+        items.forEach((item) => {
+            const card = getCardStatusFor(item.key);
+            if (!card) return;
+            if (card.isDue) counts.due += 1;
+            if (card.status === 'mastered') counts.mastered += 1;
+            else if (card.status === 'learning' || card.status === 'review') counts.learning += 1;
+        });
+        return counts;
+    }
+
+    /** Remember rendered translations so the search box can match them. */
+    function cacheTranslationsFor(container) {
+        container.querySelectorAll('.vb-row').forEach((row) => {
+            const key = row.dataset.key;
+            const text = row.querySelector('[data-role="translation"]')?.textContent?.trim();
+            if (key && text) translationIndex.set(key, text);
+        });
+    }
+
+    /** Render the Vocabulary Practice dashboard tab. */
+    function renderPracticeTab() {
+        const host = document.getElementById('tab-content-practice');
+        if (!host) return;
+        renderPracticeDashboard(host);
+    }
+
+    /** Build the search/sort/filter toolbar for a tab, once. */
+    function ensureToolbar(tabName) {
+        const host = tabName === 'bookmarks' ? vocabToolbarBookmarks : vocabToolbarMissed;
+        if (!host || host.dataset.vbReady === 'true') return;
+        host.dataset.vbReady = 'true';
+
+        const toolbar = createVocabToolbar(host, {
+            listKind: tabName,
+            onChange: (next) => {
+                listViewState[tabName] = next;
+                renderListTable(tabName);
+            }
+        });
+
+        if (tabName === 'bookmarks') toolbarBookmarks = toolbar;
+        else toolbarMissed = toolbar;
     }
 
 
@@ -866,8 +921,8 @@ const VocabularyBook = (function () {
             true
         );
         if (confirmed) {
+            // removeBookmarkedWord() calls renderAll(), refreshing panel AND modal.
             removeBookmarkedWord(lemma);
-            renderListTable('bookmarks'); // Re-render table
         }
     }
 
@@ -894,9 +949,7 @@ const VocabularyBook = (function () {
             }
         } else {
             vocabCache = createEmptyVocabCache();
-            renderBookmarkedWords();
-            renderFrequentlyMissed();
-            renderUsedToMiss();
+            renderAll();
         }
         syncToggleVisibility();
     }
@@ -1103,9 +1156,7 @@ const VocabularyBook = (function () {
                 };
             }
 
-            renderBookmarkedWords();
-            renderFrequentlyMissed();
-            renderUsedToMiss();
+            renderAll();
         } catch (e) {
             // log.error('Error loading vocab data:', e);
         }
@@ -1283,7 +1334,7 @@ const VocabularyBook = (function () {
                 });
 
                 vocabCache.wordStats[lemma].isMastered = false;
-                renderFrequentlyMissed();
+                renderAll();
             }
 
             debouncedSaveVocab();
@@ -1317,8 +1368,7 @@ const VocabularyBook = (function () {
                 vocabCache.wordStats[lemma].inUsedToMiss = false;
 
                 // Refresh UI
-                renderFrequentlyMissed();
-                renderUsedToMiss();
+                renderAll();
             }
 
             debouncedSaveVocab();
@@ -1356,8 +1406,8 @@ const VocabularyBook = (function () {
                 if (vocabCache.wordStats[lemma].example) existing.example = vocabCache.wordStats[lemma].example;
             }
 
-            // Live refresh the side panel
-            renderFrequentlyMissed();
+            // Live refresh every vocab surface
+            renderAll();
         }
 
         debouncedSaveVocab();
@@ -1417,8 +1467,7 @@ const VocabularyBook = (function () {
                 vocabCache.wordStats[lemma].inUsedToMiss = true;
 
                 // Live refresh the side panel
-                renderFrequentlyMissed();
-                renderUsedToMiss();
+                renderAll();
             }
         }
 
@@ -1492,7 +1541,7 @@ const VocabularyBook = (function () {
                 vocabCache.wordStats[lemma].isMastered = true;
             }
 
-            renderUsedToMiss();
+            renderAll();
             debouncedSaveVocab();
             return true;
         }
@@ -1515,7 +1564,7 @@ const VocabularyBook = (function () {
                 delete vocabCache.wordStats[lemma];
             }
 
-            renderFrequentlyMissed();
+            renderAll();
             debouncedSaveVocab();
             return true;
         }
@@ -1543,37 +1592,44 @@ const VocabularyBook = (function () {
 
         if (!improvingList) return;
 
-        if (vocabCache.usedToMiss.length === 0) {
-            improvingList.innerHTML = '<div class="vocab-empty">No improving words yet</div>';
-            return;
-        }
+        const items = sortItems(
+            toVocabItems(vocabCache.usedToMiss, 'improving', { resolveModeMeta: window.getModeMeta }),
+            'improving'
+        );
 
-        // Sort by movedAt desc (most recent first)
-        const sorted = [...vocabCache.usedToMiss].sort((a, b) => {
-            return new Date(b.movedAt || 0) - new Date(a.movedAt || 0);
+        renderVocabList(improvingList, items, {
+            density: 'compact',
+            listKind: 'improving',
+            emptyMessage: EMPTY_STATES.improving,
+            onPlayAudio: (word) => playPronunciation(word)
         });
+    }
 
-        const listHtml = sorted.map(w => {
-            const missesAfterMove = w.consecutiveMissesAfterMove || 0;
+    /**
+     * Re-render every vocab surface from the current cache.
+     *
+     * Previously each mutation refreshed only the surface it happened on:
+     * removeViaModal() re-rendered just the modal table and removeBookmarkedWord()
+     * re-rendered just the side panel, so deleting a word in one left the other
+     * showing it until the next full reload.
+     */
+    function renderAll() {
+        renderBookmarkedWords();
+        renderFrequentlyMissed();
+        renderUsedToMiss();
+        if (!isListModalOpen()) return;
 
-            return `
-            <div class="vocab-word-item vocab-improved">
-              <div class="vocab-word-main">
-                <span class="vocab-word-text">${escapeHtml(w.originalWord)}</span>
-                <span class="vocab-badge vocab-badge-improved">✓ Improving</span>
-              </div>
-              <div class="vocab-word-meta">
-                <span class="vocab-meta-item" title="Misses after improvement">${missesAfterMove > 0 ? `⚠️ ${missesAfterMove}/3` : '✨ Stable'}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
+        // Refresh whichever tab is actually visible. Routing everything through
+        // renderListTable() meant that with the Practice tab open, a mutation
+        // re-rendered the (hidden) Frequently Missed list and left the dashboard
+        // the user was looking at stale.
+        if (activeListTab === 'practice') renderPracticeTab();
+        else renderListTable(activeListTab);
+    }
 
-        improvingList.innerHTML = `
-            <div class="vocab-scroll-list">
-                ${listHtml}
-            </div>
-        `;
+    /** True when the full list modal is currently on screen. */
+    function isListModalOpen() {
+        return Boolean(vocabListModal && vocabListModal.classList.contains('active'));
     }
 
     /**
@@ -1655,7 +1711,7 @@ const VocabularyBook = (function () {
         }
 
         debouncedSaveVocab();
-        renderBookmarkedWords();
+        renderAll();
         return true;
     }
 
@@ -1672,7 +1728,7 @@ const VocabularyBook = (function () {
                 window.SRSReview.refreshEntrySurfaces('bookmark-remove');
             }
             debouncedSaveVocab();
-            renderBookmarkedWords();
+            renderAll();
         }
     }
 
@@ -1849,92 +1905,69 @@ const VocabularyBook = (function () {
         return showAddModal(captureItems, questionId, mode, sentenceText);
     }
 
+    /**
+     * Shared side-panel list renderer.
+     *
+     * The panel and the modal now share one row component (compact density here).
+     * Hydration is skipped: the panel is 420px wide and hides the IPA/translation
+     * columns anyway, so fetching them would be pure waste.
+     */
+    function renderPanelList(host, items, listKind, footerHtml, wireFooter) {
+        if (!host) return;
+
+        host.innerHTML = '<div class="vb-panel-rows"></div><div class="vb-panel-footer"></div>';
+        const rows = host.querySelector('.vb-panel-rows');
+        const footer = host.querySelector('.vb-panel-footer');
+
+        renderVocabList(rows, items, {
+            density: 'compact',
+            listKind,
+            showRemove: listKind === 'bookmarks',
+            emptyMessage: EMPTY_STATES[listKind],
+            onRemove: (key) => removeBookmarkedWord(key),
+            onPlayAudio: (word) => playPronunciation(word)
+        });
+
+        if (footerHtml) {
+            footer.innerHTML = footerHtml;
+            wireFooter?.(footer);
+        }
+    }
+
     function renderBookmarkedWords() {
         if (!vocabBookmarkedList) return;
 
-        if (vocabCache.bookmarkedWords.length === 0) {
-            vocabBookmarkedList.innerHTML = '<div class="vocab-empty">No bookmarked words yet</div>';
-            return;
-        }
+        const items = sortItems(
+            toVocabItems(vocabCache.bookmarkedWords, 'bookmarks', { resolveModeMeta: window.getModeMeta }),
+            'bookmarks'
+        );
+        const total = items.length;
+        const PANEL_LIMIT = 5;
 
-        // Sort by recency (addedAt desc)
-        const sorted = [...vocabCache.bookmarkedWords].sort((a, b) => {
-            return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
-        });
-
-        const totalCount = sorted.length;
-        const displayLimit = 5;
-        const displayItems = sorted.slice(0, displayLimit);
-
-        const listHtml = displayItems.map(w => `
-      <div class="vocab-word-item">
-        <div class="vocab-word-main">
-          <span class="vocab-word-text">${escapeHtml(w.word)}</span>
-          <div class="vocab-word-badges">
-             <span class="vocab-badge vocab-badge-mode">${escapeHtml(w.entryType === 'phrase' ? 'phrase' : 'word')}</span>
-             <span class="vocab-badge vocab-badge-mode">${escapeHtml(w.mode)}</span>
-             ${w.mode === 'collo-dictate' ? '' : `<span class="vocab-badge vocab-badge-q">Q${escapeHtml(w.questionId)}</span>`}
-          </div>
-        </div>
-        <button class="vocab-word-remove" data-lemma="${escapeHtml(w.lemma)}" title="Remove">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
-      </div>
-    `).join('');
-
-        // ALWAYS show button if there are items (as requested by user)
-        const showButton = totalCount > 0;
-
-        vocabBookmarkedList.innerHTML = `
-            <div class="vocab-list-content">
-                ${listHtml}
-            </div>
-            ${showButton ? `
-                <div class="vocab-list-footer">
-                    <button id="vocab-view-all-btn" class="vocab-btn-secondary">View All Items</button>
-                    ${window.DictionaryService && isAdmin() ?
-                    `<button id="vocab-reset-cache-btn" class="vocab-btn-text" style="font-size:11px;color:#94a3b8;margin-left:10px;">Reset Cache</button>`
-                    : ''}
-                </div>
-            ` : ''}
+        // "View All" is shown whenever there is anything at all, not only when the
+        // list overflows — deliberate, carried over from the previous behaviour.
+        const footerHtml = `
+            ${total > 0 ? `<button id="vocab-view-all-btn" class="vocab-btn-secondary">View All Items (${total})</button>` : ''}
+            ${isAdmin() ? '<button id="vocab-reset-cache-btn" class="vocab-btn-text">↺ Reset Cache</button>' : ''}
         `;
 
-        // Add View All Items handler
-        const viewAllBtn = vocabBookmarkedList.querySelector('#vocab-view-all-btn');
-        if (viewAllBtn) {
-            viewAllBtn.addEventListener('click', () => {
-                showListModal('bookmarks');
-            });
-        }
+        renderPanelList(vocabBookmarkedList, items.slice(0, PANEL_LIMIT), 'bookmarks', footerHtml, (footer) => {
+            footer.querySelector('#vocab-view-all-btn')
+                ?.addEventListener('click', () => showListModal('bookmarks'));
 
-        // Add remove handlers
-        vocabBookmarkedList.querySelectorAll('.vocab-word-remove').forEach(btn => {
-            btn.addEventListener('click', () => {
-                removeBookmarkedWord(btn.dataset.lemma);
-            });
-        });
-
-        // Reset Cache handler (Admin only)
-        const resetBtn = vocabBookmarkedList.querySelector('#vocab-reset-cache-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', async () => {
+            footer.querySelector('#vocab-reset-cache-btn')?.addEventListener('click', async () => {
                 const confirmed = await window.showCustomConfirm(
                     'Clear Cache?',
                     'Clear all dictionary caches? This will force a refresh of all translations.',
                     true
                 );
-                if (confirmed) {
-                    if (window.DictionaryService && typeof window.DictionaryService.clearCache === 'function') {
-                        window.DictionaryService.clearCache();
-                        alert('Cache cleared!');
-                        location.reload();
-                    }
+                if (confirmed && window.DictionaryService?.clearCache) {
+                    window.DictionaryService.clearCache();
+                    translationIndex.clear();
+                    location.reload();
                 }
             });
-        }
+        });
     }
 
     /**
@@ -1943,59 +1976,21 @@ const VocabularyBook = (function () {
     function renderFrequentlyMissed() {
         if (!vocabFrequentList) return;
 
-        if (vocabCache.frequentlyMissed.length === 0) {
-            vocabFrequentList.innerHTML = '<div class="vocab-empty">No frequently missed words</div>';
-            return;
-        }
+        const items = sortItems(
+            toVocabItems(vocabCache.frequentlyMissed, 'missed', { resolveModeMeta: window.getModeMeta }),
+            'missed'
+        );
+        const total = items.length;
+        const PANEL_LIMIT = 10;
 
-        // Sort by missCount desc
-        const sorted = [...vocabCache.frequentlyMissed].sort((a, b) => b.missCount - a.missCount);
+        const footerHtml = total > 0
+            ? `<button id="vocab-show-all-missed" class="vocab-show-all-btn">View Full List (${total})</button>`
+            : '';
 
-        const totalCount = sorted.length;
-        const displayLimit = 10;
-        const displayItems = sorted.slice(0, displayLimit);
-
-        const listHtml = displayItems.map(w => {
-            const stats = vocabCache.wordStats[w.lemma] || {};
-            // Determine streak color/status
-            const isMastered = (stats.correctStreak || 0) >= 3;
-            const streakClass = isMastered ? 'vocab-streak-mastered' : 'vocab-streak-progress';
-
-            return `
-        <div class="vocab-word-item">
-          <div class="vocab-word-main">
-            <span class="vocab-word-text">${escapeHtml(w.originalWord)}</span>
-            <span class="vocab-badge vocab-badge-miss">Missed ${escapeHtml(w.missCount)}x</span>
-          </div>
-          <div class="vocab-word-streak ${streakClass}">
-            <div class="streak-dots">
-                ${[1, 2, 3].map(i => `<span class="streak-dot ${i <= (stats.correctStreak || 0) ? 'filled' : ''}"></span>`).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-        }).join('');
-
-        // Wrapper for scroll (max 5 items visible approx 260px)
-        const showButton = totalCount > 0;
-
-        vocabFrequentList.innerHTML = `
-            <div class="vocab-scroll-list">
-                ${listHtml}
-            </div>
-            ${showButton ? `<button class="vocab-show-all-btn" id="vocab-show-all-missed">
-                <span>View Full List (${totalCount})</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-            </button>` : ''}
-        `;
-
-        // Add Show All handler
-        const showAllBtn = vocabFrequentList.querySelector('#vocab-show-all-missed');
-        if (showAllBtn) {
-            showAllBtn.addEventListener('click', () => {
-                showListModal('missed');
-            });
-        }
+        renderPanelList(vocabFrequentList, items.slice(0, PANEL_LIMIT), 'missed', footerHtml, (footer) => {
+            footer.querySelector('#vocab-show-all-missed')
+                ?.addEventListener('click', () => showListModal('missed'));
+        });
     }
 
     /**
@@ -2039,32 +2034,19 @@ const VocabularyBook = (function () {
     /**
      * Update the SRS due badge in the vocab panel
      */
+    /**
+     * Refresh the SRS-derived surfaces the Vocabulary Book owns.
+     *
+     * Kept under its original name because SRSReview.refreshEntrySurfaces() calls
+     * it. It no longer pokes #srs-due-badge / #srs-next-review-info /
+     * #srs-start-review-btn directly: those elements were part of the old static
+     * Practice tab and no longer exist. The dashboard renders them from live state
+     * instead, so this just re-renders it when it is on screen — which also keeps
+     * the due count and streak current after a review session ends.
+     */
     function updateSRSDueBadge() {
-        const badge = document.getElementById('srs-due-badge');
-        const nextReviewInfo = document.getElementById('srs-next-review-info');
-        const startBtn = document.getElementById('srs-start-review-btn');
-
-        if (!badge) return;
-
-        let entryState = null;
-        if (window.SRSReview && typeof window.SRSReview.getEntryState === 'function') {
-            entryState = window.SRSReview.getEntryState();
-        }
-
-        const dueCount = Number(entryState?.dueCount || 0);
-        badge.textContent = dueCount;
-
-        // Always keep button enabled - early review confirmation handles the rest
-        if (startBtn) startBtn.disabled = false;
-
-        // Show badge when words are due, hide when not
-        if (dueCount > 0) {
-            badge.style.display = 'inline';
-            if (nextReviewInfo) nextReviewInfo.style.display = 'none';
-        } else {
-            badge.style.display = 'none';
-            // Show next review info when no words due
-            if (nextReviewInfo) nextReviewInfo.style.display = 'block';
+        if (isListModalOpen() && activeListTab === 'practice') {
+            renderPracticeTab();
         }
     }
 

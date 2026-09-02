@@ -103,7 +103,11 @@
   gap: 6px;
   flex: 1 1 0;
   min-width: 0;
-  color: #94a3b8;
+  /* Was #94a3b8 (gray-400) — 2.56:1 on white, on every one of the seven Speaking
+     modes. An upcoming step is quieter than the current one, but its label is
+     informative text, not a disabled control, so it still owes AA. --text-muted
+     clears 4.5:1 and the current/complete states below keep the hierarchy. */
+  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.2;
@@ -121,7 +125,8 @@
   border: 1px solid #cbd5e1;
   border-radius: 50%;
   background: #fff;
-  color: #94a3b8;
+  /* Same 2.56:1 problem as the label, on a 0.72rem numeral. */
+  color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 700;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
@@ -983,6 +988,19 @@
 #mode-sst #sst-question-title,
 #mode-type #transcription-text {
   font-family: var(--font-content) !important;
+}
+
+/* Read-aloud measure.
+   The prompt rendered 900px wide at 18.4px — about 98 characters per line — while the
+   instruction directly above it sat at 480px (~65ch) on the same left edge. Long measure
+   causes line-tracking errors: the eye returns to the wrong line. Reading silently you
+   recover invisibly; reading aloud under a timer you stumble, and the attempt is scored
+   on the stumble. Family is unchanged — the serif treatment above is deliberate. */
+#mode-read-aloud #ra-text-prompt,
+#mode-read-aloud .ra-text {
+  /* `ch` is the width of "0", which in Lora is wider than its average lowercase glyph,
+     so 62ch still measured ~77 rendered characters. 50ch lands at ~63. */
+  max-width: 50ch;
 }
 
 /* Repeat Sentence keeps its replay status beside Play instead of leaving an

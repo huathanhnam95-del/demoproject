@@ -91,10 +91,9 @@
   }
 
   function resetAudioProgress() {
-    if (elements.timeCurrent) elements.timeCurrent.textContent = '00:00';
-    if (elements.timeDuration) elements.timeDuration.textContent = '00:00';
-    if (elements.timelineFill) elements.timelineFill.style.width = '0%';
-    if (elements.timelineThumb) elements.timelineThumb.style.left = '0%';
+    if (elements.progressFill) elements.progressFill.style.width = '0';
+    if (elements.seek) elements.seek.value = '0';
+    if (elements.audioTime) elements.audioTime.textContent = '00:00 / 00:00';
   }
 
   function setAudioControlsEnabled(enabled) {
@@ -102,8 +101,8 @@
       elements.playBtn.disabled = !enabled;
       elements.playBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
     }
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    if (elements.seek) {
+      elements.seek.disabled = !enabled;
     }
   }
 
@@ -120,20 +119,15 @@
 
     // audio element and player elements
     elements.audioElement = document.getElementById('hiw-audio-element');
-    elements.visualizer = document.getElementById('hiw-visualizer');
     elements.playBtn = document.getElementById('hiw-play-btn');
     elements.playIcon = document.getElementById('hiw-play-icon');
-    elements.pauseIcon = document.getElementById('hiw-pause-icon');
-    elements.timelineWrapper = document.getElementById('hiw-timeline-wrapper');
-    elements.timelineFill = document.getElementById('hiw-timeline-fill');
-    elements.timelineThumb = document.getElementById('hiw-timeline-thumb');
-    elements.timeCurrent = document.getElementById('hiw-time-current');
-    elements.timeDuration = document.getElementById('hiw-time-duration');
+    elements.playLabel = document.getElementById('hiw-play-label');
+    elements.progressFill = document.getElementById('hiw-progress-fill');
+    elements.seek = document.getElementById('hiw-seek');
+    elements.audioTime = document.getElementById('hiw-audio-time');
+    elements.volume = document.getElementById('hiw-volume');
     elements.voiceSelect = document.getElementById('hiw-voice-select');
     elements.speedBtns = document.querySelectorAll('.hiw-speed-btn');
-    elements.volumeSlider = document.getElementById('hiw-volume-slider');
-    elements.volumeText = document.getElementById('hiw-volume-text');
-    elements.volumeIcon = document.getElementById('hiw-volume-icon');
 
     // practice card elements
     elements.passageContainer = document.getElementById('hiw-passage-container');
@@ -235,8 +229,8 @@
       elements.audioElement.addEventListener('pause', onAudioPause);
     }
 
-    if (elements.timelineWrapper) {
-      elements.timelineWrapper.addEventListener('click', seekAudio);
+    if (elements.seek) {
+      elements.seek.addEventListener('input', seekAudio);
     }
 
     if (elements.voiceSelect) {
@@ -252,57 +246,18 @@
       });
     });
 
-    if (elements.volumeSlider) {
-      elements.volumeSlider.value = state.volume;
-      if (elements.volumeText) {
-        elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-      }
-      updateVolumeIcon(state.volume);
-
-      elements.volumeSlider.addEventListener('input', (e) => {
-        const vol = parseFloat(e.target.value);
+    if (elements.volume) {
+      elements.volume.value = state.volume;
+      elements.volume.addEventListener('input', () => {
+        const vol = Number(elements.volume.value);
         if (Number.isFinite(vol)) {
           state.volume = vol;
           localStorage.setItem('hiw-volume', String(vol));
           if (elements.audioElement) {
             elements.audioElement.volume = vol;
           }
-          if (elements.volumeText) {
-            elements.volumeText.textContent = `${Math.round(vol * 100)}%`;
-          }
-          updateVolumeIcon(vol);
         }
       });
-    }
-
-    if (elements.volumeIcon) {
-      elements.volumeIcon.addEventListener('click', () => {
-        if (!elements.audioElement || !elements.volumeSlider) return;
-        if (state.volume > 0) {
-          state.preMuteVolume = state.volume;
-          state.volume = 0;
-        } else {
-          state.volume = state.preMuteVolume || 1.0;
-        }
-        elements.volumeSlider.value = state.volume;
-        elements.audioElement.volume = state.volume;
-        if (elements.volumeText) {
-          elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-        }
-        updateVolumeIcon(state.volume);
-        localStorage.setItem('hiw-volume', String(state.volume));
-      });
-    }
-  }
-
-  function updateVolumeIcon(vol) {
-    if (!elements.volumeIcon) return;
-    if (vol === 0) {
-      elements.volumeIcon.textContent = '🔈';
-    } else if (vol < 0.5) {
-      elements.volumeIcon.textContent = '🔉';
-    } else {
-      elements.volumeIcon.textContent = '🔊';
     }
   }
 
@@ -312,7 +267,7 @@
 
     if (elements.audioElement.paused) {
       elements.audioElement.playbackRate = state.currentSpeed;
-      elements.audioElement.volume = state.volume;
+      elements.audioElement.volume = Number(elements.volume?.value ?? state.volume);
       elements.audioElement.play().catch((err) => {
         console.error('[HIWMode] Play failed:', err);
       });
@@ -322,15 +277,13 @@
   }
 
   function onAudioPlay() {
-    if (elements.playIcon) elements.playIcon.style.display = 'none';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'block';
-    if (elements.visualizer) elements.visualizer.classList.add('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'pause';
+    if (elements.playLabel) elements.playLabel.textContent = 'Pause';
   }
 
   function onAudioPause() {
-    if (elements.playIcon) elements.playIcon.style.display = 'block';
-    if (elements.pauseIcon) elements.pauseIcon.style.display = 'none';
-    if (elements.visualizer) elements.visualizer.classList.remove('is-playing');
+    if (elements.playIcon) elements.playIcon.textContent = 'play_arrow';
+    if (elements.playLabel) elements.playLabel.textContent = 'Play';
   }
 
   function onAudioEnded() {
@@ -343,30 +296,25 @@
 
   function updateAudioProgress() {
     const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
 
-    const percentage = (audio.currentTime / audio.duration) * 100;
-    if (elements.timelineFill) elements.timelineFill.style.width = `${percentage}%`;
-    if (elements.timelineThumb) elements.timelineThumb.style.left = `${percentage}%`;
-    if (elements.timeCurrent) elements.timeCurrent.textContent = formatTime(audio.currentTime);
+    const percentage = Math.min(100, (audio.currentTime / audio.duration) * 100);
+    if (elements.progressFill) elements.progressFill.style.width = `${percentage}%`;
+    if (elements.seek) elements.seek.value = String(percentage);
+    if (elements.audioTime) {
+      elements.audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
   }
 
   function updateAudioDuration() {
-    const audio = elements.audioElement;
-    if (!audio || !audio.duration) return;
-    if (elements.timeDuration) elements.timeDuration.textContent = formatTime(audio.duration);
+    updateAudioProgress();
   }
 
-  function seekAudio(e) {
+  function seekAudio() {
     const audio = elements.audioElement;
-    const wrapper = elements.timelineWrapper;
-    if (!audio || !audio.duration || !wrapper) return;
-
-    const rect = wrapper.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    audio.currentTime = percentage * audio.duration;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const percentage = Math.min(100, Math.max(0, Number(elements.seek.value) || 0));
+    audio.currentTime = (percentage / 100) * audio.duration;
     updateAudioProgress();
   }
 
@@ -780,13 +728,16 @@
         if (token.selected) {
           correctSelections++;
           span.classList.add('is-correct-click');
-          // Update tooltip or title to show correction detail
           span.title = `Clicked! Spoken: "${token.correctWord}"`;
         } else {
           missedSelections++;
           span.classList.add('is-missed');
           span.title = `Missed! Spoken: "${token.correctWord}"`;
         }
+        const annotation = document.createElement('span');
+        annotation.className = `hiw-word-annotation hiw-word-annotation--${token.selected ? 'correct' : 'missed'}`;
+        annotation.textContent = `→ ${token.correctWord}`;
+        span.after(annotation);
       } else {
         if (token.selected) {
           incorrectSelections++;
@@ -854,21 +805,38 @@
       scoringSource: 'client'
     }).catch((error) => console.warn('[PTE Archive] HIW save failed:', error));
 
-    // Render explanation accordion
-    if (elements.explanationToggle && (state.currentQuestion.explanation || state.currentQuestion.transcript)) {
+    // Render structured explanation
+    const mismatchedTokens = state.tokens.filter(t => t.isMismatched);
+    if (elements.explanationToggle && mismatchedTokens.length > 0) {
       elements.explanationToggle.style.display = 'block';
       if (elements.explanationContent) {
-        let explanationHtml = state.currentQuestion.explanation;
-        if (!explanationHtml) {
-          explanationHtml = `<p>No detailed explanation available for this question. Spoken words that differed from the transcript text were:</p><ul>`;
-          state.tokens.forEach(t => {
-            if (t.isMismatched) {
-              explanationHtml += `<li>Transcript text: <strong>${t.text}</strong> &rarr; Spoken in audio: <strong>${t.correctWord}</strong></li>`;
-            }
-          });
-          explanationHtml += `</ul>`;
-        }
-        safeRenderHtml(explanationHtml, elements.explanationContent);
+        elements.explanationContent.replaceChildren();
+        const table = document.createElement('table');
+        table.className = 'hiw-comparison-table';
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        ['Transcript', 'Spoken'].forEach(text => {
+          const th = document.createElement('th');
+          th.textContent = text;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        mismatchedTokens.forEach(t => {
+          const tr = document.createElement('tr');
+          const tdTranscript = document.createElement('td');
+          tdTranscript.className = 'hiw-cmp-transcript';
+          tdTranscript.textContent = t.text;
+          const tdSpoken = document.createElement('td');
+          tdSpoken.className = 'hiw-cmp-spoken';
+          tdSpoken.textContent = t.correctWord;
+          tr.appendChild(tdTranscript);
+          tr.appendChild(tdSpoken);
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        elements.explanationContent.appendChild(table);
       }
     }
   }
@@ -906,13 +874,9 @@
       state.initialized = true;
     }
 
-    if (elements.volumeSlider) {
-      elements.volumeSlider.value = state.volume;
+    if (elements.volume) {
+      elements.volume.value = state.volume;
     }
-    if (elements.volumeText) {
-      elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
-    }
-    updateVolumeIcon(state.volume);
     if (elements.audioElement) {
       elements.audioElement.volume = state.volume;
     }

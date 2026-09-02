@@ -81,7 +81,9 @@
 .srs-close-btn {
     background: transparent;
     border: none;
-    color: #9CA3AF;
+    /* An icon-only control needs 3:1 as a graphical object; gray-400 gave 2.54:1
+       and this is the only way out of the review panel. */
+    color: var(--text-muted);
     font-size: 1.5rem;
     cursor: pointer;
     padding: 4px;
@@ -105,7 +107,8 @@
 
 .srs-stats span {
     font-size: 0.875rem;
-    color: #9CA3AF;
+    /* Was #9CA3AF (gray-400) — 2.54:1 on the panel's white. --text-muted is the token this app uses for quiet-but-legible copy. */
+    color: var(--text-muted);
     font-weight: 500;
 }
 
@@ -231,7 +234,9 @@
 .srs-phonetic,
 .srs-phonetic-back {
     font-size: 15px;
-    color: #6B7280 !important;
+    /* #6B7280 measured 4.44:1 on the card back's blue-50 tint — just under AA, on
+       an IPA transcription the learner is meant to read character by character. */
+    color: var(--text-secondary) !important;
     font-family: 'Times New Roman', serif;
     background: transparent;
     padding: 0;
@@ -638,7 +643,8 @@
 .srs-progress {
     text-align: center;
     font-size: 14px;
-    color: #9CA3AF;
+    /* Was #9CA3AF (gray-400) — 2.54:1 on the panel's white. --text-muted is the token this app uses for quiet-but-legible copy. */
+    color: var(--text-muted);
     padding: 0;
     border: none;
     background: transparent;
@@ -1286,7 +1292,8 @@
 .srs-settings-btn {
     background: transparent;
     border: none;
-    color: #9CA3AF;
+    /* Same 2.54:1 as .srs-close-btn beside it. */
+    color: var(--text-muted);
     font-size: 1.25rem;
     cursor: pointer;
     padding: 4px;

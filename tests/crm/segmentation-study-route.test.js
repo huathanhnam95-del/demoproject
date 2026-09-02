@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
@@ -10,10 +11,11 @@ const {
   invokeHandlers,
   createReq
 } = require('./route-test-helpers');
-const { automaticOrderFor, automaticVersionOrderFor } = require('../../functions/src/routes/admin/segmentation-study');
+const { automaticOrderFor, automaticVersionOrderFor, requireAutomaticJudgment, v4ContentHash } = require('../../functions/src/routes/admin/segmentation-study');
 
 const MANIFEST_SHA256 = 'a'.repeat(64);
 const MANIFEST_VERSION = '2.0.0';
+const BUNDLED_MANIFEST_SHA256 = '4db7d2c260fd5be5ac8e050f0cb31dfde2368cdba43453172bfeca4a352adfce';
 const ACTIVE_STUDY_VERSION = 'study-v2';
 
 function makeWavBuffer(fillByte = 0) {
@@ -50,7 +52,7 @@ function makeBucket() {
   };
 }
 
-function makeRouter({ db, bucket, manifest }) {
+function makeRouter({ db, bucket, manifest, useInjectedManifest = true }) {
   return createCrmRouter({
     db,
     admin: {},
@@ -63,16 +65,29 @@ function makeRouter({ db, bucket, manifest }) {
     sendError: (res, status, error, message) => res.status(status).json({ success: false, error, message }),
     getStorageBucket: async () => bucket,
     serverTimestamp: () => new Date('2026-08-13T00:00:00.000Z'),
-    studyManifests: {
-      v1: legacyManifest,
-      v2: manifest
-    },
+    ...(useInjectedManifest ? { studyManifests: { v1: legacyManifest, v2: manifest } } : {}),
     identity: {
       generateClassCode: async () => 'ABC123',
       lookupUserByEmail: async () => ({ uid: 'u1' }),
       forceLinkProfile: async () => ({ success: true })
     }
   });
+}
+
+function serializeTransactions(db) {
+  let transactionTail = Promise.resolve();
+  return {
+    ...db,
+    runTransaction(callback) {
+      const result = transactionTail.then(() => db.runTransaction(callback));
+      transactionTail = result.catch(() => {});
+      return result;
+    }
+  };
+}
+
+function reservationDocIdForTest(studyVersion, operatorName, sessionId) {
+  return crypto.createHash('sha256').update(`${studyVersion}\n${operatorName}\n${sessionId}`).digest('hex');
 }
 
 const manifest = [
@@ -89,7 +104,7 @@ const manifest = [
   {
     taskId: 'segmentation-study-v2-0002',
     order: 1,
-    split: 'holdout',
+    split: 'development',
     targetWord: 'camera',
     referenceIpa: '/ˈkæmərə/',
     referenceSyllableIpa: ['kæ', 'mə', 'rə'],
@@ -155,6 +170,62 @@ function makeComparison(status = 'complete') {
     { startTime: 0.6 + offset, endTime: 0.9 + offset },
     { startTime: 0.9 + offset, endTime: 1.2 + offset }
   ];
+  const v4Spans = spans(0.03);
+  const v4Syllables = v4Spans.map((span, index) => ({
+    ...span,
+    partitionStartTime: span.startTime,
+    partitionEndTime: span.endTime,
+    index,
+    syllableId: `v4-syllable-${index + 1}`,
+    ipa: ['ə', 'bɪ', 'lə', 'ti'][index],
+    onset: [],
+    nucleus: ['ə', 'bɪ', 'lə', 'ti'][index],
+    coda: [],
+    stress: null,
+    phoneIndexes: [index],
+    phoneOwnership: { indexes: [index], startIndex: index, endIndex: index + 1 },
+    alignmentTokenRange: { start: index, end: index + 1, endExclusive: index + 1 },
+    timingSpanIndex: index,
+    rule: 'maximal-legal-onset',
+    ambiguity: { status: 'deterministic', candidates: [] }
+  }));
+  const v4Provenance = {
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: 'en-US',
+    originalIpa: '/əˈbɪləti/',
+    normalizedIpa: 'əˈbɪləti',
+    displayIpa: '/əˈbɪləti/',
+    displaySyllabification: '/ə.bɪ.lə.ti/',
+    exactSyllabification: '/ə.bɪ.lə.ti/',
+    timingSpanContractVersion: 'ctc-alignment-v2',
+    contentHash: 'a'.repeat(64),
+    rule: { id: 'weighted-maximal-onset', stressPolicy: 'primary-secondary-stressed-lax' },
+    ambiguity: { status: 'deterministic', candidates: [] },
+    syllables: v4Syllables
+  };
+  // Keep the fixture on the approved A2 onset-inventory and hash contracts.
+  v4Provenance.onsetInventoryVersion = 'en-US-onsets-v1';
+  v4Provenance.contentHash = v4ContentHash(v4Provenance);
+  const v4Alignment = {
+    aligned: true,
+    schemaVersion: 'pronunciation-syllabification-v1',
+    analysisVersion: 'pronunciation-analysis-v4.1',
+    syllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+    onsetInventoryVersion: 'en-US-onsets-v1',
+    dialect: 'en-US',
+    originalIpa: '/əˈbɪləti/',
+    normalizedIpa: 'əˈbɪləti',
+    syllable_count: 4,
+    displaySyllabification: '/ə.bɪ.lə.ti/',
+    exactSyllabification: '/ə.bɪ.lə.ti/',
+    contentHash: v4Provenance.contentHash,
+    syllables: v4Syllables,
+    provenance: v4Provenance
+  };
   return {
     schemaVersion: 'pronunciation-comparison-v2',
     status,
@@ -169,14 +240,16 @@ function makeComparison(status = 'complete') {
         partitionVariants: {
           schemaVersion: 'pronunciation-partition-variants-v2',
           v3: spans(0.02),
-          v4: spans(0.03),
-          v4AnalysisVersion: 'pronunciation-analysis-v4'
+          v4: v4Spans,
+          v4AnalysisVersion: 'pronunciation-analysis-v4.1',
+          v4SyllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+          v4Alignment
         }
       }
     },
     v4: { status, analysis: {
-      analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
-      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: spans(0.03)
+      analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
+      provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: v4Spans
     } }
   };
 }
@@ -219,11 +292,17 @@ function strictMetadata(overrides = {}) {
     variantProvenance: {
       v2: { analysisVersion: 'pronunciation-analysis-v2', source: 'comparison.v2' },
       v3: { analysisVersion: 'pronunciation-analysis-v3', source: 'partitionVariants.v3' },
-      v4: { analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4' }
+      v4: { analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4' }
     },
     playbackConfirmed: true,
     exposureLog: [{ event: 'client-replacement-must-not-persist' }],
     versionExposureLog: automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001').map((version, index) => ({ version, automaticOrder: automaticOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001'), viewedAt: `2026-08-19T00:00:0${index}.000Z` })),
+    automaticJudgment: {
+      schemaVersion: 'segmentation-study-automatic-judgment-v1',
+      selectedVersions: ['v2', 'v3'],
+      none: false,
+      judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+    },
     captureConstraintsRequested: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     captureEligibility: true,
     ...overrides
@@ -231,6 +310,439 @@ function strictMetadata(overrides = {}) {
 }
 
 (async () => {
+  const targetedManifest = [
+    {
+      taskId: 'segmentation-study-v2-abroad',
+      order: 0,
+      split: 'development',
+      targetWord: 'abroad',
+      referenceIpa: '/əˈbrɔːd/',
+      referenceSyllableIpa: ['ə', 'brɔːd'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-expired',
+      order: 1,
+      split: 'development',
+      targetWord: 'expired',
+      referenceIpa: '/ɪkˈspaɪəd/',
+      referenceSyllableIpa: ['ɪk', 'spaɪəd'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-other-owner',
+      order: 2,
+      split: 'development',
+      targetWord: 'other',
+      referenceIpa: '/ˈʌðə/',
+      referenceSyllableIpa: ['ʌ', 'ðə'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-completed',
+      order: 3,
+      split: 'holdout',
+      targetWord: 'completed',
+      referenceIpa: '/kəmˈpliːtɪd/',
+      referenceSyllableIpa: ['kəm', 'pliː', 'tɪd'],
+      targetSyllableCount: 3
+    },
+    {
+      taskId: 'segmentation-study-v2-holdout-available',
+      order: 4,
+      split: 'holdout',
+      targetWord: 'holdout',
+      referenceIpa: '/ˈhoʊldaʊt/',
+      referenceSyllableIpa: ['hoʊl', 'daʊt'],
+      targetSyllableCount: 2
+    },
+    {
+      taskId: 'segmentation-study-v2-completed-development',
+      order: 5,
+      split: 'development',
+      targetWord: 'finished',
+      referenceIpa: '/ˈfɪnɪʃt/',
+      referenceSyllableIpa: ['fɪn', 'ɪʃt'],
+      targetSyllableCount: 2
+    }
+  ];
+  targetedManifest.manifestVersion = MANIFEST_VERSION;
+  targetedManifest.manifestSha256 = 'c'.repeat(64);
+  targetedManifest.dialect = 'en-US';
+  const targetedDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad': {
+      ...targetedManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-expired': {
+      ...targetedManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { operatorName: 'Previous reviewer', sessionId: 'previous-session-001' }, claimExpiresAt: new Date('2020-01-01T00:00:00.000Z')
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-other-owner': {
+      ...targetedManifest[2], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { operatorName: 'Other reviewer', sessionId: 'other-session-001' }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-completed': {
+      ...targetedManifest[3], studyVersion: ACTIVE_STUDY_VERSION, status: 'completed', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-available': {
+      ...targetedManifest[4], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-orphan': {
+      taskId: 'segmentation-study-v2-orphan', order: 5, split: 'development', targetWord: 'orphan',
+      referenceIpa: '/ˈɔːrfən/', referenceSyllableIpa: ['ɔːr', 'fən'], targetSyllableCount: 2,
+      studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-completed-development': {
+      ...targetedManifest[5], studyVersion: ACTIVE_STUDY_VERSION, status: 'completed', claim: null, claimExpiresAt: null
+    }
+  });
+  const targetedRouter = makeRouter({ db: targetedDb, bucket: makeBucket(), manifest: targetedManifest });
+  const targetedClaimHandlers = getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const targetedIdentity = { operatorName: 'Pilot reviewer', sessionId: 'pilot-session-001' };
+
+  const invalidTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'INVALID TASK ID' }
+  }), invalidTargetRes);
+  assert.strictEqual(invalidTargetRes._status, 400, 'An explicit claim taskId must be validated.');
+  assert.strictEqual(invalidTargetRes._json.error, 'VALIDATION_ERROR');
+
+  const unknownTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-missing' }
+  }), unknownTargetRes);
+  assert.strictEqual(unknownTargetRes._status, 404, 'An unknown explicit taskId must fail closed.');
+  assert.strictEqual(unknownTargetRes._json.error, 'TASK_NOT_FOUND');
+
+  const completedTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-completed' }
+  }), completedTargetRes);
+  assert.strictEqual(completedTargetRes._status, 409, 'A completed explicit taskId must fail closed.');
+  assert.strictEqual(completedTargetRes._json.error, 'HOLDOUT_LOCKED');
+
+  const completedDevelopmentRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-completed-development' }
+  }), completedDevelopmentRes);
+  assert.strictEqual(completedDevelopmentRes._status, 409, 'A completed development task must remain non-claimable.');
+  assert.strictEqual(completedDevelopmentRes._json.error, 'TASK_COMPLETED');
+
+  const otherOwnerTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-other-owner' }
+  }), otherOwnerTargetRes);
+  assert.strictEqual(otherOwnerTargetRes._status, 409, 'An actively owned explicit taskId must fail closed.');
+  assert.strictEqual(otherOwnerTargetRes._json.error, 'CLAIM_CONFLICT');
+
+  const holdoutTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-holdout-available' }
+  }), holdoutTargetRes);
+  assert.strictEqual(holdoutTargetRes._status, 409, 'Explicit holdout claims must fail closed.');
+  assert.strictEqual(holdoutTargetRes._json.error, 'HOLDOUT_LOCKED');
+  const holdoutAfterReject = targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-available');
+  assert.strictEqual(holdoutAfterReject.status, 'available', 'Rejecting an explicit holdout claim must not mutate the task.');
+  assert.strictEqual(holdoutAfterReject.claim, null);
+  assert.strictEqual(Array.from(targetedDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'Rejecting an explicit holdout claim must not create a reservation lock.');
+
+  const orphanTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-orphan' }
+  }), orphanTargetRes);
+  assert.strictEqual(orphanTargetRes._status, 409, 'Explicit claims must reference the current immutable manifest.');
+  assert.strictEqual(orphanTargetRes._json.error, 'MANIFEST_MISMATCH');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-orphan').status, 'available');
+
+  const exactTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-abroad' }
+  }), exactTargetRes);
+  assert.strictEqual(exactTargetRes._status, 200);
+  assert.strictEqual(exactTargetRes._json.data.task.taskId, 'segmentation-study-v2-abroad', 'An explicit claim must reserve the requested task, not the first task.');
+  assert.strictEqual(exactTargetRes._json.data.task.status, 'reserved');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad').claim.operatorName, targetedIdentity.operatorName);
+
+  const unknownWhileActiveRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-missing-active' }
+  }), unknownWhileActiveRes);
+  assert.strictEqual(unknownWhileActiveRes._status, 404, 'An unknown explicit taskId must remain 404 even when the operator has another active claim.');
+
+  const idempotentTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-abroad' }
+  }), idempotentTargetRes);
+  assert.strictEqual(idempotentTargetRes._status, 200, 'The same owner must be able to resume an explicit active claim.');
+  assert.strictEqual(idempotentTargetRes._json.data.task.taskId, 'segmentation-study-v2-abroad');
+  assert.strictEqual(targetedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-abroad').exposureLog.length, 1, 'Resuming a claim must not append a second exposure event.');
+
+  const releaseTargetHandlers = getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/release', 'post');
+  const releasedTargetRes = buildRes();
+  await invokeHandlers(releaseTargetHandlers, createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-abroad' },
+    body: targetedIdentity
+  }), releasedTargetRes);
+  assert.strictEqual(releasedTargetRes._status, 200);
+  const releasedTargetListRes = buildRes();
+  await invokeHandlers(getRouteHandlers(targetedRouter, '/dev/segmentation-study/:studyVersion', 'get'), createReq({ params: { studyVersion: 'v2' } }), releasedTargetListRes);
+  const releasedTarget = releasedTargetListRes._json.data.tasks.find((task) => task.taskId === 'segmentation-study-v2-abroad');
+  assert.strictEqual(releasedTarget.status, 'available', 'Releasing an exact claim must return that task to the clean available queue.');
+  assert.strictEqual(releasedTarget.claim, null);
+
+  const expiredTargetRes = buildRes();
+  await invokeHandlers(targetedClaimHandlers, createReq({
+    params: { studyVersion: 'v2' },
+    body: { ...targetedIdentity, taskId: 'segmentation-study-v2-expired' }
+  }), expiredTargetRes);
+  assert.strictEqual(expiredTargetRes._status, 200, 'An expired explicit claim may be reclaimed.');
+  assert.strictEqual(expiredTargetRes._json.data.task.taskId, 'segmentation-study-v2-expired');
+
+  const resumeManifest = [
+    { taskId: 'segmentation-study-v2-resume-holdout', order: 0, split: 'holdout', targetWord: 'resumeholdout', referenceIpa: '/ˈriːzuːm hoʊldaʊt/', referenceSyllableIpa: ['riː', 'zuːm'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-resume-development', order: 1, split: 'development', targetWord: 'resumedevelopment', referenceIpa: '/ˈriːzuːm dɪˈvɛləpmənt/', referenceSyllableIpa: ['riː', 'zuːm'], targetSyllableCount: 2 }
+  ];
+  resumeManifest.manifestVersion = MANIFEST_VERSION;
+  resumeManifest.manifestSha256 = '3'.repeat(64);
+  resumeManifest.dialect = 'en-US';
+  const resumeIdentity = { operatorName: 'Resume reviewer', sessionId: 'resume-session-001' };
+  const holdoutResumeDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout': {
+      ...resumeManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { ...resumeIdentity }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    }
+  });
+  const holdoutResumeBefore = JSON.parse(JSON.stringify(holdoutResumeDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout')));
+  const holdoutResumeRouter = makeRouter({ db: holdoutResumeDb, bucket: makeBucket(), manifest: resumeManifest });
+  const holdoutResumeRes = buildRes();
+  await invokeHandlers(getRouteHandlers(holdoutResumeRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: resumeIdentity
+  }), holdoutResumeRes);
+  assert.strictEqual(holdoutResumeRes._status, 409, 'A self-owned active holdout resume must fail closed.');
+  assert.strictEqual(holdoutResumeRes._json.error, 'HOLDOUT_LOCKED');
+  assert.deepStrictEqual(holdoutResumeDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-holdout'), holdoutResumeBefore, 'Rejecting an active holdout resume must not mutate the task.');
+  assert.strictEqual(Array.from(holdoutResumeDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'Rejecting an active holdout resume must not create or backfill a reservation lock.');
+
+  const developmentResumeDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-resume-development': {
+      ...resumeManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'reserved',
+      claim: { ...resumeIdentity }, claimExpiresAt: new Date('2099-01-01T00:00:00.000Z')
+    }
+  });
+  const developmentResumeRouter = makeRouter({ db: developmentResumeDb, bucket: makeBucket(), manifest: resumeManifest });
+  const developmentResumeRes = buildRes();
+  await invokeHandlers(getRouteHandlers(developmentResumeRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: resumeIdentity
+  }), developmentResumeRes);
+  assert.strictEqual(developmentResumeRes._status, 200, 'A self-owned active development claim must remain resumable.');
+  assert.strictEqual(developmentResumeRes._json.data.task.taskId, 'segmentation-study-v2-resume-development');
+  assert.strictEqual(Array.from(developmentResumeDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 1, 'Development resume must retain reservation repair behavior.');
+
+  const raceManifest = [
+    { taskId: 'segmentation-study-v2-race-a', order: 0, split: 'development', targetWord: 'racea', referenceIpa: '/ˈreɪsə/', referenceSyllableIpa: ['reɪ', 'sə'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-race-b', order: 1, split: 'development', targetWord: 'raceb', referenceIpa: '/ˈreɪsb/', referenceSyllableIpa: ['reɪ', 'sb'], targetSyllableCount: 2 }
+  ];
+  raceManifest.manifestVersion = MANIFEST_VERSION;
+  raceManifest.manifestSha256 = 'd'.repeat(64);
+  raceManifest.dialect = 'en-US';
+  const raceDb = serializeTransactions(createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-race-a': { ...raceManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-race-b': { ...raceManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  }));
+  const raceRouter = makeRouter({ db: raceDb, bucket: makeBucket(), manifest: raceManifest });
+  const raceClaimHandlers = getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const raceIdentity = { operatorName: 'Concurrent reviewer', sessionId: 'concurrent-session-001' };
+  const raceResponses = await Promise.all(['segmentation-study-v2-race-a', 'segmentation-study-v2-race-b'].map(async (taskId) => {
+    const response = buildRes();
+    await invokeHandlers(raceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: { ...raceIdentity, taskId } }), response);
+    return response;
+  }));
+  assert.strictEqual(raceResponses.filter((response) => response._status === 200).length, 1, 'Concurrent exact claims for one operator must have one winner.');
+  assert.strictEqual(raceResponses.filter((response) => response._status === 409 && response._json.error === 'CLAIM_CONFLICT').length, 1, 'The losing concurrent exact claim must fail with CLAIM_CONFLICT.');
+  const raceReservations = Array.from(raceDb.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(raceReservations.length, 1, 'Concurrent exact claims must use one deterministic reservation record.');
+  assert.strictEqual(raceReservations[0][1].status, 'reserved');
+  const raceWinner = raceResponses.find((response) => response._status === 200)._json.data.task.taskId;
+  const raceHeartbeatRes = buildRes();
+  await invokeHandlers(getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/heartbeat', 'post'), createReq({
+    params: { studyVersion: 'v2', taskId: raceWinner }, body: raceIdentity
+  }), raceHeartbeatRes);
+  assert.strictEqual(raceHeartbeatRes._status, 200);
+  const heartbeatReservation = raceReservations[0][1];
+  assert.strictEqual(heartbeatReservation.taskId, raceWinner, 'Heartbeat must keep the deterministic reservation tied to the task.');
+  const raceReleaseRes = buildRes();
+  await invokeHandlers(getRouteHandlers(raceRouter, '/dev/segmentation-study/:studyVersion/tasks/:taskId/release', 'post'), createReq({
+    params: { studyVersion: 'v2', taskId: raceWinner }, body: raceIdentity
+  }), raceReleaseRes);
+  assert.strictEqual(raceReleaseRes._status, 200);
+  assert.strictEqual(raceDb.docs.get(raceReservations[0][0]).status, 'released', 'Release must clear the deterministic reservation record.');
+  assert.strictEqual(raceDb.docs.get(raceReservations[0][0]).taskId, null);
+
+  const mixedRaceManifest = [
+    { taskId: 'segmentation-study-v2-mixed-a', order: 0, split: 'development', targetWord: 'mixeda', referenceIpa: '/ˈmɪkst eɪ/', referenceSyllableIpa: ['mɪkst', 'eɪ'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-mixed-b', order: 1, split: 'development', targetWord: 'mixedb', referenceIpa: '/ˈmɪkst biː/', referenceSyllableIpa: ['mɪkst', 'biː'], targetSyllableCount: 2 }
+  ];
+  mixedRaceManifest.manifestVersion = MANIFEST_VERSION;
+  mixedRaceManifest.manifestSha256 = 'e'.repeat(64);
+  mixedRaceManifest.dialect = 'en-US';
+  const mixedRaceDb = serializeTransactions(createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-mixed-a': { ...mixedRaceManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-mixed-b': { ...mixedRaceManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  }));
+  const mixedRaceRouter = makeRouter({ db: mixedRaceDb, bucket: makeBucket(), manifest: mixedRaceManifest });
+  const mixedRaceClaimHandlers = getRouteHandlers(mixedRaceRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const mixedRaceIdentity = { operatorName: 'Mixed concurrent reviewer', sessionId: 'mixed-concurrent-session-001' };
+  const mixedRaceResponses = await Promise.all([
+    (async () => {
+      const response = buildRes();
+      await invokeHandlers(mixedRaceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: { ...mixedRaceIdentity, taskId: 'segmentation-study-v2-mixed-b' } }), response);
+      return response;
+    })(),
+    (async () => {
+      const response = buildRes();
+      await invokeHandlers(mixedRaceClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: mixedRaceIdentity }), response);
+      return response;
+    })()
+  ]);
+  const mixedRaceSuccessIds = mixedRaceResponses.filter((response) => response._status === 200).map((response) => response._json.data.task.taskId);
+  assert.ok(mixedRaceSuccessIds.length >= 1, 'Exact-vs-ordinary concurrency must leave one successful reservation response.');
+  assert.strictEqual(new Set(mixedRaceSuccessIds).size, 1, 'Exact-vs-ordinary concurrency must not produce two different claimed tasks.');
+  const mixedRaceActiveTasks = Array.from(mixedRaceDb.docs.values()).filter((task) => task.studyVersion === ACTIVE_STUDY_VERSION && task.status === 'reserved' && task.claim?.operatorName === mixedRaceIdentity.operatorName);
+  assert.strictEqual(mixedRaceActiveTasks.length, 1, 'Exact-vs-ordinary concurrency must leave at most one active task for an operator.');
+
+  const interleavedManifest = [
+    { taskId: 'segmentation-study-v2-interleaved-holdout', order: 0, split: 'holdout', targetWord: 'interleavedholdout', referenceIpa: '/ˈɪntəliːvd hoʊldaʊt/', referenceSyllableIpa: ['ɪn', 'tə', 'liːvd', 'hoʊl', 'daʊt'], targetSyllableCount: 5 },
+    { taskId: 'segmentation-study-v2-interleaved-development', order: 1, split: 'development', targetWord: 'interleaveddevelopment', referenceIpa: '/ˈɪntəliːvd dɪˈvɛləpmənt/', referenceSyllableIpa: ['ɪn', 'tə', 'liːvd', 'dɪ', 'vɛl'], targetSyllableCount: 5 }
+  ];
+  interleavedManifest.manifestVersion = MANIFEST_VERSION;
+  interleavedManifest.manifestSha256 = '1'.repeat(64);
+  interleavedManifest.dialect = 'en-US';
+  const interleavedDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-holdout': { ...interleavedManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-development': { ...interleavedManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  });
+  const interleavedRouter = makeRouter({ db: interleavedDb, bucket: makeBucket(), manifest: interleavedManifest });
+  const interleavedClaimRes = buildRes();
+  await invokeHandlers(getRouteHandlers(interleavedRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: { operatorName: 'Interleaved reviewer', sessionId: 'interleaved-session-001' }
+  }), interleavedClaimRes);
+  assert.strictEqual(interleavedClaimRes._status, 200, 'Ordinary claims must continue past an interleaved holdout.');
+  assert.strictEqual(interleavedClaimRes._json.data.task.taskId, 'segmentation-study-v2-interleaved-development', 'Ordinary claims must select development before holdout.');
+  assert.strictEqual(interleavedDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-interleaved-holdout').status, 'available', 'Interleaved holdouts must remain untouched.');
+  assert.strictEqual(Array.from(interleavedDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 1, 'Interleaved holdouts must not receive a reservation lock.');
+
+  const holdoutOnlyManifest = [
+    { taskId: 'segmentation-study-v2-holdout-only-a', order: 0, split: 'holdout', targetWord: 'holdoutonlya', referenceIpa: '/ˈhoʊldaʊt ə/', referenceSyllableIpa: ['hoʊl', 'daʊt'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-holdout-only-b', order: 1, split: 'holdout', targetWord: 'holdoutonlyb', referenceIpa: '/ˈhoʊldaʊt biː/', referenceSyllableIpa: ['hoʊl', 'daʊt'], targetSyllableCount: 2 }
+  ];
+  holdoutOnlyManifest.manifestVersion = MANIFEST_VERSION;
+  holdoutOnlyManifest.manifestSha256 = '2'.repeat(64);
+  holdoutOnlyManifest.dialect = 'en-US';
+  const holdoutOnlyDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-a': { ...holdoutOnlyManifest[0], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-b': { ...holdoutOnlyManifest[1], studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null }
+  });
+  const holdoutOnlyRouter = makeRouter({ db: holdoutOnlyDb, bucket: makeBucket(), manifest: holdoutOnlyManifest });
+  const holdoutOnlyClaimRes = buildRes();
+  await invokeHandlers(getRouteHandlers(holdoutOnlyRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post'), createReq({
+    params: { studyVersion: 'v2' }, body: { operatorName: 'Holdout reviewer', sessionId: 'holdout-session-001' }
+  }), holdoutOnlyClaimRes);
+  assert.strictEqual(holdoutOnlyClaimRes._status, 409, 'An ordinary claim with only holdouts remaining must fail closed.');
+  assert.strictEqual(holdoutOnlyClaimRes._json.error, 'HOLDOUT_LOCKED');
+  assert.strictEqual(holdoutOnlyDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-a').status, 'available', 'HOLDOUT_LOCKED must not mutate the first holdout.');
+  assert.strictEqual(holdoutOnlyDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-holdout-only-b').status, 'available', 'HOLDOUT_LOCKED must not mutate later holdouts.');
+  assert.strictEqual(Array.from(holdoutOnlyDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyReservations/')).length, 0, 'HOLDOUT_LOCKED must not create a reservation lock.');
+
+  const ordinaryManifest = [
+    { taskId: 'segmentation-study-v2-ordinary-mismatched', order: 1, split: 'development', targetWord: 'mismatch', referenceIpa: '/mɪsˈmætʃ/', referenceSyllableIpa: ['mɪs', 'mætʃ'], targetSyllableCount: 2 },
+    { taskId: 'segmentation-study-v2-ordinary-valid', order: 2, split: 'development', targetWord: 'valid', referenceIpa: '/ˈvælɪd/', referenceSyllableIpa: ['væ', 'lɪd'], targetSyllableCount: 2 }
+  ];
+  ordinaryManifest.manifestVersion = MANIFEST_VERSION;
+  ordinaryManifest.manifestSha256 = 'e'.repeat(64);
+  ordinaryManifest.dialect = 'en-US';
+  const ordinaryDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-orphan': {
+      taskId: 'segmentation-study-v2-ordinary-orphan', order: 0, split: 'development', targetWord: 'orphan',
+      referenceIpa: '/ˈɔːrfən/', referenceSyllableIpa: ['ɔːr', 'fən'], targetSyllableCount: 2,
+      studyVersion: ACTIVE_STUDY_VERSION, status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-mismatched': {
+      ...ordinaryManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: 'f'.repeat(64),
+      status: 'available', claim: null, claimExpiresAt: null
+    },
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-valid': {
+      ...ordinaryManifest[1], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: ordinaryManifest.manifestSha256,
+      status: 'available', claim: null, claimExpiresAt: null
+    }
+  });
+  const ordinaryRouter = makeRouter({ db: ordinaryDb, bucket: makeBucket(), manifest: ordinaryManifest });
+  const ordinaryClaimHandlers = getRouteHandlers(ordinaryRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const ordinaryIdentity = { operatorName: 'Sequential reviewer', sessionId: 'sequential-session-001' };
+  const ordinaryClaimRes = buildRes();
+  await invokeHandlers(ordinaryClaimHandlers, createReq({
+    params: { studyVersion: 'v2' }, body: ordinaryIdentity
+  }), ordinaryClaimRes);
+  assert.strictEqual(ordinaryClaimRes._status, 200, 'Ordinary claim must continue after stale or orphaned candidates.');
+  assert.strictEqual(ordinaryClaimRes._json.data.task.taskId, 'segmentation-study-v2-ordinary-valid', 'Ordinary claim must select the next current-manifest task.');
+  assert.strictEqual(ordinaryDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-orphan').status, 'available', 'An orphan ordinary candidate must not be claimed.');
+  assert.strictEqual(ordinaryDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-ordinary-mismatched').status, 'available', 'A hash-mismatched ordinary candidate must not be claimed.');
+  const staleOrdinaryReservationEntries = Array.from(ordinaryDb.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(staleOrdinaryReservationEntries.length, 1, 'Skipped ordinary candidates must not create reservation records.');
+  assert.strictEqual(staleOrdinaryReservationEntries[0][1].taskId, 'segmentation-study-v2-ordinary-valid');
+
+  const lockManifest = [
+    { taskId: 'segmentation-study-v2-lock-valid', order: 0, split: 'development', targetWord: 'lock', referenceIpa: '/ˈlɒkɪŋ/', referenceSyllableIpa: ['lɒ', 'kɪŋ'], targetSyllableCount: 2 }
+  ];
+  lockManifest.manifestVersion = MANIFEST_VERSION;
+  lockManifest.manifestSha256 = 'b'.repeat(64);
+  lockManifest.dialect = 'en-US';
+  const lockIdentity = { operatorName: 'Lock reviewer', sessionId: 'lock-session-001' };
+  const lockDocKey = `pronunciationSegmentationStudyReservations/${reservationDocIdForTest(ACTIVE_STUDY_VERSION, lockIdentity.operatorName, lockIdentity.sessionId)}`;
+  const lockDb = createFakeDb({
+    'pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid': {
+      ...lockManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: lockManifest.manifestSha256,
+      status: 'available', claim: null, claimExpiresAt: null
+    },
+    [lockDocKey]: {
+      studyVersion: ACTIVE_STUDY_VERSION, studyId: 'segmentation-study-v2', taskId: 'segmentation-study-v2-expired-lock',
+      operatorName: lockIdentity.operatorName, sessionId: lockIdentity.sessionId, status: 'reserved',
+      claimExpiresAt: new Date('2020-01-01T00:00:00.000Z'), updatedAt: new Date('2020-01-01T00:00:00.000Z')
+    }
+  });
+  const lockRouter = makeRouter({ db: lockDb, bucket: makeBucket(), manifest: lockManifest });
+  const lockClaimHandlers = getRouteHandlers(lockRouter, '/dev/segmentation-study/:studyVersion/claim-next', 'post');
+  const expiredLockRes = buildRes();
+  await invokeHandlers(lockClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: lockIdentity }), expiredLockRes);
+  assert.strictEqual(expiredLockRes._status, 200, 'An expired reservation lock must be replaceable by an ordinary claim.');
+  assert.strictEqual(expiredLockRes._json.data.task.taskId, 'segmentation-study-v2-lock-valid');
+  assert.strictEqual(lockDb.docs.get(lockDocKey).taskId, 'segmentation-study-v2-lock-valid');
+  assert.strictEqual(lockDb.docs.get(lockDocKey).status, 'reserved');
+
+  lockDb.docs.set('pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid', {
+    ...lockManifest[0], studyVersion: ACTIVE_STUDY_VERSION, manifestVersion: MANIFEST_VERSION, manifestSha256: lockManifest.manifestSha256,
+    status: 'available', claim: null, claimExpiresAt: null
+  });
+  lockDb.docs.set(lockDocKey, {
+    studyVersion: ACTIVE_STUDY_VERSION, studyId: 'segmentation-study-v2', taskId: 'segmentation-study-v2-other-lock',
+    operatorName: lockIdentity.operatorName, sessionId: lockIdentity.sessionId, status: 'reserved',
+    claimExpiresAt: new Date('2099-01-01T00:00:00.000Z'), updatedAt: new Date('2099-01-01T00:00:00.000Z')
+  });
+  const activeLockRes = buildRes();
+  await invokeHandlers(lockClaimHandlers, createReq({ params: { studyVersion: 'v2' }, body: lockIdentity }), activeLockRes);
+  assert.strictEqual(activeLockRes._status, 409, 'An active reservation lock for another task must block an ordinary claim.');
+  assert.strictEqual(activeLockRes._json.error, 'NO_TASK_AVAILABLE');
+  assert.strictEqual(lockDb.docs.get('pronunciationSegmentationStudyTasks/segmentation-study-v2-lock-valid').status, 'available', 'An active reservation conflict must not mutate the candidate task.');
+
   const unseededDb = createFakeDb();
   const unseededRouter = makeRouter({ db: unseededDb, bucket: makeBucket(), manifest });
   const unseededListHandlers = getRouteHandlers(unseededRouter, '/dev/segmentation-study/:studyVersion', 'get');
@@ -238,6 +750,14 @@ function strictMetadata(overrides = {}) {
   await invokeHandlers(unseededListHandlers, createReq({ params: { studyVersion: 'v2' } }), unseededListRes);
   assert.strictEqual(unseededListRes._status, 200);
   assert.strictEqual(Array.from(unseededDb.docs.keys()).filter((key) => key.startsWith('pronunciationSegmentationStudyTasks/')).length, 0, 'Read APIs must not seed or overwrite shared task state; deployment seeding is explicit.');
+
+  const bundledRouter = makeRouter({ db: createFakeDb(), bucket: makeBucket(), useInjectedManifest: false });
+  const bundledListHandlers = getRouteHandlers(bundledRouter, '/dev/segmentation-study/:studyVersion', 'get');
+  const bundledListRes = buildRes();
+  await invokeHandlers(bundledListHandlers, createReq({ params: { studyVersion: 'v2' } }), bundledListRes);
+  assert.strictEqual(bundledListRes._status, 200);
+  assert.strictEqual(bundledListRes._json.data.manifestVersion, MANIFEST_VERSION, 'Bundled fallback must preserve manifest version metadata.');
+  assert.strictEqual(bundledListRes._json.data.manifestSha256, BUNDLED_MANIFEST_SHA256, 'Bundled fallback must preserve the frozen manifest hash.');
 
   const listHandlers = getRouteHandlers(router, '/dev/segmentation-study/:studyVersion', 'get');
   const listRes = buildRes();
@@ -278,6 +798,10 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(claimRes._json.data.task.automaticOrder.length, 64);
   assert.deepStrictEqual(claimRes._json.data.task.automaticVersionOrder.slice().sort(), ['v2', 'v3', 'v4']);
   assert.deepStrictEqual(claimRes._json.data.task.automaticVersionOrder, automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0001'));
+  const ordinaryReservationEntries = Array.from(db.docs.entries()).filter(([key]) => key.startsWith('pronunciationSegmentationStudyReservations/'));
+  assert.strictEqual(ordinaryReservationEntries.length, 1, 'Claim next must create the deterministic reservation lock.');
+  assert.strictEqual(ordinaryReservationEntries[0][1].taskId, 'segmentation-study-v2-0001');
+  assert.strictEqual(ordinaryReservationEntries[0][1].status, 'reserved');
   const heartbeatHandlers = getRouteHandlers(router, '/dev/segmentation-study/:studyVersion/tasks/:taskId/heartbeat', 'post');
 
   const mismatchedTaskId = 'segmentation-study-v1-mismatch';
@@ -359,14 +883,33 @@ function strictMetadata(overrides = {}) {
   assert.strictEqual(completeRes._json.data.sample.variantProvenance.v4.variant, 'v4');
   assert.strictEqual(completeRes._json.data.sample.versions.v4.source, 'partitionVariants.v4');
   assert.strictEqual(completeRes._json.data.sample.variantProvenance.v4.source, 'partitionVariants.v4');
+  assert.deepStrictEqual(completeRes._json.data.sample.automaticSegments, [
+    { index: 0, startTime: 0.13, endTime: 0.33, duration: 0.2 },
+    { index: 1, startTime: 0.33, endTime: 0.63, duration: 0.3 },
+    { index: 2, startTime: 0.63, endTime: 0.93, duration: 0.3 },
+    { index: 3, startTime: 0.93, endTime: 1.23, duration: 0.3 }
+  ], 'Persisted automaticSegments must remain the authoritative V4 partition spans.');
   assert.strictEqual(completeRes._json.data.sample.versions.v2.analysisVersion, 'pronunciation-analysis-v2');
-  assert.strictEqual(completeRes._json.data.sample.versions.v4.analysisVersion, 'pronunciation-analysis-v4');
+  assert.strictEqual(completeRes._json.data.sample.versions.v4.analysisVersion, 'pronunciation-analysis-v4.1');
+  assert.strictEqual(completeRes._json.data.sample.v4Provenance.schemaVersion, 'pronunciation-syllabification-v1');
+  assert.strictEqual(completeRes._json.data.sample.v4Provenance.contentHash, v4ContentHash(completeRes._json.data.sample.v4Provenance));
+  assert.notStrictEqual(completeRes._json.data.sample.v4Provenance, completeRes._json.data.sample.automaticSegments, 'V4 structural provenance must remain separate from timing-only automaticSegments.');
   assert.ok(Array.isArray(completeRes._json.data.sample.exposureLog));
   assert.strictEqual(completeRes._json.data.sample.exposureLog[0].event, 'automatic-boundaries-exposed');
   assert.strictEqual(completeRes._json.data.sample.versionExposureLog.length, 3);
+  assert.deepStrictEqual(completeRes._json.data.sample.automaticJudgment, {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1',
+    selectedVersions: ['v2', 'v3'],
+    none: false,
+    judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  }, 'The versioned automatic judgment must persist on the sample.');
   const completedSampleId = completeRes._json.data.sampleId;
+  const initialReview = Array.from(db.docs.entries()).find(([key]) => key.startsWith(`pronunciationCorpusSamples/${completedSampleId}/manualReviews/`))?.[1];
+  assert.deepStrictEqual(initialReview?.automaticJudgment, completeRes._json.data.sample.automaticJudgment, 'The immutable review must retain the automatic judgment.');
   assert.ok(db.docs.has(`pronunciationCorpusSamples/${completedSampleId}`));
   assert.ok(Array.from(db.docs.keys()).some((key) => key.startsWith(`pronunciationCorpusSamples/${completedSampleId}/manualReviews/`)), 'Initial study completion must persist an immutable manual review.');
+  assert.strictEqual(db.docs.get(ordinaryReservationEntries[0][0]).status, 'released', 'Completion must clear the deterministic reservation lock.');
+  assert.strictEqual(db.docs.get(ordinaryReservationEntries[0][0]).taskId, null);
 
   const idempotentRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](completeReq, idempotentRes);
@@ -421,15 +964,84 @@ function strictMetadata(overrides = {}) {
         comparison: {
           ...makeComparison(),
           v2: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v2', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }] } },
-          v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4AnalysisVersion: 'pronunciation-analysis-v4' } } },
+          v3: { status: 'complete', analysis: { analysisVersion: 'pronunciation-analysis-v3', observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], partitionVariants: { schemaVersion: 'pronunciation-partition-variants-v2', v3: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }], v4AnalysisVersion: 'pronunciation-analysis-v4.1', v4SyllabificationVersion: 'en-US-weight-first-max-onset-v1', v4Alignment: {
+            aligned: true, analysisVersion: 'pronunciation-analysis-v4.1', syllabificationVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', dialect: 'en-US',
+            syllables: [{ startTime: 0.1, endTime: 0.5, partitionStartTime: 0.1, partitionEndTime: 0.5, syllableId: 'v4-syllable-1', ipa: 'kæ', phoneIndexes: [0], phoneOwnership: { indexes: [0], startIndex: 0, endIndex: 0 }, alignmentTokenRange: { start: 0, end: 1, endExclusive: 1 }, timingSpanIndex: 0, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { startTime: 0.5, endTime: 1.0, partitionStartTime: 0.5, partitionEndTime: 1.0, syllableId: 'v4-syllable-2', ipa: 'mə', phoneIndexes: [1], phoneOwnership: { indexes: [1], startIndex: 1, endIndex: 1 }, alignmentTokenRange: { start: 1, end: 2, endExclusive: 2 }, timingSpanIndex: 1, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { startTime: 1.0, endTime: 1.5, partitionStartTime: 1.0, partitionEndTime: 1.5, syllableId: 'v4-syllable-3', ipa: 'rə', phoneIndexes: [2], phoneOwnership: { indexes: [2], startIndex: 2, endIndex: 2 }, alignmentTokenRange: { start: 2, end: 3, endExclusive: 3 }, timingSpanIndex: 2, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }],
+            provenance: { schemaVersion: 'pronunciation-syllabification-v1', analysisVersion: 'pronunciation-analysis-v4.1', ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1', onsetInventoryVersion: 'en-US-legal-onsets-v1', dialect: 'en-US', originalIpa: '/ˈkæmərə/', normalizedIpa: 'ˈkæmərə', displayIpa: '/ˈkæmərə/', contentHash: 'b'.repeat(64), rule: { id: 'weighted-maximal-onset', stressPolicy: 'primary-secondary-stressed-lax' }, ambiguity: { status: 'deterministic', candidates: [] }, syllables: [{ syllableId: 'v4-syllable-1', phoneIndexes: [0], phoneOwnership: { indexes: [0], startIndex: 0, endIndex: 0 }, alignmentTokenRange: { start: 0, end: 1, endExclusive: 1 }, timingSpanIndex: 0, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { syllableId: 'v4-syllable-2', phoneIndexes: [1], phoneOwnership: { indexes: [1], startIndex: 1, endIndex: 1 }, alignmentTokenRange: { start: 1, end: 2, endExclusive: 2 }, timingSpanIndex: 1, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }, { syllableId: 'v4-syllable-3', phoneIndexes: [2], phoneOwnership: { indexes: [2], startIndex: 2, endIndex: 2 }, alignmentTokenRange: { start: 2, end: 3, endExclusive: 3 }, timingSpanIndex: 2, rule: 'maximal-legal-onset', ambiguity: { status: 'deterministic', candidates: [] } }]
+          } } } } },
           v4: { status: 'complete', analysis: {
-            analysisVersion: 'pronunciation-analysis-v4', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
+            analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4', partitionSchemaVersion: 'pronunciation-partition-variants-v2',
             provenance: { source: 'partitionVariants.v4', variant: 'v4', schemaVersion: 'pronunciation-partition-variants-v2' }, observed_syllables: [{ startTime: 0.1, endTime: 0.5 }, { startTime: 0.5, endTime: 1.0 }, { startTime: 1.0, endTime: 1.5 }]
           } }
+        },
+        variantProvenance: {
+          v2: { analysisVersion: 'pronunciation-analysis-v2', source: 'comparison.v2' },
+          v3: { analysisVersion: 'pronunciation-analysis-v3', source: 'partitionVariants.v3' },
+          v4: { analysisVersion: 'pronunciation-analysis-v4.1', source: 'partitionVariants.v4' }
         }
       })
     }
   });
+  // The inline camera comparison mirrors a legacy fixture, so normalize its
+  // V4 envelope to the current onset-inventory and content-hash contract.
+  const uncertainMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  const uncertainAlignment = uncertainMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const uncertainProvenance = uncertainAlignment.provenance;
+  uncertainAlignment.syllables.forEach((syllable, index) => {
+    syllable.index = index;
+    syllable.onset = [];
+    syllable.nucleus = syllable.ipa;
+    syllable.coda = [];
+    syllable.stress = null;
+    syllable.phoneOwnership = { indexes: syllable.phoneIndexes, startIndex: index, endIndex: index + 1 };
+  });
+  uncertainProvenance.syllables.forEach((syllable, index) => {
+    const source = uncertainAlignment.syllables[index];
+    syllable.index = index;
+    syllable.ipa = source.ipa;
+    syllable.onset = source.onset;
+    syllable.nucleus = source.nucleus;
+    syllable.coda = source.coda;
+    syllable.stress = source.stress;
+    syllable.phoneOwnership = { indexes: source.phoneIndexes, startIndex: index, endIndex: index + 1 };
+  });
+  uncertainProvenance.onsetInventoryVersion = 'en-US-onsets-v1';
+  uncertainProvenance.contentHash = v4ContentHash(uncertainProvenance);
+  uncertainCompleteReq.body.metadata = JSON.stringify(uncertainMetadata);
+
+  const spoofedDialectMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  spoofedDialectMetadata.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.dialect = 'en-GB';
+  spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.contentHash = v4ContentHash(
+    spoofedDialectMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance
+  );
+  const spoofedDialectReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(spoofedDialectMetadata) }
+  });
+  spoofedDialectReq.file = { buffer: makeWavBuffer(21) };
+  const spoofedDialectRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](spoofedDialectReq, spoofedDialectRes);
+  assert.strictEqual(spoofedDialectRes._status, 400, 'Client-supplied dialect must not override the claimed task dialect.');
+  assert.strictEqual(spoofedDialectRes._json.error, 'REFERENCE_PROVENANCE_REQUIRED');
+
+  const duplicateIdMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  const duplicateIdAlignment = duplicateIdMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const duplicateId = duplicateIdAlignment.syllables[0].syllableId;
+  duplicateIdAlignment.syllables[1].syllableId = duplicateId;
+  duplicateIdAlignment.provenance.syllables[1].syllableId = duplicateId;
+  duplicateIdAlignment.provenance.contentHash = v4ContentHash(duplicateIdAlignment.provenance);
+  const duplicateIdReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(duplicateIdMetadata) }
+  });
+  duplicateIdReq.file = { buffer: makeWavBuffer(22) };
+  const duplicateIdRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](duplicateIdReq, duplicateIdRes);
+  assert.strictEqual(duplicateIdRes._status, 400, 'Duplicate stable V4 syllable IDs must be rejected.');
+  assert.strictEqual(duplicateIdRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
+
   const missingCaptureReq = createReq({
     params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
     body: { metadata: JSON.stringify({ ...JSON.parse(uncertainCompleteReq.body.metadata), captureSettings: undefined }) }
@@ -438,6 +1050,33 @@ function strictMetadata(overrides = {}) {
   const missingCaptureRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](missingCaptureReq, missingCaptureRes);
   assert.strictEqual(missingCaptureRes._status, 400, 'Missing capture settings must block completion.');
+
+  const missingV4ProvenanceMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  missingV4ProvenanceMetadata.captureSettings = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  delete missingV4ProvenanceMetadata.comparison.v3.analysis.partitionVariants.v4Alignment;
+  const missingV4ProvenanceReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(missingV4ProvenanceMetadata) }
+  });
+  missingV4ProvenanceReq.file = { buffer: makeWavBuffer(22) };
+  const missingV4ProvenanceRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](missingV4ProvenanceReq, missingV4ProvenanceRes);
+  assert.strictEqual(missingV4ProvenanceRes._status, 400, 'Missing immutable V4 provenance must block completion.');
+  assert.strictEqual(missingV4ProvenanceRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
+
+  const duplicatePhoneMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  duplicatePhoneMetadata.captureSettings = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  duplicatePhoneMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.syllables[1].phoneIndexes = [0];
+  duplicatePhoneMetadata.comparison.v3.analysis.partitionVariants.v4Alignment.provenance.syllables[1].phoneOwnership.indexes = [0];
+  const duplicatePhoneReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(duplicatePhoneMetadata) }
+  });
+  duplicatePhoneReq.file = { buffer: makeWavBuffer(23) };
+  const duplicatePhoneRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](duplicatePhoneReq, duplicatePhoneRes);
+  assert.strictEqual(duplicatePhoneRes._status, 400, 'Duplicate V4 phone ownership must block completion.');
+  assert.strictEqual(duplicatePhoneRes._json.error, 'ANALYSIS_V4_PROVENANCE_REQUIRED');
 
   const failedAnalysisReq = createReq({
     params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
@@ -526,6 +1165,99 @@ function strictMetadata(overrides = {}) {
   await completeHandlers[completeHandlers.length - 1](noPlaybackReq, noPlaybackRes);
   assert.strictEqual(noPlaybackRes._status, 400, 'Reviewer playback confirmation must be explicit.');
 
+  const missingAutomaticJudgmentMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  delete missingAutomaticJudgmentMetadata.automaticJudgment;
+  const missingAutomaticJudgmentReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(missingAutomaticJudgmentMetadata) }
+  });
+  missingAutomaticJudgmentReq.file = { buffer: makeWavBuffer(10) };
+  const missingAutomaticJudgmentRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](missingAutomaticJudgmentReq, missingAutomaticJudgmentRes);
+  assert.strictEqual(missingAutomaticJudgmentRes._status, 400, 'Completion must require an automatic judgment after exposure.');
+  assert.strictEqual(missingAutomaticJudgmentRes._json.error, 'AUTOMATIC_JUDGMENT_REQUIRED');
+
+  const conflictingAutomaticJudgmentMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  conflictingAutomaticJudgmentMetadata.automaticJudgment = {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1', selectedVersions: ['v2'], none: true, judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  };
+  const conflictingAutomaticJudgmentReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(conflictingAutomaticJudgmentMetadata) }
+  });
+  conflictingAutomaticJudgmentReq.file = { buffer: makeWavBuffer(11) };
+  const conflictingAutomaticJudgmentRes = buildRes();
+  await completeHandlers[completeHandlers.length - 1](conflictingAutomaticJudgmentReq, conflictingAutomaticJudgmentRes);
+  assert.strictEqual(conflictingAutomaticJudgmentRes._status, 400, 'None must be exclusive with selected automatic versions.');
+  assert.strictEqual(conflictingAutomaticJudgmentRes._json.error, 'AUTOMATIC_JUDGMENT_INVALID');
+
+  const validNoneJudgment = {
+    schemaVersion: 'segmentation-study-automatic-judgment-v1',
+    selectedVersions: [],
+    none: true,
+    judgedAfterExposureAt: '2026-08-20T00:00:00.000Z'
+  };
+  assert.deepStrictEqual(
+    requireAutomaticJudgment(validNoneJudgment, JSON.parse(uncertainCompleteReq.body.metadata).versionExposureLog),
+    validNoneJudgment,
+    'An exclusive None judgment must be accepted after exposure.'
+  );
+  const judgmentAdversarialCases = [
+    {
+      label: 'duplicate versions',
+      judgment: { ...validNoneJudgment, selectedVersions: ['v2', 'v2'], none: false },
+      message: 'Duplicate automatic versions must be rejected.'
+    },
+    {
+      label: 'malformed timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: 'not-a-timestamp' },
+      message: 'Malformed judgment timestamps must be rejected.'
+    },
+    {
+      label: 'non-after timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: '2026-08-19T00:00:10.000Z' },
+      message: 'Judgment timestamps at or before exposure must be rejected.'
+    }
+  ];
+  for (const testCase of judgmentAdversarialCases) {
+    assert.throws(
+      () => requireAutomaticJudgment(testCase.judgment, JSON.parse(uncertainCompleteReq.body.metadata).versionExposureLog),
+      (error) => error?.code === 'AUTOMATIC_JUDGMENT_INVALID',
+      testCase.message
+    );
+  }
+
+  const routeJudgmentAdversarialCases = [
+    {
+      label: 'duplicate versions',
+      judgment: { ...validNoneJudgment, selectedVersions: ['v2', 'v2'], none: false },
+      fillByte: 12
+    },
+    {
+      label: 'malformed timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: 'not-a-timestamp' },
+      fillByte: 13
+    },
+    {
+      label: 'non-after timestamp',
+      judgment: { ...validNoneJudgment, judgedAfterExposureAt: '2026-08-19T00:00:10.000Z' },
+      fillByte: 14
+    }
+  ];
+  for (const testCase of routeJudgmentAdversarialCases) {
+    const routeMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+    routeMetadata.automaticJudgment = testCase.judgment;
+    const routeReq = createReq({
+      params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+      body: { metadata: JSON.stringify(routeMetadata) }
+    });
+    routeReq.file = { buffer: makeWavBuffer(testCase.fillByte) };
+    const routeRes = buildRes();
+    await completeHandlers[completeHandlers.length - 1](routeReq, routeRes);
+    assert.strictEqual(routeRes._status, 400, `${testCase.label} automatic judgment must be rejected by the completion route.`);
+    assert.strictEqual(routeRes._json.error, 'AUTOMATIC_JUDGMENT_INVALID');
+  }
+
   const uncertainAutomaticVersionOrder = automaticVersionOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0002');
   const exposureLogNegativeCases = [
     { label: 'one-entry', log: [{ version: uncertainAutomaticVersionOrder[0], automaticOrder: automaticOrderFor(MANIFEST_SHA256, 'segmentation-study-v2-0002'), viewedAt: '2026-08-19T00:00:10.000Z' }] },
@@ -548,9 +1280,15 @@ function strictMetadata(overrides = {}) {
   const duplicateAudioRes = buildRes();
   await completeHandlers[completeHandlers.length - 1](uncertainCompleteReq, duplicateAudioRes);
   assert.strictEqual(duplicateAudioRes._status, 409, 'A WAV already assigned to another study task must be rejected by SHA-256.');
-  uncertainCompleteReq.file = { buffer: makeWavBuffer(1) };
+  const validNoneMetadata = JSON.parse(uncertainCompleteReq.body.metadata);
+  validNoneMetadata.automaticJudgment = validNoneJudgment;
+  const validNoneReq = createReq({
+    params: { studyVersion: 'v2', taskId: 'segmentation-study-v2-0002' },
+    body: { metadata: JSON.stringify(validNoneMetadata) }
+  });
+  validNoneReq.file = { buffer: makeWavBuffer(1) };
   const uncertainCompleteRes = buildRes();
-  await completeHandlers[completeHandlers.length - 1](uncertainCompleteReq, uncertainCompleteRes);
+  await completeHandlers[completeHandlers.length - 1](validNoneReq, uncertainCompleteRes);
   assert.strictEqual(uncertainCompleteRes._status, 200, uncertainCompleteRes._json?.message);
   assert.strictEqual(uncertainCompleteRes._json.data.sample.needsManualReview, true, 'Uncertain study labels must remain excluded from the primary benchmark.');
   assert.strictEqual(uncertainCompleteRes._json.data.sample.reviewReason, 'operator_uncertain');
@@ -575,6 +1313,9 @@ function strictMetadata(overrides = {}) {
   assert.ok(exportRes._json.data.samples.every((item) => typeof item.promotionEligible === 'boolean'));
   assert.ok(exportRes._json.data.samples.every((item) => item.captureEligibility === true));
   assert.ok(exportRes._json.data.samples.every((item) => item.assistedEvidence?.assisted === true));
+  assert.ok(exportRes._json.data.samples.every((item) => item.automaticJudgment?.schemaVersion === 'segmentation-study-automatic-judgment-v1'), 'Canonical export must include the versioned automatic judgment.');
+  assert.ok(exportRes._json.data.samples.some((item) => Array.isArray(item.automaticJudgment?.selectedVersions) && item.automaticJudgment.none === false), 'Canonical export must preserve the selected automatic tie subset.');
+  assert.ok(exportRes._json.data.samples.some((item) => Array.isArray(item.automaticJudgment?.selectedVersions) && item.automaticJudgment.selectedVersions.length === 0 && item.automaticJudgment.none === true), 'Canonical export must preserve an exclusive None judgment.');
   const certainExport = exportRes._json.data.samples.find((item) => item.sampleId === completedSampleId);
   assert.ok(certainExport, 'Certain completed sample must remain visible in export.');
   assert.strictEqual(certainExport.promotionEligible, true, 'A certain sample is promotion eligible only with complete exposure and capture proof.');

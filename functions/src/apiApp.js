@@ -16,6 +16,7 @@ const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
 const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
 const readAloudRoutes = require('./routes/read-aloud');
+const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
 const {
@@ -23,6 +24,7 @@ const {
     sharedPracticeAttemptsLimiter,
     azureAssessmentRateLimiter
 } = require('./middleware/practice-attempts-rate-limiter');
+const { createEchoForgeOriginGuard } = require('./middleware/echo-forge-origin-guard');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
     generateClassCode,
@@ -33,6 +35,7 @@ const {
 } = require('./studentIdentity');
 
 const app = express();
+const { buildPublicFeatures } = require('./public-feature-config');
 app.set('trust proxy', true); // Cloud Functions runs behind Google's load balancer
 app.use(cors({ origin: true }));
 app.use(express.json());
@@ -49,7 +52,8 @@ app.get(['/config', '/api/config'], (req, res) => {
             messagingSenderId: process.env.CLIENT_FIREBASE_MESSAGING_SENDER_ID,
             appId: process.env.CLIENT_FIREBASE_APP_ID,
             measurementId: process.env.CLIENT_FIREBASE_MEASUREMENT_ID
-        }
+        },
+        features: buildPublicFeatures(process.env)
     });
 });
 
@@ -370,9 +374,12 @@ app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 app.use('/api/read-aloud/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
+app.use('/api/echo-forge/assess', createEchoForgeOriginGuard({ environment: process.env }));
+app.use('/api/echo-forge/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/vowel-hint', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api', optionalAuthMiddleware, readAloudRoutes);
+app.use('/api', optionalAuthMiddleware, createEchoForgeRouter());
 app.use('/api', optionalAuthMiddleware, pronunciationTestRoutes);
 app.use('/api', pronunciationReferenceAudioRouter);
 

@@ -1824,3 +1824,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 830,2026-09-02,Review debug and refactor Write Essay Guided Walkthrough and Deploy V1.8.90 to production,Done,2026-09-02
 831,2026-09-02,Restore and verify Books Elaborate multi-selection highlight tool across explorer and mindmap,Done,2026-09-02
 832,2026-09-02,High-fidelity ingest and text audit for Harmer 5th Edition on localhost and production with 100-page examination,Done,2026-09-02
+833,2026-09-03,Review debug and refactor CRM Books collections and tagging system,Done,2026-09-03
+834,2026-09-03,Rerun text regeneration and 100-page ground truth audit on Adult Learner and Teaching Pronunciation on production,Done,2026-09-03

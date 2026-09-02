@@ -1,0 +1,24 @@
+[
+  {
+    "bookId": "if1GtQHgGoU7uolTPVXC",
+    "title": "The Adult Learner, A Neglected Species (Knowles, 1973)",
+    "contract": "ocr-v2",
+    "pagesAudited": 100,
+    "passedPages": 98,
+    "passRatePct": 98.0,
+    "avgWordOverlapPct": 96.21,
+    "avgCharSimilarityPct": 94.6,
+    "zeroSyllableSplits": true
+  },
+  {
+    "bookId": "ZT25mJFlnHUYCOY2rmIG",
+    "title": "Teaching Pronunciation with Confidence (Guskaroska et al.)",
+    "contract": "ocr-v2",
+    "pagesAudited": 100,
+    "passedPages": 100,
+    "passRatePct": 100.0,
+    "avgWordOverlapPct": 99.91,
+    "avgCharSimilarityPct": 99.94,
+    "zeroSyllableSplits": true
+  }
+]

@@ -113,6 +113,182 @@ def _resample(samples: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
     return scipy_resample(samples, num_target).astype(np.float32)
 
 
+from dataclasses import dataclass
+import json
+import logging
+import os
+import uuid
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Inference Gate Observability
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class InferenceGateAcquisition:
+    """Result of attempting to acquire the inference gate."""
+    acquired: bool
+    request_id: str
+    active_request_age_ms: Optional[float] = None
+
+
+class InferenceGate:
+    """Thread-safe single-inference gate tracking and structured logging.
+
+    Enforces the single-inference invariant, measures monotonic active
+    request age and inference duration, and emits privacy-safe structured
+    logs without exposing audio payloads, token sequences, or learner IPA.
+    """
+
+    def __init__(self, semaphore: Optional[threading.Semaphore] = None) -> None:
+        self._semaphore = semaphore if semaphore is not None else threading.Semaphore(1)
+        self._lock = threading.Lock()
+        self._active_request_id: Optional[str] = None
+        self._active_endpoint: Optional[str] = None
+        self._active_start_time: Optional[float] = None
+        self._revision = os.environ.get("K_REVISION", "local")
+        self._instance_id = os.environ.get("HOSTNAME", os.environ.get("INSTANCE_ID", "local"))
+
+    @property
+    def semaphore(self) -> threading.Semaphore:
+        return self._semaphore
+
+    @property
+    def active_request_id(self) -> Optional[str]:
+        with self._lock:
+            return self._active_request_id
+
+    @property
+    def active_request_age_ms(self) -> Optional[float]:
+        with self._lock:
+            if self._active_start_time is None:
+                return None
+            return round((time.monotonic() - self._active_start_time) * 1000, 2)
+
+    def acquire(
+        self,
+        endpoint: str,
+        request_id: Optional[str] = None,
+        blocking: bool = True,
+        timeout: Optional[float] = None,
+    ) -> InferenceGateAcquisition:
+        """Acquire the inference gate (blocking or non-blocking)."""
+        now = time.monotonic()
+        req_id = request_id or uuid.uuid4().hex[:12]
+
+        if not blocking:
+            with self._lock:
+                if not self._semaphore.acquire(blocking=False):
+                    age_ms = None
+                    if self._active_start_time is not None:
+                        age_ms = round((now - self._active_start_time) * 1000, 2)
+                    self._log_event(
+                        event="RECOGNIZER_BUSY",
+                        request_id=req_id,
+                        endpoint=endpoint,
+                        outcome="busy",
+                        active_request_age_ms=age_ms,
+                        inference_duration_ms=None,
+                    )
+                    return InferenceGateAcquisition(
+                        acquired=False, request_id=req_id, active_request_age_ms=age_ms
+                    )
+                self._active_request_id = req_id
+                self._active_endpoint = endpoint
+                self._active_start_time = now
+                self._log_event(
+                    event="INFERENCE_ACQUIRED",
+                    request_id=req_id,
+                    endpoint=endpoint,
+                    outcome="acquired",
+                    active_request_age_ms=0.0,
+                    inference_duration_ms=None,
+                )
+                return InferenceGateAcquisition(
+                    acquired=True, request_id=req_id, active_request_age_ms=0.0
+                )
+
+        # Blocking acquisition
+        kw = {} if timeout is None else {"timeout": timeout}
+        acquired = self._semaphore.acquire(blocking=True, **kw)
+        now_acquired = time.monotonic()
+        if not acquired:
+            return InferenceGateAcquisition(
+                acquired=False, request_id=req_id, active_request_age_ms=None
+            )
+        with self._lock:
+            self._active_request_id = req_id
+            self._active_endpoint = endpoint
+            self._active_start_time = now_acquired
+            self._log_event(
+                event="INFERENCE_ACQUIRED",
+                request_id=req_id,
+                endpoint=endpoint,
+                outcome="acquired",
+                active_request_age_ms=0.0,
+                inference_duration_ms=None,
+            )
+            return InferenceGateAcquisition(
+                acquired=True, request_id=req_id, active_request_age_ms=0.0
+            )
+
+    def try_acquire(
+        self, endpoint: str, request_id: Optional[str] = None
+    ) -> InferenceGateAcquisition:
+        """Attempt non-blocking acquisition of the inference gate."""
+        return self.acquire(endpoint=endpoint, request_id=request_id, blocking=False)
+
+    def release(
+        self, outcome: str = "completed", inference_duration_ms: Optional[float] = None
+    ) -> None:
+        """Release the gate and record structured completion telemetry."""
+        now = time.monotonic()
+        with self._lock:
+            req_id = self._active_request_id or "unknown"
+            endpoint = self._active_endpoint or "unknown"
+            duration = inference_duration_ms
+            if duration is None and self._active_start_time is not None:
+                duration = round((now - self._active_start_time) * 1000, 2)
+            self._active_request_id = None
+            self._active_endpoint = None
+            self._active_start_time = None
+            try:
+                self._semaphore.release()
+            except ValueError:
+                pass
+            self._log_event(
+                event="INFERENCE_RELEASED",
+                request_id=req_id,
+                endpoint=endpoint,
+                outcome=outcome,
+                active_request_age_ms=None,
+                inference_duration_ms=duration,
+            )
+
+    def _log_event(
+        self,
+        event: str,
+        request_id: str,
+        endpoint: str,
+        outcome: str,
+        active_request_age_ms: Optional[float],
+        inference_duration_ms: Optional[float],
+    ) -> None:
+        payload = {
+            "event": event,
+            "requestId": request_id,
+            "endpoint": endpoint,
+            "outcome": outcome,
+            "activeRequestAgeMs": active_request_age_ms,
+            "inferenceDurationMs": inference_duration_ms,
+            "revision": self._revision,
+            "instanceId": self._instance_id,
+        }
+        logger.info(json.dumps(payload))
+
+
 # ---------------------------------------------------------------------------
 # Recognizer
 # ---------------------------------------------------------------------------
@@ -126,9 +302,14 @@ class PhonemeRecognizer:
     * Calls the backend and returns enriched results.
     """
 
-    def __init__(self, backend: RecognizerBackend) -> None:
+    def __init__(
+        self,
+        backend: RecognizerBackend,
+        gate: Optional[InferenceGate] = None,
+    ) -> None:
         self._backend = backend
-        self._semaphore = threading.Semaphore(1)
+        self._gate = gate if gate is not None else InferenceGate()
+        self._semaphore = self._gate.semaphore
 
     # -- public API ---------------------------------------------------------
 
@@ -181,14 +362,20 @@ class PhonemeRecognizer:
 
         preprocess_ms = (time.monotonic() - t0) * 1000
 
-        # --- inference (thread-safe) ---
-        self._semaphore.acquire()
+        # --- inference (thread-safe gate) ---
+        self._gate.acquire(endpoint="/recognize_wav", blocking=True)
+
+        outcome = "completed"
+        inference_ms = 0.0
         try:
             t1 = time.monotonic()
             result = self._backend.recognize(samples, TARGET_SAMPLE_RATE)
             inference_ms = (time.monotonic() - t1) * 1000
+        except Exception:
+            outcome = "error"
+            raise
         finally:
-            self._semaphore.release()
+            self._gate.release(outcome=outcome, inference_duration_ms=round(inference_ms, 2))
 
         result["preprocessing"] = {
             "original_sample_rate": orig_sr,
@@ -198,6 +385,7 @@ class PhonemeRecognizer:
             "inference_ms": round(inference_ms, 2),
         }
         return result
+
 
 
 # ---------------------------------------------------------------------------

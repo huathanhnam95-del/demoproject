@@ -551,5 +551,86 @@ class EagerLoadTest(unittest.TestCase):
         self.assertEqual(backend.loads, 0)
 
 
+class TestInferenceGateObservability(unittest.TestCase):
+    """Observability and state contract for inference gate acquisition and release."""
+
+    def test_recognize_v1_and_v2_busy_response_contains_age_without_sensitive_data(self):
+        app, backend = _create_test_app(ready=True)
+        recognizer = app.extensions["phoneme_service_state"]["recognizer"]
+
+        with app.test_client() as client:
+            # Force acquire the gate
+            acq = recognizer._gate.try_acquire(endpoint="/external-holder")
+            self.assertTrue(acq.acquired)
+
+            try:
+                # 1. /recognize/v1 busy response
+                res1 = client.post(
+                    "/recognize/v1",
+                    data={"audio": (io.BytesIO(_make_wav_bytes()), "test.wav")},
+                    content_type="multipart/form-data",
+                )
+                self.assertEqual(res1.status_code, 503)
+                json1 = res1.get_json()
+                self.assertEqual(json1["error"]["code"], "RECOGNIZER_BUSY")
+                self.assertIn("active_request_age_ms", json1["error"]["details"])
+                # Must not leak audio, tokens, or IPA
+                self.assertNotIn("phonemes", str(json1))
+                self.assertNotIn("tokens", str(json1))
+                self.assertNotIn("reference", str(json1))
+
+                # 2. /recognize/v2 busy response
+                res2 = client.post(
+                    "/recognize/v2",
+                    data={
+                        "audio": (io.BytesIO(_make_wav_bytes()), "test.wav"),
+                        "reference_syllables": json.dumps(["hɛ", "loʊ"]),
+                        "expected_syllable_count": "2",
+                        "reference_ipa": "/hɛˈloʊ/",
+                    },
+                    content_type="multipart/form-data",
+                )
+                self.assertEqual(res2.status_code, 503)
+                json2 = res2.get_json()
+                self.assertEqual(json2["error"]["code"], "RECOGNIZER_BUSY")
+                self.assertIn("active_request_age_ms", json2["error"]["details"])
+                self.assertNotIn("v4_alignment", str(json2))
+                self.assertNotIn("canonical_alignment", str(json2))
+
+                # 3. /readyz remains 200 ready (model readiness is decoupled from gate contention)
+                ready_res = client.get("/readyz")
+                self.assertEqual(ready_res.status_code, 200)
+                self.assertEqual(ready_res.get_json()["status"], "ready")
+
+            finally:
+                recognizer._gate.release(outcome="completed")
+
+    def test_gate_releases_on_backend_error_and_validation_error(self):
+        app, backend = _create_test_app(ready=True)
+        recognizer = app.extensions["phoneme_service_state"]["recognizer"]
+
+        # Backend exception during recognize
+        backend.recognize.side_effect = RuntimeError("GPU crash simulated")
+        with app.test_client() as client:
+            res = client.post(
+                "/recognize/v1",
+                data={"audio": (io.BytesIO(_make_wav_bytes()), "test.wav")},
+                content_type="multipart/form-data",
+            )
+            self.assertEqual(res.status_code, 500)
+            # Gate must be free for next request
+            self.assertIsNone(recognizer._gate.active_request_id)
+
+            # Next request can acquire
+            backend.recognize.side_effect = None
+            backend.recognize.return_value = MOCK_BACKEND_RESULT
+            res2 = client.post(
+                "/recognize/v1",
+                data={"audio": (io.BytesIO(_make_wav_bytes()), "test.wav")},
+                content_type="multipart/form-data",
+            )
+            self.assertEqual(res2.status_code, 200)
+
+
 if __name__ == "__main__":
     unittest.main()

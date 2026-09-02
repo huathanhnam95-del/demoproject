@@ -512,7 +512,16 @@ module.exports = function registerBookRoutes(router, deps) {
             const bookId = ref.id;
             const storagePath = `crm-books/${bookId}/source.pdf`;
 
-            const collectionId = cleanStr(req.body?.collectionId);
+            let collectionId = cleanStr(req.body?.collectionId);
+            if (!collectionId) {
+                const colsSnap = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                const pronunciationCol = colsSnap.docs?.find(d => (d.data()?.name || '').trim().toLowerCase() === 'pronunciation');
+                if (pronunciationCol) {
+                    collectionId = pronunciationCol.id;
+                } else if (colsSnap.docs?.length > 0) {
+                    collectionId = colsSnap.docs[0].id;
+                }
+            }
             const tags = Array.isArray(req.body?.tags) ? req.body.tags.map(t => cleanStr(t)).filter(Boolean) : [];
 
             const payload = {
@@ -702,6 +711,23 @@ module.exports = function registerBookRoutes(router, deps) {
             });
 
             await bookRef.delete();
+
+            // Prune bookId from all collections
+            try {
+                const colsSnap = await db.collection(CRM_BOOK_COLLECTIONS).get();
+                for (const cDoc of colsSnap.docs || []) {
+                    const cData = cDoc.data() || {};
+                    const bIds = Array.isArray(cData.bookIds) ? cData.bookIds : [];
+                    if (bIds.includes(bookId)) {
+                        await cDoc.ref.update({
+                            bookIds: bIds.filter(id => id !== bookId),
+                            updatedAt: serverTimestamp()
+                        }).catch(() => {});
+                    }
+                }
+            } catch (_ignored) {
+                // ignore collection cleanup errors
+            }
 
             const jobRef = db.collection(CRM_BOOK_INGEST_JOBS).doc(bookId);
             const jobSnap = await jobRef.get();
@@ -1016,7 +1042,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 rendererContract = 'ocr-v2';
             } else {
                 pagesPath = `crm-books/${bookId}/pages.json`;
-                rendererContract = 'ocr-v2';
+                rendererContract = 'legacy';
             }
 
             const file = bucket.file(pagesPath);
@@ -1594,6 +1620,12 @@ module.exports = function registerBookRoutes(router, deps) {
             const bookIds = Array.isArray(req.body?.bookIds) ? req.body.bookIds.map(cleanStr).filter(Boolean) : [];
             if (!name) return sendError(res, 400, 'MISSING_NAME', 'Collection name is required.');
 
+            const existingSnap = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+            const duplicate = existingSnap.docs?.find(d => cleanStr(d.data()?.name).toLowerCase() === name.toLowerCase());
+            if (duplicate) {
+                return sendError(res, 409, 'DUPLICATE_NAME', `A collection named "${name}" already exists.`, { existingId: duplicate.id });
+            }
+
             const colDoc = {
                 name, description, bookIds,
                 createdBy: req.user?.uid || '',
@@ -1640,6 +1672,14 @@ module.exports = function registerBookRoutes(router, deps) {
             }
             updates.updatedAt = serverTimestamp();
 
+            if (updates.name) {
+                const existingSnap = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                const duplicate = existingSnap.docs?.find(d => d.id !== collectionId && cleanStr(d.data()?.name).toLowerCase() === updates.name.toLowerCase());
+                if (duplicate) {
+                    return sendError(res, 409, 'DUPLICATE_NAME', `A collection named "${updates.name}" already exists.`);
+                }
+            }
+
             await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).update(updates);
 
             if (Array.isArray(updates.bookIds)) {
@@ -1674,15 +1714,20 @@ module.exports = function registerBookRoutes(router, deps) {
             const snap = await db.collection(CRM_BOOK_COLLECTIONS).doc(collectionId).get();
             if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Collection not found.');
 
-            const targetCollectionId = cleanStr(req.body?.targetCollectionId);
+            const targetCollectionId = cleanStr(req.body?.targetCollectionId || req.query?.targetCollectionId);
             const colData = snap.data() || {};
             const bookIds = Array.isArray(colData.bookIds) ? colData.bookIds : [];
 
             if (bookIds.length > 0) {
                 let destColId = targetCollectionId;
+                const otherCols = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
+                if (destColId) {
+                    const exists = otherCols.docs.some(d => d.id === destColId && d.id !== collectionId);
+                    if (!exists) destColId = '';
+                }
                 if (!destColId) {
-                    const otherCols = await db.collection(CRM_BOOK_COLLECTIONS).get().catch(() => ({ docs: [] }));
-                    const another = otherCols.docs.find(d => d.id !== collectionId);
+                    const pronunciationCol = otherCols.docs.find(d => d.id !== collectionId && cleanStr(d.data()?.name).toLowerCase() === 'pronunciation');
+                    const another = pronunciationCol || otherCols.docs.find(d => d.id !== collectionId);
                     if (another) destColId = another.id;
                 }
                 if (destColId) {
@@ -1787,15 +1832,19 @@ module.exports = function registerBookRoutes(router, deps) {
             const tagId = cleanStr(req.params.tagId);
             if (!tagId) return sendError(res, 400, 'MISSING_TAG_ID', 'Tag ID is required.');
 
+            const tagSnap = await db.collection(CRM_BOOK_TAGS).doc(tagId).get().catch(() => null);
+            const tagName = tagSnap?.exists ? cleanStr(tagSnap.data()?.name).toLowerCase() : '';
+
             await db.collection(CRM_BOOK_TAGS).doc(tagId).delete();
 
             const booksSnap = await db.collection(CRM_BOOKS).get();
             for (const doc of booksSnap.docs) {
                 const bData = doc.data() || {};
                 const tags = Array.isArray(bData.tags) ? bData.tags : [];
-                if (tags.includes(tagId)) {
+                const filtered = tags.filter(t => t !== tagId && (tagName ? cleanStr(t).toLowerCase() !== tagName : true));
+                if (filtered.length !== tags.length) {
                     await doc.ref.update({
-                        tags: tags.filter(t => t !== tagId),
+                        tags: filtered,
                         updatedAt: serverTimestamp()
                     }).catch(() => {});
                 }

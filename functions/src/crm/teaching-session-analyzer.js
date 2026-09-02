@@ -1,3 +1,4 @@
+/* eslint-disable no-console, no-empty */
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const axios = require('axios');
 const path = require('path');

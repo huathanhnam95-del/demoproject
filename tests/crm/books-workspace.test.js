@@ -130,5 +130,46 @@ const ocrV2Text = workspace.formatPageText(
 );
 assert.match(ocrV2Text, /Specias and specialized terminology/, 'OCR-v2 contract must preserve genuine page text without segmenter word splitting.');
 
+const normalized = workspace.normalizeBooks([
+    { bookId: 'b1', title: 'Book One', collectionId: 'col-phonetics', tags: ['vowels', 'ipa'] },
+    { bookId: 'b2', title: 'Book Two' }
+]);
+assert.strictEqual(normalized.length, 2);
+assert.strictEqual(normalized[0].collectionId, 'col-phonetics');
+assert.deepStrictEqual([...normalized[0].tags], ['vowels', 'ipa']);
+assert.strictEqual(normalized[1].collectionId, '');
+assert.strictEqual(normalized[1].tags.length, 0);
+
+assert.strictEqual(workspace.normalizeTagName('  Phonetics  '), 'phonetics');
+
+const testBooks = [
+    { bookId: 'b1', title: 'Book 1', tags: ['phonetics', 'vowels'] },
+    { bookId: 'b2', title: 'Book 2', tags: ['phonetics'] },
+    { bookId: 'b3', title: 'Book 3', tags: ['grammar'] }
+];
+const andMatch = workspace.filterBooksByTags(testBooks, ['phonetics', 'vowels'], 'and');
+assert.strictEqual(andMatch.length, 1);
+assert.strictEqual(andMatch[0].bookId, 'b1');
+
+const orMatch = workspace.filterBooksByTags(testBooks, ['vowels', 'grammar'], 'or');
+assert.strictEqual(orMatch.length, 2);
+assert.deepStrictEqual(orMatch.map(b => b.bookId), ['b1', 'b3']);
+
+const collections = [
+    { id: 'col-pron', name: 'Pronunciation', bookIds: [] },
+    { id: 'col-other', name: 'Advanced Linguistics', bookIds: [] }
+];
+const booksToGroup = [
+    { bookId: 'b1', collectionId: 'col-other' },
+    { bookId: 'b2', collectionId: 'col-pron' },
+    { bookId: 'b3', collectionId: '' } // Unfiled
+];
+const grouped = workspace.groupBooksByCollection(booksToGroup, collections);
+assert.strictEqual(grouped['col-other'].length, 1);
+assert.strictEqual(grouped['col-other'][0].bookId, 'b1');
+assert.strictEqual(grouped['col-pron'].length, 2, 'Unfiled book must fall back to Pronunciation collection');
+assert.strictEqual(grouped['col-pron'][0].bookId, 'b2');
+assert.strictEqual(grouped['col-pron'][1].bookId, 'b3');
+
 console.log('books workspace helper contracts passed');
 

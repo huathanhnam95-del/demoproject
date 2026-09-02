@@ -806,9 +806,14 @@ window.CrmBooksWorkspace = (function () {
             return apiFetchJson(path, { method: 'PATCH', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
         }
 
-        async function apiDelete(path) {
+        async function apiDelete(path, body = null) {
             if (!apiFetchJson) throw new Error('No API client');
-            return apiFetchJson(path, { method: 'DELETE' });
+            const options = { method: 'DELETE' };
+            if (body !== null && body !== undefined) {
+                options.body = JSON.stringify(body);
+                options.headers = { 'Content-Type': 'application/json' };
+            }
+            return apiFetchJson(path, options);
         }
 
         function renderBookListItem(b) {
@@ -896,8 +901,8 @@ window.CrmBooksWorkspace = (function () {
 
                 html += `
                 <div class="crm-books-folder" data-folder-id="${escapeHtml(col.id)}">
-                  <div class="crm-books-folder-header" data-folder-toggle="${escapeHtml(col.id)}">
-                    <div class="crm-books-folder-title-wrap">
+                  <div class="crm-books-folder-header">
+                    <div class="crm-books-folder-title-wrap" data-folder-toggle="${escapeHtml(col.id)}">
                       <span class="crm-books-folder-chevron${isExpanded ? '' : ' collapsed'}">▾</span>
                       <span class="crm-books-folder-icon">📁</span>
                       <span class="crm-books-folder-name" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</span>
@@ -6045,6 +6050,12 @@ window.CrmBooksWorkspace = (function () {
             const existing = qs('.crm-books-add-modal');
             if (existing) existing.remove();
 
+            const defaultCol = bookCollections.find(c => (c.name || '').toLowerCase() === 'pronunciation') || bookCollections[0];
+            const targetColId = selectedBook?.collectionId || defaultCol?.id || '';
+            const colOptionsHtml = bookCollections.length > 0
+                ? bookCollections.map(c => `<option value="${escapeHtml(c.id)}"${targetColId === c.id ? ' selected' : ''}>📁 ${escapeHtml(c.name)}</option>`).join('')
+                : `<option value="">📁 Pronunciation</option>`;
+
             const modal = document.createElement('div');
             modal.className = 'crm-modal-overlay crm-books-add-modal';
             modal.setAttribute('role', 'dialog');
@@ -6058,7 +6069,7 @@ window.CrmBooksWorkspace = (function () {
                 `<div class="crm-form-grid" style="grid-template-columns:1fr;">` +
                 `<div class="crm-form-group"><label for="crm-book-title">Title <span style="color:var(--danger-color,#e53e3e);">*</span></label><input id="crm-book-title" class="crm-input" type="text" placeholder="e.g. Sound Foundations"></div>` +
                 `<div class="crm-form-group"><label for="crm-book-author">Author</label><input id="crm-book-author" class="crm-input" type="text" placeholder="e.g. Adrian Underhill"></div>` +
-                `<div class="crm-form-group"><label for="crm-book-collection">Collection</label><select id="crm-book-collection" class="crm-input">${bookCollections.map(c => `<option value="${escapeHtml(c.id)}"${selectedBook?.collectionId === c.id ? ' selected' : ''}>📁 ${escapeHtml(c.name)}</option>`).join('')}</select></div>` +
+                `<div class="crm-form-group"><label for="crm-book-collection">Collection</label><select id="crm-book-collection" class="crm-input">${colOptionsHtml}</select></div>` +
                 `<div class="crm-form-group"><label for="crm-book-file">PDF file <span style="color:var(--danger-color,#e53e3e);">*</span></label><input id="crm-book-file" class="crm-input" type="file" accept=".pdf,application/pdf"></div>` +
                 `<p class="crm-books-modal-error crm-muted" style="color:var(--danger-color,#e53e3e); display:none;"></p>` +
                 `</div></div>` +
@@ -6430,6 +6441,11 @@ window.CrmBooksWorkspace = (function () {
                 await apiDelete(`/api/admin/books/${bookId}`);
                 showToast?.('Book deleted.', 'info');
                 books = books.filter((b) => b.bookId !== bookId);
+                bookCollections.forEach(c => {
+                    if (Array.isArray(c.bookIds)) {
+                        c.bookIds = c.bookIds.filter(id => id !== bookId);
+                    }
+                });
                 if (selectedBookId === bookId) {
                     selectedBookId = '';
                     selectedBook = null;
@@ -7173,9 +7189,18 @@ window.CrmBooksWorkspace = (function () {
         }
 
         async function createBookCollection(name, description, bookIds) {
+            const cleanName = clean(name);
+            if (!cleanName) {
+                showToast?.('Collection name is required.', 'warning');
+                return null;
+            }
+            if (bookCollections.some(c => c.name.trim().toLowerCase() === cleanName.toLowerCase())) {
+                showToast?.(`A collection named "${cleanName}" already exists.`, 'warning');
+                return null;
+            }
             try {
-                const res = await apiPost('/api/admin/book-collections', { name, description, bookIds });
-                const newCol = { id: res.id, name, description, bookIds: bookIds || [] };
+                const res = await apiPost('/api/admin/book-collections', { name: cleanName, description, bookIds });
+                const newCol = { id: res.id, name: cleanName, description, bookIds: bookIds || [] };
                 bookCollections.push(newCol);
                 openFolderIds.add(res.id);
                 saveOpenFolders();
@@ -7197,7 +7222,7 @@ window.CrmBooksWorkspace = (function () {
                 if (selectedBook) renderExplorerPanel();
                 return newCol;
             } catch (err) {
-                showToast?.('Failed to create collection.', 'error');
+                showToast?.(err?.message || 'Failed to create collection.', 'error');
                 return null;
             }
         }
@@ -7207,14 +7232,19 @@ window.CrmBooksWorkspace = (function () {
             if (!col) return;
             const newName = prompt('New collection name:', col.name);
             if (!newName || !newName.trim() || newName.trim() === col.name) return;
+            const cleanName = newName.trim();
+            if (bookCollections.some(c => c.id !== collectionId && c.name.trim().toLowerCase() === cleanName.toLowerCase())) {
+                showToast?.(`A collection named "${cleanName}" already exists.`, 'warning');
+                return;
+            }
             try {
-                await apiPatch(`/api/admin/book-collections/${collectionId}`, { name: newName.trim() });
-                col.name = newName.trim();
+                await apiPatch(`/api/admin/book-collections/${collectionId}`, { name: cleanName });
+                col.name = cleanName;
                 renderSourcesPanel();
                 if (selectedBook) renderExplorerPanel();
                 showToast?.('Collection renamed.', 'info');
             } catch (err) {
-                showToast?.('Failed to rename collection.', 'error');
+                showToast?.(err?.message || 'Failed to rename collection.', 'error');
             }
         }
 
@@ -7443,8 +7473,10 @@ window.CrmBooksWorkspace = (function () {
                             `</label>`;
                     }).join('');
 
+                const panel = document.querySelector('.crm-books-panel');
+                const isDark = panel?.classList.contains('books-dark');
                 const html = `
-                <div id="crm-books-new-collection-modal" class="crm-books-modal-overlay">
+                <div id="crm-books-new-collection-modal" class="crm-books-modal-overlay${isDark ? ' books-dark' : ''}">
                   <div class="crm-books-modal-card">
                     <div class="crm-books-modal-header">
                       <h3>📁 Create New Collection</h3>
@@ -7452,12 +7484,12 @@ window.CrmBooksWorkspace = (function () {
                     </div>
                     <div class="crm-books-modal-body">
                       <div style="margin-bottom: 14px;">
-                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Collection Name *</label>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:var(--books-text,#334155);">Collection Name *</label>
                         <input type="text" id="crm-books-new-col-name" class="crm-input" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:0.85rem;" placeholder="e.g. Acoustic Phonetics" autofocus />
                       </div>
 
                       <div style="margin-bottom: 8px;">
-                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Select Books for Collection</label>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:var(--books-text,#334155);">Select Books for Collection</label>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                           <div style="display:flex; align-items:center; gap:8px; font-size:0.75rem; color:#64748b;">
                             <span>Filter by Tag:</span>
@@ -7473,7 +7505,7 @@ window.CrmBooksWorkspace = (function () {
                           ${tagChipsHtml || '<span style="color:#94a3b8; font-size:0.75rem;">No tags created yet.</span>'}
                         </div>
                         <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-                          <input type="text" id="crm-books-modal-search" class="crm-input" style="flex:1; padding:5px 8px; font-size:0.78rem;" placeholder="🔍 Search books in library..." value="${escapeHtml(modalSearchQuery)}" />
+                          <input type="text" id="crm-books-modal-search" class="crm-input" style="flex:1; padding:5px 8px; font-size:0.75rem;" placeholder="Search books in list below..." value="${escapeHtml(modalSearchQuery)}" />
                           <button type="button" class="crm-btn crm-btn-sm crm-btn-secondary" id="crm-books-modal-select-all">Select All Filtered</button>
                           <button type="button" class="crm-btn crm-btn-sm crm-btn-secondary" id="crm-books-modal-deselect-all">Deselect All</button>
                         </div>
@@ -7503,10 +7535,20 @@ window.CrmBooksWorkspace = (function () {
                 const overlay = document.querySelector('#crm-books-new-collection-modal');
                 if (!overlay) return;
 
+                function closeModal() {
+                    overlay.remove();
+                    document.removeEventListener('keydown', escHandler);
+                }
+
+                const escHandler = (e) => {
+                    if (e.key === 'Escape') closeModal();
+                };
+                document.addEventListener('keydown', escHandler);
+
                 overlay.querySelectorAll('[data-modal-close]').forEach(btn => {
-                    btn.onclick = () => overlay.remove();
+                    btn.onclick = closeModal;
                 });
-                overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+                overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
 
                 const nameInput = overlay.querySelector('#crm-books-new-col-name');
                 if (nameInput) setTimeout(() => nameInput.focus(), 50);
@@ -7647,8 +7689,9 @@ window.CrmBooksWorkspace = (function () {
                 <div class="crm-books-color-dot${i === 0 ? ' active' : ''}" data-color="${c.color}" style="background:${c.color};" title="${c.name}"></div>
             `).join('');
 
+            const isDark = panel?.classList.contains('books-dark');
             const html = `
-            <div id="crm-books-create-tag-modal" class="crm-books-modal-overlay">
+            <div id="crm-books-create-tag-modal" class="crm-books-modal-overlay${isDark ? ' books-dark' : ''}">
               <div class="crm-books-modal-card" style="max-width: 420px;">
                 <div class="crm-books-modal-header">
                   <h3>🏷️ Create New Tag</h3>
@@ -7656,11 +7699,11 @@ window.CrmBooksWorkspace = (function () {
                 </div>
                 <div class="crm-books-modal-body">
                   <div style="margin-bottom: 14px;">
-                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Tag Name *</label>
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:var(--books-text,#334155);">Tag Name *</label>
                     <input type="text" id="crm-books-new-tag-name" class="crm-input" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:0.85rem;" placeholder="e.g. Phonetics" autofocus />
                   </div>
                   <div>
-                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#334155;">Color</label>
+                    <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:var(--books-text,#334155);">Color</label>
                     <div class="crm-books-color-picker">
                       ${colorDotsHtml}
                     </div>
@@ -7678,10 +7721,20 @@ window.CrmBooksWorkspace = (function () {
             const overlay = document.querySelector('#crm-books-create-tag-modal');
             if (!overlay) return;
 
+            function closeModal() {
+                overlay.remove();
+                document.removeEventListener('keydown', escHandler);
+            }
+
+            const escHandler = (e) => {
+                if (e.key === 'Escape') closeModal();
+            };
+            document.addEventListener('keydown', escHandler);
+
             overlay.querySelectorAll('[data-modal-close]').forEach(btn => {
-                btn.onclick = () => overlay.remove();
+                btn.onclick = closeModal;
             });
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+            overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
 
             const input = overlay.querySelector('#crm-books-new-tag-name');
             if (input) setTimeout(() => input.focus(), 50);
@@ -7694,20 +7747,37 @@ window.CrmBooksWorkspace = (function () {
                 };
             });
 
-            const submitBtn = overlay.querySelector('#crm-books-create-tag-submit-btn');
-            if (submitBtn) {
-                submitBtn.onclick = async () => {
-                    const name = clean(input?.value);
-                    if (!name) {
-                        alert('Please enter a tag name.');
-                        input?.focus();
-                        return;
-                    }
+            async function handleCreateTag() {
+                const name = clean(input?.value);
+                if (!name) {
+                    showToast?.('Please enter a tag name.', 'warning');
+                    input?.focus();
+                    return;
+                }
+                const submitBtn = overlay.querySelector('#crm-books-create-tag-submit-btn');
+                if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'Saving...';
-                    await createBookTag(name, selectedColor);
-                    overlay.remove();
+                }
+                const created = await createBookTag(name, selectedColor);
+                if (created) {
+                    closeModal();
                     showToast?.(`Tag "${name}" created.`, 'info');
+                } else if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Tag';
+                }
+            }
+
+            const submitBtn = overlay.querySelector('#crm-books-create-tag-submit-btn');
+            if (submitBtn) submitBtn.onclick = handleCreateTag;
+
+            if (input) {
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateTag();
+                    }
                 };
             }
         }
@@ -7718,20 +7788,45 @@ window.CrmBooksWorkspace = (function () {
             if (!book) return;
             if (!Array.isArray(book.tags)) book.tags = [];
 
+            const isDark = panel?.classList.contains('books-dark');
             const rect = anchorEl.getBoundingClientRect();
             let left = rect.left;
             let top = rect.bottom + 4;
-            if (left + 250 > window.innerWidth) left = window.innerWidth - 260;
-            if (top + 260 > window.innerHeight) top = rect.top - 260;
+            if (left + 260 > window.innerWidth) left = window.innerWidth - 270;
+            if (top + 280 > window.innerHeight) top = rect.top - 280;
 
             const popover = document.createElement('div');
             popover.id = 'crm-books-quick-tag-popover';
-            popover.className = 'crm-books-quick-tag-popover';
+            popover.className = 'crm-books-quick-tag-popover' + (isDark ? ' books-dark' : '');
             popover.style.left = `${Math.max(10, left)}px`;
             popover.style.top = `${Math.max(10, top)}px`;
 
+            let tagSearchQuery = '';
+
+            function closePopover() {
+                popover.remove();
+                document.removeEventListener('click', outsideHandler);
+                document.removeEventListener('keydown', keydownHandler);
+            }
+
+            const outsideHandler = (e) => {
+                if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
+                    closePopover();
+                }
+            };
+            const keydownHandler = (e) => {
+                if (e.key === 'Escape') closePopover();
+            };
+
             function renderPopoverContent() {
-                const bookTagsList = bookTags.map(t => {
+                const query = tagSearchQuery.trim().toLowerCase();
+                const matchedTags = query
+                    ? bookTags.filter(t => (t.name || '').toLowerCase().includes(query))
+                    : bookTags;
+
+                const hasExactMatch = bookTags.some(t => (t.name || '').toLowerCase() === query);
+
+                const bookTagsList = matchedTags.map(t => {
                     const isSelected = book.tags.includes(t.id) || book.tags.includes(t.name);
                     return `<div class="crm-books-quick-tag-item${isSelected ? ' selected' : ''}" data-popover-tag-id="${escapeHtml(t.id)}">` +
                         `<span><span class="crm-books-quick-tag-dot" style="background:${t.color || '#10b981'};"></span>${escapeHtml(t.name)}</span>` +
@@ -7739,57 +7834,115 @@ window.CrmBooksWorkspace = (function () {
                         `</div>`;
                 }).join('');
 
+                const createPromptHtml = (query && !hasExactMatch)
+                    ? `<div class="crm-books-quick-tag-create-item" data-create-tag-name="${escapeHtml(tagSearchQuery.trim())}">` +
+                      `<span>+ Create "<b>${escapeHtml(tagSearchQuery.trim())}</b>"</span>` +
+                      `<span style="font-size:0.68rem; color:#94a3b8;">Enter ↵</span>` +
+                      `</div>`
+                    : '';
+
                 popover.innerHTML = `
                     <div style="font-weight:600; margin-bottom:6px; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center;">
                       <span>🏷️ Tags for Book</span>
                       <span style="font-size:0.7rem; color:#94a3b8; cursor:pointer;" data-close-popover="1">✕</span>
                     </div>
-                    <input type="text" class="crm-books-quick-tag-input" placeholder="Type tag & press Enter..." autofocus />
-                    <div class="crm-books-quick-tag-hint">Press Enter to create & assign immediately</div>
+                    <input type="text" class="crm-books-quick-tag-input" placeholder="Search or type new tag..." value="${escapeHtml(tagSearchQuery)}" autofocus />
+                    <div class="crm-books-quick-tag-hint">Press Enter to assign or create</div>
                     <div class="crm-books-quick-tag-list">
-                      ${bookTagsList || '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No tags yet. Type above to create.</div>'}
+                      ${createPromptHtml}
+                      ${bookTagsList || (query ? '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No existing tags match.</div>' : '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No tags yet. Type above to create.</div>')}
                     </div>
                 `;
 
                 const input = popover.querySelector('.crm-books-quick-tag-input');
                 if (input) {
-                    setTimeout(() => input.focus(), 50);
+                    setTimeout(() => {
+                        input.focus();
+                        input.setSelectionRange(input.value.length, input.value.length);
+                    }, 20);
+
+                    input.oninput = (e) => {
+                        tagSearchQuery = e.target.value;
+                        renderListOnly();
+                    };
+
                     input.onkeydown = async (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             const val = clean(input.value);
                             if (val) {
                                 await toggleBookTag(bookId, val);
-                                popover.remove();
+                                closePopover();
                             }
                         } else if (e.key === 'Escape') {
-                            popover.remove();
+                            closePopover();
                         }
                     };
                 }
 
+                bindItems();
+            }
+
+            function renderListOnly() {
+                const listEl = popover.querySelector('.crm-books-quick-tag-list');
+                if (!listEl) return;
+                const query = tagSearchQuery.trim().toLowerCase();
+                const matchedTags = query
+                    ? bookTags.filter(t => (t.name || '').toLowerCase().includes(query))
+                    : bookTags;
+
+                const hasExactMatch = bookTags.some(t => (t.name || '').toLowerCase() === query);
+
+                const bookTagsList = matchedTags.map(t => {
+                    const isSelected = book.tags.includes(t.id) || book.tags.includes(t.name);
+                    return `<div class="crm-books-quick-tag-item${isSelected ? ' selected' : ''}" data-popover-tag-id="${escapeHtml(t.id)}">` +
+                        `<span><span class="crm-books-quick-tag-dot" style="background:${t.color || '#10b981'};"></span>${escapeHtml(t.name)}</span>` +
+                        `<span>${isSelected ? '✓' : ''}</span>` +
+                        `</div>`;
+                }).join('');
+
+                const createPromptHtml = (query && !hasExactMatch)
+                    ? `<div class="crm-books-quick-tag-create-item" data-create-tag-name="${escapeHtml(tagSearchQuery.trim())}">` +
+                      `<span>+ Create "<b>${escapeHtml(tagSearchQuery.trim())}</b>"</span>` +
+                      `<span style="font-size:0.68rem; color:#94a3b8;">Enter ↵</span>` +
+                      `</div>`
+                    : '';
+
+                listEl.innerHTML = createPromptHtml +
+                    (bookTagsList || (query ? '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No existing tags match.</div>' : '<div style="color:#94a3b8; font-size:0.72rem; padding:4px;">No tags yet. Type above to create.</div>'));
+
+                bindItems();
+            }
+
+            function bindItems() {
                 popover.querySelectorAll('[data-popover-tag-id]').forEach(item => {
                     item.onclick = async () => {
                         const tId = item.dataset.popoverTagId;
                         await toggleBookTag(bookId, tId);
-                        renderPopoverContent();
+                        renderListOnly();
                     };
                 });
 
-                popover.querySelector('[data-close-popover]')?.addEventListener('click', () => popover.remove());
+                const createBtn = popover.querySelector('[data-create-tag-name]');
+                if (createBtn) {
+                    createBtn.onclick = async () => {
+                        const name = createBtn.dataset.createTagName;
+                        if (name) {
+                            await toggleBookTag(bookId, name);
+                            closePopover();
+                        }
+                    };
+                }
+
+                popover.querySelector('[data-close-popover]')?.addEventListener('click', closePopover);
             }
 
             renderPopoverContent();
             document.body.appendChild(popover);
 
             setTimeout(() => {
-                const outsideHandler = (e) => {
-                    if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
-                        popover.remove();
-                        document.removeEventListener('click', outsideHandler);
-                    }
-                };
                 document.addEventListener('click', outsideHandler);
+                document.addEventListener('keydown', keydownHandler);
             }, 10);
         }
 
@@ -7798,6 +7951,7 @@ window.CrmBooksWorkspace = (function () {
             const book = books.find(b => b.bookId === bookId);
             if (!book) return;
 
+            const isDark = panel?.classList.contains('books-dark');
             const rect = anchorEl.getBoundingClientRect();
             let left = rect.left;
             let top = rect.bottom + 4;
@@ -7805,10 +7959,25 @@ window.CrmBooksWorkspace = (function () {
 
             const popover = document.createElement('div');
             popover.id = 'crm-books-move-col-popover';
-            popover.className = 'crm-books-quick-tag-popover';
+            popover.className = 'crm-books-quick-tag-popover' + (isDark ? ' books-dark' : '');
             popover.style.width = '200px';
             popover.style.left = `${Math.max(10, left)}px`;
             popover.style.top = `${Math.max(10, top)}px`;
+
+            function closePopover() {
+                popover.remove();
+                document.removeEventListener('click', outsideHandler);
+                document.removeEventListener('keydown', keydownHandler);
+            }
+
+            const outsideHandler = (e) => {
+                if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
+                    closePopover();
+                }
+            };
+            const keydownHandler = (e) => {
+                if (e.key === 'Escape') closePopover();
+            };
 
             const colList = bookCollections.map(c => {
                 const isCur = c.id === book.collectionId;
@@ -7819,7 +7988,10 @@ window.CrmBooksWorkspace = (function () {
             }).join('');
 
             popover.innerHTML = `
-                <div style="font-weight:600; margin-bottom:6px; font-size:0.78rem;">Move to Collection:</div>
+                <div style="font-weight:600; margin-bottom:6px; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center;">
+                  <span>Move to Collection:</span>
+                  <span style="font-size:0.7rem; color:#94a3b8; cursor:pointer;" data-close-col-popover="1">✕</span>
+                </div>
                 <div class="crm-books-quick-tag-list">
                   ${colList}
                 </div>
@@ -7829,19 +8001,16 @@ window.CrmBooksWorkspace = (function () {
                 item.onclick = async () => {
                     const cId = item.dataset.moveColId;
                     await moveBookToCollection(bookId, cId);
-                    popover.remove();
+                    closePopover();
                 };
             });
 
+            popover.querySelector('[data-close-col-popover]')?.addEventListener('click', closePopover);
+
             document.body.appendChild(popover);
             setTimeout(() => {
-                const outsideHandler = (e) => {
-                    if (!popover.contains(e.target) && !anchorEl.contains(e.target)) {
-                        popover.remove();
-                        document.removeEventListener('click', outsideHandler);
-                    }
-                };
                 document.addEventListener('click', outsideHandler);
+                document.addEventListener('keydown', keydownHandler);
             }, 10);
         }
 
@@ -9244,7 +9413,9 @@ window.CrmBooksWorkspace = (function () {
             loadUsage().catch(() => {});
             try {
                 await apiPost('/api/admin/books/ensure-seed', {}).catch(() => {});
-            } catch (_) {}
+            } catch (_ignored) {
+                // ignore seed error
+            }
             await Promise.all([
                 loadBookCollections(),
                 loadBookTags()

@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 /**
  * CRM Teaching Sessions & Pre-Class Briefings Controller
  * Handles drag-and-drop audio upload, session history, auto AI analysis polling, and live Mermaid.js mindmap/flowchart rendering.

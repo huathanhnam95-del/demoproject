@@ -704,6 +704,114 @@ async function compileResearch(db, bookId, bookTitle, sources) {
     };
 }
 
+function buildElaboratePrompt(bookTitle, bookAuthor, snippets, chunks) {
+    const snippetsText = snippets.map((s, idx) => {
+        const src = s.sourceTab ? ` (from ${s.sourceTab}${s.section ? ` - ${s.section}` : ''})` : '';
+        return `Highlight #${idx + 1}${src}: "${s.text}"`;
+    }).join('\n\n');
+
+    const chunksText = chunks.map((c) => {
+        const pageLabel = c.pageStart === c.pageEnd ? `[Page ${c.pageStart}]` : `[Pages ${c.pageStart}-${c.pageEnd}]`;
+        return `${pageLabel}\n${c.text}`;
+    }).join('\n\n---\n\n');
+
+    return `You are an expert reading tutor and analyst. The user has selected key highlights from the book "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} and requested an in-depth elaboration.
+
+Your goal is to thoroughly explain, unpack, and contextualize what was highlighted, abiding STRICTLY and FAITHFULLY to the source book material provided below. Do not fabricate facts or bring outside opinions that contradict or dilute the author's work.
+
+HIGHLIGHTED EXCERPTS TO ELABORATE:
+${snippetsText}
+
+SOURCE TEXT FROM THE BOOK:
+${chunksText || '(No specific chunk retrieved; rely strictly on authoritative book context)'}
+
+INSTRUCTIONS:
+1. Provide an overall "synthesis" explaining how the highlighted excerpts connect to each other and to the book's overarching theme/framework.
+2. For each highlighted excerpt, generate a detailed elaboration item:
+   - "snippetId": ID or index corresponding to the highlight
+   - "snippetText": the exact highlighted text
+   - "concept": a crisp name or title for this concept (2-8 words)
+   - "detailedExplanation": a comprehensive, nuanced breakdown explaining what the author means, why it matters, how it works, and the core reasoning in the book (2-4 rich paragraphs)
+   - "sourceEvidence": verbatim or faithful citations from the source text supporting the explanation
+   - "pageRef": page numbers or range where this is addressed (e.g. "pp. 14-16" or "p. 42")
+   - "keyTakeaways": 2-4 clear, bullet-worthy takeaways
+
+Return a JSON object with this exact schema:
+{
+  "synthesis": "Comprehensive synthesis paragraph connecting the highlighted parts...",
+  "elaborations": [
+    {
+      "snippetId": "el_1",
+      "snippetText": "...",
+      "concept": "...",
+      "detailedExplanation": "...",
+      "sourceEvidence": "...",
+      "pageRef": "...",
+      "keyTakeaways": ["...", "..."]
+    }
+  ]
+}`;
+}
+
+async function elaborateBookSnippets(db, bookId, snippets, options = {}) {
+    const { retrieveTopChunks } = require('./book-retrieval');
+    const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+    if (!bookSnap.exists) throw Object.assign(new Error('Book not found'), { code: 'not-found' });
+    const bookData = bookSnap.data();
+    const textRevisionId = options?.textRevisionId || bookData.activeTextRevisionId || null;
+
+    const cleanSnippets = Array.isArray(snippets) ? snippets.filter(s => s && String(s.text || '').trim()) : [];
+    if (cleanSnippets.length === 0) {
+        throw Object.assign(new Error('No valid text snippets provided for elaboration'), { code: 'invalid-argument' });
+    }
+
+    const allChunks = [];
+    const seenChunkIds = new Set();
+
+    for (const snippet of cleanSnippets) {
+        try {
+            const query = `${snippet.text} ${snippet.section || ''}`.trim();
+            const topChunks = await retrieveTopChunks(db, bookId, query, {
+                bookTitle: bookData.title,
+                topK: 4,
+                textRevisionId
+            });
+            for (const chunk of topChunks) {
+                const key = chunk.chunkId || `${chunk.pageStart}-${chunk.index}`;
+                if (!seenChunkIds.has(key)) {
+                    seenChunkIds.add(key);
+                    allChunks.push(chunk);
+                }
+            }
+        } catch (err) {
+            console.warn('[book-summary] Chunk retrieval failed for snippet:', snippet.text, err?.message);
+        }
+    }
+
+    const models = getModels();
+    const prompt = buildElaboratePrompt(bookData.title || 'Untitled', bookData.author || '', cleanSnippets, allChunks);
+    const { json, model, usage } = await generateWithFallback(models, prompt);
+
+    recordUsage(db, { type: 'elaborate', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens })
+        .catch(err => console.error('[book-summary] Usage tracking failed:', err?.message));
+
+    const elaborations = Array.isArray(json.elaborations) ? json.elaborations : [];
+    return {
+        synthesis: String(json.synthesis || ''),
+        textRevisionId: textRevisionId || 'legacy',
+        elaborations: elaborations.map((el, idx) => ({
+            snippetId: el.snippetId || cleanSnippets[idx]?.id || `el_${idx + 1}`,
+            snippetText: el.snippetText || cleanSnippets[idx]?.text || '',
+            concept: String(el.concept || cleanSnippets[idx]?.text || `Concept ${idx + 1}`),
+            detailedExplanation: String(el.detailedExplanation || ''),
+            sourceEvidence: String(el.sourceEvidence || ''),
+            pageRef: String(el.pageRef || ''),
+            keyTakeaways: Array.isArray(el.keyTakeaways) ? el.keyTakeaways.map(t => String(t)) : []
+        })),
+        model
+    };
+}
+
 module.exports = {
     groupChunksIntoSections,
     summarizeSection,
@@ -726,6 +834,8 @@ module.exports = {
     buildNodeExpandPrompt,
     compileResearch,
     buildCompilePrompt,
+    elaborateBookSnippets,
+    buildElaboratePrompt,
     SECTION_TARGET_CHARS,
     DEFAULT_MODEL,
     FALLBACK_MODEL

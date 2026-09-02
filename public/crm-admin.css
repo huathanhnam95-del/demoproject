@@ -9366,6 +9366,580 @@ mark.crm-highlight:hover {
   color: #dc2626;
 }
 
+/* ─── CRM Books: Collection Folders & Tagging System ─── */
+.crm-books-folders-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.crm-books-folder {
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: rgba(248, 250, 252, 0.6);
+  border: 1px solid #edf2f7;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+.crm-books-folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: background 0.12s ease;
+}
+.crm-books-folder-header:hover {
+  background: #f1f5f9;
+}
+.crm-books-folder-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.crm-books-folder-chevron {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: inline-block;
+  transition: transform 0.15s ease;
+  width: 14px;
+  text-align: center;
+}
+.crm-books-folder-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+.crm-books-folder-icon {
+  font-size: 0.95rem;
+}
+.crm-books-folder-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crm-books-folder-count {
+  font-size: 0.72rem;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+.crm-books-folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.crm-books-folder-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.12s;
+}
+.crm-books-folder-btn:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+.crm-books-folder-btn.delete:hover {
+  color: #ef4444;
+}
+.crm-books-folder-content {
+  padding: 4px 6px 6px 14px;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: max-height 0.2s ease;
+}
+.crm-books-folder-content.collapsed {
+  display: none;
+}
+.crm-books-folder-empty {
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Sidebar Tag Filter Bar */
+.crm-books-sidebar-tag-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0 8px;
+}
+.crm-books-sidebar-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  transition: all 0.12s ease;
+}
+.crm-books-sidebar-tag-pill:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.crm-books-sidebar-tag-pill.active {
+  background: #0f766e;
+  color: #fff;
+  border-color: #0f766e;
+}
+.crm-books-sidebar-tag-pill.clear-btn {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Tag Chips */
+.crm-books-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  line-height: 1.2;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.crm-books-tag-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.6;
+}
+.crm-books-tag-chip-remove:hover {
+  opacity: 1;
+}
+.crm-books-card-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.crm-books-card-quick-tag-btn {
+  opacity: 0;
+  background: none;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.12s;
+}
+.crm-books-list-item:hover .crm-books-card-quick-tag-btn {
+  opacity: 1;
+}
+.crm-books-card-quick-tag-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Header Tags Bar (Explorer Center) */
+.crm-books-header-tags-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+.crm-books-header-folder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+}
+.crm-books-header-folder-badge:hover {
+  background: #e2e8f0;
+}
+.crm-books-header-add-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  border: 1px dashed #cbd5e1;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 500;
+}
+.crm-books-header-add-tag-btn:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: #f0fdf4;
+}
+
+/* Floating Quick-Tag Popover */
+.crm-books-quick-tag-popover {
+  position: fixed;
+  z-index: 10500;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
+  width: 250px;
+  padding: 10px;
+  font-size: 0.8rem;
+  animation: fadeIn 0.12s ease;
+}
+.crm-books-quick-tag-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  outline: none;
+}
+.crm-books-quick-tag-input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+.crm-books-quick-tag-hint {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+.crm-books-quick-tag-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.crm-books-quick-tag-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.crm-books-quick-tag-item:hover {
+  background: #f1f5f9;
+}
+.crm-books-quick-tag-item.selected {
+  background: #ecfdf5;
+  font-weight: 600;
+}
+.crm-books-quick-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+/* Modals (New Collection & Create Tag) */
+.crm-books-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.crm-books-modal-card {
+  background: #fff;
+  border-radius: 14px;
+  width: 90vw;
+  max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.crm-books-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.crm-books-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+.crm-books-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.crm-books-modal-close-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+.crm-books-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.crm-books-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.crm-books-candidate-list {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.crm-books-candidate-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.crm-books-candidate-item:last-child {
+  border-bottom: none;
+}
+.crm-books-candidate-item:hover {
+  background: #f8fafc;
+}
+.crm-books-candidate-item.selected {
+  background: #f0fdf4;
+}
+.crm-books-candidate-info {
+  flex: 1;
+  min-width: 0;
+}
+.crm-books-candidate-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crm-books-candidate-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.crm-books-candidate-current-col {
+  color: #0f766e;
+  font-weight: 500;
+}
+
+/* Color Palette Picker for Create Tag */
+.crm-books-color-picker {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+.crm-books-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.crm-books-color-dot:hover {
+  transform: scale(1.15);
+}
+.crm-books-color-dot.active {
+  border-color: #0f172a;
+  transform: scale(1.15);
+}
+
+.crm-books-quick-tag-create-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #f0fdf4;
+  color: #0f766e;
+  font-weight: 500;
+  margin-bottom: 4px;
+  transition: background 0.1s;
+}
+.crm-books-quick-tag-create-item:hover {
+  background: #dcfce7;
+}
+
+/* Dark mode support for Collections and Tags */
+[data-panel="books"].books-dark .crm-books-folder {
+  background: rgba(37, 37, 43, 0.6);
+  border-color: #3a3a42;
+}
+[data-panel="books"].books-dark .crm-books-folder-header {
+  background: #25252b;
+  color: #e4e4e8;
+}
+[data-panel="books"].books-dark .crm-books-folder-header:hover {
+  background: #2c2c33;
+}
+[data-panel="books"].books-dark .crm-books-folder-chevron {
+  color: #9a9a9f;
+}
+[data-panel="books"].books-dark .crm-books-folder-count {
+  background: #3a3a42;
+  color: #9a9a9f;
+}
+[data-panel="books"].books-dark .crm-books-folder-content {
+  border-left-color: #3a3a42;
+}
+[data-panel="books"].books-dark .crm-books-folder-btn:hover {
+  background: #3a3a42;
+  color: #e4e4e8;
+}
+[data-panel="books"].books-dark .crm-books-sidebar-tag-pill {
+  background: #25252b;
+  border-color: #3a3a42;
+  color: #9a9a9f;
+}
+[data-panel="books"].books-dark .crm-books-sidebar-tag-pill:hover {
+  background: #2c2c33;
+  color: #e4e4e8;
+}
+[data-panel="books"].books-dark .crm-books-sidebar-tag-pill.active {
+  background: #134e4a;
+  border-color: #0f766e;
+  color: #5eead4;
+}
+[data-panel="books"].books-dark .crm-books-header-folder-badge {
+  background: #25252b;
+  border-color: #3a3a42;
+  color: #e4e4e8;
+}
+[data-panel="books"].books-dark .crm-books-header-add-tag-btn {
+  background: #25252b;
+  border-color: #3a3a42;
+  color: #9a9a9f;
+}
+
+.crm-books-modal-overlay.books-dark .crm-books-modal-card {
+  background: #25252b;
+  color: #e4e4e8;
+  border: 1px solid #3a3a42;
+}
+.crm-books-modal-overlay.books-dark .crm-books-modal-header {
+  border-bottom-color: #3a3a42;
+}
+.crm-books-modal-overlay.books-dark .crm-books-modal-header h3 {
+  color: #e4e4e8;
+}
+.crm-books-modal-overlay.books-dark .crm-books-modal-close-btn:hover {
+  background: #3a3a42;
+  color: #e4e4e8;
+}
+.crm-books-modal-overlay.books-dark .crm-books-modal-footer {
+  background: #1f1f24;
+  border-top-color: #3a3a42;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-list {
+  border-color: #3a3a42;
+  background: #1f1f24;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-item {
+  border-bottom-color: #2c2c33;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-item:hover {
+  background: #2c2c33;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-item.selected {
+  background: #134e4a;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-title {
+  color: #e4e4e8;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-sub {
+  color: #9a9a9f;
+}
+.crm-books-modal-overlay.books-dark .crm-books-candidate-current-col {
+  color: #2dd4bf;
+}
+
+.crm-books-quick-tag-popover.books-dark {
+  background: #25252b;
+  border-color: #3a3a42;
+  color: #e4e4e8;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-input {
+  background: #1f1f24;
+  border-color: #3a3a42;
+  color: #e4e4e8;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-item:hover {
+  background: #2c2c33;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-item.selected {
+  background: #134e4a;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-create-item {
+  background: #134e4a;
+  color: #5eead4;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-create-item:hover {
+  background: #0f766e;
+}
+
 /* ─── Phase 4: Knowledge Graph Modal ─── */
 .crm-books-kg-overlay {
   position: fixed;

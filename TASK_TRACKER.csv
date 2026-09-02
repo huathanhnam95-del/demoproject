@@ -1826,3 +1826,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 832,2026-09-02,High-fidelity ingest and text audit for Harmer 5th Edition on localhost and production with 100-page examination,Done,2026-09-02
 833,2026-09-03,Review debug and refactor CRM Books collections and tagging system,Done,2026-09-03
 834,2026-09-03,Rerun text regeneration and 100-page ground truth audit on Adult Learner and Teaching Pronunciation on production,Done,2026-09-03
+835,2026-09-03,Review debug refactor and deploy CRM Books Elaborate tool and V1.8.93 to production,In Progress,

@@ -1,12 +1,13 @@
 /**
  * CRM Teaching Sessions & Pre-Class Briefings Controller
- * Handles drag-and-drop audio upload, session history, and live Mermaid.js mindmap/flowchart rendering.
+ * Handles drag-and-drop audio upload, session history, auto AI analysis polling, and live Mermaid.js mindmap/flowchart rendering.
  */
 window.CrmTeachingSessions = (function () {
     let currentStudentId = null;
     let currentSession = null;
     let isInitialized = false;
     let selectedAudioFile = null;
+    let pollTimer = null;
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -189,21 +190,23 @@ window.CrmTeachingSessions = (function () {
         }
     }
 
-    async function loadStudentSessions(studentId) {
-        currentStudentId = studentId;
+    async function loadStudentSessions(studentId, isPolling = false) {
+        if (studentId) currentStudentId = studentId;
+        const sid = currentStudentId;
+        if (!sid) return;
+
         const listEl = document.getElementById('teaching-sessions-list');
         const emptyEl = document.getElementById('teaching-sessions-empty');
         const loadingEl = document.getElementById('teaching-sessions-loading');
 
         if (!listEl) return;
 
-        if (loadingEl) loadingEl.style.display = 'block';
-        if (emptyEl) emptyEl.style.display = 'none';
-        listEl.innerHTML = '';
+        if (!isPolling && loadingEl) loadingEl.style.display = 'block';
+        if (!isPolling && emptyEl) emptyEl.style.display = 'none';
 
         try {
             const headers = await getAuthHeaders();
-            const resp = await fetch(`/api/admin/teaching-sessions?studentId=${encodeURIComponent(studentId)}`, {
+            const resp = await fetch(`/api/admin/teaching-sessions?studentId=${encodeURIComponent(sid)}`, {
                 headers
             });
             const data = await resp.json();
@@ -213,12 +216,28 @@ window.CrmTeachingSessions = (function () {
 
             if (!sessions.length) {
                 if (emptyEl) emptyEl.style.display = 'block';
+                listEl.innerHTML = '';
+                stopPolling();
                 return;
             }
 
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            let hasProcessing = false;
+
             listEl.innerHTML = sessions.map((s) => {
-                const statusColor = s.status === 'analyzed' ? '#16a34a' : (s.status === 'error' ? '#dc2626' : '#d97706');
-                const statusBg = s.status === 'analyzed' ? '#dcfce7' : (s.status === 'error' ? '#fee2e2' : '#fef3c7');
+                const isProcessing = s.status === 'processing' || s.status === 'uploaded';
+                if (isProcessing) hasProcessing = true;
+
+                let statusBadge = '';
+                if (s.status === 'analyzed') {
+                    statusBadge = `<span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;">✅ Analyzed</span>`;
+                } else if (s.status === 'error') {
+                    statusBadge = `<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;">⚠️ Analysis Failed</span>`;
+                } else {
+                    statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;animation:spin 1.5s linear infinite;">🔄</span> Analyzing with Gemini AI...</span>`;
+                }
+
                 const durationBadge = s.audioDurationSec ? `<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;">⏱️ ${formatDuration(s.audioDurationSec)}</span>` : '';
                 const skillBadge = s.focusSkill ? `<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;">🎯 ${escapeHtml(s.focusSkill)}</span>` : '';
 
@@ -227,7 +246,7 @@ window.CrmTeachingSessions = (function () {
                         <div style="display:flex;flex-direction:column;gap:4px;">
                             <div style="display:flex;align-items:center;gap:8px;">
                                 <strong style="font-size:15px;color:#0f172a;">${escapeHtml(s.title || 'Teaching Session')}</strong>
-                                <span style="background:${statusBg};color:${statusColor};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;text-transform:capitalize;">${escapeHtml(s.status)}</span>
+                                ${statusBadge}
                                 ${skillBadge}
                                 ${durationBadge}
                             </div>
@@ -236,11 +255,22 @@ window.CrmTeachingSessions = (function () {
                                 ${s.teacherName ? `<span style="margin-left:12px;">👨‍🏫 ${escapeHtml(s.teacherName)}</span>` : ''}
                             </div>
                             ${s.notes ? `<div style="font-size:12px;color:#475569;margin-top:2px;">${escapeHtml(s.notes)}</div>` : ''}
+                            ${s.errorMessage ? `<div style="font-size:11px;color:#dc2626;margin-top:2px;">Error: ${escapeHtml(s.errorMessage)}</div>` : ''}
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <button class="crm-btn-primary btn-view-teaching-session" data-session-id="${escapeHtml(s.id)}" type="button" style="padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:4px;">
-                                <span>🧠 View Report & Mindmap</span>
-                            </button>
+                            ${s.status === 'analyzed' ? `
+                                <button class="crm-btn-primary btn-view-teaching-session" data-session-id="${escapeHtml(s.id)}" type="button" style="padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:4px;">
+                                    <span>🧠 View Report & Mindmap</span>
+                                </button>
+                            ` : (s.status === 'error' || s.status === 'uploaded' ? `
+                                <button class="crm-btn-secondary btn-retry-teaching-session" data-session-id="${escapeHtml(s.id)}" type="button" style="padding:6px 12px;font-size:13px;">
+                                    <span>🔄 Retry Analysis</span>
+                                </button>
+                            ` : `
+                                <button class="crm-btn-secondary" disabled type="button" style="padding:6px 12px;font-size:13px;opacity:0.7;cursor:wait;">
+                                    <span>Processing...</span>
+                                </button>
+                            `)}
                             <button class="crm-icon-btn btn-delete-teaching-session" data-session-id="${escapeHtml(s.id)}" title="Delete Session" type="button" style="color:#94a3b8;">
                                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                                     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -251,7 +281,7 @@ window.CrmTeachingSessions = (function () {
                 `;
             }).join('');
 
-            // Attach view & delete listeners
+            // Attach view listeners
             listEl.querySelectorAll('.btn-view-teaching-session').forEach((btn) => {
                 btn.addEventListener('click', () => {
                     const sid = btn.dataset.sessionId;
@@ -259,6 +289,18 @@ window.CrmTeachingSessions = (function () {
                 });
             });
 
+            // Attach retry listeners
+            listEl.querySelectorAll('.btn-retry-teaching-session').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const sid = btn.dataset.sessionId;
+                    if (!sid) return;
+                    btn.disabled = true;
+                    btn.textContent = 'Starting...';
+                    await triggerAnalysis(sid);
+                });
+            });
+
+            // Attach delete listeners
             listEl.querySelectorAll('.btn-delete-teaching-session').forEach((btn) => {
                 btn.addEventListener('click', async () => {
                     const sid = btn.dataset.sessionId;
@@ -268,10 +310,54 @@ window.CrmTeachingSessions = (function () {
                 });
             });
 
+            // If any session is still processing, keep polling every 4s
+            if (hasProcessing) {
+                startPolling();
+            } else {
+                stopPolling();
+            }
+
         } catch (err) {
             console.error('[Teaching Sessions] Error loading sessions:', err);
             if (loadingEl) loadingEl.style.display = 'none';
             listEl.innerHTML = `<div style="color:#dc2626;padding:16px;">Failed to load teaching sessions: ${escapeHtml(err.message)}</div>`;
+            stopPolling();
+        }
+    }
+
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(() => {
+            if (currentStudentId) {
+                loadStudentSessions(currentStudentId, true);
+            } else {
+                stopPolling();
+            }
+        }, 4000);
+    }
+
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    async function triggerAnalysis(sessionId) {
+        try {
+            const headers = await getAuthHeaders();
+            const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}/analyze`, {
+                method: 'POST',
+                headers
+            });
+            const res = await resp.json();
+            if (res.success) {
+                if (currentStudentId) loadStudentSessions(currentStudentId);
+            } else {
+                throw new Error(res.error || 'Failed to trigger analysis');
+            }
+        } catch (err) {
+            alert(`Analysis trigger failed: ${err.message}`);
         }
     }
 
@@ -411,8 +497,8 @@ window.CrmTeachingSessions = (function () {
             // 1. If Firebase Storage is available and a file is selected, upload it
             if (file && window.firebase && window.firebase.storage) {
                 if (progressLabel) progressLabel.textContent = `Uploading ${file.name} to Cloud Storage...`;
-                if (progressBar) progressBar.style.width = '30%';
-                if (progressPct) progressPct.textContent = '30%';
+                if (progressBar) progressBar.style.width = '25%';
+                if (progressPct) progressPct.textContent = '25%';
 
                 const timestamp = Date.now();
                 const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -424,7 +510,7 @@ window.CrmTeachingSessions = (function () {
                     uploadTask.on(
                         window.firebase.storage.TaskEvent.STATE_CHANGED,
                         (snapshot) => {
-                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 60) + 30;
+                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 60) + 25;
                             if (progressBar) progressBar.style.width = `${pct}%`;
                             if (progressPct) progressPct.textContent = `${pct}%`;
                         },
@@ -437,11 +523,11 @@ window.CrmTeachingSessions = (function () {
                 });
             }
 
-            if (progressLabel) progressLabel.textContent = 'Saving session to database...';
+            if (progressLabel) progressLabel.textContent = 'Saving session and launching AI analysis...';
             if (progressBar) progressBar.style.width = '90%';
             if (progressPct) progressPct.textContent = '90%';
 
-            // 2. Create session in Firestore
+            // 2. Create session in Firestore (which triggers background AI analysis)
             const createPayload = {
                 studentId: currentStudentId,
                 title,
@@ -450,7 +536,7 @@ window.CrmTeachingSessions = (function () {
                 notes,
                 audioUrl,
                 audioDurationSec,
-                status: 'uploaded'
+                status: 'processing'
             };
 
             const headers = await getAuthHeaders();
@@ -465,7 +551,7 @@ window.CrmTeachingSessions = (function () {
                 throw new Error(createRes.error || 'Failed to create session');
             }
 
-            if (progressLabel) progressLabel.textContent = 'Session saved successfully!';
+            if (progressLabel) progressLabel.textContent = 'Upload complete! AI analysis in progress...';
             if (progressBar) progressBar.style.width = '100%';
             if (progressPct) progressPct.textContent = '100%';
 
@@ -477,8 +563,9 @@ window.CrmTeachingSessions = (function () {
             const drawer = document.getElementById('teaching-session-upload-drawer');
             if (drawer) drawer.style.display = 'none';
 
-            // Reload list
+            // Reload list and begin polling
             loadStudentSessions(currentStudentId);
+            startPolling();
 
         } catch (err) {
             console.error('[Teaching Sessions] Upload error:', err);
@@ -630,6 +717,7 @@ window.CrmTeachingSessions = (function () {
         loadStudentSessions,
         openSessionDetail,
         deleteSession,
+        triggerAnalysis,
         renderMermaid,
         convertMarkdownToHtml
     };

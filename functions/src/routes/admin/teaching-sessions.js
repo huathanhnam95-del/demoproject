@@ -1,5 +1,6 @@
 const {
-    CRM_TEACHING_SESSIONS
+    CRM_TEACHING_SESSIONS,
+    CRM_STUDENTS
 } = require('../../crm/collections');
 const {
     buildTeachingSessionCreateData,
@@ -7,9 +8,37 @@ const {
     mapTeachingSessionRecord,
     sortTeachingSessions
 } = require('../../crm/teaching-session-service');
+const {
+    runSessionAnalysisTask
+} = require('../../crm/teaching-session-analyzer');
 
 module.exports = function registerTeachingSessionRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
+
+    // Helper to resolve all related IDs for a student (Firestore doc ID + crmId)
+    async function resolveStudentIds(id) {
+        if (!id) return [];
+        const ids = new Set([id]);
+        try {
+            // Check if doc exists by ID
+            const doc = await db.collection(CRM_STUDENTS).doc(id).get();
+            if (doc.exists) {
+                const data = doc.data() || {};
+                if (data.crmId) ids.add(String(data.crmId).trim());
+            } else {
+                // Check if crmId matches
+                const snap = await db.collection(CRM_STUDENTS).where('crmId', '==', id).limit(5).get();
+                snap.forEach((d) => {
+                    ids.add(d.id);
+                    const data = d.data() || {};
+                    if (data.crmId) ids.add(String(data.crmId).trim());
+                });
+            }
+        } catch (err) {
+            console.warn('[Teaching Sessions] Student ID resolution error:', err.message);
+        }
+        return Array.from(ids).filter(Boolean);
+    }
 
     // GET /teaching-sessions - Query teaching sessions
     router.get('/teaching-sessions', ...requireAdminHandlers, async (req, res) => {
@@ -23,7 +52,12 @@ module.exports = function registerTeachingSessionRoutes(router, deps) {
             let query = db.collection(CRM_TEACHING_SESSIONS);
 
             if (studentId) {
-                query = query.where('studentId', '==', studentId);
+                const candidateIds = await resolveStudentIds(studentId);
+                if (candidateIds.length === 1) {
+                    query = query.where('studentId', '==', candidateIds[0]);
+                } else if (candidateIds.length > 1) {
+                    query = query.where('studentId', 'in', candidateIds);
+                }
             } else if (classId) {
                 query = query.where('classId', '==', classId);
             } else if (teacherUid) {
@@ -92,6 +126,13 @@ module.exports = function registerTeachingSessionRoutes(router, deps) {
                 }
             }, { user: req.user });
 
+            // If audioUrl is present and status is not yet analyzed, trigger AI analysis asynchronously
+            if (sessionData.audioUrl && sessionData.status !== 'analyzed') {
+                runSessionAnalysisTask(ref.id, db, serverTimestamp).catch((err) => {
+                    console.error('[Teaching Sessions] Background analysis error:', err);
+                });
+            }
+
             const snap = await ref.get();
             return sendSuccess(res, {
                 sessionId: ref.id,
@@ -99,6 +140,34 @@ module.exports = function registerTeachingSessionRoutes(router, deps) {
             }, 'Teaching session created.');
         } catch (error) {
             return sendError(res, 400, 'CREATE_TEACHING_SESSION_ERROR', error?.message || 'Failed to create teaching session.');
+        }
+    });
+
+    // POST /teaching-sessions/:sessionId/analyze - Trigger AI analysis
+    router.post('/teaching-sessions/:sessionId/analyze', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const sessionId = String(req.params.sessionId || '').trim();
+            if (!sessionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing sessionId.');
+            }
+
+            const ref = db.collection(CRM_TEACHING_SESSIONS).doc(sessionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Teaching session not found.');
+            }
+
+            // Run analysis task asynchronously in background
+            runSessionAnalysisTask(sessionId, db, serverTimestamp).catch((err) => {
+                console.error('[Teaching Sessions] Triggered analysis error:', err);
+            });
+
+            return sendSuccess(res, {
+                sessionId,
+                status: 'processing'
+            }, 'Teaching session analysis started.');
+        } catch (error) {
+            return sendError(res, 500, 'ANALYZE_TEACHING_SESSION_ERROR', 'Failed to trigger session analysis.', error?.message || error);
         }
     });
 

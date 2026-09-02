@@ -1015,6 +1015,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 db,
                 bucket,
                 bookId,
+                revisionId: cleanStr(req.body?.revisionId) || `rev-ocr-${Date.now()}`,
                 sourcePath,
                 sourceSha256: req.body?.expectedSourceSha256,
                 expectedPageCount: req.body?.pageCount || bookData.pageCount,

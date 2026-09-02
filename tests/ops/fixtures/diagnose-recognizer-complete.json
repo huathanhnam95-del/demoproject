@@ -1,0 +1,43 @@
+{
+  "$comment": [
+    "Sample availability log fixture for phoneme-recognizer-00016-lum"
+  ],
+  "queries": {
+    "requests": {
+      "ok": true,
+      "rows": [
+        "2026-08-31T10:00:00.000000Z\tphoneme-recognizer-00016-lum\t/recognize/v2\t200\t0.350s\tinst-001",
+        "2026-08-31T10:01:00.000000Z\tphoneme-recognizer-00016-lum\t/recognize/v2\t200\t0.420s\tinst-001",
+        "2026-08-31T10:02:00.000000Z\tphoneme-recognizer-00016-lum\t/recognize/v2\t503\t0.005s\tinst-001",
+        "2026-08-31T10:03:00.000000Z\tphoneme-recognizer-00016-lum\t/recognize/v2\t400\t0.010s\tinst-001",
+        "2026-08-31T10:04:00.000000Z\tphoneme-recognizer-00016-lum\t/recognize/v2\t500\t0.050s\tinst-001"
+      ]
+    },
+    "readyz": {
+      "ok": true,
+      "rows": [
+        "2026-08-31T10:00:10.000000Z\tphoneme-recognizer-00016-lum\t200\t0.003s",
+        "2026-08-31T10:10:10.000000Z\tphoneme-recognizer-00016-lum\t200\t0.004s"
+      ]
+    },
+    "instances": {
+      "ok": true,
+      "rows": [
+        "2026-08-31T09:59:00.000000Z\tphoneme-recognizer-00016-lum\tStarting new instance. Reason: AUTOSCALING\tinst-001"
+      ]
+    },
+    "scheduler": {
+      "ok": true,
+      "rows": [
+        "2026-08-31T10:00:00.000000Z\tOK",
+        "2026-08-31T10:10:00.000000Z\tOK"
+      ]
+    },
+    "busyLogs": {
+      "ok": true,
+      "rows": [
+        "2026-08-31T10:02:00.000000Z\tphoneme-recognizer-00016-lum\tRECOGNIZER_BUSY active_request_age_ms=120"
+      ]
+    }
+  }
+}

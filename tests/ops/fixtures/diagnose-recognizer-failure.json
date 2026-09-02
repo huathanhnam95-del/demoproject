@@ -1,0 +1,27 @@
+{
+  "$comment": [
+    "Fixture where request and busy log queries failed"
+  ],
+  "queries": {
+    "requests": {
+      "ok": false,
+      "error": "gcloud logging read error"
+    },
+    "readyz": {
+      "ok": true,
+      "rows": []
+    },
+    "instances": {
+      "ok": true,
+      "rows": []
+    },
+    "scheduler": {
+      "ok": true,
+      "rows": []
+    },
+    "busyLogs": {
+      "ok": false,
+      "error": "timeout reading application logs"
+    }
+  }
+}

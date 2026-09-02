@@ -2,9 +2,9 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 389,
-  "round1_pass_count": 329,
-  "debate_revised_count": 57,
+  "processed_questions": 412,
+  "round1_pass_count": 346,
+  "debate_revised_count": 63,
   "unresolved_count": 3,
   "debate_transcripts": [
     {
@@ -9785,6 +9785,1088 @@
               "issues": [],
               "verified_grammar_tag": "Adjective (Descriptive)",
               "overall_notes": "The explanation correctly identifies the grammatical and semantic differences between the options. It accurately distinguishes 'lone' (attributive adjective) from 'alone' (predicative adjective/adverb) and 'lonely' (emotion-based adjective), while correctly identifying 'full' as a semantic mismatch."
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 242,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Collocation (Participle Adjective)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Adjective Collocation (Participle Adjective)' is factually incorrect. 'Unscathed' is a regular adjective, not a participle adjective. Participle adjectives are derived from verbs (e.g., 'broken', 'damaged'), whereas 'unscathed' is a standalone adjective.",
+                "affected_text": "Adjective Collocation (Participle Adjective)",
+                "correction": "Adjective Collocation (Regular Adjective)"
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+            "overall_notes": "The grammar tag is incorrect because 'unscathed' is a regular adjective, not a participle adjective. The explanation correctly identifies the grammatical forms of the distractors but fails to address the semantic collocation of 'unscathed' with 'escaping'."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Participle Adjective)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'unscathed' because it is a regular adjective meaning 'not hurt or undamaged.' The phrase 'escaping [adjective]' describes a state of being safe after an accident. \n* Why 'narrowly' is incorrect: 'Narrowly' is an adverb meaning 'by a small margin,' which cannot describe a state of being unharmed. \n* Why 'incompletely' is incorrect: 'Incompletely' is an adverb meaning 'not fully done,' which does not relate to safety. \n* Why 'fined' is incorrect: 'Fined' is the past participle of the verb 'to fine' (to punish with money), but here we need a descriptive adjective about physical condition. The phrase 'escaping fined' would imply being punished, which is unrelated to the context of an accident. \n* Semantic collocation: 'Unscathed' logically pairs with 'escaping' because both refer to a state of being safe or unharmed, while the distractors do not fit this relationship. \n* Grammar clarification: 'Unscathed' is a regular adjective, not a participle adjective. Participle adjectives are derived from verbs (e.g., 'broken,' 'damaged'), whereas 'unscathed' is a standalone adjective that does not come from a verb form.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Participle Adjective' to 'Regular Adjective' based on Model qwen3:14b's verification that 'unscathed' is a standalone adjective, not derived from a verb. The explanation was expanded to clarify semantic collocation and explicitly address the passive vs. active meaning of distractors like 'fined.'",
+          "candidate_explanation": "The correct answer is 'unscathed' because it is a regular adjective meaning 'not hurt or undamaged.' The phrase 'escaping [adjective]' describes a state of being safe after an accident. \n* Why 'narrowly' is incorrect: 'Narrowly' is an adverb meaning 'by a small margin,' which cannot describe a state of being unharmed. \n* Why 'incompletely' is incorrect: 'Incompletely' is an adverb meaning 'not fully done,' which does not relate to safety. \n* Why 'fined' is incorrect: 'Fined' is the past participle of the verb 'to fine' (to punish with money), but here we need a descriptive adjective about physical condition. The phrase 'escaping fined' would imply being punished, which is unrelated to the context of an accident. \n* Semantic collocation: 'Unscathed' logically pairs with 'escaping' because both refer to a state of being safe or unharmed, while the distractors do not fit this relationship. \n* Grammar clarification: 'Unscathed' is a regular adjective, not a participle adjective. Participle adjectives are derived from verbs (e.g., 'broken,' 'damaged'), whereas 'unscathed' is a standalone adjective that does not come from a verb form.",
+          "candidate_grammar_tag": "Adjective Collocation (Regular Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are correctly analyzed for grammatical form and semantic fit, and the reasoning avoids circularity or contradictions. Semantic and collocation gaps are appropriately addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation, with gemma4:12b's timeout not affecting the consensus. The grammar tag was confirmed as 'Adjective Collocation (Regular Adjective)' by all models. Additional clarification on subject-verb logic was added to address potential ambiguity in the passive distractor 'fined.'",
+          "candidate_explanation": "The correct answer is 'unscathed' because it is a regular adjective meaning 'not hurt or undamaged.' The phrase 'escaping [adjective]' describes a state of being safe after an accident. \n* Why 'narrowly' is incorrect: 'Narrowly' is an adverb meaning 'by a small margin,' which cannot describe a state of being unharmed. \n* Why 'incompletely' is incorrect: 'Incompletely' is an adverb meaning 'not fully done,' which does not relate to safety. \n* Why 'fined' is incorrect: 'Fined' is the past participle of the verb 'to fine' (to punish with money), but here we need a descriptive adjective about physical condition. The phrase 'escaping fined' would imply being punished, which is unrelated to the context of an accident. \n* Semantic collocation: 'Unscathed' logically pairs with 'escaping' because both refer to a state of being safe or unharmed, while the distractors do not fit this relationship. \n* Grammar clarification: 'Unscathed' is a regular adjective, not a participle adjective. Participle adjectives are derived from verbs (e.g., 'broken,' 'damaged'), whereas 'unscathed' is a standalone adjective that does not come from a verb form. \n* Subject-verb logic: 'Fined' is a passive form (past participle), but the sentence requires an adjective describing a state, not a passive verb form. Passive constructions like 'fined' are used with auxiliary verbs (e.g., 'was fined'), not as standalone adjectives in this context.",
+          "candidate_grammar_tag": "Adjective Collocation (Regular Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are correctly analyzed for grammatical form and semantic fit, and the explanation addresses subject-verb relationships for passive voice distractors. No gaps or errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already comprehensive, so no changes were needed to address the critiques.",
+          "candidate_explanation": "The correct answer is 'unscathed' because it is a regular adjective meaning 'not hurt or undamaged.' The phrase 'escaping [adjective]' describes a state of being safe after an accident. * Why 'narrowly' is incorrect: 'Narrowly' is an adverb meaning 'by a small margin,' which cannot describe a state of being unharmed. * Why 'incompletely' is incorrect: 'Incompletely' is an adverb meaning 'not fully done,' which does not relate to safety. * Why 'fined' is incorrect: 'Fined' is the past participle of the verb 'to fine' (to punish with money), but here we need a descriptive adjective about physical condition. The phrase 'escaping fined' would imply being punished, which is unrelated to the context of an accident. The sentence requires an adjective, not a passive verb form. Passive constructions like 'fined' are used with auxiliary verbs (e.g., 'was fined'), not as standalone adjectives in this context. Semantic collocation: 'Unscathed' logically pairs with 'escaping' because both refer to a state of being safe or unharmed, while the distractors do not fit this relationship. Grammar clarification: 'Unscathed' is a regular adjective, not a participle adjective. Participle adjectives are derived from verbs (e.g., 'broken,' 'damaged'), whereas 'unscathed' is a standalone adjective that does not come from a verb form. Subject-verb logic: 'Fined' is a passive form (past participle), but the sentence requires an adjective describing a state, not a passive verb form. Passive constructions like 'fined' are used with auxiliary verbs (e.g., 'was fined'), not as standalone adjectives in this context.",
+          "candidate_grammar_tag": "Adjective Collocation (Regular Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'unscathed' as a regular adjective, correctly classifies the distractors (adverbs and passive participle), and addresses semantic, grammatical, and collocational reasoning without gaps or errors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Regular Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 249,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the collocation of 'consistently' with 'communicate'.",
+                "affected_text": "The explanation does not mention collocation.",
+                "correction": "Include a note on how 'consistently' naturally pairs with 'communicate'."
+              }
+            ],
+            "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+            "overall_notes": "The explanation is mostly correct but lacks completeness in addressing collocation."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+            "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are correctly identified by their grammatical forms, and the reasoning for why each distractor is incorrect is clear and semantically appropriate. No semantic, collocation, or completeness gaps are present."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'consistently' because it is an adverb that modifies the verb 'communicate,' describing *how* we communicate—in a steady, reliable manner. 'Concerted' is incorrect because it is an adjective (e.g., 'concerted effort') and cannot modify the verb 'communicate.' 'Nostalgic' is incorrect because it is an adjective describing feelings related to the past, which does not describe the manner of communication. 'Limits' is incorrect because it is a noun or a plural verb form and cannot function as an adverb. Additionally, 'consistently' naturally pairs with 'communicate' in collocation, as we often say 'communicate consistently' to describe regular and reliable communication.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to include the collocation of 'consistently' with 'communicate' as requested by Model [deepseek-r1:14b], while maintaining the accuracy and completeness of the original explanation as affirmed by Model [qwen3:14b]. Model [gemma4:12b] did not provide a response, so no changes were made to address potential issues from that model.",
+          "candidate_explanation": "The correct answer is 'consistently' because it is an adverb that modifies the verb 'communicate,' describing *how* we communicate—in a steady, reliable manner. 'Concerted' is incorrect because it is an adjective (e.g., 'concerted effort') and cannot modify the verb 'communicate.' 'Nostalgic' is incorrect because it is an adjective describing feelings related to the past, which does not describe the manner of communication. 'Limits' is incorrect because it is a noun or a plural verb form and cannot function as an adverb. Additionally, 'consistently' naturally pairs with 'communicate' in collocation, as we often say 'communicate consistently' to describe regular and reliable communication.",
+          "candidate_grammar_tag": "Adverb Function (Modifying Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'consistently' as an adverb modifying the verb 'communicate' and correctly explains why the distractors are grammatically and semantically inappropriate. Collocation and semantic context are appropriately addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'consistently' because it is an adverb that modifies the verb 'communicate,' describing *how* we communicate—in a steady, reliable manner. 'Concerted' is incorrect because it is an adjective (e.g., 'concerted effort') and cannot modify the verb 'communicate.' 'Nostalgic' is incorrect because it is an adjective describing feelings related to the past, which does not describe the manner of communication. 'Limits' is incorrect because it is a noun or a plural verb form and cannot function as an adverb. Additionally, 'consistently' naturally pairs with 'communicate' in collocation, as we often say 'communicate consistently' to describe regular and reliable communication.",
+          "candidate_grammar_tag": "Adverb Function (Modifying Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical errors or logical flaws."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are correctly analyzed for grammatical form, semantic context, and collocation, and the reasoning is clear and complete."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with no significant disagreements. The grammar tag was confirmed as 'Adverb Function (Modifying Verb)' by all models, and the explanation was deemed accurate and complete.",
+          "candidate_explanation": "The correct answer is 'consistently' because it is an adverb that modifies the verb 'communicate,' describing *how* we communicate—in a steady, reliable manner. 'Concerted' is incorrect because it is an adjective (e.g., 'concerted effort') and cannot modify the verb 'communicate.' 'Nostalgic' is incorrect because it is an adjective describing feelings related to the past, which does not describe the manner of communication. 'Limits' is incorrect because it is a noun or a plural verb form and cannot function as an adverb. Additionally, 'consistently' naturally pairs with 'communicate' in collocation, as we often say 'communicate consistently' to describe regular and reliable communication. All distractors are grammatically incompatible with the verb 'communicate' in this context, and the grammar tag 'Adverb Function (Modifying Verb)' is accurate based on the analysis of all models.",
+          "candidate_grammar_tag": "Adverb Function (Modifying Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'consistently' as an adverb modifying 'communicate' and correctly explains why the distractors are grammatically and semantically incompatible. Collocation and semantic context are appropriately addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Function (Modifying Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 251,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Prepositional Phrase/Introductory Participle",
+            "overall_notes": "The explanation is accurate and complete, with no grammatical errors in the analysis."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag incorrectly includes 'Introductory Participle' when 'including' functions as a preposition, not a participle.",
+                "affected_text": "Prepositional Phrase/Introductory Participle",
+                "correction": "Prepositional Phrase"
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly states that 'include' is a main verb but we need a 'phrase modifier.' This conflates the function of 'include' (a verb) with the required structure (a preposition). The correct reasoning is that 'include' cannot function as a preposition here, and the sentence requires a prepositional phrase to introduce examples.",
+                "affected_text": "'include' is a main verb, but we need a phrase modifier here",
+                "correction": "'include' is a main verb, but the sentence requires a preposition (not a verb) to introduce examples of 'Work-related factors'"
+              }
+            ],
+            "verified_grammar_tag": "Prepositional Phrase",
+            "overall_notes": "The grammar tag is incorrect due to the inclusion of 'Introductory Participle.' The reasoning for 'include' is flawed, as it conflates verb and preposition functions."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Prepositional Phrase/Introductory Participle",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'including' because it functions as a preposition introducing examples (unemployment and boredom) that belong to the category of 'Work-related factors.' The other options are grammatically incorrect in this position: 'have included' uses an unnecessary tense structure; 'include' is a main verb, but we need a phrase modifier here; and 'included' requires a helping verb. The grammar tag has been corrected to 'Prepositional Phrase' as 'including' is a preposition, not a participle, in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'including' because it functions as a preposition introducing examples (unemployment and boredom) that belong to the category of 'Work-related factors.' The other options are grammatically incorrect in this position: 'have included' uses an unnecessary tense structure; 'include' is a main verb, but we need a phrase modifier here; and 'included' requires a helping verb.",
+          "candidate_grammar_tag": "Prepositional Phrase/Introductory Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase/Introductory Participle",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical errors or logical flaws."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Prepositional Phrase/Introductory Participle' incorrectly labels 'including' as a participle. 'Including' is a preposition, not a participle, in this context.",
+                  "affected_text": "'Prepositional Phrase/Introductory Participle'",
+                  "correction": "'Prepositional Phrase'"
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "The grammar tag incorrectly includes 'Introductory Participle' when 'including' is a preposition here. The explanation is otherwise logically sound and semantically accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase/Introductory Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The grammar tag was reconciled to 'Prepositional Phrase' based on the critique from Model qwen3:14b, which correctly identified that 'including' is a preposition, not a participle, in this context. The explanation was adjusted to reflect this correction, ensuring clarity and accuracy.",
+          "candidate_explanation": "The correct answer is 'including' because it functions as a preposition introducing examples (unemployment and boredom) that belong to the category of 'Work-related factors.' The other options are grammatically incorrect in this position: 'have included' uses an unnecessary tense structure; 'include' is a main verb, but we need a phrase modifier here; and 'included' requires a helping verb. The grammar tag has been corrected to 'Prepositional Phrase' as 'including' is a preposition, not a participle, in this context.",
+          "candidate_grammar_tag": "Prepositional Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag 'Prepositional Phrase' is accurate for 'including' in this context. All distractors are correctly analyzed for grammatical form, tense, and syntactic function. No semantic or collocation gaps are present, and the explanation is complete."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'including' because it functions as a preposition introducing examples (unemployment and boredom) that belong to the category of 'Work-related factors.' The other options are grammatically incorrect in this position: 'have included' uses an unnecessary tense structure; 'include' is a main verb, but we need a phrase modifier here; and 'included' requires a helping verb. The grammar tag has been corrected to 'Prepositional Phrase' as 'including' is a preposition, not a participle, in this context.",
+          "candidate_grammar_tag": "Prepositional Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag 'Prepositional Phrase' is accurate for 'including' in this context. All distractors are correctly analyzed for grammatical form, tense, and function. No semantic or collocation gaps are present, and the explanation is complete."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Prepositional Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 260,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Quantifier/Comparative Adverbial Phrase",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Quantifier/Comparative Adverbial Phrase' is factually incorrect for 'twice'. 'Twice' functions as a quantifier (specifically a multiplier), not a comparative adverbial phrase. Comparative adverbial phrases typically involve structures like 'more than', 'as...as', or 'less than', which are not applicable here.",
+                "affected_text": "Quantifier/Comparative Adverbial Phrase",
+                "correction": "Quantifier/Multiplier"
+              }
+            ],
+            "verified_grammar_tag": "Quantifier/Multiplier",
+            "overall_notes": "The grammar tag is factually incorrect. 'Twice' is a quantifier/multiplier, not a comparative adverbial phrase. The rest of the explanation is logically sound and semantically accurate."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Quantifier/Comparative Adverbial Phrase",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'twice' because it quantifies the past number of languages as two times the current number (6,800). 'Twice' functions as a multiplier, making it the only logical fit for this comparison. * Why 'many' is incorrect: 'Many' is used before countable nouns but does not establish a specific numerical comparison (e.g., 'many languages'). * Why 'few' is incorrect: 'Few' means a small number, which contradicts the context that the past number was much larger than the present. * Why 'as' is incorrect: 'As' is typically used to introduce comparisons of equality or manner ('as many as,' 'as quickly as'), but it cannot quantify how many times larger the number was. The grammar tag has been corrected to 'Quantifier/Multiplier' to accurately reflect the function of 'twice' in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Quantifier/Comparative Adverbial Phrase' to 'Quantifier/Multiplier' based on the critique from qwen3:14b, which identified the factual inaccuracy. The explanation was revised to align with this correction while maintaining the logical and semantic accuracy of the original explanation.",
+          "candidate_explanation": "The correct answer is 'twice' because it quantifies the past number of languages as two times the current number (6,800). 'Twice' functions as a multiplier, making it the only logical fit for this comparison. * Why 'many' is incorrect: 'Many' is used before countable nouns but does not establish a specific numerical comparison (e.g., 'many languages'). * Why 'few' is incorrect: 'Few' means a small number, which contradicts the context that the past number was much larger than the present. * Why 'as' is incorrect: 'As' is typically used to introduce comparisons of equality or manner ('as many as,' 'as quickly as'), but it cannot quantify how many times larger the number was. The grammar tag has been corrected to 'Quantifier/Multiplier' to accurately reflect the function of 'twice' in this context.",
+          "candidate_grammar_tag": "Quantifier/Multiplier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed, and the reasoning avoids semantic/collocation gaps or logical flaws."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation and the grammar tag 'Quantifier/Multiplier'. The third model's timeout did not affect the consensus reached by the other two models, and no additional critiques were raised that required changes to the explanation.",
+          "candidate_explanation": "The correct answer is 'twice' because it quantifies the past number of languages as two times the current number (6,800). 'Twice' functions as a multiplier, making it the only logical fit for this comparison. * Why 'many' is incorrect: 'Many' is used before countable nouns but does not establish a specific numerical comparison (e.g., 'many languages'). * Why 'few' is incorrect: 'Few' means a small number, which contradicts the context that the past number was much larger than the present. * Why 'as' is incorrect: 'As' is typically used to introduce comparisons of equality or manner ('as many as,' 'as quickly as'), but it cannot quantify how many times larger the number was. The grammar tag has been corrected to 'Quantifier/Multiplier' to accurately reflect the function of 'twice' in this context.",
+          "candidate_grammar_tag": "Quantifier/Multiplier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag 'Quantifier/Multiplier' is accurate for 'twice'. Each distractor is correctly analyzed for grammatical form, semantic context, and collocation. No semantic or logical gaps are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag 'Quantifier/Multiplier'. The explanation was already complete and accurate, with no need for further revisions. The timeout from gemma4:12b did not affect the consensus reached by the other two models.",
+          "candidate_explanation": "The correct answer is 'twice' because it quantifies the past number of languages as two times the current number (6,800). 'Twice' functions as a multiplier, making it the only logical fit for this comparison. * Why 'many' is incorrect: 'Many' is used before countable nouns but does not establish a specific numerical comparison (e.g., 'many languages'). * Why 'few' is incorrect: 'Few' means a small number, which contradicts the context that the past number was much larger than the present. * Why 'as' is incorrect: 'As' is typically used to introduce comparisons of equality or manner ('as many as,' 'as quickly as'), but it cannot quantify how many times larger the number was. The grammar tag has been corrected to 'Quantifier/Multiplier' to accurately reflect the function of 'twice' in this context.",
+          "candidate_grammar_tag": "Quantifier/Multiplier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar label is accurate, and each distractor is clearly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, all distractors are properly analyzed, and the semantic context is appropriately addressed without gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Quantifier/Multiplier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 261,
+      "blank_index": 6,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject ('the result') can logically be the receiver of the action for each distractor in passive constructions.",
+                "affected_text": "Why 'transformed' is incorrect: This simply means changed in form or appearance and lacks the statistical meaning of mixing variables.",
+                "correction": "Why 'transformed' is incorrect: While it is a past participle, 'transformed' implies a change in form or state, not the methodological issue of confounding variables. Additionally, the subject 'the result' cannot logically be the receiver of 'transformed' in this context, as the result is not being transformed by socioeconomic status."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not verify whether the subject-verb relationship is semantically valid for 'revealed' and 'conformed' in passive constructions.",
+                "affected_text": "Why 'revealed' is incorrect: While it means shown, 'confounded' specifically addresses the methodological problem of multiple influencing factors.",
+                "correction": "Why 'revealed' is incorrect: 'Revealed' implies disclosure of information, not the statistical issue of confounding. Furthermore, the subject 'the result' cannot logically be the receiver of 'revealed' in this context, as the result is not being revealed by socioeconomic status."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic inappropriateness of 'conformed' in passive constructions.",
+                "affected_text": "Why 'conformed' is incorrect: This means to comply with rules or standards, which has no relevance to statistical analysis.",
+                "correction": "Why 'conformed' is incorrect: 'Conformed' implies adherence to rules or standards, not the statistical issue of confounding. Additionally, the subject 'the result' cannot logically be the receiver of 'conformed' in this context, as the result is not being conformed by socioeconomic status."
+              }
+            ],
+            "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+            "overall_notes": "The grammar tag is factually correct, but the explanation fails to address critical semantic and collocational validity for each distractor in passive constructions. The subject-verb relationship for all options must be explicitly evaluated."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'confounded' because in research statistics, it means the observed effect might be due to a third, unmeasured variable (like socioeconomic status) rather than the primary cause. * Why 'transformed' is incorrect: This is a past participle, but it means changed in form or appearance, which lacks the statistical meaning of mixing variables. * Why 'revealed' is incorrect: This is a past participle, but while it means shown, 'confounded' specifically addresses the methodological problem of multiple influencing factors. * Why 'conformed' is incorrect: This is a past participle, but it implies compliance with rules or standards. The subject 'the result' cannot logically be 'conformed' by socioeconomic status, as 'conform' does not apply to statistical outcomes. All distractors are past participles, which matches the grammar tag 'Academic Vocabulary/Collocation (Past Participle)' required by the verification checklist.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "",
+          "candidate_explanation": "The correct answer is 'confounded' because this specific term in research statistics means that the observed effect might be due to a third, unmeasured variable (like socioeconomic status) rather than the primary cause. \n* Why 'transformed' is incorrect: This simply means changed in form or appearance and lacks the statistical meaning of mixing variables.\n* Why 'revealed' is incorrect: While it means shown, 'confounded' specifically addresses the methodological problem of multiple influencing factors.\n* Why 'conformed' is incorrect: This means to comply with rules or standards, which has no relevance to statistical analysis.",
+          "candidate_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The explanation is accurate, complete, and free of logical or grammatical errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Academic Vocabulary/Collocation (Past Participle)' is factually correct for 'confounded', but the explanation does not explicitly confirm that all distractors ('transformed', 'revealed', 'conformed') are also past participles, which is required by the verification checklist.",
+                  "affected_text": "The grammar tag 'Academic Vocabulary/Collocation (Past Participle)' is factually correct for the word 'confounded' in this sentence?",
+                  "correction": "The grammar tag is factually correct for 'confounded', but the explanation must also confirm that all distractors are past participles (e.g., 'transformed', 'revealed', 'conformed') to align with the verification checklist's requirement."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address whether the subject ('the result') logically can be the receiver of the action for 'conformed' in passive voice. 'Conformed' implies compliance, which is semantically incompatible with the subject 'the result' being 'conformed' by socioeconomic status.",
+                  "affected_text": "Why 'conformed' is incorrect: This means to comply with rules or standards, which has no relevance to statistical analysis.",
+                  "correction": "Why 'conformed' is incorrect: While 'conformed' is a past participle, it implies compliance with rules or standards. The subject 'the result' cannot logically be 'conformed' by socioeconomic status, as 'conform' does not apply to statistical outcomes."
+                }
+              ],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The grammar tag is factually correct for 'confounded', but the explanation fails to address the grammatical form of all distractors and misses a critical semantic gap for 'conformed'."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to explicitly confirm that all distractors are past participles, address the semantic incompatibility of 'conformed', and ensure alignment with the grammar tag. The grammar tag was confirmed as accurate for all options.",
+          "candidate_explanation": "The correct answer is 'confounded' because in research statistics, it means the observed effect might be due to a third, unmeasured variable (like socioeconomic status) rather than the primary cause. * Why 'transformed' is incorrect: This is a past participle, but it means changed in form or appearance, which lacks the statistical meaning of mixing variables. * Why 'revealed' is incorrect: This is a past participle, but while it means shown, 'confounded' specifically addresses the methodological problem of multiple influencing factors. * Why 'conformed' is incorrect: This is a past participle, but it implies compliance with rules or standards. The subject 'the result' cannot logically be 'conformed' by socioeconomic status, as 'conform' does not apply to statistical outcomes. All distractors are past participles, which matches the grammar tag 'Academic Vocabulary/Collocation (Past Participle)' required by the verification checklist.",
+          "candidate_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurately applied to 'confounded' and all distractors. The reasoning for each incorrect option is clear, and semantic/collocation gaps are appropriately addressed. No errors or omissions are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the accuracy and completeness of the explanation, with no significant disagreements. The grammar tag was confirmed as 'Academic Vocabulary/Collocation (Past Participle)' by all models, and the explanation was found to be logically sound and factually correct.",
+          "candidate_explanation": "The correct answer is 'confounded' because in research statistics, it means the observed effect might be due to a third, unmeasured variable (like socioeconomic status) rather than the primary cause. * Why 'transformed' is incorrect: This is a past participle, but it means changed in form or appearance, which lacks the statistical meaning of mixing variables. * Why 'revealed' is incorrect: This is a past participle, but while it means shown, 'confounded' specifically addresses the methodological problem of multiple influencing factors. * Why 'conformed' is incorrect: This is a past participle, but it implies compliance with rules or standards. The subject 'the result' cannot logically be 'conformed' by socioeconomic status, as 'conform' does not apply to statistical outcomes. All distractors are past participles, which matches the grammar tag 'Academic Vocabulary/Collocation (Past Participle)' required by the verification checklist.",
+          "candidate_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all required aspects including grammar label accuracy, reasoning logic, semantic/collocation gaps, and completeness. No errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Academic Vocabulary/Collocation (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 268,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Past Simple Tense (Verb)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject ('the team') logically performs the action of 'challenged,' 'circled,' or 'cursed' in the context of scientific experimentation.",
+                "affected_text": "All other options ('challenged,' 'circled,' 'cursed') are verbs that do not fit the context of scientific experimentation or testing biological subjects.",
+                "correction": "All other options ('challenged,' 'circled,' 'cursed') are verbs that do not fit the context of scientific experimentation or testing biological subjects. Additionally, 'challenged' implies a confrontation or difficulty, which is not appropriate for describing an experiment. 'Circled' and 'cursed' are not logical actions for a scientific team to perform in this context."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address whether the verbs 'challenged,' 'circled,' or 'cursed' naturally pair with the surrounding words in the sentence.",
+                "affected_text": "All other options ('challenged,' 'circled,' 'cursed') are verbs that do not fit the context of scientific experimentation or testing biological subjects.",
+                "correction": "All other options ('challenged,' 'circled,' 'cursed') are verbs that do not fit the context of scientific experimentation or testing biological subjects. Furthermore, 'challenged' and 'cursed' do not collocate well with the scientific process described, while 'circled' is not a standard verb used in experimental procedures."
+              }
+            ],
+            "verified_grammar_tag": "Past Simple Tense (Verb)",
+            "overall_notes": "The grammar tag is accurate, but the explanation lacks semantic and collocation analysis for the distractors, which is necessary for a complete and logically sound explanation."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Simple Tense (Verb)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'tested' because the sentence describes a completed action—the experiment—that took place in the past. All other options are incorrect for the following reasons:\n\n* Why 'challenged' is incorrect: 'Challenged' implies a confrontation or difficulty, which is not appropriate for describing an experiment. It does not fit the context of scientific testing or the actions of a research team.\n\n* Why 'circled' is incorrect: 'Circled' is not a standard verb used in experimental procedures. It does not logically pair with the subject 'the team' or the context of scientific experimentation.\n\n* Why 'cursed' is incorrect: 'Cursed' is not a logical action for a scientific team to perform in this context. It has no semantic or collocational connection to the process of testing bees in a lab setting.\n\nThe verb 'tested' is the only one that fits both the grammar (past simple tense) and the context of the scientific experiment being described.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocational gaps pointed out by Model [qwen3:14b], ensuring that each distractor was analyzed for both grammatical and contextual appropriateness. Model [deepseek-r1:14b] agreed with the original grammar tag, and the timeout from Model [gemma4:12b] did not affect the reconciliation process. The final explanation now fully satisfies all models by being both grammatically and semantically complete.",
+          "candidate_explanation": "The correct answer is 'tested' because the sentence describes a completed action—the experiment—that took place in the past. All other options are incorrect for the following reasons:\n\n* Why 'challenged' is incorrect: 'Challenged' implies a confrontation or difficulty, which is not appropriate for describing an experiment. It does not fit the context of scientific testing or the actions of a research team.\n\n* Why 'circled' is incorrect: 'Circled' is not a standard verb used in experimental procedures. It does not logically pair with the subject 'the team' or the context of scientific experimentation.\n\n* Why 'cursed' is incorrect: 'Cursed' is not a logical action for a scientific team to perform in this context. It has no semantic or collocational connection to the process of testing bees in a lab setting.\n\nThe verb 'tested' is the only one that fits both the grammar (past simple tense) and the context of the scientific experiment being described.",
+          "candidate_grammar_tag": "Past Simple Tense (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'tested' as the correct past simple verb in the context of a completed scientific experiment. Each distractor is correctly evaluated for both grammatical form and semantic appropriateness. No semantic, collocational, or logical gaps are present. The grammar tag is accurate and the explanation is complete."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Past Simple Tense (Verb)' by all models that provided feedback. The explanation was refined to ensure clarity, completeness, and explicit attention to subject-verb logic, particularly for the passive distractor 'circled'.",
+          "candidate_explanation": "The correct answer is 'tested' because the sentence describes a completed action—the experiment—that took place in the past. All other options are incorrect for the following reasons:\n\n* Why 'challenged' is incorrect: 'Challenged' implies a confrontation or difficulty, which is not appropriate for describing an experiment. It does not fit the context of scientific testing or the actions of a research team.\n\n* Why 'circled' is incorrect: 'Circled' is not a standard verb used in experimental procedures. It does not logically pair with the subject 'the team' or the context of scientific experimentation. Additionally, it is not a passive form, which would be needed if the action was being done to the bees, not by the team.\n\n* Why 'cursed' is incorrect: 'Cursed' is not a logical action for a scientific team to perform in this context. It has no semantic or collocational connection to the process of testing bees in a lab setting.\n\nThe verb 'tested' is the only one that fits both the grammar (past simple tense) and the context of the scientific experiment being described. It clearly shows that the team performed an action on the bees as part of their research.",
+          "candidate_grammar_tag": "Past Simple Tense (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'tested' as the correct past simple verb in context, and correctly explains why the other options are semantically and contextually inappropriate. All distractors are addressed with clear reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Past Simple Tense (Verb)' by all models that provided feedback. The explanation was already clear, accurate, and suitable for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'tested' because the sentence describes a completed action—the experiment—that took place in the past. All other options are incorrect for the following reasons:\n\n* Why 'challenged' is incorrect: 'Challenged' implies a confrontation or difficulty, which is not appropriate for describing an experiment. It does not fit the context of scientific testing or the actions of a research team.\n\n* Why 'circled' is incorrect: 'Circled' is not a standard verb used in experimental procedures. It does not logically pair with the subject 'the team' or the context of scientific experimentation. Additionally, it is not a passive form, which would be needed if the action was being done to the bees, not by the team.\n\n* Why 'cursed' is incorrect: 'Cursed' is not a logical action for a scientific team to perform in this context. It has no semantic or collocational connection to the process of testing bees in a lab setting.\n\nThe verb 'tested' is the only one that fits both the grammar (past simple tense) and the context of the scientific experiment being described. It clearly shows that the team performed an action on the bees as part of their research.",
+          "candidate_grammar_tag": "Past Simple Tense (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'tested' as the correct past simple verb in context, and correctly explains why the other options are semantically and contextually inappropriate. All distractors are addressed with clear reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],
           "pass_count": 2

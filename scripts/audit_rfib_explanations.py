@@ -58,22 +58,20 @@ def clean_model_response(raw: str) -> str:
         match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", cleaned, re.DOTALL)
         if match:
             cleaned = match.group(1).strip()
-    if not cleaned.startswith("{") and not cleaned.startswith("["):
-        match = re.search(r"(\{.*\}|\[.*\])", cleaned, re.DOTALL)
+    if not cleaned.startswith("{"):
+        match = re.search(r"(\{.*\})", cleaned, re.DOTALL)
         if match:
             cleaned = match.group(1).strip()
     return cleaned
 
 
 def query_ollama(model: str, prompt: str, temperature: float = 0.1,
-                 max_retries: int = 5, timeout: int = 450,
-                 json_mode: bool = True) -> str | None:
+                 max_retries: int = 3, timeout: int = 90,
+                 json_mode: bool = True, num_predict: int = 256,
+                 num_ctx: int = 4096) -> str | None:
     effective_prompt = prompt
     if "qwen" in model.lower():
         effective_prompt = "/no_think\n\n" + prompt
-
-    num_ctx = 8192 if "gemma" in model.lower() else 16384
-    num_predict = 4096
 
     for attempt in range(1, max_retries + 1):
         temp = temperature if attempt == 1 else 0.0
@@ -87,6 +85,8 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                 "num_ctx": num_ctx,
             },
         }
+        if "qwen" in model.lower():
+            payload["think"] = False
         if json_mode:
             payload["format"] = "json"
         try:
@@ -96,16 +96,16 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                 cleaned = clean_model_response(raw)
                 if not cleaned or len(cleaned.strip()) < 10:
                     if attempt < max_retries:
-                        time.sleep(2 * attempt)
+                        time.sleep(1.5 * attempt)
                         continue
                 return cleaned
             logging.warning(f"Ollama HTTP {resp.status_code} (attempt {attempt}, model={model})")
         except requests.exceptions.Timeout:
-            logging.warning(f"Ollama timeout (attempt {attempt}, model={model})")
+            logging.warning(f"Ollama timeout after {timeout}s (attempt {attempt}, model={model})")
         except Exception as e:
             logging.warning(f"Ollama error (attempt {attempt}, model={model}): {e}")
         if attempt < max_retries:
-            time.sleep(2 * attempt)
+            time.sleep(1.5 * attempt)
     return None
 
 
@@ -243,6 +243,7 @@ RULES:
 - If the explanation is correct and complete, return verdict "PASS" with an empty issues array.
 - Do NOT nitpick purely stylistic preferences. Only flag factual errors, logical flaws, and missing critical analysis.
 - For the "correction" field, write the COMPLETE corrected text that should replace the affected_text.
+- Do NOT output conversational commentary or thinking. Output ONLY the raw JSON object starting with {{ and ending with }}.
 """
 
 
@@ -339,7 +340,11 @@ def audit_single_model(
         model_role_title=role,
     )
 
-    raw = query_ollama(model_name, prompt, temperature=0.1, max_retries=4, timeout=300, json_mode=False)
+    predict_tokens = 1024 if "deepseek" in model_name.lower() else 512
+    raw = query_ollama(
+        model_name, prompt, temperature=0.1, max_retries=3,
+        timeout=90, json_mode=False, num_predict=predict_tokens, num_ctx=4096
+    )
     if not raw:
         return {
             "model": model_name,
@@ -352,6 +357,20 @@ def audit_single_model(
 
     try:
         data = json.loads(raw)
+        if isinstance(data, list):
+            dict_found = None
+            for item in data:
+                if isinstance(item, dict) and "verdict" in item:
+                    dict_found = item
+                    break
+            if dict_found:
+                data = dict_found
+            elif data and isinstance(data[0], dict):
+                data = data[0]
+            else:
+                data = {"verdict": "FAIL", "issues": []}
+        elif not isinstance(data, dict):
+            data = {"verdict": "FAIL", "issues": []}
     except json.JSONDecodeError:
         return {
             "model": model_name,
@@ -382,72 +401,23 @@ def audit_single_model(
 
 # ── Multi-Model Audit & Debate Engine ───────────────────────────────────────
 
-def run_multi_model_audit_for_blank(
+# ── Debate Engine ────────────────────────────────────────────────────────────
+
+def run_debate_loop_for_blank(
     answer_with_blanks: str,
     full_text: str,
-    blank_data: dict,
+    b_idx: int | str,
+    correct_answer: str,
     options: list[str],
+    current_explanation: str,
+    current_concise: str,
+    current_grammar_tag: str,
+    juror_votes: list[dict],
+    pass_count: int,
+    fail_count: int,
     max_debate_rounds: int = 3,
 ) -> dict:
-    b_idx = blank_data.get("blank_index", "?")
-    correct_answer = blank_data.get("correct_answer", "")
-    current_grammar_tag = blank_data.get("grammar_tag", "")
-    current_explanation = blank_data.get("final_explanation", "")
-    current_concise = blank_data.get("concise_explanation", "")
-
-    if not current_explanation.strip():
-        return {
-            "blank_index": b_idx,
-            "final_verdict": "FAIL",
-            "votes": {"PASS": 0, "FAIL": 3, "details": []},
-            "debate_rounds": 0,
-            "debate_history": [],
-            "final_explanation": "",
-            "final_concise": "",
-            "final_grammar_tag": current_grammar_tag,
-            "consensus_type": "EMPTY_INPUT",
-        }
-
-    # ── Round 1: Independent 3-Juror Audit ──
-    logging.info(f"      [Round 1] Gathering independent votes from all 3 models...")
-    juror_votes = []
-    for mkey in ["dr", "qw", "gm"]:
-        t0 = time.time()
-        vote = audit_single_model(
-            mkey, answer_with_blanks, full_text,
-            current_explanation, current_grammar_tag,
-            correct_answer, options,
-        )
-        elapsed = time.time() - t0
-        juror_votes.append(vote)
-        logging.info(f"        Juror [{MODELS[mkey]}]: {vote['verdict']} ({len(vote['issues'])} issues, {elapsed:.1f}s)")
-
-    pass_count = sum(1 for v in juror_votes if v["verdict"] == "PASS")
-    fail_count = sum(1 for v in juror_votes if v["verdict"] != "PASS")
-
-    # If 2/3 approve, the target passes immediately!
-    if pass_count >= 2:
-        reconciled_tag = current_grammar_tag
-        for v in juror_votes:
-            if v["verdict"] == "PASS" and v["verified_grammar_tag"]:
-                reconciled_tag = v["verified_grammar_tag"]
-                break
-
-        logging.info(f"      ✓ PASSED by consensus ({pass_count}/3 approvals).")
-        return {
-            "blank_index": b_idx,
-            "final_verdict": "PASS",
-            "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
-            "debate_rounds": 0,
-            "debate_history": [],
-            "final_explanation": current_explanation,
-            "final_concise": current_concise,
-            "final_grammar_tag": reconciled_tag,
-            "consensus_type": "ROUND1_APPROVAL",
-        }
-
-    # ── Disapproved by 2/3 models -> Enter Debate & Consensus Loop ──
-    logging.info(f"      ⚠️ DISAPPROVED ({fail_count}/3 rejections) -> Initiating Debate & Consensus Loop...")
+    logging.info(f"      Blank {b_idx}: ⚠️ DISAPPROVED ({fail_count}/3 rejections) -> Initiating Debate & Consensus Loop...")
     debate_history = []
     candidate_explanation = current_explanation
     candidate_concise = current_concise
@@ -455,19 +425,25 @@ def run_multi_model_audit_for_blank(
     last_critiques = juror_votes
 
     for round_num in range(1, max_debate_rounds + 1):
-        logging.info(f"      --- Debate Round {round_num}/{max_debate_rounds} ---")
+        logging.info(f"        --- Debate Round {round_num}/{max_debate_rounds} ---")
         synth_prompt = build_debate_synthesis_prompt(
             answer_with_blanks, full_text, correct_answer, options,
             candidate_explanation, candidate_tag, last_critiques, round_num,
         )
 
-        synth_raw = query_ollama(MODELS["qw"], synth_prompt, temperature=0.2, max_retries=4, timeout=300)
+        synth_raw = query_ollama(
+            MODELS["qw"], synth_prompt, temperature=0.2, max_retries=3,
+            timeout=120, num_predict=1024, num_ctx=4096
+        )
         if not synth_raw:
-            logging.warning(f"        Qwen3 debate synthesis failed, falling back to Gemma4...")
-            synth_raw = query_ollama(MODELS["gm"], synth_prompt, temperature=0.2, max_retries=4, timeout=300)
+            logging.warning(f"          Qwen3 debate synthesis failed, falling back to Gemma4...")
+            synth_raw = query_ollama(
+                MODELS["gm"], synth_prompt, temperature=0.2, max_retries=3,
+                timeout=120, num_predict=1024, num_ctx=4096
+            )
 
         if not synth_raw:
-            logging.error(f"        Debate synthesis failed in round {round_num}.")
+            logging.error(f"          Debate synthesis failed in round {round_num}.")
             break
 
         try:
@@ -477,11 +453,11 @@ def run_multi_model_audit_for_blank(
             candidate_tag = synth_data.get("proposed_grammar_tag", candidate_tag)
             reconcile_summary = synth_data.get("reconciliation_summary", "")
         except json.JSONDecodeError:
-            logging.error(f"        Invalid JSON in debate synthesis round {round_num}.")
+            logging.error(f"          Invalid JSON in debate synthesis round {round_num}.")
             break
 
         # Re-evaluate candidate explanation with all 3 models
-        logging.info(f"        Re-evaluating synthesized explanation with 3 models for mutual consent...")
+        logging.info(f"          Re-evaluating synthesized explanation with 3 models for mutual consent...")
         round_votes = []
         for mkey in ["dr", "qw", "gm"]:
             t0 = time.time()
@@ -491,7 +467,7 @@ def run_multi_model_audit_for_blank(
                 correct_answer, options,
             )
             round_votes.append(v)
-            logging.info(f"          Re-vote [{MODELS[mkey]}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
+            logging.info(f"            Re-vote [{MODELS[mkey]}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
 
         round_passes = sum(1 for v in round_votes if v["verdict"] == "PASS")
         debate_history.append({
@@ -505,7 +481,7 @@ def run_multi_model_audit_for_blank(
 
         # Check for 3/3 Unanimous Mutual Consent
         if round_passes == 3:
-            logging.info(f"      🎉 MUTUAL CONSENT ACHIEVED (3/3 Unanimous PASS) in Debate Round {round_num}!")
+            logging.info(f"        🎉 MUTUAL CONSENT ACHIEVED (3/3 Unanimous PASS) in Debate Round {round_num}!")
             return {
                 "blank_index": b_idx,
                 "final_verdict": "FIXED_CONSENSUS",
@@ -523,7 +499,7 @@ def run_multi_model_audit_for_blank(
     # If loop concludes without 3/3 unanimous consent, check if 2/3 consent was reached
     best_round = max(debate_history, key=lambda r: r["pass_count"]) if debate_history else None
     if best_round and best_round["pass_count"] >= 2:
-        logging.info(f"      ✓ MAJORITY CONSENT ({best_round['pass_count']}/3) achieved after {len(debate_history)} debate rounds.")
+        logging.info(f"        ✓ MAJORITY CONSENT ({best_round['pass_count']}/3) achieved after {len(debate_history)} debate rounds.")
         return {
             "blank_index": b_idx,
             "final_verdict": "FIXED_MAJORITY",
@@ -536,7 +512,7 @@ def run_multi_model_audit_for_blank(
             "consensus_type": "MAJORITY_CONSENT",
         }
 
-    logging.warning(f"      ⚠️ UNRESOLVED DEBATE after {max_debate_rounds} rounds.")
+    logging.warning(f"        ⚠️ UNRESOLVED DEBATE after {max_debate_rounds} rounds.")
     return {
         "blank_index": b_idx,
         "final_verdict": "UNRESOLVED_DEBATE",
@@ -550,7 +526,7 @@ def run_multi_model_audit_for_blank(
     }
 
 
-# ── Question Auditor ─────────────────────────────────────────────────────────
+# ── Question Auditor (Optimized Model-Grouped Batching) ──────────────────────
 
 def audit_question_multi_model(
     record: dict,
@@ -558,21 +534,19 @@ def audit_question_multi_model(
     full_text: str,
     workbook_blanks: list[dict],
     max_debate_rounds: int = 3,
+    short_circuit: bool = True,
 ) -> dict:
     qid = record["id"]
     blanks = record.get("blanks", [])
     audited_record = copy.deepcopy(record)
 
-    total_r1_pass = 0
-    total_mutual_consent = 0
-    total_majority_consent = 0
-    total_unresolved = 0
-    blank_audit_details = []
+    if not blanks:
+        return audited_record
 
+    blank_meta = []
     for i, blank_data in enumerate(blanks):
         b_idx = blank_data.get("blank_index", i + 1)
         wb_blank = workbook_blanks[i] if i < len(workbook_blanks) else None
-
         if wb_blank and wb_blank.get("options"):
             options = wb_blank["options"]
         else:
@@ -581,33 +555,154 @@ def audit_question_multi_model(
                 opt = d.get("option")
                 if opt and opt not in options:
                     options.append(opt)
+        blank_meta.append({
+            "index": i,
+            "b_idx": b_idx,
+            "correct_answer": blank_data.get("correct_answer", ""),
+            "grammar_tag": blank_data.get("grammar_tag", ""),
+            "explanation": blank_data.get("final_explanation", ""),
+            "concise": blank_data.get("concise_explanation", ""),
+            "options": options,
+        })
 
-        logging.info(f"    Auditing blank {b_idx}/{len(blanks)} ('{blank_data.get('correct_answer', '')}') ...")
+    empty_indices = [i for i, bm in enumerate(blank_meta) if not bm["explanation"].strip()]
 
-        audit_res = run_multi_model_audit_for_blank(
-            answer_text, full_text, blank_data, options,
-            max_debate_rounds=max_debate_rounds,
-        )
+    # ── Phase 1: Audit all valid blanks with Juror 1 (DeepSeek-R1) ──
+    logging.info(f"    [Phase 1] Auditing {len(blanks)} blank(s) with Juror 1 ({MODELS['dr']})...")
+    dr_votes = {}
+    for i, bm in enumerate(blank_meta):
+        if i in empty_indices:
+            continue
+        t0 = time.time()
+        v = audit_single_model("dr", answer_text, full_text, bm["explanation"], bm["grammar_tag"], bm["correct_answer"], bm["options"])
+        dr_votes[i] = v
+        logging.info(f"      Blank {bm['b_idx']}/{len(blanks)} Juror [{MODELS['dr']}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
 
-        v = audit_res["final_verdict"]
-        if v == "PASS":
-            total_r1_pass += 1
-        elif v == "FIXED_CONSENSUS":
-            total_mutual_consent += 1
-        elif v == "FIXED_MAJORITY":
-            total_majority_consent += 1
-        else:
+    # ── Phase 2: Audit all valid blanks with Juror 2 (Qwen3) ──
+    logging.info(f"    [Phase 2] Auditing {len(blanks)} blank(s) with Juror 2 ({MODELS['qw']})...")
+    qw_votes = {}
+    for i, bm in enumerate(blank_meta):
+        if i in empty_indices:
+            continue
+        t0 = time.time()
+        v = audit_single_model("qw", answer_text, full_text, bm["explanation"], bm["grammar_tag"], bm["correct_answer"], bm["options"])
+        qw_votes[i] = v
+        logging.info(f"      Blank {bm['b_idx']}/{len(blanks)} Juror [{MODELS['qw']}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
+
+    # ── Phase 3: Identify contested blanks ──
+    contested_indices = []
+    for i, bm in enumerate(blank_meta):
+        if i in empty_indices:
+            continue
+        v_dr = dr_votes[i]["verdict"]
+        v_qw = qw_votes[i]["verdict"]
+        if short_circuit and v_dr == "PASS" and v_qw == "PASS":
+            continue  # 2/3 approvals already mathematically secured!
+        contested_indices.append(i)
+
+    # ── Phase 4: Audit contested blanks with Juror 3 (Gemma4) ──
+    gm_votes = {}
+    if contested_indices:
+        logging.info(f"    [Phase 3] Auditing {len(contested_indices)} contested blank(s) with Juror 3 ({MODELS['gm']})...")
+        for i in contested_indices:
+            bm = blank_meta[i]
+            t0 = time.time()
+            v = audit_single_model("gm", answer_text, full_text, bm["explanation"], bm["grammar_tag"], bm["correct_answer"], bm["options"])
+            gm_votes[i] = v
+            logging.info(f"      Blank {bm['b_idx']}/{len(blanks)} Juror [{MODELS['gm']}]: {v['verdict']} ({len(v['issues'])} issues, {time.time()-t0:.1f}s)")
+    else:
+        logging.info(f"    [Phase 3] All blanks passed Juror 1 & 2 unanimously. Juror 3 skipped (2/3 consensus secured).")
+
+    # ── Phase 5: Consolidate verdicts and run debates if needed ──
+    total_r1_pass = 0
+    total_mutual_consent = 0
+    total_majority_consent = 0
+    total_unresolved = 0
+    blank_audit_details = []
+
+    for i, bm in enumerate(blank_meta):
+        b_idx = bm["b_idx"]
+        if i in empty_indices:
+            res = {
+                "blank_index": b_idx,
+                "final_verdict": "FAIL",
+                "round_1_votes": {"pass": 0, "fail": 3, "details": []},
+                "debate_rounds": 0,
+                "debate_history": [],
+                "final_explanation": "",
+                "final_concise": "",
+                "final_grammar_tag": bm["grammar_tag"],
+                "consensus_type": "EMPTY_INPUT",
+            }
             total_unresolved += 1
+        elif i not in contested_indices:
+            # Unanimous pass by DR and QW (2/2 approvals)
+            reconciled_tag = bm["grammar_tag"]
+            for v in [dr_votes[i], qw_votes[i]]:
+                if v["verdict"] == "PASS" and v["verified_grammar_tag"]:
+                    reconciled_tag = v["verified_grammar_tag"]
+                    break
 
-        # Apply updated fields
-        audited_record["blanks"][i]["final_explanation"] = audit_res["final_explanation"]
-        audited_record["blanks"][i]["concise_explanation"] = audit_res["final_concise"]
-        audited_record["blanks"][i]["grammar_tag"] = audit_res["final_grammar_tag"]
-        audited_record["blanks"][i]["audit_verdict"] = v
-        audited_record["blanks"][i]["audit_consensus_type"] = audit_res["consensus_type"]
-        audited_record["blanks"][i]["debate_rounds_run"] = audit_res["debate_rounds"]
+            logging.info(f"      Blank {b_idx}: ✓ PASSED by consensus (2/2 approvals, 2/3 threshold satisfied).")
+            res = {
+                "blank_index": b_idx,
+                "final_verdict": "PASS",
+                "round_1_votes": {"pass": 2, "fail": 0, "details": [dr_votes[i], qw_votes[i]]},
+                "debate_rounds": 0,
+                "debate_history": [],
+                "final_explanation": bm["explanation"],
+                "final_concise": bm["concise"],
+                "final_grammar_tag": reconciled_tag,
+                "consensus_type": "ROUND1_APPROVAL",
+            }
+            total_r1_pass += 1
+        else:
+            juror_votes = [dr_votes[i], qw_votes[i], gm_votes[i]]
+            pass_count = sum(1 for v in juror_votes if v["verdict"] == "PASS")
+            fail_count = 3 - pass_count
 
-        blank_audit_details.append(audit_res)
+            if pass_count >= 2:
+                reconciled_tag = bm["grammar_tag"]
+                for v in juror_votes:
+                    if v["verdict"] == "PASS" and v["verified_grammar_tag"]:
+                        reconciled_tag = v["verified_grammar_tag"]
+                        break
+                logging.info(f"      Blank {b_idx}: ✓ PASSED by consensus ({pass_count}/3 approvals).")
+                res = {
+                    "blank_index": b_idx,
+                    "final_verdict": "PASS",
+                    "round_1_votes": {"pass": pass_count, "fail": fail_count, "details": juror_votes},
+                    "debate_rounds": 0,
+                    "debate_history": [],
+                    "final_explanation": bm["explanation"],
+                    "final_concise": bm["concise"],
+                    "final_grammar_tag": reconciled_tag,
+                    "consensus_type": "ROUND1_APPROVAL",
+                }
+                total_r1_pass += 1
+            else:
+                res = run_debate_loop_for_blank(
+                    answer_text, full_text, b_idx, bm["correct_answer"],
+                    bm["options"], bm["explanation"], bm["concise"],
+                    bm["grammar_tag"], juror_votes, pass_count, fail_count,
+                    max_debate_rounds=max_debate_rounds,
+                )
+                v = res["final_verdict"]
+                if v == "FIXED_CONSENSUS":
+                    total_mutual_consent += 1
+                elif v == "FIXED_MAJORITY":
+                    total_majority_consent += 1
+                else:
+                    total_unresolved += 1
+
+        # Apply updated fields to audited record
+        audited_record["blanks"][i]["final_explanation"] = res["final_explanation"]
+        audited_record["blanks"][i]["concise_explanation"] = res["final_concise"]
+        audited_record["blanks"][i]["grammar_tag"] = res["final_grammar_tag"]
+        audited_record["blanks"][i]["audit_verdict"] = res["final_verdict"]
+        audited_record["blanks"][i]["audit_consensus_type"] = res["consensus_type"]
+        audited_record["blanks"][i]["debate_rounds_run"] = res["debate_rounds"]
+        blank_audit_details.append(res)
 
     overall_status = "PASS"
     if total_unresolved > 0:
@@ -714,6 +809,8 @@ def parse_args():
                         help="Save output every N questions")
     parser.add_argument("--no-resume", action="store_true",
                         help="Re-audit questions already in output file")
+    parser.add_argument("--no-short-circuit", action="store_true",
+                        help="Disable early 2/2 pass resolution and query all 3 models on every blank")
     return parser.parse_args()
 
 
@@ -797,6 +894,7 @@ def main():
         audited_q = audit_question_multi_model(
             rec, wb_data["answer_text"], wb_data["full_text"],
             wb_data["blanks"], max_debate_rounds=args.max_debate_rounds,
+            short_circuit=not args.no_short_circuit,
         )
 
         elapsed = time.time() - t0

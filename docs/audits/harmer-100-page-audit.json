@@ -1,0 +1,811 @@
+{
+  "summary": {
+    "totalPagesAudited": 100,
+    "passedPages": 93,
+    "highFidelityPages": 91,
+    "averageWordOverlap": 96.53,
+    "averageCharSimilarity": 95.58
+  },
+  "results": [
+    {
+      "pageNumber": 1,
+      "gtLength": 78,
+      "extLength": 78,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 2,
+      "gtLength": 9877,
+      "extLength": 9871,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 3,
+      "gtLength": 78,
+      "extLength": 78,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 4,
+      "gtLength": 1983,
+      "extLength": 1983,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 5,
+      "gtLength": 2432,
+      "extLength": 2432,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 6,
+      "gtLength": 2484,
+      "extLength": 2484,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 7,
+      "gtLength": 2128,
+      "extLength": 2128,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 8,
+      "gtLength": 2976,
+      "extLength": 2976,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 9,
+      "gtLength": 2317,
+      "extLength": 2317,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 10,
+      "gtLength": 2595,
+      "extLength": 2591,
+      "wordOverlap": 0.9859,
+      "charSimilarity": 0.998,
+      "passed": true
+    },
+    {
+      "pageNumber": 11,
+      "gtLength": 3301,
+      "extLength": 3301,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 12,
+      "gtLength": 1464,
+      "extLength": 1464,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 13,
+      "gtLength": 2849,
+      "extLength": 2847,
+      "wordOverlap": 0.9904,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 14,
+      "gtLength": 3876,
+      "extLength": 3875,
+      "wordOverlap": 0.9964,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 15,
+      "gtLength": 4018,
+      "extLength": 4017,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 16,
+      "gtLength": 3754,
+      "extLength": 3748,
+      "wordOverlap": 0.9961,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 17,
+      "gtLength": 3674,
+      "extLength": 3671,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 18,
+      "gtLength": 3412,
+      "extLength": 3411,
+      "wordOverlap": 0.996,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 19,
+      "gtLength": 3436,
+      "extLength": 3435,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 20,
+      "gtLength": 3909,
+      "extLength": 3906,
+      "wordOverlap": 0.9879,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 21,
+      "gtLength": 3510,
+      "extLength": 3507,
+      "wordOverlap": 0.9748,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 22,
+      "gtLength": 3588,
+      "extLength": 3585,
+      "wordOverlap": 0.9952,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 23,
+      "gtLength": 1742,
+      "extLength": 2014,
+      "wordOverlap": 0.9767,
+      "charSimilarity": 0.876,
+      "passed": true
+    },
+    {
+      "pageNumber": 24,
+      "gtLength": 498,
+      "extLength": 1555,
+      "wordOverlap": 0.5789,
+      "charSimilarity": 0.0779,
+      "passed": false
+    },
+    {
+      "pageNumber": 25,
+      "gtLength": 119,
+      "extLength": 163,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.8298,
+      "passed": true
+    },
+    {
+      "pageNumber": 26,
+      "gtLength": 2789,
+      "extLength": 2786,
+      "wordOverlap": 0.9914,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 27,
+      "gtLength": 3717,
+      "extLength": 3716,
+      "wordOverlap": 0.9957,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 28,
+      "gtLength": 3650,
+      "extLength": 3649,
+      "wordOverlap": 0.9963,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 29,
+      "gtLength": 2786,
+      "extLength": 2782,
+      "wordOverlap": 0.99,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 30,
+      "gtLength": 2856,
+      "extLength": 2851,
+      "wordOverlap": 0.9905,
+      "charSimilarity": 0.998,
+      "passed": true
+    },
+    {
+      "pageNumber": 31,
+      "gtLength": 3356,
+      "extLength": 3354,
+      "wordOverlap": 0.9959,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 32,
+      "gtLength": 3131,
+      "extLength": 3129,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 33,
+      "gtLength": 2953,
+      "extLength": 2950,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 34,
+      "gtLength": 3593,
+      "extLength": 3592,
+      "wordOverlap": 0.9953,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 35,
+      "gtLength": 3644,
+      "extLength": 3643,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 36,
+      "gtLength": 3493,
+      "extLength": 3492,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 37,
+      "gtLength": 1767,
+      "extLength": 1766,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9997,
+      "passed": true
+    },
+    {
+      "pageNumber": 38,
+      "gtLength": 3073,
+      "extLength": 3073,
+      "wordOverlap": 0.9957,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 39,
+      "gtLength": 2840,
+      "extLength": 2840,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 40,
+      "gtLength": 3514,
+      "extLength": 3508,
+      "wordOverlap": 0.996,
+      "charSimilarity": 0.9975,
+      "passed": true
+    },
+    {
+      "pageNumber": 41,
+      "gtLength": 2620,
+      "extLength": 2619,
+      "wordOverlap": 0.9944,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 42,
+      "gtLength": 2992,
+      "extLength": 2991,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 43,
+      "gtLength": 1520,
+      "extLength": 1519,
+      "wordOverlap": 0.9906,
+      "charSimilarity": 0.9997,
+      "passed": true
+    },
+    {
+      "pageNumber": 44,
+      "gtLength": 2246,
+      "extLength": 2244,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 45,
+      "gtLength": 3378,
+      "extLength": 3377,
+      "wordOverlap": 0.9947,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 46,
+      "gtLength": 3071,
+      "extLength": 3068,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 47,
+      "gtLength": 2469,
+      "extLength": 2468,
+      "wordOverlap": 0.9949,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 48,
+      "gtLength": 3208,
+      "extLength": 3208,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 49,
+      "gtLength": 1332,
+      "extLength": 1776,
+      "wordOverlap": 0.8857,
+      "charSimilarity": 0.7317,
+      "passed": false
+    },
+    {
+      "pageNumber": 50,
+      "gtLength": 385,
+      "extLength": 705,
+      "wordOverlap": 0.3529,
+      "charSimilarity": 0.1413,
+      "passed": false
+    },
+    {
+      "pageNumber": 51,
+      "gtLength": 157,
+      "extLength": 151,
+      "wordOverlap": 0.7778,
+      "charSimilarity": 0.9805,
+      "passed": false
+    },
+    {
+      "pageNumber": 52,
+      "gtLength": 3098,
+      "extLength": 3096,
+      "wordOverlap": 0.991,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 53,
+      "gtLength": 3624,
+      "extLength": 3619,
+      "wordOverlap": 0.979,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 54,
+      "gtLength": 3501,
+      "extLength": 3498,
+      "wordOverlap": 0.9872,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 55,
+      "gtLength": 3847,
+      "extLength": 3846,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 56,
+      "gtLength": 3859,
+      "extLength": 3858,
+      "wordOverlap": 0.9962,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 57,
+      "gtLength": 3930,
+      "extLength": 3929,
+      "wordOverlap": 0.9967,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 58,
+      "gtLength": 3876,
+      "extLength": 3873,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 59,
+      "gtLength": 3915,
+      "extLength": 3914,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 60,
+      "gtLength": 3915,
+      "extLength": 3914,
+      "wordOverlap": 0.9961,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 61,
+      "gtLength": 3128,
+      "extLength": 3126,
+      "wordOverlap": 0.9958,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 62,
+      "gtLength": 3470,
+      "extLength": 3469,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 63,
+      "gtLength": 3443,
+      "extLength": 3440,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 64,
+      "gtLength": 2729,
+      "extLength": 2728,
+      "wordOverlap": 0.9949,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 65,
+      "gtLength": 613,
+      "extLength": 1366,
+      "wordOverlap": 0.5185,
+      "charSimilarity": 0.3274,
+      "passed": false
+    },
+    {
+      "pageNumber": 66,
+      "gtLength": 2378,
+      "extLength": 2376,
+      "wordOverlap": 0.9818,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 67,
+      "gtLength": 3495,
+      "extLength": 3488,
+      "wordOverlap": 0.9833,
+      "charSimilarity": 0.997,
+      "passed": true
+    },
+    {
+      "pageNumber": 68,
+      "gtLength": 3036,
+      "extLength": 3035,
+      "wordOverlap": 0.9952,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 69,
+      "gtLength": 3683,
+      "extLength": 3679,
+      "wordOverlap": 0.9885,
+      "charSimilarity": 0.998,
+      "passed": true
+    },
+    {
+      "pageNumber": 70,
+      "gtLength": 3436,
+      "extLength": 3431,
+      "wordOverlap": 0.9868,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 71,
+      "gtLength": 3552,
+      "extLength": 3549,
+      "wordOverlap": 0.9918,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 72,
+      "gtLength": 3575,
+      "extLength": 3572,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 73,
+      "gtLength": 3398,
+      "extLength": 3397,
+      "wordOverlap": 0.9957,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 74,
+      "gtLength": 3920,
+      "extLength": 3918,
+      "wordOverlap": 0.9934,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 75,
+      "gtLength": 4049,
+      "extLength": 4048,
+      "wordOverlap": 0.9965,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 76,
+      "gtLength": 3618,
+      "extLength": 3609,
+      "wordOverlap": 0.9597,
+      "charSimilarity": 0.9965,
+      "passed": true
+    },
+    {
+      "pageNumber": 77,
+      "gtLength": 2761,
+      "extLength": 2747,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 78,
+      "gtLength": 3294,
+      "extLength": 3292,
+      "wordOverlap": 0.9959,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 79,
+      "gtLength": 2295,
+      "extLength": 2294,
+      "wordOverlap": 0.9939,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 80,
+      "gtLength": 3574,
+      "extLength": 3574,
+      "wordOverlap": 1.0,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 81,
+      "gtLength": 3895,
+      "extLength": 3892,
+      "wordOverlap": 0.993,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 82,
+      "gtLength": 3842,
+      "extLength": 3841,
+      "wordOverlap": 0.9962,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 83,
+      "gtLength": 3417,
+      "extLength": 3412,
+      "wordOverlap": 0.9797,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 84,
+      "gtLength": 3211,
+      "extLength": 3210,
+      "wordOverlap": 0.9958,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 85,
+      "gtLength": 3161,
+      "extLength": 3160,
+      "wordOverlap": 0.995,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 86,
+      "gtLength": 3225,
+      "extLength": 3224,
+      "wordOverlap": 0.9954,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 87,
+      "gtLength": 3423,
+      "extLength": 3422,
+      "wordOverlap": 0.9953,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 88,
+      "gtLength": 3170,
+      "extLength": 3167,
+      "wordOverlap": 0.9904,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 89,
+      "gtLength": 2905,
+      "extLength": 3179,
+      "wordOverlap": 0.981,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 90,
+      "gtLength": 588,
+      "extLength": 1449,
+      "wordOverlap": 0.5,
+      "charSimilarity": 0.4075,
+      "passed": false
+    },
+    {
+      "pageNumber": 91,
+      "gtLength": 395,
+      "extLength": 957,
+      "wordOverlap": 0.4286,
+      "charSimilarity": 0.2707,
+      "passed": false
+    },
+    {
+      "pageNumber": 92,
+      "gtLength": 2923,
+      "extLength": 2922,
+      "wordOverlap": 0.9907,
+      "charSimilarity": 1.0,
+      "passed": true
+    },
+    {
+      "pageNumber": 93,
+      "gtLength": 3746,
+      "extLength": 3743,
+      "wordOverlap": 0.9964,
+      "charSimilarity": 0.9985,
+      "passed": true
+    },
+    {
+      "pageNumber": 94,
+      "gtLength": 2745,
+      "extLength": 2744,
+      "wordOverlap": 0.995,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 95,
+      "gtLength": 3512,
+      "extLength": 3511,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 96,
+      "gtLength": 3488,
+      "extLength": 3487,
+      "wordOverlap": 0.9959,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 97,
+      "gtLength": 3583,
+      "extLength": 3582,
+      "wordOverlap": 1.0,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 98,
+      "gtLength": 3649,
+      "extLength": 3646,
+      "wordOverlap": 0.9798,
+      "charSimilarity": 0.999,
+      "passed": true
+    },
+    {
+      "pageNumber": 99,
+      "gtLength": 3426,
+      "extLength": 3425,
+      "wordOverlap": 0.9959,
+      "charSimilarity": 0.9995,
+      "passed": true
+    },
+    {
+      "pageNumber": 100,
+      "gtLength": 2886,
+      "extLength": 2885,
+      "wordOverlap": 0.9955,
+      "charSimilarity": 0.9995,
+      "passed": true
+    }
+  ]
+}

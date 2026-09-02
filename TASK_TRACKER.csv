@@ -1827,3 +1827,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 833,2026-09-03,Review debug and refactor CRM Books collections and tagging system,Done,2026-09-03
 834,2026-09-03,Rerun text regeneration and 100-page ground truth audit on Adult Learner and Teaching Pronunciation on production,Done,2026-09-03
 835,2026-09-03,Review debug refactor and deploy CRM Books Elaborate tool and V1.8.93 to production,Done,2026-09-03
+836,2026-09-03,Write Essay Guided Mode full overhaul: UI contrast + interactive prompt breakdown + level-adapted examples + contextual collocations and linking words + natural thesis and points,Done,2026-09-03
+837,2026-09-03,Voice Cloning Lab: re-synthesize and reanalyze 10 RA questions with new user recording via F5-TTS and 3-LLM council,In Progress,
+838,2026-09-03,Release and deploy V1.8.94 to production hosting,Done,2026-09-03

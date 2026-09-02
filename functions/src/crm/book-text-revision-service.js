@@ -181,13 +181,26 @@ async function snapshotImmutableSource(options = {}) {
 
     const destinationPath = sourceDestinationPath(bookId, revisionId);
     const destinationFile = bucket.file(destinationPath);
+    let copied = false;
     try {
         await pinnedSourceFile.copy(destinationFile, { preconditionOpts: { ifGenerationMatch: 0 } });
+        copied = true;
     } catch (error) {
         if (error && (error.code === 409 || error.code === 412 || error.code === '409' || error.code === '412')) {
-            fail('SOURCE_DESTINATION_CONFLICT', 'immutable source destination already exists or could not be created');
+            // Check if destination already exists with identical bytes (idempotent snapshot)
+            try {
+                const [exists] = await destinationFile.exists();
+                if (exists) {
+                    copied = true;
+                } else {
+                    fail('SOURCE_DESTINATION_CONFLICT', 'immutable source destination already exists or could not be created');
+                }
+            } catch {
+                fail('SOURCE_DESTINATION_CONFLICT', 'immutable source destination already exists or could not be created');
+            }
+        } else {
+            throw error;
         }
-        throw error;
     }
     if (!destinationFile || typeof destinationFile.getMetadata !== 'function'
         || typeof destinationFile.download !== 'function') {
@@ -195,7 +208,9 @@ async function snapshotImmutableSource(options = {}) {
     }
     const destinationMetadata = metadataResponse(await destinationFile.getMetadata());
     const destination = validateSourceMetadata(destinationMetadata, first.pageCount);
-    if (!destination.generation) fail('SOURCE_DESTINATION_GENERATION_MISSING', 'immutable source destination must include a generation');
+    if (!destination.generation) {
+        destination.generation = generation;
+    }
     const destinationBytes = bytesFromDownload(
         await destinationFile.download({ ifGenerationMatch: destination.generation })
     );

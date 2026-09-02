@@ -94,7 +94,16 @@ assert.strictEqual(
     workspace.findCitationMatch('First sentence on the page.', 'A passage that is not present.'),
     null,
     'Citation matching should return null for a stale or malformed quote.'
+);const formattedRunningHeader = workspace.formatPageText(
+    '74chapter 4\n• are given words from exercises on separate pieces of paper. Can they reassemble them correctly?\n\nUsing coursebooks more effectively\nWhen we have taught a coursebook unit, we will want to reflect.\n\nChoosing coursebooks\nhow should we go about this?\n4.9.3\n4.9.4',
+    (value) => String(value)
 );
+assert.match(formattedRunningHeader, /<header class="crm-books-page-header">[\s\S]*74[\s\S]*Chapter 4[\s\S]*<\/header>/, 'Glued running page number and chapter heading must render as a distinct page header.');
+assert.match(formattedRunningHeader, /<h4>Using coursebooks more effectively<\/h4>/, 'Section headings should render as distinct headings.');
+assert.match(formattedRunningHeader, /<h4>Choosing coursebooks<\/h4>/, 'Sub-headings should render as distinct headings.');
+assert.match(formattedRunningHeader, /<div class="crm-books-section-marker"><span class="crm-books-section-badge">4\.9\.3<\/span><\/div>/, 'Trailing section numbers must render as badges rather than smushing into prose.');
+assert.doesNotMatch(formattedRunningHeader, /how should we go about this\? 4\.9\.3 4\.9\.4/, 'Section numbers must not be concatenated onto preceding questions.');
+
 
 const legacyCitationLocation = workspace.resolveCitationLocation([
     '',

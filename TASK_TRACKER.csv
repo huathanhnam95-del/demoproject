@@ -1831,3 +1831,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 837,2026-09-03,Voice Cloning Lab: re-synthesize and reanalyze 10 RA questions with new user recording via F5-TTS and 3-LLM council,In Progress,
 838,2026-09-03,Release and deploy V1.8.94 to production hosting,Done,2026-09-03
 839,2026-09-03,Write Essay Guided Mode: Step 5 interactive fillable sentence builder + authentic model sentences + paragraph tabs + draft scaffolding with spoilers and FAQ removal,Done,2026-09-03
+840,2026-09-03,Format page numbers and chapter headings cleanly and fix glued running headers in CRM Books,Done,2026-09-03
+841,2026-09-03,Write Essay 3-LLM Content Re-Analysis: optimize pipeline + enrich prompts with direct claims prompt traps and Vietnamese explanations,In Progress,

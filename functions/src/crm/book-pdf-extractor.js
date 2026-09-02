@@ -20,6 +20,7 @@ async function extractPdfPages(buffer, options = {}) {
     const pages = rawPages.map((pageText) => {
         if (!pageText || typeof pageText !== 'string') return '';
         let t = pageText.replace(/([a-zA-Z]+)-\s*\n\s*([a-zA-Z]+)/g, '$1$2');
+        t = t.replace(/^(\d{1,4})([A-Za-z])/gm, '$1\n$2');
         t = t.replace(/\r\n?/g, '\n');
         return t.split('\n').map((line) => line.trimEnd()).join('\n');
     });

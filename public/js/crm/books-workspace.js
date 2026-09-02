@@ -133,9 +133,21 @@ window.CrmBooksWorkspace = (function () {
         return result;
     }
 
-    function pageHeadingLevel(line) {
-        if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(line)) return 2;
-        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion)$/i.test(line)) return 3;
+    function pageHeadingLevel(line, nextLine) {
+        if (!line) return 0;
+        const trimmed = line.trim();
+        if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(trimmed)) return 2;
+        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion|Summary|Further Reading)$/i.test(trimmed)) return 3;
+        if (trimmed.length <= 60 && !/[.!?:,;—]$/.test(trimmed)) {
+            if (/^[A-ZÀ-ɏ][a-zA-Z0-9\s,/'’()–—-]+$/.test(trimmed)) {
+                const words = trimmed.split(/\s+/);
+                if (words.length >= 1 && words.length <= 8) {
+                    if (nextLine && /^[a-zA-ZÀ-ɏ“‘"'(]/.test(nextLine.trim())) {
+                        return 4;
+                    }
+                }
+            }
+        }
         return 0;
     }
 
@@ -144,7 +156,7 @@ window.CrmBooksWorkspace = (function () {
         if (numbered) return { text: numbered[2], explicit: true, marker: numbered[1] };
         const bullet = line.match(/^(?:[•●▪◦‣]|[-*])\s+(.+)$/);
         if (bullet) return { text: bullet[1], explicit: true };
-        if (/^To\s+/i.test(line)) return { text: line, explicit: false };
+        if (/^To\s+/.test(line)) return { text: line, explicit: false };
         return null;
     }
 
@@ -189,10 +201,13 @@ window.CrmBooksWorkspace = (function () {
     }
 
     function looksLikeParagraphEnd(line, nextLine, threshold) {
-        if (!threshold || !line || !nextLine) return false;
+        if (!line || !nextLine) return false;
+        const nextTrim = nextLine.trim();
+        if (/^\d+(?:\.\d+)+$/.test(nextTrim)) return true;
+        if (!threshold) return false;
         if (line.length >= threshold) return false;
         if (!/[.!?:]["'”’)]*\s*$/.test(line)) return false;
-        if (!/^[A-ZÀ-ɏ“‘"'(]/.test(nextLine)) return false;
+        if (!/^[A-ZÀ-ɏ“‘"'(]/.test(nextTrim)) return false;
         return true;
     }
 
@@ -202,7 +217,8 @@ window.CrmBooksWorkspace = (function () {
             || (typeof window !== 'undefined' && window.__currentBookRendererContract ? window.__currentBookRendererContract : null)
             || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
             || 'legacy';
-        const rawText = String(text ?? '').replace(/\r\n?/g, '\n');
+        let rawText = String(text ?? '').replace(/\r\n?/g, '\n');
+        rawText = rawText.replace(/^(\d{1,4})([A-Za-z])/gm, '$1\n$2');
         const repaired = rendererContract === 'ocr-v2' ? rawText : repairMissingSpaces(rawText);
         const lines = repaired
             .split('\n')
@@ -228,6 +244,41 @@ window.CrmBooksWorkspace = (function () {
         };
 
         let index = 0;
+
+        // Check for running header / folio at the top of the page
+        if (lines.length >= 2 && /^\d{1,4}$/.test(lines[0])) {
+            const folio = lines[0];
+            const secondLine = lines[1];
+            if (secondLine && (pageHeadingLevel(secondLine, lines[2]) || (/^[A-ZÀ-ɏ][a-zA-Z0-9\s,–—-]+$/i.test(secondLine) && secondLine.length <= 50))) {
+                const isChapter = /^chapter\s+\d+/i.test(secondLine);
+                const titleDisplay = isChapter
+                    ? secondLine.replace(/^chapter\s+(\d+)/i, 'Chapter $1')
+                    : secondLine;
+                html.push(
+                    `<header class="crm-books-page-header">` +
+                    `<span class="crm-books-header-folio">${renderInline(folio)}</span>` +
+                    `<span class="crm-books-header-title">${renderInline(titleDisplay)}</span>` +
+                    `</header>`
+                );
+                index = 2;
+            }
+        } else if (lines.length >= 1 && /^(\d{1,4})\s+(.+)$/.test(lines[0])) {
+            const m = lines[0].match(/^(\d{1,4})\s+(.+)$/);
+            if (m && (pageHeadingLevel(m[2], lines[1]) || m[2].length <= 50)) {
+                const isChapter = /^chapter\s+\d+/i.test(m[2]);
+                const titleDisplay = isChapter
+                    ? m[2].replace(/^chapter\s+(\d+)/i, 'Chapter $1')
+                    : m[2];
+                html.push(
+                    `<header class="crm-books-page-header">` +
+                    `<span class="crm-books-header-folio">${renderInline(m[1])}</span>` +
+                    `<span class="crm-books-header-title">${renderInline(titleDisplay)}</span>` +
+                    `</header>`
+                );
+                index = 1;
+            }
+        }
+
         while (index < lines.length) {
             const line = lines[index];
             if (!line) {
@@ -236,10 +287,10 @@ window.CrmBooksWorkspace = (function () {
                 continue;
             }
 
-            const headingLevel = pageHeadingLevel(line);
-            if (headingLevel) {
+            // Standalone section numbers e.g. "4.9.3", "4.9.4"
+            if (/^\d+(?:\.\d+)+$/.test(line)) {
                 flushParagraph();
-                html.push(`<h${headingLevel}>${renderInline(line)}</h${headingLevel}>`);
+                html.push(`<div class="crm-books-section-marker"><span class="crm-books-section-badge">${renderInline(line)}</span></div>`);
                 index += 1;
                 continue;
             }
@@ -262,8 +313,13 @@ window.CrmBooksWorkspace = (function () {
                     const itemLines = [itemStart.text];
                     cursor += 1;
                     while (cursor < lines.length && lines[cursor]
-                        && !pageHeadingLevel(lines[cursor])
-                        && !pageListItemStart(lines[cursor])) {
+                        && !pageHeadingLevel(lines[cursor], lines[cursor + 1])
+                        && !pageListItemStart(lines[cursor])
+                        && !/^\d+(?:\.\d+)+$/.test(lines[cursor])) {
+                        const prev = itemLines[itemLines.length - 1];
+                        if (/[.!?]["'”’)]*$/.test(prev)) {
+                            break;
+                        }
                         itemLines.push(lines[cursor]);
                         cursor += 1;
                     }
@@ -280,6 +336,17 @@ window.CrmBooksWorkspace = (function () {
                     index = cursor;
                     continue;
                 }
+            }
+
+            const headingLevel = pageHeadingLevel(line, lines[index + 1]);
+            if (headingLevel) {
+                flushParagraph();
+                const headingText = /^chapter\s+\d+/i.test(line)
+                    ? line.replace(/^chapter\s+(\d+)/i, 'Chapter $1')
+                    : line;
+                html.push(`<h${headingLevel}>${renderInline(headingText)}</h${headingLevel}>`);
+                index += 1;
+                continue;
             }
 
             if (paragraphLines.length > 0

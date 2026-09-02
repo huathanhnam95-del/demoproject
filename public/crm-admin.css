@@ -5428,16 +5428,66 @@ body {
   overflow-wrap: break-word;
 }
 .crm-books-page-content h2,
-.crm-books-page-content h3 {
+.crm-books-page-content h3,
+.crm-books-page-content h4 {
   margin: 0 0 14px;
   color: var(--books-text);
   line-height: 1.35;
 }
 .crm-books-page-content h2 {
-  font-size: 1.25em;
+  font-size: 1.35em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 8px;
 }
 .crm-books-page-content h3 {
-  font-size: 1.02em;
+  font-size: 1.15em;
+  font-weight: 600;
+  margin-top: 14px;
+}
+.crm-books-page-content h4 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--books-text);
+}
+.crm-books-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--books-border-subtle, rgba(0, 0, 0, 0.08));
+  font-family: var(--crm-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--books-text-muted);
+}
+.crm-books-header-folio {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.crm-books-header-title {
+  color: var(--books-text-muted);
+}
+.crm-books-section-marker {
+  display: inline-block;
+  margin: 8px 6px 8px 0;
+}
+.crm-books-section-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--books-accent);
+  background: var(--books-accent-light, rgba(74, 111, 165, 0.1));
+  border-radius: 4px;
+  letter-spacing: 0.03em;
 }
 .crm-books-page-content p {
   margin: 0 0 18px;

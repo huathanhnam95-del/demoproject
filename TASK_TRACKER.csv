@@ -1830,3 +1830,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 836,2026-09-03,Write Essay Guided Mode full overhaul: UI contrast + interactive prompt breakdown + level-adapted examples + contextual collocations and linking words + natural thesis and points,Done,2026-09-03
 837,2026-09-03,Voice Cloning Lab: re-synthesize and reanalyze 10 RA questions with new user recording via F5-TTS and 3-LLM council,In Progress,
 838,2026-09-03,Release and deploy V1.8.94 to production hosting,Done,2026-09-03
+839,2026-09-03,Write Essay Guided Mode: Step 5 interactive fillable sentence builder + authentic model sentences + paragraph tabs + draft scaffolding with spoilers and FAQ removal,Done,2026-09-03

@@ -530,6 +530,18 @@
                 copyGuidedText(draft.scaffoldEditorText, copyBtn);
             });
         }
+
+        el.guidedDraftContainer.querySelectorAll('.essay-guided-draft-spoiler-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const key = btn.dataset.paraKey;
+                if (key) {
+                    if (guidedDraftSpoilers.has(key)) guidedDraftSpoilers.delete(key);
+                    else guidedDraftSpoilers.add(key);
+                    renderGuidedDraft();
+                }
+            });
+        });
     }
 
     /**
@@ -792,6 +804,9 @@
         if (el.guidedContent) {
             el.guidedContent.addEventListener('click', onGuidedContentAction);
             el.guidedContent.addEventListener('input', onGuidedFrameInput);
+        }
+        if (el.guidedDraftContainer) {
+            el.guidedDraftContainer.addEventListener('click', onGuidedContentAction);
         }
         if (el.guidedChecklist) {
             el.guidedChecklist.addEventListener('change', updateGuidedChecklistState);

@@ -217,3 +217,11 @@ test('phoneme-recognizer declares concurrency 1 and release script passes it', (
     assert.match(code, /--concurrency=/,
         'release script must pass --concurrency to Cloud Run deploy');
 });
+
+test('config declares firebaseFunctionsDeployment invariants', () => {
+    assert.ok(config.firebaseFunctionsDeployment, 'config must declare firebaseFunctionsDeployment');
+    assert.equal(config.firebaseFunctionsDeployment.discoveryTimeoutSeconds, 60,
+        'Firebase functions discovery timeout must be 60s');
+    assert.equal(config.firebaseFunctionsDeployment.predeployPolicy, 'scoped-temporary-no-predeploy');
+});
+

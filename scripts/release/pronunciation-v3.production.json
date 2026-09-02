@@ -62,5 +62,11 @@
     "oidcAudience": "https://phoneme-recognizer-oq3kyypf4q-uc.a.run.app",
     "$audienceNote": "Base service URL. A tagged-revision URL is not a valid audience and yields 401.",
     "attemptDeadline": "120s"
+  },
+  "firebaseFunctionsDeployment": {
+    "discoveryTimeoutSeconds": 60,
+    "$discoveryNote": "Firebase source discovery for this module graph requires FUNCTIONS_DISCOVERY_TIMEOUT=60",
+    "predeployPolicy": "scoped-temporary-no-predeploy",
+    "$predeployNote": "Scoped API deployment must use a root-level temporary no-predeploy configuration, removed immediately after deployment."
   }
 }

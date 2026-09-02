@@ -239,3 +239,12 @@ While the core backend fixes are functioning cleanly in live production, full re
 - Telemetry-based cost verification pending via `scripts/measure-phoneme-billable-time.ps1`.
 
 Let the service run overnight, and proceed with Step 1 (`scripts/verify-phoneme-keepalive.ps1`) once 24 hours have elapsed.
+
+---
+
+## 9. Scoped Deployment Invariants & Firebase Functions Discovery
+
+- **Source Discovery Timeout:** Firebase CLI source discovery for the expanded backend module graph requires `FUNCTIONS_DISCOVERY_TIMEOUT=60`.
+- **Predeploy Isolation:** Scoped API deployments must use a root-level temporary no-predeploy configuration file that is verified and removed immediately post-deployment.
+- **Scope Restriction:** Release commands must remain explicit and targeted; generic npm release scripts must not broaden deployment scope or trigger unintended multi-service deployments.
+

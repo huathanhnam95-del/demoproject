@@ -1371,7 +1371,7 @@
                   <option value="Facebook - Personal">Facebook - Personal</option>
                   <option value="Facebook - Page">Facebook - Page</option>
                   <option value="Zalo - Page">Zalo - Page</option>
-                  <option value="Zalo + Personal">Zalo + Personal</option>
+                  <option value="Zalo - Personal">Zalo - Personal</option>
                   <option value="Tiktok - Personal">Tiktok - Personal</option>
                   <option value="Agent">Agent</option>
                 </select>
@@ -1846,9 +1846,26 @@
                   <label for="teaching-session-date">Session Date & Time</label>
                   <input type="datetime-local" id="teaching-session-date" class="crm-input">
                 </div>
-                <div class="crm-form-group">
-                  <label for="teaching-session-audio-file">Audio Recording File (.m4a, .mp3, .wav) <span style="color:#dc2626;">*</span></label>
-                  <input type="file" id="teaching-session-audio-file" class="crm-input" accept="audio/*,.m4a,.mp3,.wav" required>
+                <div class="crm-form-group" style="grid-column: 1 / -1;">
+                  <label>Audio Recording File (.m4a, .mp3, .wav) <span style="color:#dc2626;">*</span></label>
+                  <div id="teaching-session-dropzone" class="teaching-session-dropzone" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 22px 16px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
+                    <input type="file" id="teaching-session-audio-file" accept="audio/*,.m4a,.mp3,.wav" style="display: none;">
+                    <div id="teaching-session-dropzone-prompt">
+                      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#64748b" stroke-width="1.8" style="margin: 0 auto 8px; display: block;">
+                        <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <div style="font-weight: 500; color: #334155; font-size: 14px;">
+                        <span style="color: #2563eb; text-decoration: underline;">Click to choose file</span> or drag &amp; drop audio here
+                      </div>
+                      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Supports .m4a, .mp3, .wav (Zoom, Teams, Voice recording, up to 250MB)</div>
+                    </div>
+                    <div id="teaching-session-dropzone-selected" style="display: none; align-items: center; justify-content: center; gap: 8px; color: #0f172a; font-weight: 500;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="#10b981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      <span id="teaching-session-selected-filename">filename.m4a</span>
+                      <span id="teaching-session-selected-filesize" style="font-size: 12px; color: #64748b;">(0 MB)</span>
+                      <button id="btn-clear-selected-audio" type="button" class="crm-btn-text" style="color: #dc2626; font-size: 12px; margin-left: 8px; cursor: pointer; border: none; background: transparent; text-decoration: underline;">Remove</button>
+                    </div>
+                  </div>
                 </div>
                 <div class="crm-form-group" style="grid-column: 1 / -1;">
                   <label for="teaching-session-notes">Teacher Notes / Context (Optional)</label>

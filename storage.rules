@@ -157,5 +157,14 @@ service firebase.storage {
     match /pronunciation-reference-audio/{allPaths=**} {
       allow read, write: if false;
     }
+
+    // CRM Teaching Session audio recordings (admin/teacher upload up to 250MB)
+    match /teachingSessions/{studentId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.resource.size > 0
+        && request.resource.size <= 250 * 1024 * 1024;
+      allow delete: if isSignedIn() && (isAdmin() || isCrmAdmin());
+    }
   }
 }

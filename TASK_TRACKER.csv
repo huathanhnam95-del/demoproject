@@ -1792,3 +1792,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 798,2026-09-02,Configure local environment and verify Echo Forge sandbox readiness for testing,Done,2026-09-02
 799,2026-09-02,Implement CRM Teaching Sessions UI: student modal tab + audio upload + live Mermaid mindmap/flowchart viewer,Done,2026-09-02
 800,2026-09-02,Check UI changes and deploy Release V1.8.87 to production,Done,2026-09-02
+801,2026-09-02,Refactor Echo Forge UI: fix overlapping silhouette circles and streamline text and action controls,Done,2026-09-02
+802,2026-09-02,Fix CRM Teaching Sessions Storage rules 403 & API 401 and add drag-and-drop audio upload,Done,2026-09-02
+803,2026-09-02,Update CRM lead source dropdown option from Zalo + Personal to Zalo - Personal,In Progress,

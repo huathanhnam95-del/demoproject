@@ -124,6 +124,7 @@ async function signInOnPage(page, credentials) {
             const tabButton = document.querySelector('.crm-sidebar-item[data-tab="teaching-sessions"]');
             const tabContent = document.querySelector('#student-teaching-sessions');
             const uploadDrawer = document.querySelector('#teaching-session-upload-drawer');
+            const dropzone = document.querySelector('#teaching-session-dropzone');
             const sessionsList = document.querySelector('#teaching-sessions-list');
             const detailModal = document.querySelector('#crm-teaching-session-modal');
             const mindmapContainer = document.querySelector('#teaching-session-mindmap-container');
@@ -134,6 +135,7 @@ async function signInOnPage(page, credentials) {
                 hasTabButton: Boolean(tabButton),
                 hasTabContent: Boolean(tabContent),
                 hasUploadDrawer: Boolean(uploadDrawer),
+                hasDropzone: Boolean(dropzone),
                 hasSessionsList: Boolean(sessionsList),
                 hasDetailModal: Boolean(detailModal),
                 hasMindmapContainer: Boolean(mindmapContainer),
@@ -142,6 +144,38 @@ async function signInOnPage(page, credentials) {
                 hasController: Boolean(window.CrmTeachingSessions)
             };
         });
+
+        console.log('   ✓ DOM Elements check:', JSON.stringify(domCheck, null, 2));
+        assert.ok(domCheck.hasTabButton, 'Student modal must have Teaching Sessions sidebar tab button');
+        assert.ok(domCheck.hasTabContent, 'Student modal must have student-teaching-sessions tab content');
+        assert.ok(domCheck.hasUploadDrawer, 'Student modal must have upload drawer');
+        assert.ok(domCheck.hasDropzone, 'Student modal must have drag-and-drop audio dropzone');
+
+        // 5b. Verify Firebase Storage upload permission for teachingSessions
+        console.log('5b. Testing Firebase Storage upload permission on teachingSessions path...');
+        const storageResult = await page.evaluate(async () => {
+            try {
+                if (!window.firebase || !window.firebase.storage) {
+                    return { ok: false, error: 'Firebase Storage SDK not available' };
+                }
+                const testBlob = new Blob(['TEST_AUDIO_CONTENT'], { type: 'audio/wav' });
+                const testPath = `teachingSessions/audit_test_student/${Date.now()}_audit_test.wav`;
+                const storageRef = window.firebase.storage().ref(testPath);
+                const uploadTask = await storageRef.put(testBlob);
+                const downloadUrl = await uploadTask.ref.getDownloadURL();
+                // Clean up test file
+                await storageRef.delete().catch(() => {});
+                return {
+                    ok: true,
+                    downloadUrlAvailable: Boolean(downloadUrl && downloadUrl.includes('https://'))
+                };
+            } catch (err) {
+                return { ok: false, error: err.message, code: err.code };
+            }
+        });
+
+        console.log('   ✓ Storage upload check:', JSON.stringify(storageResult, null, 2));
+        assert.ok(storageResult.ok, `Firebase Storage upload must succeed without permissions error (got: ${storageResult.error})`);
 
         console.log('   ✓ DOM Elements check:', JSON.stringify(domCheck, null, 2));
         assert.ok(domCheck.hasTabButton, 'Student modal must have Teaching Sessions sidebar tab button');

@@ -1,11 +1,12 @@
 /**
  * CRM Teaching Sessions & Pre-Class Briefings Controller
- * Handles audio upload, session history, and live Mermaid.js mindmap/flowchart rendering.
+ * Handles drag-and-drop audio upload, session history, and live Mermaid.js mindmap/flowchart rendering.
  */
 window.CrmTeachingSessions = (function () {
     let currentStudentId = null;
     let currentSession = null;
     let isInitialized = false;
+    let selectedAudioFile = null;
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -40,6 +41,54 @@ window.CrmTeachingSessions = (function () {
         const min = m % 60;
         if (h > 0) return `${h}h ${min}m`;
         return `${min}m ${sec}s`;
+    }
+
+    async function getAuthHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        try {
+            const user = window.firebase?.auth?.().currentUser || window.__FIREBASE_INTERNAL__?.auth?.currentUser;
+            if (user && typeof user.getIdToken === 'function') {
+                const token = await user.getIdToken();
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+        } catch (err) {
+            console.warn('[Teaching Sessions] Could not retrieve auth token:', err);
+        }
+        return headers;
+    }
+
+    function updateDropzoneDisplay(file) {
+        selectedAudioFile = file || null;
+        const promptEl = document.getElementById('teaching-session-dropzone-prompt');
+        const selectedEl = document.getElementById('teaching-session-dropzone-selected');
+        const filenameEl = document.getElementById('teaching-session-selected-filename');
+        const filesizeEl = document.getElementById('teaching-session-selected-filesize');
+        const dropzone = document.getElementById('teaching-session-dropzone');
+
+        if (file) {
+            if (promptEl) promptEl.style.display = 'none';
+            if (selectedEl) selectedEl.style.display = 'flex';
+            if (filenameEl) filenameEl.textContent = file.name;
+            if (filesizeEl) {
+                const mb = (file.size / (1024 * 1024)).toFixed(1);
+                filesizeEl.textContent = `(${mb} MB)`;
+            }
+            if (dropzone) {
+                dropzone.style.borderColor = '#10b981';
+                dropzone.style.background = '#f0fdf4';
+            }
+        } else {
+            if (promptEl) promptEl.style.display = 'block';
+            if (selectedEl) selectedEl.style.display = 'none';
+            const fileInput = document.getElementById('teaching-session-audio-file');
+            if (fileInput) fileInput.value = '';
+            if (dropzone) {
+                dropzone.style.borderColor = '#cbd5e1';
+                dropzone.style.background = '#f8fafc';
+            }
+        }
     }
 
     function convertMarkdownToHtml(markdown) {
@@ -153,8 +202,9 @@ window.CrmTeachingSessions = (function () {
         listEl.innerHTML = '';
 
         try {
+            const headers = await getAuthHeaders();
             const resp = await fetch(`/api/admin/teaching-sessions?studentId=${encodeURIComponent(studentId)}`, {
-                headers: { 'Content-Type': 'application/json' }
+                headers
             });
             const data = await resp.json();
             const sessions = (data && data.data && data.data.sessions) || [];
@@ -227,7 +277,10 @@ window.CrmTeachingSessions = (function () {
 
     async function openSessionDetail(sessionId) {
         try {
-            const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`);
+            const headers = await getAuthHeaders();
+            const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`, {
+                headers
+            });
             const json = await resp.json();
             const session = (json && json.data && json.data.session) || null;
             if (!session) throw new Error('Session data not found');
@@ -303,8 +356,10 @@ window.CrmTeachingSessions = (function () {
 
     async function deleteSession(sessionId) {
         try {
+            const headers = await getAuthHeaders();
             const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers
             });
             const res = await resp.json();
             if (res.success) {
@@ -322,17 +377,21 @@ window.CrmTeachingSessions = (function () {
         const titleInput = document.getElementById('teaching-session-title');
         const skillInput = document.getElementById('teaching-session-skill');
         const dateInput = document.getElementById('teaching-session-date');
-        const fileInput = document.getElementById('teaching-session-audio-file');
         const notesInput = document.getElementById('teaching-session-notes');
 
         const title = (titleInput && titleInput.value.trim()) || '1-on-1 Teaching Session';
         const focusSkill = (skillInput && skillInput.value) || 'Writing';
         const sessionDate = (dateInput && dateInput.value) || new Date().toISOString();
         const notes = (notesInput && notesInput.value.trim()) || '';
-        const file = fileInput && fileInput.files && fileInput.files[0];
+        const file = selectedAudioFile;
 
         if (!currentStudentId) {
             alert('Please select or save a student first.');
+            return;
+        }
+
+        if (!file) {
+            alert('Please choose or drag & drop an audio recording file (.m4a, .mp3, .wav).');
             return;
         }
 
@@ -346,28 +405,41 @@ window.CrmTeachingSessions = (function () {
         if (submitBtn) submitBtn.disabled = true;
 
         try {
-            if (progressLabel) progressLabel.textContent = 'Registering teaching session record...';
-            if (progressBar) progressBar.style.width = '20%';
-            if (progressPct) progressPct.textContent = '20%';
-
             let audioUrl = null;
             let audioDurationSec = null;
 
             // 1. If Firebase Storage is available and a file is selected, upload it
             if (file && window.firebase && window.firebase.storage) {
                 if (progressLabel) progressLabel.textContent = `Uploading ${file.name} to Cloud Storage...`;
-                if (progressBar) progressBar.style.width = '40%';
-                if (progressPct) progressPct.textContent = '40%';
+                if (progressBar) progressBar.style.width = '30%';
+                if (progressPct) progressPct.textContent = '30%';
 
                 const timestamp = Date.now();
-                const storageRef = window.firebase.storage().ref(`teachingSessions/${currentStudentId}/${timestamp}_${file.name}`);
-                const uploadTask = await storageRef.put(file);
-                audioUrl = await uploadTask.ref.getDownloadURL();
+                const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const storageRef = window.firebase.storage().ref(`teachingSessions/${currentStudentId}/${timestamp}_${cleanFileName}`);
+                
+                // Track upload progress
+                const uploadTask = storageRef.put(file);
+                await new Promise((resolve, reject) => {
+                    uploadTask.on(
+                        window.firebase.storage.TaskEvent.STATE_CHANGED,
+                        (snapshot) => {
+                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 60) + 30;
+                            if (progressBar) progressBar.style.width = `${pct}%`;
+                            if (progressPct) progressPct.textContent = `${pct}%`;
+                        },
+                        (error) => reject(error),
+                        async () => {
+                            audioUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                            resolve();
+                        }
+                    );
+                });
             }
 
             if (progressLabel) progressLabel.textContent = 'Saving session to database...';
-            if (progressBar) progressBar.style.width = '70%';
-            if (progressPct) progressPct.textContent = '70%';
+            if (progressBar) progressBar.style.width = '90%';
+            if (progressPct) progressPct.textContent = '90%';
 
             // 2. Create session in Firestore
             const createPayload = {
@@ -381,9 +453,10 @@ window.CrmTeachingSessions = (function () {
                 status: 'uploaded'
             };
 
+            const headers = await getAuthHeaders();
             const resp = await fetch('/api/admin/teaching-sessions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(createPayload)
             });
             const createRes = await resp.json();
@@ -398,8 +471,9 @@ window.CrmTeachingSessions = (function () {
 
             // Reset form
             if (titleInput) titleInput.value = '';
-            if (fileInput) fileInput.value = '';
             if (notesInput) notesInput.value = '';
+            updateDropzoneDisplay(null);
+
             const drawer = document.getElementById('teaching-session-upload-drawer');
             if (drawer) drawer.style.display = 'none';
 
@@ -434,10 +508,72 @@ window.CrmTeachingSessions = (function () {
         if (cancelBtn && drawer) {
             cancelBtn.addEventListener('click', () => {
                 drawer.style.display = 'none';
+                updateDropzoneDisplay(null);
             });
         }
         if (submitBtn) {
             submitBtn.addEventListener('click', handleUploadAndAnalyze);
+        }
+
+        // Dropzone & File Input Listeners
+        const dropzone = document.getElementById('teaching-session-dropzone');
+        const fileInput = document.getElementById('teaching-session-audio-file');
+        const clearBtn = document.getElementById('btn-clear-selected-audio');
+
+        if (dropzone && fileInput) {
+            // Click to choose
+            dropzone.addEventListener('click', (e) => {
+                if (e.target === clearBtn || (clearBtn && clearBtn.contains(e.target))) return;
+                fileInput.click();
+            });
+
+            // File selection change
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (file) updateDropzoneDisplay(file);
+            });
+
+            // Drag and drop events
+            ['dragenter', 'dragover'].forEach((eventName) => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.style.borderColor = '#3b82f6';
+                    dropzone.style.background = '#eff6ff';
+                });
+            });
+
+            ['dragleave', 'dragend'].forEach((eventName) => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!selectedAudioFile) {
+                        dropzone.style.borderColor = '#cbd5e1';
+                        dropzone.style.background = '#f8fafc';
+                    } else {
+                        dropzone.style.borderColor = '#10b981';
+                        dropzone.style.background = '#f0fdf4';
+                    }
+                });
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    updateDropzoneDisplay(file);
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                updateDropzoneDisplay(null);
+            });
         }
 
         // Detail Modal View Tabs
@@ -493,6 +629,8 @@ window.CrmTeachingSessions = (function () {
         init,
         loadStudentSessions,
         openSessionDetail,
-        deleteSession
+        deleteSession,
+        renderMermaid,
+        convertMarkdownToHtml
     };
 })();

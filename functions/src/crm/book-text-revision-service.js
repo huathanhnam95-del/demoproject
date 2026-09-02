@@ -1452,13 +1452,33 @@ async function listEligibleRevisions(db, options) {
             .slice(0, batchSize)
             .map(({ revision }) => revision);
     }
-    if (!db || typeof db.collectionGroup !== 'function') return [];
-    const snapshot = await db.collectionGroup(TEXT_REVISIONS)
-        .where('status', '==', 'running')
-        .limit(batchSize)
-        .get();
-    const eligible = (snapshot.docs || []).map(normalizeRevisionCandidate)
-        .filter((revision) => revision && isDue(revision));
+    if (!db || typeof db.collection !== 'function') return [];
+    let eligible = [];
+    try {
+        if (typeof db.collectionGroup === 'function') {
+            const snapshot = await db.collectionGroup(TEXT_REVISIONS)
+                .where('status', '==', 'running')
+                .limit(batchSize)
+                .get();
+            eligible = (snapshot.docs || []).map(normalizeRevisionCandidate)
+                .filter((revision) => revision && isDue(revision));
+        }
+    } catch {
+        const booksSnap = await db.collection(CRM_BOOKS).get();
+        for (const bookDoc of (booksSnap.docs || [])) {
+            const bookData = bookDoc.data() || {};
+            const processingRevId = bookData.processingTextRevisionId;
+            if (processingRevId) {
+                const revSnap = await bookDoc.ref.collection(TEXT_REVISIONS).doc(processingRevId).get();
+                if (revSnap.exists) {
+                    const candidate = normalizeRevisionCandidate(revSnap);
+                    if (candidate && candidate.status === 'running' && isDue(candidate)) {
+                        eligible.push(candidate);
+                    }
+                }
+            }
+        }
+    }
     return eligible
         .map((revision, index) => ({ revision, index }))
         .sort((a, b) => queueStagePriority(a.revision.stage) - queueStagePriority(b.revision.stage)

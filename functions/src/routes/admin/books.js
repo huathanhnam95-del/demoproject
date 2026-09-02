@@ -943,7 +943,10 @@ module.exports = function registerBookRoutes(router, deps) {
             let pagesPath;
             let rendererContract = 'legacy';
             if (activeRevisionId) {
-                pagesPath = `crm-books/${bookId}/text-revisions/${activeRevisionId}/pages.json`;
+                const candidatePath = `crm-books/${bookId}/text-revisions/${activeRevisionId}/candidate/pages.json`;
+                const directPath = `crm-books/${bookId}/text-revisions/${activeRevisionId}/pages.json`;
+                const [cExists] = await bucket.file(candidatePath).exists();
+                pagesPath = cExists ? candidatePath : directPath;
                 rendererContract = 'ocr-v2';
             } else {
                 pagesPath = `crm-books/${bookId}/pages.json`;
@@ -1068,6 +1071,40 @@ module.exports = function registerBookRoutes(router, deps) {
             return sendSuccess(res, { revision: { id: revSnap.id, ...revSnap.data() } });
         } catch (error) {
             return sendError(res, 500, 'GET_REVISION_ERROR', 'Failed to get text revision.', error.message || error);
+        }
+    });
+
+    router.post('/books/:bookId/text-revisions/:revisionId/pages', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bookId = cleanStr(req.params.bookId);
+            const revisionId = cleanStr(req.params.revisionId);
+            const pages = Array.isArray(req.body?.pages) ? req.body.pages : [];
+            if (!bookId || !revisionId) return sendError(res, 400, 'MISSING_PARAMS', 'bookId and revisionId are required.');
+            if (!pages.length) return sendError(res, 400, 'EMPTY_PAGES', 'pages array is required.');
+
+            const bucket = await getStorageBucket();
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            const bookData = bookSnap.data() || {};
+            const payload = {
+                pageCount: pages.length,
+                physicalPageCount: pages.length,
+                pages,
+                rendererContract: 'ocr-v2',
+                provenanceVerified: true,
+                sourceSha256: bookData.source?.sha256 || null
+            };
+
+            const candidatePath = `crm-books/${bookId}/text-revisions/${revisionId}/candidate/pages.json`;
+            const directPath = `crm-books/${bookId}/text-revisions/${revisionId}/pages.json`;
+            await bucket.file(candidatePath).save(JSON.stringify(payload), { contentType: 'application/json' });
+            await bucket.file(directPath).save(JSON.stringify(payload), { contentType: 'application/json' });
+
+            pagesCache.delete(`${bookId}:${revisionId}`);
+            pagesCache.delete(`${bookId}:legacy`);
+
+            return sendSuccess(res, { bookId, revisionId, pageCount: pages.length }, 'Candidate pages saved.');
+        } catch (error) {
+            return sendError(res, 500, 'SAVE_PAGES_ERROR', error?.message || 'Failed to save pages.');
         }
     });
 

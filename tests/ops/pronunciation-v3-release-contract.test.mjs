@@ -138,7 +138,8 @@ test('full source SHA keeps provenance while the candidate tag stays Cloud Run-s
     fs.writeFileSync(fakeGcloud, '@echo off\necho {"bindings":[{"members":["allUsers"]}]}\n', 'utf8');
 
     try {
-        const result = spawnSync('pwsh', [
+        const psExe = process.platform === 'win32' ? 'powershell' : 'pwsh';
+        const result = spawnSync(psExe, [
             '-NoProfile',
             '-NonInteractive',
             '-File',
@@ -208,4 +209,11 @@ test('compound gcloud flag values are quoted against PowerShell array-splitting'
         assert.match(line.trim(), /^["']|=\s*"/,
             `compound flag must be quoted as one string: ${line.trim()}`);
     }
+});
+
+test('phoneme-recognizer declares concurrency 1 and release script passes it', () => {
+    assert.equal(config.services['phoneme-recognizer'].concurrency, 1,
+        'phoneme-recognizer must declare concurrency 1 to prevent false RECOGNIZER_BUSY contention');
+    assert.match(code, /--concurrency=/,
+        'release script must pass --concurrency to Cloud Run deploy');
 });

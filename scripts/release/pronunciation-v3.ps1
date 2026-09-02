@@ -169,6 +169,9 @@ switch ($Action) {
         "--memory=$($svc.memory)",
         "--max-instances=$($svc.maxScale)"
     )
+    if ($svc.concurrency) {
+        $deployArgs += "--concurrency=$($svc.concurrency)"
+    }
     if ($Service -eq 'praat-api') {
         $effectiveV3Mode = if ($PronunciationV3Mode) { $PronunciationV3Mode } else { [string]$svc.env.PRONUNCIATION_V3_MODE }
         if ($effectiveV3Mode -notin @('shadow', 'active')) { throw "Unsupported declared V3 mode: $effectiveV3Mode" }

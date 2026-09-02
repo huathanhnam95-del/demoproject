@@ -20,6 +20,8 @@
       "maxScale": 2,
       "minScale": null,
       "$minScaleNote": "null by design. Setting it pins an always-billed instance (~$37/mo) to remove a cold start the keep-alive already covers.",
+      "concurrency": 1,
+      "$concurrencyNote": "Must be 1. Prevents Cloud Run packing concurrent requests onto one instance and hitting the single-inference Python semaphore.",
       "timeoutSeconds": 120,
       "startupProbe": {
         "httpGet": { "path": "/readyz" },
@@ -29,8 +31,8 @@
         "timeoutSeconds": 5,
         "$note": "HTTP, not tcpSocket. Gunicorn binds the port in under a second, so a TCP probe marked the instance ready before the model loaded and put the whole ~50s load inside a learner's request."
       },
-      "rollbackRevision": "phoneme-recognizer-00004-bbc",
-      "currentRevision": "phoneme-recognizer-00010-rir"
+      "rollbackRevision": "phoneme-recognizer-00010-rir",
+      "currentRevision": "phoneme-recognizer-00016-lum"
     },
     "praat-api": {
       "access": "public",

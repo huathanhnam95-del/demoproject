@@ -203,8 +203,21 @@ assert.strictEqual(workspace.isScannerNoiseLine('320–380'), false, 'Word count
 assert.strictEqual(workspace.isScannerNoiseLine('v'), false, 'Front matter Roman numeral v must NOT be filtered as noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('x'), false, 'Front matter Roman numeral x must NOT be filtered as noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('B: Yes, please.'), false, 'Dialogue line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('A:'), false, 'Standalone speaker tag A: must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('B:'), false, 'Standalone speaker tag B: must NOT be filtered as noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('4.1 Approach, method,'), false, 'TOC decimal section header must NOT be filtered as noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('17.1.3 Language skills,'), false, 'TOC multi-decimal section header must NOT be filtered as noise.');
+
+// Index lists, fill-in exercises, and wrapped citations must NOT be filtered
+assert.strictEqual(workspace.isScannerNoiseLine('169, 175, 358'), false, 'Index comma-separated page reference list must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('195–6, 212'), false, 'Index page range list must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('192f, 268–9, 276, 383'), false, 'Index folio reference list must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('Ur, P 44, 47, 50, 62, 69, 84,'), false, 'Author index line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('A. Hi, I’m _______________________.'), false, 'Fill-in-the-blank practice prompt must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('I wish –––––––––––––––––––––––––––––––– .'), false, 'Dash blank sentence prompt must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('2020, p. 318).'), false, 'Wrapped citation line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('(2023).'), false, 'Wrapped year citation line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('2004).'), false, 'Wrapped year citation line must NOT be filtered as noise.');
 
 // Test repairArchivalOcrText
 const corruptedSample = 'Welcome on a trip up the Amazon of educatioual psychology to the jungle of learning th- Ty.\n' +

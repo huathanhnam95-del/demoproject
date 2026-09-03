@@ -1878,3 +1878,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 884,2026-09-03,CRM Courses tab: redesign Screen B/C aesthetics + fix Live 4→5 Courses tab empty state for new students,Done,2026-09-03
 885,2026-09-03,Cost comparison for entrance test ASR fix options,Done,2026-09-03
 886,2026-09-03,Verify Google AI Studio Prepay billing model policy,Done,2026-09-03
+887,2026-09-03,CRM Books: exhaustive page-by-page OCR and text inspection across all 774 pages of Harmer and Pronunciation books,Done,2026-09-03
+888,2026-09-03,Save Gemini API key to env and configure Gemini Flash model,In Progress,

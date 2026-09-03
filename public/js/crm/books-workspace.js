@@ -174,25 +174,32 @@ window.CrmBooksWorkspace = (function () {
         const trimmed = line.trim();
         if (!trimmed) return false;
 
-        // Preserve valid numbers and ranges
+        // 1. Preserve valid numbers, section markers, timestamps, ranges, and index page reference lists
         if (/^\d{1,4}$/.test(trimmed)) return false; // Page numbers
         if (/^\d+(?:\.\d+)+$/.test(trimmed)) return false; // Section markers e.g. 4.9.3
         if (/^\d{1,2}:\d{2}(?::\d{2})?$/.test(trimmed)) return false; // Video / audio timestamps e.g. 3:10, 15:30
-        if (/^\d+[\s–—-]+\d+$/.test(trimmed)) return false; // Numeric ranges e.g. 320–380, 150–300
+        if (/^[\d\s,–—fF]+(?:[a-zA-Z]\b)?\.?$/.test(trimmed) && /\d/.test(trimmed)) return false; // Index page references e.g. '169, 175, 358', '195–6, 212', '192f, 268–9'
+        if (/^[A-Z][a-z]+,\s+[A-Z]\b/.test(trimmed) && /\d/.test(trimmed)) return false; // Author index lines e.g. 'Ur, P 44, 47, 50, 62, 69, 84,'
 
-        // Preserve Roman numerals (front-matter folios) e.g. i, ii, iii, iv, v, vi, vii, viii, ix, x, xi, xii
+        // 2. Preserve Roman numerals (front-matter folios) e.g. i, ii, iii, iv, v, vi, vii, viii, ix, x, xi, xii
         if (/^(?:i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv|xvi|xvii|xviii|xix|xx)$/i.test(trimmed)) return false;
 
-        // Preserve legitimate author citations in square brackets e.g. [Bruner, 1966, pp. 4-5], [Kidd, 1959]
+        // 3. Preserve legitimate author citations in square brackets e.g. [Bruner, 1966, pp. 4-5], [Kidd, 1959]
         if (/^\[[A-Z][a-zA-Z\s.,&'’–-]+,\s*(?:19|20)\d{2}(?:,\s*pp?\.?\s*[\d-]+)?\]$/.test(trimmed)) return false;
         if (/^\[Ibid\.(?:,\s*pp?\.?\s*[\d-]+)?\]$/i.test(trimmed)) return false;
 
-        // Preserve International Phonetic Alphabet (IPA) transcriptions & linguistic notation
+        // 4. Preserve wrapped citations e.g. '2020, p. 318).', '(2023).', 'al., 2017)!', '2004).'
+        if (/^(?:[a-zA-Z.,\s]+)?\(?(?:19|20)\d{2}(?:,\s*pp?\.?\s*[\d-]+)?\)[.!?:–—]*$/.test(trimmed)) return false;
+
+        // 5. Preserve International Phonetic Alphabet (IPA) transcriptions & linguistic notation
         if (/[/\[][\u0250-\u02AF\u1D00-\u1D7F\u0370-\u03FFa-zA-Z0-9\s:ːˑˈˌ~.ˈ-]+[/\]]/.test(trimmed)) return false;
         if (/^<[a-z]>\s+[a-zA-Z]+\s+\[[^\]\n]+\]/i.test(trimmed)) return false;
 
-        // Preserve dialogue speakers e.g. "A:", "B:", "Teacher:", "Student:"
-        if (/^(?:[A-Z]:|[A-Z][a-z]+:)\s+\S+/.test(trimmed)) return false;
+        // 6. Preserve dialogue speakers e.g. "A:", "B:", "Teacher:", "Student:" (with or without following words)
+        if (/^(?:[A-Z]:|[A-Z][a-z]+:)(?:\s+.*)?$/.test(trimmed)) return false;
+
+        // 7. Preserve fill-in-the-blank practice prompts with underscores, dashes, or dots e.g. 'A. Hi, I’m ______.' or 'I wish ––––––– .'
+        if (/^(?:[A-Z]\.|\d+\.|\b[a-zA-Z]{2,}\b).*(?:_{3,}|[–—-]{5,}|\.{4,})/.test(trimmed)) return false;
 
         // Filter archival catalog/microfiche stamp codes
         if (/^(?:ED|CE)\s*\d{3}\s*\d{3}$/i.test(trimmed)) return true;
@@ -214,7 +221,7 @@ window.CrmBooksWorkspace = (function () {
         if (letterCount === 0) return true; // zero letters and not a recognized number/timestamp/range
         if (trimmed.length < 3 && letterCount < 2 && !/^[A-D]\.?$/.test(trimmed) && !/^[A-Z]\.$/.test(trimmed)) return true;
 
-        const punctCount = (trimmed.match(/[^a-zA-Z0-9\s\u0250-\u02AF\u1D00-\u1D7F\u0370-\u03FF]/g) || []).length;
+        const punctCount = (trimmed.match(/[^a-zA-Z0-9\s\u0250-\u02AF\u1D00-\u1D7F\u0370-\u03FF_–—-]/g) || []).length;
         if (punctCount >= 4 && punctCount >= letterCount * 2) return true;
         if (punctCount >= 3 && /(?:-{3,}|,{2,}|%{2,}|\[;)/.test(trimmed) && letterCount < 10) return true;
 

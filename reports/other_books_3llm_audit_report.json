@@ -1,0 +1,786 @@
+{
+  "audited_at": "2026-09-03T14:31:37.305947+00:00",
+  "models": {
+    "qwen": "qwen3:14b",
+    "deepseek": "deepseek-r1:14b",
+    "gemma": "gemma4:12b"
+  },
+  "pages": [
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 4,
+      "label": "Detailed Table of Contents (section numbers & commas)",
+      "text_length": 1983,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 23954,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The extracted text appears clean with proper sectioning and headings. No signs of scanner artifacts or noise. Layout is well-organized with clear hierarchy and spacing."
+          },
+          "duration_ms": 51023,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The extracted text appears clean with proper sectioning and headings. No signs of scanner artifacts or noise. Layout is well-organized with clear hierarchy and spacing.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_phrase_preserve": "IPA symbols, timestamps, dialogue lines that must be preserved",
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is a clean Table of Contents. No scanner noise, artifacts, or overlapping text. The numbering and structure are clear."
+          },
+          "duration_ms": 47796,
+          "raw": "{\"text_verdict\": \"PASS\", \"layout_verdict\": \"PASS\", \"scanner_noise_lines\": [], \"legitimate_elements_to_phrase_preserve\": \"IPA symbols, timestamps, dialogue lines that must be preserved\", \"layered_repeated_phrases\": [], \"layout_notes\": \"The text is a clean Table of Contents. No scanner noise, artifacts, or overlapping text. The numbering and structure are clear.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "2/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 9,
+      "label": "Video & DVD Contents Table (duration timestamps)",
+      "text_length": 2317,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 42189,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The extracted text appears clean with proper formatting. The content is readable and well-structured without any signs of scanner artifacts or layout issues."
+          },
+          "duration_ms": 38623,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The extracted text appears clean with proper formatting. The content is readable and well-structured without any signs of scanner artifacts or layout issues.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "15:54"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is clean and well-structured. The timestamp '15:54' is a legitimate part of the video content table. No scanner noise or overlapping text is detected."
+          },
+          "duration_ms": 43301,
+          "raw": "{\"text_verdict\": \"PASS\", \"layout_verdict\": \"PASS\", \"scanner_noise_lines\": [], \"legitimate_elements_to_preserve\": [\"15:54\"], \"layered_repeated_phrases\": [], \"layout_notes\": \"The text is clean and well-structured. The timestamp '15:54' is a legitimate part of the video content table. No scanner noise or overlapping text is detected.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "15:54"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "2/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 24,
+      "label": "InDesign Layered Heading Drop Shadows",
+      "text_length": 1555,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [
+              "English as a lingua franca",
+              "ESP (English for specific purposes)",
+              "Business English",
+              "Content-based language teaching (CBLT)"
+            ],
+            "text_verdict": "FAIL",
+            "layout_verdict": "FAIL",
+            "layout_notes": "The text contains multiple repeated phrases likely due to InDesign drop shadow effects, leading to redundancy and poor readability. No scanner noise or legitimate elements to preserve detected."
+          },
+          "duration_ms": 33293,
+          "raw": "{\n\n\n\"scanner_noise_lines\": [],\n\"legitimate_elements_to_preserve\": [],\n\"layered_repeated_phrases\": [\"English as a lingua franca\", \"ESP (English for specific purposes)\", \"Business English\", \"Content-based language teaching (CBLT)\"],\n\"text_verdict\": \"FAIL\",\n\"layout_verdict\": \"FAIL\",\n\"layout_notes\": \"The text contains multiple repeated phrases likely due to InDesign drop shadow effects, leading to redundancy and poor readability. No scanner noise or legitimate elements to preserve detected.\"\n\n}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "FAIL",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [
+              "English as a lingua franca",
+              "ESP (English for specific purposes)",
+              "Business English",
+              "Content-based language teaching (CBLT)"
+            ],
+            "layout_notes": "The text shows repeated phrases likely due to InDesign drop shadow effects, affecting readability. No scanner noise detected. Legitimate elements are absent."
+          },
+          "duration_ms": 45091,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"FAIL\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [],\n  \"layered_repeated_phrases\": [\"English as a lingua franca\", \"ESP (English for specific purposes)\", \"Business English\", \"Content-based language teaching (CBLT)\"],\n  \"layout_notes\": \"The text shows repeated phrases likely due to InDesign drop shadow effects, affecting readability. No scanner noise detected. Legitimate elements are absent.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "FAIL",
+            "layout_verdict": "FAIL",
+            "layout_notes": "The text contains severe repetition of phrases (e.g., 'English as a lingua franca' repeated 9 times, 'ESP' repeated 15 times) which is a classic symptom of InDesign layered heading drop shadow artifacts. The layout is unreadable due to these repetitions."
+          },
+          "duration_ms": 41771,
+          "raw": "{\"text_verdict\": \"FAIL\", \"layout_verdict\": \"FAIL\", \"layout_notes\": \"The text contains severe repetition of phrases (e.g., 'English as a lingua franca' repeated 9 times, 'ESP' repeated 15 times) which is a classic symptom of InDesign layered heading drop shadow artifacts. The layout is unreadable due to these repetitions.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "FAIL",
+        "layout_verdict": "FAIL",
+        "legitimate_elements_to_preserve": [],
+        "layered_repeated_phrases": [
+          "Business English",
+          "Content-based language teaching (CBLT)",
+          "ESP (English for specific purposes)",
+          "English as a lingua franca"
+        ],
+        "agreement_ratio": "2/3 text, 3/3 layout"
+      }
+    },
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 47,
+      "label": "Conversational Dialogue Transcription (Speakers A & B)",
+      "text_length": 2468,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 39294,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "A:",
+              "B:",
+              "Would you like a biscuit?",
+              "Yes, please.",
+              "Here you are."
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-formatted with clear sections and appropriate use of punctuation to indicate dialogue and interruptions. No issues with layout or readability."
+          },
+          "duration_ms": 43175,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"A:\", \"B:\", \"Would you like a biscuit?\", \"Yes, please.\", \"Here you are.\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-formatted with clear sections and appropriate use of punctuation to indicate dialogue and interruptions. No issues with layout or readability.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "A: Would you like a biscuit?",
+              "B: Yes, please.",
+              "C: Here you are.",
+              "B: Nice (talking about the biscuit)",
+              "A: They’re my fav-",
+              "|",
+              "B: I like gingernuts best",
+              "|",
+              "A: -ourite, but I thought ... you know when I was in town ... erm, I’m trying to cut down, you know ...",
+              "(|) indicates two people speaking at the same time",
+              "Mm, yeah, right, yeah",
+              "San Francisco? You went to San Francisco?"
+            ]
+          },
+          "duration_ms": 42035,
+          "raw": "{\"text_verdict\": \"PASS\", \"layout_verdict\": \"PASS\", \"scanner_noise_lines\": [], \"legitimate_elements_to_preserve\": [\"A: Would you like a biscuit?\", \"B: Yes, please.\", \"C: Here you are.\", \"B: Nice (talking about the biscuit)\", \"A: They’re my fav-\", \"|\", \"B: I like gingernuts best\", \"|\", \"A: -ourite, but I thought ... you know when I was in town ... erm, I’m trying to cut down, you know ...\", \"(|) indicates two people speaking at the same time\", \"Mm, yeah, right, yeah\", \"San Francisco? You went to San Francisco?\"] }"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "(|) indicates two people speaking at the same time",
+          "A:",
+          "A: -ourite, but I thought ... you know when I was in town ... erm, I’m trying to cut down, you know ...",
+          "A: They’re my fav-",
+          "A: Would you like a biscuit?",
+          "B:",
+          "B: I like gingernuts best",
+          "B: Nice (talking about the biscuit)",
+          "B: Yes, please.",
+          "C: Here you are.",
+          "Here you are.",
+          "Mm, yeah, right, yeah",
+          "San Francisco? You went to San Francisco?",
+          "Would you like a biscuit?",
+          "Yes, please.",
+          "|"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "2/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 49,
+      "label": "Chapter 2 End Notes & Further Reading Repeats",
+      "text_length": 1776,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 43005,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "FAIL",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [
+              "Chapter notes and further reading"
+            ],
+            "layout_notes": "The text has multiple repeated phrases like 'Chapter notes and further reading', which likely result from InDesign drop shadows. This repetition disrupts readability and should be removed."
+          },
+          "duration_ms": 41909,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"FAIL\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [],\n  \"layered_repeated_phrases\": [\"Chapter notes and further reading\"],\n  \"layout_notes\": \"The text has multiple repeated phrases like 'Chapter notes and further reading', which likely result from InDesign drop shadows. This repetition disrupts readability and should be removed.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "WARN",
+            "layout_verdict": "FAIL",
+            "layout_notes": "The text contains significant repetition of headings (e.g., 'Chapter notes and further reading', 'Language purpose', 'Appropriacy and register', 'Gender', 'Discourse and text', 'Genre') due to a likely InDesign drop shadow or layout error during OCR. The text is otherwise legible, but the layout is severely compromised by these repetitions."
+          },
+          "duration_ms": 42400,
+          "raw": "{\"text_verdict\": \"WARN\", \"layout_verdict\": \"FAIL\", \"layout_notes\": \"The text contains significant repetition of headings (e.g., 'Chapter notes and further reading', 'Language purpose', 'Appropriacy and register', 'Gender', 'Discourse and text', 'Genre') due to a likely InDesign drop shadow or layout error during OCR. The text is otherwise legible, but the layout is severely compromised by these repetitions.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "WARN",
+        "layout_verdict": "FAIL",
+        "legitimate_elements_to_preserve": [],
+        "layered_repeated_phrases": [
+          "Chapter notes and further reading"
+        ],
+        "agreement_ratio": "1/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "harmer",
+      "book_title": "The Practice of English Language Teaching (5th Edition)",
+      "page_num": 100,
+      "label": "Pedagogical Methodology Body Prose",
+      "text_length": 2885,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 39221,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-formatted with clear headings and bullet points, enhancing readability. There are no signs of scanner artifacts or illegitimate elements."
+          },
+          "duration_ms": 41512,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-formatted with clear headings and bullet points, enhancing readability. There are no signs of scanner artifacts or illegitimate elements.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is a list of learning styles and a paragraph of academic text. The OCR is clean, and the layout is clear. The '88' at the beginning is likely a page number or chapter header artifact, but it is part of the sequence and not 'noise' in the sense of 'garbage characters'."
+          },
+          "duration_ms": 43127,
+          "raw": "{\"text_verdict\": \"PASS\", \"layout_verdict\": \"PASS\", \"scanner_noise_lines\": [], \"legitimate_elements_to_preserve\": [], \"layered_repeated_phrases\": [], \"layout_notes\": \"The text is a list of learning styles and a paragraph of academic text. The OCR is clean, and the layout is clear. The '88' at the beginning is likely a page number or chapter header artifact, but it is part of the sequence and not 'noise' in the sense of 'garbage characters'.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "2/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 12,
+      "label": "Consonant Contrast Pairs (/p/, /b/)",
+      "text_length": 1909,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 42263,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "/p/",
+              "/b/",
+              "English",
+              "French",
+              "Spanish",
+              "Japanese",
+              "Indian"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-structured and readable. IPA symbols are correctly used and should be preserved. No signs of scanner noise or repeated phrases."
+          },
+          "duration_ms": 42329,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"/p/\", \"/b/\", \"English\", \"French\", \"Spanish\", \"Japanese\", \"Indian\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-structured and readable. IPA symbols are correctly used and should be preserved. No signs of scanner noise or repeated phrases.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "thought": -2024.05
+          },
+          "duration_ms": 41713,
+          "raw": "{\"thought\":\n-2024.05\n    }"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "/b/",
+          "/p/",
+          "English",
+          "French",
+          "Indian",
+          "Japanese",
+          "Spanish"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "1/3 text, 1/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 21,
+      "label": "IPA Phonetic Vowel Transcription",
+      "text_length": 1252,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "/kɹitʃɚ / kɹieɪʃən",
+              "/vɝs",
+              "/kɔɹps / kɔɹ / hɔɹs / wɝs",
+              "/bɪzi",
+              "/hɛd / hit",
+              "/tɪɹ / tɛɹ"
+            ],
+            "layered_repeated_phrases": [],
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "layout_notes": "The text is well-structured and readable. IPA symbols are correctly placed and do not interfere with the readability. No layout issues observed."
+          },
+          "duration_ms": 48723,
+          "raw": "{\n\n\n\"scanner_noise_lines\": [],\n\"legitimate_elements_to_preserve\": [\"/kɹitʃɚ / kɹieɪʃən\", \"/vɝs\", \"/kɔɹps / kɔɹ / hɔɹs / wɝs\", \"/bɪzi\", \"/hɛd / hit\", \"/tɪɹ / tɛɹ\"],\n\"layered_repeated_phrases\": [],\n\"text_verdict\": \"PASS\",\n\"layout_verdict\": \"PASS\",\n\"layout_notes\": \"The text is well-structured and readable. IPA symbols are correctly placed and do not interfere with the readability. No layout issues observed.\"\n\n}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "[kɹitʃɚ",
+              "[kriːiʃən",
+              "[vɝs",
+              "[kɔɹps",
+              "[kɔɹ",
+              "[hɔɹs",
+              "[wɝs",
+              "[suzi",
+              "[bɪzi",
+              "[hɛd",
+              "[hit",
+              "[tɪɹ",
+              "[tɛɹ"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-formatted with clear IPA symbols and appropriate line breaks. No scanner artifacts or repeated phrases detected. Readability is good."
+          },
+          "duration_ms": 51364,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"[kɹitʃɚ\", \"[kriːiʃən\", \"[vɝs\", \"[kɔɹps\", \"[kɔɹ\", \"[hɔɹs\", \"[wɝs\", \"[suzi\", \"[bɪzi\", \"[hɛd\", \"[hit\", \"[tɪɹ\", \"[tɛɹ\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-formatted with clear IPA symbols and appropriate line breaks. No scanner artifacts or repeated phrases detected. Readability is good.\"\n}"
+        },
+        "gemma": {
+          "status": "HTTP_500",
+          "error": "{\"error\":\"llama-server process has terminated: exit status 0xc0000409: The system detected an overrun of a stack-based buffer in this application. This overrun could potentially allow a malicious user to gain control of this application.: CUDA error: shared object initialization failed\"}",
+          "duration_ms": 62373
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "/bɪzi",
+          "/hɛd / hit",
+          "/kɔɹps / kɔɹ / hɔɹs / wɝs",
+          "/kɹitʃɚ / kɹieɪʃən",
+          "/tɪɹ / tɛɹ",
+          "/vɝs",
+          "[bɪzi",
+          "[hit",
+          "[hɔɹs",
+          "[hɛd",
+          "[kriːiʃən",
+          "[kɔɹ",
+          "[kɔɹps",
+          "[kɹitʃɚ",
+          "[suzi",
+          "[tɛɹ",
+          "[tɪɹ",
+          "[vɝs",
+          "[wɝs"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "2/3 text, 2/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 26,
+      "label": "Vowel Quadrant Chart (/i/, /ɪ/, /ʊ/, /ʌ/, /ə/)",
+      "text_length": 742,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 56787,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "/i/",
+              "/ɪ/",
+              "/ʊ/",
+              "/ʌ/",
+              "/ə/",
+              "/eɪ/",
+              "/ɛ/",
+              "/3 r/",
+              "/ər/",
+              "/oʊ/",
+              "/æ/",
+              "/ɔ/",
+              "/ɑ/",
+              "/aɪ/",
+              "/aʊ/",
+              "/ɔɪ/"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The layout is clear and well-organized with a vowel quadrant chart and diphthongs section. IPA symbols are correctly presented, and the text is readable without any signs of scanner artifacts or noise."
+          },
+          "duration_ms": 44182,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"/i/\", \"/ɪ/\", \"/ʊ/\", \"/ʌ/\", \"/ə/\", \"/eɪ/\", \"/ɛ/\", \"/3 r/\", \"/ər/\", \"/oʊ/\", \"/æ/\", \"/ɔ/\", \"/ɑ/\", \"/aɪ/\", \"/aʊ/\", \"/ɔɪ/\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The layout is clear and well-organized with a vowel quadrant chart and diphthongs section. IPA symbols are correctly presented, and the text is readable without any signs of scanner artifacts or noise.\"\n}"
+        },
+        "gemma": {
+          "status": "JSON_PARSE_ERROR",
+          "error": "Unterminated string starting at: line 1 column 13 (char 12)",
+          "duration_ms": 75801,
+          "raw": "{\"thought\": \"The user wants an evaluation of an OCR'd text from a linguistics textbook. I need to check for scanner noise, IPA symbols, layout issues, and specific artifacts like drop shadow repeats. 1. Scanner noise: None obvious. 2. IPA symbols: Yes, many are present (e.g., /i/, /ɪ/, /ʊ/, /ʌ/, /ə/, /eɪ/, /ɛ/, /oʊ/, /æ/, /ɔ/, /ɑ/, /aɪ/, /aʊ/, /ɔɪ/). 3. Layered headings: None. 4. Layout: The text is a bit fragmented due to the table structure being flattened into a single string, but the content is legible. Note: The OCR has a line break in the middle of 'cot' and 'caught' descriptions, and a weird '3 r' which is likely a misread of 'schwa' or a specific symbol, but it's actually part of the IPA section. Wait, looking at the text: '/3 r/ /ər/'. This is likely a misread of a symbol like 'schwa' or a specific phonetic notation. However, the prompt asks to preserve IPA symbols. 5. The text 'cot (can also be said /' followed by 'ɔ/)' on the next line is a layout artifact of the table structure being flattened. 6. The text 'cot-caught merger' is a standard linguistic term. 7. The '3 r' is likely a misread of a schwa or similar, but it's part of the IPA. 8. The text 'cot (can also be said /' and 'ɔ/)' is split across lines. 9. The text 'cot-caught merger' is clear. 10. The text 'cot-caught merger'"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "/3 r/",
+          "/aɪ/",
+          "/aʊ/",
+          "/eɪ/",
+          "/i/",
+          "/oʊ/",
+          "/æ/",
+          "/ɑ/",
+          "/ɔ/",
+          "/ɔɪ/",
+          "/ə/",
+          "/ər/",
+          "/ɛ/",
+          "/ɪ/",
+          "/ʊ/",
+          "/ʌ/"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "1/3 text, 1/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 42,
+      "label": "Spelling to Phoneme Mapping (<a> hate [eɪ] hat [æ])",
+      "text_length": 1047,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 57515,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "[eɪ]",
+              "[æ]",
+              "[i]",
+              "[ɛ]",
+              "[aɪ]",
+              "[ɪ]",
+              "[əʊ]",
+              "[ɑ]",
+              "[u]",
+              "[ʌ]"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-formatted with clear headings and bullet points. IPA symbols are correctly used and should be preserved. No signs of scanner artifacts or repeated phrases due to drop shadows."
+          },
+          "duration_ms": 57995,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"[eɪ]\", \"[æ]\", \"[i]\", \"[ɛ]\", \"[aɪ]\", \"[ɪ]\", \"[əʊ]\", \"[ɑ]\", \"[u]\", \"[ʌ]\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-formatted with clear headings and bullet points. IPA symbols are correctly used and should be preserved. No signs of scanner artifacts or repeated phrases due to drop shadows.\"\n}"
+        },
+        "gemma": {
+          "status": "JSON_PARSE_ERROR",
+          "error": "Unterminated string starting at: line 1 column 156 (char 155)",
+          "duration_ms": 55174,
+          "raw": "{\"text_verdict\": \"PASS\", \"layout_verdict\": \"PASS\", \"scanner_noise_lines\": [], \"legitimate_elements_to_preserve\": [\"hate [eɪ] hat [æ]\", \"mete [i] met [ɛ]\", \"fine [aɪ] fin [1111111111111111111111111111111"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "[aɪ]",
+          "[eɪ]",
+          "[i]",
+          "[u]",
+          "[æ]",
+          "[ɑ]",
+          "[əʊ]",
+          "[ɛ]",
+          "[ɪ]",
+          "[ʌ]"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "1/3 text, 1/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 43,
+      "label": "Allophone Variations (flap [ɾ], glottal stop [ʔ])",
+      "text_length": 1115,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 51697,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "[ph]",
+              "[th]",
+              "[r]",
+              "[æ]",
+              "[ɔ]",
+              "[p]",
+              "[t]",
+              "[ ]",
+              "[eə]",
+              "[ɑ]",
+              "[p]",
+              "[t]",
+              "[ ]",
+              "[ɝ]",
+              "[ɑ]",
+              "[ɔ]",
+              "[ɾ]",
+              "[ʔ]",
+              "[ɛ]"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-structured with clear sections and bullet points. IPA symbols are correctly used and preserved. No scanner artifacts or noise detected. Layout is clean and readable."
+          },
+          "duration_ms": 52221,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"[ph]\", \"[th]\", \"[r]\", \"[æ]\", \"[ɔ]\", \"[p]\", \"[t]\", \"[ ]\", \"[eə]\", \"[ɑ]\", \"[p]\", \"[t]\", \"[ ]\", \"[ɝ]\", \"[ɑ]\", \"[ɔ]\", \"[ɾ]\", \"[ʔ]\", \"[ɛ]\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-structured with clear sections and bullet points. IPA symbols are correctly used and preserved. No scanner artifacts or noise detected. Layout is clean and readable.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "thought": "The user wants me to act as a linguistics textbook editor and OCR quality auditor. I need to evaluate a specific piece of text from a book about teaching pronunciation. I need to check for scanner noise, IPA symbols, layered headings, and layout issues. The output must be a JSON object."
+          },
+          "duration_ms": 40800,
+          "raw": "{\"thought\": \"The user wants me to act as a linguistics textbook editor and OCR quality auditor. I need to evaluate a specific piece of text from a book about teaching pronunciation. I need to check for scanner noise, IPA symbols, layered headings, and layout issues. The output must be a JSON object.\"}"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "[ ]",
+          "[eə]",
+          "[p]",
+          "[ph]",
+          "[r]",
+          "[t]",
+          "[th]",
+          "[æ]",
+          "[ɑ]",
+          "[ɔ]",
+          "[ɛ]",
+          "[ɝ]",
+          "[ɾ]",
+          "[ʔ]"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "1/3 text, 1/3 layout"
+      }
+    },
+    {
+      "book": "pronunciation",
+      "book_title": "Teaching Pronunciation with Confidence",
+      "page_num": 51,
+      "label": "Dialect Variations (father [ɛə] [ɑ] [ɒ])",
+      "text_length": 771,
+      "evaluations": {
+        "qwen": {
+          "status": "SUCCESS",
+          "data": {},
+          "duration_ms": 36594,
+          "raw": "{}"
+        },
+        "deepseek": {
+          "status": "SUCCESS",
+          "data": {
+            "text_verdict": "PASS",
+            "layout_verdict": "PASS",
+            "scanner_noise_lines": [],
+            "legitimate_elements_to_preserve": [
+              "[ɛə]",
+              "[ɑ]",
+              "[ɒ]",
+              "[ɔ]",
+              "[æ]",
+              "[a]",
+              "[ʊə]",
+              "[ʊr]",
+              "[ɛr]",
+              "[ɪr]",
+              "[ɔr]"
+            ],
+            "layered_repeated_phrases": [],
+            "layout_notes": "The text is well-organized with clear tables and headings. IPA symbols are correctly used and preserved. No scanner artifacts or repeated phrases detected."
+          },
+          "duration_ms": 45361,
+          "raw": "{\n  \"text_verdict\": \"PASS\",\n  \"layout_verdict\": \"PASS\",\n  \"scanner_noise_lines\": [],\n  \"legitimate_elements_to_preserve\": [\"[ɛə]\", \"[ɑ]\", \"[ɒ]\", \"[ɔ]\", \"[æ]\", \"[a]\", \"[ʊə]\", \"[ʊr]\", \"[ɛr]\", \"[ɪr]\", \"[ɔr]\"],\n  \"layered_repeated_phrases\": [],\n  \"layout_notes\": \"The text is well-organized with clear tables and headings. IPA symbols are correctly used and preserved. No scanner artifacts or repeated phrases detected.\"\n}"
+        },
+        "gemma": {
+          "status": "SUCCESS",
+          "data": {
+            "thought": -2024.05
+          },
+          "duration_ms": 39946,
+          "raw": "{\"thought\":\n-2024.05\n    }"
+        }
+      },
+      "consensus": {
+        "text_verdict": "PASS",
+        "layout_verdict": "PASS",
+        "legitimate_elements_to_preserve": [
+          "[a]",
+          "[æ]",
+          "[ɑ]",
+          "[ɒ]",
+          "[ɔ]",
+          "[ɔr]",
+          "[ɛr]",
+          "[ɛə]",
+          "[ɪr]",
+          "[ʊr]",
+          "[ʊə]"
+        ],
+        "layered_repeated_phrases": [],
+        "agreement_ratio": "1/3 text, 1/3 layout"
+      }
+    }
+  ]
+}

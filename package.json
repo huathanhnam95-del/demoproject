@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.103",
+  "version": "1.8.104",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -50,9 +50,10 @@
     "test:crm:entrance-test-result-pdf:browser": "node tests/browser/crm-entrance-test-result-pdf-browser-check.js",
     "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
     "test:survival:browser": "node tests/browser/survival-mode-browser-check.js",
-    "test:echo-forge": "node --test tests/echo-forge/visual-contract.test.mjs tests/echo-forge/analysis-contract.test.mjs tests/echo-forge/combat-core.test.mjs tests/echo-forge/catalog.test.mjs tests/echo-forge/listening-audio.test.mjs tests/echo-forge/listening-audio-semantic-qa.test.mjs tests/echo-forge/analysis-adapters.test.mjs tests/echo-forge/telemetry.test.mjs tests/echo-forge/feature-config.test.mjs tests/echo-forge/runtime-adapters.test.mjs tests/echo-forge/integration-guardrails.test.mjs tests/echo-forge/stateless-route.test.mjs tests/echo-forge/timing-collector.test.mjs tests/echo-forge/visual-production-gate.test.mjs tests/echo-forge/visual-assets.test.mjs tests/echo-forge/learner-feedback.test.mjs tests/echo-forge/presenter-sequence.test.mjs tests/echo-forge/api-origin-guard.test.mjs tests/echo-forge/functions-secret-binding.test.mjs tests/echo-forge/wardens.test.mjs",
+    "test:echo-forge": "node --test tests/echo-forge/visual-contract.test.mjs tests/echo-forge/analysis-contract.test.mjs tests/echo-forge/combat-core.test.mjs tests/echo-forge/catalog.test.mjs tests/echo-forge/listening-audio.test.mjs tests/echo-forge/listening-audio-semantic-qa.test.mjs tests/echo-forge/analysis-adapters.test.mjs tests/echo-forge/telemetry.test.mjs tests/echo-forge/feature-config.test.mjs tests/echo-forge/runtime-adapters.test.mjs tests/echo-forge/integration-guardrails.test.mjs tests/echo-forge/stateless-route.test.mjs tests/echo-forge/timing-collector.test.mjs tests/echo-forge/visual-production-gate.test.mjs tests/echo-forge/visual-assets.test.mjs tests/echo-forge/learner-feedback.test.mjs tests/echo-forge/presenter-sequence.test.mjs tests/echo-forge/api-origin-guard.test.mjs tests/echo-forge/functions-secret-binding.test.mjs tests/echo-forge/wardens.test.mjs tests/echo-forge/rewards.test.mjs tests/echo-forge/run-reducer.test.mjs tests/echo-forge/run-storage.test.mjs tests/echo-forge/bridge.test.mjs",
     "test:echo-forge:browser": "node tests/browser/echo-forge-sandbox-browser-check.js",
-    "verify:echo-forge": "npm run test:echo-forge && npm run test:echo-forge:browser",
+    "test:echo-forge:run:browser": "node tests/browser/echo-forge-run-browser-check.js",
+    "verify:echo-forge": "npm run test:echo-forge && npm run test:echo-forge:browser && npm run test:echo-forge:run:browser",
     "collect:echo-forge:timing": "node scripts/echo-forge/collect-timing-evidence.js",
     "generate:echo-forge:audio": "node scripts/echo-forge/build-listening-audio.js",
     "build:echo-forge:visuals": "node scripts/echo-forge/build-visual-assets.mjs",

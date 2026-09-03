@@ -1857,5 +1857,24 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 863,2026-09-03,Review Echo Forge overhaul plan and formulate architectural questions,Done,2026-09-03
 864,2026-09-03,Dynamic per-voice neural F5-TTS calibration test synthesis and daemon worker,Done,2026-09-03
 865,2026-09-03,Implement Echo Forge overhaul Phase 0 and Phase 1 (game feel latency and sfx),Done,2026-09-03
-866,2026-09-03,Implement Echo Forge overhaul Phase 2 (Wardens moves counters and visual identity),In Progress,
+866,2026-09-03,Implement Echo Forge overhaul Phase 2 (Wardens moves counters and visual identity),Done,2026-09-03
 867,2026-09-03,Deploy Release V1.8.103 to production hosting functions and firestore rules,Done,2026-09-03
+868,2026-09-03,Write Essay: redesign essay prompt visibility and contrast with prominent editorial callout treatment,Done,2026-09-03
+869,2026-09-03,Implement Echo Forge overhaul Phase 3 (run layer multi-fight progression and rewards),Done,2026-09-03
+870,2026-09-03,Write Essay: fix Prompt Picker jump search auto-selecting and auto-closing while typing numbers,Done,2026-09-03
+871,2026-09-03,Review debug and refactor Echo Forge overhaul Phases 1 to 3,Done,2026-09-03
+872,2026-09-03,Write Essay: fix UI clipping in Guided Practice caused by phantom sticky cap and unhidden header card,Done,2026-09-03
+873,2026-09-03,Implement Echo Forge overhaul Phase 4 (persistence bridge and run storage),Done,2026-09-03
+874,2026-09-03,Browser test Course Scheduling and Attendance complete flow from student creation to attendance push-forward,Done,2026-09-03
+875,2026-09-03,Implement Echo Forge overhaul Phase 5 (first-class integration scoring vocab and nav),Done,2026-09-03
+876,2026-09-03,Fix Voice Cloning white text contrast and resolve worker claim query for user voice cloning,Done,2026-09-03
+877,2026-09-03,Live browser test of Course Scheduling and Attendance in Chrome against running server,Done,2026-09-03
+878,2026-09-03,CRM Books: page-by-page quality scan and assessment of Harmer (459p) and Pronunciation (315p) books,Done,2026-09-03
+879,2026-09-03,Remove points and profile XP awards from Echo Forge,Done,2026-09-03
+880,2026-09-03,Investigate nonsense repetitive transcription hallucination in entrance test result,Done,2026-09-03
+881,2026-09-03,Write Essay: Guided Practice overhaul across all 5 steps with interactive checklist full-card clicks 6 arguments and de-clustering,Done,2026-09-03
+882,2026-09-03,CRM Books UX optimization: Quick-tag Enter match and arrow navigation + Tag Management deletion UI + New Collection tag resolution + target collection selector on delete + folder toggle fix,Done,2026-09-03
+883,2026-09-03,Echo Forge: review debug and refactor with campaign resume dynamic seeds and UI polish,Done,2026-09-03
+884,2026-09-03,CRM Courses tab: redesign Screen B/C aesthetics + fix Live 4→5 Courses tab empty state for new students,Done,2026-09-03
+885,2026-09-03,Cost comparison for entrance test ASR fix options,Done,2026-09-03
+886,2026-09-03,Verify Google AI Studio Prepay billing model policy,Done,2026-09-03

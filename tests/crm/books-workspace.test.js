@@ -187,6 +187,25 @@ assert.strictEqual(workspace.isScannerNoiseLine('[Bruner, 1966, pp. 4-5]'), fals
 assert.strictEqual(workspace.isScannerNoiseLine('[Hilgard and Bower, 1966, pp. 1-2]'), false, 'Academic citation line must NOT be filtered as scanner noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('[Kidd, 1959, pp. 134-135]'), false, 'Academic citation line must NOT be filtered as scanner noise.');
 
+// Pronunciation book: IPA Phonetics & Linguistic transcriptions must NOT be filtered
+assert.strictEqual(workspace.isScannerNoiseLine('[ə]'), false, 'Schwa bracket phoneme must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('/ʃ/'), false, 'Esh slash phoneme must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('/ʊ/'), false, 'Upsilon slash phoneme must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('later [ɾ]'), false, 'Alveolar flap example must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('button [ʔ]'), false, 'Glottal stop example must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('<a> hate [eɪ] hat [æ]'), false, 'Vowel contrast lesson line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('father [ɛə] [ɑ] [ɒ]'), false, 'Dialect contrast lesson line must NOT be filtered as noise.');
+
+// Harmer 5th edition: Video timestamps, ranges, Roman numerals, dialogues, and TOC entries must NOT be filtered
+assert.strictEqual(workspace.isScannerNoiseLine('3:10'), false, 'Video clip timestamp must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('15:30'), false, 'Video clip timestamp must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('320–380'), false, 'Word count range must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('v'), false, 'Front matter Roman numeral v must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('x'), false, 'Front matter Roman numeral x must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('B: Yes, please.'), false, 'Dialogue line must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('4.1 Approach, method,'), false, 'TOC decimal section header must NOT be filtered as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('17.1.3 Language skills,'), false, 'TOC multi-decimal section header must NOT be filtered as noise.');
+
 // Test repairArchivalOcrText
 const corruptedSample = 'Welcome on a trip up the Amazon of educatioual psychology to the jungle of learning th- Ty.\n' +
     'Here are exaTiples of izSpeiecs described by Kidl, 1959.';
@@ -212,6 +231,22 @@ const knowlesP5Sample = '6.1,,E1K,44[;14i01..rogfiwoal;';
 const formattedP5 = workspace.formatPageText(knowlesP5Sample, (v) => String(v));
 assert.strictEqual(formattedP5, '', 'Scanner noise page must format to empty output without rendering garbage.');
 
+// Test Harmer Page 49/50 chapter notes deduplication
+const harmerP49Notes = 'Chapter notes and further readingChapter notes and further reading\n' +
+    'PragmaticsPragmaticsPragmatics\n' +
+    'Language purposeLanguage purposeLanguage purpose';
+const formattedP49 = workspace.formatPageText(harmerP49Notes, (v) => String(v));
+assert.match(formattedP49, /<h4>Chapter notes and further reading<\/h4>/, 'Chapter notes must render cleanly once.');
+assert.match(formattedP49, /<h4>Pragmatics<\/h4>/, 'Pragmatics must render cleanly once.');
+assert.match(formattedP49, /<h4>Language purpose<\/h4>/, 'Language purpose must render cleanly once.');
+
+// Test Pronunciation IPA rendering preserved in formatPageBlocks
+const pronIPASample = 'HIGH /i/ feed\n/ɪ/ fib\n/u/ boot\n/ʊ/ book\n<a> hate [eɪ] hat [æ]\nbutton [ʔ]';
+const formattedIPA = workspace.formatPageText(pronIPASample, (v) => String(v));
+assert.match(formattedIPA, /\/i\/ feed/, 'Phoneme /i/ feed must be preserved.');
+assert.match(formattedIPA, /\[eɪ\] hat \[æ\]/, 'Phonemes [eɪ] and [æ] must be preserved.');
+assert.match(formattedIPA, /button \[ʔ\]/, 'Glottal stop button [ʔ] must be preserved.');
+
 const normalized = workspace.normalizeBooks([
     { bookId: 'b1', title: 'Book One', collectionId: 'col-phonetics', tags: ['vowels', 'ipa'] },
     { bookId: 'b2', title: 'Book Two' }
@@ -236,6 +271,24 @@ assert.strictEqual(andMatch[0].bookId, 'b1');
 const orMatch = workspace.filterBooksByTags(testBooks, ['vowels', 'grammar'], 'or');
 assert.strictEqual(orMatch.length, 2);
 assert.deepStrictEqual(orMatch.map(b => b.bookId), ['b1', 'b3']);
+
+// Test filterBooksByTags with availableTags bidirectional name/id resolution
+const availableTags = [
+    { id: 'tag-1', name: 'Phonetics' },
+    { id: 'tag-2', name: 'Vowels' }
+];
+const booksWithMixedTags = [
+    { bookId: 'b1', title: 'Book 1', tags: ['Phonetics', 'tag-2'] }, // One by name, one by ID
+    { bookId: 'b2', title: 'Book 2', tags: ['tag-1'] },
+    { bookId: 'b3', title: 'Book 3', tags: ['Grammar'] }
+];
+const resolvedAnd = workspace.filterBooksByTags(booksWithMixedTags, ['tag-1', 'tag-2'], 'and', availableTags);
+assert.strictEqual(resolvedAnd.length, 1);
+assert.strictEqual(resolvedAnd[0].bookId, 'b1', 'Should resolve tag name "Phonetics" to "tag-1" and match AND query');
+
+const resolvedOr = workspace.filterBooksByTags(booksWithMixedTags, ['tag-2'], 'or', availableTags);
+assert.strictEqual(resolvedOr.length, 1);
+assert.strictEqual(resolvedOr[0].bookId, 'b1');
 
 const collections = [
     { id: 'col-pron', name: 'Pronunciation', bookIds: [] },

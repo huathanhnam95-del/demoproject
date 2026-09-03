@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="rmcsa-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="swt-mode.css">
-  <link rel="stylesheet" href="write-essay-mode.css?v=20260903_guided_ux_v15">
+  <link rel="stylesheet" href="write-essay-mode.css?v=20260903_guided_overhaul_v1">
   <link rel="stylesheet" href="css/practice-audio-player.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.103</div>
+  <div id="version-indicator" class="version-indicator">V1.8.104</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1697,6 +1697,25 @@
                     onclick="event.stopPropagation(); window.startTutorial('pronounce', true);">What's this?</button>
                 </div>
               </div>
+
+              <!-- Echo Forge Mode Card -->
+              <a id="mode-btn-echo-forge" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking" href="/echo-forge-sandbox.html" role="link"
+                aria-label="Echo Forge pronunciation combat arena">
+                <div class="card-visual visual-pronounce">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <path d="M36 12L42 28L58 34L42 40L36 56L30 40L14 34L30 28Z" stroke="var(--visual-accent)" stroke-width="2.5" fill="none" />
+                      <circle cx="36" cy="34" r="6" stroke="currentColor" stroke-width="2" fill="var(--visual-accent)" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Echo Forge</h3>
+                  <p>Battle the Echo Wardens with real-time pronunciation combat.</p>
+                  <span class="card-cta" aria-hidden="true">Enter Arena</span>
+                </div>
+              </a>
 
               <!-- Essay Mode Card -->
               <div id="mode-btn-essay" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
@@ -6142,12 +6161,12 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.103"></script>
+  <script src="/read-aloud-mode.js?v=1.8.104"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/js/write-essay-support.js?v=20260903_guided_ux_v15"></script>
-  <script src="/write-essay-mode.js?v=20260903_guided_ux_v15"></script>
+  <script src="/write-essay-mode.js?v=20260903_guided_overhaul_v1"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

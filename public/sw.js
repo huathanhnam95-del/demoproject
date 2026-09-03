@@ -10,7 +10,7 @@ const SHELL_URLS = [
   '/offline.html',
   '/style.css?v=20260508_practice_router_fix',
   '/script.js?v=20260802_browser_cache_fix',
-  '/js/write-essay-support.js?v=20260902_integrity_fix',
+  '/js/write-essay-support.js?v=20260903_guided_ux_v15',
   '/write-essay-mode.js?v=20260902_guided_ux',
   '/landing/landing.css',
   '/dictionary-service.js',

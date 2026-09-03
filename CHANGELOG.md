@@ -1,3 +1,27 @@
+## [V1.8.99] - 2026-09-03
+
+### Added & Enhanced
+- **Write Essay Guided Mode UI & Interactive Scaffolding Overhaul**:
+  - **Step 5 Sentence Builder & Live Assembly Engine**: Replaced static templates with interactive fillable blanks (`<input class="essay-guided-slot-input">`) that dynamically assemble sentences in real-time with an active preview card and bold highlighted inputs, preserving cursor focus while typing.
+  - **Paragraph Scaffolding Tabs**: Added responsive filtering tabs (`1. Introduction`, `2. Body Paragraph 1`, `3. Body Paragraph 2`, `4. Conclusion`, `All Sentences`) to eliminate cognitive overload and wall-of-text fatigue.
+  - **Authentic Academic Model Sentences**: Replaced dummy placeholder text (`"This prompt concerns Education."`) with genuine, vetted academic model sentences tailored to each prompt topic, paragraph role, and stance.
+  - **Draft Scaffolding & Collapsible Spoilers**: Redesigned the Writing Phase to feature a structured scaffolding outline, keeping model answers collapsed behind `👁️ Reveal Model Wording (Spoiler)` buttons to encourage independent writing.
+  - **Sentence Auto-Transfer**: Automatically transfers learner-assembled sentences from Step 5 directly into the main essay textarea upon entering the writing phase.
+  - **FAQ Step Removal**: Streamlined Guided Mode into 5 progressive steps (Understand, Direction, Language, Plan, Sentence Builder), removing redundant FAQ cards.
+  - **High-Contrast CSS Polish**: Added polished dark-mode contrast styles for interactive blanks, live assembled previews, scaffold tabs, and blueprint tags.
+
+- **Write Essay 3-LLM Content Re-Analysis & Batch Enrichment (All 453 Packs)**:
+  - **Regex Splitter Bug Fix**: Resolved newline-collapsing bug in `generator.py` that previously caused fallback to placeholder sentences, restoring access to authentic 90-score sample responses.
+  - **Active Academic Claims**: Implemented `clean_claim_text()` removing third-person meta-commentary (`"The essay argues that..."`, `"The essay uses the concept of..."`) across all packs, yielding assertive topic sentences.
+  - **Prompt-Specific Traps**: Added intelligent heuristics detecting quoted figures, multi-part prompt questions, and task archetypes to provide targeted pitfalls.
+  - **Natural Thesis Frames & Contextual Collocations**: Upgraded thesis templates to naturally reflect agree/disagree/both stances and enriched collocation explanations.
+  - **50x Batch Throughput & Manifest Sync**: Streamlined disk I/O, regenerated and verified all 453 question packs, updated `manifest.json` with SHA256 hashes, and verified 100% schema contract compliance.
+
+- **CRM Books & Student Directory Enhancements**:
+  - Fixed CRM Student Directory rendering all students instead of overwriting with enrolled bucket after saving.
+  - Deduplicated repeated layered text filter OCR noise and enforced full-page sheet min-height.
+  - Formatted page numbers, chapter headings, lettered activity headings, and frozen sticky navigation bar when scrolling in CRM Books workspace.
+
 ## [V1.8.89] - 2026-09-02
 
 ### Added & Enhanced

@@ -18,7 +18,7 @@ from .sources import load_question_sources
 MODELS = {
     "dr": "deepseek-r1:14b",
     "qw": "qwen3:14b",
-    "gm": "gemma4:latest",
+    "gm": "gemma4:12b",
 }
 COMPONENTS = ("promptBreakdown", "angles", "languageKit", "plans", "scaffolds", "faq", "eltAudit")
 
@@ -482,8 +482,8 @@ def run_batch(
                 record["previousAuditRecord"] = old
                 record["rerun"] = True
             records_by_id[str(question_id)] = record
-        _write_json(output_root / "audit-records.json", sorted(records_by_id.values(), key=lambda item: int(str(item["questionId"]))))
     records = sorted(records_by_id.values(), key=lambda item: int(str(item["questionId"])))
+    _write_json(output_root / "audit-records.json", records)
     manifest = build_manifest(records)
     _write_json(output_root / "manifest.json", manifest)
     aggregate = aggregate_audit_records(records)

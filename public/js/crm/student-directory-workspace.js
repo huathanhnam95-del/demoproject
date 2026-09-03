@@ -336,15 +336,25 @@ window.CrmStudentDirectoryWorkspace = (function () {
                 }
             }
 
-            const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
-                ? window.CrmStudents.splitStudents(students)
-                : { potential: students, studentData: [] };
-
             dataCache.students = students;
             pruneSelection(students.map((student) => student.studentId));
 
-            renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-            renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+            const targetContainer = elements.studentsContainer
+                || elements.studentDataContainer
+                || elements.potentialStudentsContainer;
+
+            if (targetContainer) {
+                renderStudentsTable(targetContainer, students, 'No students in database yet.');
+            }
+
+            if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== targetContainer) {
+                const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
+                    ? window.CrmStudents.splitStudents(students)
+                    : { potential: students, studentData: [] };
+                renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+                renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+            }
+
             await populateAttendanceStudentOptions();
         }
 

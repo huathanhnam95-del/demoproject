@@ -2317,3 +2317,741 @@
   #mode-essay .essay-fullscreen-btn { display: none; }
 }
 
+
+/* ==========================================================================
+   GUIDED WRITE ESSAY — v2 pass
+   --------------------------------------------------------------------------
+   Three things this block owns and the sheet above it did not:
+
+   1. The clause dissector, the cohesion stages and the sentence-pattern
+      workbench shipped markup with no rules at all, so they rendered as raw
+      running text. They are styled here, flat: hairlines and left rules, no
+      card inside a card (see the UI rule in CLAUDE.md).
+   2. Freeze zones. A guided step is 2000 px tall, so the stepper, the prompt
+      and the two Step-5 controls are pinned instead of scrolling away. Every
+      offset comes from --essay-sticky-top, which already accounts for the
+      76 px fixed site header (and collapses in the fullscreen overlay, which
+      is its own scroll container and paints over that header).
+   3. The <?> affordance: one floating popover, always Vietnamese, appended to
+      <body> so the rail's own overflow cannot clip it.
+
+   Decoration is typographic on purpose. Micro labels replace the emoji the
+   render functions used to carry.
+   ========================================================================== */
+
+#mode-essay {
+  /* Clears the fixed site header; every sticky offset in guided mode uses it. */
+  --essay-sticky-top: calc(var(--site-header-height, 76px) + 14px);
+  /* Was undefined, so the draft card fell back to a cool #f8fafd on warm paper. */
+  --essay-card-bg: color-mix(in srgb, var(--essay-accent) 4%, var(--essay-paper));
+  --essay-micro: .69rem;
+}
+/* The fullscreen overlay covers the site header and scrolls itself. */
+#mode-essay.essay-fullscreen { --essay-sticky-top: 12px; }
+
+/* Micro label — the typographic replacement for the old emoji prefixes. */
+#mode-essay .essay-guided-clause-detail-label,
+#mode-essay .essay-guided-clause-trap-label,
+#mode-essay .essay-guided-clause-role-badge,
+#mode-essay .essay-guided-cohesion-stage-badge,
+#mode-essay .essay-guided-cohesion-demo-label,
+#mode-essay .essay-guided-pattern-badge,
+#mode-essay .essay-guided-vocab-example-label,
+#mode-essay .essay-guided-vocab-vi-label,
+#mode-essay .essay-guided-draft-user-label,
+#mode-essay .essay-guided-spoiler-badge,
+#mode-essay .essay-guided-subhead {
+  display: block;
+  font-size: var(--essay-micro);
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--essay-muted);
+}
+
+/* ── The <?> affordance ───────────────────────────────────────────────────── */
+#mode-essay .essay-guided-help {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--essay-border);
+  border-radius: 50%;
+  color: var(--essay-muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: inherit;
+  font-size: .72rem;
+  font-weight: 700;
+  height: 22px;
+  justify-content: center;
+  line-height: 1;
+  margin-inline-start: 6px;
+  padding: 0;
+  position: relative;
+  transition: background var(--read-ease), border-color var(--read-ease), color var(--read-ease);
+  vertical-align: middle;
+  width: 22px;
+}
+/* Pointer target stays 40px even though the dot is 22px. */
+#mode-essay .essay-guided-help::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+#mode-essay .essay-guided-help:hover {
+  border-color: var(--essay-accent);
+  color: var(--essay-accent);
+}
+#mode-essay .essay-guided-help[aria-expanded="true"] {
+  background: var(--essay-accent);
+  border-color: var(--essay-accent);
+  color: #fff;
+}
+
+.essay-guided-help-pop {
+  background: #fff;
+  border: 1px solid var(--read-border, rgba(110, 84, 54, 0.18));
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(42, 31, 18, 0.14);
+  color: var(--read-ink, #2c2418);
+  font-size: .9rem;
+  line-height: 1.62;
+  padding: 14px 16px 16px;
+  position: fixed;
+  width: min(360px, calc(100vw - 24px));
+  z-index: 10050;
+}
+.essay-guided-help-pop[hidden] { display: none; }
+.essay-guided-help-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.essay-guided-help-head strong {
+  font-size: .95rem;
+  line-height: 1.35;
+}
+.essay-guided-help-close {
+  background: transparent;
+  border: 0;
+  color: var(--read-muted, #6f5f4e);
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+  margin: -4px -4px 0 0;
+  padding: 4px 8px;
+}
+.essay-guided-help-close:hover { color: var(--read-ink, #2c2418); }
+.essay-guided-help-body code {
+  background: rgba(110, 84, 54, 0.10);
+  border-radius: 5px;
+  font-size: .85em;
+  padding: 1px 5px;
+}
+.essay-guided-help-pop:focus-visible {
+  outline: 2px solid var(--read-accent, #9a5722);
+  outline-offset: 2px;
+}
+
+/* ── Disclosure header now carries the toggle plus its <?> ────────────────── */
+#mode-essay .essay-guided-group-head {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+#mode-essay .essay-guided-group-head .essay-guided-group-toggle { flex: 1 1 auto; }
+/* The toggle moved inside .essay-guided-group-head, so the original
+   direct-child selector for the chevron no longer matched. */
+#mode-essay .essay-guided-group.is-open .essay-guided-group-toggle .essay-guided-group-chevron {
+  transform: rotate(-135deg);
+}
+
+#mode-essay .essay-guided-subhead {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  margin: 2px 0 10px;
+}
+
+/* ══ FREEZE ZONE 1 — the stepper ══════════════════════════════════════════ */
+#mode-essay .essay-guided-railtop {
+  background: var(--essay-paper);
+  border-bottom: 1px solid var(--essay-border-soft);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  position: sticky;
+  z-index: 5;
+}
+/* Walkthrough: the rail is the page, so clear the fixed site header. */
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-railtop,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-railtop {
+  margin-inline: auto;
+  max-width: 860px;
+  top: var(--essay-sticky-top);
+}
+/* Writing phase: the rail scrolls itself, so pin to the rail's own top. */
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-railtop,
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-railtop {
+  top: 0;
+}
+/* One sticky context per cluster — the header used to pin on its own. */
+#mode-essay .essay-guided-railtop .essay-guided-rail-header {
+  position: static;
+  padding-top: 8px;
+}
+
+/* Rail offsets follow the same token instead of a hardcoded 20px that let the
+   header slide under the fixed site bar. */
+#mode-essay .essay-guided-rail,
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-rail,
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-rail {
+  max-height: calc(100vh - var(--essay-sticky-top) - 24px);
+  top: var(--essay-sticky-top);
+}
+
+/* Walkthrough stepper: horizontal chips, so the frozen bar stays shallow. */
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-nav,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 0;
+}
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-nav button,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav button {
+  border: 1px solid transparent;
+  border-radius: var(--read-radius-pill, 999px);
+  flex: 0 0 auto;
+  font-size: .85rem;
+  gap: 7px;
+  min-height: 38px;
+  padding: 6px 14px 6px 7px;
+  width: auto;
+}
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-nav button.is-active,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav button.is-active {
+  border-color: color-mix(in srgb, var(--essay-accent) 35%, transparent);
+}
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-nav-index,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav-index {
+  font-size: .76rem;
+  height: 24px;
+  width: 24px;
+}
+
+/* ══ FREEZE ZONE 2 — prompt, timer and live word count while typing ═══════ */
+#mode-essay .essay-write-sticky {
+  background: var(--essay-paper);
+  border-bottom: 1px solid var(--essay-border-soft);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  position: sticky;
+  top: var(--essay-sticky-top);
+  z-index: 4;
+}
+#mode-essay .essay-write-sticky #essay-prompt-display {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  line-clamp: 2;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+#mode-essay .essay-write-sticky.is-prompt-expanded #essay-prompt-display {
+  -webkit-line-clamp: unset;
+  display: block;
+  line-clamp: unset;
+  max-height: 38vh;
+  overflow-y: auto;
+}
+#mode-essay .essay-prompt-expand-btn {
+  background: transparent;
+  border: 0;
+  color: var(--essay-accent);
+  cursor: pointer;
+  display: none;
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  margin-top: 4px;
+  min-height: 28px;
+  padding: 2px 0;
+}
+#mode-essay .essay-prompt-expand-btn:hover { text-decoration: underline; }
+#mode-essay .essay-write-sticky.has-prompt-overflow .essay-prompt-expand-btn { display: inline-flex; }
+#mode-essay .essay-prompt-expand-less,
+#mode-essay .essay-write-sticky.is-prompt-expanded .essay-prompt-expand-more { display: none; }
+#mode-essay .essay-write-sticky.is-prompt-expanded .essay-prompt-expand-less { display: inline; }
+
+/* Word count mirrored into the frozen bar; the footer copy stays authoritative. */
+#mode-essay .essay-word-count-sticky {
+  border: 1px solid var(--essay-border);
+  border-radius: var(--read-radius-pill, 999px);
+  font-size: .78rem;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+#mode-essay .essay-word-count-sticky.essay-wc-good {
+  border-color: color-mix(in srgb, var(--essay-success) 45%, transparent);
+  color: var(--essay-success);
+}
+#mode-essay .essay-word-count-sticky.essay-wc-warn { color: var(--essay-accent); }
+#mode-essay .essay-word-count-sticky.essay-wc-bad { color: var(--essay-muted); }
+/* Only useful once the editor is on screen. */
+#mode-essay:not(.essay-guided-mode) .essay-word-count-sticky,
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-word-count-sticky,
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-word-count-sticky { display: inline-flex; }
+
+/* ══ FREEZE ZONE 3 — Step 5 paragraph + hint controls ═════════════════════ */
+#mode-essay .essay-guided-scaffold-controls {
+  background: var(--essay-paper);
+  border-bottom: 1px solid var(--essay-border-soft);
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 10px 0;
+  position: sticky;
+  z-index: 3;
+}
+#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-scaffold-controls,
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-scaffold-controls {
+  top: calc(var(--essay-sticky-top) + var(--essay-railtop-h, 132px));
+}
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-scaffold-controls,
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-scaffold-controls {
+  top: var(--essay-railtop-h, 132px);
+}
+#mode-essay .essay-guided-scaffold-tabs-row {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+#mode-essay .essay-guided-scaffold-tabs-row .essay-guided-scaffold-tabs {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+#mode-essay .essay-guided-scaffold-controls .essay-guided-depth { margin: 0; }
+#mode-essay .essay-guided-depth-label {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+/* ══ STEP 1 — prompt clause dissector (was entirely unstyled) ═════════════ */
+#mode-essay .essay-guided-clause-intro {
+  align-items: center;
+  color: var(--essay-muted);
+  display: flex;
+  font-size: var(--essay-guided-font-sm);
+  gap: 4px;
+  margin: 0 0 6px;
+}
+#mode-essay .essay-guided-clause-cards { display: grid; }
+#mode-essay .essay-guided-clause-card {
+  border-top: 1px solid var(--essay-border-soft);
+  padding: 16px 0;
+}
+#mode-essay .essay-guided-clause-card:first-child { border-top: 0; }
+#mode-essay .essay-guided-clause-head {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 26px minmax(0, 1fr);
+}
+#mode-essay .essay-guided-clause-idx {
+  align-items: center;
+  background: var(--essay-accent-soft);
+  border-radius: 50%;
+  color: var(--essay-accent);
+  display: inline-flex;
+  font-size: .76rem;
+  font-weight: 700;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+#mode-essay .essay-guided-clause-main { min-width: 0; }
+#mode-essay .essay-guided-clause-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+#mode-essay .essay-guided-clause-role-badge {
+  color: var(--essay-accent);
+  display: inline-block;
+}
+#mode-essay .essay-guided-clause-target-pill {
+  border: 1px solid var(--essay-border);
+  border-radius: var(--read-radius-pill, 999px);
+  color: var(--essay-muted);
+  font-size: .73rem;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+#mode-essay .essay-guided-clause-text {
+  border-left: 2px solid var(--essay-border);
+  color: var(--essay-ink);
+  font-style: italic;
+  margin: 0;
+  padding: 1px 0 1px 12px;
+}
+#mode-essay .essay-guided-clause-body {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0 38px;
+}
+#mode-essay .essay-guided-clause-detail-text,
+#mode-essay .essay-guided-clause-trap-text {
+  margin: 4px 0 0;
+}
+#mode-essay .essay-guided-clause-trap {
+  border-left: 2px solid color-mix(in srgb, var(--essay-danger) 40%, transparent);
+  padding-left: 12px;
+}
+#mode-essay .essay-guided-clause-trap-label { color: var(--essay-danger); }
+
+/* ══ STEP 3 — sentence pattern workbench (was entirely unstyled) ══════════ */
+#mode-essay .essay-guided-pattern-workbench { display: grid; gap: 16px; }
+#mode-essay .essay-guided-pattern-purpose { display: grid; gap: 4px; }
+#mode-essay .essay-guided-pattern-purpose strong {
+  color: var(--essay-muted);
+  font-size: var(--essay-micro);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#mode-essay .essay-guided-pattern-purpose span {
+  color: var(--essay-ink);
+  font-size: var(--essay-guided-font-sm);
+}
+#mode-essay .essay-guided-pattern-formula-card,
+#mode-essay .essay-guided-pattern-applied-card {
+  border-left: 2px solid var(--essay-border);
+  display: grid;
+  gap: 7px;
+  padding-left: 12px;
+}
+#mode-essay .essay-guided-pattern-formula-card { border-left-color: var(--essay-accent); }
+#mode-essay .essay-guided-pattern-code {
+  background: var(--essay-accent-soft);
+  border-radius: 8px;
+  color: var(--essay-ink);
+  display: block;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: .84rem;
+  line-height: 1.6;
+  padding: 9px 12px;
+}
+#mode-essay .essay-guided-pattern-sentence {
+  font-style: italic;
+  margin: 0;
+}
+
+/* ══ STEP 3 — cohesion stages (was entirely unstyled) ═════════════════════ */
+#mode-essay .essay-guided-cohesion-intro {
+  color: var(--essay-muted);
+  font-size: var(--essay-guided-font-sm);
+  margin: 0 0 4px;
+}
+#mode-essay .essay-guided-cohesion-cards { display: grid; }
+#mode-essay .essay-guided-cohesion-card {
+  border-top: 1px solid var(--essay-border-soft);
+  padding: 14px 0;
+}
+#mode-essay .essay-guided-cohesion-card:first-child { border-top: 0; }
+#mode-essay .essay-guided-cohesion-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: space-between;
+}
+#mode-essay .essay-guided-cohesion-stage-badge { color: var(--essay-accent); }
+#mode-essay .essay-guided-cohesion-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#mode-essay .essay-guided-cohesion-pill {
+  border: 1px solid var(--essay-border);
+  border-radius: var(--read-radius-pill, 999px);
+  color: var(--essay-ink);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 3px 11px;
+  white-space: nowrap;
+}
+#mode-essay .essay-guided-cohesion-purpose {
+  color: var(--essay-muted);
+  font-size: var(--essay-guided-font-sm);
+  margin: 8px 0 0;
+}
+#mode-essay .essay-guided-cohesion-demo {
+  border-left: 2px solid var(--essay-border);
+  margin-top: 10px;
+  padding-left: 12px;
+}
+#mode-essay .essay-guided-cohesion-demo-text {
+  font-style: italic;
+  margin: 3px 0 0;
+}
+
+/* ── Odds and ends the sheet above never reached ──────────────────────────── */
+#mode-essay .essay-guided-collo-vi-box {
+  border-left: 2px solid color-mix(in srgb, var(--essay-accent) 45%, transparent);
+  margin-top: 8px;
+  padding-left: 12px;
+}
+#mode-essay .essay-guided-collo-vi-text {
+  color: var(--essay-muted);
+  font-size: var(--essay-guided-font-sm);
+  margin: 0;
+}
+#mode-essay .essay-guided-frame-static-text { color: var(--essay-ink); }
+#mode-essay .essay-guided-spoiler-text { font-weight: 600; }
+#mode-essay .essay-guided-paragraph-head {
+  color: var(--essay-muted);
+  font-size: var(--essay-micro);
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin: 22px 0 10px;
+  text-transform: uppercase;
+}
+/* Stance is carried by a colour edge now that the thumbs are gone. */
+#mode-essay .essay-guided-stance-tab { border-left-width: 3px; }
+#mode-essay .essay-guided-stance-tab.is-for { border-left-color: color-mix(in srgb, var(--essay-success) 55%, transparent); }
+#mode-essay .essay-guided-stance-tab.is-against { border-left-color: color-mix(in srgb, var(--essay-danger) 55%, transparent); }
+#mode-essay .essay-guided-meter span {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* ── Draft blueprint card: warm surface + collapse ────────────────────────── */
+#mode-essay .essay-guided-draft-collapse {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--essay-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  gap: 9px;
+  min-height: 34px;
+  padding: 0;
+}
+#mode-essay .essay-guided-draft-collapse .essay-guided-group-chevron { transform: rotate(-135deg); }
+#mode-essay .essay-guided-draft-collapse[aria-expanded="false"] .essay-guided-group-chevron { transform: rotate(45deg); }
+#mode-essay .essay-guided-draft-card.is-collapsed { padding-bottom: 14px; }
+#mode-essay .essay-guided-draft-collapsible[hidden] { display: none; }
+
+/* ── Focus, motion, touch ─────────────────────────────────────────────────── */
+#mode-essay .essay-guided-help:focus-visible,
+#mode-essay .essay-prompt-expand-btn:focus-visible,
+#mode-essay .essay-guided-draft-collapse:focus-visible {
+  outline: 2px solid var(--essay-accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #mode-essay .essay-guided-help,
+  #mode-essay .essay-guided-group-chevron { transition: none; }
+}
+
+/* Below the two-column breakpoint nothing is frozen: the rail and the editor
+   stack, and a pinned bar would eat a phone screen. */
+@media (max-width: 1023px) {
+  #mode-essay .essay-guided-railtop,
+  #mode-essay .essay-write-sticky,
+  #mode-essay .essay-guided-scaffold-controls {
+    position: static;
+  }
+  #mode-essay .essay-write-sticky #essay-prompt-display {
+    -webkit-line-clamp: unset;
+    display: block;
+    line-clamp: unset;
+    overflow: visible;
+  }
+  #mode-essay .essay-prompt-expand-btn { display: none !important; }
+  #mode-essay .essay-guided-clause-body { margin-left: 0; }
+}
+
+@media (max-width: 560px) {
+  #mode-essay .essay-guided-help { height: 26px; width: 26px; }
+  #mode-essay .essay-guided-clause-head { grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+  #mode-essay .essay-guided-clause-idx { height: 22px; width: 22px; font-size: .72rem; }
+  .essay-guided-help-pop { width: calc(100vw - 24px); }
+}
+
+/* ── Freeze-zone caps ──────────────────────────────────────────────────────
+   A sticky bar offset by N px leaves an N px window above it through which
+   scrolling content shows. Each frozen bar paints that gap itself.
+   (position: sticky already establishes a containing block for these.) */
+#mode-essay { --essay-freeze-cap: var(--essay-sticky-top); }
+/* Inside the rail's own scroll container the bar already sits flush at the top. */
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-railtop,
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-railtop {
+  --essay-freeze-cap: 0px;
+}
+#mode-essay .essay-guided-railtop::before,
+#mode-essay .essay-write-sticky::before {
+  background: var(--essay-paper);
+  bottom: 100%;
+  content: '';
+  height: var(--essay-freeze-cap, 0px);
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+/* ── Progress reads as the frozen bar's own edge, not a text underline ───── */
+#mode-essay .essay-guided-progress {
+  bottom: -1px;
+  height: 2px;
+  left: 0;
+  margin: 0;
+  position: absolute;
+  right: 0;
+  z-index: 1;
+}
+#mode-essay .essay-guided-progress-bar {
+  background: transparent;
+  height: 2px;
+}
+
+@media (max-width: 1023px) {
+  #mode-essay .essay-guided-progress { position: static; margin: 0 0 12px; }
+  #mode-essay .essay-guided-progress-bar { background: var(--essay-border-soft); }
+}
+
+/* style.css sets `.mode-panel.active { overflow-x: clip }`, which pairs the
+   other axis into `hidden` — and `hidden` makes the panel a scroll container,
+   so every `position: sticky` inside it was inert against page scroll.
+   Clipping both axes keeps the horizontal guard without the scroll container.
+   Excluded in fullscreen, where the panel must scroll itself. */
+#mode-essay.mode-panel.active:not(.essay-fullscreen) {
+  overflow: clip;
+}
+
+/* The checklist's <?> is a sibling of a full-width toggle, so the row has to
+   be a grid or the button drops to its own line. */
+#mode-essay .essay-guided-checklist {
+  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+#mode-essay .essay-guided-checklist[hidden] { display: none; }
+#mode-essay .essay-guided-checklist-body { grid-column: 1 / -1; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FLATTEN — "avoid nested card structures" (CLAUDE.md UI rule)
+   Every list item used to be a bordered card that then held a tinted inner
+   box: two frames around one sentence. Items are separated by a hairline and
+   marked with a left rule instead; the inner blocks keep only that rule.
+   ══════════════════════════════════════════════════════════════════════════ */
+#mode-essay .essay-guided-target-grid,
+#mode-essay .essay-guided-collo-grid,
+#mode-essay .essay-guided-points-list,
+#mode-essay .essay-guided-stance-groups { gap: 0; }
+
+#mode-essay .essay-guided-target-card,
+#mode-essay .essay-guided-collo-card,
+#mode-essay .essay-guided-point-card,
+#mode-essay .essay-guided-stance-card {
+  background: transparent;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  border-top: 1px solid var(--essay-border-soft);
+  box-shadow: none;
+  overflow: visible;
+  padding: 14px 0 14px 13px;
+}
+#mode-essay .essay-guided-target-grid > .essay-guided-target-card:first-child,
+#mode-essay .essay-guided-collo-grid > .essay-guided-collo-card:first-child,
+#mode-essay .essay-guided-points-list > .essay-guided-point-card:first-child,
+#mode-essay .essay-guided-stance-groups > .essay-guided-stance-card:first-child {
+  border-top: 0;
+}
+#mode-essay .essay-guided-target-card:hover,
+#mode-essay .essay-guided-collo-card:hover,
+#mode-essay .essay-guided-point-card:hover {
+  border-left-color: var(--essay-border);
+}
+#mode-essay .essay-guided-target-card.is-selected,
+#mode-essay .essay-guided-point-card.is-selected {
+  background: color-mix(in srgb, var(--essay-accent) 5%, transparent);
+  border-left-color: var(--essay-accent);
+}
+/* Stance keeps its semantic edge; it just loses the box around it. */
+#mode-essay .essay-guided-stance-card.is-agree {
+  background: transparent;
+  border-left-color: var(--essay-success);
+}
+#mode-essay .essay-guided-stance-card.is-disagree {
+  background: transparent;
+  border-left-color: var(--essay-danger);
+}
+#mode-essay .essay-guided-stance-card.is-general {
+  background: transparent;
+  border-left-color: var(--essay-accent);
+}
+
+/* Inner example blocks: a rule, not a fill. */
+#mode-essay .essay-guided-vocab-example,
+#mode-essay .essay-guided-model,
+#mode-essay .essay-guided-vocab-vi-box,
+#mode-essay .essay-guided-point-expl-tip {
+  background: transparent;
+  border-left: 2px solid var(--essay-border);
+  border-radius: 0;
+  padding: 1px 0 1px 12px;
+}
+#mode-essay .essay-guided-vocab-example { border-left-color: var(--essay-accent); }
+/* Was a hardcoded emerald that did not belong to the warm Reading palette. */
+#mode-essay .essay-guided-vocab-vi-box {
+  border-left-color: color-mix(in srgb, var(--essay-success) 55%, transparent);
+}
+#mode-essay .essay-guided-vocab-vi-label { color: var(--essay-success); }
+#mode-essay .essay-guided-vocab-example-label { color: var(--essay-accent); }
+#mode-essay .essay-guided-point-expl {
+  background: transparent;
+  border-top: 1px solid var(--essay-border-soft);
+  padding: 12px 0 4px;
+}
+
+/* The frozen Step-5 controls must stay shallow: label beside the track, not
+   above it, so the pinned block costs one row instead of two. */
+@media (min-width: 1024px) {
+  #mode-essay .essay-guided-scaffold-controls .essay-guided-depth {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+  }
+  #mode-essay .essay-guided-scaffold-controls .essay-guided-depth-label {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+  }
+  #mode-essay .essay-guided-scaffold-controls .essay-guided-depth-track { flex: 1 1 auto; }
+  #mode-essay .essay-guided-scaffold-controls { padding: 8px 0; gap: 8px; }
+}
+
+/* Step 5 already ends with "Start writing" in the step nav; the persistent
+   rail CTA would make three identical buttons in one screen. */
+#mode-essay .essay-guided-rail[data-step="further"] .essay-fs-ready-btn { display: none; }
+
+/* The rail is a narrow column; nothing in it should scroll sideways. */
+#mode-essay .essay-guided-rail { overflow-x: clip; }
+/* Long targets like "Introduction (Thesis) & Body Paragraph 2 / Conclusion"
+   must wrap rather than widen the rail. */
+#mode-essay .essay-guided-clause-target-pill { white-space: normal; }

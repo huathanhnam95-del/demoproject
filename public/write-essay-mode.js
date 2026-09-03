@@ -57,6 +57,7 @@
     let guidedFilledSentenceSlots = {};
     let guidedActiveScaffoldPara = 'intro';
     let guidedDraftSpoilers = new Set();
+    let guidedDraftCollapsed = false;
     let guidedQuizSelectedOption = null;
     let guidedPackRequestId = 0;
     // Disclosure + checklist state must outlive a re-render: switching step or
@@ -454,22 +455,27 @@
         el.guidedDraftContainer.innerHTML = `
             <div class="essay-guided-draft-header">
                 <div class="essay-guided-draft-title">
-                    <span>🏗️ ${guidedText('Essay Writing Scaffolding & Draft Blueprint', 'Khung dàn ý & Giàn giáo hỗ trợ viết bài')}</span>
-                    <span class="essay-guided-draft-badge">${escapeHtml(draft.stance)} · 4 Paragraphs</span>
+                    <button type="button" class="essay-guided-draft-collapse" id="essay-draft-collapse-btn" aria-expanded="${guidedDraftCollapsed ? 'false' : 'true'}" aria-controls="essay-draft-body">
+                        <span class="essay-guided-group-chevron" aria-hidden="true"></span>
+                        <span>${guidedText('Outline blueprint', 'Khung dàn ý')}</span>
+                    </button>
+                    <span class="essay-guided-draft-badge">${escapeHtml(draft.stance)} · ${guidedText('4 paragraphs', '4 đoạn')}</span>
                 </div>
                 <div class="essay-guided-draft-actions">
                     <button type="button" class="essay-guided-draft-btn-insert" id="essay-draft-insert-btn" title="${guidedText('Populate scaffold outline into the essay editor', 'Điền khung dàn ý vào bài viết')}">
-                        ⚡ ${guidedText('Insert Outline into Editor', 'Điền khung vào bài')}
+                        ${guidedText('Insert into editor', 'Điền vào bài')}
                     </button>
                     <button type="button" class="essay-guided-draft-btn-copy" id="essay-draft-copy-btn" title="${guidedText('Copy scaffold outline to clipboard', 'Sao chép khung dàn ý')}">
-                        📋 ${guidedText('Copy Outline', 'Sao chép khung')}
+                        ${guidedText('Copy', 'Sao chép')}
                     </button>
+                    ${guidedHelpBtn('draft-insert')}
                 </div>
             </div>
+            <div id="essay-draft-body" class="essay-guided-draft-collapsible"${guidedDraftCollapsed ? ' hidden' : ''}>
             <p class="essay-guided-draft-instructions">
-                💡 ${guidedText(
-                    'This scaffolding guides your writing without giving away a full essay to copy. Use your chosen points below, and click the spoiler tag only when you need sample phrasing inspiration.',
-                    'Khung dàn ý này hỗ trợ bạn tự viết bài mà không hiển thị sẵn nguyên văn toàn bài. Hãy dựa vào các luận điểm bên dưới và chỉ mở spoiler khi cần gợi ý cách diễn đạt.'
+                ${guidedText(
+                    'A scaffold, not a finished essay. Write from your own points below and only open a spoiler when you are stuck on phrasing.',
+                    'Đây là khung sườn, không phải bài viết sẵn. Hãy tự viết từ các luận điểm bên dưới và chỉ mở spoiler khi bí cách diễn đạt.'
                 )}
             </p>
             <div class="essay-guided-draft-content">
@@ -478,7 +484,7 @@
                     return `
                     <div class="essay-guided-draft-para" data-para-key="${p.key}">
                         <div class="essay-guided-draft-para-head">
-                            <div class="essay-guided-draft-para-label">📌 ${escapeHtml(guidedText(p.titleEn, p.titleVi))}</div>
+                            <div class="essay-guided-draft-para-label">${escapeHtml(guidedText(p.titleEn, p.titleVi))}</div>
                             <span class="essay-guided-draft-blueprint-tag">${escapeHtml(guidedText(p.blueprintEn, p.blueprintVi))}</span>
                         </div>
                         <div class="essay-guided-draft-para-blueprint">
@@ -487,25 +493,38 @@
                             </ul>
                             ${p.userText ? `
                             <div class="essay-guided-draft-user-box">
-                                <span class="essay-guided-draft-user-label">✍️ ${guidedText('Your Constructed Sentences from Step 5:', 'Các câu bạn đã ghép ở Bước 5:')}</span>
-                                <p class="essay-guided-draft-user-text">"${escapeHtml(p.userText)}"</p>
+                                <span class="essay-guided-draft-user-label">${guidedText('Your sentences from step 5', 'Câu bạn đã ghép ở bước 5')}</span>
+                                <p class="essay-guided-draft-user-text">&ldquo;${escapeHtml(p.userText)}&rdquo;</p>
                             </div>` : ''}
                         </div>
                         <div class="essay-guided-draft-spoiler-wrap">
                             <button type="button" class="essay-guided-draft-spoiler-toggle${isRevealed ? ' is-revealed' : ''}" data-guided-action="toggle-draft-spoiler" data-para-key="${p.key}">
-                                <span class="essay-guided-spoiler-icon" aria-hidden="true">${isRevealed ? '🙈' : '👁️'}</span>
-                                <span class="essay-guided-spoiler-text">${isRevealed ? guidedText('Hide Model Wording (Spoiler)', 'Ẩn câu mẫu (Spoiler)') : guidedText('Reveal Model Wording (Spoiler)', 'Hiện câu mẫu tham khảo (Spoiler)')}</span>
+                                <span class="essay-guided-spoiler-text">${isRevealed ? guidedText('Hide model wording', 'Ẩn câu mẫu') : guidedText('Reveal model wording', 'Hiện câu mẫu')}</span>
                             </button>
+                            ${guidedHelpBtn('draft-spoiler')}
                             ${isRevealed ? `
                             <div class="essay-guided-draft-spoiler-content">
-                                <span class="essay-guided-spoiler-badge">🌟 ${guidedText('Sample Academic Wording:', 'Câu hoàn chỉnh mẫu:')}</span>
+                                <span class="essay-guided-spoiler-badge">${guidedText('Sample academic wording', 'Câu mẫu học thuật')}</span>
                                 <p class="essay-guided-draft-model-text">${escapeHtml(p.modelText)}</p>
                             </div>` : ''}
                         </div>
                     </div>`;
                 }).join('')}
             </div>
+            </div>
         `;
+
+        const collapseBtn = document.getElementById('essay-draft-collapse-btn');
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', () => {
+                guidedDraftCollapsed = !guidedDraftCollapsed;
+                const body = document.getElementById('essay-draft-body');
+                if (body) body.hidden = guidedDraftCollapsed;
+                collapseBtn.setAttribute('aria-expanded', guidedDraftCollapsed ? 'false' : 'true');
+                el.guidedDraftContainer.classList.toggle('is-collapsed', guidedDraftCollapsed);
+            });
+        }
+        el.guidedDraftContainer.classList.toggle('is-collapsed', guidedDraftCollapsed);
 
         // Wire up dynamic buttons
         const insertBtn = document.getElementById('essay-draft-insert-btn');
@@ -516,9 +535,9 @@
                     updateWordCount();
                     el.essayInput.focus();
                     el.essayInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    insertBtn.textContent = '✓ ' + guidedText('Outline Inserted!', 'Đã điền vào bài!');
+                    insertBtn.textContent = '✓ ' + guidedText('Inserted', 'Đã điền');
                     setTimeout(() => {
-                        insertBtn.innerHTML = '⚡ ' + guidedText('Insert Outline into Editor', 'Điền khung vào bài');
+                        insertBtn.textContent = guidedText('Insert into editor', 'Điền vào bài');
                     }, 2000);
                 }
             });
@@ -594,6 +613,7 @@
         guidedFilledSentenceSlots = {};
         guidedActiveScaffoldPara = 'intro';
         guidedDraftSpoilers = new Set();
+        guidedDraftCollapsed = false;
         guidedQuizSelectedOption = null;
         guidedPackRequestId += 1;
         guidedVisitedSections = new Set(['understand']);
@@ -666,6 +686,7 @@
         el.practiceArea = document.getElementById('essay-practice-area');
         el.guidedWorkspace = document.getElementById('essay-guided-workspace');
         el.guidedRail = document.getElementById('essay-guided-rail');
+        el.guidedRailTop = document.querySelector('#essay-guided-rail .essay-guided-railtop');
         el.guidedRailTitle = document.getElementById('essay-guided-rail-title');
         el.guidedLanguageToggle = document.getElementById('essay-guided-language-toggle');
         el.guidedMobileToggle = document.getElementById('essay-guided-mobile-toggle');
@@ -688,6 +709,9 @@
         el.promptDisplay = document.getElementById('essay-prompt-display');
         el.essayInput = document.getElementById('essay-input');
         el.wordCountDisplay = document.getElementById('essay-word-count');
+        el.writeSticky = document.getElementById('essay-write-sticky');
+        el.wordCountSticky = document.getElementById('essay-word-count-sticky');
+        el.promptExpandBtn = document.getElementById('essay-prompt-expand-btn');
         el.timerDisplay = document.getElementById('essay-timer');
         el.submitBtn = document.getElementById('essay-submit-btn');
 
@@ -817,8 +841,59 @@
         if (el.railFullscreenBtn) el.railFullscreenBtn.addEventListener('click', toggleEssayFullscreen);
         if (el.fsReadyBtn) el.fsReadyBtn.addEventListener('click', enterFsWritingPhase);
         if (el.fsBackBtn) el.fsBackBtn.addEventListener('click', exitFsWritingPhase);
+        if (el.promptExpandBtn) el.promptExpandBtn.addEventListener('click', toggleStickyPrompt);
+        bindGuidedHelp();
+        observeGuidedRailTop();
         _watchForModeHide();
         restoreGuidedPreferences();
+    }
+
+    /**
+     * Step 5 pins its own controls directly beneath the frozen stepper, so the
+     * stepper's height has to be a live value rather than a guessed constant.
+     */
+    function syncGuidedRailTopHeight() {
+        const panel = getModePanelEl();
+        if (!el.guidedRailTop || !panel) return;
+        const height = Math.round(el.guidedRailTop.getBoundingClientRect().height);
+        if (height > 0) panel.style.setProperty('--essay-railtop-h', `${height}px`);
+    }
+
+    function observeGuidedRailTop() {
+        if (!el.guidedRailTop) return;
+        // ResizeObserver is the cheap path; the explicit calls from
+        // renderGuidedSupport and the phase switches are the reliable one.
+        if (typeof ResizeObserver !== 'undefined') {
+            try { new ResizeObserver(syncGuidedRailTopHeight).observe(el.guidedRailTop); } catch (_) { /* not critical */ }
+        }
+        window.addEventListener('resize', syncGuidedRailTopHeight);
+        syncGuidedRailTopHeight();
+    }
+
+    /**
+     * The prompt bar is frozen above the editor, so it is clamped to two lines
+     * by default and opens on demand. Without the clamp a four-line prompt eats
+     * a third of the writing area on a laptop.
+     */
+    function toggleStickyPrompt() {
+        if (!el.writeSticky || !el.promptExpandBtn) return;
+        const expanded = el.writeSticky.classList.toggle('is-prompt-expanded');
+        el.promptExpandBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
+
+    /** True when the prompt actually overflows its two-line clamp. */
+    function syncStickyPromptAffordance() {
+        if (!el.writeSticky || !el.promptExpandBtn || !el.promptDisplay) return;
+        el.writeSticky.classList.remove('is-prompt-expanded');
+        el.promptExpandBtn.setAttribute('aria-expanded', 'false');
+        // Reading scrollHeight forces the pending layout, so the clamp is already
+        // applied; rAF would be throttled whenever the tab is not rendering.
+        const measure = () => {
+            const overflows = el.promptDisplay.scrollHeight - el.promptDisplay.clientHeight > 4;
+            el.writeSticky.classList.toggle('has-prompt-overflow', overflows);
+        };
+        measure();
+        setTimeout(measure, 60);
     }
 
     function restoreGuidedPreferences() {
@@ -904,6 +979,183 @@
         context: { en: 'Context', vi: 'Bối cảnh' },
     });
 
+    /* -- Vietnamese help affordance ---------------------------------------
+       Every guided control that is not self-evident carries a <?> that opens
+       this popover. The copy is always Vietnamese: the learner reaches for it
+       precisely when the English label did not land. One floating element is
+       reused for all of them so it can escape the rail's own scroll clipping. */
+    const GUIDED_HELP = Object.freeze({
+        'practice-mode': {
+            title: 'Hai chế độ luyện tập',
+            body: '<strong>Exam Practice</strong> mô phỏng phòng thi: đồng hồ đếm ngược 20 phút, không có gợi ý.<br><strong>Guided Practice</strong> là chế độ học: đồng hồ đếm xuôi (không áp lực) và bạn được đi qua 5 bước hướng dẫn trước khi viết.<br>Dùng Guided khi bạn còn lúng túng về cách triển khai, và chuyển sang Exam khi muốn kiểm tra tốc độ thật.',
+        },
+        'support-level': {
+            title: 'Mức hỗ trợ (A2–B1 / B2 / C1)',
+            body: 'Quyết định độ khó của từ vựng, cấu trúc câu và câu mẫu mà phần hướng dẫn đưa ra.<br><strong>A2–B1</strong>: câu ngắn, từ thông dụng.<br><strong>B2</strong>: mức chuẩn cho PTE / IELTS.<br><strong>C1</strong>: từ vựng học thuật và câu phức nâng cao.<br>Chọn đúng trình độ hiện tại của bạn — chọn quá cao sẽ khiến bạn chép máy móc thay vì tự viết.',
+        },
+        'support-language': {
+            title: 'Ngôn ngữ hiển thị hướng dẫn',
+            body: 'Đổi ngôn ngữ của phần <em>giải thích</em> (nhãn, hướng dẫn, lưu ý). Từ vựng, câu mẫu và bài viết của bạn luôn giữ nguyên tiếng Anh.<br>Mẹo: để <strong>English</strong> cho quen thuật ngữ bài thi, và bấm nút <strong>VI</strong> ở góc phải khi gặp chỗ khó hiểu.',
+        },
+        'steps': {
+            title: '5 bước của phần hướng dẫn',
+            body: '<strong>1. Hiểu đề bài</strong> — tách đề thành từng vế và xác định yêu cầu bắt buộc.<br><strong>2. Chọn hướng đi</strong> — chốt lập trường và 2 luận điểm chính.<br><strong>3. Bộ ngôn ngữ</strong> — từ vựng, cụm từ, mẫu câu và từ nối.<br><strong>4. Lập dàn ý</strong> — khung bài dựng theo lựa chọn của bạn.<br><strong>5. Xây dựng câu</strong> — viết từng câu; các câu này chuyển thẳng vào bài viết.<br>Bạn có thể quay lại bất kỳ bước nào; dấu ✓ cho biết bước đã xem qua.',
+        },
+        'clauses': {
+            title: 'Vì sao phải tách đề thành từng vế?',
+            body: 'Mất điểm Task Achievement thường không phải vì tiếng Anh yếu, mà vì bỏ sót một vế của đề. Mỗi thẻ bên dưới là một vế: nó cho biết vế đó <strong>đóng vai trò gì</strong>, phải trả lời ở <strong>đoạn nào</strong>, và <strong>lỗi thường gặp</strong> khi xử lý vế đó.',
+        },
+        'traps': {
+            title: 'Bẫy riêng của đề này',
+            body: 'Đây là những lỗi thí sinh hay mắc <em>với chính đề bài này</em>, không phải lời khuyên chung chung. Hãy đọc lại danh sách này một lần nữa sau khi viết xong — kiểm tra nhanh hơn nhiều so với việc viết lại cả bài.',
+        },
+        'stance': {
+            title: 'Chọn lập trường',
+            body: 'Chọn <strong>một</strong> hướng và giữ nguyên xuyên suốt bài viết. Bài trung lập hoặc đổi quan điểm giữa chừng sẽ bị trừ điểm.<br>Không có hướng nào “đúng” hơn hướng nào — hãy chọn hướng bạn nghĩ ra được nhiều dẫn chứng nhất. Đổi lập trường sẽ cập nhật lại dàn ý và câu mẫu ở các bước sau.',
+        },
+        'main-points': {
+            title: 'Vì sao chỉ chọn đúng 2 luận điểm?',
+            body: 'Bài 200–300 từ chỉ đủ chỗ cho 2 đoạn thân bài. Mỗi luận điểm cần: câu chủ đề → giải thích → dẫn chứng → câu chốt. Chọn 3–4 luận điểm sẽ khiến mỗi ý bị hụt và mất điểm Development.<br>Bấm <strong>?</strong> ở từng luận điểm để xem cách triển khai chi tiết.',
+        },
+        'targets': {
+            title: 'Từ vựng / câu mục tiêu',
+            body: 'Đánh dấu tối đa 6 mục bạn <em>cam kết sẽ dùng</em> trong bài. Chúng sẽ xuất hiện trong bảng kiểm “Trước khi nộp bài”, và được ghi nhớ để ôn lại ở các đề sau.<br>Chọn có chủ đích tốt hơn chọn thật nhiều: dùng đúng 4 từ học thuật ghi điểm cao hơn nhồi 20 từ sai ngữ cảnh.',
+        },
+        'pattern': {
+            title: 'Mẫu câu phức',
+            body: 'Giám khảo chấm điểm Grammar dựa trên <em>sự đa dạng</em> của cấu trúc câu. Mẫu <code>Although [X], I believe [Y] because [Z]</code> ghi điểm vì vừa nhượng bộ quan điểm đối lập vừa bảo vệ lập trường trong cùng một câu.<br>Dùng ở Mở bài (câu luận đề) hoặc mở đầu Thân bài 2.',
+        },
+        'cohesion': {
+            title: 'Từ nối theo từng giai đoạn',
+            body: 'Đây không phải danh sách từ nối để học thuộc, mà là <strong>thứ tự sử dụng</strong>: mỗi giai đoạn ứng với một vị trí cụ thể trong bài. Đi đúng thứ tự này thì mạch bài tự nhiên và ghi điểm Coherence.<br>Chỉ dùng mỗi từ nối một lần trong toàn bài.',
+        },
+        'plan-source': {
+            title: 'Nguồn dàn ý',
+            body: 'Cho biết dàn ý này lấy từ bài mẫu đã kiểm duyệt hay được dựng tự động từ các lựa chọn của bạn. Đây là <em>một</em> cách triển khai hợp lệ, không phải đáp án duy nhất — hãy diễn đạt lại bằng từ ngữ của bạn.',
+        },
+        'hint-level': {
+            title: 'Mức độ gợi ý (1 → 3)',
+            body: '<strong>Mức 1</strong>: chỉ nói câu này để làm gì — bạn tự viết hoàn toàn.<br><strong>Mức 2</strong>: khung câu có chỗ trống để bạn điền.<br><strong>Mức 3</strong>: câu hoàn chỉnh mẫu để tham khảo cách diễn đạt.<br>Hãy bắt đầu ở mức thấp nhất bạn chịu được và chỉ tăng khi thật sự bí. Bạn học được nhiều nhất ở mức phải cố gắng một chút.',
+        },
+        'scaffold-tabs': {
+            title: 'Chọn đoạn để viết',
+            body: 'Lọc danh sách câu theo từng đoạn để bạn viết xong một đoạn rồi mới sang đoạn tiếp theo. Số trong ngoặc là số câu gợi ý cho đoạn đó. Chọn <strong>Tất cả các câu</strong> khi muốn xem lại toàn bộ mạch bài.',
+        },
+        'frame': {
+            title: 'Khung điền câu',
+            body: 'Gõ trực tiếp vào các ô trống; câu hoàn chỉnh hiện ngay bên dưới. Những câu bạn ghép ở đây sẽ được <strong>tự động đưa vào khung bài viết</strong> khi bạn bấm bắt đầu viết, nên hãy viết bằng ý của chính bạn thay vì chép câu mẫu.',
+        },
+        'checklist': {
+            title: 'Bảng kiểm trước khi nộp',
+            body: 'Nút <strong>Nộp bài</strong> chỉ mở khoá khi bạn đã tự kiểm tra đủ các mục. Đây là thói quen của thí sinh điểm cao: dành 1–2 phút cuối rà lại yêu cầu đề, tính nhất quán của lập trường và các từ mục tiêu đã chọn.',
+        },
+        'draft-insert': {
+            title: 'Điền khung vào bài viết',
+            body: 'Chèn dàn ý cùng các câu bạn đã ghép ở Bước 5 vào ô soạn thảo, để bạn viết tiếp thay vì bắt đầu từ trang trắng.<br><strong>Lưu ý:</strong> hãy viết lại và mở rộng phần được chèn — nộp nguyên khung sẽ bị đánh giá là bài chưa phát triển.',
+        },
+        'draft-spoiler': {
+            title: 'Câu mẫu (ẩn có chủ đích)',
+            body: 'Câu mẫu bị ẩn để bạn tự viết trước đã. Hãy viết phiên bản của bạn, rồi mới mở ra so sánh cách diễn đạt. Đọc mẫu trước khi tự viết là cách nhanh nhất để chép lại mà không học được gì.',
+        },
+    });
+
+    let guidedHelpEl = null;
+    let guidedHelpAnchor = null;
+    let guidedHelpBound = false;
+
+    /** The <?> trigger. Vietnamese copy on purpose - see GUIDED_HELP. */
+    function guidedHelpBtn(key) {
+        if (!GUIDED_HELP[key]) return '';
+        return `<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="${escapeHtml(key)}" aria-expanded="false" aria-label="Giải thích" title="Giải thích (tiếng Việt)"><span aria-hidden="true">?</span></button>`;
+    }
+
+    function ensureGuidedHelpEl() {
+        if (guidedHelpEl && document.body.contains(guidedHelpEl)) return guidedHelpEl;
+        guidedHelpEl = document.createElement('div');
+        guidedHelpEl.id = 'essay-guided-help-pop';
+        guidedHelpEl.className = 'essay-guided-help-pop';
+        guidedHelpEl.setAttribute('role', 'dialog');
+        guidedHelpEl.tabIndex = -1;
+        guidedHelpEl.hidden = true;
+        document.body.appendChild(guidedHelpEl);
+        return guidedHelpEl;
+    }
+
+    /** Fixed-positioned so the rail's own overflow cannot clip it. */
+    function positionGuidedHelp(anchor) {
+        if (!guidedHelpEl || !anchor?.isConnected) return;
+        const gap = 10;
+        const margin = 12;
+        const rect = anchor.getBoundingClientRect();
+        const pop = guidedHelpEl.getBoundingClientRect();
+        let left = rect.left + rect.width / 2 - pop.width / 2;
+        left = Math.max(margin, Math.min(left, window.innerWidth - pop.width - margin));
+        let top = rect.bottom + gap;
+        if (top + pop.height > window.innerHeight - margin) {
+            const above = rect.top - gap - pop.height;
+            top = above >= margin ? above : window.innerHeight - pop.height - margin;
+        }
+        // Last resort: an anchor scrolled out of view must not drag the popover
+        // off-screen with it.
+        top = Math.max(margin, Math.min(top, Math.max(margin, window.innerHeight - pop.height - margin)));
+        guidedHelpEl.style.left = `${Math.round(left)}px`;
+        guidedHelpEl.style.top = `${Math.round(top)}px`;
+    }
+
+    function closeGuidedHelp({ restoreFocus = false } = {}) {
+        if (!guidedHelpEl || guidedHelpEl.hidden) return;
+        guidedHelpEl.hidden = true;
+        const anchor = guidedHelpAnchor;
+        guidedHelpAnchor = null;
+        if (anchor?.isConnected) {
+            anchor.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) anchor.focus();
+        }
+    }
+
+    function openGuidedHelp(anchor) {
+        const entry = GUIDED_HELP[anchor?.dataset?.helpKey];
+        if (!entry) return;
+        if (guidedHelpAnchor === anchor && guidedHelpEl && !guidedHelpEl.hidden) {
+            closeGuidedHelp({ restoreFocus: true });
+            return;
+        }
+        closeGuidedHelp();
+        const pop = ensureGuidedHelpEl();
+        pop.innerHTML = `<div class="essay-guided-help-head"><strong>${escapeHtml(entry.title)}</strong>
+            <button type="button" class="essay-guided-help-close" data-guided-help-close aria-label="Đóng">&times;</button></div>
+            <div class="essay-guided-help-body">${entry.body}</div>`;
+        pop.setAttribute('aria-label', entry.title);
+        pop.hidden = false;
+        guidedHelpAnchor = anchor;
+        anchor.setAttribute('aria-expanded', 'true');
+        positionGuidedHelp(anchor);
+        pop.focus();
+    }
+
+    /** Bound once on the document: triggers live in both static and rendered markup. */
+    function bindGuidedHelp() {
+        if (guidedHelpBound) return;
+        guidedHelpBound = true;
+        document.addEventListener('click', (event) => {
+            const trigger = event.target.closest?.('[data-guided-action="help"]');
+            if (trigger) {
+                event.preventDefault();
+                event.stopPropagation();
+                openGuidedHelp(trigger);
+                return;
+            }
+            if (event.target.closest?.('[data-guided-help-close]')) { closeGuidedHelp({ restoreFocus: true }); return; }
+            if (guidedHelpEl && !guidedHelpEl.hidden && !event.target.closest?.('#essay-guided-help-pop')) closeGuidedHelp();
+        }, true);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && guidedHelpEl && !guidedHelpEl.hidden) closeGuidedHelp({ restoreFocus: true });
+        });
+        window.addEventListener('resize', () => closeGuidedHelp());
+        // Any scroll (page or rail) would leave the popover stranded.
+        window.addEventListener('scroll', () => closeGuidedHelp(), true);
+    }
+
     function guidedSectionIndex(id) {
         const index = GUIDED_SECTIONS.findIndex(section => section.id === id);
         return index < 0 ? 0 : index;
@@ -951,16 +1203,21 @@
     }
 
     /** Collapsible block: the main tool against the old wall of bullet lists. */
-    function guidedGroup(key, title, bodyHtml, { count = null, defaultOpen = false, tone = '' } = {}) {
+    function guidedGroup(key, title, bodyHtml, { count = null, defaultOpen = false, tone = '', help = '' } = {}) {
         if (!bodyHtml) return '';
         const open = isGuidedGroupOpen(key, defaultOpen);
         const badge = count === null ? '' : `<span class="essay-guided-group-count">${escapeHtml(String(count))}</span>`;
+        // The <?> is a sibling of the toggle, never inside it: nesting two
+        // buttons is invalid and breaks keyboard traversal.
         return `<div class="essay-guided-group${open ? ' is-open' : ''}${tone ? ` essay-guided-group--${tone}` : ''}">
-            <button type="button" class="essay-guided-group-toggle" data-guided-action="toggle-group" data-group-key="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}">
-                <span class="essay-guided-group-title">${escapeHtml(title)}</span>
-                ${badge}
-                <span class="essay-guided-group-chevron" aria-hidden="true"></span>
-            </button>
+            <div class="essay-guided-group-head">
+                <button type="button" class="essay-guided-group-toggle" data-guided-action="toggle-group" data-group-key="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}">
+                    <span class="essay-guided-group-title">${escapeHtml(title)}</span>
+                    ${badge}
+                    <span class="essay-guided-group-chevron" aria-hidden="true"></span>
+                </button>
+                ${help ? guidedHelpBtn(help) : ''}
+            </div>
             <div class="essay-guided-group-body"${open ? '' : ' hidden'}>${bodyHtml}</div>
         </div>`;
     }
@@ -969,7 +1226,7 @@
         const index = guidedSectionIndex(section.id);
         return `<header class="essay-guided-section-head">
             <span class="essay-guided-step-tag">${guidedText('Step', 'Bước')} ${index + 1}/${GUIDED_SECTIONS.length}</span>
-            <h3><span class="essay-guided-section-icon" aria-hidden="true">${section.icon}</span>${escapeHtml(guidedSectionLabel(section))}</h3>
+            <h3>${escapeHtml(guidedSectionLabel(section))}</h3>
             ${lede ? `<p class="essay-guided-section-lede">${escapeHtml(lede)}</p>` : ''}
         </header>`;
     }
@@ -1228,6 +1485,7 @@
             el.guidedLanguageToggle.title = guidedLanguage === 'en' ? 'Chuyển sang tiếng Việt' : 'Switch to English';
         }
         guidedVisitedSections.add(guidedSection);
+        el.guidedRail.dataset.step = guidedSection;
         renderGuidedNav();
         renderGuidedProgress();
         if (!guidedPack) {
@@ -1246,8 +1504,16 @@
         if (section === 'plan') html = renderGuidedPlan(levelData);
         if (section === 'further') html = renderGuidedFurther(levelData);
         if (el.guidedContent) el.guidedContent.innerHTML = html + guidedStepNav();
+        syncGuidedRailTopHeight();
         renderGuidedChecklist();
         renderGuidedRecycle(levelData);
+    }
+
+    /** A claim reused mid-sentence: lower-cased opener, no trailing stop. */
+    function asClause(text) {
+        return cleanArgumentClaim(text)
+            .replace(/[.\s]+$/, '')
+            .replace(/^./, ch => ch.toLowerCase());
     }
 
     function cleanArgumentClaim(text) {
@@ -1436,10 +1702,10 @@
         return `
         <div class="essay-guided-clause-dissector">
             <p class="essay-guided-clause-intro">
-                🔍 ${guidedText(
-                    'Interactive Prompt Breakdown: Click each part to see its role, target paragraph, and how to address it.',
-                    'Phân tích đề bài tương tác: Nhấn vào từng phần để xem vai trò, vị trí trong bài và cách triển khai.'
-                )}
+                ${guidedText(
+                    'Each part of the prompt below shows its role, the paragraph it belongs to, and the mistake to avoid.',
+                    'Mỗi vế của đề bên dưới cho biết vai trò, đoạn văn tương ứng và lỗi cần tránh.'
+                )}${guidedHelpBtn('clauses')}
             </p>
             <div class="essay-guided-clause-cards">
                 ${parsedSegments.map((item) => `
@@ -1448,9 +1714,7 @@
                         <span class="essay-guided-clause-idx" aria-hidden="true">${item.index}</span>
                         <div class="essay-guided-clause-main">
                             <div class="essay-guided-clause-meta">
-                                <span class="essay-guided-clause-role-badge">
-                                    ${item.roleIcon} ${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}
-                                </span>
+                                <span class="essay-guided-clause-role-badge">${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}</span>
                                 <span class="essay-guided-clause-target-pill">
                                     ${escapeHtml(guidedText(item.targetParagraphEn, item.targetParagraphVi))}
                                 </span>
@@ -1460,11 +1724,11 @@
                     </div>
                     <div class="essay-guided-clause-body">
                         <div class="essay-guided-clause-detail">
-                            <span class="essay-guided-clause-detail-label">✍️ ${guidedText('How to address in your essay:', 'Cách triển khai trong bài:')}</span>
+                            <span class="essay-guided-clause-detail-label">${guidedText('How to address it', 'Cách triển khai')}</span>
                             <p class="essay-guided-clause-detail-text">${escapeHtml(guidedText(item.instructionEn, item.instructionVi))}</p>
                         </div>
                         <div class="essay-guided-clause-trap">
-                            <span class="essay-guided-clause-trap-label">⚠️ ${guidedText('Pitfall for this clause:', 'Lưu ý tránh bẫy cho phần này:')}</span>
+                            <span class="essay-guided-clause-trap-label">${guidedText('Avoid', 'Tránh')}</span>
                             <p class="essay-guided-clause-trap-text">${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
                         </div>
                     </div>
@@ -1516,7 +1780,6 @@
                 const items = grouped[key];
                 return `<div class="essay-guided-stance-card is-${meta.tone}">
                     <div class="essay-guided-stance-head">
-                        <span class="essay-guided-stance-icon" aria-hidden="true">${meta.icon}</span>
                         <strong>${escapeHtml(guidedText(meta.en, meta.vi))}</strong>
                         <span class="essay-guided-stance-count">${items.length} ${guidedText('ideas', 'ý')}</span>
                     </div>
@@ -1531,9 +1794,9 @@
             ${guidedSectionHead(section, guidedText('Analyze the prompt structure and core requirements before formulating your argument.', 'Phân tích kỹ cấu trúc câu hỏi và yêu cầu bắt buộc trước khi lập luận.'))}
             <h4 class="essay-guided-visually-hidden">${guidedText('Break down the prompt', 'Phân tích đề')}</h4>
             <blockquote class="essay-guided-prompt">${escapeHtml(guidedPack.prompt)}</blockquote>
-            ${guidedGroup('parts', guidedText('Interactive Question Structure', 'Cấu trúc câu hỏi tương tác'), segmentsHtml, { count: segments.length, defaultOpen: true })}
+            ${guidedGroup('parts', guidedText('Prompt broken into parts', 'Đề bài tách theo từng vế'), segmentsHtml, { count: segments.length, defaultOpen: true, help: 'clauses' })}
             ${guidedGroup('requirements', guidedText('Mandatory Requirements', 'Yêu cầu bắt buộc'), reqsHtml, { count: reqs.length, defaultOpen: true })}
-            ${guidedGroup('traps', guidedText('Prompt-Specific Traps to Avoid', 'Các bẫy đề thi cần tránh'), trapsHtml, { count: traps.length, tone: 'warn', defaultOpen: true })}
+            ${guidedGroup('traps', guidedText('Traps specific to this prompt', 'Bẫy riêng của đề này'), trapsHtml, { count: traps.length, tone: 'warn', defaultOpen: true, help: 'traps' })}
             ${guidedGroup('angles', guidedText('Suggested Approaches', 'Gợi ý các hướng tiếp cận'), anglesHtml, { count: angles.length, defaultOpen: true })}
         </section>`;
     }
@@ -1650,12 +1913,14 @@
 
         // Stance selector tabs
         const stanceSelectorHtml = `
+        <div class="essay-guided-subhead">
+            <span>${guidedText('Your stance', 'Lập trường của bạn')}</span>${guidedHelpBtn('stance')}
+        </div>
         <div class="essay-guided-stance-selector" role="group" aria-label="${guidedText('Select essay stance', 'Chọn lập trường bài viết')}">
             ${plans.map(plan => {
                 const isSelected = guidedSelectedVariantId === plan.variantId;
                 const isDisagree = String(plan.stance || plan.variantId).toLowerCase().includes('disagree');
-                return `<button type="button" class="essay-guided-stance-tab${isSelected ? ' is-active' : ''}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${isSelected ? 'true' : 'false'}">
-                    <span class="essay-guided-stance-tab-icon">${isDisagree ? '👎' : '👍'}</span>
+                return `<button type="button" class="essay-guided-stance-tab${isSelected ? ' is-active' : ''}${isDisagree ? ' is-against' : ' is-for'}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${isSelected ? 'true' : 'false'}">
                     <span class="essay-guided-stance-tab-label">${escapeHtml(plan.label || plan.variantId)}</span>
                     <span class="essay-guided-stance-tab-state">${isSelected ? guidedText('Selected', 'Đang chọn') : guidedText('Choose', 'Chọn')}</span>
                 </button>`;
@@ -1668,7 +1933,7 @@
         <div class="essay-guided-points-container">
             <div class="essay-guided-points-head">
                 <div>
-                    <h4>${guidedText('Choose 2 Main Points for Your Essay', 'Chọn 2 luận điểm cho bài viết của bạn')}</h4>
+                    <h4>${guidedText('Choose 2 main points', 'Chọn 2 luận điểm')}${guidedHelpBtn('main-points')}</h4>
                     <p class="essay-guided-points-subtitle">${guidedText('Select the 2 most convincing arguments you want to develop in Body 1 & Body 2.', 'Chọn 2 luận điểm bạn thấy thuyết phục nhất để triển khai trong Thân bài 1 & Thân bài 2.')}</p>
                 </div>
                 <div class="essay-guided-meter${selectedCount >= 2 ? ' is-full' : ''}">
@@ -1699,7 +1964,6 @@
                         ${isExplOpen ? `
                         <div class="essay-guided-point-expl">
                             <div class="essay-guided-point-expl-head">
-                                <span class="essay-guided-point-expl-icon" aria-hidden="true">💡</span>
                                 <strong>${guidedText('Argument Strategy & Real-World Elaboration', 'Giải thích chi tiết & Hướng dẫn triển khai')}</strong>
                             </div>
                             <p class="essay-guided-point-expl-desc">${escapeHtml(guidedLanguage === 'vi' ? (point.explVi || 'Luận điểm này làm rõ lập trường của bạn. Hãy giải thích nguyên nhân và đưa ra dẫn chứng thực tế.') : (point.explEn || 'Develop this argument with a clear causal explanation and supporting real-world evidence.'))}</p>
@@ -2036,12 +2300,12 @@
                     </button>
                 </div>
                 <div class="essay-guided-vocab-example">
-                    <span class="essay-guided-vocab-example-label">📝 ${guidedText('Essay Example:', 'Ví dụ trong bài:')}</span>
+                    <span class="essay-guided-vocab-example-label">${guidedText('In an essay', 'Ví dụ trong bài')}</span>
                     <p class="essay-guided-vocab-example-text">"${escapeHtml(vocabInfo.en)}"</p>
                 </div>
                 ${isViOpen ? `
                 <div class="essay-guided-vocab-vi-box">
-                    <span class="essay-guided-vocab-vi-label">🇻🇳 ${guidedText('Vietnamese:', 'Dịch nghĩa & ngữ cảnh:')}</span>
+                    <span class="essay-guided-vocab-vi-label">${guidedText('Vietnamese', 'Nghĩa & ngữ cảnh')}</span>
                     <p class="essay-guided-vocab-vi-text">${escapeHtml(vocabInfo.vi)}</p>
                 </div>` : ''}
             </div>`;
@@ -2062,10 +2326,10 @@
                         <span aria-hidden="true">?</span>
                     </button>
                 </div>
-                <p class="essay-guided-collo-example">📝 <em>"${escapeHtml(info.example)}"</em></p>
+                <p class="essay-guided-collo-example"><em>&ldquo;${escapeHtml(info.example)}&rdquo;</em></p>
                 ${isColloViOpen ? `
                 <div class="essay-guided-collo-vi-box">
-                    <p class="essay-guided-collo-vi-text">🇻🇳 <em>"${escapeHtml(info.exampleVi)}"</em></p>
+                    <p class="essay-guided-collo-vi-text"><em>&ldquo;${escapeHtml(info.exampleVi)}&rdquo;</em></p>
                 </div>` : ''}
             </div>`;
         }).join('')}</div>` : '';
@@ -2087,19 +2351,19 @@
         const grammarHtml = `
         <div class="essay-guided-pattern-workbench">
             <div class="essay-guided-pattern-purpose">
-                <strong>🎯 ${guidedText('How to use in your essay:', 'Mục đích & Cách sử dụng:')}</strong>
+                <strong>${guidedText('How to use it', 'Cách sử dụng')}</strong>
                 <span>${guidedText(
                     'Use this pattern in your Introduction (Sentence 2) to state a balanced thesis, or in Body 2 to concede a counter-argument before defending your stance.',
                     'Dùng cấu trúc này ở Mở bài (Câu 2) để nêu luận đề cân bằng, hoặc ở Thân bài 2 để thừa nhận góc nhìn đối lập trước khi bảo vệ lập trường của bạn.'
                 )}</span>
             </div>
             <div class="essay-guided-pattern-formula-card">
-                <span class="essay-guided-pattern-badge">📐 ${guidedText('Complex Sentence Formula', 'Công thức câu phức')}</span>
+                <span class="essay-guided-pattern-badge">${guidedText('Formula', 'Công thức')}</span>
                 <code class="essay-guided-pattern-code">Although [Concession X], I believe [Your Stance Y] because [Reason Z].</code>
             </div>
             <div class="essay-guided-pattern-applied-card">
-                <span class="essay-guided-pattern-badge">✍️ ${guidedText('Concrete Application for this Essay', 'Áp dụng thực tế cho bài viết này')}</span>
-                <p class="essay-guided-pattern-sentence">"${escapeHtml(appliedPattern)}"</p>
+                <span class="essay-guided-pattern-badge">${guidedText('Applied to this prompt', 'Áp dụng cho đề này')}</span>
+                <p class="essay-guided-pattern-sentence">&ldquo;${escapeHtml(appliedPattern)}&rdquo;</p>
             </div>
         </div>`;
 
@@ -2111,7 +2375,7 @@
                 words: ['To begin with', 'First and foremost'],
                 purposeEn: 'Introduce your first selected main point in Body 1.',
                 purposeVi: 'Mở đầu Thân bài 1 và giới thiệu Luận điểm 1 đã chọn.',
-                example: `To begin with, ${cleanArgumentClaim(body1Point || 'rigid educational frameworks frequently suppress curiosity').toLowerCase()}.`
+                example: `To begin with, ${asClause(body1Point || 'rigid educational frameworks frequently suppress curiosity')}.`
             },
             {
                 badgeEn: 'Stage 2 · Elaboration & Mechanism',
@@ -2143,7 +2407,7 @@
                 words: ['Furthermore', 'In addition'],
                 purposeEn: 'Transition smoothly to your second main argument in Body 2.',
                 purposeVi: 'Chuyển ý mượt mà sang Luận điểm 2 ở Thân bài 2.',
-                example: `Furthermore, ${cleanArgumentClaim(body2Point || 'structured schooling provides essential collaborative skills').toLowerCase()}.`
+                example: `Furthermore, ${asClause(body2Point || 'structured schooling provides essential collaborative skills')}.`
             },
             {
                 badgeEn: 'Stage 6 · Conclusion Synthesis',
@@ -2158,9 +2422,9 @@
         const cohesionHtml = `
         <div class="essay-guided-cohesion-stages">
             <p class="essay-guided-cohesion-intro">
-                🔗 ${guidedText(
-                    'Step-by-step cohesive transitions mapped to your chosen main points and essay paragraphs:',
-                    'Hệ thống từ nối theo từng giai đoạn viết đoạn văn, liên kết trực tiếp với các luận điểm bạn đã chọn:'
+                ${guidedText(
+                    'Transitions in the order you will need them, tied to the main points you chose.',
+                    'Từ nối xếp theo đúng thứ tự bạn sẽ cần, gắn với luận điểm bạn đã chọn.'
                 )}
             </p>
             <div class="essay-guided-cohesion-cards">
@@ -2174,8 +2438,8 @@
                     </div>
                     <p class="essay-guided-cohesion-purpose">${escapeHtml(guidedText(stage.purposeEn, stage.purposeVi))}</p>
                     <div class="essay-guided-cohesion-demo">
-                        <span class="essay-guided-cohesion-demo-label">📝 ${guidedText('Sentence in Action:', 'Câu mẫu áp dụng:')}</span>
-                        <p class="essay-guided-cohesion-demo-text">"${escapeHtml(stage.example)}"</p>
+                        <span class="essay-guided-cohesion-demo-label">${guidedText('In action', 'Câu mẫu')}</span>
+                        <p class="essay-guided-cohesion-demo-text">&ldquo;${escapeHtml(stage.example)}&rdquo;</p>
                     </div>
                 </div>`).join('')}
             </div>
@@ -2185,13 +2449,13 @@
         return `<section class="essay-guided-section">
             ${guidedSectionHead(section, guidedText('Select vocabulary with level-adapted examples, contextual collocations, and paragraph-by-paragraph cohesive linking words.', 'Chọn từ vựng theo trình độ, các cụm từ học thuật và hệ thống từ nối liên kết trực tiếp với dàn bài của bạn.'))}
             <div class="essay-guided-meter${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
-                <span>${guidedText('Targets selected for your checklist', 'Từ vựng mục tiêu đã chọn (hiển thị trong checklist)')}</span>
+                <span>${guidedText('Targets you commit to using', 'Mục tiêu bạn cam kết sẽ dùng')}${guidedHelpBtn('targets')}</span>
                 <strong>${used}/${GUIDED_MAX_TARGETS}</strong>
             </div>
             ${guidedGroup('vocabulary', guidedText('Core Vocabulary with Context Examples', 'Từ vựng cốt lõi & Ví dụ theo trình độ'), vocabHtml, { count: vocabulary.length, defaultOpen: true })}
             ${guidedGroup('collocations', guidedText('Collocations & Academic Usage', 'Cụm từ đi kèm & Cách dùng học thuật'), colloHtml, { count: collocations.length, defaultOpen: true })}
-            ${guidedGroup('grammar', guidedText('Complex Sentence Pattern Workbench', 'Mẫu câu phức học thuật & Cách áp dụng'), grammarHtml, { count: 1, defaultOpen: true })}
-            ${guidedGroup('cohesion', guidedText('Cohesive Linking Words by Paragraph Stage', 'Từ nối mạch lạc theo từng giai đoạn thân bài'), cohesionHtml, { count: linkingStages.length, defaultOpen: true })}
+            ${guidedGroup('grammar', guidedText('Complex sentence pattern', 'Mẫu câu phức'), grammarHtml, { count: 1, defaultOpen: true, help: 'pattern' })}
+            ${guidedGroup('cohesion', guidedText('Linking words, in order', 'Từ nối theo thứ tự'), cohesionHtml, { count: linkingStages.length, defaultOpen: true, help: 'cohesion' })}
         </section>`;
     }
 
@@ -2225,7 +2489,7 @@
             </div>
             <div class="essay-guided-inline-actions">
                 <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">${guidedText('Copy outline', 'Sao chép dàn ý')}</button>
-                <span class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}</span>
+                <span class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}${guidedHelpBtn('plan-source')}</span>
             </div>
         </section>`;
     }
@@ -2412,12 +2676,12 @@
         return `
         <div class="essay-guided-frame is-interactive">
             <div class="essay-guided-frame-head">
-                <span class="essay-guided-reveal-label">✏️ ${guidedText('Interactive Sentence Builder (Type in the blanks):', 'Tự ghép câu hoàn chỉnh (Gõ trực tiếp vào chỗ trống):')}</span>
-                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">📋 ${guidedText('Copy Assembled Sentence', 'Sao chép câu hoàn chỉnh')}</button>
+                <span class="essay-guided-reveal-label">${guidedText('Fill in the blanks', 'Điền vào chỗ trống')}${guidedHelpBtn('frame')}</span>
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">${guidedText('Copy sentence', 'Sao chép câu')}</button>
             </div>
             ${inputsHtml}
             <div class="essay-guided-frame-assembled">
-                <span class="essay-guided-assembled-label">🚀 ${guidedText('Your Sentence in Real Time:', 'Câu bạn đã ghép:')}</span>
+                <span class="essay-guided-assembled-label">${guidedText('Your sentence', 'Câu của bạn')}</span>
                 <p class="essay-guided-assembled-text">${previewHtml.trim()}</p>
             </div>
         </div>`;
@@ -2457,8 +2721,7 @@
         const workflowGuideHtml = `
         <div class="essay-guided-scaffold-guide">
             <div class="essay-guided-scaffold-guide-head">
-                <span class="essay-guided-scaffold-guide-icon" aria-hidden="true">💡</span>
-                <strong>${guidedText('How to use Sentence Support progressively:', 'Hướng dẫn 3 bước viết câu hoàn chỉnh:')}</strong>
+                <strong>${guidedText('How to use the three hint levels', 'Cách dùng 3 mức gợi ý')}</strong>${guidedHelpBtn('hint-level')}
             </div>
             <ul class="essay-guided-scaffold-guide-steps">
                 <li><strong>${guidedText('Level 1 (Purpose):', 'Mức 1 (Mục đích):')}</strong> ${guidedText('Read each sentence goal and write in your own words.', 'Đọc mục đích từng câu và tự diễn đạt bằng từ ngữ của bạn.')}</li>
@@ -2468,7 +2731,7 @@
         </div>`;
 
         const scaffoldTabsHtml = `
-        <div class="essay-guided-scaffold-tabs" role="tablist">
+        <div class="essay-guided-scaffold-tabs" role="tablist" aria-label="${guidedText('Paragraph', 'Đoạn văn')}">
             <button type="button" class="essay-guided-scaffold-tab${guidedActiveScaffoldPara === 'intro' ? ' is-active' : ''}" data-guided-action="set-scaffold-tab" data-tab="intro">
                 1. ${guidedText('Introduction', 'Mở bài')} (${introCount})
             </button>
@@ -2487,7 +2750,7 @@
         </div>`;
 
         const depthSwitch = `<div class="essay-guided-depth">
-            <span class="essay-guided-depth-label">${guidedText('Hint level (Adjust how much support you need)', 'Mức độ gợi ý (Điều chỉnh mức trợ giúp bạn cần)')}</span>
+            <span class="essay-guided-depth-label">${guidedText('Hint level', 'Mức gợi ý')}${guidedHelpBtn('hint-level')}</span>
             <div class="essay-guided-depth-track" role="group" aria-label="${guidedText('Hint level', 'Mức gợi ý')}">
                 ${depths.map(item => `<button type="button" class="${guidedHintDepth === item.depth ? 'is-active' : ''}" data-guided-action="set-depth" data-depth="${item.depth}" aria-pressed="${guidedHintDepth === item.depth ? 'true' : 'false'}">${escapeHtml(guidedText(item.en, item.vi))}</button>`).join('')}
             </div>
@@ -2497,7 +2760,7 @@
         const cards = visibleSentences.map(sentence => {
             const paragraph = String(sentence.paragraph || '').trim();
             const heading = paragraph && paragraph !== currentParagraph
-                ? `<h4 class="essay-guided-paragraph-head">📌 ${escapeHtml(paragraph.toUpperCase())}</h4>`
+                ? `<h4 class="essay-guided-paragraph-head">${escapeHtml(paragraph)}</h4>`
                 : '';
             currentParagraph = paragraph || currentParagraph;
             const sId = sentence.sentenceId || `sent_${sentence.index || 1}`;
@@ -2511,12 +2774,12 @@
                 : '';
             const model = guidedHintDepth >= 3 && modelSentence
                 ? `<div class="essay-guided-model">
-                    <span class="essay-guided-reveal-label">🌟 ${guidedText('Full Model Sentence:', 'Câu hoàn chỉnh mẫu:')}</span>
+                    <span class="essay-guided-reveal-label">${guidedText('Model sentence', 'Câu mẫu')}</span>
                     <p class="essay-guided-model-text">${escapeHtml(modelSentence)}</p>
                 </div>`
                 : '';
             const reveal = guidedHintDepth < 3
-                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">🔍 ${guidedText(guidedHintDepth === 1 ? 'Show Fillable Frame' : 'Show Full Model Sentence', guidedHintDepth === 1 ? 'Hiện khung câu mẫu' : 'Hiện câu hoàn chỉnh mẫu')}</button>`
+                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show fillable frame' : 'Show model sentence', guidedHintDepth === 1 ? 'Hiện khung câu' : 'Hiện câu mẫu')}</button>`
                 : '';
             return `${heading}<article class="essay-guided-sentence">
                 <div class="essay-guided-sentence-meta">
@@ -2527,7 +2790,8 @@
                 ${frame}${model}
                 <div class="essay-guided-sentence-actions">
                     ${reveal}
-                    <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? '✓ ' + guidedText('Target Selected', 'Đã chọn mục tiêu') : '+ ' + guidedText('Track as Target', 'Chọn làm mục tiêu')}</button>
+                    <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? '✓ ' + guidedText('Target set', 'Đã chọn mục tiêu') : '+ ' + guidedText('Track as target', 'Chọn làm mục tiêu')}</button>
+                    ${guidedHelpBtn('targets')}
                 </div>
             </article>`;
         }).join('');
@@ -2535,14 +2799,17 @@
         return `<section class="essay-guided-section">
             ${guidedSectionHead(section, guidedText('Build your essay sentence-by-sentence. Type directly into the blanks to auto-transfer into your final essay.', 'Xây dựng bài viết theo từng câu. Gõ trực tiếp vào chỗ trống để câu tự động chuyển sang bài viết hoàn chỉnh.'))}
             ${workflowGuideHtml}
-            ${scaffoldTabsHtml}
-            ${depthSwitch}
-            ${cards || `<p class="essay-guided-empty">${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}
-            <div class="essay-guided-scaffold-footer-cta">
-                <button type="button" class="essay-guided-stepnav-btn is-primary" data-guided-action="focus-editor">
-                    🚀 ${guidedText('Start writing & Transfer my sentences →', 'Bắt đầu viết & Chuyển câu đã ghép vào bài →')}
-                </button>
+            <!-- Frozen while the sentence list scrolls: paragraph and hint level are
+                 the two controls a learner reaches for mid-list. -->
+            <div class="essay-guided-scaffold-controls">
+                <div class="essay-guided-scaffold-tabs-row">
+                    ${scaffoldTabsHtml}
+                    ${guidedHelpBtn('scaffold-tabs')}
+                </div>
+                ${depthSwitch}
             </div>
+            ${cards || `<p class="essay-guided-empty">${guidedText('No scaffold is available for this direction.', 'Hướng này chưa có khung hỗ trợ.')}</p>`}
+
         </section>`;
     }
 
@@ -2576,6 +2843,7 @@
                 <span class="essay-guided-checklist-count${complete ? ' is-complete' : ''}">${done}/${checks.length}</span>
                 <span class="essay-guided-group-chevron" aria-hidden="true"></span>
             </button>
+            ${guidedHelpBtn('checklist')}
             <div class="essay-guided-checklist-body"${open ? '' : ' hidden'}>
                 ${checks.map((label, index) => `<label class="${guidedChecklistState.has(index) ? 'is-checked' : ''}"><input type="checkbox" data-guided-check="${index}"${guidedChecklistState.has(index) ? ' checked' : ''}> <span>${escapeHtml(label)}</span></label>`).join('')}
                 <small>${guidedText('Tick every item to unlock Submit.', 'Đánh dấu mọi mục để mở khoá nút Nộp bài.')}</small>
@@ -3104,6 +3372,7 @@
         // Show prompt & badges
         if (el.promptDisplay) {
             el.promptDisplay.innerHTML = `<div class="essay-prompt-text">${escapeHtml(currentEntry.prompt)}</div>`;
+            syncStickyPromptAffordance();
         }
         if (el.writeMetaBadges) {
             el.writeMetaBadges.innerHTML = buildTopicBadgesHtml(currentEntry, { isPreview: true });
@@ -3209,6 +3478,12 @@
         return text.split(/\s+/).filter(w => w.length > 0).length;
     }
 
+    function syncStickyWordCount() {
+        if (!el.wordCountSticky || !el.wordCountDisplay) return;
+        el.wordCountSticky.textContent = el.wordCountDisplay.textContent;
+        el.wordCountSticky.className = `essay-word-count-sticky ${el.wordCountDisplay.classList.contains('essay-wc-good') ? 'essay-wc-good' : el.wordCountDisplay.classList.contains('essay-wc-warn') ? 'essay-wc-warn' : 'essay-wc-bad'}`;
+    }
+
     function updateWordCount() {
         const count = getWordCount();
         if (el.wordCountDisplay) {
@@ -3222,6 +3497,7 @@
                 el.wordCountDisplay.className = 'essay-word-count essay-wc-bad';
             }
         }
+        syncStickyWordCount();
     }
 
     /* ──────────────────────────── SCORING ────────────────────────── */

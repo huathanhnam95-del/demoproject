@@ -69,23 +69,94 @@ def _requirements(prompt_type: str) -> list[dict[str, Any]]:
     return [{"id": key, "required": True, "en": en, "vi": vi} for key, en, vi in values.get(prompt_type, values["other"])]
 
 
-def _prompt_traps(prompt_type: str) -> list[dict[str, str]]:
-    common = {
-        "en": "Do not write a general essay about the topic without answering the exact task.",
-        "vi": "Không viết bài chung chung về chủ đề mà không trả lời đúng yêu cầu của đề.",
+def clean_claim_text(text: str) -> str:
+    raw = str(text or "").strip()
+    cleaned = re.sub(
+        r"^(The essay argues that|The essay uses the concept of|The essay uses two main points:?|The essay uses|The body paragraphs detail|The writer believes that|The author suggests that|The response asserts that)\s*",
+        "",
+        raw,
+        flags=re.IGNORECASE
+    )
+    cleaned = re.sub(r"^(\d+\)\s*|Point \d+:\s*)", "", cleaned)
+    match = re.search(r"to support the (?:idea|view|claim|argument) that\s+(.+)$", cleaned, flags=re.IGNORECASE)
+    if match:
+        cleaned = match.group(1).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:]
+    return cleaned or raw
+
+
+def _thesis_frame(stance: str, topic: str) -> str:
+    s = str(stance or "").lower()
+    if "agree" in s and "disagree" not in s:
+        return f"In my view, I strongly agree with this perspective because {topic or 'this issue'} ____."
+    elif "disagree" in s:
+        return f"In my view, I disagree with this assertion because {topic or 'this issue'} ____."
+    elif "advantage" in s or "positive" in s:
+        return f"In my view, the benefits of {topic or 'this trend'} far outweigh the drawbacks because ____."
+    elif "disadvantage" in s or "negative" in s:
+        return f"In my view, the negative consequences of {topic or 'this development'} are more concerning because ____."
+    elif "both" in s or "discuss" in s:
+        return f"While both viewpoints offer valid considerations, I contend that {topic or 'this issue'} ____."
+    return f"In my view, {topic or 'this issue'} requires a nuanced approach because ____."
+
+
+def _prompt_traps(prompt: str, prompt_type: str, topic: str) -> list[dict[str, str]]:
+    traps = []
+    p_lower = str(prompt or "").lower()
+    if '"' in prompt or '“' in prompt or 'quote' in p_lower or 'said' in p_lower:
+        traps.append({
+            "en": "Do not write a biography of the quoted figure; focus strictly on analyzing and evaluating the core claim.",
+            "vi": "Không viết về tiểu sử của nhân vật được trích dẫn; hãy tập trung phân tích và đánh giá đúng nhận định trong đề.",
+        })
+    if '?' in prompt and (prompt.count('?') > 1 or 'and' in prompt or 'also' in prompt):
+        traps.append({
+            "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+            "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng.",
+        })
+
+    type_traps = {
+        "agree_disagree": {
+            "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+            "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài.",
+        },
+        "discuss_both_views": {
+            "en": "Do not discuss only your preferred side; give equal analytical weight to both perspectives before concluding.",
+            "vi": "Không chỉ phân tích phía bạn ủng hộ; hãy trình bày công bằng cả hai quan điểm trước khi đưa ra kết luận.",
+        },
+        "problems_solutions": {
+            "en": "Do not list abstract solutions without directly linking each solution to a specific root cause mentioned.",
+            "vi": "Không liệt kê giải pháp chung chung mà không gắn kết trực tiếp với từng nguyên nhân cụ thể đã nêu.",
+        },
+        "advantages_disadvantages": {
+            "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+            "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn.",
+        },
     }
-    by_type = {
-        "agree_disagree": {"en": "Do not explain the statement without making your own position clear.", "vi": "Không chỉ giải thích nhận định mà quên nêu rõ quan điểm cá nhân."},
-        "discuss_both_views": {"en": "Do not discuss only the side you prefer; explain both views before your position.", "vi": "Không chỉ thảo luận phía bạn thích; hãy giải thích cả hai phía trước khi nêu quan điểm."},
-        "problems_solutions": {"en": "Do not list solutions without connecting them to the stated problems.", "vi": "Không liệt kê giải pháp mà không liên hệ với các vấn đề đã nêu."},
-        "advantages_disadvantages": {"en": "Do not list advantages and disadvantages without making the required judgement.", "vi": "Không chỉ liệt kê ưu nhược điểm mà quên đưa ra nhận định bắt buộc."},
-    }
-    return [common, by_type.get(prompt_type, {"en": "Do not ignore a direct question in the prompt.", "vi": "Không bỏ qua câu hỏi trực tiếp trong đề."})]
+    match = type_traps.get(prompt_type, {
+        "en": f"Do not write off-topic generalizations; ground every point in the specific context of {topic or 'the prompt'}.",
+        "vi": f"Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của {topic or 'đề bài'}.",
+    })
+    traps.append(match)
+    if len(traps) < 2:
+        traps.append({
+            "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+            "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể.",
+        })
+    return traps[:3]
 
 
 def _gloss(term: str, topic: str) -> tuple[str, str]:
-    return (f"A useful word for discussing {topic or 'this topic'}.",
-            f"Từ hữu ích để thảo luận về {topic or 'chủ đề này'}.")
+    return (f"Key academic term used to analyze core concepts in {topic or 'this domain'}.",
+            f"Thuật ngữ học thuật then chốt dùng để phân tích các khía cạnh của {topic or 'chủ đề này'}.")
+
+
+def _collocation_gloss(collo: str, topic: str) -> tuple[str, str]:
+    return (
+        f"Natural academic collocation that enhances cohesion when discussing {topic or 'this subject'}.",
+        f"Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về {topic or 'chủ đề này'}."
+    )
 
 
 def _sample_variants(question: dict[str, Any], level_id: str) -> list[dict[str, Any]]:
@@ -141,36 +212,43 @@ def _split_sentences(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"(?<=[.!?])\s+", _clean(text)) if part.strip()]
 
 
-def _scaffolds(variant: dict[str, Any], level_id: str, topic: str) -> list[dict[str, Any]]:
-    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", _clean(variant.get("essay"))) if p.strip()]
+def _scaffolds(variant: dict[str, Any], level_id: str, topic: str, prompt: str = "") -> list[dict[str, Any]]:
+    raw_essay = str(variant.get("essay") or "").strip()
+    # Split paragraphs by double newline directly on raw_essay to preserve structure
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", raw_essay) if p.strip()]
     if len(paragraphs) < 4:
-        paragraphs = [
-            f"This prompt concerns {topic or 'an important issue'}.",
-            f"One important point is that {topic or 'this issue'} affects people in practical ways.",
-            f"A second point is that the wider effects of {topic or 'this issue'} should also be considered.",
-            "For these reasons, the position above is the most convincing.",
-        ]
+        lines = [p.strip() for p in raw_essay.split("\n") if len(p.strip()) > 35]
+        if len(lines) >= 4:
+            paragraphs = lines[:4]
+        else:
+            paragraphs = [
+                f"The question of whether {topic or 'this issue'} exerts a positive influence on society has sparked significant debate.",
+                f"To begin with, a primary consideration is that {topic or 'this issue'} provides direct practical benefits for development.",
+                f"Furthermore, another crucial dimension is the broader social and institutional implications of {topic or 'this development'}.",
+                f"In conclusion, having analyzed both theoretical principles and practical impacts, I reaffirm my stance on {topic or 'this subject'}.",
+            ]
     output: list[dict[str, Any]] = []
-    for paragraph_index in range(4):
+    for paragraph_index in range(min(4, len(paragraphs))):
         sentences = _split_sentences(paragraphs[paragraph_index])
-        expected = 3 if paragraph_index == 0 else 2 if paragraph_index == 3 else 5
+        expected = 3 if paragraph_index == 0 else 2 if paragraph_index == 3 else 4
         if not sentences:
             sentences = ["" for _ in range(expected)]
-        for index in range(min(max(len(sentences), expected), 5 if paragraph_index in (1, 2) else 3)):
+        num_sentences = min(max(len(sentences), expected), 5 if paragraph_index in (1, 2) else 3)
+        for index in range(num_sentences):
             model_sentence = sentences[index] if index < len(sentences) else ""
             purpose = _sentence_purpose(paragraph_index, index)
             frame = {
-                "paraphrase the prompt": "The question of ____ has become increasingly important.",
+                "paraphrase the prompt": "The issue of ____ has sparked considerable debate in contemporary society.",
                 "state your position": "In my view, I ____ because ____.",
-                "preview the main points": "This essay will discuss ____ and ____.",
-                "introduce the main point": "One important reason is that ____.",
-                "explain why it matters": "This is because ____.",
-                "give a relevant example": "For example, ____.",
-                "show the effect": "As a result, ____.",
-                "link back to the position": "Therefore, this supports the view that ____.",
-                "restate the position": "In conclusion, I believe that ____.",
-                "synthesise the main points": "This is because ____ and ____.",
-            }[purpose]
+                "preview the main points": "This essay will examine ____ as well as ____.",
+                "introduce the main point": "First and foremost, a major consideration is that ____.",
+                "explain why it matters": "Specifically, this occurs because ____.",
+                "give a relevant example": "For instance, real-world experience demonstrates that ____.",
+                "show the effect": "Consequently, this leads to ____.",
+                "link back to the position": "Therefore, this evidence confirms that ____.",
+                "restate the position": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+                "synthesise the main points": "Looking forward, addressing both ____ and ____ will be vital.",
+            }.get(purpose, "Furthermore, it is evident that ____.")
             output.append({
                 "sentenceId": f"p{paragraph_index + 1}s{index + 1}",
                 "paragraph": ["introduction", "body1", "body2", "conclusion"][paragraph_index],
@@ -202,7 +280,8 @@ def build_template_candidate(question: dict[str, Any], collocations: set[str]) -
         for variant in variants:
             analysis = variant.get("analysis") if isinstance(variant.get("analysis"), dict) else {}
             for key in ("point1", "point2"):
-                point = _clean(analysis.get(key))
+                raw_point = _clean(analysis.get(key))
+                point = clean_claim_text(raw_point)
                 if point:
                     common_angles.append({
                         "id": f"{variant.get('id', 'angle')}-{key}",
@@ -234,7 +313,7 @@ def build_template_candidate(question: dict[str, Any], collocations: set[str]) -
         collocation_terms = [item for item in sorted(collocations) if any(token in item for token in _unique([topic, *[v["term"].lower() for v in vocabulary]]))]
         language_kit = {
             "vocabulary": vocabulary,
-            "collocations": [{"term": term, "enGloss": f"A natural academic word combination for {topic or 'this topic'}.", "viGloss": f"Cụm từ học thuật tự nhiên về {topic or 'chủ đề này'}."} for term in collocation_terms[:4]],
+            "collocations": [{"term": term, "enGloss": _collocation_gloss(term, topic)[0], "viGloss": _collocation_gloss(term, topic)[1]} for term in collocation_terms[:4]],
             "grammar": _grammar_for(prompt_type),
             "cohesion": _cohesion(),
         }
@@ -243,17 +322,20 @@ def build_template_candidate(question: dict[str, Any], collocations: set[str]) -
         for variant in variants:
             variant_id = str(variant.get("id") or "default")
             analysis = variant.get("analysis") if isinstance(variant.get("analysis"), dict) else {}
+            stance_val = _clean(variant.get("stance")) or "unspecified"
+            point1_clean = clean_claim_text(analysis.get("point1")) or f"A primary consideration regarding {topic or 'this issue'} is its direct impact."
+            point2_clean = clean_claim_text(analysis.get("point2")) or f"Another crucial dimension of {topic or 'this issue'} is its long-term social effect."
             plans.append({
                 "variantId": variant_id,
                 "label": _clean(variant.get("label")) or variant_id,
-                "stance": _clean(variant.get("stance")) or "unspecified",
-                "thesisFrame": f"In my view, {topic or 'this issue'} should be considered from the perspective of {variant.get('stance') or 'the selected position'}.",
-                "point1": _clean(analysis.get("point1")) or f"A practical effect of {topic or 'this issue'}.",
-                "point2": _clean(analysis.get("point2")) or f"A wider effect of {topic or 'this issue'}.",
+                "stance": stance_val,
+                "thesisFrame": _thesis_frame(stance_val, topic),
+                "point1": point1_clean,
+                "point2": point2_clean,
                 "sampleVariantId": variant_id,
                 "sampleSourceStatus": "approved" if variant.get("qa", {}).get("status") == "approved" else "fallback_or_generated",
             })
-            scaffolds[variant_id] = _scaffolds(variant, level_id, topic)
+            scaffolds[variant_id] = _scaffolds(variant, level_id, topic, prompt)
         levels[level_id] = {
             "cefrEvidence": f"{level_id} uses controlled sentence frames, {len(vocabulary)} core vocabulary items, and prompt-specific academic structures.",
             "coreTargets": [{"id": f"{level_id}-vocab-{i + 1}", "type": "vocabulary", "term": item["term"], "source": item["source"]} for i, item in enumerate(vocabulary[:4])] + [{"id": f"{level_id}-grammar-1", "type": "grammar", "term": language_kit["grammar"][0]["en"]}],
@@ -275,7 +357,7 @@ def build_template_candidate(question: dict[str, Any], collocations: set[str]) -
             "hardVocabulary": [{"term": token, "enGloss": f"A key word in this prompt.", "viGloss": "Từ quan trọng trong đề."} for token in _unique(re.findall(r"[A-Za-z][A-Za-z'-]{6,}", prompt))[:8]],
             "requirements": _requirements(prompt_type),
             "angles": deduped_angles[:8],
-            "promptTraps": _prompt_traps(prompt_type),
+            "promptTraps": _prompt_traps(prompt, prompt_type, topic),
             "faq": [
                 {"questionEn": "What is this question asking?", "questionVi": "Đề này đang hỏi điều gì?", "answerEn": "Break the prompt into its direct requirements before choosing ideas.", "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."},
                 {"questionEn": "How many main ideas should I use?", "questionVi": "Tôi nên dùng bao nhiêu ý chính?", "answerEn": "Use two developed points with explanation and relevant examples.", "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."},

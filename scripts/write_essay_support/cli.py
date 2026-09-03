@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--timeout-s", type=int, default=180)
     parser.add_argument("--template-only", action="store_true", help="deterministic dry-run mode; not a production audit")
     parser.add_argument("--resume", action="store_true", help="resume an existing sidecar, skipping already published questions")
+    parser.add_argument("--benchmark-5", action="store_true", help="run 5 diverse archetype questions (1, 2, 5, 10, 25)")
     parser.add_argument("--quarantine-only", action="store_true", help="rerun only questions currently marked QUARANTINED")
     parser.add_argument("--validate-only", action="store_true")
     args = parser.parse_args(argv)
@@ -48,10 +49,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(validate_output(output_root), indent=2))
         return 0
     client = None if args.template_only else OllamaClient(args.ollama_url, args.timeout_s)
+    ids_to_run = ["1", "2", "5", "10", "25"] if args.benchmark_5 else _parse_ids(args.ids)
     report = run_batch(
         args.root,
         output_root,
-        question_ids=_parse_ids(args.ids),
+        question_ids=ids_to_run,
         template_only=args.template_only,
         client=client,
         resume=args.resume,

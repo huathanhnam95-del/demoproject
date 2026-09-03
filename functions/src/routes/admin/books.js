@@ -855,10 +855,13 @@ module.exports = function registerBookRoutes(router, deps) {
             }
 
             const filename = sourceDownloadFilename(bookData);
+            const isInline = req.query.inline === 'true' || req.query.mode === 'view';
             const [downloadUrl] = await file.getSignedUrl({
                 action: 'read',
                 expires: Date.now() + SOURCE_DOWNLOAD_TTL_MS,
-                responseDisposition: `attachment; filename="${filename.replace(/"/g, '')}"`,
+                responseDisposition: isInline
+                    ? `inline; filename="${filename.replace(/"/g, '')}"`
+                    : `attachment; filename="${filename.replace(/"/g, '')}"`,
                 responseType: 'application/pdf'
             });
 

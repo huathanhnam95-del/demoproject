@@ -762,6 +762,10 @@ window.CrmBooksWorkspace = (function () {
         let selectedBook = null;
         let selectedSummary = null;
         let activeTab = 'summary';
+        let activePageSubTab = 'text'; // 'text' | 'pdf'
+        let cachedSourcePdfUrl = '';
+        let cachedSourcePdfBookId = '';
+        let isLoadingSourcePdf = false;
         let uploadTask = null;
         let snapshotUnsubscribe = null;
         let threads = [];
@@ -1473,7 +1477,7 @@ window.CrmBooksWorkspace = (function () {
             if (targetPage === currentPage) return;
 
             const focusSelector = direction === 'prev' ? '.crm-books-page-prev' : '.crm-books-page-next';
-            if (isReducedMotionPreferred()) {
+            if (activePageSubTab === 'pdf' || isReducedMotionPreferred()) {
                 commitPageNavigation(targetPage, focusSelector);
                 return;
             }
@@ -1515,6 +1519,61 @@ window.CrmBooksWorkspace = (function () {
             stage.classList.add(`turning-${direction}`);
         }
 
+        async function loadSourcePdfUrl(bookId) {
+            if (!bookId) return '';
+            if (cachedSourcePdfBookId === bookId && cachedSourcePdfUrl) {
+                return cachedSourcePdfUrl;
+            }
+            try {
+                const res = await apiGet(`/api/admin/books/${encodeURIComponent(bookId)}/source?inline=true`);
+                const downloadUrl = res?.downloadUrl || res?.data?.downloadUrl;
+                if (downloadUrl) {
+                    cachedSourcePdfUrl = downloadUrl;
+                    cachedSourcePdfBookId = bookId;
+                    return downloadUrl;
+                }
+            } catch (err) {
+                console.error('[CRM Books] Failed to load source PDF URL:', err);
+            }
+            return '';
+        }
+
+        function renderSourcePdfStage(bookId, pageNum) {
+            const pdfUrl = (cachedSourcePdfBookId === bookId && cachedSourcePdfUrl) ? cachedSourcePdfUrl : '';
+            if (isLoadingSourcePdf) {
+                return `<div class="crm-books-pdf-container loading">` +
+                    `<div class="crm-books-pdf-loading">` +
+                    `<div class="crm-spinner" style="width:28px; height:28px; border-width:3px; margin:0 auto 12px;"></div>` +
+                    `<p style="color:var(--books-text-muted); font-size:0.95rem;">Loading original source PDF…</p>` +
+                    `</div>` +
+                    `</div>`;
+            }
+            if (!pdfUrl) {
+                return `<div class="crm-books-pdf-container empty">` +
+                    `<div class="crm-books-pdf-empty-state">` +
+                    `<div class="crm-books-empty-icon" style="margin-bottom:12px;">${ICON_DOC}</div>` +
+                    `<h4 style="margin:0 0 6px; font-weight:600;">Source PDF Not Loaded</h4>` +
+                    `<p class="crm-muted" style="margin:0 0 16px;">View the original publication alongside extracted text.</p>` +
+                    `<button type="button" class="crm-books-jump-to-source-btn crm-books-load-pdf-btn">Load Source PDF</button>` +
+                    `</div>` +
+                    `</div>`;
+            }
+            const frameSrc = `${pdfUrl}#page=${pageNum}&toolbar=1&navpanes=1`;
+            return `<div class="crm-books-pdf-container">` +
+                `<div class="crm-books-pdf-header-bar">` +
+                `<div class="crm-books-pdf-meta">` +
+                `<span class="crm-books-pdf-badge">Original Document</span>` +
+                `<span class="crm-books-pdf-page-indicator">Synchronized to Page <strong>${pageNum}</strong> of ${pagesData?.totalPages || ''}</span>` +
+                `</div>` +
+                `<div class="crm-books-pdf-actions">` +
+                `<a href="${pdfUrl}#page=${pageNum}" target="_blank" rel="noopener" class="crm-books-pdf-action-link" title="Open PDF in a new browser tab">Open in new tab ↗</a>` +
+                `<button type="button" class="crm-books-pdf-download-btn" data-book-id="${escapeHtml(bookId)}" title="Download source PDF">${ICON_DOWNLOAD}<span>Download</span></button>` +
+                `</div>` +
+                `</div>` +
+                `<iframe class="crm-books-pdf-iframe" src="${frameSrc}" title="Source PDF Reader" data-current-page="${pageNum}"></iframe>` +
+                `</div>`;
+        }
+
         function renderPagesTab() {
             if (!pagesData) {
                 loadPagesMetadata();
@@ -1530,33 +1589,69 @@ window.CrmBooksWorkspace = (function () {
             const navigation = getPageNavigationState();
             const prevDisabled = navigation.prevDisabled ? ' disabled aria-disabled="true"' : '';
             const nextDisabled = navigation.nextDisabled ? ' disabled aria-disabled="true"' : '';
-            return `<div class="crm-books-pages-nav">` +
+
+            const subtabsHtml = `<div class="crm-books-pages-subtabs" role="tablist" aria-label="Page viewing mode">` +
+                `<button type="button" class="crm-books-subtab-btn${activePageSubTab === 'text' ? ' active' : ''}" data-page-subtab="text" role="tab" aria-selected="${activePageSubTab === 'text'}" title="Read extracted and formatted book text">` +
+                `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>` +
+                `<span>Extracted Text</span>` +
+                `</button>` +
+                `<button type="button" class="crm-books-subtab-btn${activePageSubTab === 'pdf' ? ' active' : ''}" data-page-subtab="pdf" role="tab" aria-selected="${activePageSubTab === 'pdf'}" title="Read original source PDF document">` +
+                `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>` +
+                `<span>Source PDF</span>` +
+                `</button>` +
+                `</div>`;
+
+            const jumpBtnHtml = activePageSubTab === 'text'
+                ? `<button type="button" class="crm-books-jump-to-source-btn" data-target-page="${currentPage}" title="View page ${currentPage} in original source PDF">` +
+                  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l3 3m0 0l3-3m-3 3V11"/></svg>` +
+                  `<span>View in Source PDF</span>` +
+                  `</button>`
+                : `<button type="button" class="crm-books-jump-to-text-btn" data-target-page="${currentPage}" title="View page ${currentPage} in extracted text reader">` +
+                  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/><path d="M15 15l-3-3m0 0l-3 3m3-3v8"/></svg>` +
+                  `<span>View Extracted Text</span>` +
+                  `</button>`;
+
+            const navHtml = `<div class="crm-books-pages-nav">` +
                 `<div class="crm-books-page-navigation-group">` +
                 `<button class="crm-books-page-prev"${prevDisabled}>← Prev</button>` +
                 `<span class="crm-books-pages-indicator">Page <input type="number" class="crm-books-page-input" value="${currentPage}" min="1" max="${pagesData.totalPages}"> of ${pagesData.totalPages}</span>` +
                 `<button class="crm-books-page-next"${nextDisabled}>Next →</button>` +
                 `</div>` +
-                `<label class="crm-books-font-controls" for="crm-books-font-scale">` +
-                `<span class="crm-books-font-scale-label">Text size</span>` +
-                `<span class="crm-books-font-scale-small" aria-hidden="true">A</span>` +
-                `<input id="crm-books-font-scale" class="crm-books-font-scale" type="range" min="${READER_FONT_SCALE_MIN}" max="${READER_FONT_SCALE_MAX}" step="${READER_FONT_SCALE_STEP}" value="${readerFontScale}" aria-label="Reader text size" aria-valuetext="${readerFontScale} percent">` +
-                `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
-                `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
-                `</label>` +
-                `<button class="crm-books-open-bookview" title="Open book view">` +
-                `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
-                `<span>Open book view</span></button>` +
-                `<button class="crm-books-bookmark-toggle${isPageBookmarked(selectedBookId, currentPage) ? ' bookmarked' : ''}" title="${isPageBookmarked(selectedBookId, currentPage) ? 'Page bookmarked' : 'Bookmark this page'}">` +
-                `<svg viewBox="0 0 24 24" width="16" height="16" fill="${isPageBookmarked(selectedBookId, currentPage) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>` +
-                `<span>Bookmark</span></button>` +
-                `<button class="crm-books-bookmarks-open" title="View all bookmarks">` +
-                `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10"/></svg>` +
-                `<span>All bookmarks${bookmarks.length ? ` (${bookmarks.length})` : ''}</span></button>` +
-                `<button class="crm-books-split-toggle${splitViewEnabled ? ' active' : ''}" title="${splitViewEnabled ? 'Exit split view' : 'Split view: page + chat'}">` +
-                `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M3 3h18v18H3z"/></svg>` +
-                `<span>Split</span></button>` +
+                jumpBtnHtml +
+                (activePageSubTab === 'text'
+                    ? `<label class="crm-books-font-controls" for="crm-books-font-scale">` +
+                      `<span class="crm-books-font-scale-label">Text size</span>` +
+                      `<span class="crm-books-font-scale-small" aria-hidden="true">A</span>` +
+                      `<input id="crm-books-font-scale" class="crm-books-font-scale" type="range" min="${READER_FONT_SCALE_MIN}" max="${READER_FONT_SCALE_MAX}" step="${READER_FONT_SCALE_STEP}" value="${readerFontScale}" aria-label="Reader text size" aria-valuetext="${readerFontScale} percent">` +
+                      `<span class="crm-books-font-scale-large" aria-hidden="true">A</span>` +
+                      `<output class="crm-books-font-scale-output" for="crm-books-font-scale">${readerFontScale}%</output>` +
+                      `</label>` +
+                      `<button class="crm-books-open-bookview" title="Open book view">` +
+                      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>` +
+                      `<span>Open book view</span></button>` +
+                      `<button class="crm-books-bookmark-toggle${isPageBookmarked(selectedBookId, currentPage) ? ' bookmarked' : ''}" title="${isPageBookmarked(selectedBookId, currentPage) ? 'Page bookmarked' : 'Bookmark this page'}">` +
+                      `<svg viewBox="0 0 24 24" width="16" height="16" fill="${isPageBookmarked(selectedBookId, currentPage) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>` +
+                      `<span>Bookmark</span></button>` +
+                      `<button class="crm-books-bookmarks-open" title="View all bookmarks">` +
+                      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10"/></svg>` +
+                      `<span>All bookmarks${bookmarks.length ? ` (${bookmarks.length})` : ''}</span></button>` +
+                      `<button class="crm-books-split-toggle${splitViewEnabled ? ' active' : ''}" title="${splitViewEnabled ? 'Exit split view' : 'Split view: page + chat'}">` +
+                      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M3 3h18v18H3z"/></svg>` +
+                      `<span>Split</span></button>`
+                    : `<button type="button" class="crm-books-download-btn" data-book-id="${escapeHtml(selectedBookId)}" title="Download source PDF">` +
+                      `${ICON_DOWNLOAD}<span>Download PDF</span></button>`) +
                 `<span class="crm-books-page-turn-status crm-books-sr-only" role="status" aria-live="polite" aria-atomic="true">Page ${currentPage} of ${pagesData.totalPages}</span>` +
-                `</div>` +
+                `</div>`;
+
+            if (activePageSubTab === 'pdf') {
+                return subtabsHtml +
+                    navHtml +
+                    renderProgressHeatmap(pagesData.totalPages) +
+                    renderSourcePdfStage(selectedBookId, currentPage);
+            }
+
+            return subtabsHtml +
+                navHtml +
                 renderProgressHeatmap(pagesData.totalPages) +
                 `<div class="crm-books-reading-label">Reading view · extracted text</div>` +
                 (pageNotice ? `<div class="crm-books-page-notice" role="status">${escapeHtml(pageNotice)}</div>` : '') +
@@ -5718,6 +5813,10 @@ window.CrmBooksWorkspace = (function () {
             pagesData = null;
             if (typeof window !== 'undefined') window.__currentBookRendererContract = null;
             currentPage = 1;
+            activePageSubTab = 'text';
+            cachedSourcePdfUrl = '';
+            cachedSourcePdfBookId = '';
+            isLoadingSourcePdf = false;
             resetPageCitation();
             editingThreadId = '';
             editingThreadTitle = '';
@@ -8808,6 +8907,55 @@ window.CrmBooksWorkspace = (function () {
                 }
                 if (e.target.closest('.crm-books-page-next')) {
                     startPageTurn('next');
+                    return;
+                }
+                const subtabBtn = e.target.closest('.crm-books-subtab-btn[data-page-subtab]');
+                if (subtabBtn) {
+                    const mode = subtabBtn.getAttribute('data-page-subtab');
+                    if (mode && mode !== activePageSubTab) {
+                        activePageSubTab = mode;
+                        if (mode === 'pdf' && (!cachedSourcePdfUrl || cachedSourcePdfBookId !== selectedBookId)) {
+                            isLoadingSourcePdf = true;
+                            renderExplorerPanel();
+                            loadSourcePdfUrl(selectedBookId).then(() => {
+                                isLoadingSourcePdf = false;
+                                renderExplorerPanel();
+                            }).catch(() => {
+                                isLoadingSourcePdf = false;
+                                renderExplorerPanel();
+                            });
+                        } else {
+                            renderExplorerPanel();
+                        }
+                    }
+                    return;
+                }
+                if (e.target.closest('.crm-books-jump-to-source-btn') || e.target.closest('.crm-books-load-pdf-btn')) {
+                    activePageSubTab = 'pdf';
+                    if (!cachedSourcePdfUrl || cachedSourcePdfBookId !== selectedBookId) {
+                        isLoadingSourcePdf = true;
+                        renderExplorerPanel();
+                        loadSourcePdfUrl(selectedBookId).then(() => {
+                            isLoadingSourcePdf = false;
+                            renderExplorerPanel();
+                        }).catch(() => {
+                            isLoadingSourcePdf = false;
+                            renderExplorerPanel();
+                        });
+                    } else {
+                        renderExplorerPanel();
+                    }
+                    return;
+                }
+                if (e.target.closest('.crm-books-jump-to-text-btn')) {
+                    activePageSubTab = 'text';
+                    renderExplorerPanel();
+                    return;
+                }
+                const pdfDownloadBtn = e.target.closest('.crm-books-pdf-download-btn');
+                if (pdfDownloadBtn) {
+                    const bId = pdfDownloadBtn.getAttribute('data-book-id') || selectedBookId;
+                    if (bId) downloadSource(bId);
                     return;
                 }
             });

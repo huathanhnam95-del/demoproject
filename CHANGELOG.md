@@ -1,3 +1,13 @@
+## [V1.8.103] - 2026-09-03
+
+### Fixed & Enhanced
+- **CRM Voice Cloning Studio Dynamic Per-Voice Neural Synthesis & Daemon Integration**:
+  - **Dynamic Audio Upload & Synthesis (Step B)**: Eliminated static test playback by implementing authentic per-voice zero-shot synthesis. When clicking "Generate Cloned Test Output", the user's audio recorded in Step A is uploaded to Cloud Storage/Firestore (`POST /api/admin/voice-cloning/upload-reference`), and a calibration test synthesis job is submitted to `POST /api/admin/voice-cloning/synthesize-test`.
+  - **Interactive Polling & Custom Audio Stream**: Step B polls the synthesis queue until completion and loads the unique MP3 generated specifically from the user's vocal pitch and timbre reading RA #18.
+  - **Local Neural Worker Daemon Hardening (`scripts/voice_local_worker.py`)**: Defined `SAMPLES_DIR`, configured offline HuggingFace environment flags (`HF_HUB_OFFLINE=1`) for instant offline model loading without HF network latency, and enabled automatic pickup of calibration test jobs.
+  - **Worker Daemon Startup Scripts**: Added `start-voice-worker.ps1` and `start-voice-worker.bat` for 1-click startup of the local F5-TTS worker daemon on the host computer.
+  - **Automated Verification**: Contract tests (`tests/voice-cloning-admin-contract.test.js`), browser walkthrough (`tests/browser/crm-voice-cloning-walkthrough.js`), and full CRM suite (`npm run verify:crm`) passing 100%.
+
 ## [V1.8.102] - 2026-09-03
 
 ### Fixed & Enhanced

@@ -194,6 +194,47 @@ function buildFirebaseStubScript() {
       });
     }
 
+    if (pathname === '/api/admin/voice-cloning/upload-reference' && method === 'POST') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          audioUrl: '/api/admin/voice-cloning/audio/ref_walkthrough_01',
+          fileId: 'ref_walkthrough_01'
+        })
+      });
+    }
+
+    if (pathname === '/api/admin/voice-cloning/synthesize-test' && method === 'POST') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          jobId: 'test_walkthrough_123',
+          status: 'pending'
+        })
+      });
+    }
+
+    if (pathname === '/api/admin/voice-cloning/jobs/test_walkthrough_123' && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          id: 'test_walkthrough_123',
+          voiceName: 'Calibration Cloned Voice',
+          status: 'completed',
+          mp3Url: '/audio/voice-cloning/ra_18_cloned_test.mp3',
+          durationSeconds: 7.2,
+          wpm: 151.0,
+          style: 'formal'
+        })
+      });
+    }
+
     if (pathname === '/api/admin/voice-cloning/synthesize' && method === 'POST') {
       synthesizedJobId = 'job_walkthrough_123';
       return route.fulfill({
@@ -263,6 +304,20 @@ function buildFirebaseStubScript() {
   await page.waitForTimeout(500);
   assert.ok(queueTriggered, 'Manual queue trigger API must be called');
   console.log('✔ Manual queue trigger executed successfully');
+
+  // 3b. Test Dynamic Calibration Test Output (Step B)
+  console.log('Testing dynamic calibration test generation (Step B)...');
+  await page.setInputFiles('#vc-audio-file-input', {
+    name: 'test_voice.webm',
+    mimeType: 'audio/webm',
+    buffer: Buffer.from('mock webm audio content')
+  });
+  await page.waitForTimeout(300);
+  await page.click('#btn-vc-generate-test');
+  await page.waitForSelector('#vc-test-output-box', { state: 'visible', timeout: 8000 });
+  const testAudioSrc = await page.$eval('#vc-test-audio-player', el => el.getAttribute('src'));
+  assert.ok(testAudioSrc, 'Step B test audio player must have a valid src');
+  console.log(`✔ Step B dynamic cloned audio player loaded: ${testAudioSrc}`);
 
   // 4. Verify Studio Voice Selector
   const optionTexts = await page.$$eval('#vc-studio-voice-select option', opts => opts.map(o => o.textContent));

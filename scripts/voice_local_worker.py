@@ -17,6 +17,9 @@ import sys
 import threading
 import time
 import uuid
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -53,6 +56,8 @@ DEFAULT_EMULATOR_HOST = "127.0.0.1:8080"
 HEARTBEAT_SECONDS = 15
 GENERATIONS_DIR = ROOT / "tools" / "voice_cloning_lab" / "results" / "generations"
 GENERATIONS_DIR.mkdir(parents=True, exist_ok=True)
+SAMPLES_DIR = ROOT / "tools" / "voice_cloning_lab" / "samples"
+SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def utc_now() -> datetime:
@@ -303,7 +308,7 @@ class VoiceLocalWorker:
             self.current_job_id = None
             self.write_heartbeat("idle")
 
-    def run(self) -> None:
+    def run(self, single_run: bool = False) -> None:
         """Main worker loop."""
         self.init_engine()
         hb_thread = threading.Thread(target=self.heartbeat_loop, daemon=True)
@@ -315,7 +320,11 @@ class VoiceLocalWorker:
                 job = self.claim_pending_job()
                 if job:
                     self.process_job(job)
+                    if single_run:
+                        break
                 else:
+                    if single_run:
+                        break
                     self.stop_event.wait(2.0)
         except KeyboardInterrupt:
             logger.info("Stopping Voice Local Worker...")
@@ -328,12 +337,13 @@ class VoiceLocalWorker:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Voice Local Worker daemon")
     parser.add_argument("--production", action="store_true", help="Run against production Firestore")
+    parser.add_argument("--single-run", action="store_true", help="Process available jobs and exit")
     parser.add_argument("--worker-id", type=str, default=None, help="Custom worker ID")
     args = parser.parse_args()
 
     db = get_firestore_client(production=args.production)
     worker = VoiceLocalWorker(db=db, worker_id=args.worker_id)
-    worker.run()
+    worker.run(single_run=args.single_run)
 
 
 if __name__ == "__main__":

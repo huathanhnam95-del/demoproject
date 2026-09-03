@@ -62,6 +62,7 @@ test('Cloud backend routes define Voice Cloning admin router', () => {
     const routerCode = fs.readFileSync(routerPath, 'utf8');
     assert.match(routerCode, /\/upload-reference/, 'Must define /upload-reference endpoint');
     assert.match(routerCode, /\/audio\/:audioId/, 'Must define /audio/:audioId endpoint');
+    assert.match(routerCode, /\/synthesize-test/, 'Must define /synthesize-test endpoint');
     assert.match(routerCode, /delete\('\/profiles\/:profileId'/, 'Must define DELETE /profiles/:profileId endpoint');
 });
 

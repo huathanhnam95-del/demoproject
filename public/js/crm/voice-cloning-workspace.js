@@ -200,24 +200,123 @@ window.CrmVoiceCloningWorkspace = (function () {
 
             if (dom.btnGenerateTest) {
                 dom.btnGenerateTest.disabled = true;
-                dom.btnGenerateTest.textContent = '⏳ Loading Cloned Preview…';
+                dom.btnGenerateTest.textContent = '⏳ Uploading Voice Sample…';
             }
 
             try {
-                // Point to pre-calibrated F5-TTS neural audio asset
-                const testAudioSrc = '/audio/voice-cloning/ra_18_cloned_test.mp3';
-                if (dom.testAudioPlayer) {
-                    dom.testAudioPlayer.src = testAudioSrc;
-                    dom.testAudioPlayer.load();
-                    dom.testAudioPlayer.play().catch(() => {});
+                let referenceAudioUrl = state.uploadedReferenceAudioUrl || '/audio/voice-cloning/ra_15_reference.webm';
+
+                // 1. If user recorded fresh audio and not uploaded yet, upload to cloud
+                if (state.recordedAudioBlob && !state.uploadedReferenceAudioUrl) {
+                    try {
+                        const base64Data = await blobToBase64(state.recordedAudioBlob);
+                        const uploadRes = await apiFetchJson('/api/admin/voice-cloning/upload-reference', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                audioBase64: base64Data,
+                                mimeType: state.recordedAudioBlob.type || 'audio/webm',
+                                fileName: `calib_${Date.now()}.webm`
+                            })
+                        });
+                        if (uploadRes?.audioUrl) {
+                            referenceAudioUrl = uploadRes.audioUrl;
+                            state.uploadedReferenceAudioUrl = referenceAudioUrl;
+                        }
+                    } catch (uploadErr) {
+                        console.warn('[VoiceCloning] Audio upload fallback:', uploadErr);
+                    }
                 }
-                if (dom.testOutputBox) {
-                    dom.testOutputBox.style.display = 'block';
+
+                // 2. Enqueue dynamic test synthesis job for RA #18
+                if (dom.btnGenerateTest) {
+                    dom.btnGenerateTest.textContent = '⏳ Synthesizing Cloned Voice with F5-TTS…';
                 }
-                showToast('Test Read Aloud cloned output loaded! Click play to listen.', 'success');
+
+                const testRes = await apiFetchJson('/api/admin/voice-cloning/synthesize-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        referenceAudioUrl,
+                        referenceTranscript: "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.",
+                        targetText: "Certain types of methodology are more suitable for some research projects than others. For example, the use of questionnaires and surveys is more suitable for quantitative research."
+                    })
+                });
+
+                const jobId = testRes?.jobId;
+                if (!jobId) {
+                    throw new Error('No jobId returned from test synthesis endpoint.');
+                }
+
+                // Trigger local queue worker if online
+                apiFetchJson('/api/admin/voice-cloning/trigger', { method: 'POST' }).catch(() => {});
+
+                // 3. Poll for completion
+                let pollAttempts = 0;
+                const pollTestJob = async () => {
+                    pollAttempts++;
+                    try {
+                        const job = await apiFetchJson(`/api/admin/voice-cloning/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
+                        if (job?.status === 'completed') {
+                            const clonedAudioSrc = job.mp3Url || `/api/admin/voice-cloning/audio/${jobId}`;
+                            if (dom.testAudioPlayer) {
+                                dom.testAudioPlayer.src = clonedAudioSrc;
+                                dom.testAudioPlayer.load();
+                                dom.testAudioPlayer.play().catch(() => {});
+                            }
+                            if (dom.testOutputBox) {
+                                dom.testOutputBox.style.display = 'block';
+                            }
+                            const metricsBadge = document.getElementById('vc-test-metrics-badge');
+                            if (metricsBadge) {
+                                metricsBadge.textContent = `Ready (${job.durationSeconds || '0'}s • Cloned)`;
+                            }
+                            if (dom.btnSaveProfile) dom.btnSaveProfile.disabled = false;
+                            showToast('Voice cloned successfully! Click play to listen.', 'success');
+                            if (dom.btnGenerateTest) {
+                                dom.btnGenerateTest.disabled = false;
+                                dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                            }
+                            return;
+                        }
+
+                        if (job?.status === 'failed') {
+                            throw new Error(job.error || 'Worker failed to synthesize voice.');
+                        }
+
+                        if (pollAttempts < 45) {
+                            if (dom.btnGenerateTest) {
+                                dom.btnGenerateTest.textContent = `⏳ Neural cloning (${pollAttempts * 2}s)…`;
+                            }
+                            setTimeout(pollTestJob, 2000);
+                        } else {
+                            // Timeout fallback: if local worker is not running, notify user
+                            showToast('Neural cloning is taking longer than expected. Make sure the local voice worker is running.', 'warning');
+                            if (dom.testAudioPlayer && !dom.testAudioPlayer.src) {
+                                dom.testAudioPlayer.src = '/audio/voice-cloning/ra_18_cloned_test.mp3';
+                                dom.testAudioPlayer.load();
+                            }
+                            if (dom.testOutputBox) {
+                                dom.testOutputBox.style.display = 'block';
+                            }
+                            if (dom.btnGenerateTest) {
+                                dom.btnGenerateTest.disabled = false;
+                                dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                            }
+                        }
+                    } catch (pollErr) {
+                        showToast('Error checking clone status: ' + (pollErr.message || pollErr), 'error');
+                        if (dom.btnGenerateTest) {
+                            dom.btnGenerateTest.disabled = false;
+                            dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                        }
+                    }
+                };
+
+                setTimeout(pollTestJob, 1500);
+
             } catch (e) {
                 showToast('Test synthesis error: ' + (e.message || e), 'error');
-            } finally {
                 if (dom.btnGenerateTest) {
                     dom.btnGenerateTest.disabled = false;
                     dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
@@ -237,11 +336,11 @@ window.CrmVoiceCloningWorkspace = (function () {
             if (dom.saveProfileStatus) dom.saveProfileStatus.textContent = 'Saving to cloud…';
 
             try {
-                let audioRef = '/audio/voice-cloning/ra_15_reference.webm';
+                let audioRef = state.uploadedReferenceAudioUrl || '/audio/voice-cloning/ra_15_reference.webm';
                 const promptText = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.";
 
-                // If user recorded fresh audio, upload it to cloud storage/backend
-                if (state.recordedAudioBlob) {
+                // If user recorded fresh audio and hasn't uploaded yet, upload to cloud storage
+                if (state.recordedAudioBlob && !state.uploadedReferenceAudioUrl) {
                     try {
                         const base64Data = await blobToBase64(state.recordedAudioBlob);
                         const uploadRes = await apiFetchJson('/api/admin/voice-cloning/upload-reference', {
@@ -255,6 +354,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                         });
                         if (uploadRes?.audioUrl) {
                             audioRef = uploadRes.audioUrl;
+                            state.uploadedReferenceAudioUrl = audioRef;
                         }
                     } catch (uploadErr) {
                         console.warn('[VoiceCloning] Audio upload fallback:', uploadErr);

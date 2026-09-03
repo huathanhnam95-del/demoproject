@@ -338,6 +338,52 @@ function createVoiceCloningAdminRouter({ db, authMiddleware, adminMiddleware, se
         }
     });
 
+    // 5b. Enqueue Dynamic Calibration Test Synthesis Job
+    router.post('/synthesize-test', authMiddleware, adminMiddleware, async (req, res) => {
+        try {
+            const { referenceAudioUrl, referenceTranscript, targetText } = req.body || {};
+            if (!referenceAudioUrl || typeof referenceAudioUrl !== 'string') {
+                return sendError(res, 400, 'INVALID_AUDIO', 'referenceAudioUrl is required for test calibration.');
+            }
+
+            const uid = req.user?.uid || 'admin';
+            const jobId = `test_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+            const promptTarget = targetText || "Certain types of methodology are more suitable for some research projects than others. For example, the use of questionnaires and surveys is more suitable for quantitative research.";
+            const promptRef = referenceTranscript || "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.";
+
+            const jobData = {
+                id: jobId,
+                type: 'test_clone',
+                voiceProfileId: 'calibration_preview',
+                voiceName: 'Calibration Cloned Voice',
+                referenceAudioUrl,
+                referenceTranscript: promptRef,
+                text: promptTarget.trim(),
+                style: 'formal',
+                status: 'pending',
+                mp3Url: null,
+                durationSeconds: null,
+                wpm: null,
+                annotations: [],
+                error: null,
+                createdAt: now(),
+                createdBy: uid,
+                startedAt: null,
+                completedAt: null
+            };
+
+            await db.collection('voice_cloning_queue').doc(jobId).set(jobData);
+
+            return sendSuccess(res, {
+                jobId,
+                status: 'pending',
+                message: 'Calibration test synthesis job enqueued awaiting local worker.'
+            });
+        } catch (error) {
+            return sendError(res, 500, 'VOICE_TEST_SYNTHESIZE_ERROR', 'Failed to enqueue test synthesis job.', error?.message || error);
+        }
+    });
+
     // 6. Poll Job Status
     router.get('/jobs/:jobId', authMiddleware, adminMiddleware, async (req, res) => {
         try {

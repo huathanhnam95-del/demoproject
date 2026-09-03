@@ -1885,4 +1885,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 891,2026-09-03,Echo Forge: boost audit and optimize frictionless gameplay with hotkeys AudioContext reuse and pop-free SFX,Done,2026-09-03
 892,2026-09-03,Echo Forge: pixel art sprite styling and comprehensive browser test verification,Done,2026-09-03
 893,2026-09-03,Write Essay Guided Mode: create optimized 3-local-LLM enrichment script,Done,2026-09-03
-894,2026-09-04,Release V1.8.107: push to production with 3-local-LLM Write Essay enrichment and Gemini ASR,In Progress,
+894,2026-09-04,Release V1.8.107: push to production with 3-local-LLM Write Essay enrichment and Gemini ASR,Done,2026-09-04
+895,2026-09-04,Configure Gemini secondary API key fallback in env and ASR pipeline,Done,2026-09-04
+896,2026-09-04,Integrate hardened Hugging Face Whisper safety net fallback in entrance test ASR,Done,2026-09-04

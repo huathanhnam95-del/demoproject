@@ -133,15 +133,60 @@ window.CrmBooksWorkspace = (function () {
         return result;
     }
 
+    function deduplicateRepeatedPhrases(text) {
+        if (!text || typeof text !== 'string') return text;
+        const lines = text.split('\n');
+        const processedLines = lines.map((line) => {
+            let trimmed = line.trim();
+            if (!trimmed) return line;
+            let prev = '';
+            let iteration = 0;
+            while (prev !== trimmed && iteration < 5) {
+                prev = trimmed;
+                iteration++;
+                // Collapse consecutive runs of repeating chunks (4 to 70 chars), with or without spaces
+                trimmed = trimmed.replace(/([A-Za-z0-9][A-Za-z0-9\s()/,.'’–—-]{3,70}?)(?:\s*\1)+/g, '$1');
+            }
+            return trimmed;
+        });
+        return processedLines.join('\n');
+    }
+
+    function isScannerNoiseLine(line) {
+        if (!line) return false;
+        const trimmed = line.trim();
+        if (/^\d{1,4}$/.test(trimmed)) return false; // preserve valid page numbers
+        if (/^\d+(?:\.\d+)+$/.test(trimmed)) return false; // preserve section numbers like 4.9.3
+        const letterCount = (trimmed.match(/[a-zA-ZÀ-ɏ]/g) || []).length;
+        if (letterCount === 0) return true; // pure punctuation/symbols without letters
+        if (trimmed.length < 3 && letterCount < 2) return true;
+        if (/(?:,{2,}|\[;|;{2,}|\.{3,}|-{3,}|%{2,})/.test(trimmed)) return true;
+        const punctCount = (trimmed.match(/[^a-zA-Z0-9\s]/g) || []).length;
+        if (punctCount > 3 && punctCount >= letterCount) return true;
+        if (punctCount >= 3 && /[[\];%,]/.test(trimmed) && letterCount < 15) return true;
+        if (/^[%#*~_+|=]{1,3}[.,;:\s-]*$/.test(trimmed)) return true;
+        return false;
+    }
+
     function pageHeadingLevel(line, nextLine) {
         if (!line) return 0;
         const trimmed = line.trim();
         if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(trimmed)) return 2;
-        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion|Summary|Further Reading|Video contents|Detailed contents)$/i.test(trimmed)) return 3;
+        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion|Summary|Further Reading|Video contents|Detailed contents|Preface)$/i.test(trimmed)) return 3;
 
         // Lettered activity or task headings: e.g. "A Friend or foe?", "B Same or different?", "C How would I do it?", "D What can I steal?"
         if (/^[A-Z][.)]?\s+[A-ZÀ-ɏ“‘"'][a-zA-Z0-9\s,/'’()–—?-]+$/.test(trimmed) && trimmed.length <= 60) {
             return 4;
+        }
+
+        // Reject lines ending with trailing prepositions, articles, or conjunctions (broken prose lines)
+        if (/\b(?:to|the|of|and|or|in|on|with|for|at|by|from|a|an|into|through|as|is|are|that|which)\s*$/i.test(trimmed)) {
+            return 0;
+        }
+
+        // Reject lines starting with sentence pronouns or common openers
+        if (/^(?:Welcome|It is|This is|There are|They are|We |As |When |If |Because |Although |In |On |For )\b/i.test(trimmed)) {
+            return 0;
         }
 
         // Short standalone headings (allowing ending question mark '?' or colon ':')
@@ -149,7 +194,7 @@ window.CrmBooksWorkspace = (function () {
             if (/^[A-ZÀ-ɏ“‘"'][a-zA-Z0-9\s,/'’()–—?-]+$/.test(trimmed)) {
                 const words = trimmed.split(/\s+/);
                 if (words.length >= 1 && words.length <= 8) {
-                    if (nextLine && /^[a-zA-ZÀ-ɏ“‘"'(]/.test(nextLine.trim())) {
+                    if (!nextLine || /^[a-zA-ZÀ-ɏ“‘"'(]/.test(nextLine.trim())) {
                         return 4;
                     }
                 }
@@ -226,12 +271,13 @@ window.CrmBooksWorkspace = (function () {
             || (typeof window !== 'undefined' && window.__currentBookRendererContract ? window.__currentBookRendererContract : null)
             || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
             || 'legacy';
-        let rawText = String(text ?? '').replace(/\r\n?/g, '\n');
+        let rawText = deduplicateRepeatedPhrases(String(text ?? '').replace(/\r\n?/g, '\n'));
         rawText = rawText.replace(/^(\d{1,4})([A-Za-z])/gm, '$1\n$2');
         const repaired = rendererContract === 'ocr-v2' ? rawText : repairMissingSpaces(rawText);
         const lines = repaired
             .split('\n')
-            .map((line) => line.trim());
+            .map((line) => line.trim())
+            .filter((line) => !isScannerNoiseLine(line));
         const fullLineThreshold = inferParagraphBreaks(lines);
         const html = [];
         let paragraphLines = [];
@@ -9708,6 +9754,8 @@ window.CrmBooksWorkspace = (function () {
         clampReaderFontScale,
         normalizeTagName,
         filterBooksByTags,
-        groupBooksByCollection
+        groupBooksByCollection,
+        deduplicateRepeatedPhrases,
+        isScannerNoiseLine
     };
 })();

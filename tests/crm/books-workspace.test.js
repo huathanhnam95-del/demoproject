@@ -158,6 +158,45 @@ assert.match(activityText, /<h4>B Same or different\?<\/h4>/, 'Lettered activity
 assert.match(activityText, /<h4>C How would I do it\?<\/h4>/, 'Lettered activity C must render as an h4 heading.');
 assert.match(activityText, /<h4>D What can I steal\?<\/h4>/, 'Lettered activity D must render as an h4 heading.');
 
+// Test deduplicateRepeatedPhrases
+const repeatedHeading = 'English as a lingua francaEnglish as a lingua francaEnglish as a lingua francaEnglish as a lingua franca';
+assert.strictEqual(
+    workspace.deduplicateRepeatedPhrases(repeatedHeading),
+    'English as a lingua franca',
+    'Repeated unspaced heading layers must collapse to a single clean heading.'
+);
+
+const repeatedSpaced = 'ESP (English for specific purposes) ESP (English for specific purposes) ESP (English for specific purposes)';
+assert.strictEqual(
+    workspace.deduplicateRepeatedPhrases(repeatedSpaced),
+    'ESP (English for specific purposes)',
+    'Repeated spaced heading layers must collapse to a single clean heading.'
+);
+
+// Test isScannerNoiseLine
+assert.strictEqual(workspace.isScannerNoiseLine('6.1,,E1K,44[;14i01..rogfiwoal;'), true, 'Photocopy margin artifact line must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine("% -...--- 'F-Rll-'-s----"), true, 'Punctuation dash smudge must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('.,'), true, 'Isolated punctuation symbols must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('='), true, 'Isolated equal sign must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('contents'), false, 'Legitimate section heading must not be detected as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('Foreword by Leonard Nadler vii'), false, 'Legitimate table of contents line must not be detected as noise.');
+
+// Test formatPageText with repeated layers (Harmer Page 24 pattern)
+const harmerP24Sample = '12\nchapter 1\n' +
+    'English as a lingua francaEnglish as a lingua francaEnglish as a lingua franca\n' +
+    'ESP (English for specific purposes)ESP (English for specific purposes)\n' +
+    'Business EnglishBusiness EnglishBusiness English';
+const formattedP24 = workspace.formatPageText(harmerP24Sample, (v) => String(v));
+assert.match(formattedP24, /<h4>English as a lingua franca<\/h4>/, 'Deduplicated heading 1 must render as h4.');
+assert.match(formattedP24, /<h4>ESP \(English for specific purposes\)<\/h4>/, 'Deduplicated heading 2 must render as h4.');
+assert.match(formattedP24, /<h4>Business English<\/h4>/, 'Deduplicated heading 3 must render as h4.');
+assert.doesNotMatch(formattedP24, /lingua francaEnglish/, 'Repeated concatenated runs must be gone.');
+
+// Test formatPageText with Knowles Page 5 scanner noise
+const knowlesP5Sample = '6.1,,E1K,44[;14i01..rogfiwoal;';
+const formattedP5 = workspace.formatPageText(knowlesP5Sample, (v) => String(v));
+assert.strictEqual(formattedP5, '', 'Scanner noise page must format to empty output without rendering garbage.');
+
 const normalized = workspace.normalizeBooks([
     { bookId: 'b1', title: 'Book One', collectionId: 'col-phonetics', tags: ['vowels', 'ipa'] },
     { bookId: 'b2', title: 'Book Two' }

@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.97</div>
+  <div id="version-indicator" class="version-indicator">V1.8.98</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4565,7 +4565,7 @@
               <p>Prompt will appear here...</p>
             </div>
             <div class="essay-practice-choice" id="essay-practice-choice" aria-label="Choose essay practice">
-              <span class="essay-practice-choice-label">Practice mode</span>
+              <span class="essay-practice-choice-label">Practice mode<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="practice-mode" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></span>
               <label class="essay-practice-choice-option">
                 <input type="radio" name="essay-practice-kind" value="exam" checked>
                 <span>Exam Practice <small>20-minute countdown</small></span>
@@ -4575,13 +4575,13 @@
                 <span>Guided Practice <small>support + count-up timer</small></span>
               </label>
               <div id="essay-guided-preferences" class="essay-guided-preferences" hidden>
-                <label for="essay-guided-level">Support level</label>
+                <label for="essay-guided-level">Support level<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="support-level" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></label>
                 <select id="essay-guided-level" aria-label="Guided support level">
                   <option value="a2_b1">A2–B1</option>
                   <option value="b2" selected>B2</option>
                   <option value="c1">C1</option>
                 </select>
-                <label for="essay-guided-language">Support language</label>
+                <label for="essay-guided-language">Support language<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="support-language" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></label>
                 <select id="essay-guided-language" aria-label="Guided support language">
                   <option value="en" selected>English</option>
                   <option value="vi">Tiếng Việt</option>
@@ -4597,9 +4597,13 @@
           <div id="essay-practice-area" style="display: none;">
             <div id="essay-guided-workspace" class="essay-guided-workspace">
               <aside id="essay-guided-rail" class="essay-guided-rail" hidden aria-label="Guided essay support">
+                <div class="essay-guided-railtop">
                 <div class="essay-guided-rail-header">
                   <strong id="essay-guided-rail-title">Guided support</strong>
                   <div class="essay-guided-rail-actions">
+                    <button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="steps" aria-expanded="false" aria-label="Giải thích">
+                      <span aria-hidden="true">?</span>
+                    </button>
                     <button id="essay-guided-language-toggle" class="essay-guided-language-toggle" type="button" aria-label="Switch support language" title="Switch support language">VI</button>
                     <button id="essay-rail-fullscreen-btn" class="essay-fullscreen-btn" type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen guided mode">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4618,9 +4622,9 @@
                   <button type="button" data-guided-section="direction"><span class="essay-guided-nav-index" aria-hidden="true">2</span><span class="essay-guided-nav-label">Choose a direction</span></button>
                   <button type="button" data-guided-section="language"><span class="essay-guided-nav-index" aria-hidden="true">3</span><span class="essay-guided-nav-label">Language kit</span></button>
                   <button type="button" data-guided-section="plan"><span class="essay-guided-nav-index" aria-hidden="true">4</span><span class="essay-guided-nav-label">Make a plan</span></button>
-                  <button type="button" data-guided-section="further"><span class="essay-guided-nav-index" aria-hidden="true">5</span><span class="essay-guided-nav-label">Sentence support</span></button>
-                  <button type="button" data-guided-section="faq"><span class="essay-guided-nav-index" aria-hidden="true">6</span><span class="essay-guided-nav-label">FAQ</span></button>
+                  <button type="button" data-guided-section="further"><span class="essay-guided-nav-index" aria-hidden="true">5</span><span class="essay-guided-nav-label">Sentence builder</span></button>
                 </nav>
+                </div>
                 <div id="essay-guided-content" class="essay-guided-content"></div>
                 <div id="essay-guided-checklist" class="essay-guided-checklist" hidden></div>
                 <div id="essay-guided-recycle" class="essay-guided-recycle" hidden></div>
@@ -4630,11 +4634,15 @@
 
               <!-- Step 1: Write -->
               <div id="essay-step-write" class="essay-compose-card" style="display: none;">
+              <!-- Frozen while typing: prompt, timer and live word count stay in
+                   view so the learner can compare the draft against the task. -->
+              <div id="essay-write-sticky" class="essay-write-sticky">
               <div class="essay-card-header">
                 <span class="essay-kicker">Your essay</span>
                 <button id="essay-fs-back-btn" class="essay-fs-back-btn" type="button"
                   aria-label="Return to guided walkthrough">← Back to guide</button>
                 <div id="essay-write-meta-badges" class="essay-prompt-meta-badges"></div>
+                <span id="essay-word-count-sticky" class="essay-word-count-sticky essay-wc-bad" aria-hidden="true">0 words</span>
                 <div id="essay-timer" class="essay-timer">20:00</div>
                 <button id="essay-fullscreen-btn" class="essay-fullscreen-btn" type="button"
                   aria-label="Toggle fullscreen" title="Toggle fullscreen writing mode">
@@ -4646,6 +4654,11 @@
               </div>
               <div id="essay-prompt-display" class="essay-prompt-display">
                 <p>Prompt will appear here…</p>
+              </div>
+              <button id="essay-prompt-expand-btn" class="essay-prompt-expand-btn" type="button" aria-expanded="false">
+                <span class="essay-prompt-expand-more">Show full prompt</span>
+                <span class="essay-prompt-expand-less">Collapse prompt</span>
+              </button>
               </div>
               <!-- Generated Guided Draft Card (revealed when entering writing phase in guided mode) -->
               <div id="essay-guided-draft-container" class="essay-guided-draft-card" style="display: none;"></div>
@@ -6129,7 +6142,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.97"></script>
+  <script src="/read-aloud-mode.js?v=1.8.98"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

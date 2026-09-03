@@ -139,6 +139,25 @@ const ocrV2Text = workspace.formatPageText(
 );
 assert.match(ocrV2Text, /Specias and specialized terminology/, 'OCR-v2 contract must preserve genuine page text without segmenter word splitting.');
 
+const activityText = workspace.formatPageText(
+    'However, you can also react to what you see in the four more general ways below. Activity A, in particular, requires collaboration.\n' +
+    'A Friend or foe?\n' +
+    'In this activity, one viewer is a ‘friend’ and should say what is good about what they are seeing. Who ‘wins’ the discussion?\n' +
+    'B Same or different?\n' +
+    'How different are you from the teachers you watch? What does this make you think about a) your teaching and b) your teaching situation?\n' +
+    'C How would I do it?\n' +
+    'If you had to teach the same students and you were doing the same kind of lesson, how would you do it?\n' +
+    'D What can I steal?\n' +
+    'What techniques and activities can you ‘steal’ from the teachers on the video to use in your lessons?',
+    (v) => String(v),
+    '',
+    { rendererContract: 'ocr-v2' }
+);
+assert.match(activityText, /<h4>A Friend or foe\?<\/h4>/, 'Lettered activity A must render as an h4 heading.');
+assert.match(activityText, /<h4>B Same or different\?<\/h4>/, 'Lettered activity B must render as an h4 heading.');
+assert.match(activityText, /<h4>C How would I do it\?<\/h4>/, 'Lettered activity C must render as an h4 heading.');
+assert.match(activityText, /<h4>D What can I steal\?<\/h4>/, 'Lettered activity D must render as an h4 heading.');
+
 const normalized = workspace.normalizeBooks([
     { bookId: 'b1', title: 'Book One', collectionId: 'col-phonetics', tags: ['vowels', 'ipa'] },
     { bookId: 'b2', title: 'Book Two' }

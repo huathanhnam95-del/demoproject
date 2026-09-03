@@ -137,9 +137,16 @@ window.CrmBooksWorkspace = (function () {
         if (!line) return 0;
         const trimmed = line.trim();
         if (/^(?:Part\s+[IVXLCDM]+|Chapter\s+\d+)\b/i.test(trimmed)) return 2;
-        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion|Summary|Further Reading)$/i.test(trimmed)) return 3;
-        if (trimmed.length <= 60 && !/[.!?:,;—]$/.test(trimmed)) {
-            if (/^[A-ZÀ-ɏ][a-zA-Z0-9\s,/'’()–—-]+$/.test(trimmed)) {
+        if (/^(?:Learning Objectives|Outline|Contents|References|Introduction|Conclusion|Summary|Further Reading|Video contents|Detailed contents)$/i.test(trimmed)) return 3;
+
+        // Lettered activity or task headings: e.g. "A Friend or foe?", "B Same or different?", "C How would I do it?", "D What can I steal?"
+        if (/^[A-Z][.)]?\s+[A-ZÀ-ɏ“‘"'][a-zA-Z0-9\s,/'’()–—?-]+$/.test(trimmed) && trimmed.length <= 60) {
+            return 4;
+        }
+
+        // Short standalone headings (allowing ending question mark '?' or colon ':')
+        if (trimmed.length <= 60 && !/[.,;—]$/.test(trimmed)) {
+            if (/^[A-ZÀ-ɏ“‘"'][a-zA-Z0-9\s,/'’()–—?-]+$/.test(trimmed)) {
                 const words = trimmed.split(/\s+/);
                 if (words.length >= 1 && words.length <= 8) {
                     if (nextLine && /^[a-zA-ZÀ-ɏ“‘"'(]/.test(nextLine.trim())) {
@@ -204,6 +211,8 @@ window.CrmBooksWorkspace = (function () {
         if (!line || !nextLine) return false;
         const nextTrim = nextLine.trim();
         if (/^\d+(?:\.\d+)+$/.test(nextTrim)) return true;
+        if (pageHeadingLevel(nextTrim, '') > 0) return true;
+        if (/^[A-Z][.)]?\s+[A-ZÀ-ɏ“‘"']/.test(nextTrim) && nextTrim.length <= 60) return true;
         if (!threshold) return false;
         if (line.length >= threshold) return false;
         if (!/[.!?:]["'”’)]*\s*$/.test(line)) return false;
@@ -1458,6 +1467,8 @@ window.CrmBooksWorkspace = (function () {
             currentPage = targetPage;
             resetPageCitation();
             renderExplorerPanel();
+            const tabBody = qs('.crm-books-tab-body');
+            if (tabBody) tabBody.scrollTop = 0;
             focusAndAnnouncePage(targetPage, focusSelector);
             if (selectedBookId) markPageRead(selectedBookId, targetPage);
             requestAnimationFrame(() => applyHighlightsToPage(targetPage));
@@ -1643,15 +1654,18 @@ window.CrmBooksWorkspace = (function () {
                 `<span class="crm-books-page-turn-status crm-books-sr-only" role="status" aria-live="polite" aria-atomic="true">Page ${currentPage} of ${pagesData.totalPages}</span>` +
                 `</div>`;
 
+            const stickyBarHtml = `<div class="crm-books-pages-sticky-bar">` +
+                subtabsHtml +
+                navHtml +
+                `</div>`;
+
             if (activePageSubTab === 'pdf') {
-                return subtabsHtml +
-                    navHtml +
+                return stickyBarHtml +
                     renderProgressHeatmap(pagesData.totalPages) +
                     renderSourcePdfStage(selectedBookId, currentPage);
             }
 
-            return subtabsHtml +
-                navHtml +
+            return stickyBarHtml +
                 renderProgressHeatmap(pagesData.totalPages) +
                 `<div class="crm-books-reading-label">Reading view · extracted text</div>` +
                 (pageNotice ? `<div class="crm-books-page-notice" role="status">${escapeHtml(pageNotice)}</div>` : '') +

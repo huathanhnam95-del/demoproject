@@ -1834,3 +1834,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 840,2026-09-03,Format page numbers and chapter headings cleanly and fix glued running headers in CRM Books,Done,2026-09-03
 841,2026-09-03,Write Essay 3-LLM Content Re-Analysis: optimize pipeline + enrich prompts with direct claims prompt traps and Vietnamese explanations,Done,2026-09-03
 842,2026-09-03,CRM Books Pages tab: source PDF sub-tab and jump-to-source-page button,Done,2026-09-03
+843,2026-09-03,CRM Books: fix lettered activity headings formatting and freeze sticky navigation bar when scrolling,Done,2026-09-03

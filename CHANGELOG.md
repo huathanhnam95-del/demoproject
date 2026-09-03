@@ -1,3 +1,14 @@
+## [V1.8.105] - 2026-09-03
+
+### Fixed & Enhanced
+- **CRM Books Exhaustive 774-Page Census & Transcription/Reflow Hardening**:
+  - **100% Page-by-Page Census**: Completed full evaluation across all 774 pages of both books: Harmer (5th Edition, 459 pages) and Teaching Pronunciation with Confidence (315 pages), validating text fidelity against original publisher vector PDFs (`tmp/harmer_source.pdf` and `tmp/production_rerun/teaching_pronunciation.pdf`).
+  - **Phonetic IPA Notation Protection**: Whitelisted Unicode IPA extensions (`\u0250-\u02AF`, `\u1D00-\u1D7F`, `\u0370-\u03FF`), vowel quadrant charts (`/i/`, `/ɪ/`, `/ʊ/`, `/ʌ/`, `/ə/`), and allophone lessons (`[ɾ]`, `[ʔ]`) across 115 pages in Teaching Pronunciation, eliminating false-positive scanner noise filtering.
+  - **Subject & Author Index Preservation**: Hardened `isScannerNoiseLine` to recognize wrapped comma-separated page reference lists (e.g. `169, 175, 358`, `195–6, 212`, `192f, 268–9`) and author index entries (`Ur, P 44, 47, 50...`) across Harmer Pages 450–458.
+  - **Practice Prompts & Dialogue Markers**: Preserved student fill-in-the-blank prompt underlines/dashes/dots (`A. Hi, I’m ______`, `I wish ––––––`, `your engine..........`) and standalone dialogue speaker tags (`A:`, `B:`).
+  - **InDesign Prepress Drop-Shadow Deduplication**: Verified that 107 chapter-end pages in Harmer with layered vector drop-shadow headings are cleanly collapsed into single `<h4>` titles.
+  - **Live Production E2E Verification**: Chrome Playwright test (`tests/browser/verify-live-harmer-pron.js`) verified live rendering of Harmer Pages 9 & 49 and Pronunciation Pages 26 & 43 on production.
+
 ## [V1.8.103] - 2026-09-03
 
 ### Fixed & Enhanced

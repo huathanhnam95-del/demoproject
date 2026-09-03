@@ -39,7 +39,7 @@ except ImportError:
     AnonymousCredentials = None
 
 from tools.voice_cloning_lab.connected_speech_preprocessor import ConnectedSpeechPreprocessor
-from tools.voice_cloning_lab.engines.f5tts_engine import F5TTSEngine
+from tools.voice_cloning_lab.engines.f5_tts_engine import F5TTSEngine
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,7 +64,9 @@ def get_firestore_client(production: bool = False) -> Any:
     if firestore is None:
         raise RuntimeError("firebase_admin is not installed.")
 
-    if not production and not os.getenv("FIRESTORE_EMULATOR_HOST"):
+    # Check if service account key is available in root
+    sa_path = ROOT / "serviceAccountKey.json"
+    if not production and not os.getenv("FIRESTORE_EMULATOR_HOST") and not sa_path.exists():
         os.environ["FIRESTORE_EMULATOR_HOST"] = DEFAULT_EMULATOR_HOST
 
     emulator_host = os.getenv("FIRESTORE_EMULATOR_HOST")
@@ -80,7 +82,11 @@ def get_firestore_client(production: bool = False) -> Any:
     # Production mode
     logger.info("Connecting to production Firestore for project %s", PROJECT_ID)
     if not firebase_admin._apps:
-        cred = credentials.ApplicationDefault()
+        if sa_path.exists():
+            cred = credentials.Certificate(str(sa_path))
+            logger.info("Loaded credentials from %s", sa_path)
+        else:
+            cred = credentials.ApplicationDefault()
         firebase_admin.initialize_app(cred, {"projectId": PROJECT_ID})
     return firestore.client()
 
@@ -166,7 +172,7 @@ class VoiceLocalWorker:
             return None
 
     def resolve_reference_audio(self, audio_url: str) -> Path | None:
-        """Locate or retrieve reference audio file on disk."""
+        """Locate or retrieve reference audio file on disk or from Firestore."""
         if not audio_url:
             return None
 
@@ -176,17 +182,40 @@ class VoiceLocalWorker:
         if local_candidate.exists():
             return local_candidate
 
+        # Check in public folder
+        public_candidate = ROOT / "public" / clean_url
+        if public_candidate.exists():
+            return public_candidate
+
         # Check lab samples
         sample_path = ROOT / "tools" / "voice_cloning_lab" / "samples" / "my_saved_voice.webm"
         if sample_path.exists():
             return sample_path
 
-        # If it's a URL in /results/...
-        if "/results/" in audio_url:
-            sub = audio_url.split("/results/")[-1].replace("/", os.sep)
-            res_path = ROOT / "tools" / "voice_cloning_lab" / "results" / sub
-            if res_path.exists():
-                return res_path
+        # If it's a URL in /audio/voice-cloning/...
+        if "/audio/voice-cloning/" in audio_url:
+            filename = audio_url.split("/audio/voice-cloning/")[-1]
+            candidate = ROOT / "public" / "audio" / "voice-cloning" / filename
+            if candidate.exists():
+                return candidate
+
+        # If it's a cloud audio ID (/api/admin/voice-cloning/audio/<id>)
+        if "/audio/" in audio_url:
+            file_id = audio_url.split("/audio/")[-1].split("?")[0]
+            try:
+                doc = self.db.collection("voice_audio_files").document(file_id).get()
+                if doc.exists:
+                    data = doc.to_dict() or {}
+                    b64 = data.get("audioBase64")
+                    if b64:
+                        import base64
+                        decoded = base64.b64decode(b64)
+                        ext = "webm" if "webm" in data.get("mimeType", "") else "wav"
+                        out_file = SAMPLES_DIR / f"downloaded_{file_id}.{ext}"
+                        out_file.write_bytes(decoded)
+                        return out_file
+            except Exception as fe:
+                logger.warning("Could not download reference audio doc %s: %s", file_id, fe)
 
         return None
 
@@ -237,18 +266,22 @@ class VoiceLocalWorker:
             mp3_path = GENERATIONS_DIR / mp3_filename
             wav_data, sr = sf.read(res.audio_path)
             sf.write(str(mp3_path), wav_data, sr, format="MP3")
-            logger.info("Saved MP3 to %s (%d bytes)", mp3_path, mp3_path.stat().st_size)
+            mp3_bytes = mp3_path.read_bytes()
+            import base64
+            mp3_b64 = base64.b64encode(mp3_bytes).decode('ascii')
+            logger.info("Saved MP3 to %s (%d bytes)", mp3_path, len(mp3_bytes))
 
             # 5. Calculate metrics
             duration = round(float(len(wav_data) / sr), 2)
             word_count = len(text.split())
             wpm = round((word_count / max(duration, 0.1)) * 60, 1)
-            mp3_url = f"/results/generations/{mp3_filename}"
+            mp3_url = f"/api/admin/voice-cloning/audio/{job_id}"
 
             now_ts = firestore.SERVER_TIMESTAMP if firestore else utc_now()
             ref_doc.update({
                 "status": "completed",
                 "mp3Url": mp3_url,
+                "mp3Base64": mp3_b64 if len(mp3_b64) <= 1048576 else None,
                 "durationSeconds": duration,
                 "wpm": wpm,
                 "speechText": speech_text,

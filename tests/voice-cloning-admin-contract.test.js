@@ -26,6 +26,13 @@ test('CRM Admin HTML defines Voice Cloning navigation and panel elements', () =>
     assert.match(html, /id="btn-vc-generate-test"/, 'Must have generate test output button');
     assert.match(html, /id="vc-profile-name-input"/, 'Must have profile name input');
     assert.match(html, /id="btn-vc-save-profile"/, 'Must have save profile button');
+    assert.match(html, /id="vc-saved-profiles-list"/, 'Must have saved profiles list container');
+    assert.match(html, /id="vc-saved-count"/, 'Must have saved count element');
+    assert.match(html, /id="btn-vc-refresh-profiles"/, 'Must have refresh profiles button');
+
+    // High contrast styling classes
+    assert.match(html, /class="crm-voice-prompt-box/, 'Must use crm-voice-prompt-box');
+    assert.match(html, /class="crm-voice-prompt-text"/, 'Must use crm-voice-prompt-text');
 
     // TTS Studio
     assert.match(html, /id="vc-studio-voice-select"/, 'Must have voice selector dropdown');
@@ -51,6 +58,11 @@ test('Cloud backend routes define Voice Cloning admin router', () => {
     const routerModule = require(routerPath);
     assert.equal(typeof routerModule.createVoiceCloningAdminRouter, 'function', 'Must export createVoiceCloningAdminRouter');
     assert.equal(typeof routerModule.isVoiceWorkerReady, 'function', 'Must export isVoiceWorkerReady');
+
+    const routerCode = fs.readFileSync(routerPath, 'utf8');
+    assert.match(routerCode, /\/upload-reference/, 'Must define /upload-reference endpoint');
+    assert.match(routerCode, /\/audio\/:audioId/, 'Must define /audio/:audioId endpoint');
+    assert.match(routerCode, /delete\('\/profiles\/:profileId'/, 'Must define DELETE /profiles/:profileId endpoint');
 });
 
 test('Local Python worker script exists and has required components', () => {

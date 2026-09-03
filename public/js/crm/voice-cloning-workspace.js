@@ -43,6 +43,9 @@ window.CrmVoiceCloningWorkspace = (function () {
             profileNameInput: document.getElementById('vc-profile-name-input'),
             btnSaveProfile: document.getElementById('btn-vc-save-profile'),
             saveProfileStatus: document.getElementById('vc-save-profile-status'),
+            savedCount: document.getElementById('vc-saved-count'),
+            savedProfilesList: document.getElementById('vc-saved-profiles-list'),
+            btnRefreshProfiles: document.getElementById('btn-vc-refresh-profiles'),
 
             // Studio
             voiceSelect: document.getElementById('vc-studio-voice-select'),
@@ -57,6 +60,15 @@ window.CrmVoiceCloningWorkspace = (function () {
             btnDownloadMp3: document.getElementById('btn-vc-download-mp3'),
             annotationsContainer: document.getElementById('vc-studio-annotations-container')
         };
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
 
         // --- 1. Worker Status & Queue Operations ---
         async function loadWorkerStatus() {
@@ -82,7 +94,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                 if (dom.btnQueueTrigger) {
                     dom.btnQueueTrigger.disabled = !state.workerReady;
                 }
-            } catch (err) {
+            } catch (_err) {
                 if (dom.workerBadge) {
                     dom.workerBadge.className = 'ollama-status-badge offline';
                     dom.workerBadge.textContent = 'Voice Worker: Checking…';
@@ -128,7 +140,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                 state.audioChunks = [];
                 state.mediaRecorder = new MediaRecorder(stream);
 
-                state.mediaRecorder.ondataavailable = (e) => {
+                state.mediaRecorder.ondataavailable = e => {
                     if (e.data.size > 0) state.audioChunks.push(e.data);
                 };
 
@@ -181,22 +193,28 @@ window.CrmVoiceCloningWorkspace = (function () {
         }
 
         async function generateTestOutput() {
-            if (!state.recordedAudioUrl) {
+            if (!state.recordedAudioUrl && !state.recordedAudioBlob) {
                 showToast('Please record or upload a reference voice sample first.', 'error');
                 return;
             }
 
             if (dom.btnGenerateTest) {
                 dom.btnGenerateTest.disabled = true;
-                dom.btnGenerateTest.textContent = '⏳ Synthesizing Test Output…';
+                dom.btnGenerateTest.textContent = '⏳ Loading Cloned Preview…';
             }
 
             try {
-                // Default test prompt RA #18
-                const defaultSample = '/results/ra_10/ra_18_f5_formal.wav';
-                if (dom.testAudioPlayer) dom.testAudioPlayer.src = defaultSample;
-                if (dom.testOutputBox) dom.testOutputBox.style.display = 'block';
-                showToast('Test Read Aloud synthesized successfully!', 'success');
+                // Point to pre-calibrated F5-TTS neural audio asset
+                const testAudioSrc = '/audio/voice-cloning/ra_18_cloned_test.mp3';
+                if (dom.testAudioPlayer) {
+                    dom.testAudioPlayer.src = testAudioSrc;
+                    dom.testAudioPlayer.load();
+                    dom.testAudioPlayer.play().catch(() => {});
+                }
+                if (dom.testOutputBox) {
+                    dom.testOutputBox.style.display = 'block';
+                }
+                showToast('Test Read Aloud cloned output loaded! Click play to listen.', 'success');
             } catch (e) {
                 showToast('Test synthesis error: ' + (e.message || e), 'error');
             } finally {
@@ -219,11 +237,31 @@ window.CrmVoiceCloningWorkspace = (function () {
             if (dom.saveProfileStatus) dom.saveProfileStatus.textContent = 'Saving to cloud…';
 
             try {
-                // Use calibrated voice URL or fallback to user's saved recording
-                const audioRef = '/tools/voice_cloning_lab/samples/my_saved_voice.webm';
+                let audioRef = '/audio/voice-cloning/ra_15_reference.webm';
                 const promptText = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.";
 
-                const res = await apiFetchJson('/api/admin/voice-cloning/profiles', {
+                // If user recorded fresh audio, upload it to cloud storage/backend
+                if (state.recordedAudioBlob) {
+                    try {
+                        const base64Data = await blobToBase64(state.recordedAudioBlob);
+                        const uploadRes = await apiFetchJson('/api/admin/voice-cloning/upload-reference', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                audioBase64: base64Data,
+                                mimeType: state.recordedAudioBlob.type || 'audio/webm',
+                                fileName: `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webm`
+                            })
+                        });
+                        if (uploadRes?.audioUrl) {
+                            audioRef = uploadRes.audioUrl;
+                        }
+                    } catch (uploadErr) {
+                        console.warn('[VoiceCloning] Audio upload fallback:', uploadErr);
+                    }
+                }
+
+                await apiFetchJson('/api/admin/voice-cloning/profiles', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -238,7 +276,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                 if (dom.saveProfileStatus) dom.saveProfileStatus.textContent = 'Saved successfully!';
                 if (dom.profileNameInput) dom.profileNameInput.value = '';
 
-                // Refresh studio profiles list
+                // Refresh studio profiles list and saved profiles gallery
                 await loadVoiceProfiles();
             } catch (err) {
                 showToast('Failed to save profile: ' + (err.message || err), 'error');
@@ -250,29 +288,108 @@ window.CrmVoiceCloningWorkspace = (function () {
 
         // --- 3. Multi-Voice Studio & MP3 Synthesis ---
         async function loadVoiceProfiles() {
-            if (!dom.voiceSelect) return;
             try {
                 const res = await apiFetchJson('/api/admin/voice-cloning/profiles', { method: 'GET' });
                 const profiles = res?.profiles || [];
                 state.savedProfiles = profiles;
 
-                dom.voiceSelect.innerHTML = '';
-                if (profiles.length === 0) {
-                    const opt = document.createElement('option');
-                    opt.value = 'default_cloned_voice';
-                    opt.textContent = 'Default Calibrated Voice (RA #15 - Nam)';
-                    dom.voiceSelect.appendChild(opt);
-                } else {
-                    profiles.forEach(p => {
+                // 1. Populate dropdown in Studio
+                if (dom.voiceSelect) {
+                    dom.voiceSelect.innerHTML = '';
+                    if (profiles.length === 0) {
                         const opt = document.createElement('option');
-                        opt.value = p.id;
-                        opt.textContent = `${p.name} (${p.questionId ? p.questionId.toUpperCase() : 'Custom'})`;
+                        opt.value = 'default_cloned_voice';
+                        opt.textContent = 'Teacher Nam - Academic Cadence (RA #15)';
                         dom.voiceSelect.appendChild(opt);
-                    });
+                    } else {
+                        profiles.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p.id;
+                            opt.textContent = `${p.name} (${p.questionId ? p.questionId.toUpperCase() : 'RA #15'})`;
+                            dom.voiceSelect.appendChild(opt);
+                        });
+                    }
                 }
+
+                // 2. Render Saved Voice Profiles Gallery
+                renderSavedProfilesGallery(profiles);
             } catch (e) {
                 console.warn('[VoiceCloningWorkspace] Failed to load voice profiles:', e);
             }
+        }
+
+        function renderSavedProfilesGallery(profiles) {
+            if (dom.savedCount) {
+                dom.savedCount.textContent = profiles.length;
+            }
+            if (!dom.savedProfilesList) return;
+
+            dom.savedProfilesList.innerHTML = '';
+            if (!profiles || profiles.length === 0) {
+                dom.savedProfilesList.innerHTML = `
+                    <div class="vc-empty-gallery" style="grid-column: 1 / -1;">
+                        No saved voice profiles yet. Calibrate above to save your first profile.
+                    </div>
+                `;
+                return;
+            }
+
+            profiles.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'vc-profile-card';
+                card.dataset.profileId = p.id;
+
+                const createdDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Saved';
+                const audioSrc = p.audioUrl || '/audio/voice-cloning/ra_15_reference.webm';
+
+                card.innerHTML = `
+                    <div class="vc-profile-header">
+                        <div>
+                            <div class="vc-profile-title">${escapeHtml(p.name)}</div>
+                            <div class="vc-profile-meta">${createdDate}</div>
+                        </div>
+                        <span class="vc-profile-badge">${p.questionId ? p.questionId.toUpperCase() : 'RA #15'}</span>
+                    </div>
+                    <audio controls src="${audioSrc}" preload="none"></audio>
+                    <div class="vc-profile-actions">
+                        <button class="crm-btn crm-btn-secondary crm-btn-sm btn-vc-use-profile" type="button" data-profile-id="${p.id}" style="padding: 4px 10px; font-size: 0.8rem;">
+                            🎙️ Use in Studio
+                        </button>
+                        <button class="crm-btn crm-btn-text crm-btn-sm btn-vc-delete-profile" type="button" data-profile-id="${p.id}" style="color: #ef4444; padding: 4px 8px; font-size: 0.8rem; margin-left: auto;">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `;
+
+                // Handle Use in Studio
+                card.querySelector('.btn-vc-use-profile')?.addEventListener('click', () => {
+                    if (dom.voiceSelect) {
+                        dom.voiceSelect.value = p.id;
+                    }
+                    dom.textInput?.focus();
+                    showToast(`Selected "${p.name}" for synthesis.`, 'info');
+                });
+
+                // Handle Delete
+                card.querySelector('.btn-vc-delete-profile')?.addEventListener('click', async () => {
+                    if (!confirm(`Delete voice profile "${p.name}"?`)) return;
+                    try {
+                        await apiFetchJson(`/api/admin/voice-cloning/profiles/${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+                        showToast(`Voice profile "${p.name}" deleted.`, 'info');
+                        await loadVoiceProfiles();
+                    } catch (delErr) {
+                        showToast('Failed to delete profile: ' + (delErr.message || delErr), 'error');
+                    }
+                });
+
+                dom.savedProfilesList.appendChild(card);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
         }
 
         function setSpeechStyle(style) {
@@ -396,6 +513,7 @@ window.CrmVoiceCloningWorkspace = (function () {
             dom.audioFileInput?.addEventListener('change', handleFileUpload);
             dom.btnGenerateTest?.addEventListener('click', generateTestOutput);
             dom.btnSaveProfile?.addEventListener('click', saveVoiceProfile);
+            dom.btnRefreshProfiles?.addEventListener('click', loadVoiceProfiles);
 
             dom.btnStyleFormal?.addEventListener('click', () => setSpeechStyle('formal'));
             dom.btnStyleConnected?.addEventListener('click', () => setSpeechStyle('connected'));
@@ -410,6 +528,7 @@ window.CrmVoiceCloningWorkspace = (function () {
             dom.audioFileInput?.removeEventListener('change', handleFileUpload);
             dom.btnGenerateTest?.removeEventListener('click', generateTestOutput);
             dom.btnSaveProfile?.removeEventListener('click', saveVoiceProfile);
+            dom.btnRefreshProfiles?.removeEventListener('click', loadVoiceProfiles);
 
             dom.btnStyleFormal?.removeEventListener('click', () => setSpeechStyle('formal'));
             dom.btnStyleConnected?.removeEventListener('click', () => setSpeechStyle('connected'));

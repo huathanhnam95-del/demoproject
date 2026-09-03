@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260903-v1.8.100">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260903-v1.8.101">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260903-v1.8.100&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260903-v1.8.100&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260903-v1.8.101&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260903-v1.8.101&bgm=v2" />
 </head>
 
 <body>
@@ -656,12 +656,12 @@
 
             <div style="padding: 0 18px 18px; display: flex; flex-direction: column; gap: 16px;">
               <!-- Step A: Audio Input Prompt -->
-              <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="color: #818cf8; font-size: 0.85rem; text-transform: uppercase;">Step A: Reference Audio Input (RA #15)</strong>
-                  <span class="crm-muted" style="font-size: 0.75rem;">Recommended duration: 10–14 seconds</span>
+              <div class="crm-voice-prompt-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <strong class="crm-voice-step-title step-a">Step A: Reference Audio Input (RA #15)</strong>
+                  <span class="crm-muted" style="font-size: 0.78rem; font-weight: 600;">Recommended duration: 10–14 seconds</span>
                 </div>
-                <p id="vc-calibration-prompt-text" style="font-size: 0.95rem; line-height: 1.5; color: #e2e8f0; margin-bottom: 12px;">
+                <p id="vc-calibration-prompt-text" class="crm-voice-prompt-text">
                   "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon."
                 </p>
                 <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -672,24 +672,24 @@
                     📁 Upload Audio
                     <input type="file" id="vc-audio-file-input" accept="audio/*" style="display: none;" />
                   </label>
-                  <span id="vc-record-timer" class="crm-muted" style="font-family: monospace; font-weight: 600;">00:00</span>
+                  <span id="vc-record-timer" class="crm-muted" style="font-family: monospace; font-weight: 700; color: #334155;">00:00</span>
                   <audio id="vc-ref-audio-preview" controls style="display: none; height: 36px;"></audio>
                 </div>
               </div>
 
               <!-- Step B: Generate Cloned Test Output -->
-              <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="color: #38bdf8; font-size: 0.85rem; text-transform: uppercase;">Step B: Cloned Output Verification (RA #18)</strong>
+              <div class="crm-voice-prompt-box step-b">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <strong class="crm-voice-step-title step-b">Step B: Cloned Output Verification (RA #18)</strong>
                   <button id="btn-vc-generate-test" class="crm-btn crm-btn-primary" type="button" disabled>🧪 Generate Cloned Test Output</button>
                 </div>
-                <p style="font-size: 0.85rem; line-height: 1.45; color: #94a3b8; margin-bottom: 10px;">
+                <p class="crm-voice-prompt-text">
                   "Certain types of methodology are more suitable for some research projects than others. For example, the use of questionnaires and surveys is more suitable for quantitative research."
                 </p>
                 <div id="vc-test-output-box" style="display: none;">
                   <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                    <audio id="vc-test-audio-player" controls style="width: 100%; max-width: 400px; height: 36px;"></audio>
-                    <span id="vc-test-metrics-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">Ready</span>
+                    <audio id="vc-test-audio-player" controls style="width: 100%; max-width: 420px; height: 36px;"></audio>
+                    <span id="vc-test-metrics-badge" style="background: #dcfce7; color: #15803d; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #bbf7d0;">Ready</span>
                   </div>
                 </div>
               </div>
@@ -699,6 +699,19 @@
                 <input type="text" id="vc-profile-name-input" class="crm-input" style="flex: 1; min-width: 240px;" placeholder="Name this voice (e.g. Teacher Nam - Academic Cadence)" />
                 <button id="btn-vc-save-profile" class="crm-btn crm-btn-success" type="button" disabled>💾 Save Cloned Voice to Cloud</button>
                 <span id="vc-save-profile-status" class="crm-muted" role="status" aria-live="polite"></span>
+              </div>
+
+              <!-- Saved Voice Profiles Gallery -->
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    Saved Voice Profiles (<span id="vc-saved-count">0</span>)
+                  </h4>
+                  <button id="btn-vc-refresh-profiles" class="crm-btn crm-btn-text" type="button" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600;">🔄 Refresh</button>
+                </div>
+                <div id="vc-saved-profiles-list" class="crm-voice-gallery">
+                  <!-- Populated dynamically with profile cards -->
+                </div>
               </div>
             </div>
           </section>
@@ -714,14 +727,14 @@
 
             <div style="padding: 0 18px 18px; display: flex; flex-direction: column; gap: 16px;">
               <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
-                <div style="flex: 1; min-width: 220px;">
-                  <label for="vc-studio-voice-select" class="crm-label" style="display: block; margin-bottom: 4px; font-size: 0.8rem; color: #94a3b8;">Select Voice:</label>
+                <div style="flex: 1; min-width: 240px;">
+                  <label for="vc-studio-voice-select" class="crm-label" style="display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #334155;">Select Voice:</label>
                   <select id="vc-studio-voice-select" class="crm-select" style="width: 100%;">
                     <option value="">Loading saved voices…</option>
                   </select>
                 </div>
                 <div>
-                  <label class="crm-label" style="display: block; margin-bottom: 4px; font-size: 0.8rem; color: #94a3b8;">Cadence / Speech Style:</label>
+                  <label class="crm-label" style="display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #334155;">Cadence / Speech Style:</label>
                   <div class="crm-btn-group" style="display: inline-flex; border-radius: 6px; overflow: hidden;">
                     <button type="button" class="crm-btn crm-btn-secondary is-active" id="btn-vc-style-formal" data-style="formal">🏛️ Formal Citation</button>
                     <button type="button" class="crm-btn crm-btn-secondary" id="btn-vc-style-connected" data-style="connected">🌊 Connected Stream</button>
@@ -730,8 +743,8 @@
               </div>
 
               <div>
-                <label for="vc-studio-text-input" class="crm-label" style="display: block; margin-bottom: 4px; font-size: 0.8rem; color: #94a3b8;">Text to Read Aloud:</label>
-                <textarea id="vc-studio-text-input" class="crm-textarea" rows="4" style="width: 100%;" placeholder="Type or paste any English paragraph to synthesize in the selected voice..."></textarea>
+                <label for="vc-studio-text-input" class="crm-label" style="display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #334155;">Text to Read Aloud:</label>
+                <textarea id="vc-studio-text-input" class="crm-textarea" rows="4" placeholder="Type or paste any English paragraph to synthesize in the selected voice..."></textarea>
               </div>
 
               <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -740,10 +753,10 @@
               </div>
 
               <!-- Synthesis Output Card -->
-              <div id="vc-studio-output-box" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+              <div id="vc-studio-output-box" class="crm-voice-prompt-box step-b" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong id="vc-studio-output-title" style="color: #38bdf8; font-size: 0.9rem;">Synthesized Output</strong>
-                  <span id="vc-studio-output-wpm" class="crm-badge" style="background: rgba(99,102,241,0.2); color: #818cf8; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">150 WPM</span>
+                  <strong id="vc-studio-output-title" style="color: #0369a1; font-size: 0.95rem; font-weight: 700;">Synthesized Output</strong>
+                  <span id="vc-studio-output-wpm" class="crm-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem;">150 WPM</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
                   <audio id="vc-studio-output-audio" controls style="flex: 1; min-width: 280px; height: 38px;"></audio>
@@ -2875,60 +2888,60 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260903-v1.8.100"></script>
-  <script src="js/classroom-api.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/utils.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/state.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/dom.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/courses.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/schedule-availability.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/students.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/student-360.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/student-courses.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/classrooms.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/leads.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/activities.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/enrollments.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/attendance.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/finance-workflow.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/finance.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/communications.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/staff-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/student-finance.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/live-delivery.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/classroom-modal.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/student-modal.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/course-modal.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/lead-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/communications-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/books-workspace.js?v=20260903-v1.8.100&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/dashboard.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/governance.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/index.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/devtools-access.js?v=20260903-v1.8.100&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260903-v1.8.100"></script>
-  <script src="arpabet-ipa-map.js?v=20260903-v1.8.100"></script>
-  <script src="phonetics.js?v=20260903-v1.8.100"></script>
+  <script src="js/auth-session-guard.js?v=20260903-v1.8.101"></script>
+  <script src="js/classroom-api.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/utils.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/state.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/dom.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/courses.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/schedule-availability.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/students.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/student-360.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/student-courses.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/classrooms.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/leads.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/activities.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/enrollments.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/attendance.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/finance-workflow.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/finance.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/communications.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/staff-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/student-finance.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/live-delivery.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/classroom-modal.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/student-modal.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/course-modal.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/lead-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/communications-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/books-workspace.js?v=20260903-v1.8.101&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/dashboard.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/governance.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/index.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/devtools-access.js?v=20260903-v1.8.101&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260903-v1.8.101"></script>
+  <script src="arpabet-ipa-map.js?v=20260903-v1.8.101"></script>
+  <script src="phonetics.js?v=20260903-v1.8.101"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260903-v1.8.100"></script>
-  <script src="crm-admin.js?v=20260903-v1.8.100"></script>
-  <script src="js/crm/segmentation-study.js?v=20260903-v1.8.100" defer></script>
+  <script src="js/crm/teaching-sessions.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260903-v1.8.101"></script>
+  <script src="crm-admin.js?v=20260903-v1.8.101"></script>
+  <script src="js/crm/segmentation-study.js?v=20260903-v1.8.101" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

@@ -11497,10 +11497,6 @@ mark.crm-highlight:hover {
   transition: background-color 0.15s ease;
 }
 
-.crm-availability-row:last-of-type {
-  border-bottom: none;
-}
-
 .crm-availability-row.is-unavailable .crm-availability-day-label {
   color: var(--crm-text-muted);
   font-weight: 500;
@@ -11764,15 +11760,10 @@ mark.crm-highlight:hover {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: border-color 0.15s ease;
 }
 
 .crm-student-course-card:last-child {
   border-bottom: none;
-}
-
-.crm-student-course-card:hover {
-  border-color: var(--crm-border);
 }
 
 .crm-student-course-title-row {
@@ -12004,7 +11995,8 @@ mark.crm-highlight:hover {
 
 .crm-session-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 13px;
   border: 1px solid var(--crm-border);
   border-radius: var(--crm-radius);
@@ -12179,5 +12171,137 @@ mark.crm-highlight:hover {
     flex-direction: column;
     gap: 4px;
   }
+}
+
+/* ==========================================================================
+   Voice Cloning Hub & CRM Textarea Styling (High-Contrast Clean Theme)
+   ========================================================================== */
+.crm-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #0f172a;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.crm-textarea:focus {
+  outline: none;
+  border-color: #1b8a4f;
+  box-shadow: 0 0 0 3px rgba(27, 138, 79, 0.15);
+}
+
+.crm-voice-prompt-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #1b8a4f;
+  border-radius: 8px;
+  padding: 16px 18px;
+  box-sizing: border-box;
+}
+
+.crm-voice-prompt-box.step-b {
+  border-left-color: #0284c7;
+}
+
+.crm-voice-prompt-text {
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: #0f172a !important;
+  font-weight: 500;
+  margin: 0 0 12px 0;
+}
+
+.crm-voice-step-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #15803d;
+}
+
+.crm-voice-step-title.step-b {
+  color: #0369a1;
+}
+
+.crm-voice-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.vc-profile-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vc-profile-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.vc-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vc-profile-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.vc-profile-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.vc-profile-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.vc-profile-card audio {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.vc-profile-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.vc-empty-gallery {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 

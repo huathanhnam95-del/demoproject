@@ -269,7 +269,7 @@
                     </div>
 
                     <div class="crm-student-course-actions-row">
-                        <button type="button" class="crm-btn-secondary btn-view-attendance" style="font-size: 12px; padding: 4px 12px;" data-enrollment-id="${escapeHtml(enr.id || enr.enrollmentId)}" data-class-id="${escapeHtml(enr.classId || '')}">
+                        <button type="button" class="crm-btn-secondary btn-view-attendance" style="font-size: 12px; padding: 4px 12px;" data-enrollment-id="${escapeHtml(enr.id || enr.enrollmentId)}" aria-label="View Lessons & Attendance for ${escapeHtml(courseName)}">
                             View Lessons & Attendance →
                         </button>
                     </div>
@@ -304,7 +304,7 @@
                     <h3 style="margin: 0; font-size: 16px; font-weight: 700;">Enrol in Course</h3>
                 </div>
 
-                <div id="enroll-error-box" class="crm-enroll-error-box" style="display: none;"></div>
+                <div id="enroll-error-box" class="crm-enroll-error-box" role="alert" style="display: none;"></div>
 
                 <div class="crm-enroll-form-grid">
                     <div class="crm-form-group">
@@ -354,7 +354,7 @@
                     </div>
 
                     <div class="crm-form-group crm-enroll-form-full">
-                        <div id="enroll-comparison-bar" class="crm-enroll-comparison-bar">
+                        <div id="enroll-comparison-bar" class="crm-enroll-comparison-bar" role="status" aria-live="polite">
                             <span>Contract: <strong>—</strong></span>
                             <span>Weekly scheduled: <strong>0 lessons · 0 hrs</strong></span>
                         </div>
@@ -394,7 +394,9 @@
             if (global.CrmCourses && typeof global.CrmCourses.fetchCourses === 'function') {
                 allCourses = await global.CrmCourses.fetchCourses();
             } else {
-                const res = await fetch('/api/admin/courses');
+                const headers = await getAuthHeaders();
+                const res = await fetch('/api/admin/courses', { headers });
+                if (!res.ok) throw new Error(`Failed to load courses (HTTP ${res.status})`);
                 const data = await res.json();
                 allCourses = data.courses || [];
             }

@@ -1,3 +1,13 @@
+## [V1.8.102] - 2026-09-03
+
+### Fixed & Enhanced
+- **CRM Voice Cloning Studio (More → Voice Cloning) Contrast, Playback & Gallery**:
+  - **High-Contrast Readability & Textbox Styling**: Replaced muddy semi-transparent dark containers and low-contrast light grey text with clean light prompt cards (`.crm-voice-prompt-box`), crisp `#0f172a` text (1.02rem, 1.65 line-height), and complete styling for `.crm-textarea` (clean background, visible border, focus ring).
+  - **Cloned Voice Audio Playback**: Resolved 404 audio player error in Step B by supplying pre-calibrated F5-TTS neural audio assets (`/audio/voice-cloning/ra_18_cloned_test.mp3`) and implementing an authenticated streaming endpoint (`/api/admin/voice-cloning/audio/:audioId`) backed by Cloud Storage and Firestore.
+  - **Saved Voice Profiles Gallery**: Added a dedicated visual gallery (`#vc-saved-profiles-list`) directly beneath Step C displaying every saved profile with its name, question ID badge, creation timestamp, embedded `<audio controls>` player for immediate voice playback, "🎙️ Use in Studio" shortcut, and "🗑️ Delete" action.
+  - **Local Worker & Audio Upload Hardening**: Enabled base64 audio uploading via `POST /api/admin/voice-cloning/upload-reference`, auto-detection of `serviceAccountKey.json` for production Firestore/Storage connectivity, and streamable `mp3Url` output generation in `scripts/voice_local_worker.py`.
+  - **Automated Verification**: Contract tests (`tests/voice-cloning-admin-contract.test.js`), full CRM suite (`npm run verify:crm`), and Playwright E2E browser walkthrough (`tests/browser/crm-voice-cloning-walkthrough.js`) all passing with 100% success.
+
 ## [V1.8.101] - 2026-09-03
  
 ### Added & Enhanced

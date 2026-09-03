@@ -152,11 +152,40 @@ window.CrmBooksWorkspace = (function () {
         return processedLines.join('\n');
     }
 
+    function repairArchivalOcrText(text) {
+        if (!text || typeof text !== 'string') return text;
+        let s = text;
+        // Faded typewriter dropouts & broken ribbons from historical archival scans (e.g. Knowles 1973)
+        s = s.replace(/\bth-\s*Ty\.?\b/g, 'theory');
+        s = s.replace(/\beducatioual\b/g, 'educational');
+        s = s.replace(/\beducatioul\b/g, 'educational');
+        s = s.replace(/\bexaTiples\b/g, 'examples');
+        s = s.replace(/\bizSpeiecs\b/g, 'Species');
+        s = s.replace(/\bLeqrning\b/g, 'Learning');
+        s = s.replace(/\bGovenment\b/g, 'Government');
+        s = s.replace(/\bKidl\b(?=,?\s*195\d)/g, 'Kidd');
+        s = s.replace(/\bLased\b(?=\s+on\b)/g, 'Based');
+        s = s.replace(/\bapplicab\?e\b/g, 'applicable');
+        return s;
+    }
+
     function isScannerNoiseLine(line) {
         if (!line) return false;
         const trimmed = line.trim();
         if (/^\d{1,4}$/.test(trimmed)) return false; // preserve valid page numbers
         if (/^\d+(?:\.\d+)+$/.test(trimmed)) return false; // preserve section numbers like 4.9.3
+
+        // Preserve legitimate author citations in square brackets e.g. [Bruner, 1966, pp. 4-5], [Kidd, 1959]
+        if (/^\[[A-Z][a-zA-Z\s.,&'’–-]+,\s*(?:19|20)\d{2}(?:,\s*pp?\.?\s*[\d-]+)?\]$/.test(trimmed)) return false;
+        if (/^\[Ibid\.(?:,\s*pp?\.?\s*[\d-]+)?\]$/i.test(trimmed)) return false;
+
+        // Filter archival catalog/microfiche stamp codes
+        if (/^(?:ED|CE)\s*\d{3}\s*\d{3}$/i.test(trimmed)) return true;
+        if (/^MF-?\$[\d.]+/i.test(trimmed)) return true;
+
+        // Filter single isolated stray characters e.g. 'N', '1,', 'v' on their own line
+        if (/^[a-zA-Z0-9][,.]?$/.test(trimmed)) return true;
+
         const letterCount = (trimmed.match(/[a-zA-ZÀ-ɏ]/g) || []).length;
         if (letterCount === 0) return true; // pure punctuation/symbols without letters
         if (trimmed.length < 3 && letterCount < 2) return true;
@@ -272,6 +301,7 @@ window.CrmBooksWorkspace = (function () {
             || (typeof pagesData !== 'undefined' && pagesData ? pagesData.rendererContract : null)
             || 'legacy';
         let rawText = deduplicateRepeatedPhrases(String(text ?? '').replace(/\r\n?/g, '\n'));
+        rawText = repairArchivalOcrText(rawText);
         rawText = rawText.replace(/^(\d{1,4})([A-Za-z])/gm, '$1\n$2');
         const repaired = rendererContract === 'ocr-v2' ? rawText : repairMissingSpaces(rawText);
         const lines = repaired
@@ -9756,6 +9786,7 @@ window.CrmBooksWorkspace = (function () {
         filterBooksByTags,
         groupBooksByCollection,
         deduplicateRepeatedPhrases,
-        isScannerNoiseLine
+        isScannerNoiseLine,
+        repairArchivalOcrText
     };
 })();

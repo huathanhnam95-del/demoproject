@@ -178,8 +178,23 @@ assert.strictEqual(workspace.isScannerNoiseLine('6.1,,E1K,44[;14i01..rogfiwoal;'
 assert.strictEqual(workspace.isScannerNoiseLine("% -...--- 'F-Rll-'-s----"), true, 'Punctuation dash smudge must be detected as scanner noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('.,'), true, 'Isolated punctuation symbols must be detected as scanner noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('='), true, 'Isolated equal sign must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('ED 084 368'), true, 'ERIC accession stamp line must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('MF-$0.65'), true, 'Microfiche price stamp line must be detected as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('N'), true, 'Isolated single letter must be detected as scanner noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('contents'), false, 'Legitimate section heading must not be detected as noise.');
 assert.strictEqual(workspace.isScannerNoiseLine('Foreword by Leonard Nadler vii'), false, 'Legitimate table of contents line must not be detected as noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('[Bruner, 1966, pp. 4-5]'), false, 'Academic citation line must NOT be filtered as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('[Hilgard and Bower, 1966, pp. 1-2]'), false, 'Academic citation line must NOT be filtered as scanner noise.');
+assert.strictEqual(workspace.isScannerNoiseLine('[Kidd, 1959, pp. 134-135]'), false, 'Academic citation line must NOT be filtered as scanner noise.');
+
+// Test repairArchivalOcrText
+const corruptedSample = 'Welcome on a trip up the Amazon of educatioual psychology to the jungle of learning th- Ty.\n' +
+    'Here are exaTiples of izSpeiecs described by Kidl, 1959.';
+const cleanedSample = workspace.repairArchivalOcrText(corruptedSample);
+assert.match(cleanedSample, /educational psychology/, 'educatioual must be repaired to educational');
+assert.match(cleanedSample, /learning theory\./, 'th- Ty. must be repaired to theory.');
+assert.match(cleanedSample, /examples of Species/, 'exaTiples and izSpeiecs must be repaired to examples of Species');
+assert.match(cleanedSample, /Kidd, 1959/, 'Kidl, 1959 must be repaired to Kidd, 1959');
 
 // Test formatPageText with repeated layers (Harmer Page 24 pattern)
 const harmerP24Sample = '12\nchapter 1\n' +

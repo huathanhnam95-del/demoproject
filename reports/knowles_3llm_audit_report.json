@@ -1,0 +1,828 @@
+{
+  "timestamp": "2026-09-03T01:41:59.297574+00:00",
+  "book": "(Knowles, 1973) The Adult Learner, A Neglected Species",
+  "models": {
+    "qwen": "qwen3:14b",
+    "deepseek": "deepseek-r1:14b",
+    "gemma": "gemma4:12b"
+  },
+  "total_pages_audited": 10,
+  "pages": [
+    {
+      "page_num": 1,
+      "char_count": 1788,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "CE 000 509",
+          "ED 084 368",
+          "MF-$0.65 HC Not Available from EDRS."
+        ],
+        "severe_ocr_corruptions": [
+          "Lased",
+          "Lased -> Based",
+          "applicab?e -> applicable"
+        ],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "PASS"
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "ED 084 368",
+            "CE 000 509",
+            "MF-$0.65 HC Not Available from EDRS."
+          ],
+          "severe_ocr_corruptions": [
+            "Lased"
+          ],
+          "_elapsed_sec": 28.56
+        },
+        "deepseek": {
+          "_elapsed_sec": 51.04
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "ED 084 368",
+            "CE 000 509",
+            "MF-$0.65 HC Not Available from EDRS."
+          ],
+          "severe_ocr_corruptions": [
+            "Lased -> Based",
+            "applicab?e -> applicable"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text is a bibliographic record (likely from a database like ERIC). It contains structured fields (AUTHOR, TITLE, etc.) and a summary paragraph.",
+          "_elapsed_sec": 48.73
+        }
+      }
+    },
+    {
+      "page_num": 2,
+      "char_count": 647,
+      "consensus": {
+        "consensus_text_verdict": "FAIL",
+        "consensus_layout_verdict": "WARN",
+        "scanner_noise_lines": [
+          ".",
+          "..co.,",
+          "0",
+          "6pecie8",
+          "AliNC, IT POINTS OF VIEW OR OPINIONS",
+          "BEEN REPRO",
+          "COPYRIGHTED MATERIAL BY MICROFICHE ONLY HAS BEEN GRANTED EY",
+          "DUCED EXAC LY AS RECEIVED FROM",
+          "EDUCATION",
+          "EDUCATION A WELFARE",
+          "EDUCATION POST ION OR POLICY",
+          "EMLF6",
+          "EY",
+          "FURTHER REPRODUCTION OUTSIOE",
+          "ING UNDER AGREEMENTS WITH THE NA",
+          "NATIONAL INSTITUTE OF",
+          "PERMISSION TO REPRODUCE THIS",
+          "REPRE",
+          "SENT ,FFICIAL NATIONAL INST,TUTE OF",
+          "SION OF THE COPYRIGHT OWNER",
+          "STATED DO NOT NECESS '2ILf",
+          "THE ERIC SYSTEM REQUIRES PERM'S",
+          "THE PERSON OR ORGANZATION ORIGIN",
+          "THIS DOCUMENT HAS",
+          "TIONAL INSTITUTE OF EDUCATION",
+          "TO ERIC AND ORGANIZATIONS OPERAT",
+          "U S DEPARTMENT OF HEALTH",
+          "by",
+          "u spun"
+        ],
+        "severe_ocr_corruptions": [
+          "6pecie8",
+          "6pecie8 -> Species",
+          "AliNC, -> ALL,",
+          "INST,TUTE -> INSTITUTE",
+          "NECESS '2ILf -> NECESSARILY",
+          "REPRE\nSENT -> REPRESENT",
+          "SENT ,FFICIAL -> SENT OFFICIAL"
+        ],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "FAIL",
+            "layout": "WARN"
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "FAIL",
+            "layout": "FAIL"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "FAIL",
+          "layout_verdict": "WARN",
+          "scanner_noise_lines": [
+            "..co.,",
+            "6pecie8",
+            "U S DEPARTMENT OF HEALTH",
+            "EDUCATION A WELFARE",
+            "NATIONAL INSTITUTE OF",
+            "EDUCATION",
+            "THIS DOCUMENT HAS",
+            "BEEN REPRO",
+            "DUCED EXAC LY AS RECEIVED FROM",
+            "THE PERSON OR ORGANZATION ORIGIN",
+            "AliNC, IT POINTS OF VIEW OR OPINIONS",
+            "STATED DO NOT NECESS '2ILf",
+            "REPRE",
+            "SENT ,FFICIAL NATIONAL INST,TUTE OF",
+            "EDUCATION POST ION OR POLICY",
+            "PERMISSION TO REPRODUCE THIS",
+            "COPYRIGHTED MATERIAL BY MICROFICHE ONLY HAS BEEN GRANTED EY",
+            "0",
+            "by",
+            ".",
+            "u spun",
+            "TO ERIC AND ORGANIZATIONS OPERAT",
+            "ING UNDER AGREEMENTS WITH THE NA",
+            "TIONAL INSTITUTE OF EDUCATION",
+            "FURTHER REPRODUCTION OUTSIOE",
+            "THE ERIC SYSTEM REQUIRES PERM'S",
+            "SION OF THE COPYRIGHT OWNER ",
+            "EMLF6"
+          ],
+          "severe_ocr_corruptions": [
+            "6pecie8"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text appears to be a header or disclaimer page rather than the main content. Headings and paragraph breaks are not clearly defined due to OCR corruption and scanner noise.",
+          "_elapsed_sec": 55.25
+        },
+        "deepseek": {
+          "_elapsed_sec": 48.86
+        },
+        "gemma": {
+          "thought": -2.0,
+          "text_verdict": "FAIL",
+          "layout_verdict": "FAIL",
+          "scanner_noise_lines": [
+            "..co.,",
+            "6pecie8",
+            "AliNC, IT POINTS OF VIEW OR OPINIONS",
+            "STATED DO NOT NECESS '2ILf",
+            "REPRE",
+            "SENT ,FFICIAL NATIONAL INST,TUTE OF",
+            "EY",
+            "u spun"
+          ],
+          "severe_ocr_corruptions": [
+            "6pecie8 -> Species",
+            "AliNC, -> ALL, ",
+            "NECESS '2ILf -> NECESSARILY",
+            "REPRE\nSENT -> REPRESENT",
+            "SENT ,FFICIAL -> SENT OFFICIAL",
+            "INST,TUTE -> INSTITUTE"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text is a legal disclaimer/copyright page, not the actual content of the book. It contains significant OCR errors and fragmented lines due to poor scanning/OCR.",
+          "_elapsed_sec": 59.02
+        }
+      }
+    },
+    {
+      "page_num": 3,
+      "char_count": 2131,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "((milmied (min fmni flap",
+          "6.1,,E1K...",
+          "Continued on hack flap",
+          "KNOVII6",
+          "Learnerg A",
+          "MAIMM",
+          "Neglected",
+          "boo ',hike, deigned b,. Herman Woo",
+          "izSpeiecs",
+          "the Adult)"
+        ],
+        "severe_ocr_corruptions": [
+          "KNOVII6 -> KNOWLES",
+          "KNOVII6 -> Knowles",
+          "MAIMM -> Malcolm",
+          "izSpeiecs -> Species",
+          "th- Ty -> theory"
+        ],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "WARN"
+          },
+          "deepseek": {
+            "text": "PASS",
+            "layout": "PASS"
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "WARN",
+          "scanner_noise_lines": [
+            "izSpeiecs",
+            "6.1,,E1K...",
+            "((milmied (min fmni flap",
+            "boo ',hike, deigned b,. Herman Woo"
+          ],
+          "severe_ocr_corruptions": [
+            "izSpeiecs -> Species",
+            "th- Ty -> theory",
+            "KNOVII6 -> Knowles",
+            "MAIMM -> Malcolm"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text appears to be a promotional blurb or back cover summary rather than the main content of the book. Headings and paragraph breaks are inconsistent, and the text flows in a promotional tone rather than an academic one. There are indications of a flap or back cover layout, with some text continuing from a previous page ('Continued on hack flap').",
+          "_elapsed_sec": 56.79
+        },
+        "deepseek": {
+          "text_verdict": "PASS",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text has proper paragraph breaks and headings. The layout is clean with no major issues.",
+          "_elapsed_sec": 47.22
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "the Adult)",
+            "Learnerg A",
+            "Neglected",
+            "izSpeiecs",
+            "MAIMM",
+            "KNOVII6",
+            "Continued on hack flap",
+            "((milmied (min fmni flap",
+            "boo ',hike, deigned b,. Herman Woo"
+          ],
+          "severe_ocr_corruptions": [
+            "izSpeiecs -> Species",
+            "KNOVII6 -> KNOWLES"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text contains a blurb or promotional summary of the book, likely from a back cover or introductory page. It includes a publisher's address and a series title.",
+          "_elapsed_sec": 53.21
+        }
+      }
+    },
+    {
+      "page_num": 5,
+      "char_count": 30,
+      "consensus": {
+        "consensus_text_verdict": "FAIL",
+        "consensus_layout_verdict": "FAIL",
+        "scanner_noise_lines": [
+          "6.1,,E1K,44[;14i01..rogfiwoal;"
+        ],
+        "severe_ocr_corruptions": [],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "FAIL",
+            "layout": "FAIL"
+          },
+          "deepseek": {
+            "text": "FAIL",
+            "layout": "FAIL"
+          },
+          "gemma": {
+            "text": "FAIL",
+            "layout": "FAIL"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "FAIL",
+          "layout_verdict": "FAIL",
+          "scanner_noise_lines": [
+            "6.1,,E1K,44[;14i01..rogfiwoal;"
+          ],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The extracted text appears to be entirely corrupted and unreadable, with no discernible headings, paragraph breaks, or content flow.",
+          "_elapsed_sec": 39.58
+        },
+        "deepseek": {
+          "text_verdict": "FAIL",
+          "layout_verdict": "FAIL",
+          "scanner_noise_lines": [
+            "6.1,,E1K,44[;14i01..rogfiwoal;"
+          ],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text is completely corrupted and not readable, making it impossible to assess layout quality.",
+          "_elapsed_sec": 38.21
+        },
+        "gemma": {
+          "text_verdict": "FAIL",
+          "layout_verdict": "FAIL",
+          "layout_notes": "The text is entirely comprised of scanner noise and garbled characters, making it unintelligible and unusable for a textbook.",
+          "_elapsed_sec": 39.39
+        }
+      }
+    },
+    {
+      "page_num": 10,
+      "char_count": 443,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "%",
+          ".,",
+          "contents"
+        ],
+        "severe_ocr_corruptions": [],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "PASS"
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "%",
+            ".,",
+            "contents"
+          ],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The layout appears to be a table of contents with proper headings and paragraph breaks. The structure is logical and follows a standard academic format.",
+          "_elapsed_sec": 37.6
+        },
+        "deepseek": {
+          "_elapsed_sec": 40.34
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "layout_notes": "The text is a Table of Contents. The leading symbols (%, .,) are scanner noise.",
+          "scanner_noise_lines": [
+            "% ",
+            ".,"
+          ],
+          "severe__ocr_corruptions": "None",
+          "academic_citations_to_preserve": [],
+          "_elapsed_sec": 53.6
+        }
+      }
+    },
+    {
+      "page_num": 13,
+      "char_count": 816,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "=",
+          "But I'm willing to go again, as your guide. I'll try to point out the",
+          "I can tell you that my head is reeling.",
+          "It is a strange world that we are going to explore together, with",
+          "Welcome on a trip up the Amazon of educatioual psychology to",
+          "be alert to make your own judgments about which parts of the",
+          "before we start that I have my own tastes, values, and prejudices, so",
+          "forty-five books and uncountable articles and research reports), and",
+          "have just made a casing-the-joint trip up the river myself (surveying",
+          "high spots of the trip as objectively as I can. But you should know",
+          "lush growth of flora and fauna with exotic names (including fossils",
+          "of extinct species) and teeming with savage tribes in raging battle. I",
+          "preface",
+          "scenery best satisfy your own tastes, values, and prejudices.",
+          "the jungle of learning th- Ty."
+        ],
+        "severe_ocr_corruptions": [
+          "casing-the-joint -> casting-the-joint (possible corruption, but context suggests it may be intentional)",
+          "educatioual -> educational",
+          "educatioul -> educational",
+          "izSpeiecs -> Species (not present in the text, but included as an example)",
+          "th- Ty -> theory"
+        ],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "PASS"
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "preface",
+            "Welcome on a trip up the Amazon of educatioual psychology to",
+            "the jungle of learning th- Ty.",
+            "It is a strange world that we are going to explore together, with",
+            "lush growth of flora and fauna with exotic names (including fossils",
+            "of extinct species) and teeming with savage tribes in raging battle. I",
+            "have just made a casing-the-joint trip up the river myself (surveying",
+            "forty-five books and uncountable articles and research reports), and",
+            "I can tell you that my head is reeling.",
+            "But I'm willing to go again, as your guide. I'll try to point out the",
+            "high spots of the trip as objectively as I can. But you should know",
+            "before we start that I have my own tastes, values, and prejudices, so",
+            "be alert to make your own judgments about which parts of the",
+            "scenery best satisfy your own tastes, values, and prejudices."
+          ],
+          "severe_ocr_corruptions": [
+            "educatioual -> educational",
+            "th- Ty -> theory",
+            "casing-the-joint -> casting-the-joint (possible corruption, but context suggests it may be intentional)",
+            "izSpeiecs -> Species (not present in the text, but included as an example)"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text appears to be a continuous paragraph with no clear headings or paragraph breaks. The layout is consistent but lacks structural formatting.",
+          "_elapsed_sec": 57.58
+        },
+        "deepseek": {
+          "_elapsed_sec": 49.82
+        },
+        "gemma": {
+          "thought": -2.0,
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "="
+          ],
+          "severe_ocr_corruptions": [
+            "educatioul -> educational",
+            "th- Ty -> theory"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "The text contains a clear heading 'preface' and a single paragraph structure.",
+          "_elapsed_sec": 54.25
+        }
+      }
+    },
+    {
+      "page_num": 16,
+      "char_count": 1804,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "WARN",
+        "scanner_noise_lines": [
+          ".",
+          "Some knowledge of theory always aids practice. (Kidd, 1959, pp. 134-135)",
+          "The word \"theory\" conveys a sense of wasteful as the early wanderings of the explorers in North America .",
+          "The word \"theory\" conveys a sense of wasteful as the early wanderings of the explorers in North America . . . Some knowledge of theory always aids practice. (Kidd, 1959, pp. 134-135)"
+        ],
+        "severe_ocr_corruptions": [
+          "Kidl -> Kidd",
+          "izSpeiecs -> Species",
+          "th- Ty -> theory"
+        ],
+        "academic_citations_to_preserve": [
+          "[Hilgard and Bower, 1966, pp. 1-2]",
+          "[Kidd, 1959, pp. 134-135]",
+          "[Kidl, 1959, pp. 134-135]"
+        ],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "WARN"
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "WARN"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "WARN",
+          "scanner_noise_lines": [
+            "The word \"theory\" conveys a sense of wasteful as the early wanderings of the explorers in North America . . . Some knowledge of theory always aids practice. (Kidd, 1959, pp. 134-135)"
+          ],
+          "severe_ocr_corruptions": [
+            "izSpeiecs -> Species",
+            "th- Ty -> theory",
+            "Kidl -> Kidd"
+          ],
+          "academic_citations_to_preserve": [
+            "[Kidl, 1959, pp. 134-135]",
+            "[Hilgard and Bower, 1966, pp. 1-2]",
+            "[Kidd, 1959, pp. 134-135]"
+          ],
+          "layout_notes": "The text appears to be a section heading followed by a paragraph discussing the definition of theory. There are some inconsistencies in paragraph breaks and formatting, likely due to OCR errors and scanner noise.",
+          "_elapsed_sec": 49.0
+        },
+        "deepseek": {
+          "_elapsed_sec": 36.7
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "WARN",
+          "layout_notes": "The text contains repetitive, fragmented lines at the end of the page, likely due to a layout error or a double-scan. The heading 'What Is a Theory?' is clear, but the trailing text repeats the 'wanderings of the explorers' quote twice.",
+          "scanner_noise_lines": [
+            "The word \"theory\" conveys a sense of wasteful as the early wanderings of the explorers in North America .",
+            " .",
+            " .",
+            "Some knowledge of theory always aids practice. (Kidd, 1959, pp. 134-135)"
+          ],
+          "severe_ocr_corruptions": [
+            "Kidl -> Kidd"
+          ],
+          "academic_citations_to_preserve": [
+            "[Kidl, 1959, pp. 134-135]",
+            "[Hilgard and Bower, 1966, pp. 1-2]"
+          ],
+          "_elapsed_sec": 36.95
+        }
+      }
+    },
+    {
+      "page_num": 17,
+      "char_count": 1983,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "i:, forbidding"
+        ],
+        "severe_ocr_corruptions": [
+          "., -> .",
+          "6.1,,E1K... -> (not present in text)",
+          "exaTiples -> examples",
+          "izSpeiecs -> Species",
+          "th- Ty -> theory"
+        ],
+        "academic_citations_to_preserve": [
+          "[Bruner, 1966, pp. 4-5]",
+          "[Hilgard and Bower, 1966, pp. 1-2]",
+          "[Kingsley and Garry, 1957, p. 82]",
+          "[Thompson, 1970, p. 28]"
+        ],
+        "individual_votes": {
+          "qwen": {
+            "text": "WARN",
+            "layout": "PASS"
+          },
+          "deepseek": {
+            "text": "PASS",
+            "layout": "PASS"
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "",
+            ""
+          ],
+          "severe_ocr_corruptions": [
+            "exaTiples -> examples",
+            "izSpeiecs -> Species",
+            "th- Ty -> theory",
+            "., -> .",
+            "6.1,,E1K... -> (not present in text)"
+          ],
+          "academic_citations_to_preserve": [
+            "[Hilgard and Bower, 1966, pp. 1-2]",
+            "[Kingsley and Garry, 1957, p. 82]",
+            "[Bruner, 1966, pp. 4-5]",
+            "[Thompson, 1970, p. 28]"
+          ],
+          "layout_notes": "The text appears to follow a logical flow with clear paragraph breaks and proper use of headings. The layout is consistent with typical textbook formatting.",
+          "_elapsed_sec": 33.29
+        },
+        "deepseek": {
+          "text_verdict": "PASS",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [
+            "[Hilgard and Bower, 1966, pp. 1-2]",
+            "[Kingsley and Garry, 1957, p. 82]",
+            "[Bruner, 1966, pp. 4-5]",
+            "[Thompson, 1970, p. 28]"
+          ],
+          "layout_notes": "The text has clear paragraph breaks and headings. The first line '4' might be a page number and is followed by the main heading. The paragraphs are well-structured with proper line breaks.",
+          "_elapsed_sec": 39.24
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "i:, forbidding"
+          ],
+          "severe_ocr_corruptions": [
+            "exaTiples -> examples"
+          ],
+          "academic_citations_to_preserve": [
+            "[Hilgard and Bower, 1966, pp. 1-2]",
+            "[Kingsley and Garry, 1957, p. 82]",
+            "[Bruner, 1966, pp. 4-5]",
+            "[Thompson, 1970, p. 28]"
+          ],
+          "layout_notes": "The text contains a page number and title at the top, followed by several paragraphs of academic text with citations.",
+          "_elapsed_sec": 38.06
+        }
+      }
+    },
+    {
+      "page_num": 45,
+      "char_count": 2364,
+      "consensus": {
+        "consensus_text_verdict": "PASS",
+        "consensus_layout_verdict": "PASS",
+        "scanner_noise_lines": [
+          "32",
+          "parallel '9"
+        ],
+        "severe_ocr_corruptions": [
+          "none"
+        ],
+        "academic_citations_to_preserve": [
+          "[1951, p. 132]",
+          "[Ibid., pp. 388-391]",
+          "[Ibid., pp. 483-524]",
+          "[Maslow, 1972, pp. 50-51]",
+          "[Rogers, 1951, p. 132]"
+        ],
+        "individual_votes": {
+          "qwen": {
+            "text": "PASS",
+            "layout": "PASS"
+          },
+          "deepseek": {
+            "text": "PASS",
+            "layout": "PASS"
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "text_verdict": "PASS",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [
+            "[Maslow, 1972, pp. 50-51]",
+            "[1951, p. 132]",
+            "[Ibid., pp. 483-524]",
+            "[Ibid., pp. 388-391]"
+          ],
+          "layout_notes": "The text appears to be well-structured with clear paragraph breaks and logical flow. Headings and citations are appropriately placed.",
+          "_elapsed_sec": 39.13
+        },
+        "deepseek": {
+          "text_verdict": "PASS",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [],
+          "severe_ocr_corruptions": [],
+          "academic_citations_to_preserve": [
+            "[Maslow, 1972, pp. 50-51]",
+            "[Rogers, 1951, p. 132]",
+            "[Ibid., pp. 483-524]",
+            "[Ibid., pp. 388-391]"
+          ],
+          "layout_notes": "The text has clear paragraph breaks and headings. The citations are properly formatted and should be preserved.",
+          "_elapsed_sec": 37.42
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [
+            "32",
+            "parallel '9"
+          ],
+          "severe_ocr_corruptions": [
+            "none"
+          ],
+          "academic_citations_to_preserve": [
+            "[Maslow, 1972, pp. 50-51]",
+            "[1951, p. 132]",
+            "[Ibid., pp. 483-524]",
+            "[Ibid., pp. 388-391]"
+          ],
+          "layout_notes": "The text contains a page number and a list of points (10, 11, 12, a, b) which are correctly preserved. The 'parallel '9' is a clear scanner artifact or OCR error for 'parallel to'.",
+          "_elapsed_sec": 41.66
+        }
+      }
+    },
+    {
+      "page_num": 195,
+      "char_count": 1669,
+      "consensus": {
+        "consensus_text_verdict": "WARN",
+        "consensus_layout_verdict": "WARN",
+        "scanner_noise_lines": [],
+        "severe_ocr_corruptions": [
+          "Govenment -> Government",
+          "Leqrning -> Learning"
+        ],
+        "academic_citations_to_preserve": [],
+        "individual_votes": {
+          "qwen": {
+            "text": null,
+            "layout": null
+          },
+          "deepseek": {
+            "text": null,
+            "layout": null
+          },
+          "gemma": {
+            "text": "WARN",
+            "layout": "PASS"
+          }
+        }
+      },
+      "model_responses": {
+        "qwen": {
+          "error": "Unterminated string starting at: line 6 column 38 (char 1179)"
+        },
+        "deepseek": {
+          "_elapsed_sec": 28.77
+        },
+        "gemma": {
+          "text_verdict": "WARN",
+          "layout_verdict": "PASS",
+          "scanner_noise_lines": [],
+          "severe_ocr_corruptions": [
+            "Leqrning -> Learning",
+            "Govenment -> Government"
+          ],
+          "academic_citations_to_preserve": [],
+          "layout_notes": "Bibliography section with standard list format.",
+          "_elapsed_sec": 31.08
+        }
+      }
+    }
+  ]
+}

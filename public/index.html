@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="rmcsa-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="swt-mode.css">
-  <link rel="stylesheet" href="write-essay-mode.css?v=20260902_guided_walkthrough_v3">
+  <link rel="stylesheet" href="write-essay-mode.css?v=20260903_guided_ux_v15">
   <link rel="stylesheet" href="css/practice-audio-player.css">
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.98</div>
+  <div id="version-indicator" class="version-indicator">V1.8.99</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4615,7 +4615,6 @@
                   </div>
                 </div>
                 <div id="essay-guided-progress" class="essay-guided-progress" hidden aria-hidden="true"></div>
-                <div id="essay-guided-unavailable" class="essay-guided-unavailable" hidden role="status" aria-live="polite"></div>
                 <!-- Rebuilt by renderGuidedNav() so step labels follow the support language. -->
                 <nav id="essay-guided-nav" class="essay-guided-nav" aria-label="Support steps">
                   <button type="button" data-guided-section="understand" class="is-active"><span class="essay-guided-nav-index" aria-hidden="true">1</span><span class="essay-guided-nav-label">Understand the prompt</span></button>
@@ -4625,11 +4624,12 @@
                   <button type="button" data-guided-section="further"><span class="essay-guided-nav-index" aria-hidden="true">5</span><span class="essay-guided-nav-label">Sentence builder</span></button>
                 </nav>
                 </div>
+                <div id="essay-guided-unavailable" class="essay-guided-unavailable" hidden role="status" aria-live="polite"></div>
                 <div id="essay-guided-content" class="essay-guided-content"></div>
                 <div id="essay-guided-checklist" class="essay-guided-checklist" hidden></div>
                 <div id="essay-guided-recycle" class="essay-guided-recycle" hidden></div>
                 <button id="essay-request-guided-btn" class="essay-request-guided-btn" type="button" hidden>Need guided help?</button>
-                <button id="essay-fs-ready-btn" class="essay-fs-ready-btn" type="button">✍️ I'm ready — start writing</button>
+                <button id="essay-fs-ready-btn" class="essay-fs-ready-btn" type="button">I'm ready — start writing</button>
               </aside>
 
               <!-- Step 1: Write -->
@@ -6142,12 +6142,12 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.98"></script>
+  <script src="/read-aloud-mode.js?v=1.8.99"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
-  <script src="/js/write-essay-support.js?v=20260902_integrity_fix"></script>
-  <script src="/write-essay-mode.js?v=20260902_guided_walkthrough_v3"></script>
+  <script src="/js/write-essay-support.js?v=20260903_guided_ux_v15"></script>
+  <script src="/write-essay-mode.js?v=20260903_guided_ux_v15"></script>
   <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>

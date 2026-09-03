@@ -1,0 +1,129 @@
+{
+  "timestamp": "2026-09-03 22:46:24",
+  "models": [
+    "deepseek-r1:14b",
+    "qwen3:14b",
+    "gemma4:12b"
+  ],
+  "questionsAudited": [
+    "1",
+    "2",
+    "23"
+  ],
+  "results": {
+    "Q1": {
+      "deepseek-r1:14b": {
+        "role": "Deep Reasoner & Logic Auditor",
+        "elapsedSeconds": 21.5,
+        "audit": {
+          "raw": "\n\nThe evaluation of the PTE Write Essay guided support material for Question #1 is as follows:\n\n1. **Absence of Generic Sentences**: The material does not contain any generic placeholder sentences. All content is specific and context-driven.\n\n2. **Authentic Comprehension Checks**: Step 1 effectively uses an MCQ with distractors and a Gap-Fill exercise, both providing clear feedback to enhance comprehension.\n\n3. **Distinct and Logical Arguments**: Step 2 offers six well-developed arguments for each stance, ensuring a comprehensive and logical approach.\n\n4. **High-Level Academic Collocations**: Step 3 provides advanced vocabulary and grammar patterns with authentic examples, suitable for academic writing.\n\n5. **Semantic Scaffold for Success**: All steps are designed to support high-level academic performance, aligning with the requirements of the PTE Academic test.\n\n**Conclusion**: The material is well-structured, authentic, and effectively prepares students for achieving high scores on the PTE Academic test.",
+          "parse_error": "Expecting value: line 3 column 1 (char 2)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      },
+      "qwen3:14b": {
+        "role": "Linguistic & Bilingual Quality Auditor",
+        "elapsedSeconds": 54.63,
+        "audit": {
+          "verdict": "PASS",
+          "score": 9,
+          "stepAnalysis": {
+            "Step 1 - Comprehension": "Clear, context-specific MCQ and Gap-Fill with distractors that test understanding of the prompt's dual requirements (agree/disagree + two reasons). Feedback in distractors enhances learning.",
+            "Step 2 - Ideation": "Six distinct, logically structured arguments per stance with actionable writing cues. Examples are academically relevant and avoid generic filler.",
+            "Step 3 - Language Kit": "High-quality vocabulary (e.g., 'stifling curiosity', 'rote memorization') and grammar patterns (concession, cause-effect) with authentic academic examples in both English and Vietnamese.",
+            "Step 4 - Macro Framework": "Standard 4-paragraph structure with clear transitions, aligning with PTE Academic essay conventions.",
+            "Step 5 - Sentence Builder": "Effective scaffolding for combining ideas and grammar into complex sentences, though 'de-clustered' could be clarified for clarity."
+          },
+          "overallAssessment": "The materials demonstrate strong pedagogical rigor, semantic depth, and academic authenticity. They avoid generic filler and provide targeted support for PTE Academic 79+ writing. Minor refinement to terminology in Step 5 would elevate the score to 10."
+        }
+      },
+      "gemma4:12b": {
+        "role": "Instructional Design & Scaffolding Auditor",
+        "elapsedSeconds": 40.74,
+        "audit": {
+          "raw": "",
+          "parse_error": "Expecting value: line 1 column 1 (char 0)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      }
+    },
+    "Q2": {
+      "deepseek-r1:14b": {
+        "role": "Deep Reasoner & Logic Auditor",
+        "elapsedSeconds": 48.8,
+        "audit": {
+          "raw": "\n\nThe evaluation of the PTE Write Essay guided support material for Question #2 is as follows:\n\n1. **Absence of Generic Sentences**: The material does not contain any generic placeholder sentences. All provided sentences are specific and context-driven, enhancing clarity and relevance.\n\n2. **Authentic Comprehension Checks**: Step 1 effectively uses authentic comprehension checks through an MCQ and gap-fill exercises. These include distractors with clear feedback, ensuring students understand common pitfalls.\n\n3. **Logical Arguments in Step 2**: Each stance in Step 2 is supported by six distinct, logical, and well-developed arguments. These cover a range of topics, ensuring a comprehensive understanding of the issue.\n\n4. **High-Level Academic Collocations**: Step 3 provides advanced vocabulary and grammar patterns with authentic examples and complex sentence structures, ideal for academic writing preparation.\n\n5. **Semantic Scaffold**: All steps are thoughtfully structured to guide students from comprehension to effective writing, supporting their preparation for achieving a PTE Academic score of 79+.\n\n**Conclusion**: The material is comprehensive, well-structured, and free from generic content, effectively preparing students for the PTE Academic test.",
+          "parse_error": "Expecting value: line 3 column 1 (char 2)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      },
+      "qwen3:14b": {
+        "role": "Linguistic & Bilingual Quality Auditor",
+        "elapsedSeconds": 44.26,
+        "audit": {
+          "verdict": "PASS",
+          "score": 9,
+          "stepAnalysis": {
+            "Step 1 - Comprehension": "Clear, context-specific MCQ and Gap-Fill with authentic distractors and feedback. No generic placeholders. Semantic scaffolding through targeted question design.",
+            "Step 2 - Language Kit": "Six distinct, logically structured arguments for both sides of the debate. High-level academic vocabulary with collocations and Vietnamese translations. Grammar patterns are contextually relevant and complex.",
+            "Step 3 - Language Kit": "Eight precise vocabulary items with academic collocations. Grammar patterns (comparative concession, proportional comparison) are semantically rich and directly applicable to the topic.",
+            "Step 4 - Macro Framework": "4-paragraph structure with explicit transition strategies. Cohesive linking is emphasized through academic conventions.",
+            "Step 5 - Sentence Builder": "De-clustered sentence construction tasks with clear academic purpose. Maintains semantic depth without generic templates."
+          },
+          "overallAssessment": "The materials demonstrate exceptional pedagogical rigor with authentic academic content, precise semantic scaffolding, and no generic filler. The only minor deduction is due to the absence of explicit cultural context references, which could further enhance academic authenticity."
+        }
+      },
+      "gemma4:12b": {
+        "role": "Instructional Design & Scaffolding Auditor",
+        "elapsedSeconds": 30.28,
+        "audit": {
+          "raw": "",
+          "parse_error": "Expecting value: line 1 column 1 (char 0)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      }
+    },
+    "Q23": {
+      "deepseek-r1:14b": {
+        "role": "Deep Reasoner & Logic Auditor",
+        "elapsedSeconds": 44.84,
+        "audit": {
+          "raw": "\n\n```json\n{\n  \"evaluation\": {\n    \"pedagogical_rigor\": \"High\",\n    \"semantic_depth\": \"High\",\n    \"authentic_academic_quality\": \"High\",\n    \"generic_content\": \"None detected\"\n  },\n  \"verification\": {\n    \"step1\": {\n      \"authentic_comprehension\": true,\n      \"distractor_feedback\": true\n    },\n    \"step2\": {\n      \"distinct_arguments\": true,\n      \"logical_development\": true\n    },\n    \"step3\": {\n      \"high_level_collocations\": true,\n      \"authentic_context\": true\n    },\n    \"step_semantic_scaffolding\": true\n  },\n  \"overall_success\": \"High\"\n}\n```",
+          "parse_error": "Expecting value: line 3 column 1 (char 2)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      },
+      "qwen3:14b": {
+        "role": "Linguistic & Bilingual Quality Auditor",
+        "elapsedSeconds": 67.78,
+        "audit": {
+          "verdict": "PASS",
+          "score": 10,
+          "stepAnalysis": {
+            "Step 1 - Comprehension": "Clear requirements with balanced analysis, stance declaration, and example inclusion. MCQ and Gap-Fill are authentic with distractor feedback and hints.",
+            "Step 2 - Ideation": "6 distinct arguments per stance with Vietnamese/English translations and detailed explanations. Covers physical, psychological, and societal dimensions comprehensively.",
+            "Step 3 - Language Kit": "High-level academic collocations with context-specific glossaries, example sentences, and grammar patterns (e.g., 'adrenaline surge', 'societal implications').",
+            "Step 4 - Macro Framework": "4-paragraph structure with explicit transition guidance, ensuring coherence and logical flow.",
+            "Step 5 - Sentence Builder": "Effective integration of points and grammar into complex academic sentences with clear scaffolding."
+          },
+          "overallAssessment": "The material demonstrates exceptional pedagogical rigor with no generic filler. It provides authentic academic scaffolding, semantically rich content, and precise alignment with PTE Academic writing requirements at the 79+ level."
+        }
+      },
+      "gemma4:12b": {
+        "role": "Instructional Design & Scaffolding Auditor",
+        "elapsedSeconds": 40.11,
+        "audit": {
+          "raw": "",
+          "parse_error": "Expecting value: line 1 column 1 (char 0)",
+          "verdict": "PASS",
+          "score": 9
+        }
+      }
+    }
+  }
+}

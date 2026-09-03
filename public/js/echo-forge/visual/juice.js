@@ -24,6 +24,8 @@ export function createEchoForgeJuice({
     span.className = `ef-dmg ef-dmg--${tier}`;
     span.textContent = `-${damage}`;
     span.setAttribute('aria-hidden', 'true');
+    const jitter = Math.round(Math.random() * 28 - 14);
+    span.style.marginLeft = `${jitter}px`;
 
     fighter.appendChild(span);
 

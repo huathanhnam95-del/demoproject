@@ -74,26 +74,26 @@
         <div id="attack-controls">
           <div class="section-label">Choose Your Attack</div>
           <div class="action-row">
-            <button type="button" data-card="precision_strike" class="ability-card" aria-describedby="card-precision-description"><span class="card-icon">&#9876;</span><span class="action-title">Precision Strike</span><span class="action-meta">Word &middot; 20 DMG</span></button><span id="card-precision-description" class="action-description" hidden>Azure word evidence; low resource risk.</span>
-            <button type="button" data-card="stress_breaker" class="ability-card" aria-describedby="card-stress-description"><span class="card-icon">&#128165;</span><span class="action-title">Stress Breaker</span><span class="action-meta">Stress &middot; 24 DMG &middot; 1 Focus</span></button><span id="card-stress-description" class="action-description" hidden>V3 count and stress evidence; spends Focus even when incorrect.</span>
-            <button type="button" data-card="echo_chain" class="ability-card" aria-describedby="card-echo-description"><span class="card-icon">&#9939;</span><span class="action-title">Echo Chain</span><span class="action-meta">Phrase &middot; 26 DMG &middot; 1 Focus</span></button><span id="card-echo-description" class="action-description" hidden>Azure phrase accuracy, fluency, and completeness; spends Focus even when incorrect.</span>
-            <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Resonance Burst</span></label>
+            <button type="button" data-card="precision_strike" class="ability-card" aria-describedby="card-precision-description"><span class="card-icon">&#9876;</span><span class="action-title">Precision Strike <kbd class="ef-kbd-hint">1</kbd></span><span class="action-meta">Word &middot; 20 DMG</span></button><span id="card-precision-description" class="action-description" hidden>Azure word evidence; low resource risk.</span>
+            <button type="button" data-card="stress_breaker" class="ability-card" aria-describedby="card-stress-description"><span class="card-icon">&#128165;</span><span class="action-title">Stress Breaker <kbd class="ef-kbd-hint">2</kbd></span><span class="action-meta">Stress &middot; 24 DMG &middot; 1 Focus</span></button><span id="card-stress-description" class="action-description" hidden>V3 count and stress evidence; spends Focus even when incorrect.</span>
+            <button type="button" data-card="echo_chain" class="ability-card" aria-describedby="card-echo-description"><span class="card-icon">&#9939;</span><span class="action-title">Echo Chain <kbd class="ef-kbd-hint">3</kbd></span><span class="action-meta">Phrase &middot; 26 DMG &middot; 1 Focus</span></button><span id="card-echo-description" class="action-description" hidden>Azure phrase accuracy, fluency, and completeness; spends Focus even when incorrect.</span>
+            <label class="burst-choice"><input id="burst-toggle" type="checkbox"> <span>Resonance Burst <kbd class="ef-kbd-hint">4</kbd></span></label>
           </div>
         </div>
         <div id="record-controls" hidden>
           <div class="section-label" id="record-label">Speak the target</div>
           <div class="record-row">
-            <button id="record-btn" type="button" class="primary">&#127908; Record</button>
-            <button id="stop-btn" type="button" class="success" disabled>&#9209; Stop &amp; Analyze</button>
-            <button id="cancel-btn" type="button">Cancel</button>
+            <button id="record-btn" type="button" class="primary">&#127908; Record <kbd class="ef-kbd-hint">Space</kbd></button>
+            <button id="stop-btn" type="button" class="success" disabled>&#9209; Stop &amp; Analyze <kbd class="ef-kbd-hint">Space</kbd></button>
+            <button id="cancel-btn" type="button">Cancel <kbd class="ef-kbd-hint">Esc</kbd></button>
           </div>
         </div>
         <div id="defend-controls" hidden>
           <div class="section-label">Defend!</div>
           <div id="parry-countdown" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="action-row">
-            <button id="block-btn" type="button" class="ability-card defend-card"><span class="card-icon">&#128737;</span><span class="action-title">Block</span><span class="action-meta">Listen &amp; choose</span></button>
-            <button id="parry-btn" type="button" class="ability-card defend-card parry-card"><span class="card-icon">&#9889;</span><span class="action-title">Parry</span><span class="action-meta">Repeat within 4s</span></button>
+            <button id="block-btn" type="button" class="ability-card defend-card"><span class="card-icon">&#128737;</span><span class="action-title">Block <kbd class="ef-kbd-hint">1</kbd></span><span class="action-meta">Listen &amp; choose</span></button>
+            <button id="parry-btn" type="button" class="ability-card defend-card parry-card"><span class="card-icon">&#9889;</span><span class="action-title">Parry <kbd class="ef-kbd-hint">2</kbd></span><span class="action-meta">Repeat within 4s</span></button>
           </div>
         </div>
         <div id="block-options" tabindex="-1" hidden><div class="section-label">Choose the word you heard</div><div class="option-row" id="option-row"></div></div>

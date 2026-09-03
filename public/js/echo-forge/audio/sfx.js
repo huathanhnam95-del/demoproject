@@ -55,8 +55,10 @@ export function createEchoForgeSfx({
         osc.frequency.exponentialRampToValueAtTime(Math.max(10, endFreq), now + duration);
       }
 
-      gainNode.gain.setValueAtTime(gain, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      const attackTime = Math.min(0.005, duration * 0.1);
+      gainNode.gain.setValueAtTime(0.0001, now);
+      gainNode.gain.exponentialRampToValueAtTime(Math.max(0.001, gain), now + attackTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
       osc.connect(gainNode);
       gainNode.connect(ctx.destination);
@@ -89,8 +91,10 @@ export function createEchoForgeSfx({
       filter.frequency.setValueAtTime(800, now);
 
       const gainNode = ctx.createGain();
-      gainNode.gain.setValueAtTime(gain, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      const attackTime = Math.min(0.004, duration * 0.1);
+      gainNode.gain.setValueAtTime(0.0001, now);
+      gainNode.gain.exponentialRampToValueAtTime(Math.max(0.001, gain), now + attackTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
       noise.connect(filter);
       filter.connect(gainNode);
@@ -168,5 +172,6 @@ export function createEchoForgeSfx({
     setEnabled,
     isEnabled,
     dispose,
+    getContext: () => getContext(),
   });
 }

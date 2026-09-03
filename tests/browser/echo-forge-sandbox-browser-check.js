@@ -269,6 +269,13 @@ async function installHooks(page, { includePromptHook = true } = {}) {
     assert.equal(await page.locator('#attack-controls').isVisible(), true);
     assert.equal(await page.locator('[data-card="precision_strike"]').isEnabled(), true);
 
+    // Verify keyboard shortcut controls (card 1 hotkey and Escape cancel)
+    await page.keyboard.press('1');
+    assert.equal(await page.locator('#record-controls').isVisible(), true);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#attack-controls').isVisible(), true);
+    assert.equal(await page.locator('#record-controls').isHidden(), true);
+
     const beforeReplay = JSON.stringify(await page.evaluate(() => window.echoForgeSandbox.getState()));
     await page.click('#replay-btn');
     assert.equal(JSON.stringify(await page.evaluate(() => window.echoForgeSandbox.getState())), beforeReplay);

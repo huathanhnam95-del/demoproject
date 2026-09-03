@@ -1,3 +1,18 @@
+## [V1.8.107] - 2026-09-04
+
+### Added & Enhanced
+- **Write Essay Guided Mode 3-Sample Quality Overhaul & 3-Local-LLM Council Pipeline**:
+  - **Step 1 Active Comprehension Checks**: Eliminated passive checkbox interactions and replaced them with static instructional criteria cards (`.essay-guided-req-card-static`), a diagnostic Task Multiple-Choice Question with instant distractor feedback, and an interactive 3-slot Gap-Fill Macro Blueprint with slot chips, real-time validation, reset, and alignment banner.
+  - **Core Sample Quality Expansion**: Enriched Question #1 (Einstein Quote), Question #2 (Diet vs Exercise), and Question #23 (Extreme Sports) with exactly 6 distinct arguments per stance (12 total), 8 authentic academic PTE collocations with contextual examples, and 3 complex sentence models (Concession, Cause/Condition, Inversion).
+  - **Step 5 De-Cluttered Sentence Builder**: Replaced nested card layouts ("boxes in boxes") with a clean flat layout and compact guide bar.
+  - **3-Local-LLM Council Enrichment Tool (`scripts/write_essay_support/enrich_essay_support_council.py`)**: Built a production-grade multi-model CLI pipeline coordinating `deepseek-r1:14b` (logic & argumentation), `qwen3:14b` (authentic bilingual language kit & grammar), and `gemma4:12b` (instructional scaffolding). Features Stage-Batched execution to eliminate 16GB GPU VRAM swapping thrashing, robust JSON auto-repair (`repair_json_text`), and cross-platform SHA-256 byte preservation (`write_bytes`).
+  - **Empirical Multi-Model Verification**: Full unanimous PASS (10/10 & 9/10) achieved across local council audit; verified Question #5 and Question #10 with 100% pass across Playwright E2E browser tests.
+- **Entrance Test Gemini 3.8 Flash ASR Migration**:
+  - Implemented `functions/src/entrance-test/asr-service.js` integrating Gemini Flash for rapid speech recognition and speaking section scoring.
+  - Verified with regression tests (`tests/entrance-test-gemini-asr.test.js`, `tests/entrance-test-review-regressions.test.js`).
+- **Echo Forge Frictionless Gameplay & Visual Polish**:
+  - Integrated pixel art sprite styling, pop-free AudioContext reuse, hotkey controls, and verified all 136 unit tests and browser checks (`npm run verify:echo-forge`).
+
 ## [V1.8.106] - 2026-09-03
 
 ### Fixed & Enhanced

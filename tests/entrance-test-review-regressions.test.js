@@ -14,6 +14,9 @@ function createRouter() {
     },
     post(routePath, ...handlers) {
       routes.push({ method: 'POST', path: routePath, handlers });
+    },
+    use(routePath, ...handlers) {
+      routes.push({ method: 'USE', path: routePath, handlers });
     }
   };
 }

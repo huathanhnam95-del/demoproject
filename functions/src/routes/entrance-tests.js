@@ -17,11 +17,10 @@ const {
     buildPublicSession,
     scoreSubmission
 } = require('../entrance-test/test36plus');
+const { transcribeAudio } = require('../entrance-test/asr-service');
 
 const router = express.Router();
 
-const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
-const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
 
 function resolveStorageBucket() {
     try {
@@ -80,35 +79,6 @@ function getSpeakingQuestionById(questionId) {
     const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
     const q = speaking?.questions?.find((x) => x.id === questionId) || null;
     return q;
-}
-
-async function transcribeAudio(buffer, contentType) {
-    if (!HF_TOKEN) {
-        throw new Error('HUGGINGFACE_API_KEY is not configured on the server.');
-    }
-    const asrContentType = normalizeAsrContentType(contentType) || 'application/octet-stream';
-    const url = `https://router.huggingface.co/hf-inference/models/${ASR_MODEL}`;
-    const res = await axios({
-        method: 'POST',
-        url,
-        headers: {
-            Authorization: `Bearer ${HF_TOKEN}`,
-            Accept: 'application/json',
-            'Content-Type': asrContentType,
-            'User-Agent': 'Mozilla/5.0'
-        },
-        httpsAgent: new https.Agent({ family: 4 }),
-        data: buffer,
-        timeout: 120000,
-        validateStatus: () => true
-    });
-
-    if (res.status !== 200 || !res.data || typeof res.data.text !== 'string') {
-        const errMsg = res.data?.error || `ASR failed with status ${res.status}`;
-        throw new Error(String(errMsg));
-    }
-
-    return res.data.text;
 }
 
 router.get('/session', async (req, res) => {
@@ -286,7 +256,7 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
         let asrError = null;
 
         try {
-            transcript = await transcribeAudio(audioBuffer, contentType);
+            transcript = await transcribeAudio(audioBuffer, contentType, { expectedText: question.expectedText });
             accuracy = computeWordAccuracyPercent(question.expectedText, transcript);
         } catch (e) {
             asrError = e?.message || String(e);

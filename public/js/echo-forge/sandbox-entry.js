@@ -133,6 +133,7 @@ function stopParryCountdown() {
 
 function renderSummary() {
   if (!combat || !['victory', 'defeat', 'abandoned'].includes(combat.status)) return;
+  if (run && !['victory', 'defeat', 'abandoned'].includes(run.status)) return;
   const totalRounds = run?.ledger?.length
     ? run.ledger.reduce((sum, item) => sum + (item.rounds || 0), 0)
     : combat.round;
@@ -222,6 +223,7 @@ function claimReward(rewardId) {
   appendEvents(runResult.combatEvents);
 
   rewardSelectNode.hidden = true;
+  summaryNode.hidden = true;
   battleNode.hidden = false;
 
   wardenIndex = run.wardenIndex;
@@ -390,14 +392,6 @@ function stopSilenceDetection() {
     clearInterval(silenceMonitorInterval);
     silenceMonitorInterval = null;
   }
-  if (silenceAudioContext) {
-    try {
-      silenceAudioContext.close();
-    } catch {
-      // ignore
-    }
-    silenceAudioContext = null;
-  }
 }
 
 function startSilenceDetection() {
@@ -408,7 +402,12 @@ function startSilenceDetection() {
   if (!AudioCtx) return;
 
   try {
-    silenceAudioContext = new AudioCtx();
+    if (!silenceAudioContext || silenceAudioContext.state === 'closed') {
+      silenceAudioContext = sfx?.getContext?.() || new AudioCtx();
+    }
+    if (silenceAudioContext.state === 'suspended') {
+      void silenceAudioContext.resume().catch(() => {});
+    }
     const source = silenceAudioContext.createMediaStreamSource(stream);
     const analyser = silenceAudioContext.createAnalyser();
     analyser.fftSize = 512;
@@ -419,9 +418,19 @@ function startSilenceDetection() {
     let lastSpeechTime = performance.now();
     const startTime = performance.now();
 
+    const cleanupNodes = () => {
+      try {
+        source.disconnect();
+        analyser.disconnect();
+      } catch {
+        // best-effort node cleanup
+      }
+    };
+
     silenceMonitorInterval = setInterval(() => {
       if (!capture || capture.state !== 'recording' || combat?.status !== 'active') {
         stopSilenceDetection();
+        cleanupNodes();
         return;
       }
       analyser.getByteTimeDomainData(buffer);
@@ -1140,13 +1149,153 @@ document.querySelector('#replay-btn').addEventListener('click', replayState);
 document.querySelector('#export-json-btn').addEventListener('click', () => download('echo-forge-timing.json', 'application/json', telemetry.exportJson()));
 document.querySelector('#export-csv-btn').addEventListener('click', () => download('echo-forge-timing.csv', 'text/csv', telemetry.exportCsv()));
 document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape' || !combat || combat.status !== 'active') return;
-  if (!recordControls.hidden) {
-    event.preventDefault();
-    cancelRecording();
+  const tag = event.target?.tagName?.toLowerCase();
+  if (tag === 'input' || tag === 'select' || tag === 'textarea') {
+    if (event.key !== 'Escape') return;
+  }
+
+  if (event.key === 'Escape') {
+    if (combat && combat.status === 'active') {
+      if (!recordControls.hidden) {
+        event.preventDefault();
+        cancelRecording();
+        return;
+      }
+      if (!blockOptions.hidden && cancelBlockPrompt()) {
+        event.preventDefault();
+        return;
+      }
+    }
+  }
+
+  // Setup screen controls
+  if (!setupNode.hidden) {
+    if (event.key === 'Enter') {
+      const startBtn = document.querySelector('#start-btn');
+      if (startBtn && !startBtn.disabled) {
+        event.preventDefault();
+        void startRun();
+      }
+    } else if (event.key === 'r' || event.key === 'R') {
+      const resumeBtn = document.querySelector('#resume-btn');
+      if (resumeBtn && !resumeBtn.hidden && !resumeBtn.disabled) {
+        event.preventDefault();
+        resumeBtn.click();
+      }
+    }
     return;
   }
-  if (!blockOptions.hidden && cancelBlockPrompt()) event.preventDefault();
+
+  // Summary screen controls
+  if (!summaryNode.hidden) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void startRun();
+    } else if (event.key === 's' || event.key === 'S') {
+      const changeBtn = document.querySelector('#change-settings-btn');
+      if (changeBtn) {
+        event.preventDefault();
+        changeBtn.click();
+      }
+    }
+    return;
+  }
+
+  // Reward selection controls
+  if (rewardSelectNode && !rewardSelectNode.hidden) {
+    const rewardBtns = rewardSelectNode.querySelectorAll('.reward-card button');
+    if (event.key === '1' && rewardBtns[0]) {
+      event.preventDefault();
+      rewardBtns[0].click();
+    } else if (event.key === '2' && rewardBtns[1]) {
+      event.preventDefault();
+      rewardBtns[1].click();
+    }
+    return;
+  }
+
+  if (!combat || combat.status !== 'active') return;
+
+  // Recording controls
+  if (!recordControls.hidden) {
+    if (event.code === 'Space' || event.key === ' ') {
+      event.preventDefault();
+      const stopBtn = document.querySelector('#stop-btn');
+      const recordBtn = document.querySelector('#record-btn');
+      if (stopBtn && !stopBtn.disabled) {
+        void stopAndAnalyze();
+      } else if (recordBtn && !recordBtn.disabled) {
+        void startRecording();
+      }
+    }
+    return;
+  }
+
+  // Block options (listening multiple-choice)
+  if (!blockOptions.hidden) {
+    const buttons = optionRow.querySelectorAll('button');
+    if (event.key === 'h' || event.key === 'H' || event.key === '0') {
+      if (buttons[0] && !buttons[0].disabled) {
+        event.preventDefault();
+        buttons[0].click();
+      }
+    } else if (['1', '2', '3', '4'].includes(event.key)) {
+      const idx = parseInt(event.key, 10);
+      if (buttons[idx] && !buttons[idx].disabled) {
+        event.preventDefault();
+        buttons[idx].click();
+      }
+    }
+    return;
+  }
+
+  // Defend controls (enemy turn)
+  if (combat.turn === 'enemy' && !defendControls.hidden) {
+    if (event.key === '1' || event.key === 'b' || event.key === 'B') {
+      const blockBtn = document.querySelector('#block-btn');
+      if (blockBtn && !blockBtn.disabled) {
+        event.preventDefault();
+        presentBlock();
+      }
+    } else if (event.key === '2' || event.key === 'p' || event.key === 'P') {
+      const parryBtn = document.querySelector('#parry-btn');
+      if (parryBtn && !parryBtn.disabled) {
+        event.preventDefault();
+        presentParry();
+      }
+    }
+    return;
+  }
+
+  // Attack controls (player turn)
+  if (combat.turn === 'player' && !attackControls.hidden) {
+    if (event.key === '1') {
+      const btn = document.querySelector('[data-card="precision_strike"]');
+      if (btn && !btn.disabled) {
+        event.preventDefault();
+        chooseAttack('precision_strike');
+      }
+    } else if (event.key === '2') {
+      const btn = document.querySelector('[data-card="stress_breaker"]');
+      if (btn && !btn.disabled) {
+        event.preventDefault();
+        chooseAttack('stress_breaker');
+      }
+    } else if (event.key === '3') {
+      const btn = document.querySelector('[data-card="echo_chain"]');
+      if (btn && !btn.disabled) {
+        event.preventDefault();
+        chooseAttack('echo_chain');
+      }
+    } else if (event.key === '4') {
+      const toggle = document.querySelector('#burst-toggle');
+      if (toggle && !toggle.disabled) {
+        event.preventDefault();
+        toggle.checked = !toggle.checked;
+        toggle.dispatchEvent(new Event('change'));
+      }
+    }
+  }
 });
 
 window.echoForgeSandbox = Object.freeze({
@@ -1169,6 +1318,10 @@ window.addEventListener('pagehide', () => {
   blockPlaybackReady = false;
   stopParryCountdown();
   visualPresenter.dispose();
+  if (silenceAudioContext) {
+    try { silenceAudioContext.close(); } catch {}
+    silenceAudioContext = null;
+  }
 });
 
 init();

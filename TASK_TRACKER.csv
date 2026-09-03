@@ -1880,5 +1880,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 886,2026-09-03,Verify Google AI Studio Prepay billing model policy,Done,2026-09-03
 887,2026-09-03,CRM Books: exhaustive page-by-page OCR and text inspection across all 774 pages of Harmer and Pronunciation books,Done,2026-09-03
 888,2026-09-03,Save Gemini API key to env and configure Gemini Flash model,Done,2026-09-03
-889,2026-09-03,Write Essay Guided Mode: 3-sample quality overhaul and 3-local-LLM step-by-step pedagogical inspection,In Progress,
-890,2026-09-03,Migrate Entrance Test ASR to Gemini 3.8 Flash and rescore test 5726ca51,In Progress,
+889,2026-09-03,Write Essay Guided Mode: 3-sample quality overhaul and 3-local-LLM step-by-step pedagogical inspection,Done,2026-09-03
+890,2026-09-03,Migrate Entrance Test ASR to Gemini 3.8 Flash and rescore test 5726ca51,Done,2026-09-03
+891,2026-09-03,Echo Forge: boost audit and optimize frictionless gameplay with hotkeys AudioContext reuse and pop-free SFX,Done,2026-09-03
+892,2026-09-03,Echo Forge: pixel art sprite styling and comprehensive browser test verification,Done,2026-09-03
+893,2026-09-03,Write Essay Guided Mode: create optimized 3-local-LLM enrichment script,Done,2026-09-03
+894,2026-09-04,Release V1.8.107: push to production with 3-local-LLM Write Essay enrichment and Gemini ASR,In Progress,

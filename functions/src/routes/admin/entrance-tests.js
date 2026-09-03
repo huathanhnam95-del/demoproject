@@ -18,14 +18,13 @@ const {
     buildPublicSession,
     scoreSubmission
 } = require('../../entrance-test/test36plus');
+const { transcribeAudio } = require('../../entrance-test/asr-service');
 
 const VALID_TEST_TYPES = new Set([
     'entrance_test_36plus_v1',
     'segmental_screening_v1'
 ]);
 const DEFAULT_TEST_TYPE = 'entrance_test_36plus_v1';
-const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
-const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
 
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
@@ -49,35 +48,6 @@ function resolveStorageBucket(preferredBucketName) {
         console.warn('[CRM EntranceTests] Storage init failed:', error?.message || error);
         return null;
     }
-}
-
-async function transcribeAudio(buffer, contentType) {
-    if (!HF_TOKEN) {
-        throw new Error('HUGGINGFACE_API_KEY is not configured on the server.');
-    }
-    const asrContentType = normalizeAsrContentType(contentType) || 'application/octet-stream';
-    const url = `https://router.huggingface.co/hf-inference/models/${ASR_MODEL}`;
-    const res = await axios({
-        method: 'POST',
-        url,
-        headers: {
-            Authorization: `Bearer ${HF_TOKEN}`,
-            Accept: 'application/json',
-            'Content-Type': asrContentType,
-            'User-Agent': 'Mozilla/5.0'
-        },
-        httpsAgent: new https.Agent({ family: 4 }),
-        data: buffer,
-        timeout: 120000,
-        validateStatus: () => true
-    });
-
-    if (res.status !== 200 || !res.data || typeof res.data.text !== 'string') {
-        const errMsg = res.data?.error || `ASR failed with status ${res.status}`;
-        throw new Error(String(errMsg));
-    }
-
-    return res.data.text;
 }
 
 async function generateUniqueTestIdentity(db) {
@@ -461,7 +431,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
 
                 try {
                     const [audioBuffer] = await targetBucket.file(storagePath).download();
-                    transcript = await transcribeAudio(audioBuffer, contentType);
+                    transcript = await transcribeAudio(audioBuffer, contentType, { expectedText });
                     if (expectedText) {
                         accuracy = computeWordAccuracyPercent(expectedText, transcript);
                     }

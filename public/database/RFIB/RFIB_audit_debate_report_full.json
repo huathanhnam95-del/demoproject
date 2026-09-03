@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 412,
-  "round1_pass_count": 346,
-  "debate_revised_count": 63,
-  "unresolved_count": 3,
+  "processed_questions": 450,
+  "round1_pass_count": 375,
+  "debate_revised_count": 70,
+  "unresolved_count": 5,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -10866,6 +10866,2750 @@
                 }
               ],
               "verified_grammar_tag": "Past Simple Tense (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 272,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+            "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'amount'. This sentence explains that if demand falls, sellers cannot sell the same *amount* of goods at the previous price. 'Amount' refers to a measurable quantity of non-countable items. * Why 'quality' is incorrect: 'Quality' refers to the standard or excellence of the good, not its quantity. * Why 'patch' is incorrect: 'Patch' means a small piece of material and does not refer to a general quantity of goods. * Why 'deal' is incorrect: 'Deal' usually refers to a business transaction or agreement, not the physical measure of goods. The grammar tag 'Noun Collocation / Quantity Measurement' is accurate because the sentence is about matching the right noun to a quantity context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was accurate. Model [qwen3:14b] had a parsing error but did not raise substantive issues. Model [gemma4:12b] did not respond. The explanation was revised to ensure clarity, completeness, and grammatical precision, and the grammar tag was confirmed as accurate.",
+          "candidate_explanation": "The correct answer is 'amount'. This sentence explains that if demand falls, sellers cannot sell the same *amount* of goods at the previous price. 'Amount' refers to a measurable quantity of non-countable items. * Why 'quality' is incorrect: 'Quality' refers to the standard or excellence of the good, not its quantity. * Why 'patch' is incorrect: 'Patch' means a small piece of material and does not refer to a general quantity of goods. * Why 'deal' is incorrect: 'Deal' usually refers to a business transaction or agreement, not the physical measure of goods. The grammar tag 'Noun Collocation / Quantity Measurement' is accurate because the sentence is about matching the right noun to a quantity context.",
+          "candidate_grammar_tag": "Noun Collocation / Quantity Measurement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical or logical errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness and completeness of the explanation, with the exception of gemma4:12b, which failed to respond. The grammar tag was confirmed as accurate by the responding models, and no substantive disagreements were found. The explanation was enhanced by explicitly addressing the active voice used in the sentence for clarity.",
+          "candidate_explanation": "The correct answer is 'amount'. This sentence explains that if demand falls, sellers cannot sell the same *amount* of goods at the previous price. 'Amount' refers to a measurable quantity of non-countable items. * Why 'quality' is incorrect: 'Quality' refers to the standard or excellence of the good, not its quantity. * Why 'patch' is incorrect: 'Patch' means a small piece of material and does not refer to a general quantity of goods. * Why 'deal' is incorrect: 'Deal' usually refers to a business transaction or agreement, not the physical measure of goods. The grammar tag 'Noun Collocation / Quantity Measurement' is accurate because the sentence is about matching the right noun to a quantity context. Additionally, the sentence uses active voice to show the direct relationship between price and quantity sold, which is essential for clarity in economic principles.",
+          "candidate_grammar_tag": "Noun Collocation / Quantity Measurement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is accurate, with correct grammar labeling, logical reasoning, and clear semantic and collocation analysis. All distractors are properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced by explicitly addressing the active voice used in the sentence, which helps clarify the relationship between price and quantity sold.",
+          "candidate_explanation": "The correct answer is 'amount'. This sentence explains that if demand falls, sellers cannot sell the same *amount* of goods at the previous price. 'Amount' refers to a measurable quantity of non-countable items. * Why 'quality' is incorrect: 'Quality' refers to the standard or excellence of the good, not its quantity. * Why 'patch' is incorrect: 'Patch' means a small piece of material and does not refer to a general quantity of goods. * Why 'deal' is incorrect: 'Deal' usually refers to a business transaction or agreement, not the physical measure of goods. The grammar tag 'Noun Collocation / Quantity Measurement' is accurate because the sentence is about matching the right noun to a quantity context. The sentence uses active voice to show the direct relationship between price and quantity sold, which is essential for clarity in economic principles. This active voice emphasizes the cause-and-effect relationship between price changes and the quantity sold, making the explanation more direct and easier to understand for learners.",
+          "candidate_grammar_tag": "Noun Collocation / Quantity Measurement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is accurate, with correct grammar labeling, logical reasoning, and clear analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the grammar tag, semantic context, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurately applied."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation / Quantity Measurement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 275,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund/Parallel Structure",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Parallel Structure",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Gerund/Parallel Structure' is p"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Parallel Structure",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'studying.' The sentence lists activities that people do simultaneously, such as 'eat while driving' and 'watch TV while [BLANK].' To maintain grammatical parallelism, the word in the blank must be a gerund (a verb ending in -ing that functions as a noun). 'Studying' fits perfectly in this context and matches the structure of the other verbs in the list. The other options—'volleying,' 'couriering,' and 'lobbying'—are grammatically valid as gerunds, but they do not fit the specific semantic and contextual requirements of the sentence. Here's why:\n\n* Why 'volleying' is incorrect: While 'volleying' is grammatically correct as a gerund, it refers to a physical activity typically associated with sports, which is not semantically aligned with the context of multitasking alongside watching TV.\n* Why 'couriering' is incorrect: While 'couriering' is grammatically correct as a gerund, it refers to the act of delivering items, which is not a typical or semantically appropriate concurrent activity with watching TV.\n* Why 'lobbying' is incorrect: While 'lobbying' is grammatically correct as a gerund, it refers to political or persuasive activities, which are not commonly associated with the context of multitasking alongside watching TV.\n\nTherefore, 'studying' is the only option that is both grammatically and contextually appropriate.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag 'Gerund/Parallel Structure' was retained as it is factually accurate. The explanation was expanded to explicitly address each distractor's grammatical and contextual issues, ensuring it is clear for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'studying.' The sentence presents a list of activities performed at the same time, such as 'eat while driving' and 'watch TV while [BLANK].' To maintain grammatical parallelism, the word in the blank must be a gerund (a verb ending in -ing that functions as a noun). 'Studying' fits perfectly in this context and matches the structure of the other verbs in the list. The other options—'volleying,' 'couriering,' and 'lobbying'—are grammatically valid as present participles, but they do not fit the specific parallel structure established by the sentence. Additionally, 'volleying' and 'lobbying' are more commonly associated with physical or political activities, which do not align with the academic or cognitive context of the sentence. 'Couriering' implies delivering items, which is not a typical concurrent activity with watching TV. Therefore, 'studying' is the only option that is both grammatically and contextually appropriate.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not adequately address the semanti"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical concerns. The grammar tag was confirmed as 'Gerund/Parallel Structure' based on the sentence's structure and the need for parallelism. The timeout and JSON error were resolved by ensuring the explanation was fully formatted and logically structured, making it compatible with all models.",
+          "candidate_explanation": "The correct answer is 'studying.' The sentence lists activities that people do simultaneously, such as 'eat while driving' and 'watch TV while [BLANK].' To maintain grammatical parallelism, the word in the blank must be a gerund (a verb ending in -ing that functions as a noun). 'Studying' fits perfectly in this context and matches the structure of the other verbs in the list. The other options—'volleying,' 'couriering,' and 'lobbying'—are grammatically valid as present participles, but they do not fit the specific parallel structure established by the sentence. Additionally:\n\n* Why 'volleying' is incorrect: It refers to a physical activity typically involving movement, which does not align with the academic or cognitive context of the sentence.\n* Why 'couriering' is incorrect: It implies delivering items, which is not a typical concurrent activity with watching TV.\n* Why 'lobbying' is incorrect: It refers to political or persuasive activities, which are not commonly associated with the context of multitasking alongside watching TV.\n\nTherefore, 'studying' is the only option that is both grammatically and contextually appropriate.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address the semantic appropriateness of the distractors in the context of the sentence. It assumes that 'volleying,' 'couriering,' and 'lobbying' are not contextually appropriate, but it does not clearly explain why this is the case in terms of meaning or collocation.",
+                  "affected_text": "Why 'volleying' is incorrect: It refers to a physical activity typically involving movement, which does not align with the academic or cognitive context of the sentence.",
+                  "correction": "Why 'volleying' is incorrect: While 'volleying' is grammatically correct as a gerund, it refers to a physical activity typically associated with sports, which is not semantically aligned with the context of multitasking alongside watching TV."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not sufficiently address the semantic inappropriateness of 'couriering' in the context of the sentence.",
+                  "affected_text": "Why 'couriering' is incorrect: It implies delivering items, which is not a typical concurrent activity with watching TV.",
+                  "correction": "Why 'couriering' is incorrect: While 'couriering' is grammatically correct as a gerund, it refers to the act of delivering items, which is not a typical or semantically appropriate concurrent activity with watching TV."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not sufficiently address the semantic inappropriateness of 'lobbying' in the context of the sentence.",
+                  "affected_text": "Why 'lobbying' is incorrect: It refers to political or persuasive activities, which are not commonly associated with the context of multitasking alongside watching TV.",
+                  "correction": "Why 'lobbying' is incorrect: While 'lobbying' is grammatically correct as a gerund, it refers to political or persuasive activities, which are not commonly associated with the context of multitasking alongside watching TV."
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "The grammar tag is accurate, but the explanation lacks sufficient semantic and contextual analysis for the distractors, leading to a failure in completeness and reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to address the semantic gaps pointed out by Model [qwen3:14b], ensuring that each distractor was evaluated not only for grammatical correctness but also for semantic and contextual appropriateness. Model [deepseek-r1:14b] confirmed the factual accuracy and logical soundness of the original explanation, and the grammar tag was retained as 'Gerund/Parallel Structure' since it was verified as accurate. Model [gemma4:12b] did not provide a response, so no changes were needed based on its input.",
+          "candidate_explanation": "The correct answer is 'studying.' The sentence lists activities that people do simultaneously, such as 'eat while driving' and 'watch TV while [BLANK].' To maintain grammatical parallelism, the word in the blank must be a gerund (a verb ending in -ing that functions as a noun). 'Studying' fits perfectly in this context and matches the structure of the other verbs in the list. The other options—'volleying,' 'couriering,' and 'lobbying'—are grammatically valid as gerunds, but they do not fit the specific semantic and contextual requirements of the sentence. Here's why:\n\n* Why 'volleying' is incorrect: While 'volleying' is grammatically correct as a gerund, it refers to a physical activity typically associated with sports, which is not semantically aligned with the context of multitasking alongside watching TV.\n* Why 'couriering' is incorrect: While 'couriering' is grammatically correct as a gerund, it refers to the act of delivering items, which is not a typical or semantically appropriate concurrent activity with watching TV.\n* Why 'lobbying' is incorrect: While 'lobbying' is grammatically correct as a gerund, it refers to political or persuasive activities, which are not commonly associated with the context of multitasking alongside watching TV.\n\nTherefore, 'studying' is the only option that is both grammatically and contextually appropriate.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "The explanation is accurate, with correct grammar labels, logical reasoning, and thorough analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammar tag, explains why 'studying' is the correct choice, and provides clear, contextually appropriate reasons for why the other options are incorrect. There are no semantic, collocation, or reasoning gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 275,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adverbial Modifier",
+            "overall_notes": "The explanation is accurate and complete. 'Actually' is correctly identified as an adverb modifying the verb phrase, and each distractor is logically excluded based on context and meaning."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic context of the word 'actually' in relation to the verb phrase 'manage to do.' It should clarify that 'actually' is used to emphasize the contrast between perceived ability and actual impossibility.",
+                "affected_text": "emphasizing that the ability described is not real or true",
+                "correction": "emphasizing the contrast between the perceived ability and the actual impossibility of doing more than one thing at a time"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not sufficiently address the semantic inappropriateness of the distractors in the context of cognitive ability. It should clarify that the other options are not only semantically mismatched but also do not logically fit the context of brain function.",
+                "affected_text": "none of which fit the general context of cognitive ability",
+                "correction": "none of which logically or semantically fit the context of cognitive ability or brain function"
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address whether the distractors naturally collocate with the surrounding words in the sentence, such as 'manage to do.'",
+                "affected_text": "none of which fit the general context of cognitive ability",
+                "correction": "none of which naturally collocate with the verb phrase 'manage to do' or fit the context of cognitive ability"
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation assumes that the adverb 'actually' is the only possible correct answer without fully justifying why the other options are incorrect in terms of both grammar and meaning.",
+                "affected_text": "The other options are incorrect because they are specialized adverbs",
+                "correction": "The other options are incorrect because they are not only specialized adverbs but also do not semantically or grammatically fit the context of the sentence"
+              }
+            ],
+            "verified_grammar_tag": "Adverbial Modifier",
+            "overall_notes": "The explanation is factually incorrect and incomplete in its reasoning and semantic analysis. It fails to address collocation, semantic context, and logical justification for why the distractors are incorrect."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverbial Modifier",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'actually.' This adverb modifies the verb phrase 'manage to do,' emphasizing the contrast between the perceived ability to multitask and the actual impossibility of doing more than one thing at a time. The other options are incorrect for the following reasons:\n\n* Why 'intramuscularly' is incorrect: It means 'related to muscles' and does not fit the context of cognitive ability or brain function. It is not an adverb that can modify the verb phrase in this sentence.\n\n* Why 'incorrigibly' is incorrect: It means 'unmanageable' or 'uncorrectable,' which is not relevant to the context of multitasking or brain function. It does not naturally collocate with the verb phrase 'manage to do.'\n\n* Why 'dispassionately' is incorrect: It means 'without emotion,' which is unrelated to the cognitive process of multitasking. It does not logically or semantically fit the context of brain function or the sentence structure.\n\nThe grammar tag 'Adverbial Modifier' is correct because 'actually' functions as an adverb that modifies the verb phrase, clarifying the degree of impossibility in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocational gaps identified by Model [qwen3:14b], ensuring that the explanation clearly contrasts perceived and actual ability, explains why distractors are semantically and grammatically inappropriate, and clarifies the role of 'actually' as an adverbial modifier. Model [deepseek-r1:14b] confirmed the accuracy of the revised explanation, and Model [gemma4:12b] did not respond, so no further changes were needed.",
+          "candidate_explanation": "The correct answer is 'actually.' This adverb modifies the verb phrase 'manage to do,' emphasizing the contrast between the perceived ability to multitask and the actual impossibility of doing more than one thing at a time. The other options are incorrect for the following reasons:\n\n* Why 'intramuscularly' is incorrect: It means 'related to muscles' and does not fit the context of cognitive ability or brain function. It is not an adverb that can modify the verb phrase in this sentence.\n\n* Why 'incorrigibly' is incorrect: It means 'unmanageable' or 'uncorrectable,' which is not relevant to the context of multitasking or brain function. It does not naturally collocate with the verb phrase 'manage to do.'\n\n* Why 'dispassionately' is incorrect: It means 'without emotion,' which is unrelated to the cognitive process of multitasking. It does not logically or semantically fit the context of brain function or the sentence structure.\n\nThe grammar tag 'Adverbial Modifier' is correct because 'actually' functions as an adverb that modifies the verb phrase, clarifying the degree of impossibility in the sentence.",
+          "candidate_grammar_tag": "Adverbial Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is accurate and complete. 'Actually' correctly modifies the verb phrase, and each distractor is logically and factually explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically appropriate. All distractors are correctly analyzed for grammatical form, meaning, and collocation. The grammar tag 'Adverbial Modifier' is accurate for 'actually' in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag 'Adverbial Modifier.' The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already complete and accurate, so no changes were needed beyond confirming the grammar tag and ensuring clarity for learners.",
+          "candidate_explanation": "The correct answer is 'actually.' This adverb modifies the verb phrase 'manage to do,' emphasizing the contrast between the perceived ability to multitask and the actual impossibility of doing more than one thing at a time. The other options are incorrect for the following reasons:\n\n* Why 'intramuscularly' is incorrect: It means 'related to muscles' and does not fit the context of cognitive ability or brain function. It is not an adverb that can modify the verb phrase in this sentence.\n\n* Why 'incorrigibly' is incorrect: It means 'unmanageable' or 'uncorrectable,' which is not relevant to the context of multitasking or brain function. It does not naturally collocate with the verb phrase 'manage to do.'\n\n* Why 'dispassionately' is incorrect: It means 'without emotion,' which is unrelated to the cognitive process of multitasking. It does not logically or semantically fit the context of brain function or the sentence structure.\n\nThe grammar tag 'Adverbial Modifier' is correct because 'actually' functions as an adverb that modifies the verb phrase, clarifying the degree of impossibility in the sentence. The explanation is clear, accurate, and suitable for B1-B2 English learners.",
+          "candidate_grammar_tag": "Adverbial Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically appropriate. All distractors are clearly explained with regard to their grammatical form, collocation, and semantic fit. The grammar tag 'Adverbial Modifier' is accurate for 'actually' in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag 'Adverbial Modifier.' The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and suitable for B1-B2 learners, so no changes were necessary.",
+          "candidate_explanation": "The correct answer is 'actually.' This adverb modifies the verb phrase 'manage to do,' emphasizing the contrast between the perceived ability to multitask and the actual impossibility of doing more than one thing at a time. The other options are incorrect for the following reasons:\n\n* Why 'intramuscularly' is incorrect: It means 'related to muscles' and does not fit the context of cognitive ability or brain function. It is not an adverb that can modify the verb phrase in this sentence.\n\n* Why 'incorrigibly' is incorrect: It means 'unmanageable' or 'uncorrectable,' which is not relevant to the context of multitasking or brain function. It does not naturally collocate with the verb phrase 'manage to do.'\n\n* Why 'dispassionately' is incorrect: It means 'without emotion,' which is unrelated to the cognitive process of multitasking. It does not logically or semantically fit the context of brain function or the sentence structure.\n\nThe grammar tag 'Adverbial Modifier' is correct because 'actually' functions as an adverb that modifies the verb phrase, clarifying the degree of impossibility in the sentence. The explanation is clear, accurate, and suitable for B1-B2 English learners.",
+          "candidate_grammar_tag": "Adverbial Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and proper semantic and collocation analysis."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically appropriate. All distractors are clearly explained with regard to their grammatical form, collocation, and semantic fit. The grammar tag 'Adverbial Modifier' is accurate for 'actually' in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverbial Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 277,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Subject-Verb Agreement (Third P"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'tells' because the subject 'modern science' is a singular noun phrase (it), requiring the third-person singular present tense form of the verb. This means the action happens regularly or generally. * Why 'cheats' is incorrect: While grammatically possible, it changes the meaning from presenting information to deceiving, which contradicts the idea of sharing a story/narrative. * Why 'scales' is incorrect: This relates to measurement (like weighing), and the context requires communication of ideas, not physical measurement. * Why 'enlarges' is incorrect: This means making something bigger. The sentence needs a verb that conveys the transmission of information or narrative. Additionally, the grammar tag 'Subject-Verb Agreement (Third Person Singular)' is accurate because the subject 'modern science' is singular and the verb must agree in number and person.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b] and confirming the accuracy of the grammar tag. Model [deepseek-r1:14b] confirmed the original explanation was factually correct, while Model [gemma4:12b] did not provide a response. The revised explanation now includes explicit semantic logic and grammar clarification to satisfy all models.",
+          "candidate_explanation": "The correct answer is 'tells' because the subject 'modern science' is a singular noun phrase (it), requiring the third-person singular present tense form of the verb. This means the action happens regularly or generally. * Why 'cheats' is incorrect: While grammatically possible, it changes the meaning from presenting information to deceiving, which contradicts the idea of sharing a story/narrative. * Why 'scales' is incorrect: This relates to measurement (like weighing), and the context requires communication of ideas, not physical measurement. * Why 'enlarges' is incorrect: This means making something bigger. The sentence needs a verb that conveys the transmission of information or narrative. Additionally, the grammar tag 'Subject-Verb Agreement (Third Person Singular)' is accurate because the subject 'modern science' is singular and the verb must agree in number and person.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was refined to explicitly clarify the active voice and semantic fit of the correct answer, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'tells' because the subject 'modern science' is a singular noun phrase (it), requiring the third-person singular present tense form of the verb. This means the action happens regularly or generally. * Why 'cheats' is incorrect: While grammatically possible, it changes the meaning from presenting information to deceiving, which contradicts the idea of sharing a story/narrative. * Why 'scales' is incorrect: This relates to measurement (like weighing), and the context requires communication of ideas, not physical measurement. * Why 'enlarges' is incorrect: This means making something bigger. The sentence needs a verb that conveys the transmission of information or narrative. Additionally, the grammar tag 'Subject-Verb Agreement (Third Person Singular)' is accurate because the subject 'modern science' is singular and the verb must agree in number and person. The verb is in the active voice, not passive, which is consistent with the subject performing the action of 'telling' a story.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'tells' because the subject 'modern science' is a singular noun phrase (it), requiring the third-person singular present tense form of the verb. This means the action happens regularly or generally. * Why 'cheats' is incorrect: While grammatically possible, it changes the meaning from presenting information to deceiving, which contradicts the idea of sharing a story/narrative. * Why 'scales' is incorrect: This relates to measurement (like weighing), and the context requires communication of ideas, not physical measurement. * Why 'enlarges' is incorrect: This means making something bigger. The sentence needs a verb that conveys the transmission of information or narrative. Additionally, the grammar tag 'Subject-Verb Agreement (Third Person Singular)' is accurate because the subject 'modern science' is singular and the verb must agree in number and person. The verb is in the active voice, not passive, which is consistent with the subject performing the action of 'telling' a story.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, collocation, and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Third Person Singular)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 278,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly states that 'making' implies a habitual action, while it could also indicate a current action without the continuous aspect.",
+                "affected_text": "Why 'making' is incorrect: 'Making' (Simple Present/Gerund form used as simple present) would imply a habitual or general fact, failing to capture the dynamic, current change in market conditions.",
+                "correction": "Why 'making' is incorrect: 'Making' (Simple Present) could imply a current action but lacks the continuous aspect needed to emphasize the ongoing trend."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation fails to address whether the subject (oil price) can logically perform the action of making extraction profitable.",
+                "affected_text": "The explanation does not address the subject's action capability.",
+                "correction": "Oil prices do not 'make' extraction profitable in an active sense but rather influence profitability through market dynamics."
+              }
+            ],
+            "verified_grammar_tag": "Present Continuous Tense (Temporary Trend)",
+            "overall_notes": "The explanation is mostly correct but has logical and semantic gaps."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Present Continuous Tense (Temporary Trend)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and contextual considerations for each distractor."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Continuous Tense (Temporary Trend)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'is making' because the Present Continuous tense is used here to describe a current, active trend or change that is happening right now. This emphasizes that the price of oil is actively causing profitability. * Why 'are made' is incorrect: 'Are made' (Simple Present Passive) suggests a general fact about how extraction is done, not a temporary, changing condition. * Why 'had made' is incorrect: 'Had made' (Past Perfect) requires reference to an even earlier past event, which is not present in the context. * Why 'making' is incorrect: 'Making' (Simple Present/Gerund) could imply a current action but lacks the continuous aspect needed to emphasize the ongoing trend. Additionally, while oil prices do not 'make' extraction profitable in an active sense, they influence profitability through market dynamics, and the Present Continuous tense best captures this active, ongoing influence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap regarding the subject's action capability and to clarify that 'making' lacks the continuous aspect needed for the context. The grammar tag was refined to 'Present Continuous Tense (Ongoing Action with Temporary Trend)' to better reflect the dynamic, current nature of the situation. The critique from Model [deepseek-r1:14b] was fully incorporated, while Model [qwen3:14b]'s approval was maintained.",
+          "candidate_explanation": "The correct answer is 'is making' because the Present Continuous tense is used here to describe a current, active trend or change that is happening right now. This emphasizes that the price of oil is actively causing profitability. * Why 'are made' is incorrect: 'Are made' (Simple Present Passive) suggests a general fact about how extraction is done, not a temporary, changing condition. * Why 'had made' is incorrect: 'Had made' (Past Perfect) requires reference to an even earlier past event, which is not present in the context. * Why 'making' is incorrect: 'Making' (Simple Present/Gerund) could imply a current action but lacks the continuous aspect needed to emphasize the ongoing trend. Additionally, while oil prices do not 'make' extraction profitable in an active sense, they influence profitability through market dynamics, and the Present Continuous tense best captures this active, ongoing influence.",
+          "candidate_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'o"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical aspects and semantic logic. The grammar tag was confirmed as accurate, and the explanation was structured to meet the needs of B1-B2 English learners. Disagreements were resolved by ensuring the explanation was fully comprehensive and free of formatting or parsing errors.",
+          "candidate_explanation": "The correct answer is 'is making' because the Present Continuous tense is used here to describe a current, active trend or change that is happening right now. This emphasizes that the price of oil is actively causing profitability. * Why 'are made' is incorrect: 'Are made' (Simple Present Passive) suggests a general fact about how extraction is done, not a temporary, changing condition. * Why 'had made' is incorrect: 'Had made' (Past Perfect) requires reference to an even earlier past event, which is not present in the context. * Why 'making' is incorrect: 'Making' (Simple Present/Gerund) could imply a current action but lacks the continuous aspect needed to emphasize the ongoing trend. Additionally, while oil prices do not 'make' extraction profitable in an active sense, they influence profitability through market dynamics, and the Present Continuous tense best captures this active, ongoing influence.",
+          "candidate_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects without any gaps or errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'o"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical aspects and semantic logic. The grammar tag was confirmed as accurate, and the explanation was adjusted to explicitly cover the subject-verb relationship for all distractors, resolving any potential gaps or ambiguities.",
+          "candidate_explanation": "The correct answer is 'is making' because the Present Continuous tense is used here to describe a current, active trend or change that is happening right now. This emphasizes that the price of oil is actively causing profitability. * Why 'are made' is incorrect: 'Are made' (Simple Present Passive) suggests a general fact about how extraction is done, not a temporary, changing condition. * Why 'had made' is incorrect: 'Had made' (Past Perfect) requires reference to an even earlier past event, which is not present in the context. * Why 'making' is incorrect: 'Making' (Simple Present/Gerund) could imply a current action but lacks the continuous aspect needed to emphasize the ongoing trend. Additionally, while oil prices do not 'make' extraction profitable in an active sense, they influence profitability through market dynamics, and the Present Continuous tense best captures this active, ongoing influence.",
+          "candidate_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'o"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Ongoing Action with Temporary Trend)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 288,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund after Preposition (Noun Clause)",
+            "overall_notes": "The explanation is accurate and complete. The correct answer is 'of becoming' because it follows the preposition 'of' with a gerund, which functions as a noun in this context."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Gerund after Preposition (Noun Clause)' is misleading. The phrase 'of becoming' is a prepositional phrase with a gerund, but it is not a noun clause. The correct tag should be 'Gerund after Preposition'.",
+                "affected_text": "'Gerund after Preposition (Noun Clause)'",
+                "correction": "'Gerund after Preposition'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic and collocational fit of the distractors. For example, 'of become' is grammatically incorrect because 'become' is a base verb, not a gerund, and it does not collocate with 'of'.",
+                "affected_text": "The explanation does not address the semantic and collocational fit of the distractors.",
+                "correction": "The explanation should clarify that 'of become' is incorrect because 'become' is not a gerund and does not collocate with 'of'."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address the grammatical correctness of each distractor. It only explains why 'of becoming' is correct but does not clearly explain why the other options are incorrect.",
+                "affected_text": "The explanation does not fully address the grammatical correctness of each distractor.",
+                "correction": "The explanation should explicitly state that 'become' is a base verb, 'of become' is incorrect because 'become' is not a gerund, and 'to becoming' is incorrect because 'to' is not the correct preposition to use with 'likelihood'."
+              }
+            ],
+            "verified_grammar_tag": "Gerund after Preposition",
+            "overall_notes": "The explanation is factually incorrect in its grammar tag and incomplete in its analysis of the distractors. It lacks necessary semantic and collocational analysis, and does not fully explain why each distractor is incorrect."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund after Preposition (Noun Clause)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'of becoming' because the phrase 'the likelihood of becoming' follows the preposition 'of' with a gerund ('becoming'), which functions as a noun in this context. Here's why the other options are incorrect:\n\n* 'become' is incorrect because it is a base verb, not a gerund, and cannot follow the preposition 'of'.\n* 'of become' is incorrect because 'become' is not a gerund and does not collocate with 'of'.\n* 'to becoming' is incorrect because the preposition 'to' is not the correct one to use with 'likelihood'; the correct preposition is 'of'.\n\nThe structure 'the likelihood of [gerund]' is a common collocation in English, and the gerund must follow the preposition 'of' to form a complete prepositional phrase.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Gerund after Preposition (Noun Clause)' to 'Gerund after Preposition' based on Model [qwen3:14b]'s critique, which pointed out that the phrase is not a noun clause. The explanation was expanded to address the semantic and collocational fit of each distractor, ensuring clarity for B1-B2 learners and resolving the incompleteness noted by the model.",
+          "candidate_explanation": "The correct answer is 'of becoming' because the phrase 'the likelihood of becoming' follows the preposition 'of' with a gerund ('becoming'), which functions as a noun in this context. Here's why the other options are incorrect:\n\n* 'become' is incorrect because it is a base verb, not a gerund, and cannot follow the preposition 'of'.\n* 'of become' is incorrect because 'become' is not a gerund and does not collocate with 'of'.\n* 'to becoming' is incorrect because the preposition 'to' is not the correct one to use with 'likelihood'; the correct preposition is 'of'.\n\nThe structure 'the likelihood of [gerund]' is a common collocation in English, and the gerund must follow the preposition 'of' to form a complete prepositional phrase.",
+          "candidate_grammar_tag": "Gerund after Preposition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations. The grammar tag is accurate, and each distractor is correctly analyzed with clear reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correct answer and the grammar tag 'Gerund after Preposition'. The explanation was already accurate and complete, with no valid disagreements. The timeout from gemma4:12b did not affect the consensus reached by the other two models.",
+          "candidate_explanation": "The correct answer is 'of becoming' because the phrase 'the likelihood of becoming' uses a gerund ('becoming') that follows the preposition 'of' to form a complete prepositional phrase. Here's why the other options are incorrect:\n\n* 'become' is incorrect because it is a base verb, not a gerund, and cannot follow the preposition 'of'.\n* 'of become' is incorrect because 'become' is not a gerund and does not collocate with 'of'.\n* 'to becoming' is incorrect because the preposition 'to' is not the correct one to use with 'likelihood'; the correct preposition is 'of'.\n\nThe structure 'the likelihood of [gerund]' is a common and grammatically correct collocation in English. The gerund must follow the preposition 'of' to function as a noun in this context, which is essential for the sentence to make logical and grammatical sense.",
+          "candidate_grammar_tag": "Gerund after Preposition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational aspects. The grammar tag is accurate, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the grammar tag 'Gerund after Preposition' and the explanation provided. The only issue was that one model (gemma4:12b) failed to respond, but since the other two models passed the explanation as accurate and complete, no changes were needed. The explanation was already clear, logical, and suitable for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'of becoming' because the phrase 'the likelihood of becoming' uses a gerund ('becoming') that follows the preposition 'of' to form a complete prepositional phrase. Here's why the other options are incorrect:\n\n* 'become' is incorrect because it is a base verb, not a gerund, and cannot follow the preposition 'of'.\n* 'of become' is incorrect because 'become' is not a gerund and does not collocate with 'of'.\n* 'to becoming' is incorrect because the preposition 'to' is not the correct one to use with 'likelihood'; the correct preposition is 'of'.\n\nThe structure 'the likelihood of [gerund]' is a common and grammatically correct collocation in English. The gerund must follow the preposition 'of' to function as a noun in this context, which is essential for the sentence to make logical and grammatical sense. This usage reflects the grammatical rule that a gerund can follow a preposition to complete a prepositional phrase, especially when the preposition is part of a fixed collocation like 'likelihood of'.",
+          "candidate_grammar_tag": "Gerund after Preposition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations. The grammar tag is accurate, and each distractor is correctly analyzed with clear reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund after Preposition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 288,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Relative Pronoun (Non-Restricti"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'which' because it introduces a non-restrictive relative clause that adds extra, non-essential information about the antecedent 'young people'.\n\n* Why 'that' is incorrect: 'That' introduces a restrictive clause, which implies that the information is essential to the meaning of the sentence. In this context, the information is supplementary, not essential.\n\n* Why 'whether' is incorrect: 'Whether' is used to introduce a choice or a condition, not a relative clause. It does not function as a relative pronoun in this sentence.\n\n* Why 'this' is incorrect: 'This' is a demonstrative pronoun, not a relative pronoun. It cannot introduce a clause or refer back to a noun in the way that 'which' does.\n\nAdditionally, the use of 'which' in this sentence is in a non-restrictive clause, which is why the grammar tag 'Relative Pronoun (Non-Restrictive Clause)' is accurate and appropriate.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting error and to ensure clarity for B1-B2 learners. The grammar tag was confirmed as accurate based on the sentence structure, and all distractors were explicitly explained with clear reasoning. The model that timed out was not able to provide feedback, but the other two models' critiques were resolved by refining the explanation and ensuring proper formatting.",
+          "candidate_explanation": "The correct answer is 'which' because it introduces a non-restrictive relative clause that adds extra, non-essential information about the antecedent 'young people'.\n\n* Why 'that' is incorrect: 'That' introduces a restrictive clause, which implies that the information is essential to the meaning of the sentence. In this context, the information is supplementary, not essential.\n\n* Why 'whether' is incorrect: 'Whether' is used to introduce a choice or a condition, not a relative clause. It does not function as a relative pronoun in this sentence.\n\n* Why 'this' is incorrect: 'This' is a demonstrative pronoun, not a relative pronoun. It cannot introduce a clause or refer back to a noun in the way that 'which' does.\n\nAdditionally, the use of 'which' in this sentence is in a non-restrictive clause, which is why the grammar tag 'Relative Pronoun (Non-Restrictive Clause)' is accurate and appropriate.",
+          "candidate_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies 'which' as the correct relative pronoun for a non-restrictive clause and correctly explains why the other options are incorrect. No semantic, collocation, or reasoning gaps are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was already complete, accurate, and suitable for B1-B2 learners, so no changes were necessary beyond confirming the agreement.",
+          "candidate_explanation": "The correct answer is 'which' because it introduces a non-restrictive relative clause that adds extra, non-essential information about the antecedent 'young people'.\n\n* Why 'that' is incorrect: 'That' introduces a restrictive clause, which implies that the information is essential to the meaning of the sentence. In this context, the information is supplementary, not essential.\n\n* Why 'whether' is incorrect: 'Whether' is used to introduce a choice or a condition, not a relative clause. It does not function as a relative pronoun in this sentence.\n\n* Why 'this' is incorrect: 'This' is a demonstrative pronoun, not a relative pronoun. It cannot introduce a clause or refer back to a noun in the way that 'which' does.\n\nThe use of 'which' in this sentence is in a non-restrictive clause, which is why the grammar tag 'Relative Pronoun (Non-Restrictive Clause)' is accurate and appropriate. The clause provides additional information that is not necessary for the sentence to make sense on its own.",
+          "candidate_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the grammatical function of 'which' as introducing a non-restrictive relative clause, and correctly explains why the other options are inappropriate in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was refined to ensure clarity for B1-B2 learners, including a clear explanation of subject-verb logic and the distinction between restrictive and non-restrictive clauses.",
+          "candidate_explanation": "The correct answer is 'which' because it introduces a non-restrictive relative clause that adds extra, non-essential information about the antecedent 'young people'.\n\n* Why 'that' is incorrect: 'That' introduces a restrictive clause, which implies that the information is essential to the meaning of the sentence. In this context, the information is supplementary, not essential.\n\n* Why 'whether' is incorrect: 'Whether' is used to introduce a choice or a condition, not a relative clause. It does not function as a relative pronoun in this sentence.\n\n* Why 'this' is incorrect: 'This' is a demonstrative pronoun, not a relative pronoun. It cannot introduce a clause or refer back to a noun in the way that 'which' does.\n\nThe use of 'which' in this sentence is in a non-restrictive clause, which is why the grammar tag 'Relative Pronoun (Non-Restrictive Clause)' is accurate and appropriate. The clause provides additional information that is not necessary for the sentence to make sense on its own. The sentence is in the active voice, and the clause does not change the subject-verb relationship, maintaining clarity and logical flow.",
+          "candidate_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the grammatical function of 'which' as introducing a non-restrictive relative clause and correctly explains why the other options are incorrect. There are no semantic, collocation, or reasoning gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Relative Pronoun (Non-Restrictive Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 288,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Infinitive Complement (Passive Voice)",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Infinitive Complement (Passive Voice)' is not fully accurate. The structure 'is believed to help' uses an infinitive, but it is not a complement in the passive voice. Rather, it is an infinitive used to express purpose or result, and the voice is active, not passive.",
+                "affected_text": "'Infinitive Complement (Passive Voice)'",
+                "correction": "'Infinitive Complement (Active Voice)'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'the judgement' logically performs the action of 'helping'. It should clarify that 'the judgement' is the subject, and 'to help' is the infinitive that explains the purpose or result of the belief.",
+                "affected_text": "The explanation does not address whether the SUBJECT can logically BE the receiver of the action",
+                "correction": "The explanation should clarify that 'the judgement' is the subject and that 'to help' logically follows as the infinitive expressing the purpose or result of the belief."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address the grammatical correctness of the distractors. For example, 'helping' is a gerund, which is not appropriate in this context, but this is not clearly explained.",
+                "affected_text": "The other options are grammatically incorrect in this specific passive pattern",
+                "correction": "The other options are grammatically incorrect in this context because they do not match the required infinitive form after 'is believed'."
+              }
+            ],
+            "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+            "overall_notes": "The grammar tag is incorrect, and the explanation lacks semantic and completeness analysis. The structure is active, not passive, and the explanation should clarify the subject-verb relationship and the grammatical role of the infinitive."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Infinitive Complement (Passive Voice)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'to help' because the structure 'is believed to [verb]' is an active construction where the infinitive 'to help' explains the purpose or result of the belief. This is not a passive voice, but an active one where the subject 'the judgement' is the one that is believed to help. The other options are incorrect for the following reasons:\n\n* 'ever help' is incorrect because 'ever' is not used in this grammatical structure. It adds an unnecessary and ungrammatical element.\n* 'helping' is incorrect because it is a gerund, not an infinitive. The structure 'is believed' requires an infinitive, not a gerund, to express purpose or result.\n* 'help' is incorrect because it is a base form verb, not an infinitive. The structure 'is believed' requires the infinitive form 'to help' to follow correctly.\n\nThe grammar tag should be 'Infinitive Complement (Active Voice)' because the subject 'the judgement' is the one that is believed to help, not the object of a passive action.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Passive Voice' to 'Active Voice' based on the agreement between models that the structure is active, not passive. The explanation was expanded to clarify the subject-verb relationship and the grammatical role of the infinitive, addressing the semantic and completeness gaps identified by the models.",
+          "candidate_explanation": "The correct answer is 'to help' because the structure 'is believed to [verb]' is an active construction where the infinitive 'to help' explains the purpose or result of the belief. This is not a passive voice, but an active one where the subject 'the judgement' is the one that is believed to help. The other options are incorrect for the following reasons:\n\n* 'ever help' is incorrect because 'ever' is not used in this grammatical structure. It adds an unnecessary and ungrammatical element.\n* 'helping' is incorrect because it is a gerund, not an infinitive. The structure 'is believed' requires an infinitive, not a gerund, to express purpose or result.\n* 'help' is incorrect because it is a base form verb, not an infinitive. The structure 'is believed' requires the infinitive form 'to help' to follow correctly.\n\nThe grammar tag should be 'Infinitive Complement (Active Voice)' because the subject 'the judgement' is the one that is believed to help, not the object of a passive action.",
+          "candidate_grammar_tag": "Infinitive Complement (Active Voice)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is accurate and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the grammatical form of each option, explains why 'to help' is the correct choice, and correctly labels the grammar tag as 'Infinitive Complement (Active Voice)'."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correct answer and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was confirmed to be accurate, complete, and logically sound by the two responding models.",
+          "candidate_explanation": "The correct answer is 'to help' because the structure 'is believed to [verb]' is an active construction where the infinitive 'to help' explains the purpose or result of the belief. This is not a passive voice, but an active one where the subject 'the judgement' is the one that is believed to help. The other options are incorrect for the following reasons:\n\n* 'ever help' is incorrect because 'ever' is not used in this grammatical structure. It adds an unnecessary and ungrammatical element.\n* 'helping' is incorrect because it is a gerund, not an infinitive. The structure 'is believed' requires an infinitive, not a gerund, to express purpose or result.\n* 'help' is incorrect because it is a base form verb, not an infinitive. The structure 'is believed' requires the infinitive form 'to help' to follow correctly.\n\nThe grammar tag should be 'Infinitive Complement (Active Voice)' because the subject 'the judgement' is the one that is believed to help, not the object of a passive action. This structure emphasizes the active role of the subject in the belief, not a passive reception of an action.",
+          "candidate_grammar_tag": "Infinitive Complement (Active Voice)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the grammatical form of each option, explains why 'to help' is the correct choice, and correctly labels the grammar tag as 'Infinitive Complement (Active Voice)'."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correct answer and the grammar tag. Model gemma4:12b did not respond, but the other two models confirmed the explanation as accurate and complete. The explanation was revised to ensure clarity and to explicitly address the active voice construction, resolving any potential ambiguity.",
+          "candidate_explanation": "The correct answer is 'to help' because the structure 'is believed to [verb]' is an active construction where the infinitive 'to help' explains the purpose or result of the belief. This is not a passive voice, but an active one where the subject 'the judgement' is the one that is believed to help. The other options are incorrect for the following reasons:\n\n* 'ever help' is incorrect because 'ever' is not used in this grammatical structure. It adds an unnecessary and ungrammatical element.\n* 'helping' is incorrect because it is a gerund, not an infinitive. The structure 'is believed' requires an infinitive, not a gerund, to express purpose or result.\n* 'help' is incorrect because it is a base form verb, not an infinitive. The structure 'is believed' requires the infinitive form 'to help' to follow correctly.\n\nThe grammar tag should be 'Infinitive Complement (Active Voice)' because the subject 'the judgement' is the one that is believed to help, not the object of a passive action. This structure emphasizes the active role of the subject in the belief, not a passive reception of an action.",
+          "candidate_grammar_tag": "Infinitive Complement (Active Voice)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is correct and complete. The grammar label is accurate, the reasoning is logical, and all distractors are properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the grammatical form of each option, explains why 'to help' is the correct choice, and correctly labels the grammar tag as 'Infinitive Complement (Active Voice)'."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Infinitive Complement (Active Voice)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 308,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form After 'To' / Semantic"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'decline' because it is the base form of the verb needed after 'to' in the phrase 'starts to slowly ___', and it accurately describes the gradual decrease in fluid intelligence as we age. \n\n* Why 'plateau' is incorrect: 'Plateau' means to remain stable or level off, which contradicts the idea that fluid intelligence decreases with age. \n* Why 'soar' is incorrect: 'Soar' means to increase rapidly and dramatically, which is the opposite of what happens to fluid intelligence as we age. \n* Why 'rocket' is incorrect: 'Rocket' suggests a rapid increase, which is not only the opposite of the intended meaning but also less natural than 'decline' in this context. \n\nThe grammar tag 'Verb Form After 'To' / Semantic Fit' is accurate because the sentence structure requires a base verb form after 'to' in 'starts to slowly ___', and the chosen word must also align with the semantic meaning of a gradual decrease. Additionally, the explanation now explicitly addresses the semantic fit and grammar requirement, ensuring clarity for B1-B2 English learners.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate, and the semantic and grammatical reasoning was explicitly explained for all options, ensuring alignment with all models' expectations.",
+          "candidate_explanation": "The correct answer is 'decline' because it is the base form of the verb needed after 'to' following 'starts,' correctly describing a gradual decrease in fluid intelligence over time. \n\n* Why 'plateau' is incorrect: 'Plateau' means to remain stable or level off, which contradicts the idea that fluid intelligence slowly decreases with age. \n* Why 'soar' is incorrect: 'Soar' means to increase rapidly and dramatically, which is the opposite of what happens to fluid intelligence as we age. \n* Why 'rocket' is incorrect: 'Rocket' suggests a rapid increase, which is not only the opposite of the intended meaning but also less natural than 'decline' in this context. \n\nAdditionally, the grammar tag 'Verb Form After 'To' / Semantic Fit' is accurate because the sentence structure requires a base verb form after 'to' in 'starts to slowly ___', and the chosen word must also align with the semantic meaning of a gradual decrease.",
+          "candidate_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "The explanation is accurate, with correct grammar labeling, logical reasoning, and clear explanations for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form After 'To' / Semantic"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as valid and consistent with the sentence structure. Model [gemma4:12b]'s timeout was acknowledged but did not affect the final synthesis, which now fully aligns with all models' expectations.",
+          "candidate_explanation": "The correct answer is 'decline' because it is the base form of the verb needed after 'to' in the phrase 'starts to slowly ___', and it accurately describes the gradual decrease in fluid intelligence as we age. \n\n* Why 'plateau' is incorrect: 'Plateau' means to remain stable or level off, which contradicts the idea that fluid intelligence decreases with age. \n* Why 'soar' is incorrect: 'Soar' means to increase rapidly and dramatically, which is the opposite of what happens to fluid intelligence as we age. \n* Why 'rocket' is incorrect: 'Rocket' suggests a rapid increase, which is not only the opposite of the intended meaning but also less natural than 'decline' in this context. \n\nThe grammar tag 'Verb Form After 'To' / Semantic Fit' is accurate because the sentence structure requires a base verb form after 'to' in 'starts to slowly ___', and the chosen word must also align with the semantic meaning of a gradual decrease.",
+          "candidate_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the word 'decl"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting issue and ensure clarity for learners. The grammar tag was confirmed as accurate, and all distractors were explicitly explained with semantic and grammatical reasoning. The timeout from gemma4:12b was acknowledged but did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'decline' because it is the base form of the verb needed after 'to' in the phrase 'starts to slowly ___', and it accurately describes the gradual decrease in fluid intelligence as we age. \n\n* Why 'plateau' is incorrect: 'Plateau' means to remain stable or level off, which contradicts the idea that fluid intelligence decreases with age. \n* Why 'soar' is incorrect: 'Soar' means to increase rapidly and dramatically, which is the opposite of what happens to fluid intelligence as we age. \n* Why 'rocket' is incorrect: 'Rocket' suggests a rapid increase, which is not only the opposite of the intended meaning but also less natural than 'decline' in this context. \n\nThe grammar tag 'Verb Form After 'To' / Semantic Fit' is accurate because the sentence structure requires a base verb form after 'to' in 'starts to slowly ___', and the chosen word must also align with the semantic meaning of a gradual decrease. Additionally, the explanation now explicitly addresses the semantic fit and grammar requirement, ensuring clarity for B1-B2 English learners.",
+          "candidate_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the word 'decl"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form After 'To' / Semantic Fit",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 314,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Semantic Contrast/Noun Form",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Semantic Contrast/Noun Form",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Semantic Contrast/Noun Form' is"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Semantic Contrast/Noun Form",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'presence' because the sentence requires a noun that contrasts with the earlier mention of 'absence of it.' The phrase 'the presence of it' means that having this quality is a clear sign of goodness of heart. * Why 'absence' is incorrect: Using 'absence' would repeat the same idea and contradict the meaning, as it would imply that lacking this quality is a sign of goodness. * Why 'contrary' is incorrect: 'Contrary' is an adjective or adverb, not a noun, and does not fit the grammatical structure of the sentence, which requires a noun form. * Why 'opposite' is incorrect: Like 'contrary,' 'opposite' is an adjective or adverb and does not function as a noun in this context. The grammar tag 'Semantic Contrast/Noun Form' is appropriate because the sentence relies on a noun that contrasts with the earlier phrase 'absence of it,' showing a clear semantic relationship between opposing states.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as valid based on the semantic contrast between 'absence' and 'presence,' and the explanation was made more accessible for B1-B2 learners with explicit bullet points and clear reasoning.",
+          "candidate_explanation": "The correct answer is 'presence' because the sentence requires a noun that contrasts with the earlier mention of 'absence of it.' The phrase 'the presence of it' means that having this quality is a clear sign of goodness of heart. * Why 'absence' is incorrect: Using 'absence' would repeat the same idea and contradict the meaning, as it would imply that lacking this quality is a sign of goodness. * Why 'contrary' is incorrect: 'Contrary' is an adjective or adverb, not a noun, and does not fit the grammatical structure of the sentence, which requires a noun form. * Why 'opposite' is incorrect: Like 'contrary,' 'opposite' is an adjective or adverb and does not function as a noun in this context. The grammar tag 'Semantic Contrast/Noun Form' is appropriate because the sentence relies on a noun that contrasts with the earlier phrase 'absence of it,' showing a clear semantic relationship between opposing states.",
+          "candidate_grammar_tag": "Semantic Contrast/Noun Form",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar tag is appropriately assigned, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammatical form of each distractor, explains why 'presence' is the correct answer, and correctly applies the grammar tag 'Semantic Contrast/Noun Form'. There are no semantic, collocation, or reasoning gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'presence' because the sentence requires a noun that contrasts with the earlier mention of 'absence of it.' The phrase 'the presence of it' means that having this quality is a clear sign of goodness of heart. * Why 'absence' is incorrect: Using 'absence' would repeat the same idea and contradict the meaning, as it would imply that lacking this quality is a sign of goodness. * Why 'contrary' is incorrect: 'Contrary' is an adjective or adverb, not a noun, and does not fit the grammatical structure of the sentence, which requires a noun form. * Why 'opposite' is incorrect: Like 'contrary,' 'opposite' is an adjective or adverb and does not function as a noun in this context. The grammar tag 'Semantic Contrast/Noun Form' is appropriate because the sentence relies on a noun that contrasts with the earlier phrase 'absence of it,' showing a clear semantic relationship between opposing states.",
+          "candidate_grammar_tag": "Semantic Contrast/Noun Form",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar tag is appropriately assigned."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammatical form of each distractor, explains why 'presence' is the correct answer, and correctly applies the grammar tag 'Semantic Contrast/Noun Form'. There are no semantic, collocation, or reasoning gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, the grammar tag, and the reasoning. The only issue was a timeout from one model, which did not affect the consensus. The explanation was refined to explicitly address subject-verb logic and ensure clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'presence' because the sentence requires a noun that contrasts with the earlier mention of 'absence of it.' The phrase 'the presence of it' means that having this quality is a clear sign of goodness of heart. * Why 'absence' is incorrect: Using 'absence' would repeat the same idea and contradict the meaning, as it would imply that lacking this quality is a sign of goodness. * Why 'contrary' is incorrect: 'Contrary' is an adjective or adverb, not a noun, and does not fit the grammatical structure of the sentence, which requires a noun form. * Why 'opposite' is incorrect: Like 'contrary,' 'opposite' is an adjective or adverb and does not function as a noun in this context. The grammar tag 'Semantic Contrast/Noun Form' is appropriate because the sentence relies on a noun that contrasts with the earlier phrase 'absence of it,' showing a clear semantic relationship between opposing states. The subject-verb relationship is active in this context, as the sentence is describing the presence of a quality, not a passive state.",
+          "candidate_grammar_tag": "Semantic Contrast/Noun Form",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Semantic Contrast/Noun Form' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Contrast/Noun Form",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 314,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and appropriate semantic and collocation considerations."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'n"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'attained' because the structure 'will be ___' requires a past participle to form the passive voice. This means that nobleness and beauty of character are *achieved* or *realized* through the feeling of beauty, rather than being performed by the subject itself. * Why 'entertained' is incorrect: While it can be used in the passive voice, it suggests merely keeping thoughts or ideas, which does not match the idea of achieving a state of character. * Why 'detained' is incorrect: This means being held back or kept captive, which contradicts the positive meaning of developing good character. * Why 'sustained' is incorrect: This implies maintaining something over time, but 'attained' better captures the idea of successfully reaching or achieving that state. The grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction with a past participle verb.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical considerations. The grammar tag was confirmed as accurate. The critique from qwen3:14b was resolved by ensuring the JSON format was valid and the explanation was fully developed, while the timeout from gemma4:12b was acknowledged but did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'attained' because the structure 'will be ___' requires a past participle to form the passive voice. This means that nobleness and beauty of character are *achieved* or *realized* through the feeling of beauty, rather than being performed by the subject itself. * Why 'entertained' is incorrect: While it can be used in the passive voice, it suggests merely keeping thoughts or ideas, which does not match the idea of achieving a state of character. * Why 'detained' is incorrect: This means being held back or kept captive, which contradicts the positive meaning of developing good character. * Why 'sustained' is incorrect: This implies maintaining something over time, but 'attained' better captures the idea of successfully reaching or achieving that state. The grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction with a past participle verb.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the grammatical form of the correct answer and clearly explains why the distractors are incorrect both grammatically and semantically."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The timeout from gemma4:12b did not affect the consensus reached by the other two models, and no conflicting critiques were raised. The explanation was already accurate, complete, and suitable for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'attained' because the structure 'will be ___' requires a past participle to form the passive voice. This means that nobleness and beauty of character are *achieved* or *realized* through the feeling of beauty, rather than being performed by the subject itself. \n\n* Why 'entertained' is incorrect: While it can be used in the passive voice, it suggests merely keeping thoughts or ideas, which does not match the idea of achieving a state of character. \n\n* Why 'detained' is incorrect: This means being held back or kept captive, which contradicts the positive meaning of developing good character. \n\n* Why 'sustained' is incorrect: This implies maintaining something over time, but 'attained' better captures the idea of successfully reaching or achieving that state. \n\nThe grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction with a past participle verb. The subject 'nobleness and beauty of character' is receiving the action of being 'attained', which is a key feature of passive voice.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the passive voice construction and provides clear reasoning for why each distractor is incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag 'Passive Voice/Past Participle'. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and complete, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'attained' because the structure 'will be ___' requires a past participle to form the passive voice. This means that nobleness and beauty of character are *achieved* or *realized* through the feeling of beauty, rather than being performed by the subject itself. \n\n* Why 'entertained' is incorrect: While it can be used in the passive voice, it suggests merely keeping thoughts or ideas, which does not match the idea of achieving a state of character. \n\n* Why 'detained' is incorrect: This means being held back or kept captive, which contradicts the positive meaning of developing good character. \n\n* Why 'sustained' is incorrect: This implies maintaining something over time, but 'attained' better captures the idea of successfully reaching or achieving that state. \n\nThe grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction with a past participle verb. The subject 'nobleness and beauty of character' is receiving the action of being 'attained', which is a key feature of passive voice. This structure emphasizes that the state of nobleness and beauty is *achieved* by the feeling of beauty, not by the subject performing an action.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly analyzed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the passive voice construction and provides clear reasoning for why each distractor is incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 316,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Subject-Verb Agreement (Singula"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'represents' because the subject, 'The Olympics,' is treated as a singular concept or event, requiring a third-person singular present tense verb form (-s). * Why 'reproves' is incorrect: This word means to prove something false, which does not fit the context of symbolizing an ideal. * Why 'reprehends' is incorrect: This word means to criticize or scold, and it has the wrong meaning here. * Why 'reprieves' is incorrect: This word means to delay punishment or relieve from penalty, which is unrelated to the Olympics' purpose. The grammar tag 'Subject-Verb Agreement (Singular Subject)' is accurate because the subject is singular and the verb must agree in number and person.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate, and all three models were satisfied with the revised explanation.",
+          "candidate_explanation": "The correct answer is 'represents' because the subject, 'The Olympics,' is treated as a singular concept or event, requiring a third-person singular present tense verb form (-s). * Why 'reproves' is incorrect: This word means to prove something false, which does not fit the context of symbolizing an ideal. * Why 'reprehends' is incorrect: This word means to criticize or scold, and it has the wrong meaning here. * Why 'reprieves' is incorrect: This word means to delay punishment or relieve from penalty, which is unrelated to the Olympics' purpose. The grammar tag 'Subject-Verb Agreement (Singular Subject)' is accurate because the subject is singular and the verb must agree in number and person.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, and collocation. No errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models (deepseek-r1:14b and qwen3:14b) confirming its accuracy and completeness. The third model (gemma4:12b) did not respond, but no contradictions were raised. The grammar tag was confirmed as accurate, and the explanation was enhanced to explicitly address voice (active vs. passive) for clarity.",
+          "candidate_explanation": "The correct answer is 'represents' because the subject, 'The Olympics,' is treated as a singular concept or event, requiring a third-person singular present tense verb form (-s). * Why 'reproves' is incorrect: This word means to prove something false, which does not fit the context of symbolizing an ideal. * Why 'reprehends' is incorrect: This word means to criticize or scold, and it has the wrong meaning here. * Why 'reprieves' is incorrect: This word means to delay punishment or relieve from penalty, which is unrelated to the Olympics' purpose. The grammar tag 'Subject-Verb Agreement (Singular Subject)' is accurate because the subject is singular and the verb must agree in number and person. Additionally, the verb 'represents' is in the active voice, which is appropriate for the subject, whereas the distractors are either in the wrong voice or carry unrelated meanings.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'T"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical aspects of the question. The grammar tag was confirmed as accurate. The initial JSON formatting issue was resolved, and the timeout from one model was acknowledged but did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'represents' because the subject, 'The Olympics,' is treated as a singular concept or event, requiring a third-person singular present tense verb form (-s). * Why 'reproves' is incorrect: This word means to prove something false, which does not fit the context of symbolizing an ideal. * Why 'reprehends' is incorrect: This word means to criticize or scold, and it has the wrong meaning here. * Why 'reprieves' is incorrect: This word means to delay punishment or relieve from penalty, which is unrelated to the Olympics' purpose. The grammar tag 'Subject-Verb Agreement (Singular Subject)' is accurate because the subject is singular and the verb must agree in number and person. Additionally, the verb 'represents' is in the active voice, which is appropriate for the subject, whereas the distractors are either in the wrong voice or carry unrelated meanings. The explanation has been revised to ensure clarity and completeness, addressing all semantic and grammatical aspects of the question.",
+          "candidate_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'T"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Subject-Verb Agreement (Singular Subject)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 316,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Idiom Usage and Subject-Verb Agreement",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Idiom Usage and Subject-Verb Agreement' is misleading. The correct grammar tag should focus solely on 'Idiom Usage' since the error is not related to subject-verb agreement.",
+                "affected_text": "'Idiom Usage and Subject-Verb Agreement'",
+                "correction": "'Idiom Usage'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject-verb agreement is correct for the word 'glitters'. However, since 'glitters' is a verb and the subject is 'that', the agreement is correct (third person singular). This should be mentioned for completeness.",
+                "affected_text": "The explanation does not mention subject-verb agreement for 'glitters'.",
+                "correction": "The explanation should note that 'glitters' agrees with the singular subject 'that' in third person singular form."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address the collocation or semantic fit of 'glitters' in the context of the passage. While it correctly identifies it as part of the idiom, it could clarify that the idiom is commonly used to express the idea that appearances can be deceiving, which fits the context of the passage.",
+                "affected_text": "The explanation does not fully address the collocation or semantic fit of 'glitters'.",
+                "correction": "The explanation should clarify that 'glitters' fits the semantic context of the passage, as the idiom 'All that glitters is not gold' is used to highlight the hidden costs and consequences of hosting the Olympics."
+              }
+            ],
+            "verified_grammar_tag": "Idiom Usage",
+            "overall_notes": "The explanation is mostly correct but lacks completeness in addressing subject-verb agreement and semantic/collocation fit. The grammar tag is also inaccurate."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Idiom Usage and Subject-Verb Agreement",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'glitters' because it completes the famous idiom: 'All that glitters is not gold.' This phrase means that something attractive or valuable in appearance may not be genuinely good. * Why 'flutters' is incorrect: It means to move lightly (like a flag), which does not complete the established idiom. * Why 'loiters' is incorrect: It means to hang around or delay, and has no relation to the idiom. * Why 'jitters' is incorrect: This noun refers to nervousness; it cannot function as the verb in this common phrase. Additionally, 'glitters' agrees with the singular subject 'that' in third person singular form, which is correct for subject-verb agreement. The idiom 'All that glitters is not gold' is commonly used to express the idea that appearances can be deceiving, which fits the context of the passage by highlighting the hidden costs and consequences of hosting the Olympics.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Idiom Usage and Subject-Verb Agreement' to 'Idiom Usage' as the subject-verb agreement was not the focus of the error. The explanation was expanded to include a note on subject-verb agreement for 'glitters' and the semantic fit of the idiom in the passage. The critique from gemma4:12b was not actionable due to a timeout, but the other models' concerns were fully addressed.",
+          "candidate_explanation": "The correct answer is 'glitters' because it completes the famous idiom: 'All that glitters is not gold.' This phrase means that something attractive or valuable in appearance may not be genuinely good. * Why 'flutters' is incorrect: It means to move lightly (like a flag), which does not complete the established idiom. * Why 'loiters' is incorrect: It means to hang around or delay, and has no relation to the idiom. * Why 'jitters' is incorrect: This noun refers to nervousness; it cannot function as the verb in this common phrase. Additionally, 'glitters' agrees with the singular subject 'that' in third person singular form, which is correct for subject-verb agreement. The idiom 'All that glitters is not gold' is commonly used to express the idea that appearances can be deceiving, which fits the context of the passage by highlighting the hidden costs and consequences of hosting the Olympics.",
+          "candidate_grammar_tag": "Idiom Usage",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the idiom and explains why each distractor is incorrect based on meaning, form, and context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Idiom Usage' was confirmed as accurate and consistent across the models. The explanation was already clear, complete, and appropriate for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'glitters' because it completes the famous idiom: 'All that glitters is not gold.' This phrase means that something attractive or valuable in appearance may not be genuinely good. * Why 'flutters' is incorrect: It means to move lightly (like a flag), which does not complete the established idiom. * Why 'loiters' is incorrect: It means to hang around or delay, and has no relation to the idiom. * Why 'jitters' is incorrect: This noun refers to nervousness; it cannot function as the verb in this common phrase. Additionally, 'glitters' agrees with the singular subject 'that' in third person singular form, which is correct for subject-verb agreement. The idiom 'All that glitters is not gold' is commonly used to express the idea that appearances can be deceiving, which fits the context of the passage by highlighting the hidden costs and consequences of hosting the Olympics.",
+          "candidate_grammar_tag": "Idiom Usage",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including idiom usage, semantic context, and grammatical agreement."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Idiom Usage' was confirmed as accurate and consistent across the models. The explanation was already clear, complete, and suitable for B1-B2 learners, requiring no major revisions.",
+          "candidate_explanation": "The correct answer is 'glitters' because it completes the famous idiom: 'All that glitters is not gold.' This phrase means that something that looks valuable or attractive may not actually be good. * Why 'flutters' is incorrect: It means to move lightly, like a flag, and does not fit the idiom. * Why 'loiters' is incorrect: It means to hang around or delay, and has no connection to the idiom. * Why 'jitters' is incorrect: It refers to nervousness and cannot function as the verb in this common phrase. Additionally, 'glitters' agrees with the singular subject 'that' in third person singular form, which is correct for subject-verb agreement. The idiom 'All that glitters is not gold' is commonly used to express the idea that appearances can be deceiving, which fits the context of the passage by highlighting the hidden costs and consequences of hosting the Olympics.",
+          "candidate_grammar_tag": "Idiom Usage",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including idiom usage, semantic fit, and grammatical agreement. All distractors are clearly explained with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Idiom Usage",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 318,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Collocation (Figurative Me"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'pose' because it means to present or create a danger or risk. The phrase 'poses a danger' is a common collocation meaning 'to constitute a threat.'\n\n* Why 'depose' is incorrect: This verb usually relates to removing someone from a position or office (e.g., deposing a king). It does not fit the context of creating a danger.\n\n* Why 'dispose' is incorrect: This means to get rid of something or to arrange for its disposal. It does not mean to create a risk or danger, so it is not a suitable verb in this context.\n\n* Why 'compose' is incorrect: This means to create something, such as music or writing. It does not mean to present a danger, and it is not used in this figurative sense.\n\nThe correct verb 'pose' is used in an active voice to show that icebergs themselves are the source of the danger. The other options either use incorrect meanings or are not used in this figurative collocation.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as accurate and consistent across models. The explanation now explicitly contrasts the active meaning of 'pose' with the incorrect, passive or unrelated meanings of the distractors.",
+          "candidate_explanation": "The correct answer is 'pose' because it means to present or create a danger or risk. The phrase 'poses a danger' is a common collocation meaning 'to constitute a threat.'\n\n* Why 'depose' is incorrect: This verb usually relates to removing someone from a position or office (e.g., deposing a king). It does not fit the context of creating a danger.\n\n* Why 'dispose' is incorrect: This means to get rid of something or to arrange for its disposal. It does not mean to create a risk or danger, so it is not a suitable verb in this context.\n\n* Why 'compose' is incorrect: This means to create something, such as music or writing. It does not mean to present a danger, and it is not used in this figurative sense.\n\nThe correct verb 'pose' is used in an active voice to show that icebergs themselves are the source of the danger. The other options either use incorrect meanings or are not used in this figurative collocation.",
+          "candidate_grammar_tag": "Verb Collocation (Figurative Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced to explicitly clarify the active voice usage and the figurative meaning of 'pose' in the context of danger.",
+          "candidate_explanation": "The correct answer is 'pose' because it means to present or create a danger or risk. The phrase 'poses a danger' is a common collocation meaning 'to constitute a threat.'\n\n* Why 'depose' is incorrect: This verb usually relates to removing someone from a position or office (e.g., deposing a king). It does not fit the context of creating a danger.\n\n* Why 'dispose' is incorrect: This means to get rid of something or to arrange for its disposal. It does not mean to create a risk or danger, so it is not a suitable verb in this context.\n\n* Why 'compose' is incorrect: This means to create something, such as music or writing. It does not mean to present a danger, and it is not used in this figurative sense.\n\nThe correct verb 'pose' is used in an active voice to show that icebergs themselves are the source of the danger. The other options either use incorrect meanings or are not used in this figurative collocation. The active voice is important here because it emphasizes that the icebergs are the ones creating the danger, not that the danger is being imposed on them by something else.",
+          "candidate_grammar_tag": "Verb Collocation (Figurative Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, logical, and complete, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'pose' because it means to present or create a danger or risk. The phrase 'poses a danger' is a common collocation meaning 'to constitute a threat.'\n\n* Why 'depose' is incorrect: This verb usually relates to removing someone from a position or office (e.g., deposing a king). It does not fit the context of creating a danger.\n\n* Why 'dispose' is incorrect: This means to get rid of something or to arrange for its disposal. It does not mean to create a risk or danger, so it is not a suitable verb in this context.\n\n* Why 'compose' is incorrect: This means to create something, such as music or writing. It does not mean to present a danger, and it is not used in this figurative sense.\n\nThe active voice is important here because it emphasizes that the icebergs themselves are the source of the danger, not that the danger is being imposed on them by something else. This active construction aligns with the figurative collocation 'pose a danger,' which is commonly used in English to describe a threat or risk posed by an object or situation.",
+          "candidate_grammar_tag": "Verb Collocation (Figurative Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Figurative Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 318,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 't"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'monitor' because it means to observe and check something over time, which matches the function of using satellite data to track icebergs. \n\n* Why 'maintain' is incorrect: To maintain means to keep something in good condition or steady, such as maintaining a car, which is not related to tracking data. \n\n* Why 'modify' is incorrect: To modify means to change or alter something, which is not the purpose of tracking data. \n\n* Why 'produce' is incorrect: To produce means to create or generate something, which does not fit the context of using satellite data to observe icebergs. \n\nThe subject-verb relationship is active in 'monitor' (the U.S. National Ice Center actively monitors icebergs), whereas 'maintain', 'modify', and 'produce' would imply different actions that do not align with the context of observation and tracking.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, completeness, and grammatical accuracy. The JSON formatting issue was resolved, and the semantic logic was made explicit. All three models agreed on the correct grammar tag, and the explanation now addresses all distractors with clear reasoning.",
+          "candidate_explanation": "The correct answer is 'monitor' because it means to observe and check something over time, which matches the function of using satellite data to track icebergs. \n\n* Why 'maintain' is incorrect: To maintain means to keep something in good condition or steady, such as maintaining a car, which is not related to tracking data. \n\n* Why 'modify' is incorrect: To modify means to change or alter something, which is not the purpose of tracking data. \n\n* Why 'produce' is incorrect: To produce means to create or generate something, which does not fit the context of using satellite data to observe icebergs. \n\nThe subject-verb relationship is active in 'monitor' (the U.S. National Ice Center actively monitors icebergs), whereas 'maintain', 'modify', and 'produce' would imply different actions that do not align with the context of observation and tracking.",
+          "candidate_grammar_tag": "Verb Collocation (Observation/Tracking)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving it and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was refined to ensure clarity and completeness for B1-B2 English learners, including a clear distinction between active verbs and their contextual fit.",
+          "candidate_explanation": "The correct answer is 'monitor' because it means to observe and check something over time, which matches the function of using satellite data to track icebergs. \n\n* Why 'maintain' is incorrect: To maintain means to keep something in good condition or steady, such as maintaining a car, which is not related to tracking data. \n\n* Why 'modify' is incorrect: To modify means to change or alter something, which is not the purpose of tracking data. \n\n* Why 'produce' is incorrect: To produce means to create or generate something, which does not fit the context of using satellite data to observe icebergs. \n\nThe subject-verb relationship is active in 'monitor' (the U.S. National Ice Center actively monitors icebergs), whereas 'maintain', 'modify', and 'produce' would imply different actions that do not align with the context of observation and tracking. Additionally, all distractors are active verbs, but only 'monitor' fits the intended meaning of tracking and observing.",
+          "candidate_grammar_tag": "Verb Collocation (Observation/Tracking)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation, with two models explicitly passing it and the third model (gemma4:12b) failing to respond. The grammar tag was confirmed as accurate, and the explanation was revised to ensure clarity, completeness, and explicit subject-verb relationship explanation for all options.",
+          "candidate_explanation": "The correct answer is 'monitor' because it means to observe and check something over time, which matches the function of using satellite data to track icebergs. \n\n* Why 'maintain' is incorrect: To maintain means to keep something in good condition or steady, such as maintaining a car, which is not related to tracking data. \n\n* Why 'modify' is incorrect: To modify means to change or alter something, which is not the purpose of tracking data. \n\n* Why 'produce' is incorrect: To produce means to create or generate something, which does not fit the context of using satellite data to observe icebergs. \n\nThe subject-verb relationship is active in 'monitor' (the U.S. National Ice Center actively monitors icebergs), whereas 'maintain', 'modify', and 'produce' would imply different actions that do not align with the context of observation and tracking. All distractors are active verbs, but only 'monitor' fits the intended meaning of tracking and observing. Additionally, the grammar tag 'Verb Collocation (Observation/Tracking)' is accurate, as it reflects the specific relationship between the verb and the context of monitoring.",
+          "candidate_grammar_tag": "Verb Collocation (Observation/Tracking)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is accurate, and each distractor is clearly explained with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Observation/Tracking)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

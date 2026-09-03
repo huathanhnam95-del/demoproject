@@ -5,6 +5,7 @@ const {
     buildRegenerationPreview,
     buildScheduledSessionWriteData,
     computeContractedTargetCount,
+    buildPushForwardPlan,
     buildScheduleSummary,
     buildSeedSessions,
     buildReplacementPlan,
@@ -132,7 +133,10 @@ assert.deepStrictEqual(summary, {
     contractedCompletedCount: 1,
     remainingToScheduleCount: 14,
     overflowCount: 1,
-    nextScheduledAt: '2026-03-25T11:00:00.000Z'
+    nextScheduledAt: '2026-03-25T11:00:00.000Z',
+    contractedMinutesTotal: 1440,
+    contractedMinutesDelivered: 90,
+    contractedMinutesRemaining: 1350
 });
 
 const summaryWithNonCounting = buildScheduleSummary({
@@ -153,7 +157,10 @@ assert.deepStrictEqual(summaryWithNonCounting, {
     contractedCompletedCount: 2,
     remainingToScheduleCount: 13,
     overflowCount: 0,
-    nextScheduledAt: '2026-03-22T11:00:00.000Z'
+    nextScheduledAt: '2026-03-22T11:00:00.000Z',
+    contractedMinutesTotal: 1440,
+    contractedMinutesDelivered: 180,
+    contractedMinutesRemaining: 1260
 });
 
 assert.deepStrictEqual(
@@ -170,7 +177,10 @@ assert.deepStrictEqual(
         contractedCompletedCount: 0,
         remainingToScheduleCount: 16,
         overflowCount: 0,
-        nextScheduledAt: null
+        nextScheduledAt: null,
+        contractedMinutesTotal: 1440,
+        contractedMinutesDelivered: 0,
+        contractedMinutesRemaining: 1440
     }
 );
 
@@ -510,5 +520,207 @@ assert.deepStrictEqual(
         lockReason: 'attendance_in_progress'
     }
 );
+
+// Phase 2: Multi-interval slots in buildSeedSessions
+const alternatingSessions = buildSeedSessions({
+    classId: 'class-slots-1',
+    courseId: 'course-slots-1',
+    teacherUid: 'teacher-1',
+    timezone: 'Asia/Ho_Chi_Minh',
+    startDate: '2026-09-07', // Monday
+    totalInstructionMinutes: 24 * 60,
+    slots: [
+        { weekday: 1, startTime: '13:30', durationMinutes: 120 },
+        { weekday: 3, startTime: '13:30', durationMinutes: 60 }
+    ]
+});
+
+assert.strictEqual(alternatingSessions.length, 16);
+assert.strictEqual(alternatingSessions[0].contractUnitIndex, 1);
+assert.strictEqual(alternatingSessions[0].durationMinutes, 120);
+assert.strictEqual(alternatingSessions[0].scheduledLocalDate, '2026-09-07');
+assert.strictEqual(alternatingSessions[0].scheduledLocalTime, '13:30');
+
+assert.strictEqual(alternatingSessions[1].contractUnitIndex, 2);
+assert.strictEqual(alternatingSessions[1].durationMinutes, 60);
+assert.strictEqual(alternatingSessions[1].scheduledLocalDate, '2026-09-09');
+
+assert.strictEqual(alternatingSessions[15].contractUnitIndex, 16);
+assert.strictEqual(alternatingSessions[15].durationMinutes, 60);
+
+// Alternating 120/60 duration check across all 16
+for (let i = 0; i < alternatingSessions.length; i++) {
+    assert.strictEqual(alternatingSessions[i].contractUnitIndex, i + 1);
+    assert.strictEqual(alternatingSessions[i].durationMinutes, i % 2 === 0 ? 120 : 60);
+}
+
+// Two slots on the same day (Fri 13:30 and Fri 19:00) both emit in time order
+const multiSlotFriday = buildSeedSessions({
+    classId: 'class-slots-2',
+    courseId: 'course-slots-2',
+    teacherUid: 'teacher-1',
+    timezone: 'Asia/Ho_Chi_Minh',
+    startDate: '2026-09-11', // Friday
+    targetSessionCount: 2,
+    slots: [
+        { weekday: 5, startTime: '19:00', durationMinutes: 60 },
+        { weekday: 5, startTime: '13:30', durationMinutes: 60 }
+    ]
+});
+assert.strictEqual(multiSlotFriday.length, 2);
+assert.strictEqual(multiSlotFriday[0].scheduledLocalDate, '2026-09-11');
+assert.strictEqual(multiSlotFriday[0].scheduledLocalTime, '13:30');
+assert.strictEqual(multiSlotFriday[0].contractUnitIndex, 1);
+assert.strictEqual(multiSlotFriday[1].scheduledLocalDate, '2026-09-11');
+assert.strictEqual(multiSlotFriday[1].scheduledLocalTime, '19:00');
+assert.strictEqual(multiSlotFriday[1].contractUnitIndex, 2);
+
+// Decision 3: a 13:30–15:30 window yields exactly one 120-minute session, not two 60-minute ones
+const singleLongSession = buildSeedSessions({
+    classId: 'class-slots-3',
+    courseId: 'course-slots-3',
+    teacherUid: 'teacher-1',
+    timezone: 'Asia/Ho_Chi_Minh',
+    startDate: '2026-09-07',
+    targetSessionCount: 1,
+    slots: [
+        { weekday: 1, startTime: '13:30', durationMinutes: 120 }
+    ]
+});
+assert.strictEqual(singleLongSession.length, 1);
+assert.strictEqual(singleLongSession[0].durationMinutes, 120);
+
+// Decision 7: 25h contract against a 3h week schedules 24.0h and reports remainder = 60
+const remainderTest = buildSeedSessions({
+    classId: 'class-slots-4',
+    courseId: 'course-slots-4',
+    teacherUid: 'teacher-1',
+    timezone: 'Asia/Ho_Chi_Minh',
+    startDate: '2026-09-07',
+    totalInstructionMinutes: 25 * 60, // 1500 minutes
+    slots: [
+        { weekday: 1, startTime: '13:30', durationMinutes: 120 },
+        { weekday: 3, startTime: '13:30', durationMinutes: 60 }
+    ] // 180 min/week
+});
+assert.strictEqual(remainderTest.length, 16);
+assert.strictEqual(remainderTest.accumulatedMinutes, 1440);
+assert.strictEqual(remainderTest.remainderMinutes, 60);
+assert.strictEqual(remainderTest.remainder, 60);
+
+// A lesson longer than the whole contract yields zero sessions and an error
+assert.throws(
+    () => buildSeedSessions({
+        classId: 'class-slots-5',
+        courseId: 'course-slots-5',
+        teacherUid: 'teacher-1',
+        timezone: 'Asia/Ho_Chi_Minh',
+        startDate: '2026-09-07',
+        totalInstructionMinutes: 90, // 1.5h contract
+        slots: [
+            { weekday: 1, startTime: '13:30', durationMinutes: 120 } // 2h lesson
+        ]
+    }),
+    /A 2h lesson is longer than the 1.5h contract/
+);
+
+// Push-forward cascade: buildPushForwardPlan on lesson 3 of 16
+// lessons 4-16 shift back one slot, one new trailing lesson appears, and total counting minutes is unchanged.
+const testSessionsForPush = alternatingSessions.map((s, idx) => ({
+    ...s,
+    sessionId: `session-${idx + 1}`
+}));
+
+const totalCountingMinutesBefore = testSessionsForPush
+    .filter((s) => s.contractCountState === 'counts')
+    .reduce((sum, s) => sum + s.durationMinutes, 0);
+
+const pushPlan = buildPushForwardPlan({
+    sessions: testSessionsForPush,
+    fromSessionId: 'session-3',
+    slots: [
+        { weekday: 1, startTime: '13:30', durationMinutes: 120 },
+        { weekday: 3, startTime: '13:30', durationMinutes: 60 }
+    ],
+    timezone: 'Asia/Ho_Chi_Minh'
+});
+
+assert.strictEqual(pushPlan.patches.length, 14); // 1 triggering (lesson 3) + 13 future (lessons 4-16)
+assert.strictEqual(pushPlan.patches[0].sessionId, 'session-3');
+assert.strictEqual(pushPlan.patches[0].sessionOutcome, 'absent_makeup');
+assert.strictEqual(pushPlan.patches[0].contractCountState, 'does_not_count');
+assert.strictEqual(pushPlan.patches[0].attendanceState, 'finalized');
+
+// Future lessons renumbered: lesson 4 gets unitIndex 3, ..., lesson 16 gets unitIndex 15
+assert.strictEqual(pushPlan.patches[1].sessionId, 'session-4');
+assert.strictEqual(pushPlan.patches[1].contractUnitIndex, 3);
+assert.strictEqual(pushPlan.patches[13].sessionId, 'session-16');
+assert.strictEqual(pushPlan.patches[13].contractUnitIndex, 15);
+
+// New trailing lesson appended with next contractUnitIndex 16
+assert.strictEqual(pushPlan.newSession.contractUnitIndex, 16);
+assert.strictEqual(pushPlan.newSession.contractCountState, 'counts');
+assert.strictEqual(pushPlan.newSession.status, 'scheduled');
+
+// Assert invariant: total contracted minutes that count is unchanged
+const patchedSessions = testSessionsForPush.map((s) => {
+    const patchObj = pushPlan.patches.find((p) => p.sessionId === s.sessionId);
+    return patchObj ? { ...s, ...patchObj.patch } : s;
+});
+const allSessionsAfter = [...patchedSessions, pushPlan.newSession];
+const totalCountingMinutesAfter = allSessionsAfter
+    .filter((s) => s.contractCountState === 'counts')
+    .reduce((sum, s) => sum + s.durationMinutes, 0);
+
+assert.strictEqual(totalCountingMinutesAfter, totalCountingMinutesBefore);
+
+// Check preview rows and date shift
+assert.strictEqual(pushPlan.previewRows.length, 14);
+assert.strictEqual(pushPlan.newEndDate > pushPlan.prevEndDate, true);
+
+// Overlapping slots on the same day throw error
+assert.throws(
+    () => buildSeedSessions({
+        classId: 'class-overlap',
+        courseId: 'course-overlap',
+        teacherUid: 'teacher-1',
+        timezone: 'Asia/Ho_Chi_Minh',
+        startDate: '2026-09-07',
+        targetSessionCount: 2,
+        slots: [
+            { weekday: 1, startTime: '13:00', durationMinutes: 90 }, // 13:00 - 14:30
+            { weekday: 1, startTime: '14:00', durationMinutes: 60 }  // 14:00 - 15:00 (overlaps!)
+        ]
+    }),
+    /Overlapping slots on weekday 1/
+);
+
+// Pushing forward an already completed session throws error
+assert.throws(
+    () => buildPushForwardPlan({
+        sessions: [
+            { sessionId: 's1', status: 'completed', sessionOutcome: 'completed', scheduledLocalDate: '2026-09-07', scheduledLocalTime: '13:30' }
+        ],
+        fromSessionId: 's1',
+        slots: [{ weekday: 1, startTime: '13:30', durationMinutes: 60 }]
+    }),
+    /Completed sessions cannot be pushed forward/
+);
+
+// Unpadded time strings (e.g. '9:00') are normalized and sorted before '13:30'
+const unpaddedSlotsTest = buildSeedSessions({
+    classId: 'class-unpadded',
+    courseId: 'course-unpadded',
+    teacherUid: 'teacher-1',
+    timezone: 'Asia/Ho_Chi_Minh',
+    startDate: '2026-09-07', // Monday
+    targetSessionCount: 2,
+    slots: [
+        { weekday: 1, startTime: '13:30', durationMinutes: 60 },
+        { weekday: 1, startTime: '9:00', durationMinutes: 60 }
+    ]
+});
+assert.strictEqual(unpaddedSlotsTest[0].scheduledLocalTime, '09:00');
+assert.strictEqual(unpaddedSlotsTest[1].scheduledLocalTime, '13:30');
 
 console.log('scheduling service passed');

@@ -41,6 +41,35 @@ function normalizePositiveInteger(value, label) {
     return numeric;
 }
 
+// Delivery shape, not a marketing label. `category` stays free text; `courseType` drives
+// how the course is scheduled (a 1on1 course provisions a single-member classroom).
+const COURSE_TYPES = ['1on1', 'pronun'];
+
+function normalizeCourseType(value, { required = false } = {}) {
+    const raw = cleanOptionalString(value);
+    if (!raw) {
+        if (required) {
+            throw new Error('Please choose a course type before saving.');
+        }
+        return null;
+    }
+    let normalized = raw.toLowerCase();
+    if (normalized.endsWith('.')) {
+        normalized = normalized.slice(0, -1);
+    }
+    if (!COURSE_TYPES.includes(normalized)) {
+        throw new Error(`Invalid course type: ${normalized}`);
+    }
+    return normalized;
+}
+
+// Calendar days the student has to finish the course. Optional: courses without it simply
+// require an explicit end date at enrolment time.
+function normalizeDurationDays(value) {
+    if (value === null || value === undefined || value === '') return null;
+    return normalizePositiveInteger(value, 'Course duration days');
+}
+
 function normalizeCommissionBps(value) {
     if (value === null || value === undefined || value === '') return null;
     const numeric = Number(value);
@@ -137,7 +166,10 @@ function buildEmptyScheduleSummary(scheduleConfig) {
             contractedCompletedCount: 0,
             remainingToScheduleCount: 0,
             overflowCount: 0,
-            nextScheduledAt: null
+            nextScheduledAt: null,
+            contractedMinutesTotal: 0,
+            contractedMinutesDelivered: 0,
+            contractedMinutesRemaining: 0
         };
     }
 
@@ -156,6 +188,8 @@ function buildCourseCreateData(input, context = {}) {
         label: cleanOptionalString(input.label),
         level: cleanOptionalString(input.level),
         category: cleanOptionalString(input.category),
+        courseType: normalizeCourseType(input.courseType, { required: true }),
+        durationDays: normalizeDurationDays(input.durationDays),
         status: cleanOptionalString(input.status, 'active') || 'active',
         agentCommissionBps: normalizeCommissionBps(input.agentCommissionBps),
         description: cleanOptionalString(input.description),
@@ -181,6 +215,14 @@ function buildCoursePatchData(existing, input, context = {}) {
                 ? cleanOptionalString(input[key], '')
                 : cleanOptionalString(input[key]);
         }
+    }
+    if (Object.prototype.hasOwnProperty.call(input || {}, 'courseType')) {
+        // Not `required` here: legacy courses predate the field and may be patched for
+        // unrelated reasons before the migration reaches them.
+        patch.courseType = normalizeCourseType(input.courseType);
+    }
+    if (Object.prototype.hasOwnProperty.call(input || {}, 'durationDays')) {
+        patch.durationDays = normalizeDurationDays(input.durationDays);
     }
     if (Object.prototype.hasOwnProperty.call(input || {}, 'agentCommissionBps')) {
         patch.agentCommissionBps = normalizeCommissionBps(input.agentCommissionBps);
@@ -221,6 +263,10 @@ function mapCourseRecord(doc, courseId) {
         label: data.label || null,
         level: data.level || null,
         category: data.category || null,
+        courseType: COURSE_TYPES.includes(String(data.courseType || '').toLowerCase().replace(/\.$/, ''))
+            ? String(data.courseType).toLowerCase().replace(/\.$/, '')
+            : null,
+        durationDays: Number.isInteger(Number(data.durationDays)) && Number(data.durationDays) > 0 ? Number(data.durationDays) : null,
         status: data.status || 'active',
         agentCommissionBps,
         description: data.description || null,
@@ -242,6 +288,9 @@ function buildClassroomCreateData(input, context = {}) {
         name: cleanOptionalString(input.name, ''),
         courseId: cleanOptionalString(input.courseId),
         primaryTeacherUid: cleanOptionalString(input.primaryTeacherUid),
+        classKind: cleanOptionalString(input.classKind, 'group') || 'group',
+        studentId: cleanOptionalString(input.studentId),
+        studentUid: cleanOptionalString(input.studentUid),
         status: cleanOptionalString(input.status, 'draft') || 'draft',
         meetingDays: normalizeStringList(input.meetingDays),
         meetingHours: normalizeStringList(input.meetingHours),
@@ -258,7 +307,7 @@ function buildClassroomCreateData(input, context = {}) {
 
 function buildClassroomPatchData(existing, input, context = {}) {
     const patch = {};
-    for (const key of ['name', 'courseId', 'status', 'primaryTeacherUid']) {
+    for (const key of ['name', 'courseId', 'status', 'primaryTeacherUid', 'classKind', 'studentId', 'studentUid']) {
         if (Object.prototype.hasOwnProperty.call(input || {}, key)) {
             patch[key] = key === 'name'
                 ? cleanOptionalString(input[key], '')
@@ -299,6 +348,9 @@ function mapClassroomRecord(doc, classId) {
         name: data.name || '',
         courseId: data.courseId || null,
         primaryTeacherUid: data.primaryTeacherUid || null,
+        classKind: data.classKind || 'group',
+        studentId: data.studentId || null,
+        studentUid: data.studentUid || null,
         status: data.status || 'draft',
         meetingDays: normalizeStringList(data.meetingDays),
         meetingHours: normalizeStringList(data.meetingHours),
@@ -355,10 +407,14 @@ function computeMissingReviewItems({ classworks, submissions, members }) {
 }
 
 module.exports = {
+    COURSE_TYPES,
+    normalizeCourseType,
+    normalizeDurationDays,
     buildCourseCreateData,
     buildCoursePatchData,
     buildClassroomCreateData,
     buildClassroomPatchData,
+    buildEmptyScheduleSummary,
     computeMissingReviewItems,
     mapClassroomMembers,
     mapClassroomRecord,

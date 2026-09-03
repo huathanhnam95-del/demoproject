@@ -189,3 +189,10 @@ visio_debug_trace.ps1
 
 # Query scratch files
 query/
+
+# Voice Cloning Lab artifacts & cache
+tools/voice_cloning_lab/results/
+tools/voice_cloning_lab/models/
+tools/voice_cloning_lab/**/__pycache__/
+artifacts/
+tmp/

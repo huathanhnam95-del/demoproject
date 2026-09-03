@@ -165,15 +165,19 @@ function createFakeDb(initialDocs = {}) {
                     rows = rows.slice(0, limitCount);
                 }
 
+                const mappedDocs = rows.map((row) => {
+                    const ref = makeDocRef(collectionName, row.id);
+                    return {
+                        id: row.id,
+                        ref,
+                        data: () => clone(row.data)
+                    };
+                });
+
                 return {
-                    docs: rows.map((row) => {
-                        const ref = makeDocRef(collectionName, row.id);
-                        return {
-                            id: row.id,
-                            ref,
-                            data: () => clone(row.data)
-                        };
-                    })
+                    docs: mappedDocs,
+                    empty: mappedDocs.length === 0,
+                    size: mappedDocs.length
                 };
             }
         };
@@ -207,11 +211,18 @@ function createFakeDb(initialDocs = {}) {
             const operations = [];
             return {
                 set(ref, patch, options = {}) {
-                    operations.push({ ref, patch, options });
+                    operations.push({ type: 'set', ref, patch, options });
+                },
+                update(ref, patch) {
+                    operations.push({ type: 'update', ref, patch });
                 },
                 async commit() {
                     for (const operation of operations) {
-                        await operation.ref.set(operation.patch, operation.options);
+                        if (operation.type === 'update') {
+                            await operation.ref.update(operation.patch);
+                        } else {
+                            await operation.ref.set(operation.patch, operation.options);
+                        }
                     }
                 }
             };

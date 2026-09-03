@@ -11470,3 +11470,655 @@ mark.crm-highlight:hover {
   padding: 8px 12px;
 }
 
+/* ============================================
+   Course Scheduling — Availability Matrix (Phase 3)
+   Google Calendar-inspired interaction model with CRM tokens.
+   ============================================ */
+
+.crm-schedule-availability {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crm-availability-matrix {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.crm-availability-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--crm-border-light);
+  gap: 12px;
+  transition: background-color 0.15s ease;
+}
+
+.crm-availability-row:last-of-type {
+  border-bottom: none;
+}
+
+.crm-availability-row.is-unavailable .crm-availability-day-label {
+  color: var(--crm-text-muted);
+  font-weight: 500;
+}
+
+.crm-availability-row.is-active .crm-availability-day-label {
+  color: var(--crm-text-main);
+  font-weight: 600;
+}
+
+.crm-availability-day-col {
+  width: 96px;
+  min-width: 96px;
+  padding-top: 6px;
+}
+
+.crm-availability-day-label {
+  font-size: 14px;
+  user-select: none;
+}
+
+.crm-availability-intervals-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.crm-availability-empty-state {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+.crm-availability-unavailable {
+  font-size: 13px;
+  color: var(--crm-text-muted);
+  font-style: italic;
+  user-select: none;
+}
+
+.crm-availability-interval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.crm-availability-interval-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crm-availability-time-input {
+  width: 105px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--crm-text-main);
+  background-color: var(--crm-surface-input);
+  border: 1px solid var(--crm-border);
+  border-radius: var(--crm-radius);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.crm-availability-time-input:focus {
+  border: var(--crm-focus-ring);
+  box-shadow: var(--crm-focus-halo);
+}
+
+.crm-availability-sep {
+  color: var(--crm-text-muted);
+  font-weight: 600;
+  user-select: none;
+}
+
+.crm-availability-length-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--crm-text-muted);
+  background-color: var(--crm-surface-dim);
+  border: 1px solid var(--crm-border-light);
+  border-radius: 13px;
+  user-select: none;
+}
+
+.crm-availability-btn-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--crm-text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-availability-btn-remove:hover {
+  color: var(--crm-danger-text);
+  background-color: var(--crm-danger-bg);
+}
+
+.crm-availability-btn-remove:focus-visible {
+  outline: var(--crm-focus-ring);
+  outline-offset: 2px;
+}
+
+.crm-availability-actions-col {
+  width: 36px;
+  min-width: 36px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.crm-availability-btn-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--crm-border);
+  background-color: #ffffff;
+  color: var(--crm-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-availability-btn-add:hover {
+  border-color: var(--crm-primary);
+  background-color: var(--crm-primary-light);
+}
+
+.crm-availability-btn-add:focus-visible {
+  outline: var(--crm-focus-ring);
+  outline-offset: 2px;
+}
+
+.crm-availability-day-error {
+  margin-left: 108px;
+  margin-top: -4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--crm-danger-text);
+  font-weight: 500;
+}
+
+.crm-availability-interval-item.has-error .crm-availability-time-input {
+  border-color: var(--crm-danger);
+  background-color: var(--crm-danger-bg);
+}
+
+.crm-availability-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background-color: var(--crm-surface-dim);
+  border-radius: var(--crm-radius);
+  border: 1px solid var(--crm-border-light);
+  font-size: 13px;
+  color: var(--crm-text-main);
+}
+
+.crm-availability-summary-text strong {
+  color: var(--crm-primary);
+  font-weight: 700;
+}
+
+.crm-availability-summary-sub {
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .crm-availability-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .crm-availability-day-col {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .crm-availability-actions-col {
+    width: 100%;
+    min-width: unset;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .crm-availability-btn-add {
+    width: 100%;
+    height: 32px;
+    border-style: solid;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .crm-availability-day-error {
+    margin-left: 0;
+  }
+}
+
+/* ==========================================================================
+   Student Courses Tab — Screens A & B (1-on-1 Enrolment & Scheduling)
+   ========================================================================== */
+
+.crm-student-courses-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.crm-student-courses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.crm-student-courses-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--crm-text-main, #1e293b);
+}
+
+.crm-student-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Screen A: Enrolment Card (flat design, no nested boxes) */
+.crm-student-course-card {
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.crm-student-course-card:hover {
+  border-color: var(--crm-border-hover, #cbd5e1);
+}
+
+.crm-student-course-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.crm-student-course-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crm-student-course-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--crm-text-main, #1e293b);
+  margin: 0;
+}
+
+.crm-student-course-code {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--crm-surface-input, #f1f5f9);
+  color: var(--crm-text-secondary, #475569);
+}
+
+.crm-student-course-type-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(23, 122, 68, 0.1);
+  color: var(--crm-primary, #177a44);
+}
+
+.crm-student-course-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.crm-student-course-status.active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.crm-student-course-status.completed {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.crm-student-course-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crm-student-course-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--crm-text-secondary, #475569);
+  font-weight: 500;
+}
+
+.crm-student-course-details-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--crm-text-secondary, #475569);
+  padding: 8px 0;
+  border-top: 1px dashed var(--crm-border, #e2e8f0);
+}
+
+.crm-student-course-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.crm-student-course-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Screen B: Add Course Takeover Form */
+.crm-course-enroll-takeover {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crm-course-enroll-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.crm-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  background: transparent;
+  color: var(--crm-text-secondary, #475569);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-back-btn:hover {
+  background: var(--crm-surface-input, #f1f5f9);
+  color: var(--crm-text-main, #1e293b);
+}
+
+.crm-enroll-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+@media (max-width: 640px) {
+  .crm-enroll-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crm-enroll-form-full {
+  grid-column: 1 / -1;
+}
+
+.crm-enroll-comparison-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--crm-surface-input, #f1f5f9);
+  font-size: 13px;
+  color: var(--crm-text-main, #1e293b);
+}
+
+.crm-enroll-comparison-bar .status-warning {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.crm-enroll-comparison-bar .status-ok {
+  color: var(--crm-primary, #177a44);
+  font-weight: 600;
+}
+
+.crm-enroll-error-box {
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Screen C: Lessons & Attendance View with Inline Expansion
+   ========================================================================== */
+
+.crm-attendance-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crm-attendance-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crm-attendance-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crm-attendance-summary-card {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.crm-attendance-summary-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--crm-text-secondary, #475569);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crm-session-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.crm-session-table th {
+  background: var(--crm-surface-input, #f1f5f9);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--crm-text-secondary, #475569);
+  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+}
+
+.crm-session-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+  vertical-align: middle;
+  color: var(--crm-text-main, #1e293b);
+}
+
+.crm-session-table tr:last-child td {
+  border-bottom: none;
+}
+
+.crm-session-table tr.is-expanded td {
+  background: rgba(23, 122, 68, 0.02);
+}
+
+/* Status Badges with Icon + Text */
+.crm-session-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.crm-session-status-badge.status-attended {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.crm-session-status-badge.status-absent {
+  background: var(--crm-surface-input, #f1f5f9);
+  color: var(--crm-text-secondary, #475569);
+}
+
+.crm-session-status-badge.status-penalized {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.crm-session-status-badge.status-rescheduled {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.crm-session-status-badge.status-scheduled {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+}
+
+/* Inline Expansion Row */
+.crm-session-inline-tr td {
+  background: #f8fafc;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+}
+
+.crm-session-inline-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crm-session-inline-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--crm-text-main, #1e293b);
+  margin: 0;
+}
+
+.crm-inline-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crm-inline-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--crm-text-main, #1e293b);
+  cursor: pointer;
+}
+
+.crm-cascade-preview-box {
+  margin-top: 6px;
+  margin-left: 24px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crm-cascade-preview-shift {
+  font-family: monospace;
+  color: var(--crm-primary, #177a44);
+  font-weight: 600;
+}
+
+.crm-cascade-preview-date {
+  color: var(--crm-text-secondary, #475569);
+  font-weight: 500;
+}
+
+.crm-inline-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+

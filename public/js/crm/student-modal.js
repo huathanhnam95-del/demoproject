@@ -39,6 +39,14 @@ window.CrmStudentModal = (function () {
                 });
                 return;
             }
+            if (tabId === 'courses' && modalState.studentId) {
+                if (window.CrmStudentCourses && typeof window.CrmStudentCourses.refresh === 'function') {
+                    window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
+                        console.error('[CRM Admin] Failed to refresh student courses:', error);
+                    });
+                }
+                return;
+            }
             if (tabId === 'info') {
                 renderStudentSchedulePrompt();
             }

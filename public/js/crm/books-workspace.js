@@ -218,6 +218,11 @@ window.CrmBooksWorkspace = (function () {
             return 0;
         }
 
+        // Reject lines followed by lowercase sentence continuation (not a question or dialogue)
+        if (nextLine && /^[a-zà-ÿ]/.test(nextLine.trim()) && !/[?:]$/.test(nextLine.trim())) {
+            return 0;
+        }
+
         // Short standalone headings (allowing ending question mark '?' or colon ':')
         if (trimmed.length <= 60 && !/[.,;—]$/.test(trimmed)) {
             if (/^[A-ZÀ-ɏ“‘"'][a-zA-Z0-9\s,/'’()–—?-]+$/.test(trimmed)) {

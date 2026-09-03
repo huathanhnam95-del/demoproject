@@ -806,13 +806,17 @@ module.exports = function createCrmRouter(rawDeps) {
                 ? Math.min(500, Math.max(1, Math.floor(requestedLimit)))
                 : 200;
 
+            const includeOneOnOne = String(req.query?.includeOneOnOne || '').trim() === 'true';
             const snaps = await deps.db
                 .collection(CRM_CLASSROOMS)
                 .orderBy('createdAt', 'desc')
                 .limit(limit)
                 .get();
 
-            const classrooms = snaps.docs.map((doc) => mapClassroomRecord(doc, doc.id));
+            let classrooms = snaps.docs.map((doc) => mapClassroomRecord(doc, doc.id));
+            if (!includeOneOnOne) {
+                classrooms = classrooms.filter((c) => c.classKind !== 'oneOnOne');
+            }
             return sendSuccess(res, { classrooms, count: classrooms.length });
         } catch (error) {
             return sendError(res, 500, 'LIST_CLASSROOMS_ERROR', 'Failed to list classrooms.', error?.message || error);

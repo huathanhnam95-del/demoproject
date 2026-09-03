@@ -15,6 +15,7 @@ const entranceTestRoutes = require('./routes/entrance-tests');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
 const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
+const { createVoiceCloningAdminRouter } = require('./voice-cloning/admin-routes');
 const readAloudRoutes = require('./routes/read-aloud');
 const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
@@ -359,6 +360,14 @@ const essayAiAdminRouter = createEssayAiAdminRouter({
     sendSuccess,
     sendError
 });
+const voiceCloningAdminRouter = createVoiceCloningAdminRouter({
+    db,
+    authMiddleware,
+    adminMiddleware,
+    sendSuccess,
+    sendError,
+    getStorageBucket
+});
 const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRouter({
     db,
     sendSuccess,
@@ -367,6 +376,7 @@ const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRoute
 });
 
 app.use('/api/admin/essay-ai', essayAiAdminRouter);
+app.use('/api/admin/voice-cloning', voiceCloningAdminRouter);
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/teacher', teacherSchedulerRouter);

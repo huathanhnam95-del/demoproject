@@ -812,6 +812,8 @@ async function main() {
     await page.waitForSelector('#crm-course-modal', { state: 'visible' });
     await page.fill('#course-name', 'PTE Foundation');
     await page.fill('#course-code', 'PTE-FND');
+    await page.selectOption('#course-type', '1on1');
+    await page.fill('#course-duration-days', '60');
     await page.fill('#course-agent-commission-percent', '12.5');
     await page.fill('#course-total-hours', '24');
     await page.fill('#course-default-session-minutes', '90');
@@ -825,6 +827,8 @@ async function main() {
       'Expected course create request.'
     );
     assert.strictEqual(courseCreateRequest.body.agentCommissionBps, 1250);
+    assert.strictEqual(courseCreateRequest.body.courseType, '1on1');
+    assert.strictEqual(courseCreateRequest.body.durationDays, 60);
     assert.strictEqual(courseCreateRequest.body.deliveryTemplate.totalInstructionMinutes, 1440);
     assert.strictEqual(courseCreateRequest.body.deliveryTemplate.defaultSessionMinutes, 90);
     await page.waitForFunction(() => !!document.querySelector('.crm-course-link[data-course-id="course-1"]'));

@@ -19,6 +19,10 @@ window.CrmCourses = (function () {
             label: data.label || null,
             level: data.level || null,
             category: data.category || null,
+            courseType: data.courseType || null,
+            durationDays: Number.isFinite(Number(data.durationDays)) && Number(data.durationDays) > 0
+                ? Math.round(Number(data.durationDays))
+                : null,
             status: data.status || 'active',
             agentCommissionBps: Number.isFinite(Number(data.agentCommissionBps)) ? Math.round(Number(data.agentCommissionBps)) : null,
             description: data.description || null,
@@ -31,6 +35,7 @@ window.CrmCourses = (function () {
         const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
         const sessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
         const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
+        const durationDays = Number(elements.inputCourseDurationDays?.value || 0);
         const commissionPercent = Number(elements.inputCourseAgentCommissionPercent?.value || 0);
         const agentCommissionBps = Number.isFinite(commissionPercent) ? Math.round(commissionPercent * 100) : null;
 
@@ -40,6 +45,8 @@ window.CrmCourses = (function () {
             label: String(elements.inputCourseLabel?.value || '').trim(),
             level: String(elements.inputCourseLevel?.value || '').trim(),
             category: String(elements.inputCourseCategory?.value || '').trim(),
+            courseType: String(elements.inputCourseType?.value || '').trim(),
+            durationDays: Number.isFinite(durationDays) && durationDays > 0 ? Math.round(durationDays) : null,
             status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
             agentCommissionBps: Number.isFinite(agentCommissionBps) ? agentCommissionBps : null,
             description: String(elements.inputCourseDescription?.value || '').trim(),
@@ -61,6 +68,11 @@ window.CrmCourses = (function () {
         if (elements.inputCourseLabel) elements.inputCourseLabel.value = String(course?.label || '');
         if (elements.inputCourseLevel) elements.inputCourseLevel.value = String(course?.level || '');
         if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
+        if (elements.inputCourseType) elements.inputCourseType.value = String(course?.courseType || '');
+        if (elements.inputCourseDurationDays) {
+            const days = Number(course?.durationDays);
+            elements.inputCourseDurationDays.value = Number.isFinite(days) && days > 0 ? String(days) : '';
+        }
         if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
         if (elements.inputCourseAgentCommissionPercent) {
             const bps = Number(course?.agentCommissionBps);
@@ -121,7 +133,11 @@ window.CrmCourses = (function () {
             const defaultSessionMinutes = Number(course?.deliveryTemplate?.defaultSessionMinutes || '');
             const durationStepMinutes = Number(course?.deliveryTemplate?.durationStepMinutes || '');
             const timezone = String(course?.deliveryTemplate?.timezone || '');
-            return `<option value="${course.id}" data-total-minutes="${Number.isFinite(totalMinutes) ? totalMinutes : ''}" data-default-session-minutes="${Number.isFinite(defaultSessionMinutes) ? defaultSessionMinutes : ''}" data-duration-step-minutes="${Number.isFinite(durationStepMinutes) ? durationStepMinutes : ''}" data-timezone="${timezone}">${label}</option>`;
+            // courseType and durationDays ride along so the enrolment form can filter by type
+            // and auto-fill the end date without a second fetch.
+            const courseType = String(course?.courseType || '');
+            const durationDays = Number(course?.durationDays || '');
+            return `<option value="${course.id}" data-course-type="${courseType}" data-duration-days="${Number.isFinite(durationDays) && durationDays > 0 ? durationDays : ''}" data-total-minutes="${Number.isFinite(totalMinutes) ? totalMinutes : ''}" data-default-session-minutes="${Number.isFinite(defaultSessionMinutes) ? defaultSessionMinutes : ''}" data-duration-step-minutes="${Number.isFinite(durationStepMinutes) ? durationStepMinutes : ''}" data-timezone="${timezone}">${label}</option>`;
         }).join('');
 
         if (selectedValue) {

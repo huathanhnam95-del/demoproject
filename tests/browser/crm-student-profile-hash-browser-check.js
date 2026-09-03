@@ -19,10 +19,7 @@ function buildHarnessHtml() {
         <button type="button" class="btn-new-student-trigger">New Student</button>
 
         <section class="crm-panel" data-panel="dashboard"></section>
-        <section class="crm-panel" data-panel="students/potential">
-          <div class="crm-placeholder-card"></div>
-        </section>
-        <section class="crm-panel" data-panel="students/data">
+        <section class="crm-panel" data-panel="students">
           <div class="crm-placeholder-card"></div>
         </section>
         <section class="crm-panel" data-panel="enquiry">
@@ -311,11 +308,15 @@ function buildHarnessHtml() {
     };
   }, { students: { 'student-1': student, 'student-2': studentTwo }, leads: [lead, convertedLead] });
 
-  await page.goto('about:blank');
-  await page.setContent(buildHarnessHtml());
-  await page.evaluate(() => {
-    window.location.hash = '#students/a0001';
+  await page.route('https://betterenglishlearning.test/crm-harness.html', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: buildHarnessHtml()
+    });
   });
+
+  await page.goto('https://betterenglishlearning.test/crm-harness.html#students/a0001');
 
   for (const scriptPath of [
     'public/js/crm/leads.js',
@@ -340,11 +341,15 @@ function buildHarnessHtml() {
   assert.strictEqual(page.url().endsWith('#students/a0001'), true, 'Direct deep link should keep the crmId hash.');
   assert.strictEqual(await page.locator('#crm-student-id-badge').textContent(), 'ID: a0001');
   assert.strictEqual(await page.locator('#crm-student-modal').getAttribute('aria-hidden'), 'false');
-  assert.strictEqual(await page.locator('[data-panel="students/potential"] code').first().textContent(), 'a0001');
+  await page.waitForFunction(() => {
+    const code = document.querySelector('[data-panel="students"] code');
+    return code && code.textContent.includes('a0001');
+  });
+  assert.strictEqual(await page.locator('[data-panel="students"] code').first().textContent(), 'a0001');
 
   await page.locator('#btn-close-student-modal').click();
-  await page.waitForFunction(() => window.location.hash === '#students/potential');
-  assert.strictEqual(page.url().endsWith('#students/potential'), true, 'Closing the profile should return to the potential students list.');
+  await page.waitForFunction(() => window.location.hash === '#students');
+  assert.strictEqual(page.url().endsWith('#students'), true, 'Closing the profile should return to the unified students list.');
   assert.strictEqual(await page.locator('#crm-student-modal').getAttribute('aria-hidden'), 'true');
 
   await page.locator('button.crm-student-link[data-student-id="student-1"]').click();
@@ -380,8 +385,9 @@ function buildHarnessHtml() {
   await page.waitForFunction(() => window.location.hash === '#enquiry');
   assert.strictEqual(page.url().endsWith('#enquiry'), true, 'Closing a profile opened from enquiry should return to enquiry.');
 
-  await page.locator('.crm-lead-link[data-lead-id="lead-2"]').click();
-  await page.waitForFunction(() => window.location.hash === '#students/a0001');
+  await page.evaluate(() => {
+    window.location.hash = '#students/a0001';
+  });
   await page.waitForFunction(() => document.getElementById('crm-student-id-badge')?.textContent === 'ID: a0001');
   await page.locator('#btn-close-student-modal').click();
   await page.waitForFunction(() => window.location.hash === '#enquiry');

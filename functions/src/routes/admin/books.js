@@ -855,7 +855,7 @@ module.exports = function registerBookRoutes(router, deps) {
             }
 
             const filename = sourceDownloadFilename(bookData);
-            const isInline = req.query.inline === 'true' || req.query.mode === 'view';
+            const isInline = req.query?.inline === 'true' || req.query?.mode === 'view';
             const [downloadUrl] = await file.getSignedUrl({
                 action: 'read',
                 expires: Date.now() + SOURCE_DOWNLOAD_TTL_MS,

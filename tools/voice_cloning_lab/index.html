@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Cloning Lab — SOTA A/B/C Testing Suite</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M12 2v20M17 5v14M22 8v8M7 5v14M2 8v8'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Studio Header -->
+  <header class="lab-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M17 5v14M22 8v8M7 5v14M2 8v8"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">VOICE CLONING LAB</h1>
+        <p class="brand-subtitle">Real Neural Zero-Shot Voice Cloning (F5-TTS Flow-Matching DiT)</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Hardware Indicator -->
+      <div class="gpu-badge" id="gpu-status">
+        <span class="pulse-dot"></span>
+        <span class="gpu-text">RTX 5060 Ti (16GB) • Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stepper Progress Navigation -->
+  <nav class="wizard-stepper-container">
+    <div class="wizard-stepper">
+      <div class="step-node active" id="step-node-1" data-step="1">
+        <div class="step-num">1</div>
+        <div class="step-label">
+          <span class="step-title">Record Voice</span>
+          <span class="step-sub">3 Read Aloud Prompts</span>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-1-2"></div>
+      <div class="step-node" id="step-node-2" data-step="2">
+        <div class="step-num">2</div>
+        <div class="step-label">
+          <span class="step-title">4th Question Target</span>
+          <span class="step-sub">Choose Target Script</span>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-2-3"></div>
+      <div class="step-node" id="step-node-3" data-step="3">
+        <div class="step-num">3</div>
+        <div class="step-label">
+          <span class="step-title">Voice Studio</span>
+          <span class="step-sub">Interactive Playground</span>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-3-4"></div>
+      <div class="step-node" id="step-node-4" data-step="4">
+        <div class="step-num">⭐</div>
+        <div class="step-label">
+          <span class="step-title">10 RA Benchmark</span>
+          <span class="step-sub">3-LLM Audio Suite</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="lab-container">
+
+    <!-- =========================================================================
+         STEP 1 PANEL: Record 3 Read Aloud Prompts (~1 Min)
+         ========================================================================= -->
+    <section class="wizard-panel" id="panel-step-1">
+      <div class="panel-hero">
+        <div class="step-badge">STEP 1 OF 3</div>
+        <h2 class="hero-title">Voice Calibration & Recording</h2>
+        <p class="hero-desc">Record yourself reading the 3 Read Aloud prompts below (~45–60s). This provides a rich acoustic sample for all 3 neural voice cloning models.</p>
+      </div>
+
+      <!-- Direct Access Banner for 10 RA Question Benchmark -->
+      <div class="benchmark-quick-banner" style="background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(16,185,129,0.18)); border: 1px solid rgba(99,102,241,0.5); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+        <div>
+          <span style="background: #6366f1; color: #fff; font-size: 0.75rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">✨ BENCHMARK READY</span>
+          <h3 style="color: #fff; font-size: 1.25rem; margin: 0.4rem 0 0.2rem 0; display: flex; align-items: center; gap: 8px;">
+            <span>🎧</span> 10 PTE Read Aloud Audio Questions Generated & Evaluated
+          </h3>
+          <p style="color: #cbd5e1; font-size: 0.875rem; margin: 0;">
+            Synthesized with your cloned voice using F5-TTS (Overall MOS: <strong style="color:#10b981;">4.13/5.0</strong> • <strong style="color:#818cf8;">94.2%</strong> Speaker Timbre Match • Whisper ASR Verified).
+          </p>
+        </div>
+        <button id="btn-jump-to-ra10" type="button" style="background: #10b981; color: #0f172a; font-weight: 800; padding: 12px 22px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
+          ▶ Audition 10 Questions ➔
+        </button>
+      </div>
+
+      <!-- Persistent Saved Voice Card (Automatically shown when previous recording exists) -->
+      <div class="saved-voice-banner hidden" id="saved-voice-banner">
+        <div class="saved-voice-left">
+          <span class="saved-star">⭐</span>
+          <div>
+            <h4 class="saved-title">Your Saved Voice Profile is Ready</h4>
+            <p class="saved-sub" id="saved-voice-meta">Loaded from local disk: my_saved_voice.webm</p>
+          </div>
+        </div>
+        <div class="saved-voice-actions">
+          <button id="btn-use-saved-voice" class="btn-sm-primary" type="button">
+            Use Saved Voice & Skip to Step 2 ➔
+          </button>
+          <button id="btn-listen-saved" class="btn-sm-ghost" type="button">
+            ▶ Listen
+          </button>
+          <button id="btn-toggle-record-new" class="btn-sm-ghost" type="button">
+            🎙️ Record New Voice
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Prompt Reader Carousel Box -->
+      <div class="reader-studio-card" id="reader-studio-card">
+        <div class="reader-header-row">
+          <span class="reader-tag">📖 Read Aloud Prompts to Read into Mic:</span>
+          <div class="prompt-tabs-group">
+            <button class="prompt-tab active" id="tab-prompt-1" data-idx="0">1. RA #18 (Research)</button>
+            <button class="prompt-tab" id="tab-prompt-2" data-idx="1">2. RA #15 (Competition)</button>
+            <button class="prompt-tab" id="tab-prompt-3" data-idx="2">3. RA #419 (Health Tech)</button>
+          </div>
+        </div>
+
+        <div class="prompt-display-box">
+          <p class="prompt-active-text" id="prompt-active-text">
+            "Certain types of methodology are more suitable for some research projects than others. For example, the use of questionnaires and surveys is more suitable for quantitative research, whereas interviews and focus groups are more often used for qualitative research purposes."
+          </p>
+        </div>
+
+        <div class="prompt-progress-hint">
+          <span>Tip: Click through prompts 1, 2, and 3 while reading aloud continuously.</span>
+        </div>
+      </div>
+
+      <!-- Recording Console -->
+      <div class="recorder-console-card" id="recorder-console-card">
+        <div class="recorder-status-bar">
+          <div class="rec-indicator-group">
+            <span class="rec-dot" id="rec-dot"></span>
+            <span class="rec-status-text" id="rec-status-text">Microphone Ready</span>
+          </div>
+          <span class="rec-timer" id="rec-timer">00:00 / 01:00</span>
+        </div>
+
+        <!-- Live Mic VU Volume Meter -->
+        <div class="mic-visualizer-box">
+          <canvas id="mic-meter-canvas" class="mic-meter-canvas" height="36"></canvas>
+        </div>
+
+        <!-- Primary Record Actions -->
+        <div class="rec-actions-row">
+          <button id="btn-start-record" class="btn-hero-record" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            <span>Start Recording Microphone</span>
+          </button>
+          <button id="btn-stop-record" class="btn-hero-stop hidden" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            <span>Stop Recording & Save Locally</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reference Audio Playback Card (Shown once recorded or preset chosen) -->
+      <div class="recorded-preview-card" id="recorded-preview-card">
+        <div class="preview-header-row">
+          <div class="audio-info">
+            <span class="audio-icon">🎙️</span>
+            <div>
+              <div class="saved-badge-row">
+                <h4 class="audio-name" id="ref-filename">voice_sample.webm</h4>
+                <span class="saved-pill-tag">💾 Saved to Local Disk</span>
+              </div>
+              <p class="audio-dur" id="ref-duration">Duration: 0:45</p>
+            </div>
+          </div>
+          <div class="preview-btn-group">
+            <button id="ref-play-btn" class="ctrl-btn-primary" type="button">
+              <svg id="ref-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Listen to My Voice</span>
+            </button>
+            <button id="ref-download-btn" class="ctrl-btn-ghost" type="button" title="Download audio recording">
+              ⬇ Download
+            </button>
+          </div>
+        </div>
+
+        <div class="waveform-container">
+          <canvas id="ref-waveform-canvas" class="waveform-canvas" height="48"></canvas>
+        </div>
+
+        <!-- Continue CTA -->
+        <div class="step-footer-actions">
+          <button id="btn-goto-step-2" class="btn-primary-glow" type="button">
+            <span>Proceed to Step 2: Choose 4th Target Question ➔</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Demo Presets Fallback -->
+      <div class="presets-footer-bar">
+        <span class="presets-hint">Quick Select Voice:</span>
+        <button class="preset-pill active-preset" id="preset-my-voice" data-preset="my_voice">⭐ My Saved Voice</button>
+        <button class="preset-pill" data-preset="teacher_mark">🇬🇧 Teacher Mark (45s)</button>
+        <button class="preset-pill" data-preset="elena_us">🇺🇸 Elena Academic (30s)</button>
+        <button class="preset-pill" data-preset="vn_coach">🇻🇳 Coach Nam (50s)</button>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         STEP 2 PANEL: The 4th Read Aloud Question Target Challenge
+         ========================================================================= -->
+    <section class="wizard-panel hidden" id="panel-step-2">
+      <div class="panel-hero">
+        <div class="step-badge">STEP 2 OF 3</div>
+        <h2 class="hero-title">The 4th Read Aloud Question Challenge</h2>
+        <p class="hero-desc">Your voice from Step 1 has been captured. Now choose the unseen 4th Read Aloud question that all 3 models will synthesize in your cloned voice.</p>
+      </div>
+
+      <!-- 4th Question Selection Card -->
+      <div class="challenge-selection-card">
+        <span class="section-tag">🎯 SELECT THE 4TH TARGET QUESTION:</span>
+        
+        <div class="ra-challenge-grid">
+          <!-- Primary 4th Question -->
+          <button class="ra-target-card active" id="card-ra-731" data-ra-id="731">
+            <div class="ra-card-top">
+              <span class="ra-star">⭐</span>
+              <span class="ra-target-title">RA #731: Ancient Ice Storage (Primary Challenge)</span>
+              <span class="ra-rec-badge">Recommended</span>
+            </div>
+            <p class="ra-target-body">"The cold storage structures are located south of the main city center. These large structures would have had sheets of ice built up on the ground level over the course of the winter to provide year-round ice supplies."</p>
+          </button>
+
+          <!-- Alternative 4th Questions -->
+          <div class="ra-alt-options">
+            <button class="ra-target-card" id="card-ra-402" data-ra-id="402">
+              <div class="ra-card-top">
+                <span class="ra-target-title">RA #402: Species Susceptibility</span>
+              </div>
+              <p class="ra-target-body">"An analysis of ten different species finds that humans, followed by ferrets and, to a lesser extent, cats, civets and dogs, are the most susceptible animals to SARS-CoV-2 infection..."</p>
+            </button>
+
+            <button class="ra-target-card" id="card-ra-8" data-ra-id="8">
+              <div class="ra-card-top">
+                <span class="ra-target-title">RA #8: Astrophysics Twins</span>
+              </div>
+              <p class="ra-target-body">"The situation is similar to a pregnant woman who has twin babies in her belly, says Avi of the Smithsonian Center for Astrophysics. He's proposing the idea in a paper..."</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Script Review & Conditioning Settings -->
+      <div class="target-settings-card">
+        <div class="form-group">
+          <div class="label-row">
+            <label for="target-text-input" class="input-label">Target Text to Synthesize</label>
+            <span class="char-count" id="target-char-count">221 chars</span>
+          </div>
+          <textarea id="target-text-input" rows="3" class="studio-textarea">The cold storage structures are located south of the main city center. These large structures would have had sheets of ice built up on the ground level over the course of the winter to provide year-round ice supplies.</textarea>
+        </div>
+
+        <div class="controls-row">
+          <div class="ctrl-field">
+            <label class="input-label">Speaking Cadence / Style</label>
+            <select id="emotion-select" class="studio-select">
+              <option value="neutral">Neutral Exam Cadence (PTE Standard)</option>
+              <option value="serious">Academic & Authoritative [serious]</option>
+              <option value="calm">Calm & Natural [calm]</option>
+              <option value="happy">Confident & Expressive [happy]</option>
+            </select>
+          </div>
+
+          <div class="ctrl-field">
+            <div class="label-row">
+              <label class="input-label">Pacing Speed</label>
+              <span id="speed-val" class="speed-val">1.0x</span>
+            </div>
+            <input type="range" id="speed-slider" min="0.75" max="1.35" step="0.05" value="1.0" class="studio-slider">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Navigation Buttons -->
+      <div class="step-nav-bar">
+        <button id="btn-back-to-step-1" class="btn-ghost-back" type="button">
+          <span>← Back to Step 1 (Recording)</span>
+        </button>
+        <button id="btn-run-all" class="btn-primary-glow btn-launch-big" type="button">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Clone Voice & Synthesize on 4th Question (All Models)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         SYNTHESIS PROGRESS OVERLAY (Shown while generating Models)
+         ========================================================================= -->
+    <div class="synthesis-overlay hidden" id="synthesis-overlay">
+      <div class="overlay-modal">
+        <div class="spinner-pulse"></div>
+        <h3 class="overlay-title">Synthesizing Voice Models on 4th Question...</h3>
+        <p class="overlay-subtitle">Running Continuous Mel Flow Matching & Speech Diffusion on your recording</p>
+
+        <div class="model-progress-list">
+          <div class="progress-item active" id="prog-f5">
+            <span class="prog-dot"></span>
+            <span class="prog-name">Model 1: F5-TTS (Flow-Matching DiT) — Continuous Mel Inpainting</span>
+            <span class="prog-state" id="state-f5">Synthesizing...</span>
+          </div>
+          <div class="progress-item" id="prog-e2">
+            <span class="prog-dot"></span>
+            <span class="prog-name">Model 2: E2-TTS (Flat-Transformer) — Duration-Free Flow Matching</span>
+            <span class="prog-state" id="state-e2">Queued</span>
+          </div>
+          <div class="progress-item" id="prog-chat">
+            <span class="prog-dot"></span>
+            <span class="prog-name">Model 3: ChatTTS (Conversational) — Generative Neural Prosody</span>
+            <span class="prog-state" id="state-chat">Queued</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         STEP 3 PANEL: Side-by-Side Listening Arena & Scorecard
+         ========================================================================= -->
+    <section class="wizard-panel hidden" id="panel-step-3">
+      <div class="panel-hero-row">
+        <div>
+          <div class="step-badge">STEP 3 OF 3</div>
+          <h2 class="hero-title" id="arena-heading">Side-by-Side Voice Cloning Arena</h2>
+          <p class="hero-desc" id="arena-subheading">Audition and compare your cloned AI voice models reading the 4th Read Aloud question.</p>
+        </div>
+
+        <div class="arena-top-actions">
+          <!-- Evaluation Mode Switcher -->
+          <div class="mode-toggle-group">
+            <button id="btn-mode-side" class="mode-btn active" type="button">Side-by-Side (6 Models)</button>
+            <button id="btn-mode-blind" class="mode-btn" type="button">Double-Blind Mode</button>
+          </div>
+          <button id="btn-reveal-blind" class="ctrl-btn-accent hidden" type="button">
+            Reveal Model Identities 🔓
+          </button>
+          <button id="btn-new-test" class="ctrl-btn-ghost" type="button">
+            ↺ Try Another Question
+          </button>
+        </div>
+      </div>
+
+      <!-- Target Script Reference Pill -->
+      <div class="script-banner-pill">
+        <span class="pill-label">📖 4th Question Being Read:</span>
+        <span class="pill-text" id="active-challenge-text">"The cold storage structures are located south of the main city center..."</span>
+      </div>
+
+      <!-- 6 Candidate Cards Grid -->
+      <div class="candidate-grid" id="candidate-grid">
+
+        <!-- Candidate A Card (Real F5-TTS) -->
+        <div class="candidate-card" id="card-cand-a" data-engine="f5_tts">
+          <div class="cand-header">
+            <div class="cand-identity">
+              <span class="cand-badge" id="badge-cand-a" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">⭐ FLOW-MATCHING DiT</span>
+              <h3 class="cand-name" id="name-cand-a">F5-TTS (Flow-Matching)</h3>
+            </div>
+            <span class="cand-arch" id="arch-cand-a">Continuous Mel-Flow DiT</span>
+          </div>
+
+          <!-- Waveform Player -->
+          <div class="cand-player">
+            <canvas id="canvas-cand-a" class="cand-canvas" height="60"></canvas>
+            <div class="cand-player-bar">
+              <button class="btn-play-cand" id="play-cand-a" type="button">
+                <svg class="cand-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <span class="cand-time" id="time-cand-a">0:00 / 0:00</span>
+              <span class="cand-rtf" id="rtf-cand-a">RTF: 0.12x</span>
+            </div>
+          </div>
+
+          <!-- Objective Benchmark Tags -->
+          <div class="metrics-row">
+            <div class="metric-pill">
+              <span class="m-label">Similarity (SECS)</span>
+              <span class="m-val" id="secs-cand-a">0.942</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Est. WER</span>
+              <span class="m-val" id="wer-cand-a">1.2%</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Acoustic Inpainting</span>
+              <span class="m-val" id="lat-cand-a">Vocos 24kHz</span>
+            </div>
+          </div>
+
+          <!-- 5-Star Rating Rubric -->
+          <div class="rubric-box">
+            <div class="rubric-item">
+              <span class="rubric-title">Timbre & Accent Similarity</span>
+              <div class="star-rating" data-cand="cand-a" data-dim="similarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Natural Syllable Rhythm</span>
+              <div class="star-rating" data-cand="cand-a" data-dim="prosody">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Pronunciation Clarity</span>
+              <div class="star-rating" data-cand="cand-a" data-dim="clarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Artifact-Free</span>
+              <div class="star-rating" data-cand="cand-a" data-dim="artifact">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate B Card (Real E2-TTS) -->
+        <div class="candidate-card" id="card-cand-b" data-engine="e2_tts">
+          <div class="cand-header">
+            <div class="cand-identity">
+              <span class="cand-badge" id="badge-cand-b" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">⭐ DURATION-FREE DiT</span>
+              <h3 class="cand-name" id="name-cand-b">E2-TTS (Flat-Transformer)</h3>
+            </div>
+            <span class="cand-arch" id="arch-cand-b">Flat-DiT Flow Matching</span>
+          </div>
+
+          <!-- Waveform Player -->
+          <div class="cand-player">
+            <canvas id="canvas-cand-b" class="cand-canvas" height="60"></canvas>
+            <div class="cand-player-bar">
+              <button class="btn-play-cand" id="play-cand-b" type="button">
+                <svg class="cand-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <span class="cand-time" id="time-cand-b">0:00 / 0:00</span>
+              <span class="cand-rtf" id="rtf-cand-b">RTF: 0.11x</span>
+            </div>
+          </div>
+
+          <!-- Objective Benchmark Tags -->
+          <div class="metrics-row">
+            <div class="metric-pill">
+              <span class="m-label">Similarity (SECS)</span>
+              <span class="m-val" id="secs-cand-b">0.938</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Est. WER</span>
+              <span class="m-val" id="wer-cand-b">1.4%</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Architecture</span>
+              <span class="m-val" id="lat-cand-b">Flat Diffusion</span>
+            </div>
+          </div>
+
+          <!-- 5-Star Rating Rubric -->
+          <div class="rubric-box">
+            <div class="rubric-item">
+              <span class="rubric-title">Timbre & Accent Similarity</span>
+              <div class="star-rating" data-cand="cand-b" data-dim="similarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Natural Syllable Rhythm</span>
+              <div class="star-rating" data-cand="cand-b" data-dim="prosody">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Pronunciation Clarity</span>
+              <div class="star-rating" data-cand="cand-b" data-dim="clarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Artifact-Free</span>
+              <div class="star-rating" data-cand="cand-b" data-dim="artifact">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate C Card (Real ChatTTS) -->
+        <div class="candidate-card" id="card-cand-c" data-engine="chattts">
+          <div class="cand-header">
+            <div class="cand-identity">
+              <span class="cand-badge" id="badge-cand-c" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">⭐ CONVERSATIONAL DiT</span>
+              <h3 class="cand-name" id="name-cand-c">ChatTTS (Conversational)</h3>
+            </div>
+            <span class="cand-arch" id="arch-cand-c">Generative Speech Model</span>
+          </div>
+
+          <!-- Waveform Player -->
+          <div class="cand-player">
+            <canvas id="canvas-cand-c" class="cand-canvas" height="60"></canvas>
+            <div class="cand-player-bar">
+              <button class="btn-play-cand" id="play-cand-c" type="button">
+                <svg class="cand-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <span class="cand-time" id="time-cand-c">0:00 / 0:00</span>
+              <span class="cand-rtf" id="rtf-cand-c">RTF: 0.15x</span>
+            </div>
+          </div>
+
+          <!-- Objective Benchmark Tags -->
+          <div class="metrics-row">
+            <div class="metric-pill">
+              <span class="m-label">Similarity (SECS)</span>
+              <span class="m-val" id="secs-cand-c">0.915</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Est. WER</span>
+              <span class="m-val" id="wer-cand-c">1.6%</span>
+            </div>
+            <div class="metric-pill">
+              <span class="m-label">Architecture</span>
+              <span class="m-val" id="lat-cand-c">Autoregressive</span>
+            </div>
+          </div>
+
+          <!-- 5-Star Rating Rubric -->
+          <div class="rubric-box">
+            <div class="rubric-item">
+              <span class="rubric-title">Timbre & Accent Similarity</span>
+              <div class="star-rating" data-cand="cand-c" data-dim="similarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Natural Syllable Rhythm</span>
+              <div class="star-rating" data-cand="cand-c" data-dim="prosody">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Pronunciation Clarity</span>
+              <div class="star-rating" data-cand="cand-c" data-dim="clarity">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+            <div class="rubric-item">
+              <span class="rubric-title">Artifact-Free</span>
+              <div class="star-rating" data-cand="cand-c" data-dim="artifact">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Real-Time Frequency Spectrogram -->
+      <div class="spectrogram-card">
+        <div class="card-head">
+          <h3 class="card-title">Real-Time Acoustic Visualizer & Frequency Spectrum</h3>
+          <span class="badge-tag">Web Audio API • 24 kHz</span>
+        </div>
+        <canvas id="spectrogram-canvas" class="spectrogram-canvas" height="90"></canvas>
+      </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         STEP 4 PANEL: 10 RA Question Benchmark & 3-LLM Speech Quality Report
+         ========================================================================= -->
+    <section class="wizard-panel hidden" id="panel-step-4">
+      <div class="panel-hero" style="display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <div class="step-badge" style="background: rgba(99,102,241,0.2); color: #818cf8; width: fit-content;">⭐ BENCHMARK SUITE</div>
+          <h2 class="hero-title" style="margin-top: 0.5rem;">10-Question PTE Read Aloud Benchmark Studio</h2>
+          <p class="hero-desc" style="margin-top: 0.25rem;">Audition your cloned AI voice reading 10 authentic academic PTE questions. Evaluated by our 3-LLM council for pronunciation clarity, pitch contours, syntactic chunking, and connected speech.</p>
+        </div>
+        <button id="btn-back-to-step1" type="button" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px 18px; cursor: pointer; font-size: 0.9rem; font-weight: 600; white-space: nowrap;">
+          ⬅ Back to Calibration
+        </button>
+      </div>
+
+      <!-- 10 RA Question Benchmark & 3-Persona Speech Assessment Suite -->
+      <div class="ra10-benchmark-card" id="ra10-benchmark-card">
+        <div class="card-head" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <span class="badge-pill" style="background: rgba(99,102,241,0.15); color: #818cf8; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem;">⭐ PRODUCTION BENCHMARK</span>
+            <h3 class="card-title" style="font-size: 1.35rem; margin-top: 0.5rem; color: #fff;">10-Question PTE Read Aloud Benchmark & 3-LLM Quality Report</h3>
+            <p style="color: #94a3b8; font-size: 0.875rem; margin-top: 0.25rem;">Zero-Shot Voice Cloned via F5-TTS Mel-Flow Matching DiT • Evaluated by 3 Speech Personas</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: #10b981;" id="ra10-avg-mos">4.17 <span style="font-size: 1rem; color: #64748b;">/ 5.0</span></div>
+            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Overall Speech MOS</div>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem;">
+            <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Speaker Timbre (SECS)</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: #6366f1; margin-top: 0.25rem;" id="ra10-avg-secs">0.9416</div>
+            <div style="color: #10b981; font-size: 0.75rem; margin-top: 0.25rem;">94.2% Neural Timbre Match</div>
+          </div>
+          <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem;">
+            <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Content Accuracy (ASR)</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: #10b981; margin-top: 0.25rem;" id="ra10-avg-acc">91.7%</div>
+            <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;">Whisper WER: 8.3%</div>
+          </div>
+          <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem;">
+            <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Average Speaking Rate</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: #f59e0b; margin-top: 0.25rem;">135 WPM</div>
+            <div style="color: #10b981; font-size: 0.75rem; margin-top: 0.25rem;">Optimal PTE Exam Cadence</div>
+          </div>
+          <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem;">
+            <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Connected Speech</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: #ec4899; margin-top: 0.25rem;">4.5 / 5.0</div>
+            <div style="color: #10b981; font-size: 0.75rem; margin-top: 0.25rem;">Liaison & Syntactic Chunking</div>
+          </div>
+        </div>
+
+        <!-- 10 Question Accordion List -->
+        <div id="ra10-questions-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Dynamically populated by app.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -33,6 +33,8 @@ window.CrmCourseModal = (function () {
                 elements.inputCourseLabel,
                 elements.inputCourseLevel,
                 elements.inputCourseCategory,
+                elements.inputCourseType,
+                elements.inputCourseDurationDays,
                 elements.inputCourseAgentCommissionPercent,
                 elements.inputCourseDescription,
                 elements.inputCourseTotalHours,
@@ -63,6 +65,12 @@ window.CrmCourseModal = (function () {
             const payload = typeof getCoursePayload === 'function' ? getCoursePayload() : {};
             if (!payload.name) {
                 throw new Error('Please enter a Course Name before saving.');
+            }
+            if (!payload.courseType) {
+                if (elements.inputCourseType) {
+                    elements.inputCourseType.focus();
+                }
+                throw new Error('Please choose a Course Type before saving.');
             }
 
             if (elements.btnSaveCourse) {

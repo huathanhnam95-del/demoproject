@@ -7,6 +7,25 @@ const {
     mapCourseRecord
 } = require('../../crm/course-service');
 
+// Validation failures thrown by course-service are the caller's fault, not a server fault.
+// Kept as one list so a new normalizer does not silently start returning 500s.
+const VALIDATION_ERROR_FRAGMENTS = [
+    'course name',
+    'No course fields',
+    'Agent commission rate',
+    'course type',
+    'Invalid course type',
+    'Course duration days',
+    // Pre-existing normalizers that were also surfacing as 500s.
+    'Delivery template',
+    'Schedule total instruction minutes'
+];
+
+function isValidationError(error) {
+    const message = error?.message || '';
+    return VALIDATION_ERROR_FRAGMENTS.some((fragment) => message.includes(fragment));
+}
+
 module.exports = function registerCourseRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
@@ -47,8 +66,7 @@ module.exports = function registerCourseRoutes(router, deps) {
 
             return sendSuccess(res, { courseId: ref.id }, 'Course created.');
         } catch (error) {
-            if ((error?.message || '').includes('course name')
-                || (error?.message || '').includes('Agent commission rate')) {
+            if (isValidationError(error)) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
             return sendError(res, 500, 'CREATE_COURSE_ERROR', 'Failed to create course.', error?.message || error);
@@ -82,9 +100,7 @@ module.exports = function registerCourseRoutes(router, deps) {
             const updatedSnap = await ref.get();
             return sendSuccess(res, { course: mapCourseRecord(updatedSnap, courseId) }, 'Course updated.');
         } catch (error) {
-            if ((error?.message || '').includes('course name')
-                || (error?.message || '').includes('No course fields')
-                || (error?.message || '').includes('Agent commission rate')) {
+            if (isValidationError(error)) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
             return sendError(res, 500, 'UPDATE_COURSE_ERROR', 'Failed to update course.', error?.message || error);

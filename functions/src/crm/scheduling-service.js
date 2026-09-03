@@ -394,6 +394,83 @@ function validateRemainingDurationChange({ totalInstructionMinutes, completedCon
     };
 }
 
+function normalizeTimeHhMm(timeStr) {
+    const raw = cleanOptionalString(timeStr, '00:00');
+    const [h, m = '00'] = raw.split(':');
+    return `${pad(h)}:${pad(m.slice(0, 2))}`;
+}
+
+const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function formatShortLocalDate(dateStr) {
+    const parts = parseLocalDateTime(dateStr, '00:00');
+    const dayName = WEEKDAY_NAMES_SHORT[getWeekdayNumber(dateStr)];
+    const monthName = MONTH_NAMES_SHORT[parts.month - 1];
+    return `${dayName} ${pad(parts.day)} ${monthName}`;
+}
+
+function findNextTrailingSlot(lastLocalDate, lastLocalTime, slots) {
+    if (!Array.isArray(slots) || slots.length === 0) {
+        return {
+            targetLocalDate: addDays(lastLocalDate, 7),
+            targetLocalTime: lastLocalTime || '00:00',
+            durationMinutes: 60
+        };
+    }
+
+    const normalized = slots.map((s) => {
+        const rawDay = s.weekday !== undefined ? s.weekday : s.day;
+        return {
+            weekday: parseWeekdayValue(rawDay),
+            startTime: normalizeTimeHhMm(s.startTime),
+            durationMinutes: Number(s.durationMinutes) > 0 ? Number(s.durationMinutes) : 60
+        };
+    }).filter((s) => s.weekday !== null).sort((a, b) => {
+        if (a.weekday !== b.weekday) return a.weekday - b.weekday;
+        return a.startTime.localeCompare(b.startTime);
+    });
+
+    if (normalized.length === 0) {
+        return {
+            targetLocalDate: addDays(lastLocalDate, 7),
+            targetLocalTime: lastLocalTime || '00:00',
+            durationMinutes: 60
+        };
+    }
+
+    const currentWeekday = getWeekdayNumber(lastLocalDate);
+    const sameDaySlots = normalized.filter((s) => s.weekday === currentWeekday && s.startTime > (lastLocalTime || ''));
+    if (sameDaySlots.length > 0) {
+        sameDaySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        return {
+            targetLocalDate: lastLocalDate,
+            targetLocalTime: sameDaySlots[0].startTime,
+            durationMinutes: sameDaySlots[0].durationMinutes
+        };
+    }
+
+    let cursor = addDays(lastLocalDate, 1);
+    for (let i = 0; i < 60; i++) {
+        const wd = getWeekdayNumber(cursor);
+        const match = normalized.filter((s) => s.weekday === wd).sort((a, b) => a.startTime.localeCompare(b.startTime));
+        if (match.length > 0) {
+            return {
+                targetLocalDate: cursor,
+                targetLocalTime: match[0].startTime,
+                durationMinutes: match[0].durationMinutes
+            };
+        }
+        cursor = addDays(cursor, 1);
+    }
+
+    return {
+        targetLocalDate: addDays(lastLocalDate, 7),
+        targetLocalTime: lastLocalTime || '00:00',
+        durationMinutes: 60
+    };
+}
+
 function buildSeedSessions({
     classId,
     courseId,
@@ -404,30 +481,114 @@ function buildSeedSessions({
     weekdayNumbers,
     startTime,
     targetSessionCount,
-    seedBatchId
+    seedBatchId,
+    slots,
+    totalInstructionMinutes
 }) {
-    const count = toPositiveInteger(targetSessionCount, 'Target session count');
-    const perSessionMinutes = toPositiveInteger(sessionMinutes, 'Session minutes');
-    const days = Array.isArray(weekdayNumbers)
-        ? weekdayNumbers.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
-        : [];
-    if (days.length === 0) {
-        throw new Error('At least one weekday number is required to seed sessions.');
+    let normalizedSlots = [];
+    if (Array.isArray(slots) && slots.length > 0) {
+        normalizedSlots = slots.map((slot) => {
+            const rawDay = slot.weekday !== undefined ? slot.weekday : slot.day;
+            const weekday = parseWeekdayValue(rawDay);
+            if (weekday === null) {
+                throw new Error(`Invalid weekday in slot: ${JSON.stringify(slot)}`);
+            }
+            const st = normalizeTimeHhMm(slot.startTime);
+            const dur = toPositiveInteger(slot.durationMinutes || sessionMinutes, 'Slot duration minutes');
+            return {
+                weekday,
+                startTime: st,
+                durationMinutes: dur
+            };
+        });
+    } else {
+        const perSessionMinutes = toPositiveInteger(sessionMinutes, 'Session minutes');
+        const days = Array.isArray(weekdayNumbers)
+            ? weekdayNumbers.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
+            : [];
+        if (days.length === 0) {
+            throw new Error('At least one weekday number is required to seed sessions.');
+        }
+        const st = normalizeTimeHhMm(startTime || '00:00');
+        normalizedSlots = days.map((day) => ({
+            weekday: day,
+            startTime: st,
+            durationMinutes: perSessionMinutes
+        }));
+    }
+
+    // Validate no overlapping slots on the same day
+    const slotsByDay = new Map();
+    for (const s of normalizedSlots) {
+        if (!slotsByDay.has(s.weekday)) slotsByDay.set(s.weekday, []);
+        slotsByDay.get(s.weekday).push(s);
+    }
+    for (const [dayNum, list] of slotsByDay.entries()) {
+        list.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        for (let i = 0; i < list.length - 1; i++) {
+            const cur = list[i];
+            const nxt = list[i + 1];
+            const curEnd = addMinutesToLocalDateTime('2000-01-01', cur.startTime, cur.durationMinutes);
+            const curEndTime = splitLocalDateTime(curEnd).timePart.slice(0, 5);
+            if (curEndTime > nxt.startTime) {
+                throw new Error(`Overlapping slots on weekday ${dayNum}: ${cur.startTime}–${curEndTime} overlaps with ${nxt.startTime}.`);
+            }
+        }
+    }
+
+    const maxMinutes = Number.isFinite(Number(totalInstructionMinutes)) && Number(totalInstructionMinutes) > 0
+        ? Number(totalInstructionMinutes)
+        : null;
+
+    if (maxMinutes !== null) {
+        for (const slot of normalizedSlots) {
+            if (slot.durationMinutes > maxMinutes) {
+                const lessonHours = slot.durationMinutes % 60 === 0 ? (slot.durationMinutes / 60).toFixed(0) : (slot.durationMinutes / 60).toFixed(1);
+                const contractHours = maxMinutes % 60 === 0 ? (maxMinutes / 60).toFixed(0) : (maxMinutes / 60).toFixed(1);
+                throw new Error(`A ${lessonHours}h lesson is longer than the ${contractHours}h contract.`);
+            }
+        }
+    }
+
+    const targetCount = Number(targetSessionCount || 0) > 0 ? toPositiveInteger(targetSessionCount, 'Target session count') : null;
+
+    if (!targetCount && !maxMinutes) {
+        throw new Error('Target session count or total instruction minutes is required.');
     }
 
     const sessions = [];
+    let accumulatedMinutes = 0;
     let cursor = cleanOptionalString(startDate);
-    while (sessions.length < count) {
-        if (days.includes(getWeekdayNumber(cursor))) {
+    if (!cursor) {
+        throw new Error('Start date is required to seed sessions.');
+    }
+
+    let safetyDays = 1000;
+    outerLoop:
+    while (safetyDays-- > 0) {
+        const currentWeekday = getWeekdayNumber(cursor);
+        const daySlots = normalizedSlots
+            .filter((slot) => slot.weekday === currentWeekday)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        for (const slot of daySlots) {
+            if (targetCount !== null && sessions.length >= targetCount) {
+                break outerLoop;
+            }
+            if (maxMinutes !== null && (accumulatedMinutes + slot.durationMinutes > maxMinutes)) {
+                // Stop before the first lesson that would exceed contracted total (decision 7)
+                break outerLoop;
+            }
+
             sessions.push({
                 classId: cleanOptionalString(classId),
                 courseId: cleanOptionalString(courseId),
                 teacherUid: cleanOptionalString(teacherUid),
                 ...buildScheduledSessionWriteData({}, {
                     targetLocalDate: cursor,
-                    targetLocalTime: cleanOptionalString(startTime, '00:00'),
+                    targetLocalTime: cleanOptionalString(slot.startTime, '00:00'),
                     timezone,
-                    durationMinutes: perSessionMinutes
+                    durationMinutes: slot.durationMinutes
                 }),
                 unitType: 'contracted',
                 contractUnitIndex: sessions.length + 1,
@@ -442,9 +603,21 @@ function buildSeedSessions({
                 lockReason: null,
                 version: 1
             });
+
+            accumulatedMinutes += slot.durationMinutes;
+
+            if (targetCount !== null && sessions.length >= targetCount) {
+                break outerLoop;
+            }
         }
+
         cursor = addDays(cursor, 1);
     }
+
+    const remainderMinutes = maxMinutes !== null ? Math.max(maxMinutes - accumulatedMinutes, 0) : 0;
+    sessions.remainderMinutes = remainderMinutes;
+    sessions.remainder = remainderMinutes;
+    sessions.accumulatedMinutes = accumulatedMinutes;
 
     return sessions;
 }
@@ -452,22 +625,25 @@ function buildSeedSessions({
 function buildScheduleSummary({ totalInstructionMinutes, sessionMinutes, targetSessionCount = null, sessions, nowIso = null }) {
     const contractedTargetCount = Number(targetSessionCount || 0) > 0
         ? toPositiveInteger(targetSessionCount, 'Target session count')
-        : computeContractedTargetCount({
-            totalInstructionMinutes,
-            sessionMinutes
-        });
+        : (totalInstructionMinutes && sessionMinutes
+            ? computeContractedTargetCount({
+                totalInstructionMinutes,
+                sessionMinutes
+            })
+            : 0);
     const list = Array.isArray(sessions) ? sessions.map(normalizeScheduledSession) : [];
     const active = list.filter((session) => String(session?.status || 'scheduled') !== 'cancelled');
     const contracted = active.filter((session) =>
         session.unitType === 'contracted' && String(session.contractCountState || 'counts') !== 'does_not_count'
     );
     const overflow = active.filter((session) => session.unitType === 'overflow');
-    const contractedCompletedCount = contracted.filter((session) =>
+    const contractedCompletedSessions = contracted.filter((session) =>
         session.status === 'completed'
         || session.sessionOutcome === 'completed'
         || session.sessionOutcome === 'absent_counted'
         || session.attendanceState === 'finalized'
-    ).length;
+    );
+    const contractedCompletedCount = contractedCompletedSessions.length;
 
     const nowMs = nowIso ? new Date(nowIso).getTime() : Date.now();
     const nextScheduledAt = active
@@ -476,13 +652,167 @@ function buildScheduleSummary({ totalInstructionMinutes, sessionMinutes, targetS
         .filter((iso) => new Date(iso).getTime() >= nowMs)
         .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0] || null;
 
+    const defaultMins = Number(sessionMinutes) || 0;
+    const contractedMinutesDelivered = contractedCompletedSessions.reduce((acc, s) => {
+        return acc + (Number(s.durationMinutes || 0) || defaultMins);
+    }, 0);
+
+    const contractedMinutesTotal = Number(totalInstructionMinutes || 0) > 0
+        ? Number(totalInstructionMinutes)
+        : contracted.reduce((acc, s) => acc + (Number(s.durationMinutes || 0) || defaultMins), 0);
+
+    const contractedMinutesRemaining = Math.max(contractedMinutesTotal - contractedMinutesDelivered, 0);
+
     return {
         contractedTargetCount,
         contractedAssignedCount: contracted.length,
         contractedCompletedCount,
         remainingToScheduleCount: Math.max(contractedTargetCount - contracted.length, 0),
         overflowCount: overflow.length,
-        nextScheduledAt
+        nextScheduledAt,
+        contractedMinutesTotal,
+        contractedMinutesDelivered,
+        contractedMinutesRemaining
+    };
+}
+
+function buildPushForwardPlan({ sessions, fromSessionId, slots = [], timezone = 'UTC' }) {
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+        throw new Error('Sessions array is required.');
+    }
+    const targetId = cleanOptionalString(fromSessionId);
+    if (!targetId) {
+        throw new Error('fromSessionId is required.');
+    }
+
+    const normalized = sessions.map(normalizeScheduledSession);
+    const triggeringSession = normalized.find((s) => s.sessionId === targetId || s.id === targetId);
+    if (!triggeringSession) {
+        throw new Error(`Session ${targetId} not found.`);
+    }
+    if (triggeringSession.status === 'completed' || triggeringSession.sessionOutcome === 'completed') {
+        throw new Error('Completed sessions cannot be pushed forward.');
+    }
+
+    const sorted = [...normalized].sort((a, b) => {
+        const d = String(a.scheduledLocalDate || '').localeCompare(String(b.scheduledLocalDate || ''));
+        if (d !== 0) return d;
+        return String(a.scheduledLocalTime || '').localeCompare(String(b.scheduledLocalTime || ''));
+    });
+
+    const triggerIdx = sorted.findIndex((s) => (s.sessionId || s.id) === (triggeringSession.sessionId || triggeringSession.id));
+    const laterScheduledSessions = sorted.slice(triggerIdx + 1).filter((s) => String(s.status || 'scheduled') === 'scheduled');
+
+    const triggeringPatch = {
+        sessionId: triggeringSession.sessionId || triggeringSession.id,
+        id: triggeringSession.sessionId || triggeringSession.id,
+        sessionOutcome: 'absent_makeup',
+        contractCountState: 'does_not_count',
+        attendanceState: 'finalized',
+        patch: {
+            sessionOutcome: 'absent_makeup',
+            contractCountState: 'does_not_count',
+            attendanceState: 'finalized'
+        }
+    };
+
+    const patches = [triggeringPatch];
+
+    const baseUnitIndex = Number(triggeringSession.contractUnitIndex || triggerIdx + 1);
+    laterScheduledSessions.forEach((session, idx) => {
+        const newUnitIndex = baseUnitIndex + idx;
+        patches.push({
+            sessionId: session.sessionId || session.id,
+            id: session.sessionId || session.id,
+            contractUnitIndex: newUnitIndex,
+            patch: {
+                contractUnitIndex: newUnitIndex
+            }
+        });
+    });
+
+    const lastSession = sorted[sorted.length - 1];
+    const effectiveSlots = slots.length > 0 ? slots : [{
+        weekday: getWeekdayNumber(lastSession.scheduledLocalDate),
+        startTime: lastSession.scheduledLocalTime,
+        durationMinutes: lastSession.durationMinutes || triggeringSession.durationMinutes || 60
+    }];
+
+    const trailingSlot = findNextTrailingSlot(
+        lastSession.scheduledLocalDate,
+        lastSession.scheduledLocalTime,
+        effectiveSlots
+    );
+
+    const newSessionDuration = Number(triggeringSession.durationMinutes || 0) > 0
+        ? Number(triggeringSession.durationMinutes)
+        : (trailingSlot.durationMinutes || 60);
+
+    const tz = cleanOptionalString(timezone, cleanOptionalString(lastSession.timezone, 'UTC'));
+    const windowData = buildCanonicalScheduledWindow({
+        targetLocalDate: trailingSlot.targetLocalDate,
+        targetLocalTime: trailingSlot.targetLocalTime,
+        timezone: tz,
+        durationMinutes: newSessionDuration
+    });
+
+    const nextUnitIndex = baseUnitIndex + laterScheduledSessions.length;
+    const newSession = {
+        classId: lastSession.classId || null,
+        courseId: lastSession.courseId || null,
+        teacherUid: lastSession.teacherUid || null,
+        ...windowData,
+        unitType: 'contracted',
+        contractUnitIndex: nextUnitIndex,
+        overflowSequence: null,
+        seedBatchId: lastSession.seedBatchId || null,
+        replacementOfSessionId: null,
+        status: 'scheduled',
+        sessionOutcome: 'none',
+        contractCountState: 'counts',
+        attendanceState: 'none',
+        lockState: 'unlocked',
+        lockReason: null,
+        version: 1
+    };
+
+    const previewRows = [];
+    laterScheduledSessions.forEach((session, idx) => {
+        const unit = baseUnitIndex + idx;
+        const formattedDate = formatShortLocalDate(session.scheduledLocalDate);
+        previewRows.push({
+            unitIndex: unit,
+            sessionId: session.sessionId || session.id,
+            scheduledLocalDate: session.scheduledLocalDate,
+            scheduledLocalTime: session.scheduledLocalTime,
+            formattedDate,
+            label: `${unit} → ${formattedDate}`
+        });
+    });
+
+    const finalFormattedDate = formatShortLocalDate(newSession.scheduledLocalDate);
+    previewRows.push({
+        unitIndex: nextUnitIndex,
+        sessionId: null,
+        scheduledLocalDate: newSession.scheduledLocalDate,
+        scheduledLocalTime: newSession.scheduledLocalTime,
+        formattedDate: finalFormattedDate,
+        label: `${nextUnitIndex} → ${finalFormattedDate}`
+    });
+
+    const prevEndDateFormatted = formatShortLocalDate(lastSession.scheduledLocalDate);
+    const newEndDateFormatted = finalFormattedDate;
+    const previewSummary = previewRows.map((r) => r.label).join(' · ');
+
+    return {
+        patches,
+        newSession,
+        previewRows,
+        previewSummary,
+        prevEndDate: lastSession.scheduledLocalDate,
+        newEndDate: newSession.scheduledLocalDate,
+        prevEndDateFormatted,
+        newEndDateFormatted
     };
 }
 
@@ -1078,6 +1408,7 @@ module.exports = {
     buildRegenerationPreview,
     buildScheduledSessionCompatibilityProjection,
     buildScheduledSessionWriteData,
+    buildPushForwardPlan,
     buildReplacementPlan,
     buildReplaceSessionPreview,
     buildScheduleSummary,

@@ -1837,10 +1837,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 843,2026-09-03,CRM Books: fix lettered activity headings formatting and freeze sticky navigation bar when scrolling,Done,2026-09-03
 844,2026-09-03,CRM Books: deduplicate repeated layered text filter OCR scanner noise and enforce full-page sheet min-height,Done,2026-09-03
 845,2026-09-03,Write Essay Guided: UI/UX/aesthetics pass - style clause dissector + cohesion + pattern workbench, sticky freeze zones, reusable Vietnamese help popovers, minimalist polish,Done,2026-09-03
-846,2026-09-03,Plan student course scheduling system with Google Calendar-style repeat scheduling and attendance tracking,In Progress,
+846,2026-09-03,Plan student course scheduling system with Google Calendar-style repeat scheduling and attendance tracking,Done,2026-09-03
 847,2026-09-03,Voice Cloning Lab: implement dual-mode Read Aloud practice (Formal Citation vs Connected Stream) with phonetic preprocessor and UI toggle,Done,2026-09-03
 848,2026-09-03,CRM Books: 3-model local LLM full audit of Knowles 1973 book text and layout quality,Done,2026-09-03
 849,2026-09-03,UI/UX review of student course scheduling implementation plan (Google Calendar mirror) against existing CRM design system,Done,2026-09-03
 850,2026-09-03,Rewrite student course scheduling implementation plan (Rev 2): CRM-token visual language extend-not-create backend and full UI state spec,Done,2026-09-03
 851,2026-09-03,Fix CRM Student Directory rendering all students instead of overwriting with enrolled bucket after save,Done,2026-09-03
 852,2026-09-03,Verify Write Essay Guided UI overhaul and deploy V1.8.99 to production hosting,Done,2026-09-03
+853,2026-09-03,Student course scheduling Phase 1: add Course Type and Duration Days to course catalog (service model UI and migration),Done,2026-09-03
+854,2026-09-03,CRM Voice Cloning feature: cloud-backed profile creation + local F5-TTS worker queue + manual trigger + multi-voice text-to-speech with MP3 download,Done,2026-09-03
+855,2026-09-03,Review debug refactor and deploy release V1.8.100 to production hosting,Done,2026-09-03

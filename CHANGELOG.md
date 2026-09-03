@@ -1,3 +1,21 @@
+## [V1.8.100] - 2026-09-03
+
+### Added & Enhanced
+- **CRM Voice Cloning Studio (More → Voice Cloning)**:
+  - **1-RA Voice Calibration Wizard**: Implemented Step A prompt (RA #15 "Competition Enthusiasm") with microphone recorder and audio file uploader, Step B test synthesis (RA #18 "Research Methodology") in the cloned voice, and Step C cloud persistence with descriptive voice naming.
+  - **Multi-Voice Text-to-Speech Studio**: Dynamic voice selector populated from Firestore `voice_profiles`, style toggle (`Formal Citation` vs. `Connected Stream` with weak forms and liaisons), custom text input, audio player, and high-fidelity downloadable MP3 generation.
+  - **Local Neural Processing Daemon**: Built `scripts/voice_local_worker.py` utilizing local F5-TTS Mel-Flow Matching neural model with native MP3 encoding and heartbeat reporting to `voice_worker_status/current`.
+  - **Cloud Backend Integration**: Added `functions/src/voice-cloning/admin-routes.js` mounted at `/api/admin/voice-cloning` with job queue management, manual queue trigger button (mirroring PTE Write Essay local assessment), and updated `firestore.rules`.
+  - **Full Automated Verification**: Added unit contract tests (`tests/voice-cloning-admin-contract.test.js`) and Playwright browser E2E test (`tests/browser/crm-voice-cloning-walkthrough.js`) with screenshot artifacts.
+
+- **Student Course Scheduling Architecture**:
+  - Added course type (`1on1`, `group`, `self_study`) and duration days to course models, course modal UI, and student course enrollment workflows.
+  - Integrated schedule availability checking and 1-on-1 private lesson scheduling services.
+
+- **CRM Books Workspace & Download Hardening**:
+  - Hardened `/books/:bookId/source` against missing query objects with optional chaining (`req.query?.inline`).
+  - Refined page heading detection in `pageHeadingLevel` to accurately distinguish lowercase sentence continuations from questions following subheadings, ensuring 100% citation highlighting accuracy in the book reader.
+
 ## [V1.8.99] - 2026-09-03
 
 ### Added & Enhanced

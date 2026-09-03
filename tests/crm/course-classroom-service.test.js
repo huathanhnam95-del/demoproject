@@ -4,6 +4,7 @@ const {
     buildCoursePatchData,
     buildClassroomCreateData,
     buildClassroomPatchData,
+    buildEmptyScheduleSummary,
     computeMissingReviewItems,
     mapClassroomMembers,
     mapCourseRecord,
@@ -20,6 +21,8 @@ const context = {
 
 const course = buildCourseCreateData({
     name: 'PTE Foundation',
+    courseType: '1on1',
+    durationDays: 60,
     agentCommissionBps: 850,
     teachers: ['Teacher@One.com', 'teacher2@example.com'],
     deliveryTemplate: {
@@ -29,6 +32,8 @@ const course = buildCourseCreateData({
     }
 }, context);
 assert.strictEqual(course.name, 'PTE Foundation');
+assert.strictEqual(course.courseType, '1on1');
+assert.strictEqual(course.durationDays, 60);
 assert.strictEqual(course.agentCommissionBps, 850);
 assert.deepStrictEqual(course.teachers, ['teacher@one.com', 'teacher2@example.com']);
 assert.deepStrictEqual(course.deliveryTemplate, {
@@ -98,7 +103,10 @@ assert.deepStrictEqual(classroom.scheduleSummary, {
     contractedCompletedCount: 0,
     remainingToScheduleCount: 16,
     overflowCount: 0,
-    nextScheduledAt: null
+    nextScheduledAt: null,
+    contractedMinutesTotal: 1440,
+    contractedMinutesDelivered: 0,
+    contractedMinutesRemaining: 1440
 });
 
 const classroomWithoutExplicitTarget = buildClassroomCreateData({
@@ -188,5 +196,54 @@ const missing = computeMissingReviewItems({
 assert.strictEqual(missing.length, 1);
 assert.strictEqual(missing[0].studentUid, 'uid-member-2');
 assert.strictEqual(missing[0].studentName, 'Bao');
+
+// Course type / duration days ------------------------------------------------
+
+assert.throws(
+    () => buildCourseCreateData({ name: 'No Type' }, context),
+    /course type/i,
+    'courseType is required on create'
+);
+assert.throws(
+    () => buildCourseCreateData({ name: 'Bad Type', courseType: 'group' }, context),
+    /Invalid course type/,
+    'courseType is validated against the enum'
+);
+assert.throws(
+    () => buildCourseCreateData({ name: 'Bad Days', courseType: '1on1', durationDays: 0 }, context),
+    /positive integer/,
+    'durationDays must be a positive integer'
+);
+
+// durationDays is optional — such courses just require an explicit end date at enrolment.
+const noDuration = buildCourseCreateData({ name: 'Pronunciation', courseType: 'pronun' }, context);
+assert.strictEqual(noDuration.courseType, 'pronun');
+assert.strictEqual(noDuration.durationDays, null);
+
+// Patch does not require courseType, so legacy courses can still be edited pre-migration.
+const patchedType = buildCoursePatchData(course, { courseType: 'pronun', durationDays: 90 }, context);
+assert.strictEqual(patchedType.courseType, 'pronun');
+assert.strictEqual(patchedType.durationDays, 90);
+const patchedOther = buildCoursePatchData({ name: 'Legacy' }, { status: 'inactive' }, context);
+assert.strictEqual(patchedOther.status, 'inactive');
+
+// Reads tolerate legacy documents that predate both fields.
+const legacyRecord = mapCourseRecord({ name: 'Legacy', courseType: 'nonsense', durationDays: -5 }, 'course-legacy');
+assert.strictEqual(legacyRecord.courseType, null);
+assert.strictEqual(legacyRecord.durationDays, null);
+
+// Case-insensitivity and trailing period toleration
+const dotTypeRecord = buildCourseCreateData({ name: 'Coaching', courseType: 'Pronun.', durationDays: '45' }, context);
+assert.strictEqual(dotTypeRecord.courseType, 'pronun');
+assert.strictEqual(dotTypeRecord.durationDays, 45);
+
+const caseTypeRecord = buildCourseCreateData({ name: 'Tutoring', courseType: '1On1' }, context);
+assert.strictEqual(caseTypeRecord.courseType, '1on1');
+
+// buildEmptyScheduleSummary without config returns full 0 minutes summary
+const emptySummary = buildEmptyScheduleSummary(null);
+assert.strictEqual(emptySummary.contractedMinutesTotal, 0);
+assert.strictEqual(emptySummary.contractedMinutesDelivered, 0);
+assert.strictEqual(emptySummary.contractedMinutesRemaining, 0);
 
 console.log('course classroom service passed');

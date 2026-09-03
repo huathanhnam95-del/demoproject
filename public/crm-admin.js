@@ -38,7 +38,8 @@
     settings: { label: 'Settings', subTabs: [] },
     chatbot: { label: 'Chatbot Management', subTabs: [] },
     devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true },
-    "pronunciation-samples": { label: '🎙️ Pronunciation Verification', subTabs: [] }
+    "pronunciation-samples": { label: '🎙️ Pronunciation Verification', subTabs: [] },
+    "voice-cloning": { label: '🎙️ Voice Cloning Studio', subTabs: [] }
   };
 
   const devToolsAccess = window.CrmDevToolsAccess || {
@@ -135,6 +136,7 @@
   let agentSourcesController = null;
   let booksController = null;
   let booksInitialized = false;
+  let voiceCloningController = null;
   let recycleBinController = null;
   let communicationsController = null;
   let devToolsPollTimer = null;
@@ -507,6 +509,8 @@
     elements.inputCourseLabel = document.getElementById('course-label');
     elements.inputCourseLevel = document.getElementById('course-level');
     elements.inputCourseCategory = document.getElementById('course-category');
+    elements.inputCourseType = document.getElementById('course-type');
+    elements.inputCourseDurationDays = document.getElementById('course-duration-days');
     elements.inputCourseStatus = document.getElementById('course-status');
     elements.inputCourseAgentCommissionPercent = document.getElementById('course-agent-commission-percent');
     elements.inputCourseDescription = document.getElementById('course-description');
@@ -1418,6 +1422,14 @@
         firebase
       })
       : null;
+    voiceCloningController = window.CrmVoiceCloningWorkspace
+      && typeof window.CrmVoiceCloningWorkspace.createController === 'function'
+      ? window.CrmVoiceCloningWorkspace.createController({
+        elements,
+        showToast,
+        apiFetchJson
+      })
+      : null;
     recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'
       ? window.CrmRecycleBinWorkspace.createController({
         elements,
@@ -2175,6 +2187,8 @@
       elements.inputCourseLabel,
       elements.inputCourseLevel,
       elements.inputCourseCategory,
+      elements.inputCourseType,
+      elements.inputCourseDurationDays,
       elements.inputCourseAgentCommissionPercent,
       elements.inputCourseDescription,
       elements.inputCourseTotalHours,
@@ -2444,6 +2458,7 @@
     const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
     const defaultSessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
     const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
+    const durationDays = Number(elements.inputCourseDurationDays?.value || 0);
     const rawCommissionPercent = String(elements.inputCourseAgentCommissionPercent?.value || '').trim();
     const commissionPercent = rawCommissionPercent ? Number(rawCommissionPercent) : null;
     const agentCommissionBps = Number.isFinite(commissionPercent)
@@ -2455,6 +2470,8 @@
       label: String(elements.inputCourseLabel?.value || '').trim(),
       level: String(elements.inputCourseLevel?.value || '').trim(),
       category: String(elements.inputCourseCategory?.value || '').trim(),
+      courseType: String(elements.inputCourseType?.value || '').trim(),
+      durationDays: Number.isFinite(durationDays) && durationDays > 0 ? Math.round(durationDays) : null,
       status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
       agentCommissionBps,
       description: String(elements.inputCourseDescription?.value || '').trim(),
@@ -2514,6 +2531,11 @@
     if (elements.inputCourseLabel) elements.inputCourseLabel.value = String(course?.label || '');
     if (elements.inputCourseLevel) elements.inputCourseLevel.value = String(course?.level || '');
     if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
+    if (elements.inputCourseType) elements.inputCourseType.value = String(course?.courseType || '');
+    if (elements.inputCourseDurationDays) {
+      const durationDays = Number(course?.durationDays);
+      elements.inputCourseDurationDays.value = Number.isFinite(durationDays) && durationDays > 0 ? String(durationDays) : '';
+    }
     if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
     if (elements.inputCourseAgentCommissionPercent) {
       const bps = Number(course?.agentCommissionBps);
@@ -4737,6 +4759,14 @@
       });
       return;
     }
+    if (tabId === 'courses' && modalState.studentId) {
+      if (window.CrmStudentCourses && typeof window.CrmStudentCourses.refresh === 'function') {
+        window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
+          console.error('[CRM Admin] Failed to refresh student courses:', error);
+        });
+      }
+      return;
+    }
     if (tabId === 'info') {
       renderStudentSchedulePrompt();
     }
@@ -4956,6 +4986,9 @@
     if (lastRenderedPanel?.startsWith?.('books') && state.main !== 'books') {
       booksController?.dispose?.();
     }
+    if (lastRenderedPanel === 'voice-cloning' && activePanel !== 'voice-cloning') {
+      voiceCloningController?.dispose?.();
+    }
     elements.panels.forEach((panel) => {
       const panelId = panel.dataset.panel;
       const matches = panelId === activePanel
@@ -5031,6 +5064,12 @@
       } else {
         booksController?.activate?.(state.sub || '');
       }
+    }
+
+    if (activePanel === 'voice-cloning') {
+      voiceCloningController?.activate?.().catch((error) => {
+        console.error('[CRM Admin] Voice Cloning activation failed:', error);
+      });
     }
 
     // Notify BEL assistant of route change

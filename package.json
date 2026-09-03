@@ -14,6 +14,7 @@
     "report:read-aloud:connected-speech-coverage": "node scripts/read-aloud/report-connected-speech-coverage.js",
     "version:sync": "node scripts/sync-version.js",
     "deploy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
+    "deploy:full": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting,functions:api,firestore:rules",
     "lint": "eslint .",
     "audit:ui": "impeccable detect public/",
     "audit:ui:phase1": "node scripts/audit/verify-phase1.js",

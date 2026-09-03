@@ -1851,4 +1851,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 857,2026-09-03,Course Scheduling UI token discipline accessibility and radius normalisation fixes,Done,2026-09-03
 858,2026-09-03,Course Scheduling full-stack review debug and refactor audit,Done,2026-09-03
 859,2026-09-03,Diagnose and resolve localhost 503 offline asset errors by starting HTTPS dev server,Done,2026-09-03
-860,2026-09-03,Fix CRM Voice Cloning contrast and textbox readability cloned audio playback and saved profiles gallery,In Progress,
+860,2026-09-03,Fix CRM Voice Cloning contrast and textbox readability cloned audio playback and saved profiles gallery,Done,2026-09-03

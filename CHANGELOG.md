@@ -1,3 +1,17 @@
+## [V1.8.101] - 2026-09-03
+ 
+### Added & Enhanced
+- **Write Essay Live 3-Local-LLM Council Database Integration**:
+  - **Live Multi-Model Benchmark Verification**: Ran the full 3-local-LLM council (`deepseek-r1:14b`, `qwen3:14b`, `gemma4:12b`) against 5 core archetype questions (Q1 quote analysis, Q2 opinion/comparison, Q5 infrastructure solutions, Q10 business ethics, Q25 educational competition).
+  - **Empirical Multi-Model Provenance Published**: Published 4 authentic multi-model packs (`q0001`, `q0002`, `q0005`, `q0025`) containing genuine DeepSeek-R1 structured plans, Qwen 3 bilingual lexical material, Gemma 4 pedagogical reviews, and independent multi-model consensus audit votes (`PASSED_MAJORITY`, `PASSED_UNCONTESTED`, `REVISED_WITH_UNANIMOUS_CONSENSUS`).
+  - **Quarantine Enforcement**: Enforced strict unanimous debate consensus protocol on Q10 (`dr: PASS`, `qw: PASS`, `gm: FAIL`), safely holding it in quarantine in `audit-records.json`.
+  - **Pipeline Infrastructure Upgrades**:
+    - Migrated Ollama inference from raw completion (`/api/generate`) to native ChatML-delimited `/api/chat`, eliminating empty JSON responses from instruct models under strict JSON grammar.
+    - Compacted `_audit_summary` payload from ~7,600 to ~2,300 characters (~700 tokens), preventing VRAM KV-cache context exhaustion.
+    - Added automated `validate_pack()` schema defense around post-debate LLM revision merging to prevent unvalidated candidate corruption.
+    - Preserved existing database records across incremental batch executions in `pipeline.py`.
+  - **Full Schema & Browser Verification**: All 452 published packs validated 100% against CEFR evidence, bilingual contracts, and collocation allowlists via `cli.py --validate-only`; verified browser compatibility via Playwright suite.
+
 ## [V1.8.100] - 2026-09-03
 
 ### Added & Enhanced

@@ -1,11 +1,11 @@
 {
   "schemaVersion": "EssaySupportManifestV1",
   "contentVersion": "v1",
-  "generatedAt": "2026-09-02T23:56:52.401292+00:00",
+  "generatedAt": "2026-09-03T06:24:20.037Z",
   "questions": {
     "1": {
-      "url": "/database/Write Essay/support/v1/packs/q0001.918c9812de92db02.json",
-      "sha256": "918c9812de92db0294e34a51bde213f6edbe48144695caca84df03a3fe437ab2",
+      "url": "/database/Write Essay/support/v1/packs/q0001.ec9cc31c82d5fb9f.json",
+      "sha256": "ec9cc31c82d5fb9fccaf5d0f638b0b77dbfe11d21d952b58cda4a40084dd9ed2",
       "levels": [
         "a2_b1",
         "b2",
@@ -14,8 +14,8 @@
       "status": "PUBLISHED"
     },
     "2": {
-      "url": "/database/Write Essay/support/v1/packs/q0002.abb7c94b5103c338.json",
-      "sha256": "abb7c94b5103c338646320428bcd35c0fee257a426021ac79ff9c163f9d2b116",
+      "url": "/database/Write Essay/support/v1/packs/q0002.32572b6a09a6b282.json",
+      "sha256": "32572b6a09a6b2828b883d771326ec245adb4f77f02fd343694350d6e4fbbebd",
       "levels": [
         "a2_b1",
         "b2",
@@ -44,8 +44,8 @@
       "status": "PUBLISHED"
     },
     "5": {
-      "url": "/database/Write Essay/support/v1/packs/q0005.e3bd1534ec3dab3f.json",
-      "sha256": "e3bd1534ec3dab3f68518c96ed2c674cc2e4f6c9bd94c85d2610aa85ab6c62ad",
+      "url": "/database/Write Essay/support/v1/packs/q0005.2a995f1c44b5c830.json",
+      "sha256": "2a995f1c44b5c8300223b0d3a9bffb9ce91dd8db26e5068709121f83d23bd23b",
       "levels": [
         "a2_b1",
         "b2",
@@ -86,16 +86,6 @@
     "9": {
       "url": "/database/Write Essay/support/v1/packs/q0009.565a27c61cc38603.json",
       "sha256": "565a27c61cc3860377c7afc38c1a03be9f4635ccfbd39514962fc057b0e924e3",
-      "levels": [
-        "a2_b1",
-        "b2",
-        "c1"
-      ],
-      "status": "PUBLISHED"
-    },
-    "10": {
-      "url": "/database/Write Essay/support/v1/packs/q0010.d1222574512a3fe4.json",
-      "sha256": "d1222574512a3fe4bccc403a450d51a01f42008c5970dac8a047616e5d93cd4a",
       "levels": [
         "a2_b1",
         "b2",
@@ -244,8 +234,8 @@
       "status": "PUBLISHED"
     },
     "25": {
-      "url": "/database/Write Essay/support/v1/packs/q0025.36488b1c3e002de9.json",
-      "sha256": "36488b1c3e002de9b879595e8d693c4ecdfadb0a681090ee78a450632e035ccd",
+      "url": "/database/Write Essay/support/v1/packs/q0025.754ce61ed446a74b.json",
+      "sha256": "754ce61ed446a74bb4a9986d2aef84ebbb348c19313763f5c99563566548ad8d",
       "levels": [
         "a2_b1",
         "b2",

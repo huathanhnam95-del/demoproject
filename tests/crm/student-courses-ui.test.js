@@ -105,7 +105,19 @@ const { chromium } = require('playwright');
     await page.dispatchEvent('#enroll-start-date', 'change');
     const updatedEndDate = await page.$eval('#enroll-end-date', (el) => el.value);
     assert.strictEqual(updatedEndDate, '2026-10-31', 'Start date + 30 days should equal 2026-10-31');
-    console.log('✓ Test 3 passed: Duration calculation & instant end-date update on start-date change');
+
+    // Test manual override and undo link
+    await page.fill('#enroll-end-date', '2026-11-15');
+    await page.dispatchEvent('#enroll-end-date', 'input');
+    const overrideBadgeText = await page.textContent('#enroll-end-date-helper');
+    assert(overrideBadgeText.includes('Manually set'), 'Should show Manually set badge');
+
+    await page.click('#btn-undo-end-date');
+    const undoneEndDate = await page.$eval('#enroll-end-date', (el) => el.value);
+    assert.strictEqual(undoneEndDate, '2026-10-31', 'Undo should revert back to auto-calculated date');
+    const resetHelperText = await page.textContent('#enroll-end-date-helper');
+    assert(resetHelperText.includes('(auto-calculated)'));
+    console.log('✓ Test 3 passed: Duration calculation, manual override badge, and undo restore');
 
     // Test 4: Back button returns to Screen A
     await page.click('#btn-back-to-courses');
@@ -159,13 +171,23 @@ const { chromium } = require('playwright');
     const progressBarWidth = await page.$eval('.crm-funnel-bar', (el) => el.style.width);
     assert.strictEqual(progressBarWidth, '33%');
 
+    // Accessibility check: progress bar in Screen A
+    const progressRole = await page.$eval('.crm-funnel-track', (el) => el.getAttribute('role'));
+    const progressValueNow = await page.$eval('.crm-funnel-track', (el) => el.getAttribute('aria-valuenow'));
+    const progressValueMax = await page.$eval('.crm-funnel-track', (el) => el.getAttribute('aria-valuemax'));
+    const progressAriaLabel = await page.$eval('.crm-funnel-track', (el) => el.getAttribute('aria-label'));
+    assert.strictEqual(progressRole, 'progressbar', 'Screen A progress bar must have role="progressbar"');
+    assert.strictEqual(progressValueNow, '480', 'Screen A progress bar must have correct aria-valuenow');
+    assert.strictEqual(progressValueMax, '1440', 'Screen A progress bar must have correct aria-valuemax');
+    assert(progressAriaLabel.includes('Course progress: 8 of 24 hours'), `progressAriaLabel was: ${progressAriaLabel}`);
+
     const nextLessonText = await page.textContent('.crm-student-course-details-row');
     assert(nextLessonText.includes('Sep 7 at 14:00'));
     assert(nextLessonText.includes('teacher-dan'));
 
     const btnAttendance = await page.$('.btn-view-attendance');
     assert(btnAttendance !== null, 'View Lessons & Attendance button must be present');
-    console.log('✓ Test 5 passed: Screen A enrollment card with live progress bar and next lesson');
+    console.log('✓ Test 5 passed: Screen A enrollment card with live progress bar (role="progressbar") and next lesson');
 
     // Test 6: Click "View Lessons & Attendance →" switches to Screen C
     await page.evaluate(() => {
@@ -199,12 +221,19 @@ const { chromium } = require('playwright');
     assert.strictEqual(sessionRows.length, 1);
     const sessionBadge = await page.textContent('.crm-session-status-badge');
     assert(sessionBadge.includes('Scheduled'));
-    console.log('✓ Test 6 passed: Screen C rendering & No stacked modals');
+
+    // Accessibility check: initial aria-expanded on trigger button
+    const initialAriaExpanded = await page.$eval('.btn-expand-attendance', (el) => el.getAttribute('aria-expanded'));
+    assert.strictEqual(initialAriaExpanded, 'false', 'Trigger button must have aria-expanded="false" initially');
+    console.log('✓ Test 6 passed: Screen C rendering & No stacked modals (aria-expanded="false")');
 
     // Test 7: Inline row expansion & push-forward preview cascade
     await page.click('.btn-expand-attendance');
     const inlinePanel = await page.$('.crm-session-inline-panel');
     assert(inlinePanel !== null, 'Inline expansion panel must appear');
+
+    const expandedAria = await page.$eval('.btn-expand-attendance', (el) => el.getAttribute('aria-expanded'));
+    assert.strictEqual(expandedAria, 'true', 'Trigger button must have aria-expanded="true" when open');
 
     // Select Push Forward radio
     await page.click('input[value="push-forward"]');
@@ -213,7 +242,7 @@ const { chromium } = require('playwright');
     assert(shiftPreviewText.includes('1 → Mon 14 Sep'), `Expected shift preview, got: ${shiftPreviewText}`);
     const datePreviewText = await page.textContent('.crm-cascade-preview-date');
     assert(datePreviewText.includes('Mon 21 Sep 2026'));
-    console.log('✓ Test 7 passed: Inline attendance expansion & Push-Forward live cascade preview');
+    console.log('✓ Test 7 passed: Inline attendance expansion & Push-Forward live cascade preview (aria-expanded="true")');
 
     // Test 8: Inline Attendance Confirm & return to Screen A
     // Switch to Attended and confirm
@@ -260,11 +289,46 @@ const { chromium } = require('playwright');
     const updatedBadge = await page.textContent('.crm-session-status-badge.status-attended');
     assert(updatedBadge.includes('Attended'));
 
+    // Accessibility check: status change announcement
+    const announcedText = await page.textContent('#attendance-announce');
+    assert(announcedText.includes('marked as attended'), `Expected attendance announcement, got: ${announcedText}`);
+
     // Click back to Screen A
     await page.click('#btn-back-to-screen-a');
     const backInScreenA = await page.$('.crm-student-courses-header');
     assert(backInScreenA !== null, 'Should return back to Screen A');
-    console.log('✓ Test 8 passed: Attendance confirmed, status updated, and back to Screen A');
+    console.log('✓ Test 8 passed: Attendance confirmed, status updated, announced via live region, and back to Screen A');
+
+    // Test 9: Reopen Screen C, Edit finalized session, and verify "Reset to Scheduled"
+    let lastAttendanceCall = null;
+    await page.evaluate(() => {
+        window.CrmStudentCourses.submitAttendance = async (sessionId, status) => {
+            window.__lastAttendanceStatus = status;
+            return { success: true, sessionId, status };
+        };
+    });
+
+    await page.click('.btn-view-attendance');
+    const editBtn = await page.$('.btn-expand-attendance');
+    assert(editBtn !== null, 'Edit button must exist on completed session');
+    const editBtnText = await editBtn.textContent();
+    assert.strictEqual(editBtnText.trim(), 'Edit ▾');
+
+    await editBtn.click();
+    const resetRadio = await page.$('input[value="reset"]');
+    assert(resetRadio !== null, 'Reset to Scheduled radio option must appear when editing finalized session');
+
+    await resetRadio.click();
+    await page.click('.btn-inline-confirm');
+
+    const lastStatus = await page.evaluate(() => window.__lastAttendanceStatus);
+    assert.strictEqual(lastStatus, 'reset', 'Should submit reset status to API');
+
+    // Test destroy method
+    await page.evaluate(() => {
+        window.CrmStudentCourses.destroy();
+    });
+    console.log('✓ Test 9 passed: Edit finalized session offers "Reset to Scheduled", submits reset, and destroy cleans up');
 
     await browser.close();
     console.log('\nAll Student Courses UI tests passed successfully!');

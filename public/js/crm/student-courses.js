@@ -16,10 +16,11 @@
     let activeAvailabilityInstance = null;
 
     function escapeHtml(str) {
-        return String(str || '').replace(/[&<>"']/g, (c) => ({
+        return (str == null ? '' : String(str)).replace(/[&<>"']/g, (c) => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
     }
+
 
     function addDaysToDateString(dateStr, days) {
         if (!dateStr || !Number.isFinite(days)) return dateStr;
@@ -55,19 +56,76 @@
         return timeStr ? `${dateFormatted} at ${timeStr}` : dateFormatted;
     }
 
-    async function fetchStudentEnrollments(studentId) {
-        if (global.CrmStudentCourses && typeof global.CrmStudentCourses.fetchStudentEnrollments === 'function' && global.CrmStudentCourses.fetchStudentEnrollments !== fetchStudentEnrollments) {
-            return global.CrmStudentCourses.fetchStudentEnrollments(studentId);
-        }
+    // ==========================================
+    // Shared Helpers
+    // ==========================================
+
+    /** Returns auth headers for CRM API calls. Includes Content-Type for methods with a body. */
+    async function getAuthHeaders(hasBody = false) {
         const token = global.auth?.currentUser ? await global.auth.currentUser.getIdToken().catch(() => '') : '';
         const headers = { Accept: 'application/json' };
+        if (hasBody) headers['Content-Type'] = 'application/json';
         if (token) headers.Authorization = `Bearer ${token}`;
+        return headers;
+    }
 
+    /** Check if a test mock override exists on the global CrmStudentCourses for the given method. */
+    function getMockOverride(methodName, localRef) {
+        const ext = global.CrmStudentCourses;
+        if (ext && typeof ext[methodName] === 'function' && ext[methodName] !== localRef) {
+            return ext[methodName];
+        }
+        return null;
+    }
+
+    /** Compute progress metrics from enrollment summary and course delivery template. */
+    function computeCourseProgress(summary, deliveryTemplate) {
+        const totalMins = summary.contractedMinutesTotal || (deliveryTemplate?.totalInstructionMinutes) || 0;
+        const deliveredMins = summary.contractedMinutesDelivered || 0;
+        const remainingMins = Math.max(totalMins - deliveredMins, 0);
+        const pct = totalMins > 0 ? Math.min(Math.round((deliveredMins / totalMins) * 100), 100) : 0;
+        return {
+            totalMins, deliveredMins, remainingMins, pct,
+            totalHours: formatHours(totalMins),
+            deliveredHours: formatHours(deliveredMins),
+            remainingHours: formatHours(remainingMins)
+        };
+    }
+
+    /** Generate progress bar HTML (shared between Screen A and Screen C). */
+    function renderProgressBarHtml(progress) {
+        return `
+            <div class="crm-funnel-track" role="progressbar"
+                 aria-valuenow="${progress.deliveredMins}" aria-valuemin="0"
+                 aria-valuemax="${progress.totalMins}"
+                 aria-label="Course progress: ${progress.deliveredHours} of ${progress.totalHours} hours"
+                 style="height: 8px; border-radius: 4px; background: var(--crm-border); overflow: hidden;">
+                <div class="crm-funnel-bar" style="width: ${progress.pct}%; height: 100%; background: var(--crm-primary); border-radius: 4px; transition: width 0.3s ease;"></div>
+            </div>
+        `;
+    }
+
+    /** Teardown the active availability matrix instance if it exists. */
+    function destroyAvailabilityMatrix() {
+        if (activeAvailabilityInstance) {
+            activeAvailabilityInstance.destroy();
+            activeAvailabilityInstance = null;
+        }
+    }
+
+    // ==========================================
+    // API Client Functions
+    // ==========================================
+
+    async function fetchStudentEnrollments(studentId) {
+        const mock = getMockOverride('fetchStudentEnrollments', fetchStudentEnrollments);
+        if (mock) return mock(studentId);
+
+        const headers = await getAuthHeaders();
         const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/enrollments`, {
             method: 'GET',
             headers
         });
-
         if (!res.ok) {
             throw new Error(`Failed to load enrollments (HTTP ${res.status})`);
         }
@@ -76,22 +134,15 @@
     }
 
     async function submitEnrollment(payload) {
-        if (global.CrmStudentCourses && typeof global.CrmStudentCourses.submitEnrollment === 'function' && global.CrmStudentCourses.submitEnrollment !== submitEnrollment) {
-            return global.CrmStudentCourses.submitEnrollment(payload);
-        }
-        const token = global.auth?.currentUser ? await global.auth.currentUser.getIdToken().catch(() => '') : '';
-        const headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-        };
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const mock = getMockOverride('submitEnrollment', submitEnrollment);
+        if (mock) return mock(payload);
 
+        const headers = await getAuthHeaders(true);
         const res = await fetch('/api/admin/enrollments', {
             method: 'POST',
             headers,
             body: JSON.stringify(payload)
         });
-
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
             throw new Error(data.message || data.error || `Failed to create enrollment (HTTP ${res.status})`);
@@ -100,16 +151,10 @@
     }
 
     async function submitAttendance(sessionId, status, notes = '') {
-        if (global.CrmStudentCourses && typeof global.CrmStudentCourses.submitAttendance === 'function' && global.CrmStudentCourses.submitAttendance !== submitAttendance) {
-            return global.CrmStudentCourses.submitAttendance(sessionId, status, notes);
-        }
-        const token = global.auth?.currentUser ? await global.auth.currentUser.getIdToken().catch(() => '') : '';
-        const headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-        };
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const mock = getMockOverride('submitAttendance', submitAttendance);
+        if (mock) return mock(sessionId, status, notes);
 
+        const headers = await getAuthHeaders(true);
         const res = await fetch(`/api/admin/sessions/${encodeURIComponent(sessionId)}/attendance`, {
             method: 'POST',
             headers,
@@ -121,16 +166,10 @@
     }
 
     async function submitPushForward(sessionId, options = {}) {
-        if (global.CrmStudentCourses && typeof global.CrmStudentCourses.submitPushForward === 'function' && global.CrmStudentCourses.submitPushForward !== submitPushForward) {
-            return global.CrmStudentCourses.submitPushForward(sessionId, options);
-        }
-        const token = global.auth?.currentUser ? await global.auth.currentUser.getIdToken().catch(() => '') : '';
-        const headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-        };
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const mock = getMockOverride('submitPushForward', submitPushForward);
+        if (mock) return mock(sessionId, options);
 
+        const headers = await getAuthHeaders(true);
         const res = await fetch(`/api/admin/sessions/${encodeURIComponent(sessionId)}/push-forward`, {
             method: 'POST',
             headers,
@@ -141,14 +180,12 @@
         return data;
     }
 
+
     // ==========================================
     // SCREEN A: Enrolments Overview List
     // ==========================================
     function renderScreenA(containerEl, enrollments) {
-        if (activeAvailabilityInstance) {
-            activeAvailabilityInstance.destroy();
-            activeAvailabilityInstance = null;
-        }
+        destroyAvailabilityMatrix();
 
         containerEl.innerHTML = `
             <div class="crm-student-courses-container">
@@ -171,7 +208,7 @@
 
         if (!enrollments || enrollments.length === 0) {
             listEl.innerHTML = `
-                <div class="crm-empty-state" style="padding: 32px 16px; text-align: center; border: 1px dashed var(--crm-border, #e2e8f0); border-radius: 8px;">
+                <div class="crm-empty-state" style="padding: 32px 16px; text-align: center; border: 1px dashed var(--crm-border); border-radius: var(--crm-radius);">
                     <p class="crm-muted" style="margin-bottom: 12px; font-size: 14px;">No courses enrolled yet for this student.</p>
                     <button type="button" class="crm-btn-secondary" id="btn-empty-add-course" style="font-size: 13px;">
                         + Enrol in a Course
@@ -192,15 +229,7 @@
             const courseType = (course.courseType || '1on1').toUpperCase();
             const status = enr.status || 'active';
 
-            const totalMins = summary.contractedMinutesTotal || (course.deliveryTemplate?.totalInstructionMinutes) || 0;
-            const deliveredMins = summary.contractedMinutesDelivered || 0;
-            const remainingMins = Math.max(totalMins - deliveredMins, 0);
-
-            const totalHours = formatHours(totalMins);
-            const deliveredHours = formatHours(deliveredMins);
-            const remainingHours = formatHours(remainingMins);
-
-            const pct = totalMins > 0 ? Math.min(Math.round((deliveredMins / totalMins) * 100), 100) : 0;
+            const progress = computeCourseProgress(summary, course.deliveryTemplate);
 
             // Find next upcoming scheduled session
             const nowIsoDate = new Date().toISOString().split('T')[0];
@@ -222,12 +251,10 @@
 
                     <div class="crm-student-course-progress-block">
                         <div class="crm-student-course-progress-meta">
-                            <span><strong>${deliveredHours} / ${totalHours} hrs</strong> delivered (${pct}%)</span>
-                            <span><strong>${remainingHours} hrs</strong> remaining</span>
+                            <span><strong>${progress.deliveredHours} / ${progress.totalHours} hrs</strong> delivered (${progress.pct}%)</span>
+                            <span><strong>${progress.remainingHours} hrs</strong> remaining</span>
                         </div>
-                        <div class="crm-funnel-track" style="height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden;">
-                            <div class="crm-funnel-bar" style="width: ${pct}%; height: 100%; background: var(--crm-primary, #177a44); border-radius: 4px; transition: width 0.3s ease;"></div>
-                        </div>
+                        ${renderProgressBarHtml(progress)}
                     </div>
 
                     <div class="crm-student-course-details-row">
@@ -266,10 +293,7 @@
     // SCREEN B: Add Course Takeover View
     // ==========================================
     async function renderScreenB(containerEl) {
-        if (activeAvailabilityInstance) {
-            activeAvailabilityInstance.destroy();
-            activeAvailabilityInstance = null;
-        }
+        destroyAvailabilityMatrix();
 
         containerEl.innerHTML = `
             <div class="crm-course-enroll-takeover">
@@ -305,8 +329,9 @@
                     </div>
 
                     <div class="crm-form-group">
-                        <label for="enroll-end-date">
-                            End Date <span class="crm-muted" style="font-size: 11px; font-weight: normal;">(auto-calculated)</span>
+                        <label for="enroll-end-date" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>End Date</span>
+                            <span id="enroll-end-date-helper" class="crm-muted" style="font-size: 11px; font-weight: normal;">(auto-calculated)</span>
                         </label>
                         <input type="date" id="enroll-end-date" class="crm-input">
                     </div>
@@ -492,15 +517,46 @@
             `;
         }
 
-        courseSelect.onchange = updateDatesAndMatrix;
+        const endDateHelper = containerEl.querySelector('#enroll-end-date-helper');
 
-        // Changing start date updates end date instantly (User requirement!)
-        startDateInput.onchange = () => {
+        function setAutoEndDate() {
             const course = getSelectedCourse();
             const dur = Number(course?.durationDays) || 30;
             if (startDateInput.value) {
                 endDateInput.value = addDaysToDateString(startDateInput.value, dur);
             }
+            if (endDateHelper) {
+                endDateHelper.className = 'crm-muted';
+                endDateHelper.innerHTML = '(auto-calculated)';
+            }
+        }
+
+        function markEndDateManuallySet() {
+            if (endDateHelper) {
+                endDateHelper.className = 'crm-manual-override-badge';
+                endDateHelper.innerHTML = `ⓘ Manually set <button type="button" id="btn-undo-end-date" class="crm-undo-link">Undo</button>`;
+                const btnUndo = endDateHelper.querySelector('#btn-undo-end-date');
+                if (btnUndo) {
+                    btnUndo.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAutoEndDate();
+                    };
+                }
+            }
+        }
+
+        endDateInput.addEventListener('input', markEndDateManuallySet);
+        endDateInput.addEventListener('change', markEndDateManuallySet);
+
+        courseSelect.onchange = () => {
+            updateDatesAndMatrix();
+            setAutoEndDate();
+        };
+
+        // Changing start date updates end date instantly (User requirement!)
+        startDateInput.onchange = () => {
+            setAutoEndDate();
         };
 
         // Form Submission
@@ -578,10 +634,7 @@
     // SCREEN C: Lessons & Attendance View with Inline Expansion
     // ==========================================
     function renderScreenC(containerEl, enrollment) {
-        if (activeAvailabilityInstance) {
-            activeAvailabilityInstance.destroy();
-            activeAvailabilityInstance = null;
-        }
+        destroyAvailabilityMatrix();
 
         const course = enrollment.course || {};
         const courseName = course.name || 'Course';
@@ -596,14 +649,7 @@
             return String(a.scheduledLocalTime || '').localeCompare(String(b.scheduledLocalTime || ''));
         });
 
-        const totalMins = summary.contractedMinutesTotal || (course.deliveryTemplate?.totalInstructionMinutes) || 0;
-        const deliveredMins = summary.contractedMinutesDelivered || 0;
-        const remainingMins = Math.max(totalMins - deliveredMins, 0);
-
-        const totalHours = formatHours(totalMins);
-        const deliveredHours = formatHours(deliveredMins);
-        const remainingHours = formatHours(remainingMins);
-        const pct = totalMins > 0 ? Math.min(Math.round((deliveredMins / totalMins) * 100), 100) : 0;
+        const progress = computeCourseProgress(summary, course.deliveryTemplate);
 
         const attendedCount = sessions.filter((s) => s.sessionOutcome === 'completed').length;
         const penalizedCount = sessions.filter((s) => s.sessionOutcome === 'absent_counted').length;
@@ -611,6 +657,7 @@
 
         containerEl.innerHTML = `
             <div class="crm-attendance-container">
+                <div aria-live="polite" id="attendance-announce" class="crm-sr-only"></div>
                 <div class="crm-attendance-header">
                     <div class="crm-attendance-title-row">
                         <button type="button" class="crm-back-btn" id="btn-back-to-screen-a">
@@ -618,28 +665,26 @@
                         </button>
                         <span class="crm-student-course-code">${escapeHtml(courseCode)}</span>
                     </div>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--crm-text-main, #1e293b);">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--crm-text-main);">
                         ${escapeHtml(courseName)} — Lessons & Attendance
                     </h3>
                 </div>
 
                 <div class="crm-attendance-summary-card">
                     <div class="crm-attendance-summary-stats">
-                        <span>Contracted: <strong>${totalHours} hrs</strong></span>
-                        <span>Delivered: <strong>${deliveredHours} hrs (${pct}%)</strong></span>
-                        <span>Remaining: <strong>${remainingHours} hrs</strong></span>
+                        <span>Contracted: <strong>${progress.totalHours} hrs</strong></span>
+                        <span>Delivered: <strong>${progress.deliveredHours} hrs (${progress.pct}%)</strong></span>
+                        <span>Remaining: <strong>${progress.remainingHours} hrs</strong></span>
                         <span>Sessions: <strong>${attendedCount} attended · ${penalizedCount} penalized · ${rescheduledCount} rescheduled</strong></span>
                     </div>
-                    <div class="crm-funnel-track" style="height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden;">
-                        <div class="crm-funnel-bar" style="width: ${pct}%; height: 100%; background: var(--crm-primary, #177a44); border-radius: 4px; transition: width 0.3s ease;"></div>
-                    </div>
+                    ${renderProgressBarHtml(progress)}
                 </div>
 
                 <div style="overflow-x: auto;">
-                    <table class="crm-session-table">
+                    <table class="crm-session-table" aria-label="Scheduled sessions and attendance">
                         <thead>
                             <tr>
-                                <th style="width: 44px; text-align: center;">#</th>
+                                <th style="width: 44px; text-align: center;" aria-label="Session number">#</th>
                                 <th>Date & Time</th>
                                 <th style="width: 90px;">Duration</th>
                                 <th style="width: 140px;">Status</th>
@@ -658,7 +703,7 @@
         if (sessions.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--crm-text-secondary, #475569); padding: 24px;">
+                    <td colspan="5" style="text-align: center; color: var(--crm-text-muted); padding: 24px;">
                         No scheduled sessions found for this course enrolment.
                     </td>
                 </tr>
@@ -692,12 +737,12 @@
 
             return `
                 <tr class="crm-session-row" data-session-id="${escapeHtml(sId)}">
-                    <td style="text-align: center; font-weight: 600; color: var(--crm-text-secondary, #475569);">${unitIndex}</td>
+                    <td style="text-align: center; font-weight: 600; color: var(--crm-text-muted);">${escapeHtml(unitIndex)}</td>
                     <td><strong>${escapeHtml(dateFormatted)}</strong></td>
                     <td><span class="crm-student-course-code">${escapeHtml(durChip)}</span></td>
                     <td>${badgeHtml}</td>
                     <td style="text-align: right;">
-                        <button type="button" class="crm-btn-secondary btn-expand-attendance" style="font-size: 11px; padding: 3px 8px;" data-session-id="${escapeHtml(sId)}">
+                        <button type="button" class="crm-btn-secondary btn-expand-attendance" style="font-size: 11px; padding: 3px 8px;" data-session-id="${escapeHtml(sId)}" aria-expanded="false" aria-controls="inline-panel-${escapeHtml(sId)}">
                             ${isDone ? 'Edit ▾' : 'Mark Attendance ▾'}
                         </button>
                     </td>
@@ -716,24 +761,27 @@
                 // If already open, close it
                 const nextTr = tr.nextElementSibling;
                 if (nextTr && nextTr.classList.contains('crm-session-inline-tr')) {
+                    btn.setAttribute('aria-expanded', 'false');
                     nextTr.remove();
                     tr.classList.remove('is-expanded');
                     return;
                 }
 
                 // Close any other open inline rows
+                tbody.querySelectorAll('.btn-expand-attendance[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
                 tbody.querySelectorAll('.crm-session-inline-tr').forEach((r) => r.remove());
                 tbody.querySelectorAll('.crm-session-row.is-expanded').forEach((r) => r.classList.remove('is-expanded'));
 
                 // Expand inline row
+                btn.setAttribute('aria-expanded', 'true');
                 tr.classList.add('is-expanded');
                 const inlineTr = document.createElement('tr');
                 inlineTr.className = 'crm-session-inline-tr';
                 inlineTr.innerHTML = `
                     <td colspan="5">
-                        <div class="crm-session-inline-panel">
+                        <div id="inline-panel-${escapeHtml(sId)}" class="crm-session-inline-panel">
                             <h4 class="crm-session-inline-title">
-                                Attendance & Action for Session #${sessionObj.contractUnitIndex || ''} (${escapeHtml(sessionObj.scheduledLocalDate)} at ${escapeHtml(sessionObj.scheduledLocalTime)})
+                                Attendance & Action for Session #${escapeHtml(sessionObj.contractUnitIndex || '')} (${escapeHtml(sessionObj.scheduledLocalDate)} at ${escapeHtml(sessionObj.scheduledLocalTime)})
                             </h4>
 
                             <div class="crm-inline-radio-group">
@@ -753,6 +801,12 @@
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="push-forward">
                                     <span><strong>↻ Reschedule & Push Forward</strong> — shift all later sessions forward by one slot</span>
                                 </label>
+                                ${sessionObj.attendanceState === 'finalized' ? `
+                                <label class="crm-inline-radio-label">
+                                    <input type="radio" name="inline-att-${escapeHtml(sId)}" value="reset">
+                                    <span><strong>⏳ Reset to Scheduled</strong> — clear attendance and revert session to upcoming</span>
+                                </label>
+                                ` : ''}
                             </div>
 
                             <div id="inline-cascade-preview-${escapeHtml(sId)}" class="crm-cascade-preview-box" style="display: none;">
@@ -780,6 +834,7 @@
                 btnCancel.onclick = () => {
                     inlineTr.remove();
                     tr.classList.remove('is-expanded');
+                    btn.setAttribute('aria-expanded', 'false');
                 };
 
                 // Radio changes
@@ -827,11 +882,22 @@
                             }
                         }
 
+                        const unitLabel = sessionObj.contractUnitIndex ? `Session ${sessionObj.contractUnitIndex}` : 'Session';
+                        const announceMsg = choice === 'push-forward'
+                            ? `${unitLabel} pushed forward and future lessons shifted.`
+                            : (choice === 'reset'
+                                ? `${unitLabel} reset to scheduled.`
+                                : `${unitLabel} marked as ${choice}.`);
+
                         // Refetch enrollments and re-render Screen C
                         cachedEnrollments = await fetchStudentEnrollments(currentStudentId);
                         const updatedEnr = cachedEnrollments.find((e) => (e.id || e.enrollmentId) === (enrollment.id || enrollment.enrollmentId));
                         if (updatedEnr) {
                             renderScreenC(containerEl, updatedEnr);
+                            const announceEl = containerEl.querySelector('#attendance-announce');
+                            if (announceEl) {
+                                announceEl.textContent = announceMsg;
+                            }
                         } else {
                             renderScreenA(containerEl, cachedEnrollments);
                         }
@@ -867,7 +933,7 @@
             console.error('[StudentCourses] Failed to fetch enrollments:', err);
             containerEl.innerHTML = `
                 <div class="crm-student-courses-container">
-                    <p style="color: var(--crm-danger, #ef4444); padding: 16px 0;">
+                    <p style="color: var(--crm-danger-text); padding: 16px 0;">
                         Failed to load enrolled courses: ${escapeHtml(err.message)}
                     </p>
                 </div>
@@ -875,8 +941,16 @@
         }
     }
 
+    function destroy() {
+        destroyAvailabilityMatrix();
+        currentStudentId = null;
+        currentStudent = null;
+        cachedEnrollments = [];
+    }
+
     global.CrmStudentCourses = {
         refresh,
+        destroy,
         renderScreenA,
         renderScreenB,
         renderScreenC,

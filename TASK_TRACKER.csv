@@ -1847,3 +1847,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 853,2026-09-03,Student course scheduling Phase 1: add Course Type and Duration Days to course catalog (service model UI and migration),Done,2026-09-03
 854,2026-09-03,CRM Voice Cloning feature: cloud-backed profile creation + local F5-TTS worker queue + manual trigger + multi-voice text-to-speech with MP3 download,Done,2026-09-03
 855,2026-09-03,Review debug refactor and deploy release V1.8.100 to production hosting,Done,2026-09-03
+856,2026-09-03,Write Essay: run live 3-model Ollama benchmark on 5 archetype prompts with chat protocol and schema guards,Done,2026-09-03
+857,2026-09-03,Course Scheduling UI token discipline accessibility and radius normalisation fixes,Done,2026-09-03
+858,2026-09-03,Course Scheduling full-stack review debug and refactor audit,Done,2026-09-03
+859,2026-09-03,Diagnose and resolve localhost 503 offline asset errors by starting HTTPS dev server,Done,2026-09-03

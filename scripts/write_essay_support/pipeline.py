@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import re
 import urllib.error
 import urllib.request
@@ -13,6 +14,8 @@ from .audit import MODEL_KEYS, aggregate_audit_records, apply_component_decision
 from .contracts import LEVELS, validate_manifest, validate_pack, sha256_text
 from .generator import build_template_candidate
 from .sources import load_question_sources
+
+logger = logging.getLogger("write_essay_support.pipeline")
 
 
 MODELS = {
@@ -37,30 +40,31 @@ def _audit_summary(candidate: dict[str, Any]) -> dict[str, Any]:
     summary = {
         "questionId": candidate.get("questionId"),
         "promptBreakdown": {
-            "requirements": common.get("requirements", [])[:3],
-            "traps": common.get("promptTraps", [])[:3],
+            "requirements": common.get("requirements", [])[:2],
+            "traps": [t.get("en") if isinstance(t, dict) else t for t in common.get("promptTraps", [])[:2]],
         },
-        "angles": common.get("angles", [])[:3],
+        "angles": common.get("angles", [])[:2],
         "languageKit": {
             lvl: {
-                "vocabulary": [v.get("term") for v in (levels.get(lvl, {}).get("languageKit") or {}).get("vocabulary", [])[:5]],
-                "collocations": [c.get("term") for c in (levels.get(lvl, {}).get("languageKit") or {}).get("collocations", [])[:5]],
+                "vocabulary": [v.get("term") if isinstance(v, dict) else v for v in (levels.get(lvl, {}).get("languageKit") or {}).get("vocabulary", [])[:3]],
+                "collocations": [c.get("term") if isinstance(c, dict) else c for c in (levels.get(lvl, {}).get("languageKit") or {}).get("collocations", [])[:3]],
             }
             for lvl in ("a2_b1", "b2", "c1") if lvl in levels
         },
         "plans": {
-            lvl: [p.get("focus") or p.get("outline") or p for p in levels.get(lvl, {}).get("plans", [])]
+            lvl: [(p.get("focus") if isinstance(p, dict) else p) for p in levels.get(lvl, {}).get("plans", [])[:1]]
             for lvl in ("a2_b1", "b2", "c1") if lvl in levels
         },
         "scaffolds": {
-            lvl: {
-                stance: [s.get("modelSentence") or s.get("frame") for s in sc_list[:2]]
-                for stance, sc_list in levels.get(lvl, {}).get("scaffolds", {}).items()
-            }
+            lvl: [
+                (sc_list[0].get("modelSentence") if isinstance(sc_list[0], dict) else sc_list[0])
+                for sc_list in levels.get(lvl, {}).get("scaffolds", {}).values()
+                if sc_list
+            ][:1]
             for lvl in ("a2_b1", "b2", "c1") if lvl in levels
         },
-        "faq": [f.get("questionEn") for f in common.get("faq", [])[:3]],
-        "eltAudit": common.get("tutorHandoff", {}).get("contextEn", ""),
+        "faq": [f.get("questionEn") if isinstance(f, dict) else f for f in common.get("faq", [])[:2]],
+        "eltAudit": (common.get("tutorHandoff", {}).get("contextEn", "") or "")[:150],
     }
     return summary
 
@@ -159,34 +163,43 @@ class OllamaClient:
             )
         else:
             prompt = json.dumps({"stage": stage, "payload": payload}, ensure_ascii=False)
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
         body = json.dumps({
             "model": model,
-            "system": system,
-            "prompt": prompt,
+            "messages": messages,
             "stream": False,
             "format": "json",
-            "options": {"temperature": 0.1},
+            "options": {
+                "temperature": 0.1,
+                "num_ctx": 8192,
+                "num_predict": 2048,
+            },
         }).encode("utf-8")
-        request = urllib.request.Request(
-            f"{self.base_url}/api/generate",
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
         import time
-        raw_response = None
+        last_exc = None
         for attempt in range(3):
+            request = urllib.request.Request(
+                f"{self.base_url}/api/chat",
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
             try:
                 with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                     raw_response = json.loads(response.read().decode("utf-8"))
-                break
-            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                message = raw_response.get("message", {}) if isinstance(raw_response, dict) else {}
+                raw = message.get("content") or raw_response.get("response") or raw_response
+                return parse_json_object(raw)
+            except Exception as exc:
+                last_exc = exc
+                logger.warning("Ollama %s %s attempt %s failed: %s", model, stage, attempt + 1, exc)
                 if attempt < 2:
                     time.sleep(2 * (attempt + 1))
                     continue
-                raise RuntimeError(f"Ollama {model} {stage} failed: {exc}") from exc
-        raw = raw_response.get("response") if isinstance(raw_response, dict) else raw_response
-        return parse_json_object(raw)
+        raise RuntimeError(f"Ollama {model} {stage} failed: {last_exc}") from last_exc
 
 
 def parse_json_object(raw: Any) -> dict[str, Any]:
@@ -194,8 +207,11 @@ def parse_json_object(raw: Any) -> dict[str, Any]:
         return raw
     text = str(raw or "").strip()
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE | re.DOTALL).strip()
+    if "<think>" in text and "</think>" not in text:
+        text = re.sub(r"<think>.*", "", text, flags=re.DOTALL).strip() or text
+    if "```" in text:
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE).strip()
+        text = re.sub(r"\s*```$", "", text, flags=re.IGNORECASE).strip()
     decoder = json.JSONDecoder()
     for index, char in enumerate(text):
         if char != "{":
@@ -206,7 +222,15 @@ def parse_json_object(raw: Any) -> dict[str, Any]:
             continue
         if isinstance(value, dict):
             return value
-    raise ValueError("model output did not contain a JSON object")
+    brace_match = re.search(r"(\{.*\})", text, re.DOTALL)
+    if brace_match:
+        try:
+            val = json.loads(brace_match.group(1))
+            if isinstance(val, dict):
+                return val
+        except Exception:
+            pass
+    raise ValueError(f"model output did not contain a JSON object. Snippet: {text[:150]!r}")
 
 
 def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
@@ -241,13 +265,11 @@ def _apply_stage_output(candidate: dict[str, Any], stage: str, response: dict[st
     elif stage == "qwen_material":
         material = response.get("material") if isinstance(response.get("material"), dict) else response
         if isinstance(material, dict):
-            output = _deep_merge(output, material)
+            output["common"]["modelMaterial"] = material
     elif stage == "gemma_review":
-        reviewed = response.get("candidate") if isinstance(response.get("candidate"), dict) else response.get("review")
-        if isinstance(reviewed, dict) and any(key in reviewed for key in ("common", "levels")):
-            output = _deep_merge(output, reviewed)
-        elif isinstance(response.get("review"), dict):
-            output["common"]["modelReview"] = response["review"]
+        review = response.get("review") if isinstance(response.get("review"), dict) else response
+        if isinstance(review, dict):
+            output["common"]["modelReview"] = review
     return output
 
 
@@ -322,7 +344,12 @@ class AuditEngine:
                 if isinstance(response.get("revision"), dict):
                     revisions.append(response["revision"])
             if revisions:
-                audited_candidate = _deep_merge(audited_candidate, revisions[0])
+                test_candidate = _deep_merge(audited_candidate, revisions[0])
+                try:
+                    validate_pack(test_candidate)
+                    audited_candidate = test_candidate
+                except Exception as val_exc:
+                    logger.warning("Debate revision failed schema validation; retaining intact candidate: %s", val_exc)
             final_votes, final_raw = self._audit_round(audited_candidate, question)
             invalidated = set(needs_debate)
             pending = list(needs_debate)
@@ -433,7 +460,7 @@ def run_batch(
     packs_dir.mkdir(parents=True, exist_ok=True)
     if not template_only and client is None:
         client = OllamaClient()
-    records_by_id = dict(existing) if (resume or quarantine_only) else {}
+    records_by_id = dict(existing)
     for question_id in selected:
         question = source.questions.get(str(question_id))
         if not question:

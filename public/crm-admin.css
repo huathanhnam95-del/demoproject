@@ -11593,7 +11593,7 @@ mark.crm-highlight:hover {
   color: var(--crm-text-muted);
   background-color: var(--crm-surface-dim);
   border: 1px solid var(--crm-border-light);
-  border-radius: 13px;
+  border-radius: 999px;
   user-select: none;
 }
 
@@ -11606,7 +11606,7 @@ mark.crm-highlight:hover {
   border: none;
   background: transparent;
   color: var(--crm-text-muted);
-  border-radius: 6px;
+  border-radius: var(--crm-radius);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -11636,9 +11636,9 @@ mark.crm-highlight:hover {
   width: 28px;
   height: 28px;
   border: 1px dashed var(--crm-border);
-  background-color: #ffffff;
+  background-color: var(--crm-surface);
   color: var(--crm-primary);
-  border-radius: 6px;
+  border-radius: var(--crm-radius);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -11746,29 +11746,33 @@ mark.crm-highlight:hover {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
 }
 
 .crm-student-courses-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
-/* Screen A: Enrolment Card (flat design, no nested boxes) */
+/* Screen A: Enrolment Row (flat rule-separated, no nested cards) */
 .crm-student-course-card {
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--crm-border, #e2e8f0);
-  background: #ffffff;
+  padding: 16px 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--crm-border);
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
+}
+
+.crm-student-course-card:last-child {
+  border-bottom: none;
 }
 
 .crm-student-course-card:hover {
-  border-color: var(--crm-border-hover, #cbd5e1);
+  border-color: var(--crm-border);
 }
 
 .crm-student-course-title-row {
@@ -11788,7 +11792,7 @@ mark.crm-highlight:hover {
 .crm-student-course-name {
   font-size: 15px;
   font-weight: 700;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
   margin: 0;
 }
 
@@ -11797,35 +11801,35 @@ mark.crm-highlight:hover {
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
-  background: var(--crm-surface-input, #f1f5f9);
-  color: var(--crm-text-secondary, #475569);
+  background: var(--crm-surface-input);
+  color: var(--crm-text-muted);
 }
 
 .crm-student-course-type-chip {
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 12px;
-  background: rgba(23, 122, 68, 0.1);
-  color: var(--crm-primary, #177a44);
+  border-radius: 999px;
+  background: var(--crm-primary-light);
+  color: var(--crm-primary);
 }
 
 .crm-student-course-status {
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: 999px;
   text-transform: capitalize;
 }
 
 .crm-student-course-status.active {
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
+  background: var(--crm-success-bg);
+  color: var(--crm-success-text);
 }
 
 .crm-student-course-status.completed {
-  background: rgba(59, 130, 246, 0.12);
-  color: #1d4ed8;
+  background: var(--crm-info-bg);
+  color: var(--crm-info-text);
 }
 
 .crm-student-course-progress-block {
@@ -11838,7 +11842,7 @@ mark.crm-highlight:hover {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--crm-text-secondary, #475569);
+  color: var(--crm-text-muted);
   font-weight: 500;
 }
 
@@ -11847,9 +11851,9 @@ mark.crm-highlight:hover {
   flex-wrap: wrap;
   gap: 16px;
   font-size: 12px;
-  color: var(--crm-text-secondary, #475569);
+  color: var(--crm-text-muted);
   padding: 8px 0;
-  border-top: 1px dashed var(--crm-border, #e2e8f0);
+  border-top: 1px dashed var(--crm-border);
 }
 
 .crm-student-course-detail-item {
@@ -11883,10 +11887,10 @@ mark.crm-highlight:hover {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: var(--crm-radius);
+  border: 1px solid var(--crm-border);
   background: transparent;
-  color: var(--crm-text-secondary, #475569);
+  color: var(--crm-text-muted);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -11894,8 +11898,8 @@ mark.crm-highlight:hover {
 }
 
 .crm-back-btn:hover {
-  background: var(--crm-surface-input, #f1f5f9);
-  color: var(--crm-text-main, #1e293b);
+  background: var(--crm-surface-input);
+  color: var(--crm-text-main);
 }
 
 .crm-enroll-form-grid {
@@ -11919,28 +11923,28 @@ mark.crm-highlight:hover {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: 6px;
-  background: var(--crm-surface-input, #f1f5f9);
+  border-radius: var(--crm-radius);
+  background: var(--crm-surface-input);
   font-size: 13px;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
 }
 
 .crm-enroll-comparison-bar .status-warning {
-  color: #b45309;
+  color: var(--crm-warning-text);
   font-weight: 600;
 }
 
 .crm-enroll-comparison-bar .status-ok {
-  color: var(--crm-primary, #177a44);
+  color: var(--crm-success-text);
   font-weight: 600;
 }
 
 .crm-enroll-error-box {
   padding: 10px 14px;
-  border-radius: 6px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #b91c1c;
+  border-radius: var(--crm-radius);
+  background: var(--crm-danger-bg);
+  border: 1px solid var(--crm-danger);
+  color: var(--crm-danger-text);
   font-size: 13px;
   font-weight: 500;
 }
@@ -11948,6 +11952,18 @@ mark.crm-highlight:hover {
 /* ==========================================================================
    Screen C: Lessons & Attendance View with Inline Expansion
    ========================================================================== */
+
+.crm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .crm-attendance-container {
   display: flex;
@@ -11969,9 +11985,9 @@ mark.crm-highlight:hover {
 
 .crm-attendance-summary-card {
   padding: 14px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--crm-border, #e2e8f0);
-  background: #ffffff;
+  border-radius: var(--crm-radius);
+  border: 1px solid var(--crm-border);
+  background: var(--crm-surface);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -11981,7 +11997,7 @@ mark.crm-highlight:hover {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--crm-text-secondary, #475569);
+  color: var(--crm-text-muted);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -11990,26 +12006,26 @@ mark.crm-highlight:hover {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  border: 1px solid var(--crm-border, #e2e8f0);
-  border-radius: 8px;
+  border: 1px solid var(--crm-border);
+  border-radius: var(--crm-radius);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--crm-surface);
 }
 
 .crm-session-table th {
-  background: var(--crm-surface-input, #f1f5f9);
+  background: var(--crm-surface-input);
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  color: var(--crm-text-secondary, #475569);
-  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+  color: var(--crm-text-muted);
+  border-bottom: 1px solid var(--crm-border);
 }
 
 .crm-session-table td {
   padding: 12px;
-  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+  border-bottom: 1px solid var(--crm-border);
   vertical-align: middle;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
 }
 
 .crm-session-table tr:last-child td {
@@ -12017,7 +12033,7 @@ mark.crm-highlight:hover {
 }
 
 .crm-session-table tr.is-expanded td {
-  background: rgba(23, 122, 68, 0.02);
+  background: var(--crm-primary-light);
 }
 
 /* Status Badges with Icon + Text */
@@ -12026,41 +12042,41 @@ mark.crm-highlight:hover {
   align-items: center;
   gap: 5px;
   padding: 3px 8px;
-  border-radius: 12px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
 }
 
 .crm-session-status-badge.status-attended {
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
+  background: var(--crm-success-bg);
+  color: var(--crm-success-text);
 }
 
 .crm-session-status-badge.status-absent {
-  background: var(--crm-surface-input, #f1f5f9);
-  color: var(--crm-text-secondary, #475569);
+  background: var(--crm-surface-input);
+  color: var(--crm-text-muted);
 }
 
 .crm-session-status-badge.status-penalized {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
+  background: var(--crm-warning-bg);
+  color: var(--crm-warning-text);
 }
 
 .crm-session-status-badge.status-rescheduled {
-  background: rgba(59, 130, 246, 0.12);
-  color: #1d4ed8;
+  background: var(--crm-info-bg);
+  color: var(--crm-info-text);
 }
 
 .crm-session-status-badge.status-scheduled {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
+  background: var(--crm-neutral-bg);
+  color: var(--crm-neutral-text);
 }
 
 /* Inline Expansion Row */
 .crm-session-inline-tr td {
-  background: #f8fafc;
+  background: var(--crm-surface-input);
   padding: 16px 20px;
-  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+  border-bottom: 1px solid var(--crm-border);
 }
 
 .crm-session-inline-panel {
@@ -12072,7 +12088,7 @@ mark.crm-highlight:hover {
 .crm-session-inline-title {
   font-size: 13px;
   font-weight: 700;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
   margin: 0;
 }
 
@@ -12087,7 +12103,7 @@ mark.crm-highlight:hover {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--crm-text-main, #1e293b);
+  color: var(--crm-text-main);
   cursor: pointer;
 }
 
@@ -12095,9 +12111,9 @@ mark.crm-highlight:hover {
   margin-top: 6px;
   margin-left: 24px;
   padding: 10px 14px;
-  border-radius: 6px;
-  background: #ffffff;
-  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: var(--crm-radius);
+  background: var(--crm-surface);
+  border: 1px solid var(--crm-border);
   font-size: 12px;
   display: flex;
   flex-direction: column;
@@ -12106,12 +12122,12 @@ mark.crm-highlight:hover {
 
 .crm-cascade-preview-shift {
   font-family: monospace;
-  color: var(--crm-primary, #177a44);
+  color: var(--crm-primary);
   font-weight: 600;
 }
 
 .crm-cascade-preview-date {
-  color: var(--crm-text-secondary, #475569);
+  color: var(--crm-text-muted);
   font-weight: 500;
 }
 
@@ -12120,5 +12136,48 @@ mark.crm-highlight:hover {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
+}
+
+.crm-manual-override-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--crm-warning-text);
+  background: var(--crm-warning-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.crm-undo-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--crm-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.crm-undo-link:hover {
+  color: var(--crm-primary-hover);
+}
+
+@media (max-width: 640px) {
+  .crm-session-table th:nth-child(3),
+  .crm-session-table td:nth-child(3) {
+    display: none; /* hide Duration column on narrow */
+  }
+  .crm-session-table th,
+  .crm-session-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  .crm-attendance-summary-stats {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 

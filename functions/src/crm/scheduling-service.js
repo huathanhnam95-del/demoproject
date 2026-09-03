@@ -62,30 +62,42 @@ function addMinutesToLocalDateTime(dateStr, timeStr, minutesToAdd) {
 }
 
 function addDays(dateStr, days) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
     const date = new Date(`${dateStr}T00:00:00`);
+    if (isNaN(date.getTime())) return null;
     date.setDate(date.getDate() + Number(days || 0));
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 function getWeekdayNumber(dateStr) {
-    return new Date(`${dateStr}T00:00:00`).getDay();
+    if (!dateStr || typeof dateStr !== 'string') return 0;
+    const date = new Date(`${dateStr}T00:00:00`);
+    return isNaN(date.getTime()) ? 0 : date.getDay();
 }
 
 const formatterCache = new Map();
+const MAX_FORMATTER_CACHE_SIZE = 50;
 
 function getTimeZoneFormatter(timezone) {
     const zone = cleanOptionalString(timezone, 'UTC');
     if (!formatterCache.has(zone)) {
-        formatterCache.set(zone, new Intl.DateTimeFormat('en-CA', {
-            timeZone: zone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hourCycle: 'h23'
-        }));
+        if (formatterCache.size >= MAX_FORMATTER_CACHE_SIZE) {
+            formatterCache.clear();
+        }
+        try {
+            formatterCache.set(zone, new Intl.DateTimeFormat('en-CA', {
+                timeZone: zone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23'
+            }));
+        } catch (_err) {
+            return getTimeZoneFormatter('UTC');
+        }
     }
     return formatterCache.get(zone);
 }
@@ -1371,7 +1383,7 @@ function buildReplacementPlan({ replacementSession, replacedSession }) {
         },
         cancelPatch: {
             status: 'cancelled',
-            replacementSessionId: cleanOptionalString(replaced.sessionId) || null
+            replacementSessionId: cleanOptionalString(base.sessionId) || null
         }
     };
 }

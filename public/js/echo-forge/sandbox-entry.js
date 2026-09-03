@@ -9,9 +9,13 @@ import { selectChallenge } from './core/challenge-selector.js';
 import { LEVEL_DESCRIPTORS, SUPPORT_DESCRIPTORS, describeActionCard, formatAnalysisFeedback, humanizeEvent, summarizeRun } from './core/learner-feedback.js';
 import { createInitialCombatState, reduceCombat, replayCombat } from './core/combat-reducer.js';
 import { createVisualPresenter } from './visual/presenter.js';
+import { createEchoForgeJuice } from './visual/juice.js';
+import { createEchoForgeSfx } from './audio/sfx.js';
+import { WARDENS, selectWardenMove, calculateMoveIncomingDamage } from './core/wardens.js';
+import { createInitialRunState, reduceRun, replayRun } from './core/run-reducer.js';
+import { getRewardById } from './core/rewards.js';
 
 const hooks = window.__ECHO_FORGE_TEST_HOOKS__ || {};
-const ENEMY_BASE_DAMAGE = 20;
 const PARRY_WINDOW_MS = 4000;
 const telemetry = createTimingTelemetry();
 const root = document.querySelector('#echo-forge-root');
@@ -24,11 +28,22 @@ const defendControls = document.querySelector('#defend-controls');
 const blockOptions = document.querySelector('#block-options');
 const optionRow = document.querySelector('#option-row');
 const eventLog = document.querySelector('#event-log');
+const rewardSelectNode = document.querySelector('#reward-select');
+const rewardCardsNode = document.querySelector('#reward-cards');
 const summaryNode = document.querySelector('#summary');
 const feedbackNode = document.querySelector('#feedback');
 const feedbackText = document.querySelector('#feedback-text');
 const parryCountdown = document.querySelector('#parry-countdown');
 const visualPresenter = createVisualPresenter({ root });
+let sfx = null;
+let juice = null;
+let wardenIndex = 0;
+let currentWarden = WARDENS[0];
+let currentMove = WARDENS[0].moves[0];
+
+let run = null;
+let initialRunState = null;
+let runActions = [];
 
 let catalog = null;
 let preferences = null;
@@ -118,14 +133,44 @@ function stopParryCountdown() {
 
 function renderSummary() {
   if (!combat || !['victory', 'defeat', 'abandoned'].includes(combat.status)) return;
-  const summary = summarizeRun({ outcome: combat.status, rounds: combat.round, attempts: runAttempts });
+  const totalRounds = run?.ledger?.length
+    ? run.ledger.reduce((sum, item) => sum + (item.rounds || 0), 0)
+    : combat.round;
+  const summary = summarizeRun({ outcome: combat.status, rounds: totalRounds, attempts: runAttempts });
   summaryNode.hidden = false;
-  document.querySelector('#summary-outcome').textContent = summary.outcome === 'victory' ? 'Victory! Your pronunciation shattered the Warden\'s defenses.' : summary.outcome === 'defeat' ? 'Defeat — use the feedback below to sharpen your skills.' : 'You retreated from the arena.';
+  document.querySelector('#summary-outcome').textContent = summary.outcome === 'victory'
+    ? (run?.ledger?.length > 1
+      ? 'Victory! Your pronunciation shattered all Wardens\' defenses.'
+      : 'Victory! Your pronunciation shattered the Warden\'s defenses.')
+    : summary.outcome === 'defeat'
+      ? 'Defeat — use the feedback below to sharpen your skills.'
+      : 'You retreated from the arena.';
   document.querySelector('#summary-rounds').textContent = String(summary.rounds);
   document.querySelector('#summary-scored').textContent = String(summary.scoredAttempts);
   document.querySelector('#summary-scores').textContent = summary.averageScore === null ? 'No scored attempts' : `${summary.averageScore} average / ${summary.bestScore} best`;
   document.querySelector('#summary-actions').textContent = String(summary.successfulActions);
   document.querySelector('#summary-focus').textContent = summary.pronunciationFocusReview.length ? summary.pronunciationFocusReview.join('; ') : 'No focus evidence recorded';
+
+  const vocabSection = document.querySelector('#vocab-capture-section');
+  const vocabBtn = document.querySelector('#vocab-capture-btn');
+  const vocabStatus = document.querySelector('#vocab-capture-status');
+  if (vocabSection && vocabBtn) {
+    const bridge = window.__echoForgeBridge;
+    const pending = bridge?.getPendingCaptures?.() || [];
+    if (pending.length > 0) {
+      vocabSection.hidden = false;
+      vocabBtn.disabled = false;
+      vocabBtn.textContent = `Add ${pending.length} missed ${pending.length === 1 ? 'word' : 'words'} to Vocabulary Book`;
+      vocabBtn.onclick = () => {
+        const flushed = bridge.flushCaptures();
+        vocabBtn.disabled = true;
+        if (vocabStatus) vocabStatus.textContent = `Saved ${flushed.length} items.`;
+      };
+    } else {
+      vocabSection.hidden = true;
+    }
+  }
+
   document.querySelector('#summary-heading').focus({ preventScroll: true });
 }
 
@@ -133,10 +178,99 @@ function emitOwnedEvent(type, payload = {}) {
   appendEvents([{ type, payload }]);
 }
 
+function emitRunEvent(type, payload = {}) {
+  root.dispatchEvent(new CustomEvent('echo-forge:run', {
+    detail: { type, payload, runState: run, timestamp: Date.now() },
+    bubbles: true,
+  }));
+}
+
+function presentRewardSelection(offer) {
+  if (!rewardCardsNode || !rewardSelectNode) return;
+  rewardCardsNode.replaceChildren();
+  for (const reward of offer) {
+    const card = document.createElement('div');
+    card.className = 'reward-card';
+    const title = document.createElement('strong');
+    title.textContent = reward.name;
+    const desc = document.createElement('p');
+    desc.textContent = reward.description;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'primary';
+    button.textContent = `Claim ${reward.name}`;
+    button.addEventListener('click', () => claimReward(reward.id));
+    card.append(title, desc, button);
+    rewardCardsNode.appendChild(card);
+  }
+  battleNode.hidden = true;
+  rewardSelectNode.hidden = false;
+  focusElement('#reward-heading');
+  setStatus(`Victory over ${currentWarden.name}! Choose a reward to proceed.`, 'success');
+}
+
+function claimReward(rewardId) {
+  const runAction = { type: 'CLAIM_REWARD', rewardId };
+  runActions.push(runAction);
+  const runResult = reduceRun(run, runAction);
+  run = runResult.state;
+  combat = run.combat;
+
+  for (const ev of runResult.events) {
+    emitRunEvent(ev.type, ev.payload);
+  }
+  appendEvents(runResult.combatEvents);
+
+  rewardSelectNode.hidden = true;
+  battleNode.hidden = false;
+
+  wardenIndex = run.wardenIndex;
+  currentWarden = WARDENS[wardenIndex] || WARDENS[0];
+  currentMove = currentWarden.moves[0];
+  root.dataset.warden = currentWarden.colorToken;
+  const enemyNameEl = document.querySelector('#enemy-name');
+  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
+  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
+  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+
+  render();
+  showChallenge(null);
+  setStatus(`Next opponent: ${currentWarden.name}! Your turn — choose an attack!`);
+  focusFirstEnabledAttack();
+}
+
 function coreDispatch(action) {
+  replayActions.push(structuredClone(action));
+  const singleFight = Boolean(hooks.singleFight);
+  const runAction = {
+    type: 'COMBAT_ACTION',
+    combatAction: action,
+    singleFight,
+  };
+  runActions.push(runAction);
+
+  if (run) {
+    const runResult = reduceRun(run, runAction);
+    run = runResult.state;
+    combat = run.combat;
+
+    for (const ev of runResult.events) {
+      emitRunEvent(ev.type, ev.payload);
+    }
+    appendEvents(runResult.combatEvents);
+    render();
+
+    if (run.status === 'reward_pending' && run.rewardOffer) {
+      presentRewardSelection(run.rewardOffer);
+    } else if (['victory', 'defeat', 'abandoned'].includes(run.status)) {
+      if (rewardSelectNode) rewardSelectNode.hidden = true;
+    }
+
+    return { state: combat, events: runResult.combatEvents };
+  }
+
   const result = reduceCombat(combat, action);
   combat = result.state;
-  replayActions.push(structuredClone(action));
   appendEvents(result.events);
   render();
   return result;
@@ -169,6 +303,7 @@ function renderMeters() {
   document.querySelector('#resonance-value').textContent = combat.hero.resonance;
   document.querySelector('#combo-value').textContent = combat.hero.combo;
   document.querySelector('#round-value').textContent = combat.round;
+  juice?.updateGhostBars();
 }
 
 function render() {
@@ -195,7 +330,7 @@ function render() {
   }
   const blockButton = document.querySelector('#block-btn');
   if (blockButton) blockButton.disabled = !promptIsReady();
-  if (combat.status === 'victory') setStatus('Victory! The Echo Warden falls.', 'success');
+  if (combat.status === 'victory') setStatus(`Victory! ${currentWarden.name} falls.`, 'success');
   if (combat.status === 'defeat') setStatus('Defeated — but every attempt sharpens your pronunciation.', 'warning');
   if (combat.status === 'abandoned') setStatus('Retreated. No progress changed.', 'neutral');
   renderSummary();
@@ -226,19 +361,20 @@ function clearAutoRecord() {
   }
 }
 
-function startAutoRecordCountdown(seconds = 2) {
+function startAutoRecordCountdown(seconds = 0.6) {
   clearAutoRecord();
-  let remaining = seconds;
+  let remainingMs = Math.round(seconds * 1000);
   const recordBtn = document.querySelector('#record-btn');
   const updateLabel = () => {
     if (recordBtn && !recordBtn.disabled) {
-      recordBtn.textContent = `Auto-recording in ${remaining}s... (click to start)`;
+      const secFormatted = (remainingMs / 1000).toFixed(1);
+      recordBtn.textContent = `READY \u2192 GO (${secFormatted}s)...`;
     }
   };
   updateLabel();
   autoRecordTimer = setInterval(() => {
-    remaining -= 1;
-    if (remaining <= 0) {
+    remainingMs -= 200;
+    if (remainingMs <= 0) {
       clearAutoRecord();
       if (combat?.status === 'active' && !recordControls.hidden && recordBtn && !recordBtn.disabled) {
         void startRecording();
@@ -246,7 +382,7 @@ function startAutoRecordCountdown(seconds = 2) {
     } else {
       updateLabel();
     }
-  }, 1000);
+  }, 200);
 }
 
 function stopSilenceDetection() {
@@ -297,13 +433,16 @@ function startSilenceDetection() {
       const rms = Math.sqrt(sum / buffer.length);
       const now = performance.now();
 
-      if (rms > 0.02) {
+      if (rms > 0.015) {
         speechDetected = true;
         lastSpeechTime = now;
       }
 
-      // If user has spoken and then pauses for 1000ms (1.0s silence)
-      if (speechDetected && (now - lastSpeechTime >= 1000)) {
+      const unitType = pendingChallenge?.unitType || pendingCard?.unitType || 'word';
+      const silenceLimitMs = unitType === 'phrase' ? 800 : 450;
+
+      // If user has spoken and then pauses
+      if (speechDetected && (now - lastSpeechTime >= silenceLimitMs)) {
         stopSilenceDetection();
         void stopAndAnalyze();
         return;
@@ -332,8 +471,15 @@ function chooseAttack(cardId) {
   document.querySelector('#record-label').textContent = 'Speak the target';
   document.querySelector('#record-btn').disabled = false;
   focusElement('#record-btn');
-  setStatus('Target ready. Auto-recording in 2s, or click Start recording now.');
-  startAutoRecordCountdown(2);
+  const preset = preferences?.supportPreset || 'standard';
+  if (preset === 'challenge') {
+    setStatus('Target ready. Speak now!');
+    void startRecording();
+  } else {
+    const countdownSec = preset === 'guided' ? 1.5 : 0.6;
+    setStatus('Target ready. Get ready...');
+    startAutoRecordCountdown(countdownSec);
+  }
 }
 
 function clearRecordingUi() {
@@ -378,6 +524,7 @@ function makeNoopAnalysis(challenge, status, reasonCode) {
 }
 
 async function startRecording() {
+  if (capture?.state === 'recording') return;
   clearAutoRecord();
   const generation = operationGeneration;
   try {
@@ -403,7 +550,9 @@ async function startRecording() {
       });
       startParryCountdown();
     }
-    setStatus(recordingPurpose === 'parry' ? 'Parry window open—repeat what you heard now.' : 'Recording… (auto-stops after 1s silence)');
+    const unitType = pendingChallenge?.unitType || pendingCard?.unitType || 'word';
+    const silenceSec = unitType === 'phrase' ? '0.8s' : '0.45s';
+    setStatus(recordingPurpose === 'parry' ? 'Parry window open—repeat what you heard now.' : `Recording… (auto-stops after ${silenceSec} silence)`);
     startSilenceDetection();
   } catch (error) {
     if (generation !== operationGeneration || combat?.status !== 'active') return;
@@ -459,7 +608,7 @@ async function stopAndAnalyze() {
       result = coreDispatch({
         type: 'RESOLVE_PARRY',
         timing: reactionDurationMs <= PARRY_WINDOW_MS ? 'timely' : 'late',
-        enemyBaseDamage: ENEMY_BASE_DAMAGE,
+        enemyBaseDamage: calculateMoveIncomingDamage(currentWarden, currentMove, 'parry'),
         analysis: analysisResult.analysis,
       });
     } else {
@@ -519,7 +668,7 @@ async function stopAndAnalyze() {
     showFeedback(formatAnalysisFeedback({ analysis: technicalAnalysis, challenge, card: card || { label: 'Parry', evaluationMode: challenge.evaluationMode }, damage: 0, supportPreset: preferences.supportPreset }));
     runAttempts.push({ status: technicalAnalysis.status, score: null, damage: 0, success: false, focus: challenge.pronunciation.focus });
     if (purpose === 'parry') {
-      coreDispatch({ type: 'RESOLVE_PARRY', timing: 'timely', enemyBaseDamage: ENEMY_BASE_DAMAGE, analysis: technicalAnalysis });
+      coreDispatch({ type: 'RESOLVE_PARRY', timing: 'timely', enemyBaseDamage: calculateMoveIncomingDamage(currentWarden, currentMove, 'parry'), analysis: technicalAnalysis });
       clearRecordingUi();
       if (hooks.playPrompt) presentBlock();
       else presentEnemyIntent();
@@ -546,7 +695,7 @@ function cancelRecording() {
   if (wasPending && challenge && combat?.status === 'active') {
     const cancelled = makeNoopAnalysis(challenge, 'cancelled', 'CANCELLED');
     if (purpose === 'parry') {
-      coreDispatch({ type: 'RESOLVE_PARRY', timing: 'timely', enemyBaseDamage: ENEMY_BASE_DAMAGE, analysis: cancelled });
+      coreDispatch({ type: 'RESOLVE_PARRY', timing: 'timely', enemyBaseDamage: calculateMoveIncomingDamage(currentWarden, currentMove, 'parry'), analysis: cancelled });
     } else {
       coreDispatch({ type: 'RESOLVE_PLAYER_ATTACK', cardId: card.id, useBurst: false, analysis: cancelled });
     }
@@ -610,7 +759,11 @@ function resolveBlockOutcome(outcome) {
   promptAdapter?.cancel?.();
   blockOptions.setAttribute('aria-busy', 'false');
   blockOptions.hidden = true;
-  coreDispatch({ type: 'RESOLVE_BLOCK', outcome, enemyBaseDamage: ENEMY_BASE_DAMAGE });
+  let incomingDamage = calculateMoveIncomingDamage(currentWarden, currentMove, 'block');
+  if (run?.modifiers?.blockReliefBonus) {
+    incomingDamage = Math.max(1, Math.round(incomingDamage * (1 - run.modifiers.blockReliefBonus)));
+  }
+  coreDispatch({ type: 'RESOLVE_BLOCK', outcome, enemyBaseDamage: incomingDamage });
   showChallenge(null);
   setStatus(outcome === 'correct' ? 'Correct Block: half damage and one Focus restored.' : `${outcome === 'timeout' ? 'Block timed out' : 'Incorrect Block'}: defence reduced.`, outcome === 'correct' ? 'success' : 'warning');
   focusFirstEnabledAttack();
@@ -732,7 +885,7 @@ async function presentParry() {
   document.querySelector('#record-btn').disabled = false;
   showChallenge(parryChallenge, { hideTarget: true, promptLabel: '🎧 Listen & Repeat' });
   focusElement('#record-btn');
-  setStatus('The Warden strikes with a spoken word! Listening...', 'neutral');
+  setStatus(`${currentWarden.name} strikes with a spoken word! Listening...`, 'neutral');
 
   await playParryAttackAudio(parryChallenge);
 
@@ -743,6 +896,11 @@ async function presentParry() {
 
 function presentEnemyIntent() {
   if (combat.status !== 'active' || combat.turn !== 'enemy') return;
+  currentMove = selectWardenMove(currentWarden, {
+    seed: 0x4543484f,
+    wardenIndex,
+    round: combat.round,
+  });
   blockChallenge = chooseListeningChallenge();
   parryChallenge = selectChallenge(catalog.challenges, {
     level: preferences.level, unitType: 'listening', rng, recentChallengeIds: challengeHistory,
@@ -755,33 +913,103 @@ function presentEnemyIntent() {
   const blockButton = document.querySelector('#block-btn');
   blockButton.disabled = !promptIsReady();
   focusElement(promptIsReady() ? '#block-btn' : '#parry-btn');
+  const moveTell = currentMove ? ` [${currentMove.label}: ${currentMove.tell}]` : '';
   setStatus(promptIsReady()
-    ? 'The Warden attacks! Block or Parry to defend.'
-    : 'The Warden attacks! Parry is available.');
+    ? `${currentWarden.name} attacks!${moveTell} Block or Parry to defend.`
+    : `${currentWarden.name} attacks!${moveTell} Parry is available.`);
+}
+
+function resumeSavedRun(savedRun) {
+  run = savedRun;
+  initialRunState = savedRun;
+  runActions = [];
+  replayActions = [];
+  preferences = createRunPreferences({
+    level: savedRun.level || document.querySelector('#level-select').value,
+    supportPreset: document.querySelector('#support-select').value,
+  });
+  rng = createSeededRng(savedRun.seed || 0x4543484f);
+
+  wardenIndex = savedRun.wardenIndex;
+  currentWarden = WARDENS[wardenIndex] || WARDENS[0];
+  currentMove = currentWarden.moves[0];
+  root.dataset.warden = currentWarden.colorToken;
+  const enemyNameEl = document.querySelector('#enemy-name');
+  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
+  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
+  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+
+  challengeHistory = new Set();
+  runAttempts = [];
+  summaryNode.hidden = true;
+  setupNode.hidden = true;
+  const resumeBtn = document.querySelector('#resume-btn');
+  if (resumeBtn) resumeBtn.hidden = true;
+  document.querySelector('#abandon-btn').hidden = false;
+
+  if (savedRun.status === 'reward_pending') {
+    const offer = savedRun.rewardOffer || deriveRewardOffer(savedRun.seed, savedRun.wardenIndex);
+    presentRewardSelection(offer);
+  } else {
+    const entered = reduceRun(run, { type: 'ENTER_FIGHT' });
+    run = entered.state;
+    combat = run.combat;
+    initialState = combat;
+    battleNode.hidden = false;
+    render();
+    showChallenge(null);
+    setStatus(`Resumed campaign against ${currentWarden.name}! Your turn — choose an attack!`);
+    focusFirstEnabledAttack();
+  }
 }
 
 async function startRun() {
+  const seed = hooks.seed !== undefined ? hooks.seed : (Date.now() & 0x7fffffff);
   preferences = createRunPreferences({
     level: document.querySelector('#level-select').value,
     supportPreset: document.querySelector('#support-select').value,
   });
-  rng = createSeededRng(0x4543484f);
-  initialState = createInitialCombatState({ level: preferences.level });
-  combat = initialState;
+  rng = createSeededRng(seed);
+
+  const initialRun = createInitialRunState({ level: preferences.level, seed });
+  const startRunAction = { type: 'START_RUN', seed, level: preferences.level };
+  runActions = [startRunAction];
+  initialRunState = initialRun;
+
+  const runResult = reduceRun(initialRun, startRunAction);
+  run = runResult.state;
+  combat = run.combat;
+  initialState = combat;
   replayActions = [];
+
+  for (const ev of runResult.events) {
+    emitRunEvent(ev.type, ev.payload);
+  }
+
+  wardenIndex = run.wardenIndex;
+  currentWarden = WARDENS[wardenIndex] || WARDENS[0];
+  currentMove = currentWarden.moves[0];
+  root.dataset.warden = currentWarden.colorToken;
+  const enemyNameEl = document.querySelector('#enemy-name');
+  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
+  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
+  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+
   challengeHistory = new Set();
   runAttempts = [];
   summaryNode.hidden = true;
+  if (rewardSelectNode) rewardSelectNode.hidden = true;
   eventLog.replaceChildren();
   showFeedback({ tone: 'neutral', text: 'Choose an action to begin.' });
   setupNode.hidden = true;
   battleNode.hidden = false;
   document.querySelector('#abandon-btn').hidden = false;
-  coreDispatch({ type: 'START_COMBAT' });
+
   showChallenge(null);
   setStatus('Your turn — choose an attack!');
-  const prewarm = await analysisClient.prewarmV3?.();
-  prewarmDurationMs = prewarm?.durationMs || 0;
+  if (!prewarmDurationMs && analysisClient?.prewarmV3) {
+    analysisClient.prewarmV3().then((p) => { prewarmDurationMs = p?.durationMs || 0; }).catch(() => {});
+  }
 }
 
 function download(name, type, contents) {
@@ -797,6 +1025,14 @@ function download(name, type, contents) {
 }
 
 function replayState() {
+  if (initialRunState && runActions.length > 0) {
+    const replayed = replayRun(initialRunState, runActions);
+    run = replayed.state;
+    combat = run.combat;
+    render();
+    setStatus('Deterministic replay reproduced the current combat state.', 'success');
+    return;
+  }
   if (!initialState || replayActions.length === 0) return;
   const replayed = replayCombat(initialState, replayActions);
   combat = replayed.state;
@@ -834,8 +1070,30 @@ async function init() {
     }
     root.dataset.state = 'ready';
     document.querySelector('#start-btn').disabled = false;
+    const resumeBtn = document.querySelector('#resume-btn');
+    const savedRun = hooks.savedRun !== undefined ? hooks.savedRun : window.__echoForgeBridge?.getSavedRun?.();
+    if (resumeBtn && savedRun && ['active', 'reward_pending'].includes(savedRun.status)) {
+      const targetWarden = WARDENS[savedRun.wardenIndex] || WARDENS[0];
+      resumeBtn.hidden = false;
+      resumeBtn.textContent = `Resume Campaign (${targetWarden.name})`;
+      resumeBtn.addEventListener('click', () => resumeSavedRun(savedRun));
+    }
     updateSetupDescriptions();
     void visualPresenter.load();
+
+    sfx = createEchoForgeSfx({ enabled: true, testHooks: hooks });
+    juice = createEchoForgeJuice({ root, sfx });
+    const soundToggle = root.querySelector('#sound-toggle');
+    if (soundToggle) {
+      soundToggle.checked = sfx.isEnabled();
+      soundToggle.addEventListener('change', () => {
+        sfx.setEnabled(soundToggle.checked);
+      });
+    }
+    analysisClient?.prewarmV3?.().then((p) => {
+      prewarmDurationMs = p?.durationMs || 0;
+    }).catch(() => {});
+
     emitOwnedEvent('sandbox.setup.completed');
     if (promptIsReady()) setStatus('Arena ready. Choose your settings and begin.');
   } catch (error) {
@@ -871,6 +1129,7 @@ document.querySelector('#change-settings-btn').addEventListener('click', () => {
   invalidateActiveOperation();
   stopParryCountdown();
   summaryNode.hidden = true;
+  if (rewardSelectNode) rewardSelectNode.hidden = true;
   battleNode.hidden = true;
   setupNode.hidden = false;
   document.querySelector('#abandon-btn').hidden = true;
@@ -892,7 +1151,9 @@ document.addEventListener('keydown', (event) => {
 
 window.echoForgeSandbox = Object.freeze({
   getState: () => combat,
+  getRunState: () => run,
   getReplay: () => Object.freeze(structuredClone(replayActions)),
+  getRunReplay: () => Object.freeze(structuredClone(runActions)),
   getTelemetry: () => telemetry.snapshot(),
   replay: replayState,
 });

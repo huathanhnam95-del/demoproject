@@ -68,6 +68,7 @@ test('attack, block, and parry calculations match locked boundaries', () => {
     damage: 0,
     incomingMultiplier: 0,
     reflectedDamage: 0,
+    focusRestored: 1,
     timing: 'timely',
   });
   assert.equal(resolveParry({ score: 95, timing: 'timely', enemyBaseDamage: 20 }).reflectedDamage, 10);
@@ -75,6 +76,9 @@ test('attack, block, and parry calculations match locked boundaries', () => {
   assert.equal(late.incomingMultiplier, 0.5);
   assert.equal(late.damage, 10);
   assert.equal(late.reflectedDamage, 0);
+  assert.equal(late.focusRestored, 0);
+  assert.equal(resolveParry({ score: 69, timing: 'timely', enemyBaseDamage: 20 }).focusRestored, 0);
+  assert.equal(resolveParry({ score: 70, timing: 'timely', enemyBaseDamage: 20 }).focusRestored, 1);
 });
 
 test('seeded challenge selection is deterministic and filters exact policy fields', () => {
@@ -259,6 +263,40 @@ test('combat events are immutable and abandonment is terminal and single-shot', 
   const abandoned = reduceCombat(started.state, { type: 'ABANDON_COMBAT' });
   assert.deepEqual(abandoned.events.map((entry) => entry.type), ['combat.abandoned']);
   assert.throws(() => reduceCombat(abandoned.state, { type: 'ABANDON_COMBAT' }), /terminal|active|setup/);
+});
+
+test('createInitialCombatState supports custom validated parameters and attack scoring >= 90 awards focus', () => {
+  const custom = createInitialCombatState({
+    level: 'B1',
+    heroMaxHp: 150,
+    enemyMaxHp: 180,
+    heroHp: 120,
+    heroFocus: 2,
+    heroResonance: 50,
+  });
+  assert.equal(custom.hero.hp, 120);
+  assert.equal(custom.hero.maxHp, 150);
+  assert.equal(custom.hero.focus, 2);
+  assert.equal(custom.hero.resonance, 50);
+  assert.equal(custom.enemy.maxHp, 180);
+
+  const started = reduceCombat(custom, { type: 'START_COMBAT' });
+  const attackHigh = reduceCombat(started.state, {
+    type: 'RESOLVE_PLAYER_ATTACK',
+    cardId: 'precision_strike',
+    analysis: analysis({ status: 'scored', score: 92, evaluationMode: 'azure_word' }),
+  });
+  // precision_strike costs 0 focus, so 2 + 1 = 3 focus (max 3)
+  assert.equal(attackHigh.state.hero.focus, 3);
+  assert.equal(attackHigh.events.some((e) => e.type === 'combat.focus.changed' && e.payload.focus === 3), true);
+
+  const attackCost = reduceCombat(started.state, {
+    type: 'RESOLVE_PLAYER_ATTACK',
+    cardId: 'stress_breaker',
+    analysis: analysis({ status: 'scored', score: 95, evaluationMode: 'v3_word' }),
+  });
+  // stress_breaker costs 1 focus, score 95 gives +1 focus: 2 - 1 + 1 = 2 focus
+  assert.equal(attackCost.state.hero.focus, 2);
 });
 
 test('Echo Forge core has no Survival, difficulty, account, or Firestore coupling', async () => {

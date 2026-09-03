@@ -87,7 +87,16 @@ test('visual build is deterministic and rejects active SVG content', () => {
     fs.writeFileSync(heroPath, tampered);
     assert.throws(() => execFileSync('node', [BUILD_SCRIPT], { cwd: ROOT, stdio: 'pipe' }), /existing binary changed/i);
   } finally {
-    fs.writeFileSync(heroPath, heroBytes);
+    let restored = false;
+    for (let i = 0; i < 5 && !restored; i++) {
+      try {
+        fs.writeFileSync(heroPath, heroBytes);
+        restored = true;
+      } catch {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+      }
+    }
+    if (!restored) fs.writeFileSync(heroPath, heroBytes);
   }
   assert.doesNotThrow(() => execFileSync('node', [BUILD_SCRIPT], { cwd: ROOT, stdio: 'pipe' }));
   for (const name of fs.readdirSync(SOURCE_ROOT).filter((item) => item.endsWith('.svg'))) {

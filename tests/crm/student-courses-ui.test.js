@@ -3,10 +3,19 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 (async function runStudentCoursesUiTests() {
-    console.log('Running Student Courses UI (Screens A & B) tests...');
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
+    const isHeaded = process.argv.includes('--headed');
+    const saveScreenshots = process.argv.includes('--screenshots');
+    const screenshotDir = path.resolve(__dirname, '../browser/screenshots');
+
+    console.log(`Running Student Courses UI tests (headed: ${isHeaded}, screenshots: ${saveScreenshots})...`);
+    const browser = await chromium.launch({ headless: !isHeaded, slowMo: isHeaded ? 300 : 0 });
+    const context = await browser.newContext({ viewport: { width: 1024, height: 800 } });
     const page = await context.newPage();
+
+    async function capture(name) {
+        if (!saveScreenshots) return;
+        await page.screenshot({ path: path.join(screenshotDir, `${name}.png`), fullPage: true });
+    }
 
     const scriptAvailability = path.resolve(__dirname, '../../public/js/crm/schedule-availability.js');
     const scriptStudentCourses = path.resolve(__dirname, '../../public/js/crm/student-courses.js');
@@ -82,7 +91,9 @@ const { chromium } = require('playwright');
     const emptyStateText = await page.textContent('#student-courses');
     assert(emptyStateText.includes('No courses enrolled yet for this student.'));
     assert(await page.$('#btn-show-add-course') !== null);
+    await capture('crm-student-courses-screen-a-empty');
     console.log('✓ Test 1 passed: Screen A empty state');
+
 
     // Test 2: Click "+ Enrol in a Course" transitions to Screen B
     await page.click('#btn-show-add-course');
@@ -117,6 +128,7 @@ const { chromium } = require('playwright');
     assert.strictEqual(undoneEndDate, '2026-10-31', 'Undo should revert back to auto-calculated date');
     const resetHelperText = await page.textContent('#enroll-end-date-helper');
     assert(resetHelperText.includes('(auto-calculated)'));
+    await capture('crm-student-courses-screen-b-matrix');
     console.log('✓ Test 3 passed: Duration calculation, manual override badge, and undo restore');
 
     // Test 4: Back button returns to Screen A
@@ -187,6 +199,7 @@ const { chromium } = require('playwright');
 
     const btnAttendance = await page.$('.btn-view-attendance');
     assert(btnAttendance !== null, 'View Lessons & Attendance button must be present');
+    await capture('crm-student-courses-screen-a-enrolled');
     console.log('✓ Test 5 passed: Screen A enrollment card with live progress bar (role="progressbar") and next lesson');
 
     // Test 6: Click "View Lessons & Attendance →" switches to Screen C
@@ -225,6 +238,7 @@ const { chromium } = require('playwright');
     // Accessibility check: initial aria-expanded on trigger button
     const initialAriaExpanded = await page.$eval('.btn-expand-attendance', (el) => el.getAttribute('aria-expanded'));
     assert.strictEqual(initialAriaExpanded, 'false', 'Trigger button must have aria-expanded="false" initially');
+    await capture('crm-student-courses-screen-c-table');
     console.log('✓ Test 6 passed: Screen C rendering & No stacked modals (aria-expanded="false")');
 
     // Test 7: Inline row expansion & push-forward preview cascade
@@ -242,6 +256,7 @@ const { chromium } = require('playwright');
     assert(shiftPreviewText.includes('1 → Mon 14 Sep'), `Expected shift preview, got: ${shiftPreviewText}`);
     const datePreviewText = await page.textContent('.crm-cascade-preview-date');
     assert(datePreviewText.includes('Mon 21 Sep 2026'));
+    await capture('crm-student-courses-screen-c-cascade-preview');
     console.log('✓ Test 7 passed: Inline attendance expansion & Push-Forward live cascade preview (aria-expanded="true")');
 
     // Test 8: Inline Attendance Confirm & return to Screen A

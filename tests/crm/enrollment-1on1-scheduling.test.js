@@ -159,6 +159,10 @@ async function testPushForwardSessionEndpoint() {
         .reduce((sum, s) => sum + s.durationMinutes, 0);
     assert.strictEqual(countingMinutes, 240);
 
+    const classDocAfterPush = db.docs.get(`${CRM_CLASSROOMS}/${createdClassId}`);
+    assert.strictEqual(classDocAfterPush.scheduleSummary.contractedTargetCount, 2);
+    assert.strictEqual(classDocAfterPush.scheduleSummary.contractedAssignedCount, 2);
+
     console.log('✓ Test 3 passed: POST /sessions/:sessionId/push-forward preserves contract hours & extends end date');
 }
 
@@ -185,6 +189,8 @@ async function testAttendanceUpdateEndpoint() {
     const classDoc = db.docs.get(`${CRM_CLASSROOMS}/${createdClassId}`);
     assert.strictEqual(classDoc.scheduleSummary.contractedMinutesDelivered, 120);
     assert.strictEqual(classDoc.scheduleSummary.contractedMinutesRemaining, 120);
+    assert.strictEqual(classDoc.scheduleSummary.contractedTargetCount, 2);
+    assert.strictEqual(classDoc.scheduleSummary.contractedAssignedCount, 2);
 
     // 2. Mark penalized
     const resPenalized = await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {

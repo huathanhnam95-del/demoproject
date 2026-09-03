@@ -1,3 +1,14 @@
+## [V1.8.106] - 2026-09-03
+
+### Fixed & Enhanced
+- **CRM Student Courses Workflow & Aesthetic Redesign (Anti-AI-Slop & Anti-Box-in-Box)**:
+  - **Live 4→5 Courses Tab Empty State Fix**: Resolved bug where clicking the Courses tab on a new student (without `studentId`) displayed static placeholder text with no actions. Direct invocation of `CrmStudentCourses.renderScreenA(container, [])` now renders the proper empty state and "+ Enrol in a Course" CTA immediately.
+  - **Screen B (1-on-1 Enrolment & Schedule Availability) Layout & Breathing Room**: Separated header with a clean divider rule, widened form grid spacing to `14px 20px`, added directional left accent border (`3px solid --crm-primary`) on the contract comparison bar, and highlighted active availability day rows with a green left border accent and green duration chip (`2h`).
+  - **Screen C (Lessons & Attendance) Flat Stat Strip**: Replaced nested card container ("boxes in boxes") with a flat horizontal stat strip using vertical dividers (`|`) and muted-label/bold-value typography; organized session attendance metrics into a compact sub-row; bolded session dates as the primary scanning axis; dimmed `#` index column; and converted row action buttons into subtle ghost buttons that fill on hover.
+  - **Inline Attendance Accordion & Push-Forward Cascade**: Styled inline expansion row with a 4px green left border connecting it to the parent session row; formatted friendly dates (`Wed, Sep 9 at 14:00`); structured radio action items with distinct bold titles and muted descriptions; and replaced monospace preview styling with native body font and info-themed accenting.
+  - **CRM Suite & Books Workspace Syntax Fix**: Removed unneeded escape character in `books-workspace.js` regex.
+  - **Full Empirical Verification**: Automated CRM suite (`npm run verify:crm`), unit contract tests (`tests/crm/student-courses-ui.test.js`, `tests/crm/enrollment-1on1-scheduling.test.js`, `tests/crm/course-classroom-service.test.js`, `tests/crm/scheduling-service.test.js`), and Playwright live server browser check (`tests/browser/crm-student-courses-live-server-check.js`) all passing 100%.
+
 ## [V1.8.105] - 2026-09-03
 
 ### Fixed & Enhanced

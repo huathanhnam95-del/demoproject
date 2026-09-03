@@ -192,7 +192,7 @@ window.CrmBooksWorkspace = (function () {
         if (/^(?:[a-zA-Z.,\s]+)?\(?(?:19|20)\d{2}(?:,\s*pp?\.?\s*[\d-]+)?\)[.!?:–—]*$/.test(trimmed)) return false;
 
         // 5. Preserve International Phonetic Alphabet (IPA) transcriptions & linguistic notation
-        if (/[/\[][\u0250-\u02AF\u1D00-\u1D7F\u0370-\u03FFa-zA-Z0-9\s:ːˑˈˌ~.ˈ-]+[/\]]/.test(trimmed)) return false;
+        if (/[/[][\u0250-\u02AF\u1D00-\u1D7F\u0370-\u03FFa-zA-Z0-9\s:ːˑˈˌ~.ˈ-]+[/\]]/.test(trimmed)) return false;
         if (/^<[a-z]>\s+[a-zA-Z]+\s+\[[^\]\n]+\]/i.test(trimmed)) return false;
 
         // 6. Preserve dialogue speakers e.g. "A:", "B:", "Teacher:", "Student:" (with or without following words)

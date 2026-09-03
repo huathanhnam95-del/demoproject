@@ -19,7 +19,14 @@
         <h1>Echo Forge</h1>
         <p class="tagline">Battle the Echo Warden with your voice</p>
       </div>
-      <button id="abandon-btn" type="button" class="danger" hidden>Retreat</button>
+      <div class="header-actions">
+        <label class="sound-toggle-label" title="Toggle sound effects">
+          <input id="sound-toggle" type="checkbox" checked>
+          <span class="sound-icon" aria-hidden="true">&#128266;</span>
+          <span class="sr-only">Toggle Sound Effects</span>
+        </label>
+        <button id="abandon-btn" type="button" class="danger" hidden>Retreat</button>
+      </div>
     </header>
     <div id="system-status" role="status" aria-live="polite">Preparing the arena&hellip;</div>
     <section id="setup" aria-labelledby="setup-heading">
@@ -34,6 +41,7 @@
           <span class="field-help" id="support-help">Before you attempt: meaning. Afterward: corrective feedback and engine evidence.</span>
         </label>
         <button id="start-btn" type="button" class="primary start-btn" disabled>Begin Battle</button>
+        <button id="resume-btn" type="button" class="subtle-btn resume-btn" hidden>Resume Campaign</button>
       </div>
     </section>
     <section id="battle" hidden aria-labelledby="battle-heading">
@@ -41,12 +49,18 @@
       <div class="meter-grid">
         <div class="meter-card hero-meter">
           <div class="meter-line"><strong>Resonant</strong><span id="hero-hp-text"></span></div>
-          <progress id="hero-hp" max="100" aria-label="Hero health"></progress>
+          <div class="hp-bar-wrapper">
+            <div id="hero-hp-ghost" class="hp-ghost"></div>
+            <progress id="hero-hp" max="100" aria-label="Hero health"></progress>
+          </div>
           <div class="meter-stats"><span>Focus <b id="focus-value"></b></span><span>Resonance <b id="resonance-value"></b>%</span></div>
         </div>
         <div class="meter-card enemy-meter">
-          <div class="meter-line"><strong>Echo Warden</strong><span id="enemy-hp-text"></span></div>
-          <progress id="enemy-hp" max="120" aria-label="Echo Warden health"></progress>
+          <div class="meter-line"><strong id="enemy-meter-name">Echo Warden</strong><span id="enemy-hp-text"></span></div>
+          <div class="hp-bar-wrapper">
+            <div id="enemy-hp-ghost" class="hp-ghost"></div>
+            <progress id="enemy-hp" max="120" aria-label="Echo Warden health"></progress>
+          </div>
           <div class="meter-stats"><span>Combo <b id="combo-value"></b></span><span>Round <b id="round-value"></b></span></div>
         </div>
       </div>
@@ -54,7 +68,7 @@
         <div class="echo-visual-layer" aria-hidden="true"><img data-visual="effect" alt="" hidden></div>
         <div class="fighter hero"><div class="fighter-mark"><img data-visual="hero" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Resonant</strong></div>
         <div class="challenge"><div id="challenge-text">Choose an action</div><div id="challenge-support"></div></div>
-        <div class="fighter enemy"><div class="fighter-mark"><img data-visual="enemy" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong>Echo Warden</strong></div>
+        <div class="fighter enemy"><div class="fighter-mark"><img data-visual="enemy" alt="" hidden><span class="css-silhouette" aria-hidden="true"></span></div><strong id="enemy-name">Echo Warden</strong></div>
       </div>
       <div class="controls">
         <div id="attack-controls">
@@ -94,10 +108,19 @@
       <section id="feedback" data-tone="neutral" aria-labelledby="feedback-heading"><h3 id="feedback-heading">Battle Result</h3><p id="feedback-text">Choose an action to begin.</p></section>
       <ol id="event-log" aria-label="Combat feed"></ol>
     </section>
+    <section id="reward-select" hidden aria-labelledby="reward-heading">
+      <h2 id="reward-heading" tabindex="-1">Warden Defeated!</h2>
+      <p id="reward-prompt">Claim a reward before facing the next Warden.</p>
+      <div class="reward-cards" id="reward-cards"></div>
+    </section>
     <section id="summary" hidden aria-labelledby="summary-heading">
       <h2 id="summary-heading" tabindex="-1">Battle Complete</h2>
       <p id="summary-outcome"></p>
       <dl><dt>Rounds</dt><dd id="summary-rounds"></dd><dt>Scored attempts</dt><dd id="summary-scored"></dd><dt>Average / best score</dt><dd id="summary-scores"></dd><dt>Successful actions</dt><dd id="summary-actions"></dd><dt>Pronunciation focus</dt><dd id="summary-focus"></dd></dl>
+      <div id="vocab-capture-section" hidden class="vocab-capture-section">
+        <button id="vocab-capture-btn" type="button" class="subtle-btn"></button>
+        <span id="vocab-capture-status" role="status" class="vocab-capture-status"></span>
+      </div>
       <div class="toolbar summary-actions">
         <button id="play-again-btn" type="button" class="primary">Play Again</button>
         <button id="change-settings-btn" type="button">Change Settings</button>
@@ -105,5 +128,25 @@
     </section>
   </main>
   <script type="module" src="/js/echo-forge/sandbox-entry.js"></script>
+  <script type="module">
+    import { createEchoForgeBridge } from '/js/echo-forge-bridge.js';
+    const root = document.querySelector('#echo-forge-root');
+    if (root) {
+      const bridge = createEchoForgeBridge({
+        root,
+        captureVocab: (items) => {
+          if (window.VocabularyBook?.handlePracticeCapture) {
+            items.forEach((item) => {
+              if (item?.text) {
+                window.VocabularyBook.handlePracticeCapture(item.text, 'Echo Forge', item.focus || 'pronunciation');
+              }
+            });
+          }
+        },
+      });
+      bridge.attach();
+      window.__echoForgeBridge = bridge;
+    }
+  </script>
 </body>
 </html>

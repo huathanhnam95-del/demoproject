@@ -108,8 +108,11 @@ class F5TTSEngine(BaseVoiceCloningEngine):
         reference_transcript: str = "",
         emotion: str = "neutral",
         speed: float = 1.0,
-        output_filename: Optional[str] = None
+        output_filename: Optional[str] = None,
+        reference_text: Optional[str] = None
     ) -> SynthesisResult:
+        if reference_text and not reference_transcript:
+            reference_transcript = reference_text
         if not self._is_loaded and self.is_available():
             self.load_model()
 
@@ -143,7 +146,7 @@ class F5TTSEngine(BaseVoiceCloningEngine):
                 ref_text=ref_text,
                 gen_text=target_text,
                 file_wave=str(out_path),
-                nfe_step=16,
+                nfe_step=12,
                 speed=speed
             )
 

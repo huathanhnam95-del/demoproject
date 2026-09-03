@@ -294,9 +294,33 @@ function buildFirebaseStubScript() {
   assert.match(badgeText, /Voice Worker: Ready/, 'Worker badge must show Ready');
   console.log(`✔ Worker status verified: "${badgeText}"`);
 
+  // Verify Contrast: Ensure badge text is NOT white
+  const badgeStyles = await page.$eval('#vc-worker-status-badge', el => {
+    const s = window.getComputedStyle(el);
+    return { color: s.color, backgroundColor: s.backgroundColor, fontWeight: s.fontWeight };
+  });
+  console.log(`✔ Badge computed styles: color=${badgeStyles.color}, bg=${badgeStyles.backgroundColor}`);
+  assert.notEqual(badgeStyles.color, 'rgb(255, 255, 255)', 'Worker badge text color must NOT be white');
+  assert.equal(badgeStyles.color, 'rgb(22, 101, 52)', 'Worker badge text must be dark green (#166534)');
+  assert.equal(badgeStyles.backgroundColor, 'rgb(220, 252, 231)', 'Worker badge background must be mint (#dcfce7)');
+
   const queueCountText = await page.$eval('#vc-queue-count-badge', el => el.textContent.trim());
   assert.match(queueCountText, /3 queued/, 'Queue count must show 3 queued');
   console.log(`✔ Queue count verified: "${queueCountText}"`);
+
+  const queueStyles = await page.$eval('#vc-queue-count-badge', el => {
+    const s = window.getComputedStyle(el);
+    return { color: s.color };
+  });
+  console.log(`✔ Queue text computed color: ${queueStyles.color}`);
+  assert.notEqual(queueStyles.color, 'rgb(255, 255, 255)', 'Queue count text must NOT be white');
+
+  const workerCard = await page.$('section[aria-labelledby="vc-worker-title"]');
+  if (workerCard) {
+    const cardScreenshotPath = path.join(ROOT, 'artifacts', 'screenshots', 'crm-voice-worker-card-verified.png');
+    await workerCard.screenshot({ path: cardScreenshotPath });
+    console.log(`✔ Worker card screenshot saved to: ${cardScreenshotPath}`);
+  }
 
   // 3. Test Manual Queue Trigger
   console.log('Testing manual queue trigger button...');

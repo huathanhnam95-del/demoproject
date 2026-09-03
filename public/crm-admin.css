@@ -9916,6 +9916,10 @@ mark.crm-highlight:hover {
 .crm-books-quick-tag-item:hover {
   background: #f1f5f9;
 }
+.crm-books-quick-tag-item.highlighted {
+  background: #e0f2fe;
+  color: #0369a1;
+}
 .crm-books-quick-tag-item.selected {
   background: #ecfdf5;
   font-weight: 600;
@@ -10079,6 +10083,75 @@ mark.crm-highlight:hover {
 .crm-books-quick-tag-create-item:hover {
   background: #dcfce7;
 }
+.crm-books-quick-tag-create-item.highlighted {
+  background: #bbf7d0;
+  color: #15803d;
+  outline: 2px solid #86efac;
+}
+
+/* Tag Management in Modal */
+.crm-books-tag-mgmt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+.crm-books-tag-mgmt-item:hover {
+  background: #f1f5f9;
+}
+.crm-books-tag-mgmt-del-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.1s, background 0.1s;
+}
+.crm-books-tag-mgmt-del-btn:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Empty folder CTA button */
+.crm-books-folder-add-books-btn {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.crm-books-folder-add-books-btn:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+/* Card tag chip clickable */
+.crm-books-card-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.crm-books-card-tag-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
 
 /* Dark mode support for Collections and Tags */
 [data-panel="books"].books-dark .crm-books-folder {
@@ -10196,6 +10269,42 @@ mark.crm-highlight:hover {
 }
 .crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-create-item:hover {
   background: #0f766e;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-item.highlighted {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+.crm-books-quick-tag-popover.books-dark .crm-books-quick-tag-create-item.highlighted {
+  background: #14532d;
+  color: #86efac;
+  outline-color: #22c55e;
+}
+[data-panel="books"].books-dark .crm-books-card-tag-pill {
+  background: #2c2c33;
+  color: #9a9a9f;
+}
+[data-panel="books"].books-dark .crm-books-card-tag-pill:hover {
+  background: #3a3a42;
+  color: #e4e4e8;
+}
+[data-panel="books"].books-dark .crm-books-folder-add-books-btn {
+  background: #134e4a;
+  border-color: #0f766e;
+  color: #5eead4;
+}
+[data-panel="books"].books-dark .crm-books-folder-add-books-btn:hover {
+  background: #115e59;
+}
+.crm-books-modal-overlay.books-dark .crm-books-tag-mgmt-item {
+  background: #1f1f24;
+  border-color: #2c2c33;
+}
+.crm-books-modal-overlay.books-dark .crm-books-tag-mgmt-item:hover {
+  background: #2c2c33;
+}
+.crm-books-modal-overlay.books-dark .crm-books-tag-mgmt-del-btn:hover {
+  background: #7f1d1d;
+  color: #fca5a5;
 }
 
 /* ─── Phase 4: Knowledge Graph Modal ─── */
@@ -11502,9 +11611,19 @@ mark.crm-highlight:hover {
   font-weight: 500;
 }
 
+.crm-availability-row.is-unavailable {
+  padding: 6px 0;
+}
+
 .crm-availability-row.is-active .crm-availability-day-label {
   color: var(--crm-text-main);
   font-weight: 600;
+}
+
+.crm-availability-row.is-active {
+  border-left: 3px solid var(--crm-primary);
+  padding-left: 10px;
+  margin-left: -13px;
 }
 
 .crm-availability-day-col {
@@ -11591,6 +11710,12 @@ mark.crm-highlight:hover {
   border: 1px solid var(--crm-border-light);
   border-radius: 999px;
   user-select: none;
+}
+
+.crm-availability-row.is-active .crm-availability-length-chip {
+  color: var(--crm-primary);
+  background-color: var(--crm-primary-light);
+  border-color: var(--crm-primary);
 }
 
 .crm-availability-btn-remove {
@@ -11871,6 +11996,8 @@ mark.crm-highlight:hover {
   align-items: center;
   gap: 12px;
   margin-bottom: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--crm-border);
 }
 
 .crm-back-btn {
@@ -11896,7 +12023,12 @@ mark.crm-highlight:hover {
 .crm-enroll-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 14px 20px;
+}
+
+.crm-enroll-form-grid label {
+  letter-spacing: 0.02em;
+  font-size: 13px;
 }
 
 @media (max-width: 640px) {
@@ -11916,7 +12048,9 @@ mark.crm-highlight:hover {
   padding: 10px 14px;
   border-radius: var(--crm-radius);
   background: var(--crm-surface-input);
+  border-left: 3px solid var(--crm-primary);
   font-size: 13px;
+  letter-spacing: 0.01em;
   color: var(--crm-text-main);
 }
 
@@ -11965,7 +12099,10 @@ mark.crm-highlight:hover {
 .crm-attendance-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--crm-border);
+  margin-bottom: 2px;
 }
 
 .crm-attendance-title-row {
@@ -11975,10 +12112,11 @@ mark.crm-highlight:hover {
 }
 
 .crm-attendance-summary-card {
-  padding: 14px 16px;
-  border-radius: var(--crm-radius);
-  border: 1px solid var(--crm-border);
-  background: var(--crm-surface);
+  padding: 0 0 14px 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--crm-border);
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -11986,11 +12124,48 @@ mark.crm-highlight:hover {
 
 .crm-attendance-summary-stats {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   font-size: 13px;
   color: var(--crm-text-muted);
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0;
+}
+
+.crm-attendance-summary-stats strong {
+  color: var(--crm-text-main);
+  font-weight: 700;
+}
+
+.crm-attendance-summary-stats > span {
+  padding: 0 14px;
+  border-right: 1px solid var(--crm-border);
+}
+
+.crm-attendance-summary-stats > span:first-child {
+  padding-left: 0;
+}
+
+.crm-attendance-summary-stats > span:last-child {
+  border-right: none;
+}
+
+.crm-attendance-summary-sessions {
+  font-size: 12px;
+  color: var(--crm-text-muted);
+  gap: 0;
+}
+
+.crm-attendance-summary-sessions > span {
+  padding: 0 10px;
+  border-right: 1px solid var(--crm-border-light);
+}
+
+.crm-attendance-summary-sessions > span:first-child {
+  padding-left: 0;
+}
+
+.crm-attendance-summary-sessions > span:last-child {
+  border-right: none;
 }
 
 .crm-session-table {
@@ -12013,6 +12188,19 @@ mark.crm-highlight:hover {
   border-bottom: 1px solid var(--crm-border);
 }
 
+/* # column — dim visual noise */
+.crm-session-table th:first-child,
+.crm-session-table td:first-child {
+  color: var(--crm-text-muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+/* Date & Time column — primary scan axis */
+.crm-session-table td:nth-child(2) {
+  font-weight: 600;
+}
+
 .crm-session-table td {
   padding: 12px;
   border-bottom: 1px solid var(--crm-border);
@@ -12033,10 +12221,11 @@ mark.crm-highlight:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .crm-session-status-badge.status-attended {
@@ -12069,12 +12258,13 @@ mark.crm-highlight:hover {
   background: var(--crm-surface-input);
   padding: 16px 20px;
   border-bottom: 1px solid var(--crm-border);
+  border-left: 4px solid var(--crm-primary);
 }
 
 .crm-session-inline-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .crm-session-inline-title {
@@ -12087,16 +12277,26 @@ mark.crm-highlight:hover {
 .crm-inline-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .crm-inline-radio-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 13px;
+  line-height: 1.5;
   color: var(--crm-text-main);
   cursor: pointer;
+}
+
+.crm-inline-radio-label strong {
+  font-weight: 700;
+}
+
+.crm-inline-radio-label .crm-radio-desc {
+  font-weight: 400;
+  color: var(--crm-text-muted);
 }
 
 .crm-cascade-preview-box {
@@ -12104,8 +12304,9 @@ mark.crm-highlight:hover {
   margin-left: 24px;
   padding: 10px 14px;
   border-radius: var(--crm-radius);
-  background: var(--crm-surface);
-  border: 1px solid var(--crm-border);
+  background: var(--crm-info-bg);
+  border: none;
+  border-left: 3px solid var(--crm-info);
   font-size: 12px;
   display: flex;
   flex-direction: column;
@@ -12113,8 +12314,8 @@ mark.crm-highlight:hover {
 }
 
 .crm-cascade-preview-shift {
-  font-family: monospace;
-  color: var(--crm-primary);
+  font-family: inherit;
+  color: var(--crm-info-text);
   font-weight: 600;
 }
 
@@ -12157,6 +12358,20 @@ mark.crm-highlight:hover {
   color: var(--crm-primary-hover);
 }
 
+/* Ghost action buttons inside the session table */
+.crm-session-table .crm-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--crm-border);
+  color: var(--crm-text-muted);
+  transition: all 0.15s ease;
+}
+
+.crm-session-table .crm-btn-secondary:hover {
+  background: var(--crm-surface-input);
+  border-color: var(--crm-primary);
+  color: var(--crm-primary);
+}
+
 @media (max-width: 640px) {
   .crm-session-table th:nth-child(3),
   .crm-session-table td:nth-child(3) {
@@ -12170,6 +12385,10 @@ mark.crm-highlight:hover {
   .crm-attendance-summary-stats {
     flex-direction: column;
     gap: 4px;
+  }
+  .crm-attendance-summary-stats > span {
+    padding: 0;
+    border-right: none;
   }
 }
 
@@ -12303,5 +12522,70 @@ mark.crm-highlight:hover {
   text-align: center;
   color: #64748b;
   font-size: 0.9rem;
+}
+
+/* High-contrast Voice Worker Status Badges */
+#vc-worker-status-badge,
+.vc-worker-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  line-height: 1.4;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #1e293b !important;
+  transition: all 0.2s ease;
+}
+
+#vc-worker-status-badge.online,
+.vc-worker-badge.online {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #86efac !important;
+}
+
+#vc-worker-status-badge.online::before,
+.vc-worker-badge.online::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a !important;
+}
+
+#vc-worker-status-badge.offline,
+.vc-worker-badge.offline {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+#vc-worker-status-badge.offline::before,
+.vc-worker-badge.offline::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626 !important;
+}
+
+#vc-worker-status-badge.checking,
+.vc-worker-badge.checking {
+  background: #fef9c3 !important;
+  color: #854d0e !important;
+  border-color: #fde047 !important;
+}
+
+#vc-queue-count-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155 !important;
 }
 

@@ -224,7 +224,7 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateOverallRating,
         calculateF1Accuracy
     };
-} else {
+} else if (typeof window !== 'undefined') {
     window.PointsLogic = {
         CONFIG,
         calculateActivityPoints,
@@ -236,3 +236,14 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateF1Accuracy
     };
 }
+
+export {
+    CONFIG,
+    calculateActivityPoints,
+    distributePointsToSkills,
+    calculatePerformanceScore,
+    updateRating,
+    getCefrLevel,
+    calculateOverallRating,
+    calculateF1Accuracy
+};

@@ -15,7 +15,7 @@ function isVoiceWorkerReady(worker, currentTime = now()) {
     const ageMs = currentTime.getTime() - timestampMillis(worker.lastHeartbeatAt);
     return worker.state !== 'stopping'
         && ageMs >= 0
-        && ageMs <= 45_000
+        && ageMs <= 120_000
         && (worker.f5ttsReachable === true || worker.ready === true);
 }
 

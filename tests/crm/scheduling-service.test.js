@@ -186,6 +186,7 @@ assert.deepStrictEqual(
 
 const replacement = buildReplacementPlan({
     replacementSession: {
+        sessionId: 'session-replacement-99',
         classId: 'class-1',
         courseId: 'course-1',
         teacherUid: 'teacher-2',
@@ -205,6 +206,8 @@ const replacement = buildReplacementPlan({
 assert.strictEqual(replacement.nextSession.contractUnitIndex, 2);
 assert.strictEqual(replacement.nextSession.replacementOfSessionId, 'session-2');
 assert.strictEqual(replacement.cancelPatch.status, 'cancelled');
+assert.strictEqual(replacement.cancelPatch.replacementSessionId, 'session-replacement-99');
+assert.notStrictEqual(replacement.cancelPatch.replacementSessionId, 'session-2');
 
 const addPreview = buildAddSessionPreview({
     classId: 'class-1',

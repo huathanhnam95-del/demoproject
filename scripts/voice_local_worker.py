@@ -53,7 +53,7 @@ logger = logging.getLogger("VoiceLocalWorker")
 
 PROJECT_ID = "listening-tasks-3ae34"
 DEFAULT_EMULATOR_HOST = "127.0.0.1:8080"
-HEARTBEAT_SECONDS = 15
+HEARTBEAT_SECONDS = 8
 GENERATIONS_DIR = ROOT / "tools" / "voice_cloning_lab" / "results" / "generations"
 GENERATIONS_DIR.mkdir(parents=True, exist_ok=True)
 SAMPLES_DIR = ROOT / "tools" / "voice_cloning_lab" / "samples"
@@ -139,16 +139,27 @@ class VoiceLocalWorker:
     def claim_pending_job(self) -> Any | None:
         """Find and claim a single pending job atomically."""
         try:
+            # Query pending jobs without requiring a composite index
             query = (
                 self.db.collection("voice_cloning_queue")
                 .where("status", "==", "pending")
-                .order_by("createdAt")
-                .limit(1)
+                .limit(10)
             )
             docs = list(query.stream())
             if not docs:
                 return None
 
+            # Sort in memory by createdAt
+            def _extract_ts(d):
+                data = d.to_dict() or {}
+                c = data.get("createdAt")
+                if hasattr(c, "timestamp"):
+                    return c.timestamp()
+                if isinstance(c, (int, float)):
+                    return c
+                return 0
+
+            docs.sort(key=_extract_ts)
             doc = docs[0]
             ref = doc.reference
             now_ts = firestore.SERVER_TIMESTAMP if firestore else utc_now()
@@ -173,7 +184,7 @@ class VoiceLocalWorker:
                 claimed["_id"] = doc.id
             return claimed
         except Exception as e:
-            logger.debug("Claim attempt notice: %s", e)
+            logger.error("Claim attempt error: %s", e)
             return None
 
     def resolve_reference_audio(self, audio_url: str) -> Path | None:
@@ -181,30 +192,7 @@ class VoiceLocalWorker:
         if not audio_url:
             return None
 
-        # Check local relative or absolute path
-        clean_url = audio_url.replace("/", os.sep).lstrip(os.sep)
-        local_candidate = ROOT / clean_url
-        if local_candidate.exists():
-            return local_candidate
-
-        # Check in public folder
-        public_candidate = ROOT / "public" / clean_url
-        if public_candidate.exists():
-            return public_candidate
-
-        # Check lab samples
-        sample_path = ROOT / "tools" / "voice_cloning_lab" / "samples" / "my_saved_voice.webm"
-        if sample_path.exists():
-            return sample_path
-
-        # If it's a URL in /audio/voice-cloning/...
-        if "/audio/voice-cloning/" in audio_url:
-            filename = audio_url.split("/audio/voice-cloning/")[-1]
-            candidate = ROOT / "public" / "audio" / "voice-cloning" / filename
-            if candidate.exists():
-                return candidate
-
-        # If it's a cloud audio ID (/api/admin/voice-cloning/audio/<id>)
+        # 1. Cloud audio ID (/api/admin/voice-cloning/audio/<file_id>) - MUST BE CHECKED FIRST!
         if "/audio/" in audio_url:
             file_id = audio_url.split("/audio/")[-1].split("?")[0]
             try:
@@ -218,9 +206,32 @@ class VoiceLocalWorker:
                         ext = "webm" if "webm" in data.get("mimeType", "") else "wav"
                         out_file = SAMPLES_DIR / f"downloaded_{file_id}.{ext}"
                         out_file.write_bytes(decoded)
+                        logger.info("Successfully retrieved reference audio %s (%s bytes) to %s", file_id, len(decoded), out_file)
                         return out_file
             except Exception as fe:
                 logger.warning("Could not download reference audio doc %s: %s", file_id, fe)
+
+        # 2. Local audio asset (/audio/voice-cloning/<filename>)
+        if "/audio/voice-cloning/" in audio_url:
+            filename = audio_url.split("/audio/voice-cloning/")[-1]
+            candidate = ROOT / "public" / "audio" / "voice-cloning" / filename
+            if candidate.exists():
+                return candidate
+
+        # 3. Direct local disk path
+        clean_url = audio_url.replace("/", os.sep).lstrip(os.sep)
+        local_candidate = ROOT / clean_url
+        if local_candidate.exists():
+            return local_candidate
+
+        public_candidate = ROOT / "public" / clean_url
+        if public_candidate.exists():
+            return public_candidate
+
+        # 4. Fallback default voice sample only if explicitly requested or nothing else found
+        sample_path = ROOT / "tools" / "voice_cloning_lab" / "samples" / "my_saved_voice.webm"
+        if sample_path.exists() and ("default" in audio_url or not audio_url):
+            return sample_path
 
         return None
 
@@ -259,7 +270,7 @@ class VoiceLocalWorker:
             res = self.engine.synthesize(
                 target_text=speech_text,
                 reference_audio_path=str(ref_audio_path),
-                reference_text=ref_transcript,
+                reference_transcript=ref_transcript,
                 speed=speed
             )
 

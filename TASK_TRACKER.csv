@@ -1879,4 +1879,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 885,2026-09-03,Cost comparison for entrance test ASR fix options,Done,2026-09-03
 886,2026-09-03,Verify Google AI Studio Prepay billing model policy,Done,2026-09-03
 887,2026-09-03,CRM Books: exhaustive page-by-page OCR and text inspection across all 774 pages of Harmer and Pronunciation books,Done,2026-09-03
-888,2026-09-03,Save Gemini API key to env and configure Gemini Flash model,In Progress,
+888,2026-09-03,Save Gemini API key to env and configure Gemini Flash model,Done,2026-09-03
+889,2026-09-03,Write Essay Guided Mode: 3-sample quality overhaul and 3-local-LLM step-by-step pedagogical inspection,In Progress,
+890,2026-09-03,Migrate Entrance Test ASR to Gemini 3.8 Flash and rescore test 5726ca51,In Progress,

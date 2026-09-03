@@ -39,11 +39,19 @@ window.CrmStudentModal = (function () {
                 });
                 return;
             }
-            if (tabId === 'courses' && modalState.studentId) {
-                if (window.CrmStudentCourses && typeof window.CrmStudentCourses.refresh === 'function') {
-                    window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
-                        console.error('[CRM Admin] Failed to refresh student courses:', error);
-                    });
+            if (tabId === 'courses') {
+                if (window.CrmStudentCourses) {
+                    if (modalState.studentId) {
+                        window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
+                            console.error('[CRM Admin] Failed to refresh student courses:', error);
+                        });
+                    } else {
+                        // New student — show empty state with Add Course CTA
+                        const container = document.getElementById('student-courses');
+                        if (container && typeof window.CrmStudentCourses.renderScreenA === 'function') {
+                            window.CrmStudentCourses.renderScreenA(container, []);
+                        }
+                    }
                 }
                 return;
             }

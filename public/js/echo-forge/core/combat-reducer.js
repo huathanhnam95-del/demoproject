@@ -39,14 +39,33 @@ function finishDefence(state, hero, enemy, events) {
   return result(freeze({ ...state, turn: 'player', round: state.round + 1, hero, enemy }), events);
 }
 
+function sanitizeIntent(intent) {
+  if (!intent || typeof intent !== 'object') return {};
+  const { wardenId, moveId, moveLabel, damage, counter, tell } = intent;
+  const sanitized = {};
+  if (wardenId !== undefined) sanitized.wardenId = wardenId;
+  if (moveId !== undefined) sanitized.moveId = moveId;
+  if (moveLabel !== undefined) sanitized.moveLabel = moveLabel;
+  if (damage !== undefined) sanitized.damage = damage;
+  if (counter !== undefined) sanitized.counter = counter;
+  if (tell !== undefined) sanitized.tell = tell;
+  return sanitized;
+}
+
 export function createInitialCombatState({
   level,
   heroMaxHp = COMBAT_POLICY.heroMaxHp,
   enemyMaxHp = COMBAT_POLICY.enemyMaxHp,
+  heroHp = heroMaxHp,
+  heroFocus = COMBAT_POLICY.focus.start,
+  heroResonance = COMBAT_POLICY.resonance.start,
 } = {}) {
   assertCefrLevel(level);
   if (!Number.isFinite(heroMaxHp) || heroMaxHp <= 0) throw new RangeError('heroMaxHp must be positive');
   if (!Number.isFinite(enemyMaxHp) || enemyMaxHp <= 0) throw new RangeError('enemyMaxHp must be positive');
+  if (!Number.isFinite(heroHp) || heroHp <= 0 || heroHp > heroMaxHp) throw new RangeError('heroHp must be positive and <= heroMaxHp');
+  if (!Number.isFinite(heroFocus) || heroFocus < 0 || heroFocus > COMBAT_POLICY.focus.max) throw new RangeError('heroFocus must be between 0 and focus.max');
+  if (!Number.isFinite(heroResonance) || heroResonance < 0 || heroResonance > COMBAT_POLICY.resonance.max) throw new RangeError('heroResonance must be between 0 and resonance.max');
   return freeze({
     schemaVersion: 'echo-forge-combat-v1',
     status: 'setup',
@@ -55,10 +74,10 @@ export function createInitialCombatState({
     turn: null,
     round: 0,
     hero: {
-      hp: heroMaxHp,
+      hp: heroHp,
       maxHp: heroMaxHp,
-      focus: COMBAT_POLICY.focus.start,
-      resonance: COMBAT_POLICY.resonance.start,
+      focus: heroFocus,
+      resonance: heroResonance,
       combo: COMBAT_POLICY.combo.start,
     },
     enemy: { hp: enemyMaxHp, maxHp: enemyMaxHp },
@@ -100,19 +119,34 @@ function resolvePlayerAttack(state, action) {
   }
   resonance = Math.min(COMBAT_POLICY.resonance.max, Math.max(0, resonance));
 
+  const previousFocus = state.hero.focus;
+  const attackFocusGain = scored && analysis.score >= 90 ? 1 : 0;
+  const focus = Math.min(COMBAT_POLICY.focus.max, Math.max(0, previousFocus - card.focusCost + attackFocusGain));
+
   const hero = {
     ...state.hero,
-    focus: state.hero.focus - card.focusCost,
+    focus,
     resonance,
     combo: scored ? state.hero.combo + 1 : 0,
   };
   const enemy = { ...state.enemy, hp: Math.max(0, state.enemy.hp - damage) };
   const events = [
-    event('analysis.resolved', { status: analysis.status, score: analysis.score }),
-    event('player.attack.resolved', { cardId: card.id, damage, burstApplied }),
+    event('analysis.resolved', {
+      status: analysis.status,
+      score: analysis.score,
+      challengeId: analysis.challengeId,
+      evaluationMode: analysis.evaluationMode,
+    }),
+    event('player.attack.resolved', {
+      cardId: card.id,
+      damage,
+      burstApplied,
+      score: analysis.score,
+      combo: state.hero.combo,
+    }),
     event('combat.damage.applied', { target: 'enemy', damage }),
   ];
-  if (card.focusCost > 0) events.push(event('combat.focus.changed', { focus: hero.focus }));
+  if (card.focusCost > 0 || hero.focus !== previousFocus) events.push(event('combat.focus.changed', { focus: hero.focus }));
   if (burstApplied) events.push(event('combat.resonance.consumed', { amount: 100 }));
   if (previousResonance < 100 && resonance === 100) events.push(event('combat.resonance.ready'));
 
@@ -124,7 +158,7 @@ function resolvePlayerAttack(state, action) {
   }
   return result(
     freeze({ ...state, turn: 'enemy', hero, enemy }),
-    [...events, event('enemy.intent.presented')],
+    [...events, event('enemy.intent.presented', sanitizeIntent(action.nextIntent))],
   );
 }
 
@@ -158,9 +192,15 @@ function resolveEnemyParry(state, action) {
   }
   const calculatedResolution = resolveParry({ score, timing: action.timing, enemyBaseDamage: action.enemyBaseDamage });
   const resolution = analysis?.status === 'incorrect'
-    ? Object.freeze({ ...calculatedResolution, reflectedDamage: 0 })
+    ? Object.freeze({ ...calculatedResolution, reflectedDamage: 0, focusRestored: 0 })
     : calculatedResolution;
-  const hero = { ...state.hero, hp: Math.max(0, state.hero.hp - resolution.damage) };
+  const previousFocus = state.hero.focus;
+  const focusRestored = resolution.focusRestored || 0;
+  const hero = {
+    ...state.hero,
+    hp: Math.max(0, state.hero.hp - resolution.damage),
+    focus: Math.min(COMBAT_POLICY.focus.max, state.hero.focus + focusRestored),
+  };
   const enemy = { ...state.enemy, hp: Math.max(0, state.enemy.hp - resolution.reflectedDamage) };
   const events = [
     ...(analysis ? [event('analysis.resolved', { status: analysis.status, score: analysis.score })] : []),
@@ -169,6 +209,9 @@ function resolveEnemyParry(state, action) {
   ];
   if (resolution.reflectedDamage > 0) {
     events.push(event('combat.damage.applied', { target: 'enemy', damage: resolution.reflectedDamage }));
+  }
+  if (hero.focus !== previousFocus) {
+    events.push(event('combat.focus.changed', { focus: hero.focus }));
   }
   return finishDefence(state, hero, enemy, events);
 }

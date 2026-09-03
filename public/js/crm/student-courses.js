@@ -675,9 +675,13 @@
                 <div class="crm-attendance-summary-card">
                     <div class="crm-attendance-summary-stats">
                         <span>Contracted: <strong>${progress.totalHours} hrs</strong></span>
-                        <span>Delivered: <strong>${progress.deliveredHours} hrs (${progress.pct}%)</strong></span>
+                        <span>Delivered: <strong>${progress.deliveredHours} hrs</strong> (${progress.pct}%)</span>
                         <span>Remaining: <strong>${progress.remainingHours} hrs</strong></span>
-                        <span>Sessions: <strong>${attendedCount} attended · ${penalizedCount} penalized · ${rescheduledCount} rescheduled</strong></span>
+                    </div>
+                    <div class="crm-attendance-summary-stats crm-attendance-summary-sessions">
+                        <span>${attendedCount} attended</span>
+                        <span>${penalizedCount} penalized</span>
+                        <span>${rescheduledCount} rescheduled</span>
                     </div>
                     ${renderProgressBarHtml(progress)}
                 </div>
@@ -783,30 +787,30 @@
                     <td colspan="5">
                         <div id="inline-panel-${escapeHtml(sId)}" class="crm-session-inline-panel">
                             <h4 class="crm-session-inline-title">
-                                Attendance & Action for Session #${escapeHtml(sessionObj.contractUnitIndex || '')} (${escapeHtml(sessionObj.scheduledLocalDate)} at ${escapeHtml(sessionObj.scheduledLocalTime)})
+                                Attendance & Action for Session #${escapeHtml(sessionObj.contractUnitIndex || '')} — ${escapeHtml(formatFriendlyDate(sessionObj.scheduledLocalDate, sessionObj.scheduledLocalTime))}
                             </h4>
 
                             <div class="crm-inline-radio-group">
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="attended" checked>
-                                    <span><strong>✓ Attended</strong> — student attended lesson (hours deducted)</span>
+                                    <span><strong>✓ Attended</strong> <span class="crm-radio-desc">— student attended lesson (hours deducted)</span></span>
                                 </label>
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="penalized">
-                                    <span><strong>! Penalized (Unexcused absence)</strong> — hours deducted, no makeup</span>
+                                    <span><strong>! Penalized</strong> <span class="crm-radio-desc">— unexcused absence, hours deducted, no makeup</span></span>
                                 </label>
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="absent">
-                                    <span><strong>○ Absent (Excused absence)</strong> — hours not deducted, makeup owed</span>
+                                    <span><strong>○ Absent</strong> <span class="crm-radio-desc">— excused absence, hours not deducted, makeup owed</span></span>
                                 </label>
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="push-forward">
-                                    <span><strong>↻ Reschedule & Push Forward</strong> — shift all later sessions forward by one slot</span>
+                                    <span><strong>↻ Reschedule & Push Forward</strong> <span class="crm-radio-desc">— shift all later sessions forward by one slot</span></span>
                                 </label>
                                 ${sessionObj.attendanceState === 'finalized' ? `
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="reset">
-                                    <span><strong>⏳ Reset to Scheduled</strong> — clear attendance and revert session to upcoming</span>
+                                    <span><strong>⏳ Reset to Scheduled</strong> <span class="crm-radio-desc">— clear attendance and revert to upcoming</span></span>
                                 </label>
                                 ` : ''}
                             </div>

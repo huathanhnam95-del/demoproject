@@ -163,6 +163,34 @@ const preservedTargetPatch = buildClassroomPatchData(classroom, {
 assert.strictEqual(preservedTargetPatch.scheduleConfig.targetSessionCount, 16);
 assert.strictEqual(preservedTargetPatch.scheduleConfig.scheduleVersion, 1);
 
+// Verify that patching scheduleConfig preserves existing completed counts & delivered minutes
+const classroomWithHistory = {
+    ...classroom,
+    scheduleSummary: {
+        contractedTargetCount: 16,
+        contractedAssignedCount: 16,
+        contractedCompletedCount: 5,
+        remainingToScheduleCount: 0,
+        overflowCount: 1,
+        nextScheduledAt: '2026-04-01T09:00:00.000Z',
+        contractedMinutesTotal: 1440,
+        contractedMinutesDelivered: 450,
+        contractedMinutesRemaining: 990
+    }
+};
+const patchedWithHistory = buildClassroomPatchData(classroomWithHistory, {
+    scheduleConfig: {
+        totalInstructionMinutes: 1440,
+        sessionMinutes: 120,
+        targetSessionCount: 12
+    }
+}, context);
+assert.strictEqual(patchedWithHistory.scheduleSummary.contractedTargetCount, 12);
+assert.strictEqual(patchedWithHistory.scheduleSummary.contractedCompletedCount, 5);
+assert.strictEqual(patchedWithHistory.scheduleSummary.contractedMinutesDelivered, 450);
+assert.strictEqual(patchedWithHistory.scheduleSummary.contractedMinutesRemaining, 990);
+
+
 const mappedCourse = mapCourseRecord({
     id: 'course-1',
     name: 'PTE Foundation',

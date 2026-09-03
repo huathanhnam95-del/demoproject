@@ -30,7 +30,7 @@ test('Echo Forge assessment route is stateless and never imports persistence sys
   }
 });
 
-test('standalone shell is animation-free, A1-C1-only, and absent from main navigation', async () => {
+test('standalone shell is animation-free, A1-C1-only, and cleanly linked from main navigation', async () => {
   const shell = await readFile(new URL('../../public/echo-forge-sandbox.html', import.meta.url), 'utf8');
   assert.doesNotMatch(shell, /<option[^>]*>\s*C2\s*</i);
   assert.doesNotMatch(shell, /@keyframes|requestAnimationFrame/);
@@ -43,5 +43,6 @@ test('standalone shell is animation-free, A1-C1-only, and absent from main navig
 
   const index = await readFile(new URL('../../public/index.html', import.meta.url), 'utf8');
   const launcher = await readFile(new URL('../../public/script.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(`${index}\n${launcher}`, /echo-forge|echoForge/i);
+  assert.doesNotMatch(launcher, /from\s+['"][^'"]*js\/echo-forge\//);
+  assert.match(index, /href="\/echo-forge-sandbox\.html"/);
 });

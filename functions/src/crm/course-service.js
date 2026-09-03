@@ -325,7 +325,23 @@ function buildClassroomPatchData(existing, input, context = {}) {
             existing: existing?.scheduleConfig || null,
             preserveExistingTargetSessionCount: true
         });
-        patch.scheduleSummary = buildEmptyScheduleSummary(patch.scheduleConfig);
+        if (existing?.scheduleSummary) {
+            const targetCount = patch.scheduleConfig.targetSessionCount || 0;
+            const assignedCount = Number(existing.scheduleSummary.contractedAssignedCount || 0);
+            patch.scheduleSummary = {
+                ...existing.scheduleSummary,
+                contractedTargetCount: targetCount,
+                remainingToScheduleCount: Math.max(targetCount - assignedCount, 0),
+                contractedMinutesTotal: Number(patch.scheduleConfig.totalInstructionMinutes || 0) || existing.scheduleSummary.contractedMinutesTotal || 0,
+                contractedMinutesRemaining: Math.max(
+                    (Number(patch.scheduleConfig.totalInstructionMinutes || 0) || existing.scheduleSummary.contractedMinutesTotal || 0) -
+                    Number(existing.scheduleSummary.contractedMinutesDelivered || 0),
+                    0
+                )
+            };
+        } else {
+            patch.scheduleSummary = buildEmptyScheduleSummary(patch.scheduleConfig);
+        }
     }
     if (Object.keys(patch).length === 0) {
         throw new Error('No classroom fields provided for update.');

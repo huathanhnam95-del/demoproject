@@ -781,8 +781,7 @@
 }
 
 /* Prompt / source text — same reading treatment as a Reading passage, flat. */
-#mode-swt .essay-prompt-display,
-#mode-essay .essay-prompt-display {
+#mode-swt .essay-prompt-display {
   background: transparent;
   border: none;
   border-radius: 0;

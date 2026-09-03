@@ -92,6 +92,7 @@
 
         const onChangeCallback = typeof options.onChange === 'function' ? options.onChange : null;
         let summaryDebounceTimer = null;
+        let isDestroyed = false;
 
         // Initialize days from options.initialDays or options.initialSlots
         if (options.initialDays && typeof options.initialDays === 'object') {
@@ -138,8 +139,8 @@
             </div>
         `;
 
-        const matrixEl = containerEl.querySelector('.crm-availability-matrix');
-        const summaryTextEl = containerEl.querySelector('.crm-availability-summary-text');
+        let matrixEl = containerEl.querySelector('.crm-availability-matrix');
+        let summaryTextEl = containerEl.querySelector('.crm-availability-summary-text');
 
         function renderDaySection(dayKey) {
             const meta = DAY_META[dayKey];
@@ -175,10 +176,10 @@
                             <input type="time" class="crm-availability-time-input start-time" step="900" value="${escapeHtml(interval.start)}" aria-label="${meta.name} start time" ${state.readOnly ? 'disabled' : ''}>
                             <span class="crm-availability-sep" aria-hidden="true">–</span>
                             <input type="time" class="crm-availability-time-input end-time" step="900" value="${escapeHtml(interval.end)}" aria-label="${meta.name} end time" ${state.readOnly ? 'disabled' : ''}>
-                            <span class="crm-availability-length-chip" aria-label="Duration: ${chipText}">${chipText}</span>
+                            <span class="crm-availability-length-chip">${chipText}</span>
                             ${!state.readOnly ? `
                                 <button type="button" class="crm-availability-btn-remove" aria-label="Remove ${meta.name} ${escapeHtml(interval.start)} to ${escapeHtml(interval.end)}">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                                         <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
                                     </svg>
                                 </button>
@@ -194,7 +195,7 @@
                         <div class="crm-availability-actions-col">
                             ${!state.readOnly ? `
                                 <button type="button" class="crm-availability-btn-add" aria-label="Add a lesson time on ${meta.name}">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                                         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                                     </svg>
                                 </button>
@@ -225,8 +226,8 @@
             }
         }
 
-        // Delegated Matrix Events: clean and zero memory leaks
-        matrixEl.addEventListener('click', (e) => {
+        // Delegated Matrix Events: named handlers for complete teardown
+        function onMatrixClick(e) {
             const addBtn = e.target.closest('.crm-availability-btn-add');
             if (addBtn) {
                 e.preventDefault();
@@ -245,9 +246,9 @@
                 const intervalId = item?.dataset.intervalId;
                 if (dayKey && intervalId) removeIntervalFromDay(dayKey, intervalId);
             }
-        });
+        }
 
-        function handleTimeInputChange(input, isInputEvent) {
+        function handleTimeInputChange(input) {
             const section = input.closest('.crm-availability-day-section');
             const item = input.closest('.crm-availability-interval-item');
             const dayKey = section?.dataset.day;
@@ -279,15 +280,19 @@
             notifyChange();
         }
 
-        matrixEl.addEventListener('change', (e) => {
+        function onMatrixChange(e) {
             const input = e.target.closest('.crm-availability-time-input');
-            if (input) handleTimeInputChange(input, false);
-        }, true);
+            if (input) handleTimeInputChange(input);
+        }
 
-        matrixEl.addEventListener('input', (e) => {
+        function onMatrixInput(e) {
             const input = e.target.closest('.crm-availability-time-input');
-            if (input) handleTimeInputChange(input, true);
-        }, true);
+            if (input) handleTimeInputChange(input);
+        }
+
+        matrixEl.addEventListener('click', onMatrixClick);
+        matrixEl.addEventListener('change', onMatrixChange, true);
+        matrixEl.addEventListener('input', onMatrixInput, true);
 
         function refreshIntervalRow(dayKey, intervalId) {
             const interval = (state.days[dayKey] || []).find((i) => i.id === intervalId);
@@ -453,13 +458,19 @@
         }
 
         function notifyChange() {
+            if (isDestroyed) return;
             validate();
             const summary = updateSummary();
 
             if (onChangeCallback) {
                 if (summaryDebounceTimer) clearTimeout(summaryDebounceTimer);
                 summaryDebounceTimer = setTimeout(() => {
-                    onChangeCallback(getState());
+                    if (isDestroyed) return;
+                    try {
+                        onChangeCallback(getState());
+                    } catch (err) {
+                        console.error('[ScheduleAvailability] Error in onChange callback:', err);
+                    }
                 }, 50);
             }
         }
@@ -567,8 +578,20 @@
         }
 
         function destroy() {
+            if (isDestroyed) return;
+            isDestroyed = true;
             if (summaryDebounceTimer) clearTimeout(summaryDebounceTimer);
-            containerEl.innerHTML = '';
+            if (matrixEl) {
+                matrixEl.removeEventListener('click', onMatrixClick);
+                matrixEl.removeEventListener('change', onMatrixChange, true);
+                matrixEl.removeEventListener('input', onMatrixInput, true);
+            }
+            if (containerEl) {
+                containerEl.innerHTML = '';
+            }
+            matrixEl = null;
+            summaryTextEl = null;
+            containerEl = null;
         }
 
         // Initial render

@@ -46,6 +46,7 @@ export function resolveParry({ score, timing, enemyBaseDamage }) {
     damage: Math.round(enemyBaseDamage * incomingMultiplier),
     incomingMultiplier,
     reflectedDamage: timing === 'timely' && score >= 95 ? Math.round(enemyBaseDamage * 0.5) : 0,
+    focusRestored: timing === 'timely' && score >= 70 ? 1 : 0,
     timing,
   });
 }

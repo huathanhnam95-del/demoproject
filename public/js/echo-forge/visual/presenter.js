@@ -13,7 +13,7 @@ const EVENT_LABELS = Object.freeze({
 
 function frameFor(data, assetId, index) { return data?.assets.get(assetId)?.frames[index]?.url || ''; }
 
-export const RESULT_READABILITY_HOLD_MS = 1500;
+export const RESULT_READABILITY_HOLD_MS = 600;
 
 export function humanizeEvent(type) { return EVENT_LABELS[type] || 'Training update'; }
 
@@ -48,8 +48,8 @@ export function createVisualPresenter({ root = document, loader = createVisualAs
     }
     resultHoldActive = true;
     setImage(effect, frameFor(data, 'ef-combat-result', 0), 'ef-combat-result', 0);
-    resultTimers.push(setTimeoutImpl(() => setImage(effect, frameFor(data, 'ef-combat-result', 1), 'ef-combat-result', 1), 100));
-    resultTimers.push(setTimeoutImpl(() => setImage(effect, frameFor(data, 'ef-combat-result', 2), 'ef-combat-result', 2), 1100));
+    resultTimers.push(setTimeoutImpl(() => setImage(effect, frameFor(data, 'ef-combat-result', 1), 'ef-combat-result', 1), 80));
+    resultTimers.push(setTimeoutImpl(() => setImage(effect, frameFor(data, 'ef-combat-result', 2), 'ef-combat-result', 2), 300));
     resultTimers.push(setTimeoutImpl(() => idle(), RESULT_READABILITY_HOLD_MS));
   }
   function handleEvent(event) {

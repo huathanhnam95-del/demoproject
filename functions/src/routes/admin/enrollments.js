@@ -88,13 +88,17 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     const defaultMins = classroom?.scheduleConfig?.sessionMinutes
                         || course?.deliveryTemplate?.defaultSessionMinutes
                         || 120;
+                    const targetCount = classroom?.scheduleConfig?.targetSessionCount
+                        || null;
 
                     scheduleSummary = buildScheduleSummary({
                         totalInstructionMinutes: totalMins,
                         sessionMinutes: defaultMins,
+                        targetSessionCount: targetCount,
                         sessions
                     });
                 }
+
 
                 enrollments.push({
                     ...enrollment,
@@ -402,6 +406,11 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
 
             // Recompute schedule summary for classroom
             if (current.classId) {
+                const classRef = db.collection(CRM_CLASSROOMS).doc(current.classId);
+                const classSnap = await classRef.get();
+                const classroom = classSnap.data() || {};
+                const scheduleConfig = classroom.scheduleConfig || {};
+
                 const allSessionSnaps = await db.collection(CRM_SCHEDULED_SESSIONS)
                     .where('classId', '==', current.classId)
                     .get();
@@ -414,8 +423,13 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     });
                 });
 
-                const updatedSummary = buildScheduleSummary({ sessions: allSessions });
-                await db.collection(CRM_CLASSROOMS).doc(current.classId).update({ scheduleSummary: updatedSummary });
+                const updatedSummary = buildScheduleSummary({
+                    totalInstructionMinutes: scheduleConfig.totalInstructionMinutes,
+                    sessionMinutes: scheduleConfig.sessionMinutes,
+                    targetSessionCount: scheduleConfig.targetSessionCount,
+                    sessions: allSessions
+                });
+                await classRef.update({ scheduleSummary: updatedSummary });
             }
 
             await writeAuditLog?.({
@@ -507,16 +521,23 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
             batch.set(newSessionRef, plan.newSession);
 
             // Recompute schedule summary for classroom
+            const classRef = db.collection(CRM_CLASSROOMS).doc(triggeringSession.classId);
+            const classSnap = await classRef.get();
+            const classroom = classSnap.data() || {};
+            const scheduleConfig = classroom.scheduleConfig || {};
+
             const patchedSessions = allSessions.map((s) => {
                 const patchObj = plan.patches.find((p) => p.sessionId === s.sessionId);
                 return patchObj ? { ...s, ...patchObj.patch } : s;
             });
             const allAfter = [...patchedSessions, plan.newSession];
             const updatedSummary = buildScheduleSummary({
+                totalInstructionMinutes: scheduleConfig.totalInstructionMinutes,
+                sessionMinutes: scheduleConfig.sessionMinutes,
+                targetSessionCount: scheduleConfig.targetSessionCount,
                 sessions: allAfter
             });
 
-            const classRef = db.collection(CRM_CLASSROOMS).doc(triggeringSession.classId);
             batch.update(classRef, { scheduleSummary: updatedSummary });
 
             await batch.commit();

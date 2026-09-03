@@ -79,10 +79,10 @@ window.CrmVoiceCloningWorkspace = (function () {
                 state.workerReady = !!(worker && (worker.ready === true || worker.f5ttsReachable === true));
 
                 if (state.workerReady) {
-                    dom.workerBadge.className = 'ollama-status-badge online';
+                    dom.workerBadge.className = 'vc-worker-badge online';
                     dom.workerBadge.textContent = 'Voice Worker: Ready (F5-TTS CPU)';
                 } else {
-                    dom.workerBadge.className = 'ollama-status-badge offline';
+                    dom.workerBadge.className = 'vc-worker-badge offline';
                     dom.workerBadge.textContent = 'Voice Worker: Offline';
                 }
 
@@ -96,7 +96,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                 }
             } catch (_err) {
                 if (dom.workerBadge) {
-                    dom.workerBadge.className = 'ollama-status-badge offline';
+                    dom.workerBadge.className = 'vc-worker-badge checking';
                     dom.workerBadge.textContent = 'Voice Worker: Checking…';
                 }
             }
@@ -290,15 +290,8 @@ window.CrmVoiceCloningWorkspace = (function () {
                             }
                             setTimeout(pollTestJob, 2000);
                         } else {
-                            // Timeout fallback: if local worker is not running, notify user
-                            showToast('Neural cloning is taking longer than expected. Make sure the local voice worker is running.', 'warning');
-                            if (dom.testAudioPlayer && !dom.testAudioPlayer.src) {
-                                dom.testAudioPlayer.src = '/audio/voice-cloning/ra_18_cloned_test.mp3';
-                                dom.testAudioPlayer.load();
-                            }
-                            if (dom.testOutputBox) {
-                                dom.testOutputBox.style.display = 'block';
-                            }
+                            // Timeout notice: notify user honestly without quietly falling back to default sample
+                            showToast('Neural cloning is taking longer than expected. Please make sure the local voice worker daemon is running on this computer.', 'warning');
                             if (dom.btnGenerateTest) {
                                 dom.btnGenerateTest.disabled = false;
                                 dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';

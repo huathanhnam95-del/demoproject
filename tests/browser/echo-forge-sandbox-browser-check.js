@@ -46,6 +46,7 @@ async function installHooks(page, { includePromptHook = true } = {}) {
     window.__echoAnalyzeStarted = false;
     window.__echoLastSignalAborted = false;
     window.__ECHO_FORGE_TEST_HOOKS__ = {
+      singleFight: true,
       analysisClient: { prewarmV3: async () => ({ durationMs: 5, available: true, httpCode: 200, errorCode: null }) },
       createAudioCapture: () => ({
         start: async () => {
@@ -221,7 +222,7 @@ async function installHooks(page, { includePromptHook = true } = {}) {
     assert.match(await page.evaluate(() => document.activeElement.dataset.card || ''), /precision_strike|stress_breaker|echo_chain/);
     let state = await page.evaluate(() => window.echoForgeSandbox.getState());
     assert.equal(state.hero.hp, 90);
-    assert.equal(state.hero.focus, 2);
+    assert.equal(state.hero.focus, 3);
 
     await page.evaluate((analysis) => window.__echoAnalysisQueue.push(analysis), normalized('scored', 80));
     await page.click('[data-card="precision_strike"]');

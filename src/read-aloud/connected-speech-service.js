@@ -325,14 +325,17 @@ function buildBaseEvent({
   confidenceHint,
   feedbackTemplates
 }) {
+  const isWeakForm = family === 'weak_form_reduction';
+  const effectiveEndWordIndex = isWeakForm ? left.wordIndex : right.wordIndex;
   return {
-    eventId: buildEventId(questionId, family, left.wordIndex, right.wordIndex),
+    eventId: buildEventId(questionId, family, left.wordIndex, effectiveEndWordIndex),
     family,
     phrase,
     leftWord: left.normalized,
-    rightWord: right.normalized,
+    rightWord: isWeakForm ? left.normalized : right.normalized,
     startWordIndex: left.wordIndex,
-    endWordIndex: right.wordIndex,
+    endWordIndex: effectiveEndWordIndex,
+    contextWordIndex: right ? right.wordIndex : null,
     allowedVariants,
     targetFormRole: targetFormRole || null,
     targetIpa: targetIpa || null,
@@ -806,6 +809,27 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
     };
   }
 
+  const isLeftOmission = String(leftAzure.errorType || '').toLowerCase() === 'omission'
+    || (leftAzure.durationMs != null && leftAzure.durationMs <= 0);
+  const isRightOmission = String(rightAzure.errorType || '').toLowerCase() === 'omission'
+    || (rightAzure.durationMs != null && rightAzure.durationMs <= 0);
+
+  if (isLeftOmission || isRightOmission) {
+    return buildEventResult(event, {
+      status: 'not_detected',
+      confidence: 0.9,
+      startMs: null,
+      endMs: null,
+      feedbackText: event.feedbackTemplates?.not_detected || `Try smoothing "${event.phrase}" more.`,
+      evidence: {
+        variant: 'canonical',
+        reason: 'omitted_speech',
+        isLeftOmission,
+        isRightOmission
+      }
+    });
+  }
+
   if (leftAzure.offsetMs == null || leftAzure.durationMs == null || rightAzure.offsetMs == null || rightAzure.durationMs == null) {
     return {
       eventId: event.eventId,
@@ -950,13 +974,12 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
 
   if (event.family === 'weak_form_reduction') {
     const targetWord = normalizeWord(event.detectorConfig?.weakFormWord || event.phrase);
-    // Oxford American transcribes both strong and weak "were" as /wər/.
-    // Its schwa is therefore not contrastive evidence of reduction; rely on
-    // duration/prominence evidence for that word.
     const reducedHint = targetWord !== 'were'
       && hasAnyPhonemeCandidate(leftAzure, ['ə', 'ɐ', 'ʊ', 'ɪ']);
+    const nextIdx = Number(event.contextWordIndex ?? (Number(event.startWordIndex) + 1));
+    const nextAzure = azureWords[nextIdx] || null;
     const reducedDuration = Number(leftAzure.durationMs || 0);
-    const nextDuration = Number(rightAzure.durationMs || 0);
+    const nextDuration = Number(nextAzure?.durationMs || 0);
     const relativeDuration = nextDuration > 0 ? reducedDuration / nextDuration : null;
     const status = ((relativeDuration != null && relativeDuration <= 0.75) || reducedHint)
       ? 'detected'

@@ -102,47 +102,111 @@ def _thesis_frame(stance: str, topic: str) -> str:
     return f"In my view, {topic or 'this issue'} requires a nuanced approach because ____."
 
 
-def _prompt_traps(prompt: str, prompt_type: str, topic: str) -> list[dict[str, str]]:
+def _prompt_traps(prompt: str, prompt_type: str, topic: str) -> list[dict[str, Any]]:
     traps = []
     p_lower = str(prompt or "").lower()
     if '"' in prompt or '“' in prompt or 'quote' in p_lower or 'said' in p_lower:
         traps.append({
-            "en": "Do not write a biography of the quoted figure; focus strictly on analyzing and evaluating the core claim.",
-            "vi": "Không viết về tiểu sử của nhân vật được trích dẫn; hãy tập trung phân tích và đánh giá đúng nhận định trong đề.",
+            "titleEn": "Focusing on Biography Rather Than the Debate",
+            "titleVi": "Viết về tiểu sử nhân vật thay vì bàn về nhận định",
+            "mistakeEn": "Spending sentences recounting the life or historical background of the quoted figure.",
+            "mistakeVi": "Dành nhiều câu kể về cuộc đời hoặc hoàn cảnh lịch sử của nhân vật được trích dẫn.",
+            "whyEn": "The prompt evaluates modern concepts, not historical facts. Biographical trivia wastes word count.",
+            "whyVi": "Đề thi đánh giá khả năng nghị luận về vấn đề thực tế, kể lể tiểu sử sẽ lãng phí dung lượng từ.",
+            "fixEn": "Treat the quote purely as a premise; focus arguments entirely on contemporary examples and policies.",
+            "fixVi": "Chỉ xem câu nói là điểm khởi đầu; tập trung phân tích vào các ví dụ và chính sách đương đại.",
+            "en": "Focusing on Biography: Recounting the speaker's life wastes words. Better approach: Focus arguments on contemporary policies.",
+            "vi": "Kể tiểu sử nhân vật: Kể chuyện đời tư làm phí dung lượng từ. Cách viết chuẩn: Tập trung phân tích vào thực tế đương đại.",
         })
     if '?' in prompt and (prompt.count('?') > 1 or 'and' in prompt or 'also' in prompt):
         traps.append({
-            "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
-            "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng.",
+            "titleEn": "Answering Only One Part of a Multi-Part Prompt",
+            "titleVi": "Chỉ trả lời một trong các yêu cầu của đề",
+            "mistakeEn": "Answering only the first question while ignoring the secondary requirement.",
+            "mistakeVi": "Chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai.",
+            "whyEn": "Compound prompts require equal coverage; omitting a sub-question directly caps Content score.",
+            "whyVi": "Đề có nhiều vế đòi hỏi dung lượng tương xứng; bỏ sót một vế sẽ làm giảm điểm Content.",
+            "fixEn": "Map each question directly to a specific body paragraph or thesis component.",
+            "fixVi": "Gắn từng câu hỏi vào một đoạn thân bài cụ thể hoặc câu luận đề rõ ràng.",
+            "en": "Single-Part Answering: Answering only one question loses Content points. Better approach: Map each requirement to a body paragraph.",
+            "vi": "Chỉ trả lời một vế: Thiếu yêu cầu sẽ mất điểm Content. Cách viết chuẩn: Chia đều các yêu cầu vào từng thân bài.",
         })
 
     type_traps = {
         "agree_disagree": {
-            "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
-            "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài.",
+            "titleEn": "Vague Neutrality Without a Decisive Stance",
+            "titleVi": "Viết nước đôi mà không chốt lập trường rõ ràng",
+            "mistakeEn": "Merely rephrasing the topic and remaining neutral without taking a clear personal position.",
+            "mistakeVi": "Chỉ diễn đạt lại đề bài và giữ thái độ trung lập, không khẳng định rõ mình theo phe nào.",
+            "whyEn": "PTE Task Achievement requires a clear position defended throughout the entire response.",
+            "whyVi": "Tiêu chí chấm PTE yêu cầu lập trường rõ ràng được bảo vệ xuyên suốt toàn bộ bài viết.",
+            "fixEn": "State whether you agree or disagree explicitly in both the introduction and conclusion.",
+            "fixVi": "Khẳng định rõ ràng bạn đồng ý hay phản đối ở cả mở bài và kết bài.",
+            "en": "Vague Neutrality: Remaining neutral lowers Task Achievement. Better approach: State your clear stance in both intro and conclusion.",
+            "vi": "Nước đôi không lập trường: Không chốt quan điểm sẽ mất điểm. Cách viết chuẩn: Khẳng định rõ lập trường ở Mở bài và Kết bài.",
         },
         "discuss_both_views": {
-            "en": "Do not discuss only your preferred side; give equal analytical weight to both perspectives before concluding.",
-            "vi": "Không chỉ phân tích phía bạn ủng hộ; hãy trình bày công bằng cả hai quan điểm trước khi đưa ra kết luận.",
+            "titleEn": "One-Sided Bias in a Both-Views Task",
+            "titleVi": "Thiên vị một bên trong bài thảo luận hai quan điểm",
+            "mistakeEn": "Elaborating only your favored side while treating the opposing perspective superficially.",
+            "mistakeVi": "Chỉ viết sâu về phe mình ủng hộ trong khi phe còn lại chỉ nhắc qua loa.",
+            "whyEn": "'Discuss both views' requires balanced, well-developed arguments for each side before deciding.",
+            "whyVi": "Dạng bài này đòi hỏi phải phân tích công bằng và phát triển ý tương đương cho cả hai phía.",
+            "fixEn": "Dedicate Body 1 to Perspective A and Body 2 to Perspective B before stating your conclusion.",
+            "fixVi": "Dành Thân bài 1 cho Quan điểm A và Thân bài 2 cho Quan điểm B trước khi đưa ra kết luận.",
+            "en": "One-Sided Bias: Neglecting one view fails the prompt requirement. Better approach: Balance both views across separate body paragraphs.",
+            "vi": "Thiên vị một quan điểm: Bỏ quên một bên sẽ vi phạm yêu cầu đề. Cách viết chuẩn: Phân tích đều cả hai quan điểm ở 2 thân bài.",
         },
         "problems_solutions": {
-            "en": "Do not list abstract solutions without directly linking each solution to a specific root cause mentioned.",
-            "vi": "Không liệt kê giải pháp chung chung mà không gắn kết trực tiếp với từng nguyên nhân cụ thể đã nêu.",
+            "titleEn": "Disconnected Solutions Lacking Root-Cause Analysis",
+            "titleVi": "Đưa giải pháp rời rạc không ăn nhập với nguyên nhân",
+            "mistakeEn": "Listing generic solutions that do not directly resolve the specific root causes discussed.",
+            "mistakeVi": "Liệt kê giải pháp chung chung không giải quyết trực tiếp các nguyên nhân đã nêu.",
+            "whyEn": "Coherence suffers when problem and solution paragraphs operate as independent lists.",
+            "whyVi": "Tính mạch lạc sẽ bị giảm sút nếu các giải pháp không tương ứng với các nguyên nhân cụ thể.",
+            "fixEn": "Directly pair each proposed solution with a specific root cause analyzed earlier in the essay.",
+            "fixVi": "Gắn trực tiếp từng giải pháp với một nguyên nhân cụ thể đã phân tích ở đoạn trước.",
+            "en": "Disconnected Solutions: Abstract fixes without root causes weaken coherence. Better approach: Pair each solution directly with a cause.",
+            "vi": "Giải pháp rời rạc: Giải pháp chung chung làm giảm tính mạch lạc. Cách viết chuẩn: Gắn từng giải pháp với một nguyên nhân cụ thể.",
         },
         "advantages_disadvantages": {
-            "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
-            "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn.",
+            "titleEn": "Listing Pros and Cons Without an Outweigh Verdict",
+            "titleVi": "Liệt kê ưu nhược điểm nhưng không chốt mặt nào áp đảo",
+            "mistakeEn": "Enumerating benefits and drawbacks without evaluating which side is more significant.",
+            "mistakeVi": "Chỉ liệt kê điểm tốt và điểm xấu mà quên so sánh và đánh giá mặt nào chiếm ưu thế.",
+            "whyEn": "The prompt asks whether advantages outweigh disadvantages; an unresolved list fails the task.",
+            "whyVi": "Đề hỏi rõ mặt nào áp đảo hơn; nếu không kết luận thì bài viết chưa hoàn thành yêu cầu đề.",
+            "fixEn": "Explicitly state which side prevails in both your thesis sentence and your concluding summary.",
+            "fixVi": "Khẳng định dứt khoát mặt nào chiếm ưu thế hơn ở cả câu luận đề mở bài và phần kết luận.",
+            "en": "Missing Verdict: Simply listing pros and cons fails the prompt. Better approach: State which side outweighs in intro and conclusion.",
+            "vi": "Thiếu kết luận áp đảo: Chỉ liệt kê hai mặt sẽ trượt yêu cầu đề. Cách viết chuẩn: Khẳng định mặt áp đảo ở Mở bài và Kết bài.",
         },
     }
     match = type_traps.get(prompt_type, {
-        "en": f"Do not write off-topic generalizations; ground every point in the specific context of {topic or 'the prompt'}.",
-        "vi": f"Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của {topic or 'đề bài'}.",
+        "titleEn": "Off-Topic Generalizations",
+        "titleVi": "Chém gió lan man ngoài đề",
+        "mistakeEn": f"Writing vague generalizations detached from the specific context of {topic or 'the prompt'}.",
+        "mistakeVi": f"Viết chung chung ngoài đề thay vì bám sát vào ngữ cảnh cụ thể của {topic or 'đề bài'}.",
+        "whyEn": "Semantic irrelevance causes automated scoring penalties in PTE Content.",
+        "whyVi": "Thiếu sự liên kết với từ khóa của đề sẽ bị hệ thống trừ điểm Content.",
+        "fixEn": f"Ground every point firmly in {topic or 'the prompt'} using concrete reasoning.",
+        "fixVi": f"Gắn chặt từng luận điểm vào chủ đề {topic or 'đề bài'} bằng lý lẽ cụ thể.",
+        "en": f"Off-topic generalizations: Ground every point in {topic or 'the prompt'}.",
+        "vi": f"Viết lan man ngoài đề: Gắn chặt từng luận điểm vào {topic or 'đề bài'}.",
     })
     traps.append(match)
     if len(traps) < 2:
         traps.append({
-            "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
-            "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể.",
+            "titleEn": "Unsupported Generic Claims",
+            "titleVi": "Khẳng định chung chung không có dẫn chứng",
+            "mistakeEn": "Relying on memorized generic templates without adding concrete real-world evidence.",
+            "mistakeVi": "Dựa dẫm vào các câu khuôn mẫu học thuộc lòng mà không thêm dẫn chứng thực tế.",
+            "whyEn": "Ideas lacking specific development cannot achieve top marks in PTE Development.",
+            "whyVi": "Luận điểm thiếu phát triển ý sẽ không thể đạt điểm tối đa trong thang điểm Development.",
+            "fixEn": "Ensure every body paragraph contains a concrete real-world example supporting its main claim.",
+            "fixVi": "Đảm bảo mỗi đoạn thân bài đều có một ví dụ thực tế cụ thể hỗ trợ cho luận điểm chính.",
+            "en": "Unsupported Claims: Generic templates fail development criteria. Better approach: Add concrete examples to every body paragraph.",
+            "vi": "Khẳng định thiếu chứng minh: Câu rập khuôn không đủ điểm. Cách viết chuẩn: Thêm ví dụ thực tế vào mỗi đoạn thân bài.",
         })
     return traps[:3]
 
@@ -358,6 +422,7 @@ def build_template_candidate(question: dict[str, Any], collocations: set[str]) -
             "requirements": _requirements(prompt_type),
             "angles": deduped_angles[:8],
             "promptTraps": _prompt_traps(prompt, prompt_type, topic),
+            "commonMistakes": _prompt_traps(prompt, prompt_type, topic),
             "faq": [
                 {"questionEn": "What is this question asking?", "questionVi": "Đề này đang hỏi điều gì?", "answerEn": "Break the prompt into its direct requirements before choosing ideas.", "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."},
                 {"questionEn": "How many main ideas should I use?", "questionVi": "Tôi nên dùng bao nhiêu ý chính?", "answerEn": "Use two developed points with explanation and relevant examples.", "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."},

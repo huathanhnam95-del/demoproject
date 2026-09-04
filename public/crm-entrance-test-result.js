@@ -384,22 +384,58 @@
     `;
   }
 
-  // ==================== DIFF LOGIC ====================
+  // ==================== DIFF & AUDIO PLAYBACK LOGIC ====================
 
-  function computeTranscriptDiffHtml(expectedText, transcriptText) {
-    if (!expectedText && !transcriptText) return '';
-    if (!expectedText) return `<span class="crm-transcript-added">${escapeHtml(transcriptText)}</span>`;
-    if (!transcriptText) return `<span class="crm-transcript-missing">${escapeHtml(expectedText)}</span>`;
+  function formatTimeSec(ms) {
+    if (!Number.isFinite(ms)) return '';
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function computeTranscriptDiffHtml(expectedText, transcriptText, words) {
+    if (!expectedText && !transcriptText && (!words || !words.length)) return '';
 
     function tokenize(text) {
       return text.trim().split(/\s+/);
     }
 
-    const aWords = tokenize(expectedText);
-    const bWords = tokenize(transcriptText);
+    const aWords = expectedText ? tokenize(expectedText) : [];
+    let bWords = [];
+    if (Array.isArray(words) && words.length > 0) {
+      bWords = words.map(w => ({
+        text: typeof w === 'string' ? w : String(w.word || w.text || ''),
+        startMs: Number(w.startMs),
+        endMs: Number(w.endMs)
+      })).filter(w => w.text.length > 0);
+    } else if (transcriptText) {
+      bWords = tokenize(transcriptText).map(text => ({
+        text,
+        startMs: null,
+        endMs: null
+      }));
+    }
 
     const aLen = aWords.length;
     const bLen = bWords.length;
+
+    function renderToken(wObj, typeClass) {
+      const isPlayable = Number.isFinite(wObj.startMs) && Number.isFinite(wObj.endMs) && wObj.endMs > wObj.startMs;
+      const text = escapeHtml(wObj.text);
+      if (isPlayable) {
+        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}" data-playable="true" title="Click to hear '${text}' (${formatTimeSec(wObj.startMs)})">${text}</button>`;
+      }
+      return `<span class="crm-word-token ${typeClass}" data-playable="false">${text}</span>`;
+    }
+
+    if (aLen === 0) {
+      return bWords.map(w => renderToken(w, 'crm-transcript-added')).join(' ');
+    }
+
+    if (bLen === 0) {
+      return aWords.map(w => `<span class="crm-word-token crm-transcript-missing" data-playable="false" title="${escapeHtml(w)} (omitted)">${escapeHtml(w)}</span>`).join(' ');
+    }
 
     const dp = Array(aLen + 1).fill(null).map(() => Array(bLen + 1).fill(0));
 
@@ -439,9 +475,10 @@
     }
 
     function isMatch(wordA, wordB) {
+      const wbText = typeof wordB === 'object' ? (wordB.text || '') : String(wordB || '');
       const wa = String(wordA).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
-      const wb = String(wordB).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
-      if (!wa && !wb) return wordA === wordB; // Fallback to exact if punctuation-only
+      const wb = String(wbText).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
+      if (!wa && !wb) return wordA === wbText; // Fallback to exact if punctuation-only
       if (wa === wb) return true;
       return normalizeSpelling(wa) === normalizeSpelling(wb);
     }
@@ -462,19 +499,133 @@
 
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && isMatch(aWords[i - 1], bWords[j - 1])) {
-        result.unshift(`<span class="crm-transcript-correct">${escapeHtml(bWords[j - 1])}</span>`);
+        result.unshift(renderToken(bWords[j - 1], 'crm-transcript-correct'));
         i--;
         j--;
       } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-        result.unshift(`<span class="crm-transcript-added">${escapeHtml(bWords[j - 1])}</span>`);
+        result.unshift(renderToken(bWords[j - 1], 'crm-transcript-added'));
         j--;
       } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
-        result.unshift(`<span class="crm-transcript-missing">${escapeHtml(aWords[i - 1])}</span>`);
+        result.unshift(`<span class="crm-word-token crm-transcript-missing" data-playable="false" title="${escapeHtml(aWords[i - 1])} (omitted)">${escapeHtml(aWords[i - 1])}</span>`);
         i--;
       }
     }
 
     return result.join(' ');
+  }
+
+  let activeWordPlayback = null;
+  let playbackRevision = 0;
+
+  function stopActiveWordPlayback({ pause = false } = {}) {
+    playbackRevision++;
+    if (!activeWordPlayback) return;
+    const { timer, token, audioEl } = activeWordPlayback;
+    if (timer) clearInterval(timer);
+    if (token) {
+      token.classList.remove('is-playing');
+      token.removeAttribute('aria-pressed');
+    }
+    if (pause && audioEl && !audioEl.paused) {
+      try {
+        audioEl.pause();
+      } catch (_) {
+        // Ignore abort/pause errors when pausing audio
+      }
+    }
+    activeWordPlayback = null;
+  }
+
+  function playWordSegment(audioEl, startMs, endMs, token) {
+    if (!audioEl) return;
+    const start = Math.max(0, Number(startMs) / 1000);
+    const end = Math.max(0, Number(endMs) / 1000);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+
+    // Toggle off if currently playing this exact token
+    if (activeWordPlayback && activeWordPlayback.token === token) {
+      stopActiveWordPlayback({ pause: true });
+      return;
+    }
+
+    // Stop any previous active playback
+    stopActiveWordPlayback({ pause: true });
+
+    const revision = ++playbackRevision;
+
+    // Mark current token
+    token.classList.add('is-playing');
+    token.setAttribute('aria-pressed', 'true');
+
+    // Seek to start timestamp
+    try {
+      const duration = Number(audioEl.duration);
+      const maxStart = Number.isFinite(duration) && duration > 0 ? Math.max(0, duration - 0.001) : Number.POSITIVE_INFINITY;
+      audioEl.currentTime = Math.min(start, maxStart);
+    } catch (err) {
+      console.warn('[CRM Result] Failed to seek audio:', err);
+      token.classList.remove('is-playing');
+      token.removeAttribute('aria-pressed');
+      return;
+    }
+
+    let hasStartedPlaying = false;
+
+    // Auto-pause timer when currentTime reaches end or finishes
+    const timer = setInterval(() => {
+      if (playbackRevision !== revision) {
+        clearInterval(timer);
+        return;
+      }
+      if (!audioEl.paused) {
+        hasStartedPlaying = true;
+      }
+      if (audioEl.currentTime >= end || audioEl.ended || (hasStartedPlaying && audioEl.paused)) {
+        stopActiveWordPlayback({ pause: true });
+      }
+    }, 25);
+
+    activeWordPlayback = {
+      revision,
+      timer,
+      token,
+      audioEl
+    };
+
+    audioEl.play().catch(err => {
+      if (playbackRevision === revision) {
+        console.warn('[CRM Result] Audio playback rejected:', err);
+        stopActiveWordPlayback({ pause: false });
+      }
+    });
+  }
+
+  function bindSpeakingWordInteractions(rootEl) {
+    if (!rootEl) return;
+    if (rootEl.dataset.crmSpeakingInteractionsBound === 'true') return;
+    rootEl.dataset.crmSpeakingInteractionsBound = 'true';
+
+    rootEl.addEventListener('click', (e) => {
+      const token = e.target.closest('.crm-word-token');
+      if (!token || token.dataset.playable !== 'true') return;
+      const questionCard = token.closest('.crm-result-question');
+      const audioEl = questionCard?.querySelector('audio.crm-result-audio');
+      if (!audioEl) return;
+      playWordSegment(audioEl, token.dataset.startMs, token.dataset.endMs, token);
+    });
+
+    rootEl.addEventListener('keydown', (e) => {
+      if (!['Enter', ' '].includes(e.key)) return;
+      // For native buttons, browser automatically triggers click on Enter/Space
+      if (e.target.tagName === 'BUTTON') return;
+      const token = e.target.closest('.crm-word-token');
+      if (!token || token.dataset.playable !== 'true') return;
+      e.preventDefault();
+      const questionCard = token.closest('.crm-result-question');
+      const audioEl = questionCard?.querySelector('audio.crm-result-audio');
+      if (!audioEl) return;
+      playWordSegment(audioEl, token.dataset.startMs, token.dataset.endMs, token);
+    });
   }
 
   // ==================== SECTION RENDERERS ====================
@@ -495,15 +646,17 @@
             const asrError = entry?.asrError ? String(entry.asrError) : '';
             const audioUrl = audioUrls?.[qId] ? String(audioUrls[qId]) : '';
             const expectedText = q?.text ? String(q.text) : '';
+            const words = Array.isArray(entry?.words) ? entry.words : null;
+            const hasPlayableWords = Array.isArray(words) && words.length > 0;
 
             const audioHtml = audioUrl
-              ? `<audio class="crm-result-audio" controls src="${escapeHtml(audioUrl)}"></audio>`
+              ? `<audio class="crm-result-audio" controls preload="metadata" src="${escapeHtml(audioUrl)}"></audio>`
               : '<div class="crm-result-muted">Audio not available.</div>';
 
-            const diffedTranscript = transcript ? computeTranscriptDiffHtml(expectedText, transcript) : '';
+            const diffedTranscript = (transcript || hasPlayableWords) ? computeTranscriptDiffHtml(expectedText, transcript, words) : '';
 
-            const transcriptHtml = transcript
-              ? `<div class="crm-result-transcript"><strong>Transcript:</strong><br>\n${diffedTranscript}</div>`
+            const transcriptHtml = (transcript || hasPlayableWords)
+              ? `<div class="crm-result-transcript"><strong>Transcript:</strong>${hasPlayableWords ? ' <span class="crm-transcript-hint">(Click any recognized word to play audio)</span>' : ''}<br>\n${diffedTranscript}</div>`
               : (asrError
                 ? `<div class="crm-result-transcript"><strong>ASR error:</strong>\n${escapeHtml(asrError)}</div>`
                 : '<div class="crm-result-muted">Transcript not available.</div>');
@@ -774,6 +927,8 @@
     const summary = buildScoreSummary(scoreData);
     const detailsHtml = buildSectionsHtml({ test, session, audioUrls, ...scoreData });
 
+    stopActiveWordPlayback({ pause: true });
+
     elements.root.innerHTML = `
       <div class="crm-result-grid">
         ${leadCard}
@@ -783,6 +938,8 @@
       ${summary}
       ${detailsHtml}
     `;
+
+    bindSpeakingWordInteractions(elements.root);
 
     // Show export button now that content is rendered
     const exportBtn = document.getElementById('crm-export-pdf-btn');
@@ -833,6 +990,7 @@
     });
 
     clone.querySelectorAll('audio').forEach((audio) => audio.remove());
+    clone.querySelectorAll('.crm-transcript-hint').forEach((hint) => hint.remove());
     return clone;
   }
 

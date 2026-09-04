@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vietnamese Typography Showcase — Better English Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,400..600&family=Lexend:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-focus: #3b82f6;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #9a5722;
+      --accent-soft: rgba(154, 87, 34, 0.08);
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --blue: #2563eb;
+      --blue-bg: #eff6ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    .demo-header {
+      background: #1e293b;
+      color: #fff;
+      padding: 32px 24px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .demo-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .demo-header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .demo-header p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      max-width: 800px;
+    }
+
+    /* Controls Bar */
+    .control-panel {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      padding: 16px 0;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .font-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .font-tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .font-tab-btn:hover {
+      border-color: #cbd5e1;
+      color: var(--text);
+      background: #f1f5f9;
+    }
+
+    .font-tab-btn.active {
+      background: #1e293b;
+      border-color: #1e293b;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(30, 41, 59, 0.25);
+    }
+
+    .font-tab-btn .badge-bug {
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .font-tab-btn .badge-rec {
+      background: #dcfce7;
+      color: #166534;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .view-modes {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .view-mode-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      transition: all 0.15s ease;
+    }
+
+    .view-mode-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    /* Font Metadata Card */
+    .font-spec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin: 24px 0;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .spec-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .spec-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .spec-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .spec-verdict {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .spec-verdict.pass {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .spec-verdict.fail {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Section Layout */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Grid Layouts */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .showcase-grid.split-view {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 900px) {
+      .showcase-grid.split-view {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* App Preview Container replicating exact screenshot */
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      position: relative;
+    }
+
+    .preview-badge-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-font-tag {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    /* Replicated BEL UI Elements */
+    .bel-app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .bel-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bel-logo {
+      background: #0d9488;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 5px 8px;
+      border-radius: 8px;
+    }
+
+    .bel-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .bel-sub {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
+    /* Step Stepper */
+    .guided-stepper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(154, 87, 34, 0.04);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .step-pill.active {
+      color: #9a5722;
+      background: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .step-pill-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #9a5722;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    /* PTE Criteria Box */
+    .pte-criteria-box {
+      border: 1px solid rgba(110, 84, 54, 0.18);
+      border-radius: 12px;
+      padding: 16px;
+      background: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .pte-criteria-head {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #9a5722;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .pte-criteria-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+
+    .pte-criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .pte-crit-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .pte-crit-num {
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.75rem;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pte-crit-text {
+      font-size: 0.84rem;
+      color: #1e293b;
+      line-height: 1.4;
+    }
+
+    /* Prompt Traps Alert Box */
+    .prompt-trap-alert {
+      margin-bottom: 20px;
+    }
+
+    .trap-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #b91c1c;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trap-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    .trap-icon {
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* Flowchart Cards */
+    .flowchart-preview-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .demo-flow-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .demo-flow-card.card-1 { border-left: 3px solid #2563eb; }
+    .demo-flow-card.card-2 { border-left: 3px solid #059669; }
+    .demo-flow-card.card-3 { border-left: 3px solid #d97706; }
+
+    .demo-flow-card-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .demo-flow-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-flow-num.n1 { background: #2563eb; }
+    .demo-flow-num.n2 { background: #059669; }
+    .demo-flow-num.n3 { background: #d97706; }
+
+    .demo-flow-role {
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: #1e293b;
+    }
+
+    .demo-flow-quote {
+      font-size: 0.8rem;
+      font-style: italic;
+      color: #64748b;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .demo-flow-meaning {
+      font-size: 0.82rem;
+      color: #1e293b;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .demo-flow-takeaway {
+      background: rgba(154, 87, 34, 0.05);
+      border: 1px solid rgba(154, 87, 34, 0.1);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.78rem;
+      color: #2c2418;
+    }
+
+    .demo-flow-takeaway strong {
+      color: #b45309;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Stress Test & Pangram Card */
+    .stress-test-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+
+    .stress-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+
+    .diacritic-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .diacritic-pill {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .pangram-box {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.95rem;
+      color: #1e293b;
+      line-height: 1.7;
+    }
+
+    /* Font application classes */
+    .font-outfit { font-family: 'Outfit', sans-serif !important; }
+    .font-be-vietnam-pro { font-family: 'Be Vietnam Pro', sans-serif !important; }
+    .font-plus-jakarta-sans { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+    .font-lexend { font-family: 'Lexend', sans-serif !important; }
+    .font-inter { font-family: 'Inter', sans-serif !important; }
+    .font-manrope { font-family: 'Manrope', sans-serif !important; }
+
+    /* Zoom Callout */
+    .zoom-callout {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 16px 0;
+      font-size: 0.85rem;
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="demo-header">
+    <div class="demo-container">
+      <h1>🇻🇳 Tiêu Chuẩn Typography Tiếng Việt — Phân Tích & Demo Thực Tế</h1>
+      <p>
+        Phân tích nguyên nhân lỗi vỡ font ở <strong>Outfit</strong> (thiếu subset tiếng Việt, dẫn đến fallback ký tự có dấu sang Segoe UI / Arial) và so sánh trực tiếp với <strong>5 phông chữ đọc tối ưu nhất</strong> cho Better English Learning.
+      </p>
+    </div>
+  </header>
+
+  <!-- Sticky Control Bar -->
+  <div class="control-panel">
+    <div class="demo-container">
+      <div class="control-row">
+        <div class="font-tabs">
+          <button class="font-tab-btn" data-font="outfit" onclick="selectFont('outfit')">
+            Outfit <span class="badge-bug">Hiện tại (Lỗi)</span>
+          </button>
+          <button class="font-tab-btn active" data-font="be-vietnam-pro" onclick="selectFont('be-vietnam-pro')">
+            Be Vietnam Pro <span class="badge-rec">Khuyên dùng #1</span>
+          </button>
+          <button class="font-tab-btn" data-font="plus-jakarta-sans" onclick="selectFont('plus-jakarta-sans')">
+            Plus Jakarta Sans <span class="badge-rec">Khuyên dùng #2</span>
+          </button>
+          <button class="font-tab-btn" data-font="lexend" onclick="selectFont('lexend')">
+            Lexend <span class="badge-rec">Giáo dục / Đọc</span>
+          </button>
+          <button class="font-tab-btn" data-font="inter" onclick="selectFont('inter')">
+            Inter <span class="badge-rec">Chuẩn UI Tech</span>
+          </button>
+          <button class="font-tab-btn" data-font="manrope" onclick="selectFont('manrope')">
+            Manrope <span class="badge-rec">Thanh lịch</span>
+          </button>
+        </div>
+
+        <div class="view-modes">
+          <button id="btn-split" class="view-mode-btn" onclick="toggleSplitView()">
+            ⚡ So sánh song song (Outfit vs Đang chọn)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="demo-container">
+
+    <!-- Font Specifications Card -->
+    <div id="font-spec-card" class="font-spec-card">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Zoom Inspection Alert -->
+    <div id="zoom-alert" class="zoom-callout">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Main Showcase Cards -->
+    <div id="showcase-container" class="showcase-grid">
+
+      <!-- Left Card: Current Font Preview (or Selected Font in Single Mode) -->
+      <div id="main-preview-card" class="preview-card font-be-vietnam-pro">
+        <div class="preview-badge-header">
+          <span id="main-preview-badge" class="preview-font-tag">Phông chữ hiển thị: Be Vietnam Pro</span>
+          <span style="font-size: 0.8rem; color: #16a34a; font-weight: 600;">✓ Hỗ trợ 100% tiếng Việt chuẩn Unicode</span>
+        </div>
+
+        <!-- BEL App Bar Replica -->
+        <div class="bel-app-bar">
+          <div class="bel-brand">
+            <span class="bel-logo">BEL</span>
+            <div>
+              <div class="bel-title">Better English Learning</div>
+              <div class="bel-sub">Adaptive English practice for active learners</div>
+            </div>
+          </div>
+          <div style="font-size: 0.84rem; font-weight: 600; color: #9a5722;">Luyện tập PTE</div>
+        </div>
+
+        <!-- Guided Stepper Replica -->
+        <div class="guided-stepper">
+          <span class="step-pill active">
+            <span class="step-pill-num">1</span>
+            <span>Hiểu đề bài</span>
+          </span>
+          <span class="step-pill">
+            <span class="step-pill-num" style="background:#cbd5e1; color:#475569;">2</span>
+            <span>Chọn hướng đi</span>
+          </span>
+          <span class="step-pill">
+            <span class="step-pill-num" style="background:#cbd5e1; color:#475569;">3</span>
+            <span>Bộ ngôn ngữ</span>
+          </span>
+          <span class="step-pill">
+            <span class="step-pill-num" style="background:#cbd5e1; color:#475569;">4</span>
+            <span>Lập dàn ý</span>
+          </span>
+          <span class="step-pill">
+            <span class="step-pill-num" style="background:#cbd5e1; color:#475569;">5</span>
+            <span>Xây dựng câu</span>
+          </span>
+        </div>
+
+        <!-- PTE Criteria Box Replica -->
+        <div class="pte-criteria-box">
+          <div class="pte-criteria-head">📋 Tiêu chí chấm điểm bắt buộc</div>
+          <div class="pte-criteria-sub">Các tiêu chí chấm điểm bắt buộc theo thang điểm PTE (Content, Form & Development):</div>
+          <div class="pte-criteria-grid">
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">1</span>
+              <span class="pte-crit-text">Nêu mức độ đồng ý hoặc không đồng ý.</span>
+            </div>
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">2</span>
+              <span class="pte-crit-text">Hỗ trợ quan điểm bằng hai lý do rõ ràng.</span>
+            </div>
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">3</span>
+              <span class="pte-crit-text">Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt Traps Replica (The exact area from the screenshot!) -->
+        <div class="prompt-trap-alert">
+          <div class="trap-title">⚠️ Bẫy riêng của đề này (Albert Einstein)</div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Không viết về tiểu sử hay cuộc đời của Albert Einstein; hãy tập trung phản biện và đánh giá nhận định về giáo dục.</span>
+          </div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Không đánh đồng 'giáo dục trường lớp' (nội quy và giáo trình) với 'việc học thực chất' (sự tò mò và tự khám phá kiến thức).</span>
+          </div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Đảm bảo trả lời đầy đủ CẢ HAI câu hỏi của đề: nhận định đó có ý nghĩa gì VÀ bạn có đồng ý với điều đó hay không.</span>
+          </div>
+        </div>
+
+        <!-- Flowchart Cards Replica -->
+        <div class="flowchart-preview-row">
+          <div class="demo-flow-card card-1">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n1">1</span>
+              <span class="demo-flow-role">Câu danh ngôn & Nghịch lý</span>
+            </div>
+            <div class="demo-flow-quote">“The only thing that interferes with my learning is education.” – Albert Einstein.</div>
+            <div class="demo-flow-meaning">
+              Einstein cho rằng trường lớp khuôn mẫu và áp lực điểm số ("education") có thể dập tắt trí tò mò tự nhiên và tinh thần tự học thực sự ("learning").
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Sự đối lập giữa trường lớp gò bó ("education") và tinh thần tự học say mê ("learning").
+            </div>
+          </div>
+
+          <div class="demo-flow-card card-2">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n2">2</span>
+              <span class="demo-flow-role">Yêu cầu: Giải thích ý nghĩa</span>
+            </div>
+            <div class="demo-flow-quote">“What did he mean by that?”</div>
+            <div class="demo-flow-meaning">
+              Yêu cầu làm rõ nhận định của Einstein: vì sao và bằng cách nào hệ thống thi cử khuôn sáo lại bóp nghẹt tư duy sáng tạo?
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Làm rõ cơ chế sâu xa khiến trường học truyền thống cản trở việc học tự nhiên.
+            </div>
+          </div>
+
+          <div class="demo-flow-card card-3">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n3">3</span>
+              <span class="demo-flow-role">Yêu cầu: Đánh giá quan điểm</span>
+            </div>
+            <div class="demo-flow-quote">“Do you think he is correct?”</div>
+            <div class="demo-flow-meaning">
+              Hỏi quan điểm cá nhân của bạn: Bạn đồng tình rằng trường học làm thui chột việc học, hay thấy giáo dục khuôn khổ vẫn vô cùng cần thiết?
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Cần một lập trường dứt khoát: Đồng ý, Phản bác, hoặc Cân bằng hai mặt.
+            </div>
+          </div>
+        </div>
+
+        <!-- Stress Test Box -->
+        <div class="stress-test-card">
+          <div class="stress-title">🔍 Thử thách dấu thanh 2 tầng & Dấu móc tiếng Việt (Stress Test)</div>
+          <div class="diacritic-row">
+            <span class="diacritic-pill">ẫ (bẫy, dẫu)</span>
+            <span class="diacritic-pill">ễ (nghĩ lễ)</span>
+            <span class="diacritic-pill">ỗ (chỗ, hỗ trợ)</span>
+            <span class="diacritic-pill">ặ (mặt, chặt)</span>
+            <span class="diacritic-pill">ợ (sợ, trợ thủ)</span>
+            <span class="diacritic-pill">ứ (sức, cứ)</span>
+            <span class="diacritic-pill">ử (thử, gửi)</span>
+            <span class="diacritic-pill">ữ (chữ, giữ)</span>
+            <span class="diacritic-pill">đ Đ (điểm, đề)</span>
+          </div>
+          <div class="pangram-box">
+            Trời đã về chiều, gió thổi vi vu làm những chiếc lá úa vàng rơi lả tả xuống mặt hồ phẳng lặng. Người học sinh cần cù ôn luyện bài thi viết luận với lòng quyết tâm bền bỉ và tinh thần tự giác cao độ.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Card: Visible only in Split View -->
+      <div id="split-reference-card" class="preview-card font-outfit" style="display: none;">
+        <div class="preview-badge-header">
+          <span class="preview-font-tag" style="background:#fee2e2; color:#991b1b;">Đối chiếu: Outfit (Phông hiện tại bị lỗi)</span>
+          <span style="font-size: 0.8rem; color: #dc2626; font-weight: 600;">⚠️ Ký tự có dấu rơi về fallback font</span>
+        </div>
+
+        <!-- Exact Duplicate in Outfit -->
+        <div class="bel-app-bar">
+          <div class="bel-brand">
+            <span class="bel-logo">BEL</span>
+            <div>
+              <div class="bel-title">Better English Learning</div>
+              <div class="bel-sub">Adaptive English practice for active learners</div>
+            </div>
+          </div>
+          <div style="font-size: 0.84rem; font-weight: 600; color: #9a5722;">Luyện tập PTE</div>
+        </div>
+
+        <div class="guided-stepper">
+          <span class="step-pill active"><span class="step-pill-num">1</span><span>Hiểu đề bài</span></span>
+          <span class="step-pill"><span class="step-pill-num" style="background:#cbd5e1; color:#475569;">2</span><span>Chọn hướng đi</span></span>
+          <span class="step-pill"><span class="step-pill-num" style="background:#cbd5e1; color:#475569;">3</span><span>Bộ ngôn ngữ</span></span>
+          <span class="step-pill"><span class="step-pill-num" style="background:#cbd5e1; color:#475569;">4</span><span>Lập dàn ý</span></span>
+          <span class="step-pill"><span class="step-pill-num" style="background:#cbd5e1; color:#475569;">5</span><span>Xây dựng câu</span></span>
+        </div>
+
+        <div class="pte-criteria-box">
+          <div class="pte-criteria-head">📋 Tiêu chí chấm điểm bắt buộc</div>
+          <div class="pte-criteria-sub">Các tiêu chí chấm điểm bắt buộc theo thang điểm PTE (Content, Form & Development):</div>
+          <div class="pte-criteria-grid">
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">1</span>
+              <span class="pte-crit-text">Nêu mức độ đồng ý hoặc không đồng ý.</span>
+            </div>
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">2</span>
+              <span class="pte-crit-text">Hỗ trợ quan điểm bằng hai lý do rõ ràng.</span>
+            </div>
+            <div class="pte-crit-item">
+              <span class="pte-crit-num">3</span>
+              <span class="pte-crit-text">Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prompt-trap-alert">
+          <div class="trap-title">⚠️ Bẫy riêng của đề này (Albert Einstein)</div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Không viết về tiểu sử hay cuộc đời của Albert Einstein; hãy tập trung phản biện và đánh giá nhận định về giáo dục.</span>
+          </div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Không đánh đồng 'giáo dục trường lớp' (nội quy và giáo trình) với 'việc học thực chất' (sự tò mò và tự khám phá kiến thức).</span>
+          </div>
+          <div class="trap-item">
+            <span class="trap-icon">!</span>
+            <span>Đảm bảo trả lời đầy đủ CẢ HAI câu hỏi của đề: nhận định đó có ý nghĩa gì VÀ bạn có đồng ý với điều đó hay không.</span>
+          </div>
+        </div>
+
+        <div class="flowchart-preview-row">
+          <div class="demo-flow-card card-1">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n1">1</span>
+              <span class="demo-flow-role">Câu danh ngôn & Nghịch lý</span>
+            </div>
+            <div class="demo-flow-quote">“The only thing that interferes with my learning is education.” – Albert Einstein.</div>
+            <div class="demo-flow-meaning">
+              Einstein cho rằng trường lớp khuôn mẫu và áp lực điểm số ("education") có thể dập tắt trí tò mò tự nhiên và tinh thần tự học thực sự ("learning").
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Sự đối lập giữa trường lớp gò bó ("education") và tinh thần tự học say mê ("learning").
+            </div>
+          </div>
+
+          <div class="demo-flow-card card-2">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n2">2</span>
+              <span class="demo-flow-role">Yêu cầu: Giải thích ý nghĩa</span>
+            </div>
+            <div class="demo-flow-quote">“What did he mean by that?”</div>
+            <div class="demo-flow-meaning">
+              Yêu cầu làm rõ nhận định của Einstein: vì sao và bằng cách nào hệ thống thi cử khuôn sáo lại bóp nghẹt tư duy sáng tạo?
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Làm rõ cơ chế sâu xa khiến trường học truyền thống cản trở việc học tự nhiên.
+            </div>
+          </div>
+
+          <div class="demo-flow-card card-3">
+            <div class="demo-flow-card-head">
+              <span class="demo-flow-num n3">3</span>
+              <span class="demo-flow-role">Yêu cầu: Đánh giá quan điểm</span>
+            </div>
+            <div class="demo-flow-quote">“Do you think he is correct?”</div>
+            <div class="demo-flow-meaning">
+              Hỏi quan điểm cá nhân của bạn: Bạn đồng tình rằng trường học làm thui chột việc học, hay thấy giáo dục khuôn khổ vẫn vô cùng cần thiết?
+            </div>
+            <div class="demo-flow-takeaway">
+              <strong>💡 Điểm mấu chốt</strong>
+              Cần một lập trường dứt khoát: Đồng ý, Phản bác, hoặc Cân bằng hai mặt.
+            </div>
+          </div>
+        </div>
+
+        <div class="stress-test-card">
+          <div class="stress-title">🔍 Thử thách dấu thanh 2 tầng & Dấu móc tiếng Việt (Outfit Fallback Bug)</div>
+          <div class="diacritic-row">
+            <span class="diacritic-pill">ẫ (bẫy, dẫu)</span>
+            <span class="diacritic-pill">ễ (nghĩ lễ)</span>
+            <span class="diacritic-pill">ỗ (chỗ, hỗ trợ)</span>
+            <span class="diacritic-pill">ặ (mặt, chặt)</span>
+            <span class="diacritic-pill">ợ (sợ, trợ thủ)</span>
+            <span class="diacritic-pill">ứ (sức, cứ)</span>
+            <span class="diacritic-pill">ử (thử, gửi)</span>
+            <span class="diacritic-pill">ữ (chữ, giữ)</span>
+            <span class="diacritic-pill">đ Đ (điểm, đề)</span>
+          </div>
+          <div class="pangram-box">
+            Trời đã về chiều, gió thổi vi vu làm những chiếc lá úa vàng rơi lả tả xuống mặt hồ phẳng lặng. Người học sinh cần cù ôn luyện bài thi viết luận với lòng quyết tâm bền bỉ và tinh thần tự giác cao độ.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const FONT_DATA = {
+      'outfit': {
+        name: 'Outfit',
+        classification: 'Geometric Sans-serif',
+        author: 'Rodrigo Fuenzalida',
+        vietnameseSupport: 'Không có (Thiếu subset Vietnamese trên Google Fonts)',
+        status: 'fail',
+        notes: 'Khi gặp ký tự tiếng Việt có dấu (ẫ, ề, ỗ, ợ, ủ, đ...), trình duyệt bắt buộc phải lấy ký tự từ font hệ thống (Segoe UI / Arial / Times) để bù vào. Kết quả: chữ bị lệch độ dày (weight), lệch đường chân chữ (baseline), dấu bị méo hoặc chìm nổi bất thường.',
+        alert: '🚨 <strong>Lỗi nghiêm trọng:</strong> Nhìn vào từ "Bẫy riêng của đề này" hoặc "Hỗ trợ Guided", các chữ "ẫ", "ỗ", "ợ", "ề" bị lệch hoàn toàn so với các chữ cái không dấu còn lại.'
+      },
+      'be-vietnam-pro': {
+        name: 'Be Vietnam Pro',
+        classification: 'Neo-Grotesk (Thiết kế bản địa cho tiếng Việt)',
+        author: 'Lâm Bảo, Tony Lê, Việt Anh Nguyễn',
+        vietnameseSupport: '100% Hoàn hảo — Thiết kế chuyên dụng cho tiếng Việt',
+        status: 'pass',
+        notes: 'Phông chữ được tạo ra bởi các nhà thiết kế Việt Nam. Dấu mũ, dấu móc, dấu hỏi/ngã/nặng được tính toán chính xác để không bao giờ bị dính dòng (vertical collision) hoặc chen chúc. Đang là tiêu chuẩn số 1 cho các sản phẩm công nghệ & giáo dục tại Việt Nam.',
+        alert: '✨ <strong>Khuyên dùng hàng đầu (#1):</strong> Dấu thanh 2 tầng (như ẫ, ế, ỗ, ặ) có tỷ lệ quang học hoàn hảo, độ dày nét chữ đồng nhất tuyệt đối, đọc lâu không mỏi mắt.'
+      },
+      'plus-jakarta-sans': {
+        name: 'Plus Jakarta Sans',
+        classification: 'Modern Geometric Sans (Gần Outfit nhất)',
+        author: 'Tokotype (Gumpita Rahayu)',
+        vietnameseSupport: '100% Đầy đủ chính thức từ v2.400 trên Google Fonts',
+        status: 'pass',
+        notes: 'Nếu bạn yêu thích vẻ đẹp hình học hiện đại, các nét bo tròn thân thiện và phong cách công nghệ của Outfit, thì Plus Jakarta Sans chính là bản sao thẩm mỹ hoàn hảo nhưng có hỗ trợ tiếng Việt bản địa đầy đủ.',
+        alert: '🎯 <strong>Lựa chọn thay thế 1:1 cho Outfit:</strong> Giữ nguyên 95% phong cách hình học tròn trịa, hiện đại của app mà sửa triệt để 100% lỗi vỡ dấu tiếng Việt.'
+      },
+      'lexend': {
+        name: 'Lexend',
+        classification: 'Hyper-legible Reading Sans (Tối ưu khả năng đọc)',
+        author: 'Thomas Jockin & các nhà nghiên cứu giáo dục',
+        vietnameseSupport: '100% Đầy đủ trên Google Fonts',
+        status: 'pass',
+        notes: 'Được thiết kế dựa trên nghiên cứu khoa học thị giác nhằm giảm thiểu hiện tượng nhảy dòng, lóa mắt và tăng tốc độ đọc hiểu. Cực kỳ thích hợp cho một nền tảng luyện thi tiếng Anh và đọc đề bài như Better English Learning.',
+        alert: '📚 <strong>Lựa chọn cho giáo dục:</strong> Khoảng cách ký tự thoáng, dấu tiếng Việt rõ ràng, giúp học viên đọc đề bài nhanh và không bị căng thẳng mắt.'
+      },
+      'inter': {
+        name: 'Inter',
+        classification: 'Modern Grotesque UI (Chuẩn mực giao diện thế giới)',
+        author: 'Rasmus Andersson',
+        vietnameseSupport: '100% Hoàn hảo (Tác giả hợp tác trực tiếp với chuyên gia font Việt)',
+        status: 'pass',
+        notes: 'Phông chữ UI được tin dùng nhiều nhất toàn cầu (Figma, GitHub, Linear, Stripe). X-height cao, độ sắc nét vượt trội ở cỡ chữ nhỏ từ 11px đến 14px.',
+        alert: '💻 <strong>Chuẩn mực kỹ thuật:</strong> Gọn gàng, độ tin cậy tuyệt đối ở mọi kích thước màn hình từ điện thoại đến máy tính.'
+      },
+      'manrope': {
+        name: 'Manrope',
+        classification: 'Semi-Geometric Modern Sans',
+        author: 'Mikhail Sharanda',
+        vietnameseSupport: '100% Đầy đủ trên Google Fonts',
+        status: 'pass',
+        notes: 'Sự pha trộn tinh tế giữa hình học tròn trịa và nét nghiêm cẩn của Grotesk. Hiện đang được dùng ở trang pronunciation-test của chính dự án này.',
+        alert: '🎨 <strong>Thanh lịch và cao cấp:</strong> Thể hiện sự tinh tế và hiện đại, rất hợp với các thẻ bài học và giao diện luyện thi cao cấp.'
+      }
+    };
+
+    let currentFont = 'be-vietnam-pro';
+    let isSplitView = false;
+
+    function selectFont(fontKey) {
+      currentFont = fontKey;
+      
+      // Update tab active state
+      document.querySelectorAll('.font-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.font === fontKey);
+      });
+
+      // Update Preview Card Font
+      const mainCard = document.getElementById('main-preview-card');
+      mainCard.className = `preview-card font-${fontKey}`;
+
+      // Update Badge
+      document.getElementById('main-preview-badge').textContent = `Phông chữ hiển thị: ${FONT_DATA[fontKey].name}`;
+
+      // Update Spec Card & Alert
+      renderSpecCard(fontKey);
+    }
+
+    function renderSpecCard(fontKey) {
+      const data = FONT_DATA[fontKey];
+      const specEl = document.getElementById('font-spec-card');
+      const alertEl = document.getElementById('zoom-alert');
+
+      specEl.innerHTML = `
+        <div class="spec-item">
+          <span class="spec-label">Tên phông chữ</span>
+          <span class="spec-value" style="font-size: 1.15rem; color: #1e293b;">${data.name}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Phong cách thiết kế</span>
+          <span class="spec-value">${data.classification}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Tác giả / Foundry</span>
+          <span class="spec-value">${data.author}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Hỗ trợ tiếng Việt</span>
+          <span class="spec-verdict ${data.status}">${data.vietnameseSupport}</span>
+        </div>
+        <div class="spec-item" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--border);">
+          <span class="spec-label">Đánh giá kỹ thuật</span>
+          <p style="font-size: 0.88rem; color: #334155; margin-top: 4px;">${data.notes}</p>
+        </div>
+      `;
+
+      alertEl.innerHTML = data.alert;
+    }
+
+    function toggleSplitView() {
+      isSplitView = !isSplitView;
+      const splitBtn = document.getElementById('btn-split');
+      const container = document.getElementById('showcase-container');
+      const refCard = document.getElementById('split-reference-card');
+
+      splitBtn.classList.toggle('active', isSplitView);
+      container.classList.toggle('split-view', isSplitView);
+      refCard.style.display = isSplitView ? 'block' : 'none';
+      splitBtn.textContent = isSplitView ? '✕ Tắt chế độ so sánh' : '⚡ So sánh song song (Outfit vs Đang chọn)';
+    }
+
+    // Initialize
+    selectFont('be-vietnam-pro');
+  </script>
+</body>
+</html>

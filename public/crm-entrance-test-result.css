@@ -560,6 +560,48 @@
   font-weight: 400;
 }
 
+/* Word Tokens (Click to seek audio) */
+.crm-word-token {
+  display: inline;
+  position: relative;
+  margin: 0 1px;
+  padding: 1px 3px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+}
+
+.crm-word-token:hover:not([data-playable="false"]) {
+  background: #e0f2fe;
+}
+
+.crm-word-token:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.crm-word-token.is-playing {
+  background: #dbeafe;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.crm-word-token[data-playable="false"] {
+  cursor: default;
+}
+
+.crm-transcript-hint {
+  font-size: 0.85em;
+  font-weight: normal;
+  color: #64748b;
+  margin-left: 6px;
+}
+
 /* Compact Tables */
 .crm-result-table-container .crm-table {
   table-layout: fixed;
@@ -794,4 +836,20 @@
   background: transparent;
   border: 1px dashed #cbd5e0;
   padding: 14px;
+}
+
+.crm-result-pdf-shell .crm-transcript-hint,
+@media print {
+  .crm-transcript-hint {
+    display: none !important;
+  }
+}
+
+.crm-result-pdf-shell .crm-word-token {
+  cursor: default !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom-color: transparent !important;
+  padding: 0 !important;
+  margin: 0 1px !important;
 }

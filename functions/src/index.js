@@ -129,7 +129,12 @@ module.exports = {
     scoreSWT,
     scoreSST,
     scoreRTS,
-    api: onRequest({ region: 'us-central1', secrets: ['AZURE_SPEECH_KEY'] }, apiApp),
+    api: onRequest({
+        region: 'us-central1',
+        memory: '1GiB',
+        timeoutSeconds: 300,
+        secrets: ['AZURE_SPEECH_KEY']
+    }, apiApp),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
         await runCrmAutomationQueue();
     }),

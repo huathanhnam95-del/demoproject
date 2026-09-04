@@ -43,8 +43,13 @@ class F5TTSEngine(BaseVoiceCloningEngine):
 
     def load_model(self) -> bool:
         try:
+            import os
             import torch
             from f5_tts.api import F5TTS
+
+            threads = os.cpu_count() or 8
+            torch.set_num_threads(threads)
+            print(f"[F5TTSEngine] Set PyTorch CPU threads to: {threads}")
 
             device = "cpu"
             print(f"[F5TTSEngine] Initializing F5-TTS on device: {device}")
@@ -146,7 +151,7 @@ class F5TTSEngine(BaseVoiceCloningEngine):
                 ref_text=ref_text,
                 gen_text=target_text,
                 file_wave=str(out_path),
-                nfe_step=12,
+                nfe_step=8,
                 speed=speed
             )
 

@@ -236,8 +236,9 @@ async function transcribeWithHuggingFace(audioBuffer, contentType) {
     const base64Data = audioBuffer.toString('base64');
 
     let rawText = '';
+    let chunks = [];
 
-    // Primary request: Force English language decoding via generate_kwargs
+    // Primary request: Force English language decoding via generate_kwargs and return word timestamps
     try {
         const jsonRes = await axios({
             method: 'POST',
@@ -252,6 +253,7 @@ async function transcribeWithHuggingFace(audioBuffer, contentType) {
             data: {
                 inputs: base64Data,
                 parameters: {
+                    return_timestamps: 'word',
                     generate_kwargs: {
                         language: 'english'
                     }
@@ -261,8 +263,13 @@ async function transcribeWithHuggingFace(audioBuffer, contentType) {
             validateStatus: () => true
         });
 
-        if (jsonRes.status === 200 && jsonRes.data && typeof jsonRes.data.text === 'string') {
-            rawText = jsonRes.data.text;
+        if (jsonRes.status === 200 && jsonRes.data) {
+            if (typeof jsonRes.data.text === 'string') {
+                rawText = jsonRes.data.text;
+            }
+            if (Array.isArray(jsonRes.data.chunks)) {
+                chunks = jsonRes.data.chunks;
+            }
         }
     } catch (jsonErr) {
         console.warn('[EntranceTest ASR] Hugging Face JSON language=english request failed, attempting binary fallback:', jsonErr?.message || jsonErr);
@@ -292,15 +299,46 @@ async function transcribeWithHuggingFace(audioBuffer, contentType) {
         }
 
         rawText = binaryRes.data.text || '';
+        if (Array.isArray(binaryRes.data?.chunks)) {
+            chunks = binaryRes.data.chunks;
+        }
     }
 
     const cleaned = cleanHallucinatedLoops(rawText, { stripVietnamese: true });
-    return cleaned;
+    const words = extractWordsFromChunks(chunks);
+
+    const result = Object.assign(new String(cleaned), {
+        text: cleaned,
+        words: words.length > 0 ? words : null
+    });
+    return result;
+}
+
+function extractWordsFromChunks(chunks) {
+    if (!Array.isArray(chunks) || chunks.length === 0) return [];
+    return chunks.map((c, idx) => {
+        const rawWord = String(c.text || '').trim();
+        const startMs = Math.round((c.timestamp?.[0] ?? 0) * 1000);
+        let endMs = c.timestamp?.[1] != null ? Math.round(c.timestamp[1] * 1000) : null;
+        if (endMs == null || endMs <= startMs) {
+            if (idx < chunks.length - 1 && chunks[idx + 1]?.timestamp?.[0] != null) {
+                endMs = Math.round(chunks[idx + 1].timestamp[0] * 1000);
+            } else {
+                endMs = startMs + 600;
+            }
+        }
+        return {
+            word: rawWord,
+            startMs,
+            endMs
+        };
+    }).filter((w) => w.word.length > 0);
 }
 
 module.exports = {
     transcribeAudio,
     transcribeWithHuggingFace,
+    extractWordsFromChunks,
     cleanHallucinatedLoops,
     resolveGeminiAudioMimeType,
     getGeminiApiKeys,

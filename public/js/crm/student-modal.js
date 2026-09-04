@@ -67,7 +67,7 @@ window.CrmStudentModal = (function () {
                 }
                 return;
             }
-            if (tabId === 'info') {
+            if (tabId === 'info' || tabId === 'student-360' || tabId === 'overview') {
                 renderStudentSchedulePrompt();
             }
         }

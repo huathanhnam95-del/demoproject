@@ -285,9 +285,22 @@
    the previous 0.7–0.86rem scale was the "wall of tiny text" complaint.
    ------------------------------------------------------------------------- */
 #mode-essay {
-  --essay-guided-font: .95rem;
-  --essay-guided-font-sm: .86rem;
-  --essay-guided-lh: 1.62;
+  --essay-guided-font-scale: 1;
+  --essay-guided-font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --essay-guided-font: calc(.95rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-font-sm: calc(.86rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-font-lg: calc(1.12rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-font-title: calc(1.3rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-lh: calc(1.54 + (var(--essay-guided-font-scale, 1) - 1) * 0.16);
+}
+
+#essay-guided-preferences,
+#mode-essay .essay-guided-workspace,
+#mode-essay .essay-guided-rail,
+#mode-essay #essay-guided-draft-container,
+#mode-essay .essay-guided-help-pop,
+#mode-essay .essay-guided-typo-popover {
+  font-family: var(--essay-guided-font-family, 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 }
 
 #mode-essay .essay-practice-choice {
@@ -321,21 +334,85 @@
   font-size: .78rem;
 }
 #mode-essay .essay-guided-preferences {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-left: auto;
+  gap: 12px 18px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px dashed var(--essay-border-soft);
 }
 #mode-essay .essay-guided-preferences[hidden] { display: none; }
+#mode-essay .essay-guided-pref-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 #mode-essay .essay-guided-preferences select {
   background: transparent;
   border: 1px solid var(--essay-border);
   border-radius: 8px;
   color: var(--essay-ink);
-  font-size: .9rem;
-  min-height: 38px;
-  padding: 6px 10px;
+  font-size: .88rem;
+  min-height: 36px;
+  padding: 5px 10px;
+  font-family: inherit;
+}
+#mode-essay .essay-guided-preferences select:focus {
+  outline: 2px solid var(--essay-accent);
+  outline-offset: 1px;
+}
+#mode-essay .essay-guided-scale-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+#mode-essay .essay-guided-scale-badge {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--essay-accent);
+  background: var(--essay-accent-soft);
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+#mode-essay .essay-guided-scale-controls,
+#mode-essay .essay-guided-popover-scale-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#mode-essay .essay-guided-scale-btn {
+  background: var(--essay-paper, #fff);
+  border: 1px solid var(--essay-border);
+  border-radius: 6px;
+  color: var(--essay-ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  height: 28px;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  transition: all .12s ease;
+}
+#mode-essay .essay-guided-scale-btn:hover {
+  background: var(--essay-accent-soft);
+  border-color: var(--essay-accent);
+  color: var(--essay-accent);
+}
+#mode-essay .essay-guided-scale-btn:active {
+  transform: scale(0.95);
+}
+#mode-essay input[type="range"]#essay-guided-font-scale,
+#mode-essay input[type="range"]#essay-guided-popover-scale-range {
+  width: 105px;
+  height: 6px;
+  accent-color: var(--essay-accent);
+  cursor: pointer;
 }
 
 /* ── Workspace: rail + editor ─────────────────────────────────────────────── */
@@ -356,6 +433,7 @@
   max-height: calc(100vh - 40px);
   min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   padding: 2px 20px 12px 0;
   position: sticky;
@@ -369,38 +447,223 @@
   border-radius: 99px;
 }
 
+/* ── Anti-Clipping Layout Safeguards for Guided Essay ─────────────────────── */
+#mode-essay .essay-guided-rail,
+#mode-essay .essay-guided-content,
+#mode-essay .essay-guided-section,
+#mode-essay .essay-guided-clause,
+#mode-essay .essay-guided-clause-card,
+#mode-essay .essay-guided-quiz,
+#mode-essay .essay-guided-target-card,
+#mode-essay .essay-guided-pattern-workbench,
+#mode-essay .essay-guided-draft-container {
+  min-height: min-content;
+  box-sizing: border-box;
+}
+
+#mode-essay .essay-guided-clause-head,
+#mode-essay .essay-guided-target-head,
+#mode-essay .essay-guided-quiz-head {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+#mode-essay .essay-guided-clause-tag,
+#mode-essay .essay-guided-clause-role,
+#mode-essay .essay-guided-clause-badge,
+#mode-essay .essay-guided-quiz-badge,
+#mode-essay .essay-guided-draft-badge,
+#mode-essay .essay-guided-draft-blueprint-tag {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+#mode-essay .essay-guided-clause-text,
+#mode-essay .essay-guided-clause-detail-text,
+#mode-essay .essay-guided-clause-trap-text,
+#mode-essay .essay-guided-prompt,
+#mode-essay .essay-guided-quiz-question,
+#mode-essay .essay-guided-quiz-opt,
+#mode-essay .essay-guided-quiz-feedback,
+#mode-essay .essay-guided-pattern-sentence,
+#mode-essay .essay-guided-cohesion-example {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: var(--essay-guided-lh, 1.54);
+}
+
+#mode-essay .essay-guided-vocab-table-wrap,
+#mode-essay .essay-guided-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+#mode-essay .essay-guided-quiz-opt {
+  align-items: flex-start;
+}
+#mode-essay .essay-guided-quiz-radio {
+  margin-top: calc(2px * var(--essay-guided-font-scale, 1));
+}
+#mode-essay .essay-guided-target-select-btn {
+  align-items: flex-start;
+}
+#mode-essay .essay-guided-target-checkbox {
+  margin-top: calc(3px * var(--essay-guided-font-scale, 1));
+}
+
 #mode-essay .essay-guided-rail-header {
   align-items: center;
   background: var(--essay-paper);
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
   padding: 6px 0 10px;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 20;
 }
 #mode-essay .essay-guided-rail-header strong {
   color: var(--essay-ink);
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--essay-guided-font-scale, 1));
   font-weight: 700;
 }
-#mode-essay .essay-guided-rail-actions { display: flex; gap: 6px; }
+#mode-essay .essay-guided-rail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 #mode-essay .essay-guided-language-toggle,
-#mode-essay .essay-guided-mobile-toggle {
+#mode-essay .essay-guided-mobile-toggle,
+#mode-essay .essay-guided-typo-btn {
   background: transparent;
   border: 1px solid var(--essay-border);
   border-radius: 99px;
   color: var(--essay-accent);
   cursor: pointer;
+  font-family: inherit;
   font-size: .8rem;
   font-weight: 700;
   min-height: 34px;
   padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s ease;
+}
+#mode-essay .essay-guided-typo-btn {
+  padding: 5px 10px;
+  font-size: .86rem;
+  letter-spacing: -.02em;
 }
 #mode-essay .essay-guided-language-toggle:hover,
-#mode-essay .essay-guided-mobile-toggle:hover { border-color: var(--essay-accent); }
+#mode-essay .essay-guided-mobile-toggle:hover,
+#mode-essay .essay-guided-typo-btn:hover,
+#mode-essay .essay-guided-typo-btn[aria-expanded="true"] {
+  background: var(--essay-accent-soft);
+  border-color: var(--essay-accent);
+}
 #mode-essay .essay-guided-mobile-toggle { display: none; }
+
+/* ── Typography Popover ─────────────────────────────────────────────────── */
+#mode-essay .essay-guided-typo-wrap {
+  position: relative;
+  display: inline-flex;
+}
+#mode-essay .essay-guided-typo-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 285px;
+  background: var(--essay-paper, #fff);
+  border: 1px solid var(--essay-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 14px 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--essay-guided-font-family, system-ui, sans-serif);
+  animation: essay-typo-in .15s ease-out;
+}
+#mode-essay .essay-guided-typo-popover[hidden] { display: none; }
+
+@keyframes essay-typo-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#mode-essay .essay-guided-typo-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--essay-border-soft);
+  padding-bottom: 8px;
+}
+#mode-essay .essay-guided-typo-popover-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--essay-ink);
+}
+#mode-essay .essay-guided-typo-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--essay-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+#mode-essay .essay-guided-typo-close:hover {
+  color: var(--essay-ink);
+  background: var(--essay-border-soft);
+}
+#mode-essay .essay-guided-typo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#mode-essay .essay-guided-typo-label {
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--essay-muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+#mode-essay .essay-guided-popover-select {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: .85rem;
+  border-radius: 8px;
+  border: 1px solid var(--essay-border);
+  background: var(--essay-paper, #fff);
+  color: var(--essay-ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+#mode-essay .essay-guided-popover-select:focus {
+  outline: 2px solid var(--essay-accent);
+  outline-offset: 1px;
+}
+#mode-essay .essay-guided-typo-scale-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#mode-essay .essay-guided-typo-scale-badge {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--essay-accent);
+  background: var(--essay-accent-soft);
+  padding: 2px 8px;
+  border-radius: 99px;
+}
 
 /* ── Progress + stepper ───────────────────────────────────────────────────── */
 #mode-essay .essay-guided-progress { margin: 0 0 12px; }
@@ -422,7 +685,7 @@
 #mode-essay .essay-guided-nav { display: grid; gap: 2px; margin-bottom: 18px; }
 #mode-essay .essay-guided-nav[hidden] { display: none; }
 #mode-essay .essay-guided-nav button {
-  align-items: center;
+  align-items: flex-start;
   background: transparent;
   border: 0;
   border-radius: 8px;
@@ -430,12 +693,14 @@
   cursor: pointer;
   display: flex;
   font-family: inherit;
-  font-size: .92rem;
+  font-size: calc(.92rem * var(--essay-guided-font-scale, 1));
   gap: 10px;
   min-height: 42px;
-  padding: 7px 10px;
+  padding: calc(7px * var(--essay-guided-font-scale, 1)) 10px;
   text-align: left;
   width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 #mode-essay .essay-guided-nav button:disabled { cursor: default; opacity: .45; }
 #mode-essay .essay-guided-nav-index {
@@ -449,6 +714,7 @@
   font-weight: 700;
   height: 24px;
   justify-content: center;
+  margin-top: 2px;
   width: 24px;
 }
 #mode-essay .essay-guided-nav button:hover:not(:disabled) {
@@ -626,6 +892,119 @@
 }
 #mode-essay .essay-guided-check { background: color-mix(in srgb, var(--essay-success) 14%, transparent); color: var(--essay-success); }
 #mode-essay .essay-guided-warn { background: color-mix(in srgb, var(--essay-danger) 14%, transparent); color: var(--essay-danger); }
+
+/* ── Common Mistakes to Avoid (Structured 3-Tier Pedagogical Cards) ─────── */
+#mode-essay .essay-guided-mistakes-container {
+  display: grid;
+  gap: 12px;
+}
+#mode-essay .essay-guided-mistakes-intro {
+  margin-bottom: 2px;
+}
+#mode-essay .essay-guided-mistakes-sub {
+  color: var(--essay-muted);
+  font-size: calc(0.84rem * var(--essay-font-scale, 1));
+  line-height: 1.45;
+  margin: 0;
+}
+#mode-essay .essay-guided-mistakes-list {
+  display: grid;
+  gap: 12px;
+}
+#mode-essay .essay-guided-mistake-card {
+  background: var(--essay-surface, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--essay-border-soft);
+  border-left: 3.5px solid var(--essay-danger, #ef4444);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#mode-essay .essay-guided-mistake-card:hover {
+  border-color: color-mix(in srgb, var(--essay-danger) 40%, var(--essay-border-soft));
+}
+#mode-essay .essay-guided-mistake-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#mode-essay .essay-guided-mistake-badge {
+  align-items: center;
+  background: color-mix(in srgb, var(--essay-danger) 12%, transparent);
+  border-radius: 6px;
+  color: var(--essay-danger, #ef4444);
+  display: inline-flex;
+  font-size: calc(0.72rem * var(--essay-font-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+#mode-essay .essay-guided-mistake-title {
+  color: var(--essay-text);
+  flex: 1 1 auto;
+  font-size: calc(0.92rem * var(--essay-font-scale, 1));
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+}
+#mode-essay .essay-guided-mistake-body {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+#mode-essay .essay-guided-mistake-row {
+  align-items: baseline;
+  display: grid;
+  gap: 6px 10px;
+  grid-template-columns: auto 1fr;
+}
+#mode-essay .essay-guided-mistake-tag {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font-size: calc(0.72rem * var(--essay-font-scale, 1));
+  font-weight: 700;
+  gap: 3px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+#mode-essay .essay-guided-mistake-row.is-mistake .essay-guided-mistake-tag {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  color: #dc2626;
+}
+#mode-essay .essay-guided-mistake-row.is-why .essay-guided-mistake-tag {
+  background: color-mix(in srgb, #f59e0b 14%, transparent);
+  color: #d97706;
+}
+#mode-essay .essay-guided-mistake-row.is-fix .essay-guided-mistake-tag {
+  background: color-mix(in srgb, #10b981 14%, transparent);
+  color: #059669;
+}
+#mode-essay .essay-guided-mistake-desc {
+  color: var(--essay-text);
+  font-size: calc(0.85rem * var(--essay-font-scale, 1));
+  line-height: 1.48;
+  margin: 0;
+}
+#mode-essay .essay-guided-mistake-row.is-why .essay-guided-mistake-desc {
+  color: var(--essay-muted);
+}
+#mode-essay .essay-guided-mistake-row.is-fix .essay-guided-mistake-desc {
+  color: var(--essay-text);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  #mode-essay .essay-guided-mistake-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
+
 
 #mode-essay .essay-guided-anglelist { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
 #mode-essay .essay-guided-anglelist li { display: grid; gap: 4px; }
@@ -1838,21 +2217,27 @@
   z-index: 9998;
   overflow-y: auto;
   background: var(--essay-paper, #fff);
-  padding: 20px 48px 40px;
+  padding: 0 28px 40px;
   overscroll-behavior: contain;
   animation: essay-fs-in .15s ease-out;
-  --essay-guided-font: 1.05rem;
-  --essay-guided-font-sm: .94rem;
-  --essay-guided-lh: 1.68;
+  --essay-guided-font: calc(1.05rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-font-sm: calc(.94rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-lh: calc(1.56 + (var(--essay-guided-font-scale, 1) - 1) * 0.16);
+}
+#mode-essay.essay-fullscreen.essay-fs-writing {
+  padding-top: 16px;
 }
 @keyframes essay-fs-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-/* Widen the inner container */
+/* Widen the inner container to full width in fullscreen */
 #mode-essay.essay-fullscreen .essay-container {
-  max-width: 1600px;
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: 0;
 }
 
 /* De-clutter: hide picker + header in all fullscreen phases */
@@ -1921,11 +2306,17 @@
   position: static;
 }
 
-/* Center the guided content for comfortable readability */
-#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-content,
-#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-content {
+/* Center the guided content for comfortable readability in standard mode */
+#mode-essay.essay-guided-mode:not(.essay-writing-phase):not(.essay-fullscreen) .essay-guided-content {
   max-width: 860px;
   margin-inline: auto;
+}
+
+/* Fullscreen mode: span full wide screen without wasted side margins */
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-content {
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
 }
 
 /* Larger step header for immersive handheld feel */
@@ -1945,11 +2336,16 @@
   font-size: .82rem;
 }
 
-/* Step nav at bottom — centered and spacious */
-#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-stepnav,
-#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-stepnav {
+/* Step nav at bottom — centered in standard mode, wide in fullscreen */
+#mode-essay.essay-guided-mode:not(.essay-writing-phase):not(.essay-fullscreen) .essay-guided-stepnav {
   max-width: 860px;
   margin: 28px auto 0;
+  padding-top: 20px;
+}
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-stepnav {
+  max-width: 100%;
+  width: 100%;
+  margin: 32px 0 0;
   padding-top: 20px;
 }
 
@@ -2027,15 +2423,152 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   FULLSCREEN WIDE LAYOUT & BORDERS — eliminates excess side spacing
+   and expands card borders, containers, and responsive grids edge-to-edge.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#mode-essay.essay-fullscreen .essay-fs-ready-btn {
+  max-width: 100%;
+}
+
+/* Fullscreen railtop: solid background pinned to top, covering scroll overflow */
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-railtop {
+  background: var(--essay-paper);
+  padding-top: 16px;
+  margin-top: 0;
+  top: 0;
+  z-index: 25;
+}
+
+/* Fullscreen header: spans wide with prominent bottom separation */
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-rail-header {
+  width: 100%;
+  padding: 6px 0 14px;
+  border-bottom: 1.5px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Fullscreen stepper: fills the top bar with equal distribution */
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-nav button {
+  flex: 1 1 0;
+  justify-content: center;
+  min-height: 42px;
+  font-size: .92rem;
+  padding: 6px 14px;
+}
+
+/* Widen Part 1 prompt hero with prominent borders */
+#mode-essay.essay-fullscreen .essay-guided-prompt-hero {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(154, 87, 34, 0.22);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+/* Widen flowchart cards and connectors across the wide canvas */
+#mode-essay.essay-fullscreen .essay-flowchart-arrow-strip,
+#mode-essay.essay-fullscreen .essay-flowchart-nodes-grid {
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+#mode-essay.essay-fullscreen .essay-flowchart-card {
+  border: 1.5px solid var(--essay-border-soft, rgba(110, 84, 54, 0.18));
+  border-radius: 14px;
+  padding: 20px 22px;
+  border-left-width: 4px;
+}
+
+/* Widen Part 2 Type Card & 4-step Blueprint */
+#mode-essay.essay-fullscreen .essay-guided-type-card {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(154, 87, 34, 0.22);
+  border-radius: 14px;
+  padding: 22px 26px;
+}
+#mode-essay.essay-fullscreen .essay-blueprint-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) {
+  #mode-essay.essay-fullscreen .essay-blueprint-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Widen Common Mistakes */
+#mode-essay.essay-fullscreen .essay-guided-mistakes-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+#mode-essay.essay-fullscreen .essay-guided-mistake-card {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(185, 28, 28, 0.25);
+  border-left: 4px solid #b91c1c;
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+/* Widen Approaches Box & Side-by-Side Grid */
+#mode-essay.essay-fullscreen .essay-guided-approaches-box {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(154, 87, 34, 0.22);
+  border-radius: 14px;
+  padding: 22px 26px;
+}
+#mode-essay.essay-fullscreen .essay-guided-approaches-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Widen Quiz Cards and Gap Cards */
+#mode-essay.essay-fullscreen .essay-guided-quiz-card,
+#mode-essay.essay-fullscreen .essay-guided-gap-card {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--essay-border-soft, rgba(110, 84, 54, 0.18));
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+/* Widen Requirements List */
+#mode-essay.essay-fullscreen .essay-guided-req-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+/* Widen Writing Phase Workspace: more breathing room for sidebar notes & editor */
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-workspace {
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  gap: 32px;
+  width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    PHASE 2: WRITING — editor fills the area, rail becomes compact sidebar.
    Active when: .essay-writing-phase or .essay-fs-writing
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Two-column: compact rail + wide editor */
-#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-workspace,
-#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-workspace {
+#mode-essay.essay-guided-mode.essay-writing-phase .essay-guided-workspace {
   grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
   gap: 28px;
+}
+#mode-essay.essay-fullscreen.essay-fs-writing .essay-guided-workspace {
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 32px;
 }
 
 /* Rail returns to scrollable sidebar, more compact */
@@ -2052,9 +2585,9 @@
 /* Scale down guided content in writing phase */
 #mode-essay.essay-guided-mode.essay-writing-phase,
 #mode-essay.essay-fullscreen.essay-fs-writing {
-  --essay-guided-font: .95rem;
-  --essay-guided-font-sm: .86rem;
-  --essay-guided-lh: 1.58;
+  --essay-guided-font: calc(.95rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-font-sm: calc(.86rem * var(--essay-guided-font-scale, 1));
+  --essay-guided-lh: calc(1.52 + (var(--essay-guided-font-scale, 1) - 1) * 0.16);
 }
 
 /* Larger textarea in writing phase */
@@ -2349,7 +2882,7 @@
   --essay-micro: .69rem;
 }
 /* The fullscreen overlay covers the site header and scrolls itself. */
-#mode-essay.essay-fullscreen { --essay-sticky-top: 12px; }
+#mode-essay.essay-fullscreen { --essay-sticky-top: 0px; }
 
 /* Micro label — the typographic replacement for the old emoji prefixes. */
 #mode-essay .essay-guided-clause-detail-label,
@@ -2488,10 +3021,15 @@
   z-index: 5;
 }
 /* Walkthrough: the rail is the page, so clear the fixed site header. */
-#mode-essay.essay-guided-mode:not(.essay-writing-phase) .essay-guided-railtop,
-#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-railtop {
+#mode-essay.essay-guided-mode:not(.essay-writing-phase):not(.essay-fullscreen) .essay-guided-railtop {
   margin-inline: auto;
   max-width: 860px;
+  top: var(--essay-sticky-top);
+}
+#mode-essay.essay-fullscreen:not(.essay-fs-writing) .essay-guided-railtop {
+  margin-inline: 0;
+  max-width: 100%;
+  width: 100%;
   top: var(--essay-sticky-top);
 }
 /* Writing phase: the rail scrolls itself, so pin to the rail's own top. */
@@ -2799,26 +3337,96 @@
   color: var(--essay-ink);
   font-size: var(--essay-guided-font-sm);
 }
-#mode-essay .essay-guided-pattern-formula-card,
-#mode-essay .essay-guided-pattern-applied-card {
-  border-left: 2px solid var(--essay-border);
-  display: grid;
-  gap: 7px;
-  padding-left: 12px;
+/* ══ Pattern Cards: Flattened, Single-Card Design (No Boxes-in-Boxes) ══ */
+#mode-essay .essay-guided-pattern-card {
+  background: var(--essay-paper, #fff);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  border-left: 3.5px solid var(--essay-accent, #9a5722);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  transition: border-color .15s ease;
 }
-#mode-essay .essay-guided-pattern-formula-card { border-left-color: var(--essay-accent); }
+#mode-essay .essay-guided-pattern-card:hover {
+  border-color: var(--essay-border, #d2e3fc);
+  border-left-color: var(--essay-accent, #9a5722);
+}
+#mode-essay .essay-guided-pattern-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#mode-essay .essay-guided-pattern-sublabel {
+  color: var(--essay-muted, #7c7267);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 #mode-essay .essay-guided-pattern-code {
-  background: var(--essay-accent-soft);
+  background: var(--essay-accent-soft, rgba(154, 87, 34, 0.08));
   border-radius: 8px;
-  color: var(--essay-ink);
+  color: var(--essay-ink, #2d241e);
   display: block;
   font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-  font-size: .84rem;
+  font-size: .88rem;
   line-height: 1.6;
-  padding: 9px 12px;
+  padding: 10px 14px;
 }
 #mode-essay .essay-guided-pattern-sentence {
+  color: var(--essay-ink, #2d241e);
+  font-size: .95rem;
   font-style: italic;
+  line-height: 1.65;
+  margin: 0;
+  padding-left: 2px;
+}
+#mode-essay .essay-guided-pattern-vi {
+  color: var(--essay-muted, #665c52);
+  font-size: .90rem;
+  font-style: normal;
+}
+
+/* ══ Term bold & highlight in example sentences ══ */
+#mode-essay .essay-term-hl {
+  background: rgba(234, 88, 12, 0.15);
+  border-radius: 4px;
+  color: var(--essay-ink, #2d241e);
+  font-weight: 700;
+  padding: 1px 5px;
+  display: inline;
+}
+
+/* ══ Point explanation detailed sections ══ */
+#mode-essay .essay-guided-point-expl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+#mode-essay .essay-guided-point-expl-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#mode-essay .essay-guided-point-expl-tag {
+  color: var(--essay-accent, #9a5722);
+  font-size: 0.80rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#mode-essay .essay-guided-point-expl-cue-box {
+  background: rgba(154, 87, 34, 0.06);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+#mode-essay .essay-guided-point-expl-cue {
+  color: var(--essay-ink, #2d241e);
+  font-size: 0.90rem;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -3455,13 +4063,6 @@
   gap: 14px;
   margin-top: 10px;
 }
-#mode-essay .essay-guided-pattern-card {
-  border-left: 2px solid var(--essay-accent);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-left: 12px;
-}
 #mode-essay .essay-guided-pattern-card-head {
   display: flex;
   flex-direction: column;
@@ -3739,6 +4340,19 @@
   transform: translateY(-2px);
 }
 
+#mode-essay .essay-flowchart-card.card-1 {
+  border-left: 3px solid #2563eb;
+}
+#mode-essay .essay-flowchart-card.card-2 {
+  border-left: 3px solid #059669;
+}
+#mode-essay .essay-flowchart-card.card-3 {
+  border-left: 3px solid #d97706;
+}
+#mode-essay .essay-flowchart-card.card-4 {
+  border-left: 3px solid #7c3aed;
+}
+
 #mode-essay .essay-flowchart-card.is-selected {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
@@ -3798,69 +4412,69 @@
   line-height: 1.3;
 }
 
-#mode-essay .essay-flowchart-card-target {
-  align-self: flex-start;
-  background: rgba(154, 87, 34, 0.08);
-  border-radius: 6px;
-  color: var(--essay-accent, #9a5722);
-  font-size: 0.76rem;
-  font-weight: 600;
-  padding: 2px 7px;
-}
-
 #mode-essay .essay-flowchart-card-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-#mode-essay .essay-thought-action {
-  background: rgba(16, 185, 129, 0.05);
-  border-left: 3px solid #10b981;
-  border-radius: 0 8px 8px 0;
+#mode-essay .essay-clause-quote {
+  border-bottom: 1px dashed var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.84rem;
+  font-style: italic;
+  line-height: 1.45;
+  padding-bottom: 8px;
+}
+
+#mode-essay .essay-clause-meaning {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 12px;
 }
 
-#mode-essay .essay-thought-label {
-  color: #047857;
-  font-size: 0.78rem;
+#mode-essay .essay-clause-label {
+  align-items: center;
+  color: var(--essay-accent, #9a5722);
+  display: inline-flex;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  gap: 4px;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-#mode-essay .essay-thought-text {
+#mode-essay .essay-clause-text {
   color: var(--essay-ink, #2c2418);
-  font-size: 0.84rem;
-  line-height: 1.45;
+  font-size: 0.86rem;
+  line-height: 1.5;
   margin: 0;
 }
 
-#mode-essay .essay-thought-avoidance {
-  background: rgba(239, 68, 68, 0.05);
-  border-left: 3px solid #ef4444;
-  border-radius: 0 8px 8px 0;
+#mode-essay .essay-clause-takeaway {
+  background: rgba(154, 87, 34, 0.04);
+  border: 1px solid rgba(154, 87, 34, 0.1);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
-#mode-essay .essay-thought-avoidance-label {
-  color: #b91c1c;
-  font-size: 0.78rem;
+#mode-essay .essay-clause-takeaway-label {
+  align-items: center;
+  color: #b45309;
+  display: inline-flex;
+  font-size: 0.73rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  gap: 4px;
 }
 
-#mode-essay .essay-thought-avoidance-text {
+#mode-essay .essay-clause-takeaway-text {
   color: var(--essay-ink, #2c2418);
-  font-size: 0.84rem;
-  line-height: 1.45;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
   margin: 0;
 }
 
@@ -4299,3 +4913,559 @@
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* ── Guided Write Essay: Mind Map, Flowcharts & Interactive Thought Bubbles ── */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* View Mode Toggle Bar */
+#mode-essay .essay-guided-view-toggle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  background: rgba(154, 87, 34, 0.05);
+  border: 1px solid rgba(154, 87, 34, 0.14);
+  border-radius: 14px;
+}
+
+#mode-essay .essay-guided-view-toggle-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--essay-muted, #7c6855);
+}
+
+#mode-essay .essay-guided-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+#mode-essay .essay-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--essay-muted, #7c6855);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mode-essay .essay-view-toggle-btn:hover {
+  color: var(--essay-ink, #2c2418);
+}
+
+#mode-essay .essay-view-toggle-btn.is-active {
+  background: #ffffff;
+  color: var(--essay-ink, #2c2418);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+#mode-essay .essay-view-toggle-icon {
+  font-size: 0.95rem;
+}
+
+/* Mind Map Canvas (Whiteboard / Ideation Space) */
+#mode-essay .essay-mindmap-canvas {
+  position: relative;
+  border-radius: 24px;
+  padding: 36px 28px;
+  background-color: var(--essay-paper, #fdfbf7);
+  background-image: radial-gradient(circle, rgba(154, 87, 34, 0.15) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+  border: 2px solid rgba(154, 87, 34, 0.22);
+  box-shadow: 0 4px 20px rgba(154, 87, 34, 0.06);
+  margin-bottom: 28px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+#mode-essay .essay-mindmap-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#mode-essay .mm-path-active {
+  filter: drop-shadow(0 0 5px rgba(234, 88, 12, 0.45));
+  animation: mmDashAnim 1.2s linear infinite;
+}
+
+@keyframes mmDashAnim {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Step 1: Central Question Hub */
+#mode-essay .essay-mindmap-core {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: 0 auto 52px;
+  text-align: center;
+  padding: 22px 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(254, 243, 199, 0.5) 100%);
+  border: 2.5px solid rgba(234, 88, 12, 0.35);
+  border-radius: 26px;
+  box-shadow: 0 10px 30px rgba(234, 88, 12, 0.1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mode-essay .essay-mindmap-core:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(234, 88, 12, 0.15);
+}
+
+#mode-essay .essay-mindmap-core-spark {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+  animation: mmPulse 2s ease-in-out infinite;
+}
+
+@keyframes mmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+#mode-essay .essay-mindmap-core-badge {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #c2410c;
+  background: rgba(234, 88, 12, 0.12);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+#mode-essay .essay-mindmap-core-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--essay-ink, #2c2418);
+  margin-bottom: 6px;
+}
+
+#mode-essay .essay-mindmap-core-hint {
+  font-size: 0.8rem;
+  color: var(--essay-muted, #7c6855);
+}
+
+/* Step 1: Thought Bubbles Row */
+#mode-essay .essay-mindmap-bubbles-row {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 26px;
+}
+
+#mode-essay .essay-thought-bubble {
+  position: relative;
+  z-index: 2;
+  border-radius: 28px;
+  padding: 22px 24px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid rgba(154, 87, 34, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mode-essay .essay-thought-bubble:hover {
+  transform: translateY(-4px);
+  border-color: rgba(234, 88, 12, 0.45);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.09);
+}
+
+#mode-essay .essay-thought-bubble.is-active {
+  border-color: var(--essay-amber, #ea580c);
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(234, 88, 12, 0.16);
+  transform: translateY(-2px);
+}
+
+/* Cloud thought tail dots */
+#mode-essay .essay-thought-tail {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5px;
+}
+
+#mode-essay .essay-thought-tail .tail-dot {
+  border-radius: 50%;
+  background: rgba(154, 87, 34, 0.3);
+  transition: all 0.2s ease;
+}
+
+#mode-essay .essay-thought-bubble.is-active .tail-dot {
+  background: #ea580c;
+}
+
+#mode-essay .essay-thought-tail .d1 { width: 3.5px; height: 3.5px; }
+#mode-essay .essay-thought-tail .d2 { width: 5.5px; height: 5.5px; }
+#mode-essay .essay-thought-tail .d3 { width: 7.5px; height: 7.5px; }
+
+#mode-essay .essay-thought-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+#mode-essay .essay-thought-icon {
+  font-size: 1.3rem;
+}
+
+#mode-essay .essay-thought-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#mode-essay .essay-thought-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--essay-muted, #7c6855);
+}
+
+#mode-essay .essay-thought-role {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--essay-ink, #2c2418);
+}
+
+#mode-essay .essay-thought-quote {
+  font-style: italic;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--essay-ink, #3a3226);
+  margin-bottom: 12px;
+}
+
+#mode-essay .essay-thought-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ea580c;
+}
+
+/* Expanded Thought Callout */
+#mode-essay .essay-thought-callout {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1.5px dashed rgba(154, 87, 34, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: mmFadeIn 0.25s ease;
+}
+
+@keyframes mmFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#mode-essay .essay-thought-callout-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#mode-essay .essay-thought-callout-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+#mode-essay .essay-thought-callout-text {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--essay-ink, #2c2418);
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* ── Step 2: Stance & Idea Brainstorming Mind Map ────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+#mode-essay .essay-brainstorm-mindmap-wrap {
+  margin-top: 24px;
+}
+
+#mode-essay .essay-brainstorm-stance-core {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 18px 24px;
+  margin: 0 auto 38px;
+  max-width: 540px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 2.5px solid rgba(234, 88, 12, 0.4);
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.12);
+  transition: all 0.25s ease;
+}
+
+#mode-essay .essay-brainstorm-stance-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+#mode-essay .essay-brainstorm-stance-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ea580c;
+  margin-bottom: 4px;
+}
+
+#mode-essay .essay-brainstorm-stance-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--essay-ink, #2c2418);
+  margin-bottom: 4px;
+}
+
+#mode-essay .essay-brainstorm-stance-sub {
+  font-size: 0.8rem;
+  color: var(--essay-muted, #7c6855);
+}
+
+/* Stems Row */
+#mode-essay .essay-brainstorm-stems-row {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+  margin-bottom: 42px;
+}
+
+#mode-essay .essay-brainstorm-stem {
+  position: relative;
+  border-radius: 20px;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(154, 87, 34, 0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+}
+
+#mode-essay .essay-brainstorm-stem.stem-body1 {
+  border-left: 5px solid #2563eb;
+}
+
+#mode-essay .essay-brainstorm-stem.stem-body2 {
+  border-left: 5px solid #059669;
+}
+
+#mode-essay .essay-brainstorm-stem-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--essay-muted, #7c6855);
+  margin-bottom: 6px;
+}
+
+#mode-essay .essay-brainstorm-stem.stem-body1 .essay-brainstorm-stem-badge {
+  color: #2563eb;
+}
+
+#mode-essay .essay-brainstorm-stem.stem-body2 .essay-brainstorm-stem-badge {
+  color: #059669;
+}
+
+#mode-essay .essay-brainstorm-stem-point-title {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--essay-ink, #2c2418);
+  line-height: 1.4;
+}
+
+#mode-essay .essay-brainstorm-stem-point-vi {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--essay-muted, #7c6855);
+  margin-top: 3px;
+}
+
+#mode-essay .essay-brainstorm-stem-placeholder {
+  font-size: 0.84rem;
+  font-style: italic;
+  color: var(--essay-muted, #a39080);
+}
+
+/* Floating Idea Bubbles Field */
+#mode-essay .essay-brainstorm-bubbles-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+#mode-essay .essay-idea-bubble {
+  position: relative;
+  border-radius: 24px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(154, 87, 34, 0.18);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+#mode-essay .essay-idea-bubble:hover {
+  transform: translateY(-3px);
+  border-color: rgba(234, 88, 12, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+#mode-essay .essay-idea-bubble.is-picked {
+  border-color: #ea580c;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(234, 88, 12, 0.16);
+  transform: translateY(-2px);
+}
+
+#mode-essay .essay-idea-bubble-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+#mode-essay .essay-idea-bubble-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--essay-muted, #7c6855);
+  background: rgba(154, 87, 34, 0.08);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+#mode-essay .essay-idea-bubble-badge.is-active {
+  color: #fff;
+  background: #ea580c;
+}
+
+#mode-essay .essay-idea-bubble-help-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(154, 87, 34, 0.25);
+  background: transparent;
+  color: var(--essay-muted, #7c6855);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+#mode-essay .essay-idea-bubble-help-btn:hover,
+#mode-essay .essay-idea-bubble-help-btn.is-open {
+  background: #ea580c;
+  border-color: #ea580c;
+  color: #fff;
+}
+
+#mode-essay .essay-idea-bubble-body {
+  flex: 1;
+  margin-bottom: 10px;
+}
+
+#mode-essay .essay-idea-bubble-title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--essay-ink, #2c2418);
+  margin-bottom: 4px;
+}
+
+#mode-essay .essay-idea-bubble-vi {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--essay-muted, #7c6855);
+}
+
+#mode-essay .essay-idea-bubble-foot {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ea580c;
+}
+
+/* Idea Bubble Callout */
+#mode-essay .essay-idea-bubble-callout {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1.5px dashed rgba(154, 87, 34, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: mmFadeIn 0.2s ease;
+}
+
+#mode-essay .essay-idea-callout-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#mode-essay .essay-idea-callout-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+#mode-essay .essay-idea-callout-sec p {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--essay-ink, #2c2418);
+  margin: 0;
+}
+
+#mode-essay .essay-idea-callout-sec.cue-box {
+  background: rgba(234, 88, 12, 0.07);
+  border-left: 3px solid #ea580c;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+

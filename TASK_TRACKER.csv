@@ -1916,3 +1916,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 922,2026-09-04,Enable word click to seek audio playback in Entrance Test Results matching Read Aloud,Done,2026-09-04
 923,2026-09-04,Overhaul guided essay prompt breakdown and brainstorming into interactive visual mind map with flowcharts and thought bubbles,Done,2026-09-04
 924,2026-09-04,Fix CRM Teaching Sessions student ID resolution and modal tab synchronization,Done,2026-09-04
+925,2026-09-04,Diagnose and fix CRM Books study module generation 500 memory limit error and student courses 401 auth token error,Done,2026-09-04
+926,2026-09-04,Fix Read Aloud linking evaluation on silent sections reduced words matching and sound changes hover animation,In Progress,
+927,2026-09-04,Replace small native audio player with custom audio controller in Read Aloud practice mode,In Progress,
+928,2026-09-04,Fix Voice Cloning premature polling timeout and implement automatic latest cloned audio recovery,Done,2026-09-04
+929,2026-09-04,Fix lost formatting and run-in headings across all CRM books in reader and extraction pipeline,In Progress,
+930,2026-09-04,Debug and improve Entrance Test word-sound timing accuracy using V4 pronunciation segmentation,In Progress,
+931,2026-09-04,Fix CRM Student Courses 401 Unauthorized teaching sessions student ID and student modal title and deploy V1.8.112 to production,In Progress,

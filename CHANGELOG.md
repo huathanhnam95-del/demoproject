@@ -1,3 +1,29 @@
+## [V1.8.112] - 2026-09-04
+
+### Fixed & Enhanced
+- **CRM Student Courses 401 Unauthorized Fix**:
+  - In `public/js/crm/student-courses.js`, hardened `getAuthHeaders()` to resolve ID token from `global.firebase.auth().currentUser`, `global.auth?.currentUser`, or internal auth instances, preventing 401 Unauthorized failures on `GET /api/admin/students/:studentId/enrollments`.
+- **CRM Teaching Sessions Student ID Resolution**:
+  - Deployed `resolveActiveStudentId()` in `public/js/crm/teaching-sessions.js` with fallback resolution from badge text (`ID: a0106`), route hash (`#students/...`), and `window._currentStudentModalId`.
+  - Added tab activation hooks in `crm-admin.js` and `student-modal.js` so switching to `teaching-sessions` reliably syncs active `studentId`, resolving the "Please select or save a student first" upload blocker.
+- **CRM Student Modal Header & Schedule Fit Polish**:
+  - In `public/crm-admin.js`, ensured opening existing students updates modal title to `Edit Student Profile` instead of defaulting to `New Student Profile`.
+  - In `renderStudentSchedulePrompt()`, added string parsing and live input element fallbacks for preferred learning days/hours, and triggered prompt refresh on switching to `student-360`.
+
+## [V1.8.111] - 2026-09-04
+
+### Added & Enhanced
+- **CRM Entrance Test Result Word-Level Click-to-Seek Audio Playback**:
+  - **Hugging Face Whisper Word Timestamps**: Configured `functions/src/entrance-test/asr-service.js` with `return_timestamps: 'word'`, extracting exact `{ word, startMs, endMs }` timestamps for every recognized word token.
+  - **Firestore Backend Persistence & Data Backfill**: Updated `functions/src/routes/entrance-tests.js` and `functions/src/routes/admin/entrance-tests.js` to persist word timestamps in Firestore under `speaking[questionId].words`; backfilled live test `5726ca5178ece2a551cbd2709366e02dcfd73cad19bd3b81d3db4c44ef685740`.
+  - **Word Diff Alignment & Playback Engine**: In `public/crm-entrance-test-result.js`, enhanced `computeTranscriptDiffHtml` to wrap recognized spoken words into interactive button tokens (`button.crm-word-token`) with timestamp tooltips while keeping omitted expected words non-interactive (`span.crm-word-token.crm-transcript-missing`).
+  - **Audio Segment Playback**: Implemented `playWordSegment` with a `playbackRevision` counter guard: seeks audio player to word start, toggles active blue `.is-playing` state, automatically pauses at segment end, and cleanly switches or toggles tokens without pause/play race conditions.
+  - **Styling & PDF Print Cleanliness**: Added `.crm-word-token` and `.crm-transcript-hint` styling in `public/crm-entrance-test-result.css`; ensured PDF export and print mode (`@media print`, `.crm-result-pdf-shell`) hide hints and strip button styles so documents export as clean, readable text.
+  - **Empirical Browser Verification**: Added automated Playwright test `tests/browser/crm-entrance-test-result-word-audio-check.js` verifying seeking, toggle, keyboard activation, and PDF export across Chromium. Passed `npm run lint:entrance-crm` with 0 errors.
+- **Guided Essay Mode UI Polish**:
+  - Enhanced prompt breakdown with interactive visual mind map, flowcharts, and thought bubbles.
+  - Eliminated excess side spacing in full-screen mode.
+
 ## [V1.8.110] - 2026-09-04
 
 ### Added & Enhanced

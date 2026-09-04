@@ -90,14 +90,20 @@ def validate_pack(pack: dict[str, Any], collocation_allowlist: set[str] | None =
         for field in ("vocabulary", "grammar", "cohesion"):
             _require(isinstance(kit.get(field), list), f"levels.{level_id}.languageKit.{field} must be a list")
         for index, item in enumerate(kit["vocabulary"]):
-            _require_bilingual(item, f"levels.{level_id}.languageKit.vocabulary[{index}]", "enGloss", "viGloss")
+            en_k = "enGloss" if "enGloss" in item else "meaningEn"
+            vi_k = "viGloss" if "viGloss" in item else "meaningVi"
+            _require_bilingual(item, f"levels.{level_id}.languageKit.vocabulary[{index}]", en_k, vi_k)
         for index, item in enumerate(kit.get("collocations") or []):
-            _require_bilingual(item, f"levels.{level_id}.languageKit.collocations[{index}]", "enGloss", "viGloss")
+            en_k = "enGloss" if "enGloss" in item else "meaningEn"
+            vi_k = "viGloss" if "viGloss" in item else "meaningVi"
+            _require_bilingual(item, f"levels.{level_id}.languageKit.collocations[{index}]", en_k, vi_k)
             if collocation_allowlist is not None:
                 _require(str(item.get("term") or "") in collocation_allowlist,
                          f"unsupported official collocation: {item.get('term')}")
         for index, item in enumerate(kit["grammar"]):
-            _require_bilingual(item, f"levels.{level_id}.languageKit.grammar[{index}]")
+            en_g = "pattern" if "pattern" in item else "en"
+            vi_g = "patternVi" if "patternVi" in item else "vi"
+            _require_bilingual(item, f"levels.{level_id}.languageKit.grammar[{index}]", en_g, vi_g)
         for index, item in enumerate(kit["cohesion"]):
             _require_bilingual(item, f"levels.{level_id}.languageKit.cohesion[{index}]")
         _require(isinstance(level.get("plans"), list), f"levels.{level_id}.plans must be a list")

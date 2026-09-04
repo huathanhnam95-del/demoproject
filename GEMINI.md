@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.110
+- **Phase**: Release V1.8.112
 
 ## Instructions
 
@@ -49,6 +49,7 @@ When a new task is created, immediately classify it:
 | **Quick Fix** | Bug fix, typo, config change, simple edit | Execute → Verify → Done |
 | **Feature** | New functionality, UI change, new endpoint, new page | Plan → Pause for Approval → Execute → Verify → Done |
 | **Investigation** | Debugging, research, performance issue, unknown cause | Research → Diagnose → Fix → Verify → Done |
+| **Complex Task (Auto-Boost)** | $\ge 3$ files, cross-layer architecture, concurrency, core engine/scoring, audio/ASR pipelines | **Auto-Boost Protocol**: Announce → Multi-Perspective Trade-Offs → Subagents → Isolated Verification |
 
 ### Step 2: Run the GSD Flow
 
@@ -121,6 +122,7 @@ These workflows add product thinking, automated QA, and release automation:
   3. Read `council_latest.txt` and present the full council output.
   The `--context` flag injects the temp file's contents as inline context so council personas can analyze the conversation. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` for a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
+- **Auto-Boost Protocol**: Automatically activated on any **Complex Task** per [.agent/rules/auto_boost_protocol.md](.agent/rules/auto_boost_protocol.md). Automatically applies the deep reasoning, subagent orchestration, and empirical verification workflow of `/boost` without requiring manual `/boost` invocation.
 
 ## Response Formatting
 
@@ -132,7 +134,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.111`
+- **Next Version**: `V1.8.113`
 
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).

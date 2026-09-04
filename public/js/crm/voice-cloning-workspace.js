@@ -284,7 +284,7 @@ window.CrmVoiceCloningWorkspace = (function () {
                             throw new Error(job.error || 'Worker failed to synthesize voice.');
                         }
 
-                        if (pollAttempts < 45) {
+                        if (pollAttempts < 180) {
                             if (dom.btnGenerateTest) {
                                 dom.btnGenerateTest.textContent = `⏳ Neural cloning (${pollAttempts * 2}s)…`;
                             }
@@ -314,6 +314,85 @@ window.CrmVoiceCloningWorkspace = (function () {
                     dom.btnGenerateTest.disabled = false;
                     dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
                 }
+            }
+        }
+
+        function resumePollingTestJob(jobId) {
+            if (!jobId || !dom.btnGenerateTest) return;
+            dom.btnGenerateTest.disabled = true;
+            dom.btnGenerateTest.textContent = '⏳ Neural cloning in progress…';
+            let resumeAttempts = 0;
+            const poll = async () => {
+                resumeAttempts++;
+                try {
+                    const job = await apiFetchJson(`/api/admin/voice-cloning/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
+                    if (job?.status === 'completed') {
+                        const clonedAudioSrc = job.mp3Url || `/api/admin/voice-cloning/audio/${jobId}`;
+                        if (dom.testAudioPlayer) {
+                            dom.testAudioPlayer.src = clonedAudioSrc;
+                            dom.testAudioPlayer.load();
+                        }
+                        if (dom.testOutputBox) {
+                            dom.testOutputBox.style.display = 'block';
+                        }
+                        const metricsBadge = document.getElementById('vc-test-metrics-badge');
+                        if (metricsBadge) {
+                            metricsBadge.textContent = `Ready (${job.durationSeconds || '0'}s • Cloned)`;
+                        }
+                        if (dom.btnSaveProfile) dom.btnSaveProfile.disabled = false;
+                        dom.btnGenerateTest.disabled = false;
+                        dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                        return;
+                    }
+                    if (job?.status === 'failed') {
+                        dom.btnGenerateTest.disabled = false;
+                        dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                        return;
+                    }
+                    if (resumeAttempts < 180) {
+                        dom.btnGenerateTest.textContent = `⏳ Neural cloning (${resumeAttempts * 2}s)…`;
+                        setTimeout(poll, 2000);
+                    } else {
+                        dom.btnGenerateTest.disabled = false;
+                        dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                    }
+                } catch (_) {
+                    dom.btnGenerateTest.disabled = false;
+                    dom.btnGenerateTest.textContent = '🧪 Generate Cloned Test Output';
+                }
+            };
+            setTimeout(poll, 1500);
+        }
+
+        async function checkAndRestoreLatestTestJob() {
+            try {
+                const res = await apiFetchJson('/api/admin/voice-cloning/latest-test', { method: 'GET' });
+                const job = res?.job;
+                if (!job) return;
+
+                if (job.status === 'completed' && (job.mp3Url || job.id)) {
+                    const clonedAudioSrc = job.mp3Url || `/api/admin/voice-cloning/audio/${job.id}`;
+                    if (dom.testAudioPlayer && !dom.testAudioPlayer.src) {
+                        dom.testAudioPlayer.src = clonedAudioSrc;
+                        dom.testAudioPlayer.load();
+                    }
+                    if (dom.testOutputBox) {
+                        dom.testOutputBox.style.display = 'block';
+                    }
+                    const metricsBadge = document.getElementById('vc-test-metrics-badge');
+                    if (metricsBadge) {
+                        metricsBadge.textContent = `Ready (${job.durationSeconds || '0'}s • Cloned)`;
+                    }
+                    if (dom.btnSaveProfile) dom.btnSaveProfile.disabled = false;
+                    // Also reuse the reference audio URL so saving profile works immediately
+                    if (job.referenceAudioUrl && !state.uploadedReferenceAudioUrl) {
+                        state.uploadedReferenceAudioUrl = job.referenceAudioUrl;
+                    }
+                } else if (job.status === 'pending' || job.status === 'processing') {
+                    resumePollingTestJob(job.id);
+                }
+            } catch (err) {
+                console.warn('[VoiceCloning] Auto-recovery notice:', err);
             }
         }
 
@@ -634,7 +713,8 @@ window.CrmVoiceCloningWorkspace = (function () {
                 bindEvents();
                 await Promise.all([
                     loadWorkerStatus(),
-                    loadVoiceProfiles()
+                    loadVoiceProfiles(),
+                    checkAndRestoreLatestTestJob()
                 ]);
                 clearInterval(state.pollTimer);
                 state.pollTimer = setInterval(loadWorkerStatus, 10000);

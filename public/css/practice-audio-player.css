@@ -150,3 +150,61 @@
 .practice-audio-meta:empty {
   display: none;
 }
+
+/* ── Read Aloud Real Audio Player & Source Tabs ── */
+.ra-real-audio-player-wrapper {
+  width: min(520px, 100%);
+  margin: 14px auto 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ra-audio-source-tabs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2, #f1f5f9);
+  padding: 4px;
+  border-radius: 999px;
+  width: fit-content;
+  margin: 0 auto;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.ra-source-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.ra-source-tab:hover:not(:disabled) {
+  color: var(--text-primary, #1e293b);
+}
+
+.ra-source-tab.active {
+  background: #ffffff;
+  color: var(--brand-primary, #2563eb);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ra-source-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ra-real-audio-player-wrapper .practice-audio-player {
+  width: 100%;
+  margin: 0;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+}

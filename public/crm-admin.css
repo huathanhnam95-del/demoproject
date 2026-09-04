@@ -5507,6 +5507,15 @@ body {
   color: var(--books-accent);
   font-weight: 600;
 }
+.crm-books-lead-term {
+  font-weight: 700;
+  color: var(--books-accent);
+  margin-inline-end: 0.25em;
+  letter-spacing: -0.01em;
+}
+.crm-books-page-content em {
+  font-style: italic;
+}
 .crm-books-page-empty {
   margin: 0;
   color: var(--books-text-muted);

@@ -288,6 +288,43 @@ function eventIds(events) {
     buildGenericEvents('bread and butter', 'parity'),
     'the deployed Functions copy must keep the same weak-form event contract'
   );
+  const omissionAnalysis = buildConnectedSpeechAnalysis({
+    questionId: 'omission-test',
+    referenceText: 'It is important to give a clear and concise presentation on pottery',
+    azurePayload: {
+      NBest: [{
+        Display: 'It is important to give a clear and concise presentation on pottery',
+        Words: [
+          { Word: 'It', Offset: 0, Duration: 2000000, PronunciationAssessment: { AccuracyScore: 95, ErrorType: 'None' } },
+          { Word: 'is', Offset: 2100000, Duration: 1500000, PronunciationAssessment: { AccuracyScore: 92, ErrorType: 'None' } },
+          { Word: 'important', Offset: 3700000, Duration: 4000000, PronunciationAssessment: { AccuracyScore: 90, ErrorType: 'None' } },
+          { Word: 'to', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'give', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'a', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'clear', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'and', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'concise', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'presentation', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'on', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } },
+          { Word: 'pottery', Offset: 0, Duration: 0, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } }
+        ]
+      }]
+    }
+  });
+
+  const omittedEvents = omissionAnalysis.events.filter((e) => e.startWordIndex >= 3);
+  assert.ok(omittedEvents.length > 0, 'should have events in the omitted section');
+  for (const ev of omittedEvents) {
+    assert.notStrictEqual(ev.status, 'detected', `omitted section event "${ev.phrase}" must never be detected (green)`);
+    assert.strictEqual(ev.status, 'not_detected', `omitted section event "${ev.phrase}" should be not_detected`);
+  }
+
+  const breadEvents = buildGenericEvents('the significance of attending', 'single-word-check');
+  const weakFormSignificance = breadEvents.filter((e) => e.family === 'weak_form_reduction');
+  assert.strictEqual(weakFormSignificance.length, 2, 'should find weak forms for "the" and "of"');
+  for (const wf of weakFormSignificance) {
+    assert.strictEqual(wf.startWordIndex, wf.endWordIndex, `weak form event for "${wf.phrase}" must be a single-word range`);
+  }
 
   console.log('read-aloud connected-speech service tests passed');
 })().catch((error) => {

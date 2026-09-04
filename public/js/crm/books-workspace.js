@@ -323,11 +323,74 @@ window.CrmBooksWorkspace = (function () {
         if (/^\d+(?:\.\d+)+$/.test(nextTrim)) return true;
         if (pageHeadingLevel(nextTrim, '') > 0) return true;
         if (/^[A-Z][.)]?\s+[A-ZÀ-ɏ“‘"']/.test(nextTrim) && nextTrim.length <= 60) return true;
+        if (detectLeadInTerm(nextTrim) && /[.!?:]["'”’)]*\s*$/.test(line)) return true;
         if (!threshold) return false;
         if (line.length >= threshold) return false;
         if (!/[.!?:]["'”’)]*\s*$/.test(line)) return false;
         if (!/^[A-ZÀ-ɏ“‘"'(]/.test(nextTrim)) return false;
         return true;
+    }
+
+    const CATEGORY_LEAD_NOUNS = new Set([
+        'procedure', 'procedures', 'technique', 'techniques', 'method', 'methods',
+        'approach', 'approaches', 'model', 'models', 'concept', 'concepts',
+        'strategy', 'strategies', 'stage', 'stages', 'activity', 'activities',
+        'task', 'tasks', 'principle', 'principles', 'aspect', 'aspects',
+        'level', 'levels', 'skill', 'skills', 'pattern', 'patterns',
+        'feature', 'features', 'category', 'categories', 'test', 'tests',
+        'question', 'questions', 'item', 'items', 'rule', 'rules',
+        'type', 'types', 'routine', 'routines', 'role', 'roles',
+        'framework', 'frameworks', 'exercise', 'exercises', 'drill', 'drills'
+    ]);
+
+    function detectLeadInTerm(text) {
+        if (!text || typeof text !== 'string') return null;
+        const trimmed = text.trim();
+        if (!trimmed || trimmed.startsWith('**') || trimmed.startsWith('<')) return null;
+
+        // Pattern 1: Labeled items (Figure 1., Table 2., Example 3:, Note:, Step 1:)
+        const mLabel = trimmed.match(/^((?:Figure|Table|Example|Step|Phase|Task|Activity|Note|Rule|Case|Pattern)\s+(?:\d+(?:\.\d+)*|[A-Z])[.:]|Note:)\s+(.+)$/i);
+        if (mLabel) {
+            return { term: mLabel[1], rest: mLabel[2] };
+        }
+
+        // Pattern 2: Word repetition: Repetition Repetition can be... / Reliability Reliability refers to...
+        const mDouble = trimmed.match(/^([A-Z][a-z]{2,25})\s+(\1\s+(?:can be|is|are|was|were|refers to|means|involves|consists of|suggests|describes)\b.+)$/);
+        if (mDouble) {
+            return { term: mDouble[1], rest: mDouble[2] };
+        }
+
+        // Pattern 3: Echo term or Category term at start of paragraph:
+        // e.g. "Procedure A procedure is...", "Technique A common technique..."
+        // "Multiple-choice questions A traditional vocabulary multiple-choice question..."
+        const mLead = trimmed.match(/^([A-Z][a-zA-Z0-9/’'–-]{1,35}(?:\s+[a-zA-Z0-9/’'–-]+){0,3})\s+((?:A|An|The|This|These)\s+.*)$/);
+        if (mLead) {
+            const term = mLead[1].trim();
+            const rest = mLead[2].trim();
+            const termWords = term.toLowerCase().split(/[\s-]+/).filter((w) => w.length > 2);
+
+            if (termWords.length >= 1 && termWords.length <= 4) {
+                const restWords = rest.toLowerCase().split(/[\s-]+/).slice(0, 8);
+                const isEcho = termWords.some((tw) => restWords.some((rw) => rw.startsWith(tw) || tw.startsWith(rw)));
+                const isCategory = restWords.some((rw) => CATEGORY_LEAD_NOUNS.has(rw));
+
+                const rejectStarters = /^(?:However|Therefore|Moreover|Furthermore|In addition|Although|Even though|At the same time|In fact|Of course|For example|On the other hand|To begin with|In the end|As a result)\b/i;
+                if (!rejectStarters.test(term)) {
+                    if (isEcho || isCategory) {
+                        return { term, rest };
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function formatMarkdownInline(escapedHtml) {
+        if (!escapedHtml || typeof escapedHtml !== 'string') return '';
+        let formatted = escapedHtml.replace(/\*\*([^*\n]+?)\*\*/g, '<strong class="crm-books-lead-term">$1</strong>');
+        formatted = formatted.replace(/(^|[^*])\*([^*\n]+?)\*([^*]|$)/g, '$1<em>$2</em>$3');
+        return formatted;
     }
 
     function formatPageBlocks(text, escHtml = fallbackEscapeHtml, highlightQuote = '', options = {}) {
@@ -350,7 +413,7 @@ window.CrmBooksWorkspace = (function () {
 
         const renderInline = (value) => highlightQuote
             ? highlightPageText(value, highlightQuote, escape).html
-            : escape(value);
+            : formatMarkdownInline(escape(value));
         const renderList = (items) => '<ul>' +
             items.map((item) => {
                 const marker = item.marker ? `<span class="crm-books-page-list-marker">${renderInline(item.marker)}</span> ` : '';
@@ -360,7 +423,16 @@ window.CrmBooksWorkspace = (function () {
         const flushParagraph = () => {
             if (!paragraphLines.length) return;
             const value = reflowPageText(paragraphLines.join('\n'));
-            if (value) html.push(`<p>${renderInline(value)}</p>`);
+            if (!value) {
+                paragraphLines = [];
+                return;
+            }
+            const leadIn = detectLeadInTerm(value);
+            if (leadIn) {
+                html.push(`<p><strong class="crm-books-lead-term">${renderInline(leadIn.term)}</strong> ${renderInline(leadIn.rest)}</p>`);
+            } else {
+                html.push(`<p>${renderInline(value)}</p>`);
+            }
             paragraphLines = [];
         };
 
@@ -554,9 +626,9 @@ window.CrmBooksWorkspace = (function () {
     function highlightPageText(pageText, quote, escHtml = fallbackEscapeHtml) {
         const text = String(pageText ?? '');
         const match = findCitationMatch(text, quote);
-        if (!match) return { html: escHtml(text), matched: false };
+        if (!match) return { html: formatMarkdownInline(escHtml(text)), matched: false };
         return {
-            html: `${escHtml(text.slice(0, match.start))}<mark class="crm-books-citation-highlight">${escHtml(text.slice(match.start, match.end))}</mark>${escHtml(text.slice(match.end))}`,
+            html: `${formatMarkdownInline(escHtml(text.slice(0, match.start)))}<mark class="crm-books-citation-highlight">${formatMarkdownInline(escHtml(text.slice(match.start, match.end)))}</mark>${formatMarkdownInline(escHtml(text.slice(match.end)))}`,
             matched: true
         };
     }
@@ -9878,7 +9950,7 @@ window.CrmBooksWorkspace = (function () {
                 }
             } catch (err) {
                 console.error('[CRM Books] Error in study notes handler:', err);
-                const msg = err?.message || 'Error generating study notes.';
+                const msg = err?.payload?.message || err?.message || 'Error generating study notes.';
                 showToast?.(msg, 'error');
                 buttonEl.innerHTML = originalLabel;
             } finally {
@@ -10081,6 +10153,8 @@ window.CrmBooksWorkspace = (function () {
         groupBooksByCollection,
         deduplicateRepeatedPhrases,
         isScannerNoiseLine,
-        repairArchivalOcrText
+        repairArchivalOcrText,
+        detectLeadInTerm,
+        formatMarkdownInline
     };
 })();

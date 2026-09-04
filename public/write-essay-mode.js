@@ -45,6 +45,8 @@
     let practiceKind = 'exam';
     let guidedLevel = 'b2';
     let guidedLanguage = 'en';
+    let guidedFontFamily = 'be-vietnam-pro';
+    let guidedFontScale = 1.0;
     let guidedPack = null;
     let guidedSection = 'understand';
     let guidedHintDepth = 2;
@@ -69,6 +71,11 @@
     let guidedSelectedPromptSegment = null;
     let guidedComprehensionQuizAnswer = null;
     let guidedComprehensionGapSlots = {};
+    const GUIDED_VIEW_MODE_KEY = 'pte_guided_essay_view_mode';
+    let guidedViewMode = 'mindmap';
+    try {
+        guidedViewMode = localStorage.getItem(GUIDED_VIEW_MODE_KEY) || 'mindmap';
+    } catch (_) {}
 
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
@@ -789,6 +796,19 @@
         el.guidedPreferences = document.getElementById('essay-guided-preferences');
         el.guidedLevel = document.getElementById('essay-guided-level');
         el.guidedLanguage = document.getElementById('essay-guided-language');
+        el.guidedFontSelect = document.getElementById('essay-guided-font-select');
+        el.guidedFontScale = document.getElementById('essay-guided-font-scale');
+        el.guidedFontScaleVal = document.getElementById('essay-guided-font-scale-val');
+        el.guidedScaleDown = document.getElementById('essay-guided-scale-down');
+        el.guidedScaleUp = document.getElementById('essay-guided-scale-up');
+        el.guidedTypoBtn = document.getElementById('essay-guided-typo-btn');
+        el.guidedTypoPopover = document.getElementById('essay-guided-typo-popover');
+        el.guidedTypoClose = document.getElementById('essay-guided-typo-close');
+        el.guidedPopoverFont = document.getElementById('essay-guided-popover-font');
+        el.guidedPopoverScaleVal = document.getElementById('essay-guided-popover-scale-val');
+        el.guidedPopoverScaleDown = document.getElementById('essay-guided-popover-scale-down');
+        el.guidedPopoverScaleUp = document.getElementById('essay-guided-popover-scale-up');
+        el.guidedPopoverScaleRange = document.getElementById('essay-guided-popover-scale-range');
 
         // Filters
         el.filterToolbar = document.getElementById('essay-filter-toolbar');
@@ -957,6 +977,74 @@
             guidedLanguage = el.guidedLanguage.value;
             persistGuidedPreferences();
         });
+        if (el.guidedFontSelect) {
+            el.guidedFontSelect.addEventListener('change', () => {
+                applyGuidedTypography(el.guidedFontSelect.value, guidedFontScale, true);
+            });
+        }
+        if (el.guidedFontScale) {
+            el.guidedFontScale.addEventListener('input', () => {
+                const scale = parseFloat(el.guidedFontScale.value) || 1.0;
+                applyGuidedTypography(guidedFontFamily, scale, true);
+            });
+        }
+        if (el.guidedScaleDown) {
+            el.guidedScaleDown.addEventListener('click', () => {
+                const nextScale = Math.max(0.8, Math.round((guidedFontScale - 0.1) * 10) / 10);
+                applyGuidedTypography(guidedFontFamily, nextScale, true);
+            });
+        }
+        if (el.guidedScaleUp) {
+            el.guidedScaleUp.addEventListener('click', () => {
+                const nextScale = Math.min(1.5, Math.round((guidedFontScale + 0.1) * 10) / 10);
+                applyGuidedTypography(guidedFontFamily, nextScale, true);
+            });
+        }
+
+        // Rail header typography popover
+        if (el.guidedTypoBtn) {
+            el.guidedTypoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleGuidedTypoPopover();
+            });
+        }
+        if (el.guidedTypoClose) {
+            el.guidedTypoClose.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeGuidedTypoPopover();
+            });
+        }
+        if (el.guidedPopoverFont) {
+            el.guidedPopoverFont.addEventListener('change', () => {
+                applyGuidedTypography(el.guidedPopoverFont.value, guidedFontScale, true);
+            });
+        }
+        if (el.guidedPopoverScaleRange) {
+            el.guidedPopoverScaleRange.addEventListener('input', () => {
+                const scale = parseFloat(el.guidedPopoverScaleRange.value) || 1.0;
+                applyGuidedTypography(guidedFontFamily, scale, true);
+            });
+        }
+        if (el.guidedPopoverScaleDown) {
+            el.guidedPopoverScaleDown.addEventListener('click', () => {
+                const nextScale = Math.max(0.8, Math.round((guidedFontScale - 0.1) * 10) / 10);
+                applyGuidedTypography(guidedFontFamily, nextScale, true);
+            });
+        }
+        if (el.guidedPopoverScaleUp) {
+            el.guidedPopoverScaleUp.addEventListener('click', () => {
+                const nextScale = Math.min(1.5, Math.round((guidedFontScale + 0.1) * 10) / 10);
+                applyGuidedTypography(guidedFontFamily, nextScale, true);
+            });
+        }
+
+        // Close typography popover when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!el.guidedTypoPopover || el.guidedTypoPopover.hidden) return;
+            if (!el.guidedTypoPopover.contains(e.target) && !el.guidedTypoBtn?.contains(e.target)) {
+                closeGuidedTypoPopover();
+            }
+        });
         if (el.guidedLanguageToggle) el.guidedLanguageToggle.addEventListener('click', toggleGuidedLanguage);
         if (el.guidedMobileToggle) el.guidedMobileToggle.addEventListener('click', toggleGuidedMobileRail);
         if (el.guidedNav) el.guidedNav.addEventListener('click', onGuidedSectionChosen);
@@ -1040,6 +1128,101 @@
         setTimeout(measure, 60);
     }
 
+    const GUIDED_FONTS = Object.freeze({
+        'be-vietnam-pro': {
+            name: 'Be Vietnam Pro',
+            css: "'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        },
+        'plus-jakarta-sans': {
+            name: 'Plus Jakarta Sans',
+            css: "'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        },
+        'lexend': {
+            name: 'Lexend',
+            css: "'Lexend', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        },
+        'inter': {
+            name: 'Inter',
+            css: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        },
+        'manrope': {
+            name: 'Manrope',
+            css: "'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        }
+    });
+
+    function applyGuidedTypography(fontKey, scaleVal, shouldPersist = true) {
+        if (!GUIDED_FONTS[fontKey]) fontKey = 'be-vietnam-pro';
+        const scale = Math.max(0.8, Math.min(1.5, Math.round((Number(scaleVal) || 1.0) * 100) / 100));
+        guidedFontFamily = fontKey;
+        guidedFontScale = scale;
+
+        const fontEntry = GUIDED_FONTS[fontKey];
+        const panel = getModePanelEl();
+        const targets = [
+            panel,
+            el.guidedPreferences,
+            el.guidedWorkspace,
+            el.guidedRail,
+            el.guidedDraftContainer,
+            el.guidedTypoPopover
+        ].filter(Boolean);
+
+        targets.forEach(node => {
+            node.style.setProperty('--essay-guided-font-family', fontEntry.css);
+            node.style.setProperty('--essay-guided-font-scale', String(scale));
+            node.setAttribute('data-guided-font', fontKey);
+        });
+
+        // Sync setup inputs
+        if (el.guidedFontSelect && el.guidedFontSelect.value !== fontKey) {
+            el.guidedFontSelect.value = fontKey;
+        }
+        if (el.guidedFontScale) {
+            el.guidedFontScale.value = String(scale);
+        }
+        if (el.guidedFontScaleVal) {
+            el.guidedFontScaleVal.textContent = `${scale.toFixed(1)}x (${Math.round(scale * 100)}%)`;
+        }
+
+        // Sync popover inputs
+        if (el.guidedPopoverFont && el.guidedPopoverFont.value !== fontKey) {
+            el.guidedPopoverFont.value = fontKey;
+        }
+        if (el.guidedPopoverScaleRange) {
+            el.guidedPopoverScaleRange.value = String(scale);
+        }
+        if (el.guidedPopoverScaleVal) {
+            el.guidedPopoverScaleVal.textContent = `${scale.toFixed(1)}x`;
+        }
+
+        if (shouldPersist) {
+            persistGuidedPreferences();
+        }
+    }
+
+    function toggleGuidedTypoPopover() {
+        if (!el.guidedTypoPopover) return;
+        const isOpen = !el.guidedTypoPopover.hidden;
+        if (isOpen) {
+            closeGuidedTypoPopover();
+        } else {
+            openGuidedTypoPopover();
+        }
+    }
+
+    function openGuidedTypoPopover() {
+        if (!el.guidedTypoPopover || !el.guidedTypoBtn) return;
+        el.guidedTypoPopover.hidden = false;
+        el.guidedTypoBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeGuidedTypoPopover() {
+        if (!el.guidedTypoPopover || !el.guidedTypoBtn) return;
+        el.guidedTypoPopover.hidden = true;
+        el.guidedTypoBtn.setAttribute('aria-expanded', 'false');
+    }
+
     function restoreGuidedPreferences() {
         const prefs = window.WriteEssaySupport?.readPreferences?.() || {};
         const profile = window.currentUserProfile || null;
@@ -1049,13 +1232,24 @@
             manualOverride: prefs.level,
         }) || prefs.level || 'b2';
         guidedLanguage = prefs.language === 'vi' ? 'vi' : 'en';
+        guidedFontFamily = GUIDED_FONTS[prefs.fontFamily] ? prefs.fontFamily : 'be-vietnam-pro';
+        guidedFontScale = typeof prefs.fontScale === 'number' && !isNaN(prefs.fontScale)
+            ? Math.max(0.8, Math.min(1.5, Math.round(prefs.fontScale * 100) / 100))
+            : 1.0;
+
         if (el.guidedLevel) el.guidedLevel.value = guidedLevel;
         if (el.guidedLanguage) el.guidedLanguage.value = guidedLanguage;
+        applyGuidedTypography(guidedFontFamily, guidedFontScale, false);
         updatePracticeChoiceUI();
     }
 
     function persistGuidedPreferences() {
-        window.WriteEssaySupport?.writePreferences?.({ level: guidedLevel, language: guidedLanguage });
+        window.WriteEssaySupport?.writePreferences?.({
+            level: guidedLevel,
+            language: guidedLanguage,
+            fontFamily: guidedFontFamily,
+            fontScale: guidedFontScale
+        });
     }
 
     function updatePracticeChoiceUI() {
@@ -1141,6 +1335,10 @@
             title: 'Ngôn ngữ hiển thị hướng dẫn',
             body: 'Đổi ngôn ngữ của phần <em>giải thích</em> (nhãn, hướng dẫn, lưu ý). Từ vựng, câu mẫu và bài viết của bạn luôn giữ nguyên tiếng Anh.<br>Mẹo: để <strong>English</strong> cho quen thuật ngữ bài thi, và bấm nút <strong>VI</strong> ở góc phải khi gặp chỗ khó hiểu.',
         },
+        'guided-font': {
+            title: 'Tùy chỉnh Font chữ & Cỡ chữ (Guided Mode)',
+            body: 'Hệ thống hỗ trợ 5 font chữ được thiết kế tối ưu riêng cho tiếng Việt và trải nghiệm đọc học thuật:<br>• <strong>Be Vietnam Pro</strong>: Font chuẩn vàng quốc gia cho tiếng Việt, dấu thanh cân đối tuyệt đối.<br>• <strong>Plus Jakarta Sans</strong>: Hình học hiện đại, liền mạch với phong cách Outfit.<br>• <strong>Lexend</strong>: Tăng tốc độ đọc và độ tập trung.<br>• <strong>Inter</strong>: Chuẩn giao diện UI quốc tế, rõ ràng sắc nét.<br>• <strong>Manrope</strong>: Hiện đại, thanh lịch.<br>Bạn có thể tăng giảm cỡ chữ linh hoạt từ <strong>0.8x đến 1.5x</strong> mà không sợ bị vỡ hay tràn giao diện.',
+        },
         'steps': {
             title: '5 bước của phần hướng dẫn',
             body: '<strong>1. Hiểu đề bài</strong> — tách đề thành từng vế và xác định yêu cầu bắt buộc.<br><strong>2. Chọn hướng đi</strong> — chốt lập trường và 2 luận điểm chính.<br><strong>3. Bộ ngôn ngữ</strong> — từ vựng, cụm từ, mẫu câu và từ nối.<br><strong>4. Lập dàn ý</strong> — khung bài dựng theo lựa chọn của bạn.<br><strong>5. Xây dựng câu</strong> — viết từng câu; các câu này chuyển thẳng vào bài viết.<br>Bạn có thể quay lại bất kỳ bước nào; dấu ✓ cho biết bước đã xem qua.',
@@ -1150,8 +1348,8 @@
             body: 'Mất điểm Task Achievement thường không phải vì tiếng Anh yếu, mà vì bỏ sót một vế của đề. Mỗi thẻ bên dưới là một vế: nó cho biết vế đó <strong>đóng vai trò gì</strong>, phải trả lời ở <strong>đoạn nào</strong>, và <strong>lỗi thường gặp</strong> khi xử lý vế đó.',
         },
         'traps': {
-            title: 'Bẫy riêng của đề này',
-            body: 'Đây là những lỗi thí sinh hay mắc <em>với chính đề bài này</em>, không phải lời khuyên chung chung. Hãy đọc lại danh sách này một lần nữa sau khi viết xong — kiểm tra nhanh hơn nhiều so với việc viết lại cả bài.',
+            title: 'Lỗi phổ biến cần tránh với đề này',
+            body: 'Thay vì những lời nhắc chung chung "đừng làm gì", phần này phân tích sâu <strong>các lỗi thí sinh hay mắc nhất</strong> với chính dạng đề này:<br>• <strong>Nhầm lẫn:</strong> Điểm mà đa số thí sinh hay hiểu sai hoặc viết nhầm.<br>• <strong>Tại sao mất điểm:</strong> Hậu quả cụ thể lên điểm Content và Task Achievement.<br>• <strong>Cách viết chuẩn:</strong> Hướng xử lý chính xác để bài viết đạt điểm tối đa.<br>Đọc kỹ phần này trước khi lên dàn bài sẽ giúp bạn tiết kiệm thời gian sửa bài sau này.',
         },
         'stance': {
             title: 'Chọn lập trường',
@@ -1353,7 +1551,7 @@
         const badge = count === null ? '' : `<span class="essay-guided-group-count">${escapeHtml(String(count))}</span>`;
         // The <?> is a sibling of the toggle, never inside it: nesting two
         // buttons is invalid and breaks keyboard traversal.
-        return `<div class="essay-guided-group${open ? ' is-open' : ''}${tone ? ` essay-guided-group--${tone}` : ''}">
+        return `<div class="essay-guided-group${open ? ' is-open' : ''}${tone ? ` essay-guided-group--${tone}` : ''}" data-guided-group="${escapeHtml(key)}">
             <div class="essay-guided-group-head">
                 <button type="button" class="essay-guided-group-toggle" data-guided-action="toggle-group" data-group-key="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}">
                     <span class="essay-guided-group-title">${escapeHtml(title)}</span>
@@ -1469,6 +1667,15 @@
         const action = target.dataset.guidedAction;
         if (action === 'retry-pack') {
             loadGuidedPack({ force: true });
+        } else if (action === 'set-guided-view-mode') {
+            const mode = target.dataset.viewMode;
+            if (mode === 'mindmap' || mode === 'list') {
+                guidedViewMode = mode;
+                try {
+                    localStorage.setItem(GUIDED_VIEW_MODE_KEY, mode);
+                } catch (_) {}
+                renderGuidedSupport();
+            }
         } else if (action === 'go-section') {
             goToGuidedSection(target.dataset.sectionId);
         } else if (action === 'toggle-group') {
@@ -1647,6 +1854,122 @@
         el.guidedProgress.hidden = !guidedPack;
     }
 
+    function renderGuidedMindMapSVGLines() {
+        if (guidedViewMode !== 'mindmap') return;
+
+        // 1. Step 1: Prompt Mind Map
+        const promptCanvas = document.getElementById('essay-prompt-mindmap-canvas');
+        const promptSvg = document.getElementById('essay-prompt-mindmap-svg');
+        const promptCore = document.getElementById('mm-prompt-core');
+
+        if (promptCanvas && promptSvg && promptCore) {
+            const canvasRect = promptCanvas.getBoundingClientRect();
+            if (canvasRect.width > 0 && canvasRect.height > 0) {
+                promptSvg.setAttribute('width', canvasRect.width);
+                promptSvg.setAttribute('height', canvasRect.height);
+
+                const coreRect = promptCore.getBoundingClientRect();
+                const sourceX = (coreRect.left + coreRect.right) / 2 - canvasRect.left;
+                const sourceY = coreRect.bottom - canvasRect.top;
+
+                const bubbles = promptCanvas.querySelectorAll('.essay-thought-bubble');
+                let pathsHtml = '';
+
+                bubbles.forEach((bubble) => {
+                    const bubbleRect = bubble.getBoundingClientRect();
+                    const targetX = (bubbleRect.left + bubbleRect.right) / 2 - canvasRect.left;
+                    const targetY = bubbleRect.top - canvasRect.top;
+                    const isActive = bubble.classList.contains('is-active');
+
+                    const deltaY = targetY - sourceY;
+                    const cpY1 = sourceY + deltaY * 0.45;
+                    const cpY2 = sourceY + deltaY * 0.55;
+                    const d = `M ${sourceX} ${sourceY} C ${sourceX} ${cpY1}, ${targetX} ${cpY2}, ${targetX} ${targetY}`;
+
+                    const strokeColor = isActive ? '#ea580c' : 'rgba(154, 87, 34, 0.35)';
+                    const strokeWidth = isActive ? '3' : '2';
+                    const strokeDash = isActive ? '6 4' : 'none';
+                    const animClass = isActive ? 'class="mm-path-active"' : '';
+
+                    pathsHtml += `<path d="${d}" stroke="${strokeColor}" stroke-width="${strokeWidth}" fill="none" stroke-dasharray="${strokeDash}" ${animClass} />`;
+                    pathsHtml += `<circle cx="${sourceX}" cy="${sourceY}" r="3.5" fill="${strokeColor}" />`;
+                    pathsHtml += `<circle cx="${targetX}" cy="${targetY}" r="4.5" fill="${strokeColor}" />`;
+                });
+
+                promptSvg.innerHTML = pathsHtml;
+            }
+        }
+
+        // 2. Step 2: Stance & Idea Mind Map
+        const stanceCanvas = document.getElementById('essay-brainstorm-mindmap-canvas');
+        const stanceSvg = document.getElementById('essay-brainstorm-mindmap-svg');
+        const stanceCore = document.getElementById('mm-stance-core');
+        const stemBody1 = document.getElementById('mm-stem-body1');
+        const stemBody2 = document.getElementById('mm-stem-body2');
+
+        if (stanceCanvas && stanceSvg && stanceCore && stemBody1 && stemBody2) {
+            const canvasRect = stanceCanvas.getBoundingClientRect();
+            if (canvasRect.width > 0 && canvasRect.height > 0) {
+                stanceSvg.setAttribute('width', canvasRect.width);
+                stanceSvg.setAttribute('height', canvasRect.height);
+
+                let pathsHtml = '';
+                const coreRect = stanceCore.getBoundingClientRect();
+                const coreX = (coreRect.left + coreRect.right) / 2 - canvasRect.left;
+                const coreY = coreRect.bottom - canvasRect.top;
+
+                // Core to Stems
+                [stemBody1, stemBody2].forEach((stem) => {
+                    const stemRect = stem.getBoundingClientRect();
+                    const targetX = (stemRect.left + stemRect.right) / 2 - canvasRect.left;
+                    const targetY = stemRect.top - canvasRect.top;
+
+                    const deltaY = targetY - coreY;
+                    const cpY1 = coreY + deltaY * 0.45;
+                    const cpY2 = coreY + deltaY * 0.55;
+                    const d = `M ${coreX} ${coreY} C ${coreX} ${cpY1}, ${targetX} ${cpY2}, ${targetX} ${targetY}`;
+
+                    pathsHtml += `<path d="${d}" stroke="rgba(154, 87, 34, 0.4)" stroke-width="2.5" fill="none" />`;
+                    pathsHtml += `<circle cx="${targetX}" cy="${targetY}" r="4" fill="#ea580c" />`;
+                });
+
+                // Stems to Picked Idea Bubbles
+                const pickedBubbles = stanceCanvas.querySelectorAll('.essay-idea-bubble.is-picked');
+                pickedBubbles.forEach((bubble, bIdx) => {
+                    const stem = bIdx === 0 ? stemBody1 : stemBody2;
+                    if (!stem) return;
+                    const stemRect = stem.getBoundingClientRect();
+                    const bubbleRect = bubble.getBoundingClientRect();
+
+                    const startX = (stemRect.left + stemRect.right) / 2 - canvasRect.left;
+                    const startY = stemRect.bottom - canvasRect.top;
+                    const endX = (bubbleRect.left + bubbleRect.right) / 2 - canvasRect.left;
+                    const endY = bubbleRect.top - canvasRect.top;
+
+                    const deltaY = endY - startY;
+                    const cpY1 = startY + deltaY * 0.5;
+                    const cpY2 = startY + deltaY * 0.5;
+                    const d = `M ${startX} ${startY} C ${startX} ${cpY1}, ${endX} ${cpY2}, ${endX} ${endY}`;
+
+                    pathsHtml += `<path d="${d}" stroke="#ea580c" stroke-width="3" fill="none" stroke-dasharray="6 4" class="mm-path-active" />`;
+                    pathsHtml += `<circle cx="${endX}" cy="${endY}" r="4.5" fill="#ea580c" />`;
+                });
+
+                pathsHtml += `<circle cx="${coreX}" cy="${coreY}" r="4" fill="#ea580c" />`;
+                stanceSvg.innerHTML = pathsHtml;
+            }
+        }
+    }
+
+    if (typeof window !== 'undefined' && !window.__guidedMindMapResizeAttached) {
+        window.__guidedMindMapResizeAttached = true;
+        window.addEventListener('resize', () => {
+            if (guidedViewMode === 'mindmap') {
+                renderGuidedMindMapSVGLines();
+            }
+        });
+    }
+
     function renderGuidedSupport() {
         if (!el.guidedRail) return;
         el.guidedRail.hidden = practiceKind !== 'guided';
@@ -1679,6 +2002,14 @@
         syncGuidedRailTopHeight();
         renderGuidedChecklist();
         renderGuidedRecycle(levelData);
+
+        if (guidedViewMode === 'mindmap' && (section === 'understand' || section === 'direction')) {
+            requestAnimationFrame(() => {
+                renderGuidedMindMapSVGLines();
+                setTimeout(renderGuidedMindMapSVGLines, 60);
+                setTimeout(renderGuidedMindMapSVGLines, 220);
+            });
+        }
     }
 
     /** A claim reused mid-sentence: lower-cased opener, no trailing stop. */
@@ -1748,32 +2079,108 @@
     function getPromptSpecificTraps(promptText, common) {
         const text = String(promptText || '').toLowerCase();
         
+        // 1. If pack provides rich structured common mistakes, prioritize it
+        const packMistakes = (common?.commonMistakes && common.commonMistakes.length > 0) ? common.commonMistakes : common?.promptTraps;
+        if (packMistakes && packMistakes.length > 0 && (packMistakes[0].mistakeEn || packMistakes[0].mistakeVi || packMistakes[0].titleEn)) {
+            return packMistakes;
+        }
+
+        // 2. High-value prompt-specific common mistakes
         if (text.includes('einstein') || text.includes('interferes with my learning')) {
             return [
                 {
-                    en: "Do NOT write a biography or history lesson about Albert Einstein; evaluate the educational concept, not his personal life.",
-                    vi: "Không viết về tiểu sử hay cuộc đời của Albert Einstein; hãy tập trung phản biện và đánh giá nhận định về giáo dục."
+                    titleEn: "Conflating Schooling with Genuine Learning",
+                    titleVi: "Đồng nhất trường học với việc học hỏi",
+                    mistakeEn: "Treating 'education' (formal schooling) and 'learning' as identical synonyms, arguing that schools are wonderful simply because learning is beneficial.",
+                    mistakeVi: "Xem 'trường học' và 'sự học hỏi' là một, rồi viết bài ca ngợi trường lớp vì cho rằng việc học luôn mang lại lợi ích.",
+                    whyEn: "Misses Einstein's central paradox: rigid institutional rules, rote memorization, and exam pressure can crush natural curiosity. Conflating them leads to an off-topic essay and lower Task Achievement.",
+                    whyVi: "Bỏ qua nghịch lý cốt lõi của Einstein: chương trình gò bó và áp lực thi cử có thể triệt tiêu sự tò mò tự nhiên. Viết như vậy sẽ lạc đề và bị trừ điểm Task Achievement.",
+                    fixEn: "Explicitly separate institutional schooling (standardized syllabus, tests) from intrinsic learning (self-driven curiosity), then debate whether school structures hinder or nurture that curiosity.",
+                    fixVi: "Tách bạch rõ ràng: 'Trường lớp' là kỷ luật và thi cử, còn 'Học hỏi' là niềm vui tự khám phá. Sau đó bàn xem quy tắc trường học đang cản trở hay chắp cánh cho sự tò mò.",
+                    en: "Conflating Schooling with Learning: Treating 'education' and 'learning' as synonyms leads to praising schools generally, missing Einstein's core claim that rigid curricula suppress natural curiosity. Better approach: Distinguish institutional schooling from intrinsic curiosity.",
+                    vi: "Đồng nhất trường lớp với việc học: Xem trường học và học hỏi là một sẽ dẫn đến việc chỉ khen trường lớp chung chung, bỏ qua ý Einstein rằng thi cử gò bó bóp nghẹt tính tò mò. Cách viết chuẩn: Phân biệt rõ kỷ luật trường học với niềm đam mê tự học."
                 },
                 {
-                    en: "Do NOT confuse 'formal schooling' (institutional rules and curricula) with 'genuine learning' (autonomous curiosity and discovery).",
-                    vi: "Không đánh đồng 'giáo dục trường lớp' (nội quy và giáo trình) với 'việc học thực chất' (sự tò mò và tự khám phá kiến thức)."
+                    titleEn: "Writing an Einstein Biography Instead of an Essay",
+                    titleVi: "Viết về tiểu sử Einstein thay vì bàn về giáo dục",
+                    mistakeEn: "Spending whole paragraphs recounting Albert Einstein's life, his school struggles in Germany, his patent office job, or the theory of relativity.",
+                    mistakeVi: "Dành cả đoạn văn kể chuyện Einstein hồi nhỏ học dốt ra sao, làm việc ở phòng cấp bằng sáng chế thế nào, hoặc giải thích thuyết tương đối.",
+                    whyEn: "The prompt quotes Einstein merely to introduce a debate on modern schooling. Historical trivia wastes your 200-300 word budget and fails the prompt question.",
+                    whyVi: "Đề bài trích lời Einstein chỉ để mở đầu chủ đề bàn về giáo dục. Kể chuyện tiểu sử làm lãng phí dung lượng từ (200-300 từ) và không trả lời đúng câu hỏi.",
+                    fixEn: "Treat Einstein only as the speaker. Focus 100% of your arguments and evidence on modern educational institutions, curricula, and student learning today.",
+                    fixVi: "Chỉ coi Einstein là người nêu vấn đề. Toàn bộ dẫn chứng và lập luận phải hướng vào hệ thống giáo dục hiện đại và học sinh ngày nay.",
+                    en: "Writing a Biography: Recounting Einstein's life or physics discoveries wastes the 200-300 word limit. Better approach: Evaluate modern school systems and contemporary learning directly.",
+                    vi: "Kể tiểu sử Einstein: Kể lể đời tư hay các phát minh của Einstein làm phí dung lượng từ. Cách viết chuẩn: Bàn trực tiếp về hệ thống trường học và việc học của học sinh ngày nay."
                 },
                 {
-                    en: "Ensure you answer BOTH questions: what the statement means AND whether you think he is correct.",
-                    vi: "Đảm bảo trả lời đầy đủ CẢ HAI câu hỏi của đề: nhận định đó có ý nghĩa gì VÀ bạn có đồng ý với điều đó hay không."
+                    titleEn: "Answering Only One Part of the Two-Part Prompt",
+                    titleVi: "Chỉ trả lời một trong hai yêu cầu của đề",
+                    mistakeEn: "Jumping directly into 'I agree' without ever explaining what the statement means, or spending 250 words explaining the quote without stating a personal stance.",
+                    mistakeVi: "Vào bài là đồng ý ngay mà không giải thích Einstein muốn nói gì, hoặc ngược lại giải thích cả bài mà không chốt rõ quan điểm của mình.",
+                    whyEn: "The prompt asks two distinct tasks: what the statement means AND whether you think he is correct. Answering only one caps your Content score at 50%.",
+                    whyVi: "Đề hỏi rõ 2 vế: câu nói đó có ý nghĩa gì VÀ bạn có nghĩ ông ấy đúng không. Trả lời thiếu một vế sẽ bị mất nửa số điểm Content.",
+                    fixEn: "Dedicate the introduction and opening of Body 1 to explaining the quote's meaning, then clearly state and defend your stance across both body paragraphs.",
+                    fixVi: "Dành phần mở bài và đầu thân bài 1 để giải thích ý nghĩa câu nói, sau đó khẳng định và bảo vệ lập trường của bạn xuyên suốt bài viết.",
+                    en: "Single-Task Answering: Answering only what the quote means or only whether you agree loses 50% Content score. Better approach: Interpret the statement first, then defend your stance with two body paragraphs.",
+                    vi: "Chỉ trả lời một vế: Chỉ giải thích câu nói hoặc chỉ nêu đồng ý sẽ mất 50% điểm Content. Cách viết chuẩn: Giải thích ý nghĩa câu nói trước, rồi bảo vệ lập trường ở 2 đoạn thân bài."
                 }
             ];
         }
         
-        if (text.includes('advantages outweigh') || text.includes('advantages and disadvantages')) {
+        if (text.includes('advantages outweigh') || text.includes('advantages and disadvantages') || text.includes('extreme sport') || text.includes('adventure')) {
             return [
                 {
-                    en: "Do NOT discuss only advantages; you must examine both sides fairly before delivering your final verdict.",
-                    vi: "Không chỉ bàn về mặt tích cực; bạn phải phân tích cả hai mặt một cách công bằng trước khi đưa ra kết luận."
+                    titleEn: "One-Sided Bias Without Analyzing Both Angles",
+                    titleVi: "Viết lệch một bên mà không phân tích cả hai mặt",
+                    mistakeEn: "Focusing exclusively on thrilling adventures and adrenaline rushes, completely ignoring life-threatening perils, injuries, or emergency rescue costs.",
+                    mistakeVi: "Chỉ tập trung viết về sự phấn khích và rèn luyện bản lĩnh, bỏ qua hoàn toàn các mối nguy hiểm tính mạng, chấn thương hay chi phí cứu hộ.",
+                    whyEn: "In an 'Advantages vs Disadvantages' essay, omitting either side immediately violates PTE Content criteria, resulting in a heavy Task Achievement deduction.",
+                    whyVi: "Với dạng bài Ưu & Nhược điểm, bỏ qua một trong hai mặt sẽ vi phạm trực tiếp tiêu chí Content của PTE và bị trừ điểm rất nặng.",
+                    fixEn: "Dedicate Body Paragraph 1 to psychological benefits (resilience, courage) and Body Paragraph 2 to grave hazards (fatal accidents, physical trauma).",
+                    fixVi: "Chia đều: Đoạn Thân bài 1 viết về lợi ích tinh thần (bản lĩnh, dũng cảm), Đoạn Thân bài 2 viết về rủi ro nghiêm trọng (tai nạn chết người, chấn thương).",
+                    en: "One-Sided Bias: Discussing only advantages or only disadvantages fails PTE Content requirements. Better approach: Analyze benefits in Body 1 and hazards in Body 2.",
+                    vi: "Viết lệch một bên: Chỉ viết ưu điểm hoặc chỉ viết nhược điểm sẽ bị trừ điểm Content. Cách viết chuẩn: Phân tích mặt tốt ở Thân bài 1 và nguy cơ ở Thân bài 2."
                 },
                 {
-                    en: "Do NOT forget to state clearly which side outweighs the other in both your thesis and conclusion.",
-                    vi: "Đừng quên nêu rõ ràng mặt nào chiếm ưu thế hơn (outweigh) trong cả câu luận đề lẫn phần kết bài."
+                    titleEn: "Failure to Deliver a Decisive Verdict",
+                    titleVi: "Liệt kê ưu nhược điểm nhưng không chốt bên nào hơn",
+                    mistakeEn: "Listing pros and cons neutrally and concluding with 'there are good and bad points' without declaring which side outweighs the other.",
+                    mistakeVi: "Liệt kê điểm tốt điểm xấu rồi kết luận chung chung 'cái gì cũng có hai mặt' mà không chốt rõ mặt nào áp đảo hơn.",
+                    whyEn: "The prompt explicitly asks whether advantages OUTWEIGH disadvantages. An indecisive essay fails to answer the main prompt question.",
+                    whyVi: "Đề bài hỏi rõ mặt lợi có ÁP ĐẢO (outweigh) mặt hại không. Kết bài nước đôi đồng nghĩa với việc chưa hoàn thành nhiệm vụ của đề.",
+                    fixEn: "Explicitly declare in both your thesis and conclusion that one side decisively outweighs the other (e.g., benefits to personal growth far outweigh managed risks).",
+                    fixVi: "Khẳng định dứt khoát ở cả Mở bài và Kết bài rằng mặt nào chiếm ưu thế hơn (ví dụ: giá trị phát triển bản thân vượt trội so với các rủi ro có thể kiểm soát).",
+                    en: "Missing Outweigh Verdict: Simply listing pros and cons without declaring which side outweighs fails the prompt. Better approach: State decisively which side prevails in both intro and conclusion.",
+                    vi: "Không chốt bên nào hơn: Liệt kê hai mặt mà không kết luận bên nào vượt trội sẽ mất điểm. Cách viết chuẩn: Khẳng định rõ mặt chiếm ưu thế ở cả Mở bài và Kết bài."
+                }
+            ];
+        }
+        
+        if (text.includes('more important') && (text.includes('than') || text.includes('diet') || text.includes('exercise'))) {
+            return [
+                {
+                    titleEn: "Fence-Sitting Instead of Comparative Evaluation",
+                    titleVi: "Nói nước đôi thay vì so sánh xem yếu tố nào quan trọng hơn",
+                    mistakeEn: "Writing that 'both diet and exercise are equally important 50/50' throughout the essay, avoiding taking any definitive stand.",
+                    mistakeVi: "Viết cả bài khẳng định 'cả ăn uống lẫn tập luyện đều quan trọng ngang nhau 50/50', né tránh việc so sánh yếu tố nào mang tính quyết định.",
+                    whyEn: "The prompt asks if diet is MORE important than exercise. A purely balanced 50/50 stance that avoids comparing their relative impact loses Task Achievement marks.",
+                    whyVi: "Đề bài hỏi ăn uống có QUAN TRỌNG HƠN (more important) tập luyện không. Viết ngang bằng 50/50 và không so sánh sức ảnh hưởng sẽ bị trừ điểm Task Achievement.",
+                    fixEn: "Acknowledge both play essential roles, but argue why one is more fundamental (e.g., diet provides the baseline biochemical energy and calorie control that enables exercise).",
+                    fixVi: "Thừa nhận cả hai đều cần thiết, nhưng chọn một yếu tố mang tính nền tảng hơn (ví dụ: dinh dưỡng quyết định năng lượng và kiểm soát cân nặng, tạo tiền đề cho tập luyện).",
+                    en: "Fence-Sitting: Saying diet and exercise are identical in importance dodges the comparative prompt. Better approach: Acknowledge both but prove why one is more fundamental.",
+                    vi: "Né tránh so sánh: Cho rằng hai yếu tố quan trọng y hệt nhau sẽ trượt yêu cầu so sánh của đề. Cách viết chuẩn: Công nhận cả hai nhưng chứng minh một bên là nền tảng cốt lõi."
+                },
+                {
+                    titleEn: "Discussing Only One Factor Exclusively",
+                    titleVi: "Chỉ viết về một yếu tố mà bỏ quên yếu tố đối trọng",
+                    mistakeEn: "Writing an entire essay about healthy meal planning, vitamins, and vegetables without ever mentioning physical workouts or cardiovascular exercise.",
+                    mistakeVi: "Viết cả bài chỉ bàn về thực đơn ăn kiêng, rau củ quả mà không hề nhắc đến việc tập thể dục, vận động hay rèn luyện tim mạch.",
+                    whyEn: "This transforms a comparative essay into a one-topic monologue, directly failing the comparative requirement of the prompt.",
+                    whyVi: "Điều này biến bài luận so sánh thành bài văn chỉ nói về một chủ đề đơn lẻ, làm mất điểm hoàn thành nhiệm vụ.",
+                    fixEn: "Dedicate attention to both factors: evaluate diet's primary role in Body 1, and evaluate exercise's contribution and limitations in Body 2.",
+                    fixVi: "Bao quát cả hai: Phân tích vai trò cốt lõi của dinh dưỡng ở Thân bài 1, và đánh giá đóng góp cũng như giới hạn của tập luyện ở Thân bài 2.",
+                    en: "Single-Topic Monologue: Omitting exercise completely turns a comparative task into a one-sided essay. Better approach: Compare both factors directly across your body paragraphs.",
+                    vi: "Bỏ quên yếu tố so sánh: Chỉ nói về ăn uống mà không nhắc đến tập luyện sẽ làm hỏng dạng bài so sánh. Cách viết chuẩn: Đặt cả hai lên bàn cân xuyên suốt các đoạn thân bài."
                 }
             ];
         }
@@ -1781,28 +2188,60 @@
         if (text.includes('discuss both views')) {
             return [
                 {
-                    en: "Do NOT dedicate the entire essay to the side you agree with; give balanced coverage to both perspectives.",
-                    vi: "Không dành toàn bộ bài viết cho quan điểm bạn ủng hộ; hãy phân tích cân bằng cả hai luồng ý kiến."
+                    titleEn: "One-Sided Favoritism in a Both-Views Task",
+                    titleVi: "Thiên vị một phe trong dạng bài thảo luận cả hai quan điểm",
+                    mistakeEn: "Spending 80% of the essay elaborating only the viewpoint you agree with, while giving the opposing view a single superficial sentence.",
+                    mistakeVi: "Dành 80% dung lượng bài chỉ để nói về quan điểm mình ủng hộ, trong khi phe còn lại chỉ nhắc qua loa một câu ngắn.",
+                    whyEn: "'Discuss both views' strictly commands equal, well-substantiated coverage of each perspective before drawing a conclusion.",
+                    whyVi: "Dạng bài 'Discuss both views' yêu cầu phải phân tích công bằng và có dẫn chứng đầy đủ cho cả hai chiều quan điểm trước khi kết luận.",
+                    fixEn: "Allocate Body 1 fully to exploring Viewpoint A with valid evidence, and Body 2 to exploring Viewpoint B, then justify your personal stance.",
+                    fixVi: "Dành trọn vẹn Thân bài 1 cho Quan điểm A với dẫn chứng thuyết phục, và Thân bài 2 cho Quan điểm B, sau đó bảo vệ lập trường cá nhân của bạn.",
+                    en: "One-Sided Favoritism: Neglecting one view in a 'Discuss both views' prompt leads to immediate score penalties. Better approach: Dedicate Body 1 to View A and Body 2 to View B fairly.",
+                    vi: "Thiên vị một quan điểm: Bỏ quên một bên trong đề 'Discuss both views' sẽ bị phạt điểm nặng. Cách viết chuẩn: Dành Thân bài 1 cho Quan điểm A và Thân bài 2 cho Quan điểm B một cách công bằng."
                 },
                 {
-                    en: "State your personal stance clearly; a neutral essay without an explicit opinion will lose Task Achievement points.",
-                    vi: "Nêu rõ lập trường cá nhân; một bài viết trung lập không có quan điểm rõ ràng sẽ bị trừ điểm Task Achievement."
+                    titleEn: "Remaining Neutral Without Declaring a Stance",
+                    titleVi: "Giữ thái độ trung lập mà không chốt quan điểm cá nhân",
+                    mistakeEn: "Discussing both views well but failing to state which viewpoint you personally endorse or believe is correct.",
+                    mistakeVi: "Phân tích cả hai quan điểm khá tốt nhưng không bao giờ nói rõ bản thân bạn đồng tình với quan điểm nào hơn.",
+                    whyEn: "PTE Task Achievement requires a clear position throughout the response. An essay without a declared stance cannot score in the highest band.",
+                    whyVi: "Tiêu chí chấm PTE yêu cầu người viết phải có lập trường xuyên suốt. Một bài viết không chốt phe sẽ không thể đạt band điểm tối đa.",
+                    fixEn: "State your opinion clearly in the introduction thesis, maintain it through the body, and reaffirm it in the conclusion.",
+                    fixVi: "Nêu rõ quan điểm của bạn ngay trong câu luận đề mở bài, duy trì sự nhất quán và khẳng định lại ở phần kết bài.",
+                    en: "Ghost Stance: Failing to state your personal perspective results in lost Task Achievement points. Better approach: Declare your clear stance in both the introduction and conclusion.",
+                    vi: "Không có lập trường: Không chốt quan điểm cá nhân sẽ bị trừ điểm Task Achievement. Cách viết chuẩn: Tuyên bố rõ ràng bạn theo phe nào ở cả Mở bài lẫn Kết bài."
                 }
             ];
         }
         
-        if (common?.promptTraps && common.promptTraps.length > 0) {
-            return common.promptTraps;
+        if (packMistakes && packMistakes.length > 0) {
+            return packMistakes;
         }
         
         return [
             {
-                en: "Do NOT write off-topic generalizations; directly connect every paragraph to the specific prompt keywords.",
-                vi: "Không viết chung chung lạc đề; hãy gắn chặt từng đoạn văn với các từ khóa cụ thể trong đề bài."
+                titleEn: "Off-Topic Generalizations Without Answering the Core Prompt",
+                titleVi: "Chém gió lan man ngoài đề, không bám sát từ khóa trọng tâm",
+                mistakeEn: "Writing memorized, generic statements about how 'society is developing fast' instead of engaging with the exact debate in the prompt.",
+                mistakeVi: "Sử dụng các câu văn học thuộc lòng chung chung như 'xã hội ngày nay đang phát triển' thay vì tập trung vào đúng vấn đề đề bài đặt ra.",
+                whyEn: "PTE automated scoring checks semantic keyword relevance. Generic template padding results in lower Content scores.",
+                whyVi: "Hệ thống chấm điểm tự động của PTE kiểm tra độ bám sát từ khóa. Viết câu khuôn mẫu lan man sẽ làm tụt điểm Content.",
+                fixEn: "Ground every single paragraph in the prompt keywords and formulate specific, context-relevant topic sentences.",
+                fixVi: "Bám sát các từ khóa chính của đề trong từng đoạn và viết câu chủ đề trực diện, chính xác với ngữ cảnh.",
+                en: "Generic Vagueness: Memorized filler about modern society lowers Content scores. Better approach: Anchor every sentence in the prompt's specific keywords.",
+                vi: "Lan man sáo rỗng: Nhồi nhét câu văn học thuộc lòng sẽ làm giảm điểm Content. Cách viết chuẩn: Gắn chặt từng câu vào từ khóa cụ thể của đề bài."
             },
             {
-                en: "Support every main idea with a concrete reason and a realistic real-world example.",
-                vi: "Hỗ trợ mọi ý chính bằng một lý do cụ thể và một ví dụ thực tế có tính thuyết phục."
+                titleEn: "Unsupported Claims Lacking Concrete Real-World Evidence",
+                titleVi: "Đưa ra khẳng định suông mà không có dẫn chứng thực tế",
+                mistakeEn: "Making sweeping assertions (e.g. 'this causes many problems') without providing a concrete mechanism or realistic example.",
+                mistakeVi: "Đưa ra các nhận định chung chung (ví dụ: 'điều này gây ra nhiều vấn đề') nhưng không giải thích vì sao hoặc không có ví dụ cụ thể.",
+                whyEn: "PTE Development criteria requires ideas to be substantiated with concrete reasons and illustrative examples.",
+                whyVi: "Tiêu chí Development của PTE yêu cầu mọi luận điểm phải được làm rõ bằng nguyên nhân và ví dụ thực tế.",
+                fixEn: "Follow the PEEL structure for every body idea: Point -> Explanation -> Concrete Real-World Example -> Link back to thesis.",
+                fixVi: "Áp dụng cấu trúc PEEL cho từng ý: Nêu luận điểm -> Giải thích nguyên nhân -> Dẫn chứng đời thực cụ thể -> Khẳng định lại quan điểm.",
+                en: "Unsupported Claims: Vague assertions without proof fail development criteria. Better approach: Use Point -> Explanation -> Concrete Example for each main idea.",
+                vi: "Luận điểm thiếu chứng minh: Khẳng định suông không có ví dụ sẽ mất điểm phát triển ý. Cách viết chuẩn: Nêu ý -> Giải thích -> Ví dụ thực tế cho mỗi luận điểm."
             }
         ];
     }
@@ -1816,18 +2255,18 @@
             return {
                 typeKey: 'comparative_opinion',
                 titleEn: 'Comparative Opinion Essay',
-                titleVi: 'Nghị luận So sánh & Đánh giá mức độ quan trọng',
+                titleVi: 'Dạng bài: So sánh cái nào quan trọng hơn',
                 icon: '⚖️',
                 badgeClass: 'is-comparative',
                 triggerPhraseEn: text.includes('more important for keeping fit than exercise') ? '“more important for keeping fit than exercise... To what extent do you agree?”' : '“...is more important than... To what extent do you agree?”',
-                triggerPhraseVi: 'Cụm so sánh hơn kết hợp câu hỏi quan điểm: “...is more important than... To what extent do you agree?”',
+                triggerPhraseVi: 'Cụm so sánh: “...is more important than... To what extent do you agree?”',
                 howToRecognizeEn: 'The prompt sets two essential concepts in direct contrast and asks which holds greater weight. You MUST evaluate BOTH factors before declaring a decisive verdict on which is more vital.',
-                howToRecognizeVi: 'Đề bài đặt hai yếu tố lên bàn cân và hỏi yếu tố nào quan trọng hơn. Dấu hiệu nhận diện là từ so sánh “more... than” hoặc “prefer A to B”. Bắt buộc phải phân tích CẢ HAI yếu tố trước khi kết luận dứt khoát.',
+                howToRecognizeVi: 'Đề so sánh hai thứ xem cái nào quan trọng hơn. Bạn cần nhắc đến cả hai, rồi chốt rõ mình nghiêng về bên nào hơn.',
                 blueprint: [
-                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase comparison & state thesis declaring the paramount factor', roleVi: 'Diễn đạt lại bài toán so sánh & tuyên bố lập trường chọn yếu tố vượt trội' },
-                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Analyze the indispensable role and benefits of Factor 1', roleVi: 'Phân tích vai trò không thể thiếu và lợi ích của Yếu tố 1' },
-                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Analyze Factor 2 and demonstrate why it exerts a more decisive impact', roleVi: 'Phân tích Yếu tố 2 và lý giải cơ chế vì sao Yếu tố 2 chiếm ưu thế quyết định' },
-                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Synthesize the comparative analysis and reaffirm the primary factor', roleVi: 'Tổng kết so sánh và tái khẳng định yếu tố mang tính nền tảng' }
+                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase comparison & state thesis declaring the paramount factor', roleVi: 'Nhắc lại 2 yếu tố & chốt xem bên nào quan trọng hơn' },
+                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Analyze the indispensable role and benefits of Factor 1', roleVi: 'Chỉ ra mặt tốt của Yếu tố 1' },
+                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Analyze Factor 2 and demonstrate why it exerts a more decisive impact', roleVi: 'Giải thích vì sao Yếu tố 2 quan trọng hơn hẳn' },
+                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Synthesize the comparative analysis and reaffirm the primary factor', roleVi: 'Nhắc lại lựa chọn của bạn một cách ngắn gọn' }
                 ]
             };
         }
@@ -1837,18 +2276,18 @@
             return {
                 typeKey: 'advantages_disadvantages',
                 titleEn: 'Advantages & Disadvantages Essay',
-                titleVi: 'Nghị luận Phân tích Hai mặt (Ưu điểm & Bất lợi)',
+                titleVi: 'Dạng bài: Lợi và Hại (Ưu & Nhược điểm)',
                 icon: '⚡',
                 badgeClass: 'is-adv-disadv',
                 triggerPhraseEn: '“Do you think the advantages outweigh the disadvantages?” or “Discuss advantages and disadvantages”',
-                triggerPhraseVi: 'Cụm từ chỉ định hai mặt: “advantages and disadvantages” hoặc “Do advantages outweigh disadvantages?”',
+                triggerPhraseVi: 'Cụm từ hai mặt: “advantages / disadvantages” hoặc “outweigh”',
                 howToRecognizeEn: 'The prompt highlights a trend, activity, or policy with conflicting outcomes. You must objectively explore BOTH dimensions and declare which side prevails.',
-                howToRecognizeVi: 'Đề bài đưa ra một xu hướng hoặc hoạt động có cả mặt tích cực lẫn tiêu cực. Dấu hiệu nhận biết là các từ khóa “advantages/benefits” và “disadvantages/drawbacks”. Bắt buộc phải viết cân bằng cả 2 mặt và chốt lập trường.',
+                howToRecognizeVi: 'Đề hỏi về mặt tốt và mặt xấu của một vấn đề. Bạn cần phân tích cả hai bên, rồi chốt xem cái nào nhiều hơn.',
                 blueprint: [
-                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Introduce the topic and state whether advantages or disadvantages outweigh', roleVi: 'Giới thiệu chủ đề và nêu rõ mặt lợi hay mặt hại chiếm ưu thế' },
-                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Examine the primary advantages and positive impacts with concrete evidence', roleVi: 'Phân tích các ưu điểm/lợi ích then chốt kèm dẫn chứng thực tế' },
-                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Address the severe disadvantages / perils and evaluate their severity', roleVi: 'Phân tích các rủi ro/bất lợi nghiêm trọng và đánh giá mức độ ảnh hưởng' },
-                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Deliver a final reasoned verdict on which dimension decisively prevails', roleVi: 'Đưa ra phán quyết cuối cùng khẳng định mặt nào chiếm ưu thế áp đảo' }
+                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Introduce the topic and state whether advantages or disadvantages outweigh', roleVi: 'Nêu chủ đề & chốt xem lợi hay hại nhiều hơn' },
+                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Examine the primary advantages and positive impacts with concrete evidence', roleVi: 'Kể ra các mặt tốt / lợi ích kèm ví dụ' },
+                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Address the severe disadvantages / perils and evaluate their severity', roleVi: 'Chỉ ra các mặt hại / rủi ro kèm ví dụ' },
+                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Deliver a final reasoned verdict on which dimension decisively prevails', roleVi: 'Khẳng định lại bên nào chiếm ưu thế' }
                 ]
             };
         }
@@ -1858,18 +2297,18 @@
             return {
                 typeKey: 'problem_solution',
                 titleEn: 'Problem & Solution Essay',
-                titleVi: 'Nghị luận Thực trạng, Nguyên nhân & Giải pháp',
+                titleVi: 'Dạng bài: Vấn đề & Cách giải quyết',
                 icon: '🔧',
                 badgeClass: 'is-problem-solution',
                 triggerPhraseEn: '“What are the causes and what solutions can be proposed?”',
-                triggerPhraseVi: 'Cụm từ hỏi nguyên nhân & giải pháp: “causes / problems... solutions / measures”',
+                triggerPhraseVi: 'Hỏi nguyên nhân & cách xử lý: “causes / solutions”',
                 howToRecognizeEn: 'The prompt presents a serious issue and asks why it occurs and how it can be mitigated.',
-                howToRecognizeVi: 'Đề bài nêu một vấn đề nhức nhối trong xã hội và yêu cầu chỉ ra nguyên nhân cũng như đề xuất phương án giải quyết.',
+                howToRecognizeVi: 'Đề nêu một vấn đề xã hội và hỏi tại sao lại bị như vậy, xử lý thế nào. Bạn chia bài làm 2 ý: nguyên nhân và giải pháp.',
                 blueprint: [
-                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase the pressing issue and outline causes and remedies', roleVi: 'Nêu thực trạng vấn đề và giới thiệu khái quát các nguyên nhân/giải pháp' },
-                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Analyze the underlying root causes driving the issue', roleVi: 'Phân tích các nguyên nhân gốc rễ dẫn đến thực trạng' },
-                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Propose feasible, impactful policy or technological solutions', roleVi: 'Đề xuất các giải pháp khả thi và hiệu quả từ góc độ chính sách/cá nhân' },
-                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Reiterate the necessity of prompt action to resolve the issue', roleVi: 'Tóm lược và nhấn mạnh tính cấp bách của các giải pháp' }
+                    { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase the pressing issue and outline causes and remedies', roleVi: 'Nêu vấn đề đang xảy ra và hướng giải quyết' },
+                    { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Analyze the underlying root causes driving the issue', roleVi: 'Chỉ ra 1-2 nguyên nhân chính dẫn đến vấn đề' },
+                    { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Propose feasible, impactful policy or technological solutions', roleVi: 'Đưa ra 1-2 cách giải quyết thực tế, làm được ngay' },
+                    { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Reiterate the necessity of prompt action to resolve the issue', roleVi: 'Nhấn mạnh lại việc cần sớm hành động' }
                 ]
             };
         }
@@ -1878,18 +2317,18 @@
         return {
             typeKey: 'agree_disagree',
             titleEn: 'Agree or Disagree / Opinion Essay',
-            titleVi: 'Nghị luận Quan điểm: Đồng ý hay Phản bác (Agree or Disagree)',
+            titleVi: 'Dạng bài: Đồng ý hay Phản đối (Agree / Disagree)',
             icon: '💡',
             badgeClass: 'is-agree-disagree',
             triggerPhraseEn: text.includes('do you think he is correct') ? '“What did he mean by that? Do you think he is correct?”' : '“Do you agree or disagree?” or “To what extent do you agree?”',
-            triggerPhraseVi: text.includes('do you think he is correct') ? 'Câu hỏi trực tiếp về tính đúng đắn của danh ngôn: “What did he mean by that? Do you think he is correct?”' : 'Câu hỏi kiểm tra lập trường: “Do you agree or disagree?” hoặc “To what extent do you agree...?”',
+            triggerPhraseVi: text.includes('do you think he is correct') ? 'Hỏi thẳng ý kiến: “What did he mean by that? Do you think he is correct?”' : 'Hỏi lập trường: “Do you agree or disagree?” hoặc “To what extent do you agree?”',
             howToRecognizeEn: 'The prompt presents an assertion, philosophy, or quote and asks if you agree. You MUST interpret the core premise and establish an unambiguous, consistent stance (Strongly Agree or Strongly Disagree) supported by reasoned arguments.',
-            howToRecognizeVi: 'Đề bài trích dẫn một câu danh ngôn hoặc đưa ra một nhận định xã hội và hỏi bạn có đồng tình không. Dấu hiệu nhận biết là câu hỏi “Do you think he is correct?” hoặc “Do you agree?”. Bạn BẮT BUỘC phải làm rõ thông điệp và xác lập lập trường dứt khoát (Đồng ý hoặc Phản bác), không được trả lời chung chung.',
+            howToRecognizeVi: 'Đề đưa ra một câu nói/ý kiến rồi hỏi bạn có đồng tình không. Bạn chỉ cần chọn rõ một phe (Đồng ý hoặc Phản đối) và giải thích lý do, đừng nói nước đôi.',
             blueprint: [
-                { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase the quote/statement and declare a clear thesis position', roleVi: 'Diễn đạt lại câu nói/nhận định và tuyên bố lập trường dứt khoát' },
-                { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Explain the core meaning and evaluate Reason 1 with evidence', roleVi: 'Giải thích bản chất ý nghĩa nhận định và đưa ra Luận điểm 1 kèm dẫn chứng' },
-                { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Substantiate Reason 2 defending your stance with real-world examples', roleVi: 'Chứng minh Luận điểm 2 củng cố lập trường bằng lý lẽ và ví dụ thực tế' },
-                { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Reaffirm your definitive position and summarize core arguments', roleVi: 'Khẳng định lại lập trường một cách nhất quán và đúc kết ý chính' }
+                { partEn: 'Introduction', partVi: 'Mở bài', roleEn: 'Paraphrase the quote/statement and declare a clear thesis position', roleVi: 'Nhắc lại câu nói & chốt rõ bạn theo phe nào' },
+                { partEn: 'Body Paragraph 1', partVi: 'Thân bài 1', roleEn: 'Explain the core meaning and evaluate Reason 1 with evidence', roleVi: 'Giải thích ý câu nói & đưa ra lý do 1 kèm ví dụ' },
+                { partEn: 'Body Paragraph 2', partVi: 'Thân bài 2', roleEn: 'Substantiate Reason 2 defending your stance with real-world examples', roleVi: 'Đưa tiếp lý do 2 kèm ví dụ thực tế để củng cố' },
+                { partEn: 'Conclusion', partVi: 'Kết bài', roleEn: 'Reaffirm your definitive position and summarize core arguments', roleVi: 'Tóm tắt lại quan điểm của bạn thật ngắn gọn' }
             ]
         };
     }
@@ -1897,10 +2336,191 @@
     function normalizeRequirementVi(vi, en) {
         if (!vi) return String(en || '').trim();
         let str = String(vi).trim();
-        if (str.includes('Dùng ví dụ phù hợp khi chúng làm rõ ý') || str.includes('Dùng ví dụ phù hợp')) {
-            return 'Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm.';
+        if (/nêu mức độ đồng ý|state your position|agree or disagree/i.test(str)) {
+            return 'Chọn rõ: Đồng ý hay Không đồng ý (tránh nói nước đôi).';
+        }
+        if (/hỗ trợ quan điểm bằng hai lý do|support.*two reasons|give two reasons|hai lý do rõ ràng/i.test(str)) {
+            return 'Nêu đủ 2 lý do chính để bảo vệ quan điểm.';
+        }
+        if (/dùng ví dụ|dẫn chứng thực tế|use examples|evidence/i.test(str)) {
+            return 'Kèm ví dụ thực tế cụ thể cho từng lý do.';
+        }
+        if (/cân nhắc|phân tích cả hai mặt|both sides|advantages and disadvantages/i.test(str)) {
+            return 'Nhắc đến cả hai mặt (lợi và hại) trước khi chốt.';
         }
         return str;
+    }
+
+    function normalizeMcqVi(mcq, promptText) {
+        if (!mcq) return mcq;
+        const pLower = String(promptText || '').toLowerCase();
+        const copy = JSON.parse(JSON.stringify(mcq));
+        
+        if (pLower.includes('einstein') || pLower.includes('interferes with my learning')) {
+            copy.questionVi = 'Đề bài này muốn bạn làm gì nhất?';
+            if (Array.isArray(copy.options)) {
+                copy.options.forEach(opt => {
+                    if (opt.id === 'a') {
+                        opt.textVi = 'Giải thích ý của Einstein và nêu rõ bạn đồng tình hay phản đối.';
+                        opt.feedbackVi = '✓ Chuẩn luôn! Cứ giải thích ngắn gọn rồi chốt phe là đúng hướng.';
+                    } else if (opt.id === 'b') {
+                        opt.textVi = 'Kể lại tiểu sử và các phát minh của Einstein.';
+                        opt.feedbackVi = '❌ Lạc đề rồi! Đây là bài nghị luận, không phải kể chuyện lịch sử nhé.';
+                    } else if (opt.id === 'c') {
+                        opt.textVi = 'Kêu gọi xóa bỏ trường học mà không có giải pháp.';
+                        opt.feedbackVi = '❌ Cực đoan quá! Viết luận học thuật thì đừng kết luận phiến diện nhé.';
+                    }
+                });
+            }
+        } else if (pLower.includes('exercise') && pLower.includes('diet')) {
+            copy.questionVi = 'Với đề này, nhiệm vụ mấu chốt của bạn là gì?';
+            if (Array.isArray(copy.options)) {
+                copy.options.forEach(opt => {
+                    if (opt.id === 'a') {
+                        opt.textVi = 'So sánh ăn uống với tập luyện, rồi chốt xem cái nào quan trọng hơn.';
+                        opt.feedbackVi = '✓ Chính xác! Phải so sánh cả 2 rồi chốt phe rõ ràng.';
+                    } else if (opt.id === 'b') {
+                        opt.textVi = 'Chỉ viết về chuyện ăn uống mà bỏ quên việc tập luyện.';
+                        opt.feedbackVi = '❌ Thiếu ý rồi! Đề hỏi cả 2 thì phải nhắc cả 2 nhé.';
+                    }
+                });
+            }
+        } else if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages'))) {
+            copy.questionVi = 'Gặp dạng bài Ưu & Nhược điểm, bạn cần viết thế nào?';
+            if (Array.isArray(copy.options)) {
+                copy.options.forEach(opt => {
+                    if (opt.id === 'a') {
+                        opt.textVi = 'Chỉ khen hoặc chỉ chê để bài viết quyết liệt hơn.';
+                        opt.feedbackVi = '❌ Chưa đủ! Dạng này bắt buộc phải nêu cả điểm tốt lẫn điểm xấu.';
+                    } else if (opt.id === 'b') {
+                        opt.textVi = 'Nêu cả mặt lợi lẫn mặt hại, rồi chỉ ra mặt nào áp đảo hơn.';
+                        opt.feedbackVi = '✓ Quá chuẩn! Phân tích 2 mặt rồi kết luận là ghi điểm trọn vẹn.';
+                    }
+                });
+            }
+        } else {
+            if (/nhiệm vụ cốt lõi|mục tiêu|yêu cầu/i.test(copy.questionVi || '')) {
+                copy.questionVi = 'Nguyên tắc quan trọng nhất khi làm bài viết luận PTE là gì?';
+            }
+            if (Array.isArray(copy.options)) {
+                copy.options.forEach(opt => {
+                    if (opt.id === 'a' && /lập trường|dứt khoát/i.test(opt.textVi || '')) {
+                        opt.textVi = 'Chọn lập trường rõ ràng, có lý lẽ và ví dụ thực tế đi kèm.';
+                        opt.feedbackVi = '✓ Rất tốt! Có quan điểm rõ ràng và dẫn chứng là có điểm.';
+                    } else if (opt.id === 'b' && /trung lập|tránh/i.test(opt.textVi || '')) {
+                        opt.textVi = 'Viết chung chung, không nghiêng về phe nào cho an toàn.';
+                        opt.feedbackVi = '❌ Tránh nhé! Viết nước đôi sẽ bị trừ điểm Content đấy.';
+                    }
+                });
+            }
+        }
+        return copy;
+    }
+
+    function normalizeGapFillVi(gapFill, promptText) {
+        if (!gapFill) return gapFill;
+        const pLower = String(promptText || '').toLowerCase();
+        const copy = JSON.parse(JSON.stringify(gapFill));
+        copy.instructionsVi = 'Bấm chọn các mảnh ghép để hoàn thành kế hoạch viết bài:';
+
+        if (pLower.includes('einstein') || pLower.includes('interferes with my learning')) {
+            copy.sentenceTemplateVi = 'Để làm tốt bài này, mình cần hiểu {slot1}, chọn rõ {slot2}, và đưa ra {slot3}.';
+            if (Array.isArray(copy.slots)) {
+                copy.slots.forEach(slot => {
+                    if (slot.id === 'slot1') {
+                        slot.labelVi = 'Ý kiến Einstein';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c1') opt.textVi = 'câu nói của Einstein về trường học';
+                            if (opt.id === 'w1') { opt.textVi = 'các phát minh vật lý của Einstein'; opt.hintVi = 'Tập trung vào chuyện học hành thôi nhé!'; }
+                        });
+                    } else if (slot.id === 'slot2') {
+                        slot.labelVi = 'Chọn lập trường';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c2') opt.textVi = 'phe đồng ý hoặc phản đối';
+                            if (opt.id === 'w2') { opt.textVi = 'thái độ nước đôi, không rõ ràng'; opt.hintVi = 'Cần chốt phe rõ ràng bạn nhé!'; }
+                        });
+                    } else if (slot.id === 'slot3') {
+                        slot.labelVi = 'Căn cứ bảo vệ';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c3') opt.textVi = 'lý do và ví dụ thực tế';
+                            if (opt.id === 'w3') { opt.textVi = 'nhận xét chung chung'; opt.hintVi = 'Phải có ví dụ thực tế mới thuyết phục nha!'; }
+                        });
+                    }
+                });
+            }
+        } else if (pLower.includes('exercise') && pLower.includes('diet')) {
+            copy.sentenceTemplateVi = 'Với đề này, mình cần so sánh {slot1} với {slot2}, rồi chốt xem yếu tố nào {slot3}.';
+            if (Array.isArray(copy.slots)) {
+                copy.slots.forEach(slot => {
+                    if (slot.id === 'slot1') {
+                        slot.labelVi = 'Yếu tố 1: Ăn uống';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c1') opt.textVi = 'chế độ ăn uống';
+                            if (opt.id === 'w1') { opt.textVi = 'đi ăn tiệm đắt tiền'; opt.hintVi = 'Tập trung vào dinh dưỡng lành mạnh nhé.'; }
+                        });
+                    } else if (slot.id === 'slot2') {
+                        slot.labelVi = 'Yếu tố 2: Tập luyện';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c2') opt.textVi = 'việc tập luyện thể thao';
+                            if (opt.id === 'w2') { opt.textVi = 'xem đá bóng trên TV'; opt.hintVi = 'Đang nói về việc tự vận động cơ thể nha.'; }
+                        });
+                    } else if (slot.id === 'slot3') {
+                        slot.labelVi = 'Đánh giá chốt';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c3') opt.textVi = 'quan trọng hơn với sức khỏe';
+                            if (opt.id === 'w3') { opt.textVi = 'không có tác dụng gì'; opt.hintVi = 'Cả hai đều quan trọng, hãy so sánh xem cái nào nhỉnh hơn.'; }
+                        });
+                    }
+                });
+            }
+        } else if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages'))) {
+            copy.sentenceTemplateVi = 'Bài này mình cần phân tích cả {slot1} lẫn {slot2} của thể thao mạo hiểm, rồi nêu rõ mặt nào {slot3}.';
+            if (Array.isArray(copy.slots)) {
+                copy.slots.forEach(slot => {
+                    if (slot.id === 'slot1') {
+                        slot.labelVi = 'Mặt 1: Điểm tốt';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c1') opt.textVi = 'lợi ích rèn luyện tinh thần';
+                            if (opt.id === 'w1') { opt.textVi = 'giá dụng cụ rẻ tiền'; opt.hintVi = 'Tập trung vào cảm giác vượt qua chính mình nhé.'; }
+                        });
+                    } else if (slot.id === 'slot2') {
+                        slot.labelVi = 'Mặt 2: Điểm xấu';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c2') opt.textVi = 'nguy cơ chấn thương nguy hiểm';
+                            if (opt.id === 'w2') { opt.textVi = 'việc tốn một chút thời gian'; opt.hintVi = 'Môn này nguy hiểm tính mạng đấy nhé.'; }
+                        });
+                    } else if (slot.id === 'slot3') {
+                        slot.labelVi = 'Kết luận';
+                        slot.options?.forEach(opt => {
+                            if (opt.id === 'c3') opt.textVi = 'chiếm ưu thế hơn';
+                            if (opt.id === 'w3') { opt.textVi = 'hoàn toàn vô nghĩa'; opt.hintVi = 'So sánh xem lợi hay hại nhiều hơn nha.'; }
+                        });
+                    }
+                });
+            }
+        } else {
+            if (/để đạt điểm cao/i.test(copy.sentenceTemplateVi || '')) {
+                copy.sentenceTemplateVi = 'Để đạt điểm cao, mình cần phân tích {slot1}, giữ vững {slot2}, và chứng minh bằng {slot3}.';
+            }
+        }
+        return copy;
+    }
+
+    function renderGuidedViewToggle() {
+        return `
+        <div class="essay-guided-view-toggle-bar">
+            <span class="essay-guided-view-toggle-label">${guidedText('Ideation View:', 'Góc nhìn tư duy:')}</span>
+            <div class="essay-guided-view-toggle" role="group" aria-label="${guidedText('Select view mode', 'Chọn chế độ xem')}">
+                <button type="button" class="essay-view-toggle-btn${guidedViewMode === 'mindmap' ? ' is-active' : ''}" data-guided-action="set-guided-view-mode" data-view-mode="mindmap" aria-pressed="${guidedViewMode === 'mindmap' ? 'true' : 'false'}">
+                    <span class="essay-view-toggle-icon">🗺️</span>
+                    <span>${guidedText('Mind Map', 'Sơ đồ tư duy')}</span>
+                </button>
+                <button type="button" class="essay-view-toggle-btn${guidedViewMode === 'list' ? ' is-active' : ''}" data-guided-action="set-guided-view-mode" data-view-mode="list" aria-pressed="${guidedViewMode === 'list' ? 'true' : 'false'}">
+                    <span class="essay-view-toggle-icon">📋</span>
+                    <span>${guidedText('Compact List', 'Danh sách')}</span>
+                </button>
+            </div>
+        </div>`;
     }
 
     function renderInteractivePromptStructure(segments, promptText) {
@@ -1916,86 +2536,144 @@
         const parsedSegments = segList.map((seg, idx) => {
             const text = String(seg.text || '').trim();
             const lower = text.toLowerCase();
+            const pLower = String(promptText || '').toLowerCase();
             
-            let roleTitleEn = seg.roleTitleEn || 'Core Instruction';
-            let roleTitleVi = seg.roleTitleVi || 'Chỉ dẫn trọng tâm';
+            let roleTitleEn = seg.roleTitleEn || 'Prompt Component';
+            let roleTitleVi = seg.roleTitleVi || 'Thành phần đề bài';
             let roleIcon = '💡';
-            let targetParagraphEn = seg.targetParagraphEn || 'Introduction & Body Paragraphs';
-            let targetParagraphVi = seg.targetParagraphVi || 'Mở bài & Các đoạn Thân bài';
-            let instructionEn = seg.instructionEn || 'Address this requirement directly in your essay.';
-            let instructionVi = seg.instructionVi || 'Trả lời trực tiếp yêu cầu này trong bài viết.';
-            let trapEn = seg.trapEn || 'Do not overlook this element when structuring your response.';
-            let trapVi = seg.trapVi || 'Không bỏ qua thành phần này khi lập dàn ý bài viết.';
-            
-            const isQuote = text.includes('“') || text.includes('"') || text.includes('–') || lower.includes('einstein') || lower.includes('quote') || lower.includes('said') || lower.includes('stated');
-            if (isQuote || (!text.includes('?') && idx === 0)) {
-                roleTitleEn = isQuote ? 'Background Quote & Premise' : 'Background Context & Topic Premise';
-                roleTitleVi = isQuote ? 'Câu trích dẫn & Nhận định gốc' : 'Bối cảnh & Nhận định gốc của đề';
-                roleIcon = '📌';
-                targetParagraphEn = 'Introduction (Sentence 1: Paraphrase)';
-                targetParagraphVi = 'Mở bài (Câu 1: Paraphrase)';
-                instructionEn = isQuote
-                    ? 'Paraphrase this quote in your opening sentence using academic synonyms. Do not copy word-for-word.'
-                    : 'Paraphrase this topic premise in your opening sentence using academic synonyms. Do not copy word-for-word.';
-                instructionVi = isQuote
-                    ? 'Diễn đạt lại câu trích dẫn này ở câu mở đầu bằng từ ngữ học thuật của bạn. Không chép y nguyên từng từ.'
-                    : 'Diễn đạt lại nhận định đề bài này ở câu mở đầu bằng từ ngữ học thuật của bạn. Không chép y nguyên từng từ.';
-                trapEn = isQuote
-                    ? 'Do NOT write a generic historical/biographical summary; focus strictly on analyzing the core concept.'
-                    : 'Do NOT copy the prompt word-for-word or drift into unrelated generalizations; focus strictly on the topic.';
-                trapVi = isQuote
-                    ? 'Không đi sâu kể chuyện lịch sử hay tiểu sử danh nhân ngoài lề; chỉ tập trung phân tích luận điểm cốt lõi.'
-                    : 'Không sao chép nguyên văn đề bài hoặc viết lan man sang các chủ đề chung chung; hãy diễn đạt lại bằng từ đồng nghĩa và đi thẳng vào trọng tâm.';
-            } else if (lower.includes('what did he mean') || lower.includes('what do you mean') || lower.includes('explain')) {
-                roleTitleEn = 'Sub-Question 1: Meaning & Interpretation';
-                roleTitleVi = 'Câu hỏi 1: Giải thích ý nghĩa nhận định';
-                roleIcon = '🎯';
-                targetParagraphEn = 'Body Paragraph 1';
-                targetParagraphVi = 'Thân bài 1 (Giải thích ý nghĩa & Cơ chế)';
-                instructionEn = 'Explain what is meant: analyze the underlying reasoning and real-world mechanism behind this claim.';
-                instructionVi = 'Giải thích ý nghĩa nhận định: phân tích cơ chế vì sao và bằng cách nào hiện tượng đó tác động lên vấn đề.';
-                trapEn = 'Do NOT simply rephrase the prompt again; explain the underlying mechanism in depth.';
-                trapVi = 'Không chỉ diễn đạt lại nhận định; hãy giải thích cơ chế nguyên nhân sâu xa.';
-            } else if (lower.includes('advantages and disadvantages') || lower.includes('pros and cons') || (lower.includes('advantages') && lower.includes('disadvantages'))) {
-                roleTitleEn = 'Core Task: Balanced Analysis (Pros & Cons)';
-                roleTitleVi = 'Nhiệm vụ cốt lõi: Phân tích Cân bằng (Ưu & Nhược điểm)';
-                roleIcon = '⚖️';
-                targetParagraphEn = 'Body 1 (Advantages) & Body 2 (Disadvantages)';
-                targetParagraphVi = 'Thân bài 1 (Ưu điểm) & Thân bài 2 (Nhược điểm)';
-                instructionEn = 'Dedicate one body paragraph to significant benefits and another to major drawbacks, stating your decisive verdict in the conclusion.';
-                instructionVi = 'Dành riêng Thân bài 1 cho các lợi ích nổi bật và Thân bài 2 cho các mặt hạn chế, sau đó nêu nhận định dứt khoát ở kết bài.';
-                trapEn = 'Do NOT write a one-sided essay; you must address both advantages and disadvantages to satisfy PTE Content criteria.';
-                trapVi = 'Tuyệt đối không viết lệch một chiều; bắt buộc phải phân tích cả hai mặt để đạt trọn điểm Content PTE.';
-            } else if (lower.includes('do you think he is correct') || lower.includes('do you agree') || lower.includes('extent do you agree') || lower.includes('agree or disagree') || lower.includes('correct?')) {
-                roleTitleEn = 'Sub-Question: Personal Stance & Evaluation';
-                roleTitleVi = 'Yêu cầu: Lập trường cá nhân & Đánh giá';
-                roleIcon = '⚖️';
-                targetParagraphEn = 'Introduction (Thesis) & Body Paragraph 2 / Conclusion';
-                targetParagraphVi = 'Mở bài (Luận đề) & Thân bài 2 / Kết bài';
-                instructionEn = 'State your clear position (Agree or Disagree) in your thesis, then substantiate your reasons throughout the body.';
-                instructionVi = 'Tuyên bố lập trường rõ ràng (Đồng ý hay Không đồng ý) trong câu luận đề, sau đó đưa ra lập luận chặt chẽ củng cố quan điểm.';
-                trapEn = 'Do NOT remain vague or undecided. PTE requires a decisive, consistent position supported with reasons.';
-                trapVi = 'Không trả lời chung chung hoặc nửa vời. PTE đòi hỏi bạn phải có lập trường dứt khoát và nhất quán.';
-            } else if (lower.includes('cause') || lower.includes('solution') || lower.includes('measure') || lower.includes('problem')) {
-                roleTitleEn = 'Core Task: Problems, Causes & Solutions';
-                roleTitleVi = 'Nhiệm vụ cốt lõi: Nguyên nhân & Giải pháp';
-                roleIcon = '🔧';
-                targetParagraphEn = 'Body 1 (Causes) & Body 2 (Solutions)';
-                targetParagraphVi = 'Thân bài 1 (Nguyên nhân) & Thân bài 2 (Giải pháp)';
-                instructionEn = 'Analyze the underlying root causes in Body 1, and propose actionable, realistic solutions in Body 2.';
-                instructionVi = 'Phân tích nguyên nhân gốc rễ ở Thân bài 1, và đề xuất các giải pháp khả thi, cụ thể ở Thân bài 2.';
-                trapEn = 'Do NOT present vague, impractical solutions; explain exactly how the remedies can be implemented.';
-                trapVi = 'Tránh đưa ra giải pháp sáo rỗng thiếu thực tế; cần giải thích rõ giải pháp được thực thi ra sao.';
-            } else if (lower.includes('example') || lower.includes('experience')) {
-                roleTitleEn = 'Supporting Requirement: Concrete Evidence';
-                roleTitleVi = 'Yêu cầu bổ trợ: Dẫn chứng thực tế';
-                roleIcon = '💡';
-                targetParagraphEn = 'Body Paragraphs 1 & 2';
-                targetParagraphVi = 'Thân bài 1 & 2 (Dẫn chứng minh họa)';
-                instructionEn = 'Substantiate both core claims with realistic real-world observations or empirical data.';
-                instructionVi = 'Minh họa cả hai luận điểm bằng các dẫn chứng thực tế hoặc trải nghiệm thuyết phục.';
-                trapEn = 'Avoid fabricated, unbelievable personal anecdotes; use general real-world observations.';
-                trapVi = 'Tránh bịa đặt các câu chuyện cá nhân thiếu thực tế; hãy dùng dẫn chứng đời sống có tính phổ quát.';
+            let meaningEn = seg.meaningEn || '';
+            let meaningVi = seg.meaningVi || '';
+            let takeawayEn = seg.takeawayEn || '';
+            let takeawayVi = seg.takeawayVi || '';
+
+            // 1. Question #1: Einstein Quote
+            if (pLower.includes('einstein') || pLower.includes('interferes with my learning')) {
+                if (idx === 0 || lower.includes('interferes') || lower.includes('einstein')) {
+                    roleTitleEn = 'The Quote & Paradox';
+                    roleTitleVi = 'Câu danh ngôn của Einstein';
+                    roleIcon = '📌';
+                    meaningEn = 'Einstein claimed that rigid, standardized schooling ("education") can actually stifle a person\'s natural curiosity and authentic discovery ("learning").';
+                    meaningVi = 'Einstein cho rằng trường lớp gò bó và áp lực điểm số dễ làm mất đi niềm vui tự học và tính tò mò tự nhiên.';
+                    takeawayEn = 'Core contrast: Formal schooling ("education") vs. self-driven curiosity ("learning").';
+                    takeawayVi = 'Mấu chốt: Khác biệt giữa học bị ép ("education") và tự học say mê ("learning").';
+                } else if (lower.includes('what did he mean') || lower.includes('explain')) {
+                    roleTitleEn = 'Interpretation Task';
+                    roleTitleVi = 'Giải thích ý câu nói';
+                    roleIcon = '🔍';
+                    meaningEn = 'Asks you to unpack Einstein\'s logic: why and how do traditional school structures restrict independent creative thought?';
+                    meaningVi = 'Đề muốn bạn chỉ ra: vì sao cách dạy rập khuôn ở trường lại cản trở sự sáng tạo?';
+                    takeawayEn = 'Explain the underlying reason why schooling can hinder creative development.';
+                    takeawayVi = 'Cần nêu: lý do trường học truyền thống hạn chế học sinh tự do tìm tòi.';
+                } else {
+                    roleTitleEn = 'Your Judgment';
+                    roleTitleVi = 'Chọn phe của bạn';
+                    roleIcon = '⚖️';
+                    meaningEn = 'Asks for your personal stance: Do you agree that schooling stifles learning, or do you believe structured education is essential for foundation?';
+                    meaningVi = 'Bạn thấy câu của Einstein đúng hay sai? Đồng ý, phản đối, hay thấy cả hai bên đều có lý?';
+                    takeawayEn = 'Form a clear judgment: Agree, Disagree, or Balanced perspective.';
+                    takeawayVi = 'Chốt rõ: Đồng ý, Phản đối, hoặc Dung hòa cả hai bên.';
+                }
+            }
+            // 2. Question #2: Diet vs Exercise
+            else if (pLower.includes('exercise') && pLower.includes('diet')) {
+                if (idx === 0 || lower.includes('exercise') || lower.includes('diet')) {
+                    roleTitleEn = 'The Core Debate';
+                    roleTitleVi = 'Chủ đề so sánh';
+                    roleIcon = '🥗';
+                    meaningEn = 'Presents a common health debate: comparing regular physical workouts directly against strict dietary regimens.';
+                    meaningVi = 'Đề đặt việc ăn uống lành mạnh lên bàn cân với việc chăm chỉ tập thể dục.';
+                    takeawayEn = 'Direct comparison: Physical exercise vs. nutritional control.';
+                    takeawayVi = 'Mấu chốt: So sánh trực tiếp giữa Ăn uống và Tập luyện.';
+                } else if (lower.includes('extent do you agree') || lower.includes('agree or disagree') || lower.includes('opinion')) {
+                    roleTitleEn = 'Your Position';
+                    roleTitleVi = 'Chọn lập trường';
+                    roleIcon = '⚖️';
+                    meaningEn = 'Asks where you stand: is exercise truly more vital, is nutrition more fundamental, or must both work in synergy?';
+                    meaningVi = 'Bạn nghiêng về bên nào hơn: ăn uống quyết định tất cả, tập luyện quan trọng hơn, hay cả hai phải đi đôi?';
+                    takeawayEn = 'Take a clear side or argue that health requires an integrated combination.';
+                    takeawayVi = 'Chốt rõ: Chọn một bên quan trọng hơn hoặc kết hợp cả hai.';
+                } else {
+                    roleTitleEn = 'Evidence Requirement';
+                    roleTitleVi = 'Đưa dẫn chứng';
+                    roleIcon = '💡';
+                    meaningEn = 'Reminds you to back up your claims with realistic facts, scientific logic, or everyday observations.';
+                    meaningVi = 'Đừng nói suông, hãy dùng ví dụ thực tế hoặc dẫn chứng đời thường để bảo vệ ý kiến.';
+                    takeawayEn = 'Ground your opinions in believable real-world examples.';
+                    takeawayVi = 'Ghi nhớ: Luôn có ví dụ thực tế đi kèm lý lẽ.';
+                }
+            }
+            // 3. Question #23: Extreme Sports
+            else if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages'))) {
+                if (lower.includes('advantages and disadvantages') || lower.includes('pros and cons') || idx === 0) {
+                    roleTitleEn = 'Two-Sided Evaluation';
+                    roleTitleVi = 'Phân tích hai mặt';
+                    roleIcon = '🧗';
+                    meaningEn = 'Asks you to examine high-risk sports (skydiving, rock climbing, big-wave surfing): evaluating both positive thrills and dangerous drawbacks.';
+                    meaningVi = 'Nêu cả hai mặt của thể thao mạo hiểm: cảm giác phấn khích, thử thách bản thân vs nguy hiểm tính mạng.';
+                    takeawayEn = 'Must examine both positive thrills and physical perils objectively.';
+                    takeawayVi = 'Bắt buộc: Phải viết cả điểm tốt và điểm xấu, không bỏ sót mặt nào.';
+                } else {
+                    roleTitleEn = 'Evidence & Substantiation';
+                    roleTitleVi = 'Dẫn chứng thực tế';
+                    roleIcon = '💡';
+                    meaningEn = 'Substantiate both the benefits and risks with realistic scenarios and clear explanations.';
+                    meaningVi = 'Dùng các môn quen thuộc (nhảy dù, leo núi...) làm ví dụ minh họa cho lập luận của bạn.';
+                    takeawayEn = 'Illustrate both advantages and risks with concrete real-world contexts.';
+                    takeawayVi = 'Ghi nhớ: Dẫn chứng càng cụ thể, bài viết càng thuyết phục.';
+                }
+            }
+            // 4. General Fallback for all other prompts
+            else {
+                const isQuote = text.includes('“') || text.includes('"') || text.includes('–') || lower.includes('said') || lower.includes('stated');
+                if (isQuote || (!text.includes('?') && idx === 0)) {
+                    roleTitleEn = isQuote ? 'Quote / Central Premise' : 'Background Topic Premise';
+                    roleTitleVi = isQuote ? 'Nhận định gốc' : 'Chủ đề chính của đề';
+                    roleIcon = '📌';
+                    meaningEn = `Introduces the primary subject of discussion: "${text.replace(/[“”"–-]/g, '').trim()}".`;
+                    meaningVi = `Chủ đề chính cần bàn: "${text.replace(/[“”"–-]/g, '').trim()}".`;
+                    takeawayEn = 'Understand the underlying context and key concept being debated.';
+                    takeawayVi = 'Nắm chắc ý chính của câu nói trước khi viết.';
+                } else if (lower.includes('what did he mean') || lower.includes('what do you mean') || lower.includes('explain')) {
+                    roleTitleEn = 'Meaning & Interpretation';
+                    roleTitleVi = 'Giải thích ý nghĩa';
+                    roleIcon = '🔍';
+                    meaningEn = 'Asks you to clarify the deeper meaning, underlying mechanism, or rationale behind the statement.';
+                    meaningVi = 'Làm rõ: vì sao tác giả lại đưa ra nhận định như vậy?';
+                    takeawayEn = 'Unpack the "why" and "how" behind the prompt statement.';
+                    takeawayVi = 'Chỉ ra lý do và bản chất cốt lõi của vấn đề.';
+                } else if (lower.includes('agree or disagree') || lower.includes('extent do you agree') || lower.includes('do you agree') || lower.includes('correct?')) {
+                    roleTitleEn = 'Personal Stance Request';
+                    roleTitleVi = 'Chọn phe của bạn';
+                    roleIcon = '⚖️';
+                    meaningEn = 'Directly checks where you stand: whether you support the prompt claim, oppose it, or take a balanced view.';
+                    meaningVi = 'Bạn đồng ý hay phản đối nhận định này? Hãy chọn rõ ràng ngay từ đầu.';
+                    takeawayEn = 'Establish a clear, consistent personal position.';
+                    takeawayVi = 'Giữ lập trường nhất quán từ mở bài đến kết bài.';
+                } else if (lower.includes('cause') || lower.includes('solution') || lower.includes('problem') || lower.includes('measure')) {
+                    roleTitleEn = 'Problem Analysis & Remedies';
+                    roleTitleVi = 'Nguyên nhân & Giải pháp';
+                    roleIcon = '🔧';
+                    meaningEn = 'Asks you to examine why this social problem exists and identify concrete measures to solve or mitigate it.';
+                    meaningVi = 'Tìm lý do vì sao vấn đề xảy ra và đề xuất cách xử lý thực tế.';
+                    takeawayEn = 'Connect underlying root causes with realistic, actionable solutions.';
+                    takeawayVi = 'Mỗi nguyên nhân cần đi kèm một giải pháp tương ứng.';
+                } else if (lower.includes('example') || lower.includes('experience') || lower.includes('reasons')) {
+                    roleTitleEn = 'Supporting Evidence';
+                    roleTitleVi = 'Lý lẽ & Ví dụ';
+                    roleIcon = '💡';
+                    meaningEn = 'Reminds you that all arguments must be supported by sound reasoning and believable real-world examples.';
+                    meaningVi = 'Củng cố quan điểm bằng lập luận logic và ví dụ thực tế đời thường.';
+                    takeawayEn = 'Back up every assertion with logical explanations and examples.';
+                    takeawayVi = 'Ý nào cũng nên có ví dụ đi kèm cho thuyết phục.';
+                } else {
+                    roleTitleEn = 'Task Directive';
+                    roleTitleVi = 'Yêu cầu của đề';
+                    roleIcon = '🎯';
+                    meaningEn = `Focuses your attention on this specific requirement: "${text}".`;
+                    meaningVi = `Tập trung vào nhiệm vụ này: "${text}".`;
+                    takeawayEn = 'Make sure this requirement is clearly understood.';
+                    takeawayVi = 'Hiểu đúng yêu cầu để không bị lạc đề.';
+                }
             }
             
             const isSegSelected = guidedSelectedPromptSegment === `seg_${idx + 1}`;
@@ -2005,23 +2683,81 @@
                 roleTitleEn,
                 roleTitleVi,
                 roleIcon,
-                targetParagraphEn,
-                targetParagraphVi,
-                instructionEn,
-                instructionVi,
-                trapEn,
-                trapVi,
+                meaningEn,
+                meaningVi,
+                takeawayEn,
+                takeawayVi,
                 isSegSelected
             };
         });
 
+        if (guidedViewMode === 'mindmap') {
+            const promptQuote = parsedSegments[0]?.text || promptText;
+            let formattedMainQuote = String(promptQuote).replace(/^[“"']+|[”"']+$/g, '').trim();
+            return `
+            <div class="essay-guided-dissector-wrap essay-mindmap-mode">
+                <div class="essay-mindmap-canvas" id="essay-prompt-mindmap-canvas">
+                    <svg class="essay-mindmap-svg" id="essay-prompt-mindmap-svg" aria-hidden="true"></svg>
+
+                    <!-- Central Question Hub -->
+                    <div class="essay-mindmap-core" id="mm-prompt-core">
+                        <div class="essay-mindmap-core-spark">💡</div>
+                        <div class="essay-mindmap-core-badge">${guidedText('Core Question & Quote', 'Nhận định trọng tâm')}</div>
+                        <div class="essay-mindmap-core-title">“${escapeHtml(formattedMainQuote)}”</div>
+                        <div class="essay-mindmap-core-hint">${guidedText('Click any thought bubble below to brainstorm its meaning', 'Bấm vào từng bóng ý nghĩ bên dưới để khám phá góc nhìn')}</div>
+                    </div>
+
+                    <!-- Thought Bubbles Row -->
+                    <div class="essay-mindmap-bubbles-row">
+                        ${parsedSegments.map(item => {
+                            let formattedQuote = String(item.text || '').trim();
+                            if (!formattedQuote.startsWith('“') && !formattedQuote.startsWith('"')) {
+                                formattedQuote = `“${formattedQuote}”`;
+                            }
+                            const isSelected = item.isSegSelected;
+                            return `
+                            <div class="essay-thought-bubble bubble-${item.index}${isSelected ? ' is-active' : ''}" id="mm-bubble-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0">
+                                <div class="essay-thought-tail" aria-hidden="true">
+                                    <span class="tail-dot d1"></span>
+                                    <span class="tail-dot d2"></span>
+                                    <span class="tail-dot d3"></span>
+                                </div>
+                                <div class="essay-thought-head">
+                                    <span class="essay-thought-icon">${item.roleIcon}</span>
+                                    <div class="essay-thought-meta">
+                                        <span class="essay-thought-badge">${guidedText('Clause', 'Vế')} ${item.index}</span>
+                                        <strong class="essay-thought-role">${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}</strong>
+                                    </div>
+                                </div>
+                                <div class="essay-thought-quote">${escapeHtml(formattedQuote)}</div>
+                                <div class="essay-thought-hint-bar">
+                                    <span class="essay-thought-hint-text">${isSelected ? guidedText('▲ Hide details', '▲ Thu gọn') : guidedText('💭 Click to explore thought', '💭 Bấm xem góc nhìn tư duy')}</span>
+                                </div>
+                                ${isSelected ? `
+                                <div class="essay-thought-callout">
+                                    <div class="essay-thought-callout-item">
+                                        <span class="essay-thought-callout-tag">📖 ${guidedText('Simple meaning:', 'Ý đơn giản là:')}</span>
+                                        <p class="essay-thought-callout-text">${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
+                                    </div>
+                                    <div class="essay-thought-callout-item">
+                                        <span class="essay-thought-callout-tag">💡 ${guidedText('Key concept:', 'Điểm mấu chốt:')}</span>
+                                        <p class="essay-thought-callout-text">${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
+                                    </div>
+                                </div>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>`;
+        }
+
         return `
-        <div class="essay-guided-dissector-wrap">
+        <div class="essay-guided-dissector-wrap essay-list-mode">
             <div class="essay-guided-prompt-hero">
                 <div class="essay-guided-prompt-hero-head">
                     <div class="essay-prompt-hero-title-group">
                         <span class="essay-prompt-hero-badge">📌 ${guidedText('Deconstructed Question Prompt', 'Đề bài tách theo từng vế')}</span>
-                        <span class="essay-prompt-hero-hint">${guidedText('Click any highlighted clause to view its flowchart branch', 'Bấm vào từng vế để xem sơ đồ triển khai tương ứng bên dưới')}</span>
+                        <span class="essay-prompt-hero-hint">${guidedText('Click any highlighted clause to view its meaning below', 'Bấm vào từng vế màu bên dưới để xem giải nghĩa nhanh')}</span>
                     </div>
                     ${guidedHelpBtn('clauses')}
                 </div>
@@ -2045,26 +2781,32 @@
                     `).join('')}
                 </div>
                 <div class="essay-flowchart-nodes-grid">
-                    ${parsedSegments.map((item) => `
+                    ${parsedSegments.map((item) => {
+                        let formattedQuote = String(item.text || '').trim();
+                        if (!formattedQuote.startsWith('“') && !formattedQuote.startsWith('"')) {
+                            formattedQuote = `“${formattedQuote}”`;
+                        }
+                        return `
                     <div class="essay-flowchart-card card-${item.index}${item.isSegSelected ? ' is-selected' : ''}" id="flowchart-card-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0">
                         <div class="essay-flowchart-card-head">
                             <span class="essay-flowchart-card-num num-${item.index}">${item.index}</span>
                             <div class="essay-flowchart-card-meta">
                                 <strong class="essay-flowchart-card-role">${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}</strong>
-                                <span class="essay-flowchart-card-target">${escapeHtml(guidedText(item.targetParagraphEn, item.targetParagraphVi))}</span>
                             </div>
                         </div>
                         <div class="essay-flowchart-card-body">
-                            <div class="essay-thought-action">
-                                <span class="essay-thought-label">🎯 ${guidedText('Action (How to develop)', 'Cách triển khai')}</span>
-                                <p class="essay-thought-text">${escapeHtml(guidedText(item.instructionEn, item.instructionVi))}</p>
+                            <div class="essay-clause-quote">${escapeHtml(formattedQuote)}</div>
+                            <div class="essay-clause-meaning">
+                                <span class="essay-clause-label">📖 ${guidedText('What this means in plain terms', 'Ý đơn giản là:')}</span>
+                                <p class="essay-clause-text">${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
                             </div>
-                            <div class="essay-thought-avoidance">
-                                <span class="essay-thought-avoidance-label">🛑 ${guidedText('Avoidance (Thought Trap)', 'Lỗi cần tránh')}</span>
-                                <p class="essay-thought-avoidance-text">${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
+                            <div class="essay-clause-takeaway">
+                                <span class="essay-clause-takeaway-label">💡 ${guidedText('Key concept', 'Điểm mấu chốt:')}</span>
+                                <p class="essay-clause-takeaway-text">${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
                             </div>
                         </div>
-                    </div>`).join('')}
+                    </div>`;
+                    }).join('')}
                 </div>
             </div>
         </div>`;
@@ -2089,16 +2831,16 @@
                     <span class="essay-type-tag">PTE Standard</span>
                 </div>
                 <div class="essay-type-trigger-row">
-                    <span class="essay-type-trigger-label">🔍 ${guidedText('Trigger in prompt:', 'Dấu hiệu trong đề:')}</span>
+                    <span class="essay-type-trigger-label">🔍 ${guidedText('Trigger in prompt:', 'Từ khóa nhận biết:')}</span>
                     <code class="essay-type-trigger-code">${escapeHtml(guidedText(essayTypeInfo.triggerPhraseEn, essayTypeInfo.triggerPhraseVi))}</code>
                 </div>
                 <div class="essay-type-reasoning">
-                    <strong>${guidedText('How do we know what type it is?', 'Vì sao là dạng bài này?')}</strong>
+                    <strong>${guidedText('How do we know what type it is?', 'Cách nhận biết dạng bài:')}</strong>
                     <p>${escapeHtml(guidedText(essayTypeInfo.howToRecognizeEn, essayTypeInfo.howToRecognizeVi))}</p>
                 </div>
             </div>
             <div class="essay-type-blueprint">
-                <span class="essay-blueprint-title">📐 ${guidedText('PTE 4-Paragraph Blueprint for this type:', 'Khung dàn bài chuẩn PTE cho dạng này:')}</span>
+                <span class="essay-blueprint-title">📐 ${guidedText('PTE 4-Paragraph Blueprint for this type:', 'Dàn ý chuẩn 4 đoạn cho dạng này:')}</span>
                 <div class="essay-blueprint-grid">
                     ${essayTypeInfo.blueprint.map((b, bIdx) => `
                         <div class="essay-blueprint-step">
@@ -2118,8 +2860,8 @@
         const reqsHtml = reqs.length ? `
             <div class="essay-guided-req-guide">
                 <div class="essay-guided-req-head">
-                    <span class="essay-guided-req-badge">📋 ${guidedText('PTE Mandatory Scoring Criteria', 'Tiêu chí chấm điểm bắt buộc')}</span>
-                    <p class="essay-guided-req-subtext">${guidedText('Core criteria required by PTE official scoring rubrics (Content, Form & Development):', 'Các tiêu chí chấm điểm bắt buộc theo thang điểm PTE (Content, Form & Development):')}</p>
+                    <span class="essay-guided-req-badge">📋 ${guidedText('PTE Mandatory Scoring Criteria', '3 yêu cầu cần có trong bài')}</span>
+                    <p class="essay-guided-req-subtext">${guidedText('Core criteria required by PTE official scoring rubrics (Content, Form & Development):', 'Để giám khảo chấm trọn điểm nội dung (Content), bài của bạn cần có:')}</p>
                 </div>
                 <div class="essay-guided-req-list">
                     ${reqs.map((item, idx) => {
@@ -2134,9 +2876,63 @@
                 </div>
             </div>` : '';
 
-        // 4. Prompt-Specific Traps (Cleaned & High-Value)
+        // 4. Prompt-Specific Common Mistakes (Insightful 3-tier Breakdown)
         const traps = getPromptSpecificTraps(promptText, common);
-        const trapsHtml = traps.length ? `<ul class="essay-guided-ticklist essay-guided-ticklist--warn">${traps.map(item => `<li><span class="essay-guided-warn" aria-hidden="true">!</span><span>${escapeHtml(bilingual(item))}</span></li>`).join('')}</ul>` : '';
+        const trapsHtml = traps.length ? `
+            <div class="essay-guided-mistakes-container">
+                <div class="essay-guided-mistakes-intro">
+                    <p class="essay-guided-mistakes-sub">${guidedText('Review these high-risk pitfalls to understand what goes wrong, why it hurts your score, and how to write it properly:', 'Xem kỹ các lỗi thường gặp dưới đây để biết cách tránh mất điểm Content và Task Achievement:')}</p>
+                </div>
+                <div class="essay-guided-mistakes-list">
+                    ${traps.map((item, idx) => {
+                        const title = guidedText(item.titleEn, item.titleVi) || `${guidedText('Mistake', 'Lỗi')} #${idx + 1}`;
+                        const mistake = guidedText(item.mistakeEn, item.mistakeVi);
+                        const why = guidedText(item.whyEn, item.whyVi);
+                        const fix = guidedText(item.fixEn, item.fixVi);
+                        
+                        if (mistake || why || fix) {
+                            return `
+                            <div class="essay-guided-mistake-card">
+                                <div class="essay-guided-mistake-head">
+                                    <span class="essay-guided-mistake-badge">⚠️ ${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
+                                    <h4 class="essay-guided-mistake-title">${escapeHtml(title)}</h4>
+                                </div>
+                                <div class="essay-guided-mistake-body">
+                                    ${mistake ? `
+                                    <div class="essay-guided-mistake-row is-mistake">
+                                        <span class="essay-guided-mistake-tag">🛑 ${guidedText('The Mistake', 'Nhầm lẫn phổ biến')}</span>
+                                        <p class="essay-guided-mistake-desc">${escapeHtml(mistake)}</p>
+                                    </div>` : ''}
+                                    ${why ? `
+                                    <div class="essay-guided-mistake-row is-why">
+                                        <span class="essay-guided-mistake-tag">💥 ${guidedText('Why It Fails', 'Tại sao mất điểm')}</span>
+                                        <p class="essay-guided-mistake-desc">${escapeHtml(why)}</p>
+                                    </div>` : ''}
+                                    ${fix ? `
+                                    <div class="essay-guided-mistake-row is-fix">
+                                        <span class="essay-guided-mistake-tag">💡 ${guidedText('Better Approach', 'Cách viết chuẩn')}</span>
+                                        <p class="essay-guided-mistake-desc">${escapeHtml(fix)}</p>
+                                    </div>` : ''}
+                                </div>
+                            </div>`;
+                        }
+
+                        const rawText = bilingual(item);
+                        return `
+                        <div class="essay-guided-mistake-card">
+                            <div class="essay-guided-mistake-head">
+                                <span class="essay-guided-mistake-badge">⚠️ ${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
+                                <h4 class="essay-guided-mistake-title">${escapeHtml(title)}</h4>
+                            </div>
+                            <div class="essay-guided-mistake-body">
+                                <div class="essay-guided-mistake-row is-fix">
+                                    <p class="essay-guided-mistake-desc">${escapeHtml(rawText)}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>` : '';
 
         // 5. Grouped Stances & Approaches (2 Columns for Comparison with Bullet Points)
         const angles = common.angles || [];
@@ -2149,12 +2945,12 @@
         });
 
         const stanceLabels = {
-            agree: { en: 'Stance 1: Agree (Support)', vi: 'Hướng 1: Quan điểm Đồng ý (Agree)', icon: '👍', tone: 'agree' },
-            disagree: { en: 'Stance 2: Disagree (Alternative)', vi: 'Hướng 2: Quan điểm Không đồng ý (Disagree)', icon: '👎', tone: 'disagree' },
-            positive: { en: 'Stance 1: More Benefits', vi: 'Hướng 1: Nhiều lợi ích hơn', icon: '✨', tone: 'agree' },
-            negative: { en: 'Stance 2: More Drawbacks', vi: 'Hướng 2: Nhiều bất lợi hơn', icon: '⚠️', tone: 'disagree' },
-            advantage: { en: 'Advantages / Positive Aspects', vi: 'Mặt Thuận lợi / Tích cực', icon: '✨', tone: 'agree' },
-            disadvantage: { en: 'Disadvantages / Negative Aspects', vi: 'Mặt Bất lợi / Hạn chế', icon: '⚠️', tone: 'disagree' },
+            agree: { en: 'Stance 1: Agree (Support)', vi: 'Phe 1: Đồng ý (Agree)', icon: '👍', tone: 'agree' },
+            disagree: { en: 'Stance 2: Disagree (Alternative)', vi: 'Phe 2: Phản đối (Disagree)', icon: '👎', tone: 'disagree' },
+            positive: { en: 'Stance 1: More Benefits', vi: 'Phe 1: Nghiêng về mặt tốt', icon: '✨', tone: 'agree' },
+            negative: { en: 'Stance 2: More Drawbacks', vi: 'Phe 2: Nghiêng về mặt hại', icon: '⚠️', tone: 'disagree' },
+            advantage: { en: 'Advantages / Positive Aspects', vi: 'Mặt tốt / Thuận lợi', icon: '✨', tone: 'agree' },
+            disadvantage: { en: 'Disadvantages / Negative Aspects', vi: 'Mặt hại / Rủi ro', icon: '⚠️', tone: 'disagree' },
             general: { en: 'Key Perspectives', vi: 'Các góc nhìn trọng tâm', icon: '🎯', tone: 'general' }
         };
 
@@ -2164,8 +2960,8 @@
             anglesHtml = `
             <div class="essay-guided-approaches-box">
                 <div class="essay-guided-approaches-head">
-                    <span class="essay-guided-approaches-badge">⚖️ ${guidedText('Comparative Approaches (Side-by-Side)', 'Gợi ý các hướng tiếp cận (So sánh 2 chiều)')}</span>
-                    <p class="essay-guided-approaches-sub">${guidedText('Compare both stances side-by-side to choose the most convincing direction for your essay:', 'So sánh trực quan hai góc nhìn đối lập để chọn hướng lập luận phù hợp nhất cho bài viết của bạn:')}</p>
+                    <span class="essay-guided-approaches-badge">⚖️ ${guidedText('Comparative Approaches (Side-by-Side)', 'Gợi ý 2 hướng viết')}</span>
+                    <p class="essay-guided-approaches-sub">${guidedText('Compare both stances side-by-side to choose the most convincing direction for your essay:', 'Xem nhanh 2 phe để chọn hướng bạn thấy dễ viết nhất:')}</p>
                 </div>
                 <div class="essay-guided-stance-columns">
                     ${stanceKeys.map(key => {
@@ -2205,93 +3001,93 @@
         const isEinsteinPrompt = promptText.toLowerCase().includes('einstein') || promptText.toLowerCase().includes('interferes with my learning');
 
         // Check 1: Multiple Choice Question (MCQ)
-        let mcq = checkData.mcq;
+        let mcq = checkData.mcq ? normalizeMcqVi(checkData.mcq, promptText) : null;
         if (!mcq) {
             if (isEinsteinPrompt) {
                 mcq = {
                     questionEn: 'What is the primary objective of your essay response to Einstein\'s quote?',
-                    questionVi: 'Nhiệm vụ cốt lõi mà bài viết của bạn phải đạt được khi phân tích câu nói của Einstein là gì?',
+                    questionVi: 'Đề bài này muốn bạn làm gì nhất?',
                     correct: 'a',
                     options: [
                         {
                             id: 'a',
                             textEn: 'Interpret Einstein\'s core meaning, declare a decisive stance (agree or disagree), and justify it with educational reasoning.',
-                            textVi: 'Giải thích ý nghĩa câu nói của Einstein, nêu rõ lập trường (đồng ý hoặc phản bác), và bảo vệ quan điểm bằng lập luận giáo dục cụ thể.',
+                            textVi: 'Giải thích ý của Einstein và nêu rõ bạn đồng tình hay phản đối.',
                             feedbackEn: '✓ Correct! PTE scoring requires both interpreting the quote\'s core meaning and articulating a clear personal stance.',
-                            feedbackVi: '✓ Chính xác! Tiêu chí PTE yêu cầu bạn vừa phải giải thích thông điệp của câu nói, vừa phải xác lập lập trường rõ ràng.'
+                            feedbackVi: '✓ Chuẩn luôn! Cứ giải thích ngắn gọn rồi chốt phe là đúng hướng.'
                         },
                         {
                             id: 'b',
                             textEn: 'Recount the life biography and scientific discoveries of Albert Einstein in chronological order.',
-                            textVi: 'Kể lại tiểu sử cuộc đời và các phát minh khoa học của Albert Einstein theo trình tự thời gian.',
+                            textVi: 'Kể lại tiểu sử và các phát minh của Einstein.',
                             feedbackEn: '❌ Off-target: This is an argumentative essay on education, not a biographical summary of Einstein.',
-                            feedbackVi: '❌ Sai hướng: Đây là bài nghị luận về giáo dục, không phải bài tóm tắt tiểu sử Einstein.'
+                            feedbackVi: '❌ Lạc đề rồi! Đây là bài nghị luận, không phải kể chuyện lịch sử nhé.'
                         }
                     ]
                 };
             } else if (isDietPrompt) {
                 mcq = {
                     questionEn: 'What is the critical PTE requirement when evaluating diet versus exercise?',
-                    questionVi: 'Yêu cầu then chốt khi xử lý đề bài so sánh giữa chế độ ăn uống và tập luyện là gì?',
+                    questionVi: 'Với đề này, nhiệm vụ mấu chốt của bạn là gì?',
                     correct: 'a',
                     options: [
                         {
                             id: 'a',
                             textEn: 'Directly compare the relative contributions of diet and exercise to fitness, then take a definitive stand on which is more vital.',
-                            textVi: 'So sánh trực tiếp vai trò của ăn uống với tập luyện đối với thể lực, và đưa ra lập trường dứt khoát xem yếu tố nào quan trọng hơn.',
+                            textVi: 'So sánh ăn uống với tập luyện, rồi chốt xem cái nào quan trọng hơn.',
                             feedbackEn: '✓ Correct! A comparative essay demands direct evaluation of both factors followed by a clear, reasoned verdict.',
-                            feedbackVi: '✓ Chính xác! Dạng đề so sánh đòi hỏi đối chiếu cả hai yếu tố trước khi kết luận dứt khoát.'
+                            feedbackVi: '✓ Chính xác! Phải so sánh cả 2 rồi chốt phe rõ ràng.'
                         },
                         {
                             id: 'b',
                             textEn: 'Discuss only healthy meal recipes and completely omit any discussion of physical workouts.',
-                            textVi: 'Chỉ viết về thực đơn ăn uống và bỏ qua hoàn toàn việc rèn luyện thể chất.',
+                            textVi: 'Chỉ viết về chuyện ăn uống mà bỏ quên việc tập luyện.',
                             feedbackEn: '❌ Incomplete essay content: You must evaluate BOTH diet and exercise to satisfy the comparative prompt.',
-                            feedbackVi: '❌ Thiếu yêu cầu đề: Bắt buộc phải đánh giá cả hai yếu tố dinh dưỡng và tập luyện.'
+                            feedbackVi: '❌ Thiếu ý rồi! Đề hỏi cả 2 thì phải nhắc cả 2 nhé.'
                         }
                     ]
                 };
             } else if (isAdvPrompt) {
                 mcq = {
                     questionEn: 'What is the primary requirement of this Advantages & Disadvantages prompt?',
-                    questionVi: 'Yêu cầu cốt lõi bắt buộc của dạng đề Ưu điểm & Nhược điểm này là gì?',
+                    questionVi: 'Gặp dạng bài Ưu & Nhược điểm, bạn cần viết thế nào?',
                     correct: 'b',
                     options: [
                         {
                             id: 'a',
                             textEn: 'Argue only one single side to make your essay as persuasive as possible.',
-                            textVi: 'Chỉ lập luận duy nhất một mặt ưu hoặc nhược để bài viết có tính thuyết phục cao nhất.',
+                            textVi: 'Chỉ khen hoặc chỉ chê để bài viết quyết liệt hơn.',
                             feedbackEn: '❌ Incomplete essay content: You must address both advantages and disadvantages to satisfy PTE Content criteria.',
-                            feedbackVi: '❌ Thiếu nửa đề bài: Dạng đề này bắt buộc phải viết về cả hai mặt để đạt điểm Content.'
+                            feedbackVi: '❌ Chưa đủ! Dạng này bắt buộc phải nêu cả điểm tốt lẫn điểm xấu.'
                         },
                         {
                             id: 'b',
                             textEn: 'Objectively analyze both advantages and disadvantages, and state which side outweighs.',
-                            textVi: 'Phân tích khách quan cả hai mặt ưu và nhược điểm, đồng thời nêu rõ mặt nào chiếm ưu thế hơn.',
+                            textVi: 'Nêu cả mặt lợi lẫn mặt hại, rồi chỉ ra mặt nào áp đảo hơn.',
                             feedbackEn: '✓ Excellent! Both sides must be analyzed with a clear personal stance.',
-                            feedbackVi: '✓ Chính xác! Cần phân tích cả 2 mặt và nêu lập trường dứt khoát.'
+                            feedbackVi: '✓ Quá chuẩn! Phân tích 2 mặt rồi kết luận là ghi điểm trọn vẹn.'
                         }
                     ]
                 };
             } else {
                 mcq = {
                     questionEn: 'What does PTE scoring require for your argument in this essay?',
-                    questionVi: 'Tiêu chí chấm điểm PTE yêu cầu gì đối với lập luận của bạn?',
+                    questionVi: 'Nguyên tắc quan trọng nhất khi làm bài viết luận PTE là gì?',
                     correct: 'a',
                     options: [
                         {
                             id: 'a',
                             textEn: 'State a clear and decisive stance, supported by well-developed reasons and examples.',
-                            textVi: 'Đưa ra lập trường rõ ràng, dứt khoát và được chứng minh bằng các lý do, dẫn chứng cụ thể.',
+                            textVi: 'Chọn lập trường rõ ràng, có lý lẽ và ví dụ thực tế đi kèm.',
                             feedbackEn: '✓ Excellent! A decisive, well-supported stance is required.',
-                            feedbackVi: '✓ Chính xác! Lập trường rõ ràng và có dẫn chứng là tiêu chí chấm điểm cốt lõi.'
+                            feedbackVi: '✓ Rất tốt! Có quan điểm rõ ràng và dẫn chứng là có điểm.'
                         },
                         {
                             id: 'b',
                             textEn: 'Avoid choosing a stance and remain completely neutral throughout.',
-                            textVi: 'Tránh đưa ra lập trường và giữ thái độ trung lập hoàn toàn trong toàn bộ bài viết.',
+                            textVi: 'Viết chung chung, không nghiêng về phe nào cho an toàn.',
                             feedbackEn: '❌ Incorrect: PTE requires you to establish and defend a clear stance.',
-                            feedbackVi: '❌ Chưa đúng: PTE yêu cầu bạn phải có lập trường rõ ràng.'
+                            feedbackVi: '❌ Tránh nhé! Viết nước đôi sẽ bị trừ điểm Content đấy.'
                         }
                     ]
                 };
@@ -2301,7 +3097,7 @@
         const mcqHtml = `
         <div class="essay-guided-interactive-quiz">
             <div class="essay-guided-quiz-head">
-                <span class="essay-guided-quiz-badge">💡 ${guidedText('Comprehension Check 1: Core Prompt Task', 'Kiểm tra hiểu đề 1: Nhiệm vụ cốt lõi')}</span>
+                <span class="essay-guided-quiz-badge">💡 ${guidedText('Comprehension Check 1: Core Prompt Task', 'Câu hỏi nhanh: Bạn hiểu đề bài thế nào?')}</span>
                 <p class="essay-guided-quiz-question">${escapeHtml(guidedText(mcq.questionEn, mcq.questionVi))}</p>
             </div>
             <div class="essay-guided-quiz-options">
@@ -2320,41 +3116,41 @@
         </div>`;
 
         // Check 2: Interactive Gap-Fill (Macro Strategy Blueprint)
-        let gapFill = checkData.gapFill;
+        let gapFill = checkData.gapFill ? normalizeGapFillVi(checkData.gapFill, promptText) : null;
         if (!gapFill) {
             if (isEinsteinPrompt) {
                 gapFill = {
                     sentenceTemplateEn: 'To excel in this essay, I must evaluate {slot1}, declare a {slot2}, and defend my position with {slot3}.',
-                    sentenceTemplateVi: 'Để đạt điểm cao, tôi cần phân tích {slot1}, xác lập một {slot2}, và bảo vệ quan điểm bằng {slot3}.',
+                    sentenceTemplateVi: 'Để làm tốt bài này, mình cần hiểu {slot1}, chọn rõ {slot2}, và đưa ra {slot3}.',
                     slots: [
                         {
                             id: 'slot1',
                             labelEn: 'Einstein\'s Quote',
-                            labelVi: 'Nhận định của Einstein',
+                            labelVi: 'Ý kiến Einstein',
                             correctId: 'c1',
                             options: [
-                                { id: 'c1', textEn: 'Einstein\'s critique of schooling', textVi: 'phê phán của Einstein về trường học' },
-                                { id: 'w1', textEn: 'Einstein\'s physics discoveries', textVi: 'phát minh vật lý của Einstein', hintEn: 'Stay focused on the quote about education and learning.', hintVi: 'Tập trung vào câu danh ngôn về giáo dục và học tập.' }
+                                { id: 'c1', textEn: 'Einstein\'s critique of schooling', textVi: 'câu nói của Einstein về trường học' },
+                                { id: 'w1', textEn: 'Einstein\'s physics discoveries', textVi: 'các phát minh vật lý của Einstein', hintEn: 'Stay focused on the quote about education and learning.', hintVi: 'Tập trung vào chuyện học hành thôi nhé!' }
                             ]
                         },
                         {
                             id: 'slot2',
                             labelEn: 'Personal Stance',
-                            labelVi: 'Lập trường cá nhân',
+                            labelVi: 'Chọn lập trường',
                             correctId: 'c2',
                             options: [
-                                { id: 'c2', textEn: 'clear agree or disagree stance', textVi: 'lập trường đồng ý hoặc phản bác rõ ràng' },
-                                { id: 'w2', textEn: 'neutral, undecided viewpoint', textVi: 'quan điểm trung lập, không rõ ràng', hintEn: 'A decisive stance is essential for high PTE marks.', hintVi: 'Cần lập trường dứt khoát để đạt điểm cao.' }
+                                { id: 'c2', textEn: 'clear agree or disagree stance', textVi: 'phe đồng ý hoặc phản đối' },
+                                { id: 'w2', textEn: 'neutral, undecided viewpoint', textVi: 'thái độ nước đôi, không rõ ràng', hintEn: 'A decisive stance is essential for high PTE marks.', hintVi: 'Cần chốt phe rõ ràng bạn nhé!' }
                             ]
                         },
                         {
                             id: 'slot3',
                             labelEn: 'Support Type',
-                            labelVi: 'Căn cứ chứng minh',
+                            labelVi: 'Căn cứ bảo vệ',
                             correctId: 'c3',
                             options: [
-                                { id: 'c3', textEn: 'concrete educational evidence', textVi: 'dẫn chứng giáo dục thực tế' },
-                                { id: 'w3', textEn: 'unsupported generalizations', textVi: 'nhận định chung chung không căn cứ', hintEn: 'Support your claims with reasons and real-world observations.', hintVi: 'Hỗ trợ luận điểm bằng lý lẽ và dẫn chứng thuyết phục.' }
+                                { id: 'c3', textEn: 'concrete educational evidence', textVi: 'lý do và ví dụ thực tế' },
+                                { id: 'w3', textEn: 'unsupported generalizations', textVi: 'nhận xét chung chung', hintEn: 'Support your claims with reasons and real-world observations.', hintVi: 'Phải có ví dụ thực tế mới thuyết phục nha!' }
                             ]
                         }
                     ]
@@ -2362,7 +3158,7 @@
             } else if (isDietPrompt) {
                 gapFill = {
                     sentenceTemplateEn: 'To answer this prompt effectively, I must compare {slot1} with {slot2}, and justify which has a {slot3}.',
-                    sentenceTemplateVi: 'Để giải quyết đề này, tôi cần so sánh {slot1} với {slot2}, và chứng minh yếu tố nào có {slot3}.',
+                    sentenceTemplateVi: 'Với đề này, mình cần so sánh {slot1} với {slot2}, rồi chốt xem yếu tố nào {slot3}.',
                     slots: [
                         {
                             id: 'slot1',
@@ -2370,8 +3166,8 @@
                             labelVi: 'Yếu tố 1: Ăn uống',
                             correctId: 'c1',
                             options: [
-                                { id: 'c1', textEn: 'nutritional dietary habits', textVi: 'chế độ dinh dưỡng lành mạnh' },
-                                { id: 'w1', textEn: 'expensive restaurant meals', textVi: 'các bữa ăn đắt đỏ tại nhà hàng', hintEn: 'Focus on balanced diet and nutrition.', hintVi: 'Tập trung vào chế độ ăn uống và dinh dưỡng.' }
+                                { id: 'c1', textEn: 'nutritional dietary habits', textVi: 'chế độ ăn uống' },
+                                { id: 'w1', textEn: 'expensive restaurant meals', textVi: 'đi ăn tiệm đắt tiền', hintEn: 'Focus on balanced diet and nutrition.', hintVi: 'Tập trung vào dinh dưỡng lành mạnh nhé.' }
                             ]
                         },
                         {
@@ -2380,18 +3176,18 @@
                             labelVi: 'Yếu tố 2: Tập luyện',
                             correctId: 'c2',
                             options: [
-                                { id: 'c2', textEn: 'regular physical workout regimens', textVi: 'việc rèn luyện thể chất đều đặn' },
-                                { id: 'w2', textEn: 'watching professional sports on TV', textVi: 'xem thể thao trên truyền hình', hintEn: 'Evaluate actual physical exercise and activity.', hintVi: 'Đánh giá hoạt động tập luyện thể chất thực tế.' }
+                                { id: 'c2', textEn: 'regular physical workout regimens', textVi: 'việc tập luyện thể thao' },
+                                { id: 'w2', textEn: 'watching professional sports on TV', textVi: 'xem đá bóng trên TV', hintEn: 'Evaluate actual physical exercise and activity.', hintVi: 'Đang nói về việc tự vận động cơ thể nha.' }
                             ]
                         },
                         {
                             id: 'slot3',
                             labelEn: 'Definitive Verdict',
-                            labelVi: 'Đánh giá kết luận',
+                            labelVi: 'Đánh giá chốt',
                             correctId: 'c3',
                             options: [
-                                { id: 'c3', textEn: 'more profound effect on overall fitness', textVi: 'tác động sâu sắc hơn đến thể lực tổng thể' },
-                                { id: 'w3', textEn: 'negligible influence on the human body', textVi: 'ảnh hưởng không đáng kể đến cơ thể', hintEn: 'Both play significant roles; evaluate the greater contribution.', hintVi: 'Cả hai đều có vai trò lớn; hãy đánh giá yếu tố vượt trội.' }
+                                { id: 'c3', textEn: 'more profound effect on overall fitness', textVi: 'quan trọng hơn với sức khỏe' },
+                                { id: 'w3', textEn: 'negligible influence on the human body', textVi: 'không có tác dụng gì', hintEn: 'Both play significant roles; evaluate the greater contribution.', hintVi: 'Cả hai đều quan trọng, hãy so sánh xem cái nào nhỉnh hơn.' }
                             ]
                         }
                     ]
@@ -2399,36 +3195,36 @@
             } else if (isAdvPrompt) {
                 gapFill = {
                     sentenceTemplateEn: 'In this essay, I must examine the {slot1} alongside the {slot2} of adventure sports before deciding which aspect {slot3}.',
-                    sentenceTemplateVi: 'Trong bài viết này, tôi phải phân tích {slot1} song song với {slot2} của thể thao mạo hiểm trước khi quyết định mặt nào {slot3}.',
+                    sentenceTemplateVi: 'Bài này mình cần phân tích cả {slot1} lẫn {slot2} của thể thao mạo hiểm, rồi nêu rõ mặt nào {slot3}.',
                     slots: [
                         {
                             id: 'slot1',
                             labelEn: 'Side 1: Advantages',
-                            labelVi: 'Mặt 1: Lợi ích',
+                            labelVi: 'Mặt 1: Điểm tốt',
                             correctId: 'c1',
                             options: [
-                                { id: 'c1', textEn: 'psychological & physical benefits', textVi: 'lợi ích tâm lý & thể chất' },
-                                { id: 'w1', textEn: 'cheap equipment costs', textVi: 'chi phí dụng cụ rẻ', hintEn: 'Focus on authentic personal and societal benefits.', hintVi: 'Tập trung vào lợi ích tâm lý và rèn luyện thể chất.' }
+                                { id: 'c1', textEn: 'psychological & physical benefits', textVi: 'lợi ích rèn luyện tinh thần' },
+                                { id: 'w1', textEn: 'cheap equipment costs', textVi: 'giá dụng cụ rẻ tiền', hintEn: 'Focus on authentic personal and societal benefits.', hintVi: 'Tập trung vào cảm giác vượt qua chính mình nhé.' }
                             ]
                         },
                         {
                             id: 'slot2',
                             labelEn: 'Side 2: Disadvantages',
-                            labelVi: 'Mặt 2: Rủi ro',
+                            labelVi: 'Mặt 2: Điểm xấu',
                             correctId: 'c2',
                             options: [
-                                { id: 'c2', textEn: 'life-threatening injury hazards', textVi: 'nguy cơ chấn thương nguy hiểm tính mạng' },
-                                { id: 'w2', textEn: 'minor scheduling conflicts', textVi: 'bất tiện nhỏ về lịch trình', hintEn: 'Extreme sports carry severe, catastrophic physical perils.', hintVi: 'Thể thao mạo hiểm gắn liền với rủi ro chấn thương nghiêm trọng.' }
+                                { id: 'c2', textEn: 'life-threatening injury hazards', textVi: 'nguy cơ chấn thương nguy hiểm' },
+                                { id: 'w2', textEn: 'minor scheduling conflicts', textVi: 'việc tốn một chút thời gian', hintEn: 'Extreme sports carry severe, catastrophic physical perils.', hintVi: 'Môn này nguy hiểm tính mạng đấy nhé.' }
                             ]
                         },
                         {
                             id: 'slot3',
                             labelEn: 'Personal Stance',
-                            labelVi: 'Lập trường cá nhân',
+                            labelVi: 'Kết luận',
                             correctId: 'c3',
                             options: [
-                                { id: 'c3', textEn: 'decisively outweighs the other', textVi: 'chiếm ưu thế áp đảo hơn' },
-                                { id: 'w3', textEn: 'is completely irrelevant', textVi: 'hoàn toàn không quan trọng', hintEn: 'State clearly whether benefits exceed drawbacks or vice versa.', hintVi: 'Nêu rõ ưu điểm vượt trội nhược điểm hay ngược lại.' }
+                                { id: 'c3', textEn: 'decisively outweighs the other', textVi: 'chiếm ưu thế hơn' },
+                                { id: 'w3', textEn: 'is completely irrelevant', textVi: 'hoàn toàn vô nghĩa', hintEn: 'State clearly whether benefits exceed drawbacks or vice versa.', hintVi: 'So sánh xem lợi hay hại nhiều hơn nha.' }
                             ]
                         }
                     ]
@@ -2436,36 +3232,36 @@
             } else {
                 gapFill = {
                     sentenceTemplateEn: 'To address this essay prompt, I must evaluate {slot1}, articulate a {slot2}, and substantiate my argument with {slot3}.',
-                    sentenceTemplateVi: 'Để giải quyết đề bài này, tôi cần phân tích {slot1}, trình bày một {slot2}, và củng cố lập luận bằng {slot3}.',
+                    sentenceTemplateVi: 'Để đạt điểm cao, mình cần phân tích {slot1}, giữ vững {slot2}, và chứng minh bằng {slot3}.',
                     slots: [
                         {
                             id: 'slot1',
                             labelEn: 'Core Task',
-                            labelVi: 'Mục tiêu chính',
+                            labelVi: 'Trọng tâm đề',
                             correctId: 'c1',
                             options: [
-                                { id: 'c1', textEn: 'the central prompt controversy', textVi: 'vấn đề tranh luận trọng tâm của đề' },
-                                { id: 'w1', textEn: 'unrelated background topics', textVi: 'các chủ đề nền tảng không liên quan', hintEn: 'Stay directly focused on the prompt topic.', hintVi: 'Bám sát trọng tâm đề bài.' }
+                                { id: 'c1', textEn: 'the central prompt controversy', textVi: 'vấn đề chính của đề bài' },
+                                { id: 'w1', textEn: 'unrelated background topics', textVi: 'chuyện ngoài lề', hintEn: 'Stay directly focused on the prompt topic.', hintVi: 'Bám sát đề bài nhé!' }
                             ]
                         },
                         {
                             id: 'slot2',
                             labelEn: 'Thesis Statement',
-                            labelVi: 'Luận điểm cá nhân',
+                            labelVi: 'Quan điểm cá nhân',
                             correctId: 'c2',
                             options: [
-                                { id: 'c2', textEn: 'clear, unambiguous stance', textVi: 'lập trường rõ ràng, dứt khoát' },
-                                { id: 'w2', textEn: 'vague, contradictory opinion', textVi: 'quan điểm mơ hồ, mâu thuẫn', hintEn: 'A clear position throughout is essential for high scores.', hintVi: 'Lập trường xuyên suốt là bắt buộc để đạt điểm cao.' }
+                                { id: 'c2', textEn: 'clear, unambiguous stance', textVi: 'lập trường rõ ràng từ đầu đến cuối' },
+                                { id: 'w2', textEn: 'vague, contradictory opinion', textVi: 'ý kiến nước đôi, mâu thuẫn', hintEn: 'A clear position throughout is essential for high scores.', hintVi: 'Đừng nói nước đôi nha.' }
                             ]
                         },
                         {
                             id: 'slot3',
                             labelEn: 'Supporting Evidence',
-                            labelVi: 'Căn cứ chứng minh',
+                            labelVi: 'Dẫn chứng',
                             correctId: 'c3',
                             options: [
-                                { id: 'c3', textEn: 'logical reasons and relevant examples', textVi: 'lý lẽ logic và ví dụ liên quan' },
-                                { id: 'w3', textEn: 'hasty, unsubstantiated generalizations', textVi: 'nhận định vội vàng không có dẫn chứng', hintEn: 'PTE requires well-developed logical progression.', hintVi: 'Cần có lý lẽ và dẫn chứng logic.' }
+                                { id: 'c3', textEn: 'logical reasons and relevant examples', textVi: 'lý do kèm ví dụ thực tế' },
+                                { id: 'w3', textEn: 'hasty, unsubstantiated generalizations', textVi: 'nhận định vu vơ không căn cứ', hintEn: 'PTE requires well-developed logical progression.', hintVi: 'Nhớ đưa ví dụ thực tế nhé!' }
                             ]
                         }
                     ]
@@ -2498,17 +3294,17 @@
         <div class="essay-guided-gapfill-box">
             <div class="essay-guided-gapfill-head">
                 <div class="essay-guided-gapfill-title-wrap">
-                    <span class="essay-guided-gapfill-badge">🧩 ${guidedText('Comprehension Check 2: Core Strategy Blueprint', 'Kiểm tra hiểu đề 2: Chiến lược khung bài viết')}</span>
+                    <span class="essay-guided-gapfill-badge">🧩 ${guidedText('Comprehension Check 2: Core Strategy Blueprint', 'Ghép từ: Chốt nhanh chiến lược làm bài')}</span>
                     ${Object.keys(guidedComprehensionGapSlots).length > 0 ? `<button type="button" class="essay-guided-gapfill-reset" data-guided-action="reset-gap-fill">${guidedText('↺ Reset', '↺ Làm lại')}</button>` : ''}
                 </div>
-                <p class="essay-guided-gapfill-instructions">${escapeHtml(guidedText(gapFill.instructionsEn || 'Select the correct strategic blocks below to lock in the core essay execution plan:', gapFill.instructionsVi || 'Bấm chọn các mảnh ghép bên dưới để hoàn thiện khung chiến lược bài viết:'))}</p>
+                <p class="essay-guided-gapfill-instructions">${escapeHtml(guidedText(gapFill.instructionsEn || 'Select the correct strategic blocks below to lock in the core essay execution plan:', gapFill.instructionsVi || 'Bấm chọn các mảnh ghép để hoàn thành kế hoạch viết bài:'))}</p>
             </div>
             <div class="essay-guided-gapfill-sentence">
                 ${guidedLanguage === 'vi' ? sentenceVi : sentenceEn}
             </div>
             ${allSlotsFilled && allSlotsCorrect ? `
                 <div class="essay-guided-gapfill-success">
-                    <span>🎉 ${guidedText('Outstanding! You have mastered the core essay strategy and are ready to select your arguments.', 'Xuất sắc! Bạn đã nắm vững 100% chiến lược cốt lõi và sẵn sàng chọn hướng lập luận.')}</span>
+                    <span>🎉 ${guidedText('Outstanding! You have mastered the core essay strategy and are ready to select your arguments.', 'Tuyệt vời! Bạn đã nắm chắc hướng làm bài rồi đấy.')}</span>
                 </div>
             ` : `
                 <div class="essay-guided-gapfill-slots">
@@ -2536,11 +3332,12 @@
         </div>`;
 
         return `<section class="essay-guided-section essay-step1-container">
+            ${renderGuidedViewToggle()}
             <!-- Part 1: Understanding parts of the question -->
             <div class="essay-step1-part essay-step1-part-1">
                 <div class="essay-step1-part-header">
                     <span class="essay-step1-part-pill">Part 1</span>
-                    <h3 class="essay-step1-part-title">${guidedText('Understanding Parts of the Question', 'Phân tích các vế của đề bài')}</h3>
+                    <h3 class="essay-step1-part-title">${guidedText('Understanding Parts of the Question', 'Hiểu nhanh các vế của đề bài')}</h3>
                 </div>
                 ${segmentsHtml}
             </div>
@@ -2549,11 +3346,11 @@
             <div class="essay-step1-part essay-step1-part-2">
                 <div class="essay-step1-part-header">
                     <span class="essay-step1-part-pill">Part 2</span>
-                    <h3 class="essay-step1-part-title">${guidedText('Type of Essay & Strategic Blueprint', 'Dạng bài & Khung chiến lược làm bài')}</h3>
+                    <h3 class="essay-step1-part-title">${guidedText('Type of Essay & Strategic Blueprint', 'Dạng bài & Khung dàn ý 4 đoạn')}</h3>
                 </div>
                 ${essayTypeCardHtml}
                 ${reqsHtml}
-                ${trapsHtml ? guidedGroup('traps', guidedText('Traps specific to this prompt', 'Bẫy riêng của đề này'), trapsHtml, { count: traps.length, tone: 'warn', defaultOpen: true, help: 'traps' }) : ''}
+                ${trapsHtml ? guidedGroup('traps', guidedText('Common Mistakes to Avoid', 'Lỗi phổ biến cần tránh với đề này'), trapsHtml, { count: traps.length, tone: 'warn', defaultOpen: true, help: 'traps' }) : ''}
                 ${anglesHtml}
                 ${mcqHtml}
                 ${gapFillHtml}
@@ -2563,11 +3360,11 @@
 
     function getAvailablePointsForPlan(plan, levelData, common) {
         if (!plan) return [];
-        const variantId = plan.variantId || 'default';
+        const variantId = plan.variantId || plan.id || plan.stance || 'default';
         const points = [];
         const seenTexts = new Set();
 
-        const addPoint = (id, en, vi, explEn = '', explVi = '') => {
+        const addPoint = (id, en, vi, explEn = '', explVi = '', titleEn = '', titleVi = '', writingCue = '') => {
             const cleanEn = cleanArgumentClaim(en);
             if (!cleanEn || seenTexts.has(cleanEn.toLowerCase())) return;
             seenTexts.add(cleanEn.toLowerCase());
@@ -2577,13 +3374,26 @@
                 vi: String(vi || '').trim(),
                 explEn: String(explEn || '').trim(),
                 explVi: String(explVi || '').trim(),
+                titleEn: String(titleEn || '').trim(),
+                titleVi: String(titleVi || '').trim(),
+                writingCue: String(writingCue || '').trim()
             });
         };
 
         // 1. Candidate points array (if explicitly defined in the plan, e.g. 6 options per side)
         if (Array.isArray(plan.candidatePoints) && plan.candidatePoints.length > 0) {
             plan.candidatePoints.forEach((pt, idx) => {
-                addPoint(`${variantId}_cand_${idx}`, pt.en, pt.vi, pt.explEn, pt.explVi);
+                const titleEn = pt.titleEn || '';
+                const titleVi = pt.titleVi || '';
+                const rawEn = pt.pointEn || pt.en || '';
+                const rawVi = pt.pointVi || pt.vi || '';
+                const en = titleEn && rawEn && !rawEn.startsWith(titleEn) ? `${titleEn}: ${rawEn}` : (rawEn || titleEn);
+                const vi = titleVi && rawVi && !rawVi.startsWith(titleVi) ? `${titleVi}: ${rawVi}` : (rawVi || titleVi);
+                const explVi = pt.strategyVi || pt.explVi || '';
+                const explEn = pt.explEn || '';
+                const writingCue = pt.writingCue || '';
+                const pointId = pt.id || `${variantId}_cand_${idx}`;
+                addPoint(pointId, en, vi, explEn, explVi, titleEn, titleVi, writingCue);
             });
         }
 
@@ -2597,11 +3407,12 @@
 
         // 3. Angles matching this stance
         const angles = common?.angles || [];
-        const targetStance = String(plan.stance || plan.variantId || '').trim().toLowerCase();
+        const targetStance = String(plan.stance || plan.variantId || plan.id || '').trim().toLowerCase();
         angles.forEach((angle, idx) => {
             const angleStance = String(angle.sourceVariantId || '').trim().toLowerCase();
             const isMatch = angleStance === targetStance ||
                             angleStance === String(plan.variantId || '').trim().toLowerCase() ||
+                            angleStance === String(plan.id || '').trim().toLowerCase() ||
                             (targetStance.includes('agree') && angleStance.includes('pos')) ||
                             (targetStance.includes('disagree') && angleStance.includes('neg')) ||
                             targetStance === 'all' || !targetStance;
@@ -2654,9 +3465,9 @@
             </section>`;
         }
 
-        const activePlan = plans.find(p => p.variantId === guidedSelectedVariantId) || plans[0];
+        const activePlan = plans.find(p => (p.variantId || p.id || p.stance) === guidedSelectedVariantId) || plans[0];
         if (!guidedSelectedVariantId && activePlan) {
-            guidedSelectedVariantId = activePlan.variantId;
+            guidedSelectedVariantId = activePlan.variantId || activePlan.id || activePlan.stance;
         }
 
         const availablePoints = getAvailablePointsForPlan(activePlan, levelData, common);
@@ -2672,67 +3483,187 @@
         </div>
         <div class="essay-guided-stance-selector" role="group" aria-label="${guidedText('Select essay stance', 'Chọn lập trường bài viết')}">
             ${plans.map(plan => {
-                const isSelected = guidedSelectedVariantId === plan.variantId;
-                const isDisagree = String(plan.stance || plan.variantId).toLowerCase().includes('disagree');
-                return `<button type="button" class="essay-guided-stance-tab${isSelected ? ' is-active' : ''}${isDisagree ? ' is-against' : ' is-for'}" data-guided-action="select-variant" data-variant-id="${escapeHtml(plan.variantId)}" aria-pressed="${isSelected ? 'true' : 'false'}">
-                    <span class="essay-guided-stance-tab-label">${escapeHtml(plan.label || plan.variantId)}</span>
+                const planId = plan.variantId || plan.id || plan.stance || 'default';
+                const isSelected = guidedSelectedVariantId === planId || guidedSelectedVariantId === plan.id || guidedSelectedVariantId === plan.stance;
+                const isDisagree = String(plan.stance || planId).toLowerCase().includes('disagree') || String(plan.stance || planId).toLowerCase().includes('against');
+                
+                let labelText = '';
+                if (guidedLanguage === 'vi') {
+                    labelText = plan.stanceLabelVi || plan.labelVi || plan.label;
+                    if (!labelText) {
+                        if (plan.stance === 'agree') labelText = 'Đồng ý (Agree)';
+                        else if (plan.stance === 'disagree') labelText = 'Phản đối (Disagree)';
+                        else labelText = plan.stanceLabelEn || plan.labelEn || plan.stance || planId;
+                    }
+                } else {
+                    labelText = plan.stanceLabelEn || plan.labelEn || plan.label;
+                    if (!labelText) {
+                        if (plan.stance === 'agree') labelText = 'Agree';
+                        else if (plan.stance === 'disagree') labelText = 'Disagree';
+                        else labelText = plan.stanceLabelVi || plan.labelVi || plan.stance || planId;
+                    }
+                }
+
+                return `<button type="button" class="essay-guided-stance-tab${isSelected ? ' is-active' : ''}${isDisagree ? ' is-against' : ' is-for'}" data-guided-action="select-variant" data-variant-id="${escapeHtml(planId)}" aria-pressed="${isSelected ? 'true' : 'false'}">
+                    <span class="essay-guided-stance-tab-label">${escapeHtml(labelText)}</span>
                     <span class="essay-guided-stance-tab-state">${isSelected ? guidedText('Selected', 'Đang chọn') : guidedText('Choose', 'Chọn')}</span>
                 </button>`;
             }).join('')}
         </div>`;
 
-        // Points Picker with <?> Vietnamese explanation button
-        const selectedCount = guidedSelectedPointIds.length;
-        const pointsPickerHtml = `
-        <div class="essay-guided-points-container">
-            <div class="essay-guided-points-head">
-                <div>
-                    <h4>${guidedText('Choose 2 main points', 'Chọn 2 luận điểm')}${guidedHelpBtn('main-points')}</h4>
-                    <p class="essay-guided-points-subtitle">${guidedText('Select the 2 most convincing arguments you want to develop in Body 1 & Body 2.', 'Chọn 2 luận điểm bạn thấy thuyết phục nhất để triển khai trong Thân bài 1 & Thân bài 2.')}</p>
-                </div>
-                <div class="essay-guided-meter${selectedCount >= 2 ? ' is-full' : ''}">
-                    <span>${guidedText('Selected', 'Đã chọn')}</span>
-                    <strong>${selectedCount}/2</strong>
-                </div>
-            </div>
-            <div class="essay-guided-points-list">
-                ${availablePoints.map((point) => {
-                    const isSelected = guidedSelectedPointIds.includes(point.id);
-                    const isExplOpen = guidedExpandedPointExplId === point.id;
-                    const selectedIdx = isSelected ? guidedSelectedPointIds.indexOf(point.id) + 1 : null;
-                    const hasViSubtitle = guidedLanguage === 'vi' && point.vi && point.vi !== point.en && !point.vi.startsWith('Góc nhìn: ' + point.en);
-                    return `
-                    <div class="essay-guided-point-card${isSelected ? ' is-selected' : ''}" data-guided-action="select-point" data-point-id="${escapeHtml(point.id)}" role="button" tabindex="0">
-                        <div class="essay-guided-point-main">
-                            <div class="essay-guided-point-select-wrap">
-                                <span class="essay-guided-point-checkbox" aria-hidden="true">${isSelected ? `✓ ${selectedIdx}` : ''}</span>
-                                <div class="essay-guided-point-text">
-                                    <strong class="essay-guided-point-title">${escapeHtml(point.en)}</strong>
-                                    ${hasViSubtitle ? `<span class="essay-guided-point-vi">${escapeHtml(point.vi)}</span>` : ''}
-                                </div>
+        let activePlanLabel = '';
+        if (guidedLanguage === 'vi') {
+            activePlanLabel = activePlan.stanceLabelVi || activePlan.labelVi || activePlan.label || (activePlan.stance === 'agree' ? 'Đồng ý (Agree)' : 'Phản đối (Disagree)') || activePlan.stance || 'Lập trường';
+        } else {
+            activePlanLabel = activePlan.stanceLabelEn || activePlan.labelEn || activePlan.label || (activePlan.stance === 'agree' ? 'Agree' : 'Disagree') || activePlan.stance || 'Stance';
+        }
+
+        let pointsPickerHtml = '';
+        if (guidedViewMode === 'mindmap') {
+            const body1PointId = guidedSelectedPointIds[0];
+            const body2PointId = guidedSelectedPointIds[1];
+            const body1Selected = availablePoints.find(p => p.id === body1PointId);
+            const body2Selected = availablePoints.find(p => p.id === body2PointId);
+
+            pointsPickerHtml = `
+            <div class="essay-brainstorm-mindmap-wrap">
+                <div class="essay-mindmap-canvas" id="essay-brainstorm-mindmap-canvas">
+                    <svg class="essay-mindmap-svg" id="essay-brainstorm-mindmap-svg" aria-hidden="true"></svg>
+
+                    <!-- Active Stance Focal Hub -->
+                    <div class="essay-brainstorm-stance-core" id="mm-stance-core">
+                        <div class="essay-brainstorm-stance-icon">⚖️</div>
+                        <div class="essay-brainstorm-stance-badge">${guidedText('Chosen Stance Direction', 'Lập trường đang chọn')}</div>
+                        <strong class="essay-brainstorm-stance-title">${escapeHtml(activePlanLabel)}</strong>
+                        <div class="essay-brainstorm-stance-sub">${guidedText('Branching into 2 Body Paragraphs • Click idea bubbles below to assign', 'Phân nhánh 2 đoạn thân bài • Bấm chọn 2 bóng ý tưởng bên dưới')}</div>
+                    </div>
+
+                    <!-- Paragraph Target Stems (Body 1 & Body 2) -->
+                    <div class="essay-brainstorm-stems-row">
+                        <div class="essay-brainstorm-stem stem-body1" id="mm-stem-body1">
+                            <div class="essay-brainstorm-stem-badge">${guidedText('Body Paragraph 1 Stem', 'Nhánh Thân bài 1')}</div>
+                            <div class="essay-brainstorm-stem-point">
+                                ${body1Selected ? `
+                                    <strong class="essay-brainstorm-stem-point-title">1. ${escapeHtml(body1Selected.titleEn || body1Selected.en)}</strong>
+                                    ${guidedLanguage === 'vi' && body1Selected.titleVi ? `<span class="essay-brainstorm-stem-point-vi">${escapeHtml(body1Selected.titleVi || body1Selected.vi)}</span>` : ''}
+                                ` : `
+                                    <span class="essay-brainstorm-stem-placeholder">${guidedText('Click an idea bubble below to assign to Body 1', 'Bấm một bóng ý tưởng bên dưới để gán cho Thân bài 1')}</span>
+                                `}
                             </div>
-                            <button type="button" class="essay-guided-info-btn${isExplOpen ? ' is-open' : ''}" data-guided-action="toggle-point-expl" data-point-id="${escapeHtml(point.id)}" title="${guidedText('Show explanation & strategy', 'Xem giải thích chi tiết và cách triển khai bằng tiếng Việt')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
-                                <span aria-hidden="true">?</span>
-                            </button>
                         </div>
-                        ${isExplOpen ? `
-                        <div class="essay-guided-point-expl">
-                            <div class="essay-guided-point-expl-head">
-                                <strong>${guidedText('Argument Strategy & Real-World Elaboration', 'Giải thích chi tiết & Hướng dẫn triển khai')}</strong>
+                        <div class="essay-brainstorm-stem stem-body2" id="mm-stem-body2">
+                            <div class="essay-brainstorm-stem-badge">${guidedText('Body Paragraph 2 Stem', 'Nhánh Thân bài 2')}</div>
+                            <div class="essay-brainstorm-stem-point">
+                                ${body2Selected ? `
+                                    <strong class="essay-brainstorm-stem-point-title">2. ${escapeHtml(body2Selected.titleEn || body2Selected.en)}</strong>
+                                    ${guidedLanguage === 'vi' && body2Selected.titleVi ? `<span class="essay-brainstorm-stem-point-vi">${escapeHtml(body2Selected.titleVi || body2Selected.vi)}</span>` : ''}
+                                ` : `
+                                    <span class="essay-brainstorm-stem-placeholder">${guidedText('Click an idea bubble below to assign to Body 2', 'Bấm một bóng ý tưởng bên dưới để gán cho Thân bài 2')}</span>
+                                `}
                             </div>
-                            <p class="essay-guided-point-expl-desc">${escapeHtml(guidedLanguage === 'vi' ? (point.explVi || 'Luận điểm này làm rõ lập trường của bạn. Hãy giải thích nguyên nhân và đưa ra dẫn chứng thực tế.') : (point.explEn || 'Develop this argument with a clear causal explanation and supporting real-world evidence.'))}</p>
-                            <div class="essay-guided-point-expl-tip">
-                                <strong>${guidedText('Writing cue:', 'Gợi ý triển khai câu:')}</strong>
-                                <span>${guidedText('Topic Sentence: State this argument directly -> Explanation: Explain why this happens -> Evidence: Give a concrete example -> Link back to thesis.', 'Câu chủ đề: Nêu luận điểm rõ ràng -> Giải thích: Phân tích nguyên nhân sâu xa -> Dẫn chứng: Đưa ví dụ thực tế -> Câu chốt: Liên kết lại với lập trường.')}</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating Idea Bubbles Field -->
+                    <div class="essay-brainstorm-bubbles-grid">
+                        ${availablePoints.map((point, pIdx) => {
+                            const isSelected = guidedSelectedPointIds.includes(point.id);
+                            const slotIdx = isSelected ? guidedSelectedPointIds.indexOf(point.id) + 1 : null;
+                            const slotName = slotIdx ? `Body ${slotIdx}` : '';
+                            const isExplOpen = guidedExpandedPointExplId === point.id;
+                            return `
+                            <div class="essay-idea-bubble bubble-cand-${pIdx + 1}${isSelected ? ' is-picked' : ''}" id="mm-idea-bubble-${pIdx + 1}" data-guided-action="select-point" data-point-id="${escapeHtml(point.id)}" role="button" tabindex="0">
+                                <div class="essay-idea-bubble-top">
+                                    <span class="essay-idea-bubble-badge${isSelected ? ' is-active' : ''}">${isSelected ? `✓ ${guidedText('Assigned to', 'Đã gán cho')} ${slotName}` : guidedText('Idea Bubble', 'Bóng ý tưởng') + ' #' + (pIdx + 1)}</span>
+                                    <button type="button" class="essay-idea-bubble-help-btn${isExplOpen ? ' is-open' : ''}" data-guided-action="toggle-point-expl" data-point-id="${escapeHtml(point.id)}" title="${guidedText('Show explanation & strategy', 'Xem giải thích chi tiết và gợi ý viết')}">
+                                        <span aria-hidden="true">?</span>
+                                    </button>
+                                </div>
+                                <div class="essay-idea-bubble-body">
+                                    <strong class="essay-idea-bubble-title">${escapeHtml(point.en)}</strong>
+                                    ${guidedLanguage === 'vi' && point.vi && point.vi !== point.en ? `<span class="essay-idea-bubble-vi">${escapeHtml(point.vi)}</span>` : ''}
+                                </div>
+                                <div class="essay-idea-bubble-foot">
+                                    <span class="essay-idea-bubble-state">${isSelected ? guidedText('✓ Pinned to outline', '✓ Đã ghim vào dàn ý') : guidedText('+ Click to pin to outline', '+ Bấm để ghim vào dàn ý')}</span>
+                                </div>
+                                ${isExplOpen ? `
+                                <div class="essay-idea-bubble-callout">
+                                    <div class="essay-idea-callout-sec">
+                                        <span class="essay-idea-callout-tag">${guidedText('Development Strategy:', 'Cách triển khai luận điểm:')}</span>
+                                        <p>${escapeHtml(guidedLanguage === 'vi' ? (point.explVi || 'Giải thích nguyên nhân và đưa ra dẫn chứng thực tế.') : (point.explEn || 'Develop this argument with causal explanation and evidence.'))}</p>
+                                    </div>
+                                    ${(point.writingCue || point.explEn) ? `
+                                    <div class="essay-idea-callout-sec cue-box">
+                                        <span class="essay-idea-callout-tag">${guidedText('Writing Cue & Topic Sentence:', 'Gợi ý câu chủ đề & Dẫn chứng:')}</span>
+                                        <p>${escapeHtml(point.writingCue || point.explEn)}</p>
+                                    </div>` : ''}
+                                </div>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>`;
+        } else {
+            // Points Picker with <?> Vietnamese explanation button (Compact List Mode)
+            const selectedCount = guidedSelectedPointIds.length;
+            pointsPickerHtml = `
+            <div class="essay-guided-points-container essay-list-mode">
+                <div class="essay-guided-points-head">
+                    <div>
+                        <h4>${guidedText('Choose 2 main points', 'Chọn 2 luận điểm')}${guidedHelpBtn('main-points')}</h4>
+                        <p class="essay-guided-points-subtitle">${guidedText('Select the 2 most convincing arguments you want to develop in Body 1 & Body 2.', 'Chọn 2 luận điểm bạn thấy thuyết phục nhất để triển khai trong Thân bài 1 & Thân bài 2.')}</p>
+                    </div>
+                    <div class="essay-guided-meter${selectedCount >= 2 ? ' is-full' : ''}">
+                        <span>${guidedText('Selected', 'Đã chọn')}</span>
+                        <strong>${selectedCount}/2</strong>
+                    </div>
+                </div>
+                <div class="essay-guided-points-list">
+                    ${availablePoints.map((point) => {
+                        const isSelected = guidedSelectedPointIds.includes(point.id);
+                        const isExplOpen = guidedExpandedPointExplId === point.id;
+                        const selectedIdx = isSelected ? guidedSelectedPointIds.indexOf(point.id) + 1 : null;
+                        const hasViSubtitle = guidedLanguage === 'vi' && point.vi && point.vi !== point.en && !point.vi.startsWith('Góc nhìn: ' + point.en);
+                        return `
+                        <div class="essay-guided-point-card${isSelected ? ' is-selected' : ''}" data-guided-action="select-point" data-point-id="${escapeHtml(point.id)}" role="button" tabindex="0">
+                            <div class="essay-guided-point-main">
+                                <div class="essay-guided-point-select-wrap">
+                                    <span class="essay-guided-point-checkbox" aria-hidden="true">${isSelected ? `✓ ${selectedIdx}` : ''}</span>
+                                    <div class="essay-guided-point-text">
+                                        <strong class="essay-guided-point-title">${escapeHtml(point.en)}</strong>
+                                        ${hasViSubtitle ? `<span class="essay-guided-point-vi">${escapeHtml(point.vi)}</span>` : ''}
+                                    </div>
+                                </div>
+                                <button type="button" class="essay-guided-info-btn${isExplOpen ? ' is-open' : ''}" data-guided-action="toggle-point-expl" data-point-id="${escapeHtml(point.id)}" title="${guidedText('Show explanation & strategy', 'Xem giải thích chi tiết và cách triển khai bằng tiếng Việt')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
+                                    <span aria-hidden="true">?</span>
+                                </button>
                             </div>
-                        </div>` : ''}
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>`;
+                            ${isExplOpen ? `
+                            <div class="essay-guided-point-expl">
+                                <div class="essay-guided-point-expl-head">
+                                    <strong>${guidedText('Argument Strategy & Real-World Elaboration', 'Hướng dẫn triển khai chi tiết & Gợi ý câu viết')}</strong>
+                                </div>
+                                <div class="essay-guided-point-expl-body">
+                                    <div class="essay-guided-point-expl-sec">
+                                        <span class="essay-guided-point-expl-tag">${guidedText('Development Strategy:', 'Cách triển khai luận điểm:')}</span>
+                                        <p class="essay-guided-point-expl-desc">${escapeHtml(guidedLanguage === 'vi' ? (point.explVi || 'Luận điểm này làm rõ lập trường của bạn. Hãy giải thích nguyên nhân và đưa ra dẫn chứng thực tế.') : (point.explEn || 'Develop this argument with a clear causal explanation and supporting real-world evidence.'))}</p>
+                                    </div>
+                                    ${(point.writingCue || point.explEn) ? `
+                                    <div class="essay-guided-point-expl-sec essay-guided-point-expl-cue-box">
+                                        <span class="essay-guided-point-expl-tag">${guidedText('Writing Cue & Topic Sentence:', 'Gợi ý câu chủ đề & Dẫn chứng:')}</span>
+                                        <p class="essay-guided-point-expl-cue">${escapeHtml(point.writingCue || point.explEn)}</p>
+                                    </div>` : ''}
+                                </div>
+                            </div>` : ''}
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }
 
         return `<section class="essay-guided-section">
             ${guidedSectionHead(section, guidedText('Pick one stance and choose 2 main arguments for your body paragraphs.', 'Xác định quan điểm rõ ràng và chọn 2 luận điểm chính bạn muốn bảo vệ.'))}
+            ${renderGuidedViewToggle()}
             ${stanceSelectorHtml}
             ${pointsPickerHtml}
         </section>`;
@@ -3020,6 +3951,7 @@
         const entry = dictionary[rawTerm];
         if (entry) {
             return {
+                viCandidate: entry.vi,
                 meaning: guidedLanguage === 'vi' ? entry.vi : (item.enGloss || item.en || entry.vi),
                 example: entry.exampleEn,
                 exampleVi: entry.exampleVi
@@ -3028,17 +3960,67 @@
 
         const topic = currentEntry?.verifiedPrimaryTopic || 'the essay prompt';
         return {
+            viCandidate: item.viGloss || item.vi || '',
             meaning: guidedLanguage === 'vi' ? `Cụm từ học thuật về "${item.term}"` : `Academic collocation for "${item.term}"`,
             example: `Employing "${item.term}" clarifies your academic reasoning regarding ${topic.toLowerCase()}.`,
             exampleVi: `Sử dụng "${item.term}" giúp làm sáng tỏ lập luận học thuật của bạn về ${topic.toLowerCase()}.`
         };
     }
 
+    /**
+     * Highlights target terms in example sentences for both English and Vietnamese.
+     * Supports markdown **term**, inflections (plurals, -ed, -ing), and phrase matching.
+     */
+    function highlightSentenceTerms(sentence, targetTerm, lang = 'en', fallbackCandidate = '') {
+        if (!sentence) return '';
+        let text = String(sentence).trim();
+
+        // 1. If text already has markdown **bold**, convert to highlighted strong tag
+        if (text.includes('**')) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong class="essay-term-hl">$1</strong>');
+        }
+
+        // 2. Identify candidate terms to highlight
+        const candidates = [];
+        if (lang === 'en') {
+            if (targetTerm) candidates.push(targetTerm.trim());
+        } else {
+            // Vietnamese candidate: extract clean phrase from candidate or gloss
+            if (fallbackCandidate) {
+                const rawParts = fallbackCandidate.split(/[/(;:]/)[0].trim();
+                if (rawParts.length >= 2) candidates.push(rawParts);
+                // Also extract head phrase if combined with common linkers
+                const headPhrase = rawParts.split(/\s+(?:thông qua|bằng cách|để|thay vì|như|với)\s+/i)[0].trim();
+                if (headPhrase && headPhrase !== rawParts && headPhrase.length >= 3) {
+                    candidates.unshift(headPhrase);
+                }
+            }
+            if (targetTerm && !candidates.includes(targetTerm.trim())) {
+                candidates.push(targetTerm.trim());
+            }
+        }
+
+        // 3. Search and wrap candidates safely
+        for (const cand of candidates) {
+            if (!cand || cand.length < 2) continue;
+            const escaped = cand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = lang === 'en'
+                ? new RegExp('(\\b' + escaped + '(?:s|es|ed|ing)?\\b)', 'gi')
+                : new RegExp('(' + escaped + ')', 'gi');
+
+            if (pattern.test(text)) {
+                return text.replace(pattern, '<strong class="essay-term-hl">$1</strong>');
+            }
+        }
+
+        return escapeHtml(text);
+    }
+
     function renderGuidedLanguage(levelData) {
         const section = GUIDED_SECTIONS[2];
         const kit = levelData.languageKit || {};
         const common = guidedPack.common || {};
-        const activePlan = (levelData.plans || []).find(p => p.variantId === guidedSelectedVariantId) || levelData.plans?.[0] || {};
+        const activePlan = (levelData.plans || []).find(p => (p.variantId || p.id || p.stance) === guidedSelectedVariantId) || levelData.plans?.[0] || {};
         const [body1Point, body2Point] = getSelectedPointsForPlan(activePlan, levelData, common);
 
         // 1. Core Vocabulary with Level-Adapted Examples & <?> Vietnamese Toggle
@@ -3047,7 +4029,9 @@
             const selected = guidedSelectedTargetIds.includes(item.term);
             const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
             const vocabInfo = getVocabContextExample(item, currentEntry, guidedPack, guidedLevel);
-            const isViOpen = guidedExpandedVocabViIds.has(item.term) || guidedLanguage === 'vi';
+            const isViOpen = guidedExpandedVocabViIds.has(item.term);
+            const enExampleHtml = highlightSentenceTerms(vocabInfo.en, item.term, 'en');
+            const viExampleHtml = highlightSentenceTerms(vocabInfo.vi, item.term, 'vi', item.viGloss || item.vi || item.meaningVi || '');
             return `<div class="essay-guided-target-card${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" role="button" tabindex="0">
                 <div class="essay-guided-target-head">
                     <div class="essay-guided-target-title-wrap">
@@ -3055,18 +4039,18 @@
                         <strong class="essay-guided-target-term">${escapeHtml(item.term)}</strong>
                         <span class="essay-guided-target-gloss">${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
                     </div>
-                    <button type="button" class="essay-guided-vocab-vi-toggle${isViOpen ? ' is-open' : ''}" data-guided-action="toggle-vocab-vi" data-term="${escapeHtml(item.term)}" title="${guidedText('Show Vietnamese translation', 'Xem bản dịch tiếng Việt')}" aria-label="${guidedText('Show Vietnamese translation', 'Xem bản dịch tiếng Việt')}">
+                    <button type="button" class="essay-guided-vocab-vi-toggle${isViOpen ? ' is-open' : ''}" data-guided-action="toggle-vocab-vi" data-term="${escapeHtml(item.term)}" title="${isViOpen ? guidedText('Hide explanation', 'Thu gọn giải thích') : guidedText('Show explanation', 'Xem giải thích chi tiết & ngữ cảnh')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
                         <span aria-hidden="true">?</span>
                     </button>
                 </div>
                 <div class="essay-guided-vocab-example">
                     <span class="essay-guided-vocab-example-label">${guidedText('In an essay', 'Ví dụ trong bài')}</span>
-                    <p class="essay-guided-vocab-example-text">"${escapeHtml(vocabInfo.en)}"</p>
+                    <p class="essay-guided-vocab-example-text">"${enExampleHtml}"</p>
                 </div>
                 ${isViOpen ? `
                 <div class="essay-guided-vocab-vi-box">
                     <span class="essay-guided-vocab-vi-label">${guidedText('Vietnamese', 'Nghĩa & ngữ cảnh')}</span>
-                    <p class="essay-guided-vocab-vi-text">${escapeHtml(vocabInfo.vi)}</p>
+                    <p class="essay-guided-vocab-vi-text">${viExampleHtml}</p>
                 </div>` : ''}
             </div>`;
         }).join('')}</div>` : '';
@@ -3075,21 +4059,23 @@
         const collocations = kit.collocations || [];
         const colloHtml = collocations.length ? `<div class="essay-guided-collo-grid">${collocations.map(item => {
             const info = getCollocationInfo(item, currentEntry, guidedLevel);
-            const isColloViOpen = guidedExpandedColloViIds.has(item.term) || guidedLanguage === 'vi';
+            const isColloViOpen = guidedExpandedColloViIds.has(item.term);
+            const colloEnHtml = highlightSentenceTerms(info.example, item.term, 'en');
+            const colloViHtml = highlightSentenceTerms(info.exampleVi, item.term, 'vi', info.viCandidate || info.meaning || item.viGloss || '');
             return `<div class="essay-guided-collo-card">
                 <div class="essay-guided-collo-head">
                     <div class="essay-guided-collo-title-wrap">
                         <strong class="essay-guided-collo-term">${escapeHtml(item.term)}</strong>
                         <span class="essay-guided-collo-meaning">${escapeHtml(info.meaning)}</span>
                     </div>
-                    <button type="button" class="essay-guided-vocab-vi-toggle${isColloViOpen ? ' is-open' : ''}" data-guided-action="toggle-collo-vi" data-term="${escapeHtml(item.term)}" title="${guidedText('Show Vietnamese translation', 'Xem bản dịch tiếng Việt')}" aria-label="${guidedText('Show Vietnamese translation', 'Xem bản dịch tiếng Việt')}">
+                    <button type="button" class="essay-guided-vocab-vi-toggle${isColloViOpen ? ' is-open' : ''}" data-guided-action="toggle-collo-vi" data-term="${escapeHtml(item.term)}" title="${isColloViOpen ? guidedText('Hide explanation', 'Thu gọn giải thích') : guidedText('Show explanation', 'Xem bản dịch tiếng Việt')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
                         <span aria-hidden="true">?</span>
                     </button>
                 </div>
-                <p class="essay-guided-collo-example"><em>&ldquo;${escapeHtml(info.example)}&rdquo;</em></p>
+                <p class="essay-guided-collo-example"><em>&ldquo;${colloEnHtml}&rdquo;</em></p>
                 ${isColloViOpen ? `
                 <div class="essay-guided-collo-vi-box">
-                    <p class="essay-guided-collo-vi-text"><em>&ldquo;${escapeHtml(info.exampleVi)}&rdquo;</em></p>
+                    <p class="essay-guided-collo-vi-text"><em>&ldquo;${colloViHtml}&rdquo;</em></p>
                 </div>` : ''}
             </div>`;
         }).join('')}</div>` : '';
@@ -3134,16 +4120,21 @@
                 <div class="essay-guided-pattern-card">
                     <div class="essay-guided-pattern-card-head">
                         <span class="essay-guided-pattern-badge">${escapeHtml(g.name || `Model ${gIdx + 1}`)}</span>
-                        <p class="essay-guided-pattern-purpose-note">${escapeHtml(g.purpose || '')}</p>
+                        ${g.purpose ? `<p class="essay-guided-pattern-purpose-note">${escapeHtml(g.purpose)}</p>` : ''}
                     </div>
-                    <div class="essay-guided-pattern-formula-card">
-                        <span class="essay-guided-pattern-badge">${guidedText('Formula', 'Công thức')}</span>
+                    <div class="essay-guided-pattern-row">
+                        <span class="essay-guided-pattern-sublabel">${guidedText('Formula', 'Công thức')}</span>
                         <code class="essay-guided-pattern-code">${escapeHtml(g.pattern || '')}</code>
                     </div>
-                    <div class="essay-guided-pattern-applied-card">
-                        <span class="essay-guided-pattern-badge">${guidedText('Applied example', 'Ví dụ áp dụng')}</span>
+                    <div class="essay-guided-pattern-row">
+                        <span class="essay-guided-pattern-sublabel">${guidedText('Applied example', 'Ví dụ áp dụng')}</span>
                         <p class="essay-guided-pattern-sentence">&ldquo;${escapeHtml(g.applied || appliedPattern)}&rdquo;</p>
                     </div>
+                    ${(guidedLanguage === 'vi' && (g.patternVi || g.vi)) ? `
+                    <div class="essay-guided-pattern-row">
+                        <span class="essay-guided-pattern-sublabel">${guidedText('Translation', 'Bản dịch ví dụ')}</span>
+                        <p class="essay-guided-pattern-sentence essay-guided-pattern-vi">&ldquo;${escapeHtml(g.patternVi || g.vi)}&rdquo;</p>
+                    </div>` : ''}
                 </div>`).join('')}
             </div>
         </div>`;
@@ -5489,7 +6480,9 @@
         loadEntries: loadEntries,
         updateAiScoreButtonState: updateAiScoreButtonState,
         shouldConfirmExit: shouldConfirmExit,
-        onEnter: onEnter
+        onEnter: onEnter,
+        applyGuidedTypography: applyGuidedTypography,
+        restoreGuidedPreferences: restoreGuidedPreferences
     };
 
     function onEnter() {

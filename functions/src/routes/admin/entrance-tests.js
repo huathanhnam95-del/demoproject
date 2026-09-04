@@ -42,8 +42,8 @@ function resolveStorageBucket(preferredBucketName) {
     try {
         const bucketName = cleanOptionalString(preferredBucketName)
             || cleanOptionalString(process.env.CLIENT_FIREBASE_STORAGE_BUCKET);
-        if (!bucketName) return null;
-        return getStorage().bucket(bucketName);
+        const storage = getStorage();
+        return bucketName ? storage.bucket(bucketName) : storage.bucket();
     } catch (error) {
         console.warn('[CRM EntranceTests] Storage init failed:', error?.message || error);
         return null;
@@ -426,12 +426,15 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 const expectedText = getSpeakingQuestionExpectedText(questionId);
 
                 let transcript = null;
+                let words = null;
                 let accuracy = null;
                 let asrError = null;
 
                 try {
                     const [audioBuffer] = await targetBucket.file(storagePath).download();
-                    transcript = await transcribeAudio(audioBuffer, contentType, { expectedText });
+                    const asrRes = await transcribeAudio(audioBuffer, contentType, { expectedText });
+                    transcript = typeof asrRes === 'object' && asrRes ? (asrRes.text || String(asrRes)) : String(asrRes || '');
+                    words = Array.isArray(asrRes?.words) ? asrRes.words : null;
                     if (expectedText) {
                         accuracy = computeWordAccuracyPercent(expectedText, transcript);
                     }
@@ -441,6 +444,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
 
                 await testRef.update({
                     [`speaking.${questionId}.transcript`]: transcript,
+                    [`speaking.${questionId}.words`]: words || null,
                     [`speaking.${questionId}.accuracyPercent`]: accuracy?.percent ?? null,
                     [`speaking.${questionId}.expectedCount`]: accuracy?.expectedCount ?? null,
                     [`speaking.${questionId}.transcriptCount`]: accuracy?.transcriptCount ?? null,

@@ -252,11 +252,14 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
         });
 
         let transcript = null;
+        let words = null;
         let accuracy = null;
         let asrError = null;
 
         try {
-            transcript = await transcribeAudio(audioBuffer, contentType, { expectedText: question.expectedText });
+            const asrRes = await transcribeAudio(audioBuffer, contentType, { expectedText: question.expectedText });
+            transcript = typeof asrRes === 'object' && asrRes ? (asrRes.text || String(asrRes)) : String(asrRes || '');
+            words = Array.isArray(asrRes?.words) ? asrRes.words : null;
             accuracy = computeWordAccuracyPercent(question.expectedText, transcript);
         } catch (e) {
             asrError = e?.message || String(e);
@@ -275,6 +278,7 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
                         bytes: audioBuffer.length
                     },
                     transcript,
+                    words: words || null,
                     accuracyPercent: accuracy?.percent ?? null,
                     expectedCount: accuracy?.expectedCount ?? null,
                     transcriptCount: accuracy?.transcriptCount ?? null,

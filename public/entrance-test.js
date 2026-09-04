@@ -954,12 +954,27 @@
   }
 
   function pickAudioMimeType() {
-    const candidates = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/ogg;codecs=opus',
-      'audio/ogg'
-    ];
+    // Safari / iOS WebKit produces headerless WebM without duration tags which cannot
+    // play in Safari's native <audio> element. Prioritize audio/mp4 for Apple/Safari devices.
+    const isAppleOrSafari = /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent || '')
+      || /^((?!chrome|android).)*safari/i.test(navigator.userAgent || '');
+
+    const candidates = isAppleOrSafari
+      ? [
+          'audio/mp4',
+          'audio/webm;codecs=opus',
+          'audio/webm',
+          'audio/ogg;codecs=opus',
+          'audio/ogg'
+        ]
+      : [
+          'audio/webm;codecs=opus',
+          'audio/webm',
+          'audio/mp4',
+          'audio/ogg;codecs=opus',
+          'audio/ogg'
+        ];
+
     for (const mt of candidates) {
       if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mt)) {
         return mt;

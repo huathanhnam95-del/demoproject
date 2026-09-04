@@ -3202,8 +3202,20 @@
   function renderStudentSchedulePrompt() {
     if (!elements.studentSchedulePrompt) return;
     const profile = getCurrentStudentProfile() || {};
-    const days = Array.isArray(profile.preferredLearningDays) ? profile.preferredLearningDays.filter(Boolean) : [];
-    const hours = Array.isArray(profile.preferredLearningHours) ? profile.preferredLearningHours.filter(Boolean) : [];
+    let days = Array.isArray(profile.preferredLearningDays) ? profile.preferredLearningDays.filter(Boolean) : [];
+    if (!days.length && typeof profile.preferredLearningDays === 'string') {
+      days = profile.preferredLearningDays.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    if (!days.length && elements.inputPreferredLearningDays?.value) {
+      days = elements.inputPreferredLearningDays.value.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    let hours = Array.isArray(profile.preferredLearningHours) ? profile.preferredLearningHours.filter(Boolean) : [];
+    if (!hours.length && typeof profile.preferredLearningHours === 'string') {
+      hours = profile.preferredLearningHours.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    if (!hours.length && elements.inputPreferredLearningHours?.value) {
+      hours = elements.inputPreferredLearningHours.value.split(',').map((s) => s.trim()).filter(Boolean);
+    }
     const preferredBits = [];
     if (days.length) preferredBits.push(`Days: ${days.join(', ')}`);
     if (hours.length) preferredBits.push(`Hours: ${hours.join(', ')}`);
@@ -4156,6 +4168,10 @@
       elements.studentIdBadge.style.display = 'inline-flex';
     }
 
+    if (elements.studentModalTitle) {
+      elements.studentModalTitle.textContent = 'Edit Student Profile';
+    }
+
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.disabled = false;
       elements.btnSaveStudent.textContent = 'Save Student';
@@ -4783,7 +4799,7 @@
       }
       return;
     }
-    if (tabId === 'info') {
+    if (tabId === 'info' || tabId === 'student-360' || tabId === 'overview') {
       renderStudentSchedulePrompt();
     }
   }

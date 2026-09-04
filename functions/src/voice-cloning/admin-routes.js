@@ -384,6 +384,29 @@ function createVoiceCloningAdminRouter({ db, authMiddleware, adminMiddleware, se
         }
     });
 
+    // 5c. Get Latest Calibration Test Job for Quick Recovery
+    router.get('/latest-test', authMiddleware, adminMiddleware, async (req, res) => {
+        try {
+            const snapshot = await db.collection('voice_cloning_queue')
+                .where('type', '==', 'test_clone')
+                .limit(10)
+                .get();
+
+            if (snapshot.empty) {
+                return sendSuccess(res, { job: null });
+            }
+
+            const jobs = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
+
+            const latest = jobs[0] || null;
+            return sendSuccess(res, { job: latest });
+        } catch (error) {
+            return sendError(res, 500, 'LATEST_TEST_ERROR', 'Failed to fetch latest test job.', error?.message || error);
+        }
+    });
+
     // 6. Poll Job Status
     router.get('/jobs/:jobId', authMiddleware, adminMiddleware, async (req, res) => {
         try {

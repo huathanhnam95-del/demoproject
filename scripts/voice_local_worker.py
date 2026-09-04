@@ -20,6 +20,11 @@ import uuid
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+try:
+    import torch
+    torch.set_num_threads(os.cpu_count() or 8)
+except ImportError:
+    pass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable

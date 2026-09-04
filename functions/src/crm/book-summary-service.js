@@ -11,6 +11,7 @@ const {
 } = require('../assessWriting.helpers');
 const { CRM_BOOKS } = require('./collections');
 const { recordUsage } = require('./book-usage-tracker');
+const { resolveChunksCollection } = require('./book-retrieval');
 
 const DEFAULT_MODEL = 'gemini-3-flash-preview';
 const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
@@ -251,32 +252,80 @@ Return a JSON object with this exact structure:
 }`;
 }
 
-async function generateChapterStudyNotes(db, bookId, sectionIndex) {
+async function generateChapterStudyNotes(db, bookId, sectionIndex, options = {}) {
     const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
     if (!bookSnap.exists) {
         throw new Error(`Book ${bookId} not found`);
     }
     const bookData = bookSnap.data() || {};
+    const textRevisionId = options?.textRevisionId || bookData.activeTextRevisionId || null;
 
-    const sectionRef = db.collection(CRM_BOOKS).doc(bookId)
-        .collection('sections').doc(String(sectionIndex));
-    const sectionSnap = await sectionRef.get();
+    let sectionSnap = null;
+    let sectionRef = null;
+    if (textRevisionId) {
+        const revSectionRef = db.collection(CRM_BOOKS).doc(bookId)
+            .collection('textRevisions').doc(textRevisionId)
+            .collection('sections').doc(String(sectionIndex));
+        const revSectionSnap = await revSectionRef.get();
+        if (revSectionSnap.exists) {
+            sectionRef = revSectionRef;
+            sectionSnap = revSectionSnap;
+        }
+    }
+    if (!sectionSnap) {
+        sectionRef = db.collection(CRM_BOOKS).doc(bookId)
+            .collection('sections').doc(String(sectionIndex));
+        sectionSnap = await sectionRef.get();
+    }
     if (!sectionSnap.exists) {
         throw new Error(`Section ${sectionIndex} not found for book ${bookId}`);
     }
     const sectionData = sectionSnap.data() || {};
-    const pageStart = sectionData.pageStart || 1;
-    const pageEnd = sectionData.pageEnd || 1;
+    const pageStart = Number(sectionData.pageStart) || 1;
+    const pageEnd = Number(sectionData.pageEnd) || 1;
 
-    const chunksSnap = await db.collection(CRM_BOOKS).doc(bookId)
-        .collection('chunks')
-        .orderBy('index')
-        .get();
+    const { chunksCol } = await resolveChunksCollection(db, bookId, { textRevisionId });
 
-    const allChunks = chunksSnap.docs.map((doc) => doc.data());
-    const chapterChunks = allChunks.filter(
-        (c) => c.pageStart <= pageEnd && c.pageEnd >= pageStart
-    );
+    // Efficient chunk retrieval:
+    // 1. Never download 768-dim float vector embeddings - use .select() to project only text & page fields.
+    // 2. Query within target page range so we don't load thousands of chunks across 400+ pages into memory.
+    let chapterChunks = [];
+    try {
+        let chunksQuery = chunksCol;
+        if (typeof chunksQuery.select === 'function') {
+            chunksQuery = chunksQuery.select('index', 'text', 'charCount', 'pageStart', 'pageEnd');
+        }
+        if (typeof chunksQuery.where === 'function') {
+            chunksQuery = chunksQuery.where('pageStart', '<=', pageEnd);
+            if (pageStart > 5) {
+                chunksQuery = chunksQuery.where('pageStart', '>=', Math.max(1, pageStart - 3));
+            }
+        }
+        if (typeof chunksQuery.orderBy === 'function') {
+            chunksQuery = chunksQuery.orderBy('pageStart');
+        }
+        const querySnap = await chunksQuery.get();
+        chapterChunks = (querySnap.docs || [])
+            .map((doc) => doc.data())
+            .filter((c) => c.pageStart <= pageEnd && c.pageEnd >= pageStart);
+    } catch (queryErr) {
+        console.warn('[book-summary] Bounded chunk query failed, falling back to full chunk scan:', queryErr?.message);
+    }
+
+    if (chapterChunks.length === 0) {
+        let fallbackQuery = chunksCol;
+        if (typeof fallbackQuery.select === 'function') {
+            fallbackQuery = fallbackQuery.select('index', 'text', 'charCount', 'pageStart', 'pageEnd');
+        }
+        if (typeof fallbackQuery.orderBy === 'function') {
+            fallbackQuery = fallbackQuery.orderBy('index');
+        }
+        const fallbackSnap = await fallbackQuery.get();
+        const allChunks = (fallbackSnap.docs || []).map((doc) => doc.data());
+        chapterChunks = allChunks.filter(
+            (c) => c.pageStart <= pageEnd && c.pageEnd >= pageStart
+        );
+    }
 
     if (chapterChunks.length === 0) {
         throw new Error(`No text chunks found for section "${sectionData.title || sectionIndex}" (pages ${pageStart}-${pageEnd}). The book may need re-ingestion.`);
@@ -307,13 +356,11 @@ async function generateChapterStudyNotes(db, bookId, sectionIndex) {
         content: json.content || '',
         keyTerms: Array.isArray(json.keyTerms) ? json.keyTerms : [],
         model,
+        textRevisionId: textRevisionId || 'legacy',
         generatedAt: new Date()
     };
 
-    await db.collection(CRM_BOOKS).doc(bookId)
-        .collection('sections').doc(String(sectionIndex))
-        .collection('artifacts').doc('study_notes')
-        .set(studyNotes);
+    await sectionRef.collection('artifacts').doc('study_notes').set(studyNotes);
 
     return studyNotes;
 }

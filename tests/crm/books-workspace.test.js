@@ -319,5 +319,58 @@ assert.strictEqual(grouped['col-pron'].length, 2, 'Unfiled book must fall back t
 assert.strictEqual(grouped['col-pron'][0].bookId, 'b2');
 assert.strictEqual(grouped['col-pron'][1].bookId, 'b3');
 
+// Test detectLeadInTerm
+const leadProcedure = workspace.detectLeadInTerm('Procedure A procedure is an ordered sequence of techniques.');
+assert.ok(leadProcedure, 'detectLeadInTerm must match "Procedure A procedure is..."');
+assert.strictEqual(leadProcedure.term, 'Procedure');
+assert.strictEqual(leadProcedure.rest, 'A procedure is an ordered sequence of techniques.');
+
+const leadTechnique = workspace.detectLeadInTerm('Technique A common technique when using video or film material is called silent viewing');
+assert.ok(leadTechnique, 'detectLeadInTerm must match "Technique A common technique..."');
+assert.strictEqual(leadTechnique.term, 'Technique');
+
+const leadMCQ = workspace.detectLeadInTerm('Multiple-choice questions A traditional vocabulary multiple-choice question (MCQ) looks like this:');
+assert.ok(leadMCQ, 'detectLeadInTerm must match "Multiple-choice questions A traditional..."');
+assert.strictEqual(leadMCQ.term, 'Multiple-choice questions');
+
+const leadFigure = workspace.detectLeadInTerm('Figure 1. Classification of pronunciation features');
+assert.ok(leadFigure, 'detectLeadInTerm must match "Figure 1."');
+assert.strictEqual(leadFigure.term, 'Figure 1.');
+
+const leadRepetition = workspace.detectLeadInTerm('Repetition Repetition can be either choral or individual.');
+assert.ok(leadRepetition, 'detectLeadInTerm must match word repetition "Repetition Repetition can be..."');
+assert.strictEqual(leadRepetition.term, 'Repetition');
+
+const nonLead = workspace.detectLeadInTerm('For example, a popular dictation procedure starts when students are in groups.');
+assert.strictEqual(nonLead, null, 'Normal sentence starter must NOT be treated as lead-in term.');
+
+// Test formatMarkdownInline
+const mdBold = workspace.formatMarkdownInline('Hello **Procedure** world');
+assert.strictEqual(mdBold, 'Hello <strong class="crm-books-lead-term">Procedure</strong> world');
+const mdItalic = workspace.formatMarkdownInline('This is *silent viewing* here');
+assert.strictEqual(mdItalic, 'This is <em>silent viewing</em> here');
+
+// Test formatPageText with legacy plain text lead-ins (Harmer Page 67 & 424 patterns)
+const p67Sample = '55\nPopular methodology\n' +
+    'Procedure A procedure is an ordered sequence of techniques. For example, a popular dictation procedure.\n' +
+    'A procedure is a sequence.\n' +
+    'Technique A common technique when using video or film material is called silent viewing (see 19.4.1).\n' +
+    'Three and a half methods\n' +
+    'Many of the seeds which have grown into present-day methodology were sown in debates.\n4.2';
+const p67Formatted = workspace.formatPageText(p67Sample, (v) => String(v));
+assert.match(p67Formatted, /<p><strong class="crm-books-lead-term">Procedure<\/strong> A procedure is an ordered sequence of techniques\./, 'Procedure must be formatted with strong.crm-books-lead-term');
+assert.match(p67Formatted, /<p><strong class="crm-books-lead-term">Technique<\/strong> A common technique when using video/, 'Technique must be formatted with strong.crm-books-lead-term');
+assert.match(p67Formatted, /<h4>Three and a half methods<\/h4>/, 'Heading must remain h4');
+assert.match(p67Formatted, /<span class="crm-books-section-badge">4\.2<\/span>/, 'Section badge 4.2 must remain');
+
+// Test citation highlighting compatibility with lead-in terms
+const citationHighlight = workspace.highlightPageText(
+    'Procedure A procedure is an ordered sequence of techniques.',
+    'ordered sequence of techniques',
+    (v) => String(v)
+);
+assert.strictEqual(citationHighlight.matched, true);
+assert.match(citationHighlight.html, /<mark class="crm-books-citation-highlight">ordered sequence of techniques<\/mark>/);
+
 console.log('books workspace helper contracts passed');
 

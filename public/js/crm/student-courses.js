@@ -60,9 +60,26 @@
     // Shared Helpers
     // ==========================================
 
-    /** Returns auth headers for CRM API calls. Includes Content-Type for methods with a body. */
     async function getAuthHeaders(hasBody = false) {
-        const token = global.auth?.currentUser ? await global.auth.currentUser.getIdToken().catch(() => '') : '';
+        let user = null;
+        try {
+            if (global.firebase && typeof global.firebase.auth === 'function') {
+                user = global.firebase.auth().currentUser;
+            }
+            if (!user && global.auth?.currentUser) {
+                user = global.auth.currentUser;
+            }
+            if (!user && global.__FIREBASE_INTERNAL__?.auth?.currentUser) {
+                user = global.__FIREBASE_INTERNAL__.auth.currentUser;
+            }
+        } catch (err) {
+            void err;
+        }
+
+        let token = '';
+        if (user && typeof user.getIdToken === 'function') {
+            token = await user.getIdToken().catch(() => '');
+        }
         const headers = { Accept: 'application/json' };
         if (hasBody) headers['Content-Type'] = 'application/json';
         if (token) headers.Authorization = `Bearer ${token}`;

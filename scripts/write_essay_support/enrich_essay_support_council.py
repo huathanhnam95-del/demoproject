@@ -185,7 +185,20 @@ Topic: {q.get('verifiedPrimaryTopic', 'General Academic')}
 Prompt Type: {q.get('promptType', 'agree_disagree')}
 
 Generate:
-1. "traps": 3 specific prompt traps (common mistakes students make on this exact prompt) with "en" and "vi".
+1. "commonMistakes": Exactly 3 specific, insightful common mistakes students make on this exact prompt.
+   CRITICAL PEDAGOGICAL REQUIREMENT:
+   Do NOT merely write negative "Do NOT" commands (e.g. "Do NOT confuse X with Y" is forbidden because students do not understand what "confuse" actually looks like in practice).
+   Instead, provide a complete 3-tier pedagogical breakdown for each mistake:
+   - "titleEn": concise 3-6 word English title (e.g. "Conflating Schooling with Genuine Learning")
+   - "titleVi": concise natural Vietnamese title (e.g. "Đồng nhất trường học với việc học hỏi")
+   - "mistakeEn": concrete description of what students mistakenly do or write in their essay
+   - "mistakeVi": mô tả cụ thể học viên thường nhầm lẫn hoặc viết sai cái gì
+   - "whyEn": pedagogical explanation of why this weakens the essay or loses Task Achievement points
+   - "whyVi": giải thích sâu lý do vì sao cách viết này bị trừ điểm hoặc làm hỏng bài
+   - "fixEn": actionable, high-scoring better approach and strategic writing fix
+   - "fixVi": hướng dẫn cụ thể cách viết chuẩn xác để đạt điểm tối đa
+   - "en": synthesized one-paragraph summary in English
+   - "vi": synthesized one-paragraph summary in Vietnamese
 2. "stance1": The primary stance (e.g. Agree, Advantages, or Option A).
    - "labelEn": concise label (e.g. "Version 1: Agree / Support")
    - "labelVi": Vietnamese label
@@ -196,7 +209,7 @@ Generate:
      * "titleVi": natural Vietnamese title
      * "pointEn": 1 clear, high-level academic claim (18-28 words)
      * "pointVi": accurate Vietnamese translation
-     * "strategyVi": actionable explanation of how to prove this point in Vietnamese
+     * "strategyVi": detailed, step-by-step development guide in simple, conversational Vietnamese (Giải thích chi tiết bằng tiếng Việt gần gũi, cụ thể cách triển khai luận điểm này: câu chủ đề nêu gì, giải thích cơ chế/nguyên nhân sâu xa thế nào, và đưa ví dụ thực tế đời sống ra sao. Tuyệt đối không dùng câu sáo rỗng như 'hãy đưa ví dụ thực tế' mà phải nêu rõ ví dụ cụ thể về hiện tượng gì).
      * "writingCue": recommended topic sentence start and evidence direction
 3. "stance2": The opposing or alternative stance (e.g. Disagree, Disadvantages, or Option B).
    - "labelEn": concise label (e.g. "Version 2: Disagree / Alternative")
@@ -213,6 +226,8 @@ def build_qwen_prompt(q: Dict[str, Any], topic_context: str = "") -> Tuple[str, 
         "You are an expert bilingual ELT lexicographer and academic writing coach for PTE Academic (Target 79+). "
         "Generate 8 high-level academic collocations directly pertinent to the prompt, with authentic example sentences, "
         "plus 3 diverse complex sentence models (Concession, Cause/Condition, Inversion). "
+        "Write Vietnamese definitions and explanations in clear, simple, and casual learner-friendly terms. "
+        "Bold the target word/collocation using markdown **bold** in both English and Vietnamese example sentences. "
         "No generic phrases like 'daily life' or 'clear understanding'. "
         "Respond strictly in valid JSON."
     )
@@ -223,15 +238,15 @@ Topic: {q.get('verifiedPrimaryTopic', 'Academic')}
 
 Generate:
 1. "vocabulary": Exactly 8 academic collocations/lexical phrases. Each item must have:
-   - "term": the core academic term (e.g. "caloric expenditure", "intellectual curiosity")
-   - "collocation": common academic collocation (e.g. "elevate caloric expenditure", "stifle intellectual curiosity")
+   - "term": the core academic term
+   - "collocation": common academic collocation
    - "level": "B2" or "C1"
    - "meaningEn": precise English academic definition
-   - "meaningVi": natural Vietnamese definition
+   - "meaningVi": natural, casual Vietnamese definition in simple learner-friendly terms
    - "enGloss": short English gloss
-   - "viGloss": short Vietnamese gloss
-   - "example": a realistic, sophisticated essay sentence using the collocation in context of this prompt (20-30 words)
-   - "exampleVi": natural Vietnamese translation of the example sentence
+   - "viGloss": short casual Vietnamese gloss
+   - "example": a realistic essay sentence using the collocation in context, with the target term wrapped in **bold**
+   - "exampleVi": natural, simple Vietnamese translation of the example sentence with the translated term wrapped in **bold**
 
 2. "grammar": Exactly 3 complex sentence models adapted to this prompt:
    - Item 1: Concession & Contrast (pattern using 'Although' or 'While')
@@ -325,6 +340,10 @@ def build_essay_pack(q: Dict[str, Any], deepseek: Dict[str, Any],
     plan1 = {
         "id": f"plan-1-b2",
         "stance": s1_data.get("stance", "stance1"),
+        "variantId": s1_data.get("stance", "stance1"),
+        "label": s1_data.get("labelEn", "Version 1"),
+        "labelEn": s1_data.get("labelEn", "Version 1"),
+        "labelVi": s1_data.get("labelVi", "Phiên bản 1"),
         "stanceLabelEn": s1_data.get("labelEn", "Version 1"),
         "stanceLabelVi": s1_data.get("labelVi", "Phiên bản 1"),
         "en": s1_data.get("labelEn", "Version 1"),
@@ -334,6 +353,10 @@ def build_essay_pack(q: Dict[str, Any], deepseek: Dict[str, Any],
     plan2 = {
         "id": f"plan-2-b2",
         "stance": s2_data.get("stance", "stance2"),
+        "variantId": s2_data.get("stance", "stance2"),
+        "label": s2_data.get("labelEn", "Version 2"),
+        "labelEn": s2_data.get("labelEn", "Version 2"),
+        "labelVi": s2_data.get("labelVi", "Phiên bản 2"),
         "stanceLabelEn": s2_data.get("labelEn", "Version 2"),
         "stanceLabelVi": s2_data.get("labelVi", "Phiên bản 2"),
         "en": s2_data.get("labelEn", "Version 2"),
@@ -357,11 +380,81 @@ def build_essay_pack(q: Dict[str, Any], deepseek: Dict[str, Any],
         if "viGloss" not in v:
             v["viGloss"] = v.get("meaningVi", v.get("term", ""))[:60]
 
-    # Traps & Comprehension Check
-    traps = deepseek.get("traps") or deepseek.get("promptTraps") or [
-        {"en": "Do not write an off-topic summary; answer the specific question.", "vi": "Không viết tóm tắt lạc đề; trả lời đúng câu hỏi cốt lõi."},
-        {"en": "Avoid vague or unsupported generalizations without concrete evidence.", "vi": "Tránh các nhận định chung chung không có dẫn chứng cụ thể."}
-    ]
+    # Common Mistakes to Avoid (Insightful 3-Tier Pedagogical Structure)
+    raw_mistakes = (
+        deepseek.get("commonMistakes")
+        or deepseek.get("traps")
+        or deepseek.get("promptTraps")
+        or []
+    )
+    traps = []
+    for idx, m in enumerate(raw_mistakes):
+        if not isinstance(m, dict):
+            continue
+        title_en = m.get("titleEn") or f"Mistake #{idx+1}"
+        title_vi = m.get("titleVi") or f"Lỗi #{idx+1}"
+        mistake_en = m.get("mistakeEn") or ""
+        mistake_vi = m.get("mistakeVi") or ""
+        why_en = m.get("whyEn") or ""
+        why_vi = m.get("whyVi") or ""
+        fix_en = m.get("fixEn") or ""
+        fix_vi = m.get("fixVi") or ""
+
+        en_str = m.get("en")
+        if not en_str:
+            parts = [f"{title_en}:"]
+            if mistake_en: parts.append(mistake_en)
+            if why_en: parts.append(f"Why it fails: {why_en}")
+            if fix_en: parts.append(f"Better approach: {fix_en}")
+            en_str = " ".join(parts)
+
+        vi_str = m.get("vi")
+        if not vi_str:
+            parts = [f"{title_vi}:"]
+            if mistake_vi: parts.append(mistake_vi)
+            if why_vi: parts.append(f"Tại sao mất điểm: {why_vi}")
+            if fix_vi: parts.append(f"Cách viết chuẩn: {fix_vi}")
+            vi_str = " ".join(parts)
+
+        traps.append({
+            "titleEn": title_en,
+            "titleVi": title_vi,
+            "mistakeEn": mistake_en,
+            "mistakeVi": mistake_vi,
+            "whyEn": why_en,
+            "whyVi": why_vi,
+            "fixEn": fix_en,
+            "fixVi": fix_vi,
+            "en": en_str,
+            "vi": vi_str,
+        })
+    if not traps:
+        traps = [
+            {
+                "titleEn": "Off-Topic Generalizations",
+                "titleVi": "Chém gió lan man ngoài đề",
+                "mistakeEn": "Writing memorized filler without engaging with the prompt keywords.",
+                "mistakeVi": "Dùng câu học thuộc lòng chung chung thay vì bám sát từ khóa trong đề.",
+                "whyEn": "Automated scoring penalizes low keyword relevance and weak task coherence.",
+                "whyVi": "Hệ thống chấm điểm tự động sẽ trừ điểm Content vì bài viết thiếu độ liên quan.",
+                "fixEn": "Anchor every paragraph directly in prompt keywords with explicit reasons and examples.",
+                "fixVi": "Gắn chặt từng đoạn vào từ khóa của đề với lý lẽ và ví dụ thực tế.",
+                "en": "Off-Topic Generalizations: Memorized filler lowers Content scores. Better approach: Anchor every sentence in the prompt's specific keywords.",
+                "vi": "Lan man ngoài đề: Nhồi nhét câu học thuộc lòng làm giảm điểm Content. Cách viết chuẩn: Bám sát từ khóa cụ thể của đề bài."
+            },
+            {
+                "titleEn": "Unsupported Assertions",
+                "titleVi": "Khẳng định suông không có dẫn chứng",
+                "mistakeEn": "Making sweeping claims without providing mechanisms or concrete examples.",
+                "mistakeVi": "Đưa ra các nhận định chung chung mà không giải thích nguyên nhân hoặc dẫn chứng.",
+                "whyEn": "Fails PTE Development requirements, reducing your written discourse score.",
+                "whyVi": "Không đáp ứng tiêu chí Development của PTE, khiến điểm bài viết bị tụt hạng.",
+                "fixEn": "Use Point -> Explanation -> Example for each body paragraph.",
+                "fixVi": "Áp dụng cấu trúc Luận điểm -> Giải thích -> Dẫn chứng cụ thể cho từng thân bài.",
+                "en": "Unsupported Assertions: Claims without evidence fail Development criteria. Better approach: Use Point-Explanation-Example structure.",
+                "vi": "Khẳng định thiếu chứng minh: Luận điểm thiếu dẫn chứng sẽ mất điểm. Cách viết chuẩn: Dùng cấu trúc Luận điểm - Giải thích - Ví dụ."
+            }
+        ]
     gap_fill_raw = gemma.get("gapFill") or gemma.get("gap_fill") or gemma.get("gapfill") or gemma.get("macroBlueprint") or {}
     if not gap_fill_raw or not gap_fill_raw.get("slots") or len(gap_fill_raw.get("slots", [])) != 3:
         p_type = q.get("promptType", "agree_disagree")
@@ -482,6 +575,7 @@ def build_essay_pack(q: Dict[str, Any], deepseek: Dict[str, Any],
                 {"id": "angle-2", "en": "Systemic & Institutional Perspective", "vi": "Góc nhìn hệ thống & thể chế"}
             ],
             "promptTraps": traps,
+            "commonMistakes": traps,
             "faq": [
                 {
                     "questionEn": "Should I balance both viewpoints?",

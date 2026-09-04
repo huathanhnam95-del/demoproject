@@ -1,3 +1,17 @@
+## [V1.8.114] - 2026-09-04
+
+### Fixed & Enhanced
+- **CRM Books Reading Workspace Lost Formatting & Run-in Headings Resolution**:
+  - **Automated Run-in Heading Detection**: In `public/js/crm/books-workspace.js`, implemented `detectLeadInTerm` to detect and format leading terms across 4 structural patterns:
+    - *Echo terms*: e.g., `Procedure A procedure is...`, `Method A method is...`, `Topic The topic we are addressing...`
+    - *Category-defining terms*: e.g., `Technique A common technique...`, `Multiple-choice questions A traditional vocabulary multiple-choice question...`
+    - *Labeled figures & tables*: e.g., `Figure 1. ...`, `Table 1. ...`, `Example 1: ...`, `Note: ...`
+    - *Word duplicate openers*: e.g., `Repetition Repetition can be...`, `Reliability Reliability refers to...`
+  - Automatically wraps identified lead-in terms in `<strong class="crm-books-lead-term">` with clean visual separation from opening sentences.
+  - **Safe Inline Markdown Support**: Added `formatMarkdownInline` to parse `**bold**` as `<strong class="crm-books-lead-term">` and `*italic*` as `<em>` after HTML escaping, ensuring complete XSS security and full citation highlight compatibility.
+  - **Publisher-Grade Typography**: Added `.crm-books-lead-term` CSS styling in `public/crm-admin.css` using `font-weight: 700`, `var(--books-accent)` color, and letter-spacing to match the publisher's layout.
+  - **Comprehensive Verification**: Passed 44 assertions in `tests/crm/books-workspace.test.js` and confirmed live browser rendering in Chrome via `tests/browser/crm-books-lead-headings-browser-check.js`.
+
 ## [V1.8.113] - 2026-09-04
 
 ### Fixed & Enhanced

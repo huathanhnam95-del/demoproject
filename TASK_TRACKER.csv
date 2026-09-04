@@ -1918,10 +1918,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 924,2026-09-04,Fix CRM Teaching Sessions student ID resolution and modal tab synchronization,Done,2026-09-04
 925,2026-09-04,Diagnose and fix CRM Books study module generation 500 memory limit error and student courses 401 auth token error,Done,2026-09-04
 926,2026-09-04,Fix Read Aloud linking evaluation on silent sections reduced words matching and sound changes hover animation,Done,2026-09-04
-927,2026-09-04,Replace small native audio player with custom audio controller in Read Aloud practice mode,In Progress,
+927,2026-09-04,Replace small native audio player with custom audio controller in Read Aloud practice mode,Done,2026-09-04
 928,2026-09-04,Fix Voice Cloning premature polling timeout and implement automatic latest cloned audio recovery,Done,2026-09-04
 929,2026-09-04,Fix lost formatting and run-in headings across all CRM books in reader and extraction pipeline,Done,2026-09-04
 930,2026-09-04,Debug and improve Entrance Test word-sound timing accuracy using V4 pronunciation segmentation,In Progress,
 931,2026-09-04,Fix CRM Student Courses 401 Unauthorized teaching sessions student ID and student modal title and deploy V1.8.112 to production,Done,2026-09-04
 932,2026-09-04,Implement 3-layout visualizer toggle and natural Vietnamese copy for Guided Essay Step 1,Done,2026-09-04
-933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,In Progress,
+933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,Done,2026-09-04
+934,2026-09-04,Redesign Read Aloud practice page with aligned shared shell grid focus width and side-rail Speech Coach,In Progress,
+935,2026-09-04,Release V1.8.114: Deploy CRM Books lost formatting fix and run-in headings to production hosting,In Progress,
+

@@ -31,8 +31,8 @@
         "timeoutSeconds": 5,
         "$note": "HTTP, not tcpSocket. Gunicorn binds the port in under a second, so a TCP probe marked the instance ready before the model loaded and put the whole ~50s load inside a learner's request."
       },
-      "rollbackRevision": "phoneme-recognizer-00010-rir",
-      "currentRevision": "phoneme-recognizer-00016-lum"
+      "rollbackRevision": "phoneme-recognizer-00016-lum",
+      "currentRevision": "phoneme-recognizer-00018-dis"
     },
     "praat-api": {
       "access": "public",

@@ -10,6 +10,32 @@ window.CrmTeachingSessions = (function () {
     let selectedAudioFile = null;
     let pollTimer = null;
 
+    function resolveActiveStudentId() {
+        if (currentStudentId) return currentStudentId;
+        if (window._currentStudentModalId) return String(window._currentStudentModalId).trim();
+        
+        // Check student badge in modal: <span id="crm-student-id-badge">ID: a0106</span>
+        const badge = document.getElementById('crm-student-id-badge');
+        if (badge && badge.textContent) {
+            const m = badge.textContent.match(/ID:\s*([^\s]+)/i);
+            if (m && m[1] && m[1] !== '—') {
+                return m[1].trim();
+            }
+        }
+
+        // Check window location hash: #students/a0106
+        const hashMatch = (window.location.hash || '').match(/#students\/([a-zA-Z0-9_-]+)/i);
+        if (hashMatch && hashMatch[1]) {
+            return hashMatch[1].trim();
+        }
+
+        return null;
+    }
+
+    function setStudentId(id) {
+        currentStudentId = id ? String(id).trim() : null;
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         const div = document.createElement('div');
@@ -203,7 +229,11 @@ window.CrmTeachingSessions = (function () {
     }
 
     async function loadStudentSessions(studentId, isPolling = false) {
-        if (studentId) currentStudentId = studentId;
+        if (studentId) {
+            currentStudentId = String(studentId).trim();
+        } else if (!currentStudentId) {
+            currentStudentId = resolveActiveStudentId();
+        }
         const sid = currentStudentId;
         if (!sid) return;
 
@@ -483,10 +513,12 @@ window.CrmTeachingSessions = (function () {
         const notes = (notesInput && notesInput.value.trim()) || '';
         const file = selectedAudioFile;
 
-        if (!currentStudentId) {
+        const activeStudentId = currentStudentId || resolveActiveStudentId();
+        if (!activeStudentId) {
             alert('Please select or save a student first.');
             return;
         }
+        currentStudentId = activeStudentId;
 
         if (!file) {
             alert('Please choose or drag & drop an audio recording file (.m4a, .mp3, .wav).');
@@ -726,6 +758,8 @@ window.CrmTeachingSessions = (function () {
 
     return {
         init,
+        setStudentId,
+        resolveActiveStudentId,
         loadStudentSessions,
         openSessionDetail,
         deleteSession,

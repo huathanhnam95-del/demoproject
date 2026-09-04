@@ -4145,6 +4145,10 @@
     modalState.studentId = id;
     modalState.studentProfile = student || null;
     modalState.createdTestLinks = new Map();
+    window._currentStudentModalId = id;
+    if (window.CrmTeachingSessions && typeof window.CrmTeachingSessions.setStudentId === 'function') {
+      window.CrmTeachingSessions.setStudentId(id);
+    }
     const studentSession = beginStudentSession(id);
 
     if (elements.studentIdBadge) {
@@ -4757,6 +4761,18 @@
       refreshStudentFinance().catch((error) => {
         console.error('[CRM Admin] Failed to refresh student finance:', error);
       });
+      return;
+    }
+    if (tabId === 'teaching-sessions') {
+      const targetStudentId = modalState.studentId || (modalState.studentProfile && (modalState.studentProfile.studentId || modalState.studentProfile.id || modalState.studentProfile.crmId));
+      if (window.CrmTeachingSessions) {
+        if (typeof window.CrmTeachingSessions.setStudentId === 'function') {
+          window.CrmTeachingSessions.setStudentId(targetStudentId);
+        }
+        if (targetStudentId && typeof window.CrmTeachingSessions.loadStudentSessions === 'function') {
+          window.CrmTeachingSessions.loadStudentSessions(targetStudentId);
+        }
+      }
       return;
     }
     if (tabId === 'courses' && modalState.studentId) {

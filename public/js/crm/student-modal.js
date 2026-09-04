@@ -55,6 +55,18 @@ window.CrmStudentModal = (function () {
                 }
                 return;
             }
+            if (tabId === 'teaching-sessions') {
+                const targetStudentId = modalState.studentId || (modalState.studentProfile && (modalState.studentProfile.studentId || modalState.studentProfile.id || modalState.studentProfile.crmId));
+                if (window.CrmTeachingSessions) {
+                    if (typeof window.CrmTeachingSessions.setStudentId === 'function') {
+                        window.CrmTeachingSessions.setStudentId(targetStudentId);
+                    }
+                    if (targetStudentId && typeof window.CrmTeachingSessions.loadStudentSessions === 'function') {
+                        window.CrmTeachingSessions.loadStudentSessions(targetStudentId);
+                    }
+                }
+                return;
+            }
             if (tabId === 'info') {
                 renderStudentSchedulePrompt();
             }

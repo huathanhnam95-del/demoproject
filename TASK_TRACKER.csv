@@ -1902,3 +1902,17 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 908,2026-09-04,Diagnose and resolve localhost access issue and start dev server,Done,2026-09-04
 909,2026-09-04,Release V1.8.109: push to production with Write Essay Step 1 overhaul and Echo Forge Stage environments,Done,2026-09-04
 910,2026-09-04,Release V1.8.110: push to production with RFIB 3-LLM audit consensus and hosting deployment,Done,2026-09-04
+911,2026-09-04,Write Essay Step 1 redesign: replace procedural writing instructions with plain-language clause explanations and reduce text density,Done,2026-09-04
+912,2026-09-04,Research best Vietnamese reading fonts and build interactive real-time demo for typography evaluation,Done,2026-09-04
+913,2026-09-04,Fix Vietnamese font demo accessibility on dev server,Done,2026-09-04
+914,2026-09-04,Add 5 Vietnamese font selector and 0.8-1.5 font scaling with anti-clipping UI layout in Guided Essay mode,Done,2026-09-04
+915,2026-09-04,Make Guided Essay Vietnamese coaching copy concise and casual for learners,Done,2026-09-04
+916,2026-09-04,Refactor prompt traps to insightful common mistakes and update batch enrichment pipeline,Done,2026-09-04
+917,2026-09-04,Fix audio playback issue on entrance test result page for test 5726ca51,Done,2026-09-04
+918,2026-09-04,Establish Auto-Boost protocol for complex tasks with complexity definitions and rules,Done,2026-09-04
+919,2026-09-04,Widen full screen mode layout and borders to eliminate excess side spacing in Guided Essay mode,Done,2026-09-04
+920,2026-09-04,Fix Read Aloud linking guide display on question text and match recognized linking and reduced words styling,Done,2026-09-04
+921,2026-09-04,Guided Essay UI and regeneration overhaul: stance labels detailed point elaboration working toggle term highlights and flatten nested cards,Done,2026-09-04
+922,2026-09-04,Enable word click to seek audio playback in Entrance Test Results matching Read Aloud,Done,2026-09-04
+923,2026-09-04,Overhaul guided essay prompt breakdown and brainstorming into interactive visual mind map with flowcharts and thought bubbles,Done,2026-09-04
+924,2026-09-04,Fix CRM Teaching Sessions student ID resolution and modal tab synchronization,Done,2026-09-04

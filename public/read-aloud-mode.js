@@ -213,7 +213,17 @@ class ReadAloudMode {
     this.collapseConnectedSpeechModes('sessionConnectedSpeechModes', level);
   }
 
+  /**
+   * The single funnel the render path, the guide cards and the assessment
+   * session all read from. In the simple tier it reports the fixed beginner set
+   * rather than the chip selection, so a Basic learner sees marks and coaching
+   * without the chips ever being shown to them. `connectedSpeechModes` stays
+   * untouched, so switching to Advanced restores whatever they had picked.
+   */
   getActiveConnectedSpeechModes() {
+    if (this.getCoachTier() === 'simple') {
+      return [...this.getSimpleTierModes()];
+    }
     return [...(this.connectedSpeechModes || [])];
   }
 
@@ -350,6 +360,34 @@ class ReadAloudMode {
     return 'basic';
   }
 
+  /**
+   * Basic and Advanced are not "coach off" and "coach on" — they are two tiers of
+   * the same coach. Basic used to suppress the guide marks and the rail entirely,
+   * which meant a first-time learner (Basic is the default view) never saw the
+   * feature at all unless they found the Advanced toggle.
+   *
+   * simple: marks on, plain-language rail, no chips, no IPA, no scored sections.
+   * full:   the learner picks guides, and gets IPA and the scored breakdown.
+   */
+  getCoachTier() {
+    return this.getEffectiveViewMode() === 'advanced' ? 'full' : 'simple';
+  }
+
+  /**
+   * In the simple tier the learner does not choose guides — the two that carry
+   * the most value for a beginner are always on. The chips stay Advanced-only.
+   */
+  getSimpleTierModes() {
+    return new Set(['linking', 'reduced_words']);
+  }
+
+  /** Modes to render marks and coach cards for, given the current tier. */
+  getActiveCoachModes() {
+    return this.getCoachTier() === 'simple'
+      ? this.getSimpleTierModes()
+      : new Set(this.connectedSpeechModes || []);
+  }
+
   getLegacyConnectedSpeechLevel(mode = this.connectedSpeechLevel) {
     const normalized = this.normalizeConnectedSpeechMode(mode);
     if (normalized === 'linking') return 'v1_linking';
@@ -442,6 +480,15 @@ class ReadAloudMode {
     const handleViewChange = async () => {
       const isRaVisible = document.getElementById('mode-read-aloud')?.style.display !== 'none';
       if (this.isActive || isRaVisible) {
+        // Basic shows linking and reduced words without ever exposing a chip, so a
+        // learner arriving in Advanced for the first time has an empty chip set and
+        // would land on a blank passage — a step backwards from what they were just
+        // looking at. Carry the simple tier's guides across as the starting point.
+        if (this.getEffectiveViewMode() === 'advanced' && !this.connectedSpeechModes?.size) {
+          this.connectedSpeechModes = new Set(this.getSimpleTierModes());
+          this.connectedSpeechLevel = ReadAloudMode.dominantConnectedSpeechMode(this.connectedSpeechModes);
+          this.updatePromptGuideButtons();
+        }
         if (typeof this.renderPromptForCurrentView === 'function') {
           this.renderPromptForCurrentView();
         }
@@ -449,14 +496,13 @@ class ReadAloudMode {
         if (this.state === 'RESULTS') {
           const showAdvContainer = document.getElementById('ra-show-advanced-container');
           const showAdvBtn = document.getElementById('ra-show-advanced-btn');
-          if (viewMode === 'basic') {
+          if (this.lastAssessmentPayload?.connectedSpeech) {
+            // Both tiers render the coach; only the depth of it changes.
             const resultModes = this.getAssessmentConnectedSpeechModes({}, this.lastAssessmentSession);
-            if (showAdvContainer) showAdvContainer.style.display = resultModes.size > 0 ? 'block' : 'none';
-            if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
-            this.hideConnectedSpeechPanel();
-            if (resultModes.size === 0) this.updateSpeechCoachModeHints(resultModes);
-          } else if (this.lastAssessmentPayload?.connectedSpeech) {
-            if (showAdvContainer) showAdvContainer.style.display = 'none';
+            if (showAdvContainer) {
+              showAdvContainer.style.display = viewMode === 'basic' && resultModes.size > 0 ? 'block' : 'none';
+            }
+            if (showAdvBtn && viewMode === 'basic') showAdvBtn.textContent = '✨ Show detailed analysis';
             await this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
               transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
               sessionViewMode: viewMode,
@@ -1093,7 +1139,7 @@ class ReadAloudMode {
     if (!promptStage || this.resizeObserver || typeof ResizeObserver === 'undefined') return;
 
     this.resizeObserver = new ResizeObserver(() => {
-      if (!this.isActive || !(this.chunkingEnabled || this.isConnectedSpeechEnabled()) || !this.currentPromptPlainText) return;
+      if (!this.isActive || !(this.chunkingEnabled || this.hasActiveCoachGuides()) || !this.currentPromptPlainText) return;
       this.renderPromptForCurrentView();
       if (this.state === 'RESULTS') {
         this.renderRecognizedLinkingOverlay();
@@ -1246,7 +1292,7 @@ class ReadAloudMode {
         if (this.currentPromptRow) {
           this.currentPromptFeatureRecord = this.getPromptFeatureRecord(this.currentPromptRow);
         }
-        if (this.isActive && this.currentPromptPlainText && this.isConnectedSpeechEnabled()) {
+        if (this.isActive && this.currentPromptPlainText && this.hasActiveCoachGuides()) {
           this.renderPromptForCurrentView();
         }
         return map;
@@ -1928,7 +1974,7 @@ class ReadAloudMode {
     }
     this.pendingLinkingRetry = setTimeout(() => {
       this.pendingLinkingRetry = null;
-      if (!this.shouldApplyPromptRender(promptKey, renderToken) || !this.isConnectedSpeechEnabled()) {
+      if (!this.shouldApplyPromptRender(promptKey, renderToken) || !this.hasActiveCoachGuides()) {
         return;
       }
       this.hydrateLinkingView(promptKey, renderToken, attempt);
@@ -2255,6 +2301,13 @@ class ReadAloudMode {
       }
     });
 
+    // Legend keys follow the guides that are actually drawing marks, which in the
+    // simple tier is the fixed beginner set rather than the chip selection.
+    const legendModes = new Set(this.getActiveConnectedSpeechModes());
+    document.querySelectorAll('#ra-guide-legend .ra-legend-item').forEach((item) => {
+      item.hidden = !legendModes.has(item.getAttribute('data-legend'));
+    });
+
     const viewMode = this.getEffectiveViewMode();
     const instructionEl = document.getElementById('ra-guide-instruction') || document.getElementById('ra-prompt-instruction-text');
     if (instructionEl) {
@@ -2268,26 +2321,31 @@ class ReadAloudMode {
         if (this.isConnectedSpeechModeActive('sound_changes')) activeGuides.push('sound_changes');
 
         if (activeGuides.length === 0) {
-          instructionEl.textContent = 'Select a guide mode above to highlight pause groups, linking, reduced words, or sound changes.';
+          instructionEl.textContent = 'Read the sentence aloud. Turn on a guide above to see where words join, which to say lightly, and where sounds blend.';
         } else if (activeGuides.length === 1) {
           const mode = activeGuides[0];
           if (mode === 'chunking') {
-            instructionEl.textContent = 'Chunking mode: Displays natural pause groups and phrase breaks to help you pace your reading smoothly.';
+            instructionEl.textContent = 'Read the sentence aloud, pausing where the marks break it into groups.';
           } else if (mode === 'linking') {
-            instructionEl.textContent = 'Linking mode: Highlights word boundaries where ending consonants blend into starting vowels.';
+            instructionEl.textContent = 'Read the sentence aloud. Where words are joined by a curve, run them together without a pause.';
           } else if (mode === 'reduced_words') {
-            instructionEl.textContent = 'Reduced words mode: Marks function words (e.g. to, and, of) pronounced with weak schwa sounds.';
+            instructionEl.textContent = 'Read the sentence aloud. Say the marked words lightly and quickly — do not stress them.';
           } else if (mode === 'sound_changes') {
-            instructionEl.textContent = 'Sound changes mode: Shows assimilation, elision, and connected speech sound transformations.';
+            instructionEl.textContent = 'Read the sentence aloud. Where words are badged, let the two sounds blend into one.';
           }
         } else {
+          // Was "Active guides: X + Y." — a readout of state, which never told the
+          // learner what to do. Lead with the action; name the guides after it.
           const labels = activeGuides.map(m => {
-            if (m === 'chunking') return 'Chunking (pause groups)';
-            if (m === 'linking') return 'Linking (consonant-vowel joins)';
-            if (m === 'reduced_words') return 'Reduced Words (weak forms)';
-            return 'Sound Changes';
+            if (m === 'chunking') return 'pause groups';
+            if (m === 'linking') return 'joins';
+            if (m === 'reduced_words') return 'light words';
+            return 'sound changes';
           });
-          instructionEl.textContent = `Active guides: ${labels.join(' + ')}.`;
+          const tail = labels.length > 1
+            ? `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+            : labels[0];
+          instructionEl.textContent = `Read the sentence aloud, following the marks for ${tail}.`;
         }
       }
     }
@@ -2332,7 +2390,12 @@ class ReadAloudMode {
       this.clearConnectedSpeechResults();
     }
 
-    if (viewMode === 'basic' || !window.ReadAloudLinking || !this.isConnectedSpeechEnabled()) {
+    // Basic used to return here, so the passage carried no linking arcs or weak-form
+    // marks at all and the coach never mounted. The simple tier draws the same marks
+    // from a fixed beginner set (see getActiveConnectedSpeechModes), so the only
+    // thing Basic still withholds is the chip row and the IPA detail.
+    const hasActiveGuides = this.hasActiveCoachGuides();
+    if (!window.ReadAloudLinking || !hasActiveGuides) {
       return;
     }
 
@@ -2343,7 +2406,7 @@ class ReadAloudMode {
       this.pendingFontHydration = document.fonts.ready.then(() => {
         this.pendingFontHydration = null;
         if (this.shouldApplyPromptRender(this.activePromptKey, this.activePromptRenderToken)
-            && this.isConnectedSpeechEnabled()) {
+            && this.hasActiveCoachGuides()) {
           this.hydrateLinkingView(this.activePromptKey, this.activePromptRenderToken);
         }
         if (this.state === 'RESULTS') {
@@ -2358,7 +2421,7 @@ class ReadAloudMode {
   async hydrateLinkingView(promptKey, renderToken, attempt = 0) {
     if (!window.ReadAloudLinking
         || !this.currentPromptPlainText
-        || !this.isConnectedSpeechEnabled()) return;
+        || !this.hasActiveCoachGuides()) return;
     const targetPromptKey = promptKey || this.activePromptKey;
     const targetToken = renderToken || this.activePromptRenderToken;
     // Analyse the full superset regardless of which guides are on, so one cached
@@ -2374,7 +2437,7 @@ class ReadAloudMode {
       this.currentPromptRenderState?.blockedBoundarySet
     );
 
-    if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.isConnectedSpeechEnabled()) {
+    if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.hasActiveCoachGuides()) {
       return;
     }
 
@@ -2382,7 +2445,7 @@ class ReadAloudMode {
     this.pendingLinkingFrame = requestAnimationFrame(() => {
       this.pendingLinkingFrame = null;
       this.hideSoundChangeTooltip();
-      if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.isConnectedSpeechEnabled()) {
+      if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.hasActiveCoachGuides()) {
         return;
       }
 
@@ -2566,6 +2629,17 @@ class ReadAloudMode {
     return !!this.connectedSpeechModes?.size;
   }
 
+  /**
+   * Whether anything should be drawn on the passage right now.
+   *
+   * isConnectedSpeechEnabled() asks "has the learner switched a chip on", which is
+   * always false in Basic because Basic has no chips. The render path needs the
+   * tier-aware question instead, or the simple tier draws nothing.
+   */
+  hasActiveCoachGuides() {
+    return this.getActiveConnectedSpeechModes().length > 0;
+  }
+
   shouldApplyPromptRender(promptKey, renderToken) {
     return this.isActive
       && this.activePromptKey === promptKey
@@ -2646,8 +2720,7 @@ class ReadAloudMode {
       recordBtn.disabled = true;
     }
     if (nextBtn) nextBtn.style.display = 'none';
-    if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-    if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+    this.setTimerEmphasis('none');
   }
 
   handleMicrophoneAccessError(error) {
@@ -2946,14 +3019,66 @@ class ReadAloudMode {
     return entry;
   }
 
+  /**
+   * Resolve the manifest event id for a preview card's model clip.
+   *
+   * This used to return null for anything but a sound change, so linking and
+   * reduced-word cards never offered audio — even though the manifests carry
+   * ready `catenation` clips. It now resolves every family the manifest can
+   * describe; callers fall back to synthesis when no clip is present, which is
+   * most of the time (clip coverage is a few questions, not the whole bank).
+   */
   getSpeechCoachGuideEvent(item) {
     if (!item || !Number.isInteger(Number(item.startWordIndex)) || !Number.isInteger(Number(item.endWordIndex))) return null;
-    const family = item.category === 'sound_changes'
-      ? (String(item.subtype || '').startsWith('coalescent_') ? 'yod_coalescence' : 'n_bilabial_assimilation')
-      : null;
     const questionId = String(this.currentQuestionId || '').trim();
-    if (!family || !questionId) return null;
-    return { eventId: `q-${questionId}-${family}-${Number(item.startWordIndex)}-${Number(item.endWordIndex)}`, family, phrase: item.label || '', startWordIndex: Number(item.startWordIndex), endWordIndex: Number(item.endWordIndex) };
+    if (!questionId) return null;
+
+    let family = null;
+    if (item.category === 'sound_changes') {
+      family = String(item.subtype || '').startsWith('coalescent_') ? 'yod_coalescence' : 'n_bilabial_assimilation';
+    } else if (item.category === 'linking') {
+      family = String(item.subtype || 'catenation');
+    }
+    if (!family) return null;
+
+    const eventId = `q-${questionId}-${family}-${Number(item.startWordIndex)}-${Number(item.endWordIndex)}`;
+    // Only offer the manifest control when a ready clip actually exists for it.
+    // The manifest is cached per question by loadSpeechCoachAudioManifest(); if it
+    // has not loaded yet there is nothing to play, so fall through to synthesis.
+    const manifest = this.speechCoachAudioManifestCache?.get(questionId);
+    const entry = manifest?.events?.[eventId];
+    if (!entry || entry.status !== 'ready') return null;
+
+    return { eventId, family, phrase: item.label || '', startWordIndex: Number(item.startWordIndex), endWordIndex: Number(item.endWordIndex) };
+  }
+
+  /**
+   * Fallback model audio for cards with no recorded clip. Speaks the card's own
+   * phrase through the browser voice — never the IPA and never the respelling,
+   * which synthesis reads as nonsense. Renders nothing where the API is absent
+   * rather than showing a control that cannot work.
+   */
+  _buildSpokenModelFallbackControl(item) {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return '';
+    const phrase = String(item?.label || '').trim();
+    if (!phrase) return '';
+    const escapeHtml = ReadAloudMode.escapeHtml;
+    return `<button class="sc-audio-btn sc-audio-btn--model sc-audio-btn--synth" type="button" data-speak-phrase="${escapeHtml(phrase)}" title="Hear this read by the browser voice" aria-label="Hear ${escapeHtml(phrase)} read aloud"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Listen</span></button>`;
+  }
+
+  /** Speak a short phrase with the browser voice, cancelling anything in flight. */
+  speakGuidePhrase(phrase) {
+    const text = String(phrase || '').trim();
+    if (!text || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.warn('[ReadAloud] Speech synthesis failed:', error);
+    }
   }
 
   hasPlayableRecordingSource() {
@@ -3354,8 +3479,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'PREP') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '1';
-      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      this.setTimerEmphasis('prep');
       if (nextBtn) {
         nextBtn.style.display = '';
         nextBtn.disabled = false;
@@ -3380,8 +3504,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'RECORDING') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-      if (recordTimerBox) recordTimerBox.style.opacity = '1';
+      this.setTimerEmphasis('record');
       if (nextBtn) nextBtn.style.display = 'none';
       if (recordBtn) recordBtn.style.display = 'none';
       if (statusMsg) statusMsg.textContent = 'Recording... Please read aloud.';
@@ -3394,8 +3517,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'REQUESTING_MIC') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      this.setTimerEmphasis('none');
       if (nextBtn) {
         nextBtn.style.display = '';
         nextBtn.disabled = false;
@@ -3416,8 +3538,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'STOPPING_RECORDING') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      this.setTimerEmphasis('none');
       if (nextBtn) nextBtn.style.display = 'none';
       if (recordBtn) recordBtn.style.display = 'none';
       if (statusMsg) statusMsg.textContent = 'Finishing recording...';
@@ -3430,8 +3551,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'RECORDED') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      this.setTimerEmphasis('none');
       if (nextBtn) {
         nextBtn.style.display = '';
         nextBtn.disabled = false;
@@ -3455,8 +3575,7 @@ class ReadAloudMode {
     }
 
     if (this.state === 'RESULTS') {
-      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      this.setTimerEmphasis('none');
       if (nextBtn) nextBtn.style.display = 'none';
       if (recordBtn) {
         recordBtn.textContent = 'Next prompt';
@@ -3475,8 +3594,7 @@ class ReadAloudMode {
       return;
     }
 
-    if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
-    if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+    this.setTimerEmphasis('none');
     if (nextBtn) nextBtn.style.display = 'none';
     if (recordBtn) {
       recordBtn.textContent = 'Next prompt';
@@ -3497,11 +3615,33 @@ class ReadAloudMode {
    * says "Read the text silently to prepare." Both were on screen at once, telling the
    * learner to do opposite things. The instruction now follows the phase.
    */
+  /**
+   * Exactly one timer is live at a time, but both used to render at 2rem with the
+   * inactive one merely dimmed — two big countdowns competing before the learner
+   * had done anything. The idle timer collapses to a small label instead.
+   */
+  setTimerEmphasis(active) {
+    const boxes = {
+      prep: document.getElementById('ra-prep-timer-box'),
+      record: document.getElementById('ra-record-timer-box')
+    };
+    Object.entries(boxes).forEach(([key, box]) => {
+      if (!box) return;
+      const isActive = key === active;
+      box.dataset.timerState = isActive ? 'active' : 'idle';
+      // Kept for anything still reading inline opacity; the data attribute drives styling.
+      box.style.opacity = isActive ? '1' : '';
+    });
+  }
+
   getBasicPhaseInstruction() {
+    // Basic now shows the linking and reduced-word marks, so the instruction has
+    // to account for them — otherwise the learner sees curves and shading under
+    // the text with nothing telling them what to do about it.
     if (this.state === 'PREP') {
-      return 'Read silently and plan your phrasing. Recording starts when the prep timer ends.';
+      return 'Read silently and plan your phrasing. The curves show words that run together; shaded words are said lightly. Recording starts when the prep timer ends.';
     }
-    return 'Read the text aloud into your microphone. Speak at a natural pace with clear pronunciation and pauses at punctuation.';
+    return 'Read the text aloud into your microphone. Run the joined words together and keep the shaded words light and quick.';
   }
 
   startPrepTimer() {
@@ -3998,13 +4138,15 @@ class ReadAloudMode {
     const showAdvContainer = document.getElementById('ra-show-advanced-container');
     const showAdvBtn = document.getElementById('ra-show-advanced-btn');
 
-    if (sessionView === 'basic') {
-      if (showAdvContainer) showAdvContainer.style.display = assessmentModes.size > 0 ? 'block' : 'none';
-      if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
-      this.hideConnectedSpeechPanel();
-      if (assessmentModes.size === 0) this.updateSpeechCoachModeHints(assessmentModes);
-    } else {
-      if (showAdvContainer) showAdvContainer.style.display = 'none';
+    // Basic used to hide the coach here and offer a button that revealed a panel.
+    // It now renders the same findings in the simple tier, and the button switches
+    // the learner to Advanced for IPA and the full scored breakdown.
+    const isSimpleTier = sessionView === 'basic';
+    if (showAdvContainer) {
+      showAdvContainer.style.display = isSimpleTier && assessmentModes.size > 0 ? 'block' : 'none';
+    }
+    if (showAdvBtn && isSimpleTier) showAdvBtn.textContent = '✨ Show detailed analysis';
+    {
       this.renderPromptForCurrentView();
       await this.renderConnectedSpeechResults(payload.connectedSpeech, {
         transcriptText: payload.recognizedText || this.currentPromptPlainText,
@@ -4115,10 +4257,25 @@ class ReadAloudMode {
     if (summary) summary.textContent = '';
   }
 
+  /**
+   * Basic now renders its own coach, so this button no longer reveals a hidden
+   * panel — it promotes the learner to Advanced, where the same findings carry
+   * IPA and the full scored breakdown. Switching the view re-renders through
+   * handleViewChange, so there is nothing to render here.
+   */
   async toggleAdvancedAnalysisView() {
     const box = document.getElementById('ra-connected-speech-box');
     const btn = document.getElementById('ra-show-advanced-btn');
     if (!box || !btn) return { visible: false, reason: 'missing_dom', revision: this.speechCoachResultRevision };
+
+    if (this.getCoachTier() === 'simple') {
+      try {
+        window.SpeakingPracticeController?.setPreferredView?.('advanced');
+      } catch (error) {
+        console.error('[ReadAloud] Could not switch to advanced view:', error);
+      }
+      return { visible: true, reason: 'promoted_to_advanced', revision: this.speechCoachResultRevision };
+    }
 
     const isHidden = box.style.display === 'none' || !box.style.display;
     if (isHidden) {
@@ -4280,6 +4437,7 @@ class ReadAloudMode {
     };
 
     box.style.display = '';
+    box.dataset.coachTier = this.getCoachTier();
     label.textContent = 'Speech Coach';
     meta.textContent = this.connectedSpeechPanelMode === 'results' ? 'Feedback' : 'Preview';
     const toggleBtn = document.getElementById('ra-speech-coach-toggle');
@@ -4288,15 +4446,25 @@ class ReadAloudMode {
       toggleBtn.setAttribute('aria-expanded', this.speechCoachVisible ? 'true' : 'false');
     }
     summary.style.display = this.speechCoachVisible ? '' : 'none';
+    // The compact layout already labels the selected card "START HERE"; repeating
+    // it in the summary said the same thing twice in adjacent lines.
     summary.textContent = noSoundChangeMessage
       ? 'No sound changes in this sentence.'
-      : (compactView && !showFullList
-        ? 'Start here.'
-        : `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`);
+      : `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`;
+    const isSimpleTier = this.getCoachTier() === 'simple';
     const renderGuideCard = (item, selected) => {
-      const guideEvent = item.category === 'sound_changes' ? this.getSpeechCoachGuideEvent(item) : null;
+      // Model audio used to be gated to sound changes only, so a beginner facing a
+      // reduced-word card had IPA and no way to hear it. Every family that resolves
+      // a manifest clip gets one; everything else falls back to speech synthesis.
+      const guideEvent = this.getSpeechCoachGuideEvent(item);
       const modelAudio = guideEvent
-        ? this._buildSpeechCoachPlaybackControls(guideEvent, -1, false, 'Play the model sound-change example')
+        ? this._buildSpeechCoachPlaybackControls(guideEvent, -1, false, 'Play the model example')
+        : this._buildSpokenModelFallbackControl(item);
+
+      // Plain language leads; IPA is a quiet secondary line and is dropped
+      // entirely in the simple tier (see [data-coach-tier="simple"] in style.css).
+      const sayItLike = item.sayItLike
+        ? `<span class="sc-card-say"><span class="sc-card-say-label">Say it like</span> <strong>${escapeHtml(item.sayItLike)}</strong></span>`
         : '';
       const spokenAs = item.spokenAs
         ? `<span class="sc-card-ipa"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
@@ -4305,13 +4473,12 @@ class ReadAloudMode {
         <div class="sc-guide-item sc-card ${layerClass(item.layer)}" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-start-word="${Number.isFinite(item.startWordIndex) ? item.startWordIndex : ''}" data-end-word="${Number.isFinite(item.endWordIndex) ? item.endWordIndex : ''}" data-selected="${selected ? 'true' : 'false'}">
           <button type="button" class="sc-card-body" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}">
             <span class="sc-card-head">
-              <span class="sc-card-title">
-                <strong class="sc-card-word">${escapeHtml(item.label || 'Hint')}</strong>
-                ${spokenAs}
-              </span>
+              <strong class="sc-card-word">${escapeHtml(item.label || 'Hint')}</strong>
               <span class="sc-card-badge">${escapeHtml(item.badge || 'Hint')}</span>
             </span>
-            <span class="sc-card-tip">${escapeHtml(item.explanation || '')}</span>
+            ${sayItLike}
+            <span class="sc-card-tip">${escapeHtml((isSimpleTier && item.simpleExplanation) || item.explanation || '')}</span>
+            ${spokenAs}
           </button>
           ${modelAudio ? `<div class="sc-card-audio">${modelAudio}</div>` : ''}
         </div>
@@ -4790,16 +4957,17 @@ class ReadAloudMode {
     }
 
     this.setSpeechCoachModeHint('ra-feedback-mode-hint');
-    if (viewMode === 'basic' || !connectedSpeech || connectedSpeech.status === 'not_applicable') {
+    if (!connectedSpeech || connectedSpeech.status === 'not_applicable') {
       this.hideConnectedSpeechPanel({ invalidate: false });
-      return { visible: false, reason: viewMode === 'basic' ? 'basic' : 'not_applicable', revision };
+      return { visible: false, reason: 'not_applicable', revision };
     }
 
     this.connectedSpeechPanelMode = 'results';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
-    box.style.display = 'block';
+    box.style.display = '';
+    box.dataset.coachTier = this.getCoachTier();
     label.textContent = 'Speech Coach';
     meta.textContent = 'Feedback';
     list.innerHTML = '';
@@ -5884,11 +6052,32 @@ class ReadAloudMode {
       matched.forEach((node) => node.classList.toggle('sc-token--hovered', on));
     };
 
+    // Synthesis fallback playback for cards with no recorded clip.
+    container.addEventListener('click', (e) => {
+      const speakBtn = e.target.closest('[data-speak-phrase]');
+      if (!speakBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.speakGuidePhrase(speakBtn.getAttribute('data-speak-phrase'));
+    });
+
     container.addEventListener('mouseover', (e) => {
       const card = e.target.closest('.sc-guide-item');
       if (card) highlight(card, true);
     });
     container.addEventListener('mouseout', (e) => {
+      const card = e.target.closest('.sc-guide-item');
+      if (!card) return;
+      if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+      highlight(card, false);
+    });
+
+    // Keyboard parity: tabbing to a card lights its word exactly as hovering does.
+    container.addEventListener('focusin', (e) => {
+      const card = e.target.closest('.sc-guide-item');
+      if (card) highlight(card, true);
+    });
+    container.addEventListener('focusout', (e) => {
       const card = e.target.closest('.sc-guide-item');
       if (!card) return;
       if (e.relatedTarget && card.contains(e.relatedTarget)) return;

@@ -197,31 +197,33 @@ class VoiceLocalWorker:
         if not audio_url:
             return None
 
-        # 1. Cloud audio ID (/api/admin/voice-cloning/audio/<file_id>) - MUST BE CHECKED FIRST!
-        if "/audio/" in audio_url:
-            file_id = audio_url.split("/audio/")[-1].split("?")[0]
-            try:
-                doc = self.db.collection("voice_audio_files").document(file_id).get()
-                if doc.exists:
-                    data = doc.to_dict() or {}
-                    b64 = data.get("audioBase64")
-                    if b64:
-                        import base64
-                        decoded = base64.b64decode(b64)
-                        ext = "webm" if "webm" in data.get("mimeType", "") else "wav"
-                        out_file = SAMPLES_DIR / f"downloaded_{file_id}.{ext}"
-                        out_file.write_bytes(decoded)
-                        logger.info("Successfully retrieved reference audio %s (%s bytes) to %s", file_id, len(decoded), out_file)
-                        return out_file
-            except Exception as fe:
-                logger.warning("Could not download reference audio doc %s: %s", file_id, fe)
-
-        # 2. Local audio asset (/audio/voice-cloning/<filename>)
+        # 1. Local audio asset (/audio/voice-cloning/<filename>) - check first to avoid false Firestore hits
         if "/audio/voice-cloning/" in audio_url:
-            filename = audio_url.split("/audio/voice-cloning/")[-1]
+            filename = audio_url.split("/audio/voice-cloning/")[-1].split("?")[0]
             candidate = ROOT / "public" / "audio" / "voice-cloning" / filename
             if candidate.exists():
                 return candidate
+
+        # 2. Cloud audio ID (/api/admin/voice-cloning/audio/<file_id> or /audio/<file_id>)
+        if "/audio/" in audio_url:
+            file_id = audio_url.split("/audio/")[-1].split("?")[0]
+            if "/" not in file_id:
+                try:
+                    doc = self.db.collection("voice_audio_files").document(file_id).get()
+                    if doc.exists:
+                        data = doc.to_dict() or {}
+                        b64 = data.get("audioBase64")
+                        if b64:
+                            import base64
+                            decoded = base64.b64decode(b64)
+                            mtype = data.get("mimeType", "").lower()
+                            ext = "webm" if ("webm" in mtype or "weba" in mtype) else ("mp3" if "mp3" in mtype else "wav")
+                            out_file = SAMPLES_DIR / f"downloaded_{file_id}.{ext}"
+                            out_file.write_bytes(decoded)
+                            logger.info("Successfully retrieved reference audio %s (%s bytes) to %s", file_id, len(decoded), out_file)
+                            return out_file
+                except Exception as fe:
+                    logger.warning("Could not download reference audio doc %s: %s", file_id, fe)
 
         # 3. Direct local disk path
         clean_url = audio_url.replace("/", os.sep).lstrip(os.sep)

@@ -11,27 +11,27 @@
   const AMBIGUOUS_FINAL_SPELLING_PATTERNS = [/mb$/i, /bt$/i, /mn$/i, /gue$/i, /que$/i];
   const REDUCED_WORD_HINTS = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'for', 'can', 'have', 'has', 'was', 'were', 'from']);
   const REDUCED_WORD_GUIDE_COPY = {
-    a: { strongAs: '/eɪ/', spokenAs: '/ə/', explanation: 'Use the weak form in connected speech unless you want to stress the article.' },
-    an: { strongAs: '/æn/', spokenAs: '/ən/', explanation: 'Keep the vowel weak and move quickly into the next word.' },
-    the: { strongAs: '/ðiː/', spokenAs: '/ðə/ or /ði/', explanation: 'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.' },
-    to: { strongAs: '/tuː/', spokenAs: '/tə/', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
-    of: { strongAs: '/ʌv/', spokenAs: '/əv/ or /ə/', explanation: 'Reduce the vowel and keep it quick; the strong form is used for emphasis.' },
-    and: { strongAs: '/ænd/', spokenAs: '/ən/, /ənd/, /n/, /t/, or /d/', explanation: 'Lighten or omit sounds in unstressed connected speech; use the strong form for emphasis.' },
-    for: { strongAs: '/fɔːr/', spokenAs: '/fər/', explanation: 'Use a lighter vowel and do not hold the word too long.' },
-    can: { strongAs: '/kæn/', spokenAs: '/kən/', explanation: 'Keep it light when it is not being emphasized.' },
-    have: { strongAs: '/hæv/', spokenAs: '/həv/, /əv/, or /v/', explanation: 'Shorten the vowel and let it stay unstressed.' },
-    has: { strongAs: '/hæz/', spokenAs: '/həz/, /əz/, or /z/', explanation: 'Reduce the vowel and keep the word light.' },
-    was: { strongAs: '/wʌz/', spokenAs: '/wəz/', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
-    were: { strongAs: '/wɜːr/', spokenAs: '/wər/', explanation: 'Oxford American uses the same broad IPA; make the weak form shorter and unstressed.' },
-    from: { strongAs: '/frʌm/ or /frɑːm/', spokenAs: '/frəm/', explanation: 'Use the weak vowel in unstressed connected speech.' }
+    a: { strongAs: '/eɪ/', spokenAs: '/ə/', sayItLike: 'uh', explanation: 'Use the weak form in connected speech unless you want to stress the article.' },
+    an: { strongAs: '/æn/', spokenAs: '/ən/', sayItLike: 'un', explanation: 'Keep the vowel weak and move quickly into the next word.' },
+    the: { strongAs: '/ðiː/', spokenAs: '/ðə/ or /ði/', sayItLike: 'thuh (or thee before a vowel)', simpleExplanation: 'Say "thuh" before a consonant and "thee" before a vowel. Only stress it to make a point.', explanation: 'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.' },
+    to: { strongAs: '/tuː/', spokenAs: '/tə/', sayItLike: 'tuh', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
+    of: { strongAs: '/ʌv/', spokenAs: '/əv/ or /ə/', sayItLike: 'uhv', explanation: 'Reduce the vowel and keep it quick; the strong form is used for emphasis.' },
+    and: { strongAs: '/ænd/', spokenAs: '/ən/, /ənd/, /n/, /t/, or /d/', sayItLike: 'un (or just n)', explanation: 'Lighten or omit sounds in unstressed connected speech; use the strong form for emphasis.' },
+    for: { strongAs: '/fɔːr/', spokenAs: '/fər/', sayItLike: 'fer', explanation: 'Use a lighter vowel and do not hold the word too long.' },
+    can: { strongAs: '/kæn/', spokenAs: '/kən/', sayItLike: 'kun', explanation: 'Keep it light when it is not being emphasized.' },
+    have: { strongAs: '/hæv/', spokenAs: '/həv/, /əv/, or /v/', sayItLike: 'huv', explanation: 'Shorten the vowel and let it stay unstressed.' },
+    has: { strongAs: '/hæz/', spokenAs: '/həz/, /əz/, or /z/', sayItLike: 'huz', explanation: 'Reduce the vowel and keep the word light.' },
+    was: { strongAs: '/wʌz/', spokenAs: '/wəz/', sayItLike: 'wuz', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
+    were: { strongAs: '/wɜːr/', spokenAs: '/wər/', sayItLike: 'wer', simpleExplanation: 'Keep it short and unstressed.', explanation: 'Oxford American uses the same broad IPA; make the weak form shorter and unstressed.' },
+    from: { strongAs: '/frʌm/ or /frɑːm/', spokenAs: '/frəm/', sayItLike: 'frum', explanation: 'Use the weak vowel in unstressed connected speech.' }
   };
   const SOUND_CHANGE_GUIDE_COPY = {
-    coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
-    coalescent_tj: { spokenAs: '/tʃ/', arrow: 't + y → /tʃ/', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
-    coalescent_sj: { spokenAs: '/ʃ/', arrow: 's + y → /ʃ/', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
-    coalescent_zj: { spokenAs: '/ʒ/', arrow: 'z + y → /ʒ/', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
-    n_bilabial_assimilation: { spokenAs: '/m/', arrow: 'n → /m/', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
-    yod_coalescence: { spokenAs: '/dʒ/', arrow: 'sound change', explanation: 'Let the sound blend smoothly into the following y sound.' }
+    coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', sayItLike: 'like a j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
+    coalescent_tj: { spokenAs: '/tʃ/', arrow: 't + y → /tʃ/', sayItLike: 'like a ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
+    coalescent_sj: { spokenAs: '/ʃ/', arrow: 's + y → /ʃ/', sayItLike: 'like a sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
+    coalescent_zj: { spokenAs: '/ʒ/', arrow: 'z + y → /ʒ/', sayItLike: 'like a zh (the s in "measure")', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
+    n_bilabial_assimilation: { spokenAs: '/m/', arrow: 'n → /m/', sayItLike: 'like an m', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
+    yod_coalescence: { spokenAs: '/dʒ/', arrow: 'sound change', sayItLike: 'blended, like a j', explanation: 'Let the sound blend smoothly into the following y sound.' }
   };
   const LINKING_GUIDE_COPY = {
     consonant_to_vowel: 'Carry the last consonant straight into the next vowel without adding a pause.',
@@ -381,6 +381,7 @@
           label: phrase,
           badge: 'Sound change',
           spokenAs: copy.spokenAs,
+          sayItLike: copy.sayItLike || null,
           explanation: copy.explanation
         });
       });
@@ -389,6 +390,7 @@
       const normalized = String(annotation.subtype || annotation.word || '').toLowerCase();
       const copy = REDUCED_WORD_GUIDE_COPY[normalized] || {
         spokenAs: 'lighter',
+        sayItLike: null,
         explanation: 'Make this word shorter and lighter than its careful citation form.'
       };
       pushItem({
@@ -401,7 +403,11 @@
         badge: 'Reduced word',
         strongAs: copy.strongAs,
         spokenAs: copy.spokenAs,
+        sayItLike: copy.sayItLike || null,
         targetIpa: annotation.targetIpa || copy.spokenAs,
+        // Used instead of `explanation` in the simple tier, where the standard
+        // wording would put IPA back in front of a beginner.
+        simpleExplanation: copy.simpleExplanation || null,
         explanation: copy.explanation
       });
     });
@@ -421,6 +427,8 @@
           label: phrase,
           badge: 'Linking',
           spokenAs: null,
+          // Linking has no single respelling — the instruction is the action.
+          sayItLike: 'run the two words together',
           explanation: LINKING_GUIDE_COPY[boundary.subtype || boundary.category] || LINKING_GUIDE_COPY.generic_vowel_link
         });
       });

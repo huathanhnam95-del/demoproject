@@ -18,7 +18,7 @@ const {
     buildPublicSession,
     scoreSubmission
 } = require('../../entrance-test/test36plus');
-const { transcribeAudio } = require('../../entrance-test/asr-service');
+const { transcribeAudio, alignAudioWithAzure } = require('../../entrance-test/asr-service');
 
 const VALID_TEST_TYPES = new Set([
     'entrance_test_36plus_v1',
@@ -465,6 +465,65 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
             return sendSuccess(res, { testId, retried }, 'Speaking ASR retried.');
         } catch (error) {
             return sendError(res, 500, 'RETRY_ASR_ERROR', 'Failed to retry speaking ASR.', error?.message || error);
+        }
+    });
+
+    router.post('/:testId/speaking/align-words', async (req, res) => {
+        try {
+            const testId = cleanOptionalString(req.params?.testId);
+            if (!testId || testId.length < 20) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
+            }
+
+            const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
+            const testSnap = await testRef.get();
+            if (!testSnap.exists) {
+                return sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
+            }
+
+            const test = testSnap.data() || {};
+            const speaking = test.speaking && typeof test.speaking === 'object' ? test.speaking : {};
+            const questionIds = Object.keys(speaking);
+            if (questionIds.length === 0) {
+                return sendSuccess(res, { testId, aligned: [] }, 'No speaking answers to align.');
+            }
+
+            const aligned = [];
+            const updates = {};
+
+            for (const questionId of questionIds) {
+                const entry = speaking[questionId] || null;
+                const storagePath = entry?.audio?.storagePath || null;
+                const transcript = String(entry?.transcript || '').trim();
+                if (!storagePath || !transcript) continue;
+
+                const bucketName = cleanOptionalString(entry?.audio?.bucketName);
+                const targetBucket = resolveStorageBucket(bucketName) || bucket;
+                const contentType = cleanOptionalString(entry?.audio?.contentType) || 'application/octet-stream';
+
+                try {
+                    const [audioBuffer] = await targetBucket.file(storagePath).download();
+                    const words = await alignAudioWithAzure(audioBuffer, transcript, contentType);
+                    if (Array.isArray(words) && words.length > 0) {
+                        updates[`speaking.${questionId}.words`] = words;
+                        updates[`speaking.${questionId}.wordsAlignedAt`] = serverTimestamp();
+                        aligned.push({ questionId, wordCount: words.length, ok: true });
+                    } else {
+                        aligned.push({ questionId, wordCount: 0, ok: false, error: 'No words aligned' });
+                    }
+                } catch (err) {
+                    aligned.push({ questionId, wordCount: 0, ok: false, error: err?.message || String(err) });
+                }
+            }
+
+            if (Object.keys(updates).length > 0) {
+                updates.updatedAt = serverTimestamp();
+                await testRef.update(updates);
+            }
+
+            return sendSuccess(res, { testId, aligned }, 'Speaking words aligned.');
+        } catch (error) {
+            return sendError(res, 500, 'ALIGN_WORDS_ERROR', 'Failed to align speaking words.', error?.message || error);
         }
     });
 

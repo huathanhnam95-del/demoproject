@@ -113,6 +113,8 @@ body {
   flex-wrap: nowrap;
   max-width: 100%;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .crm-header-left {
@@ -134,17 +136,14 @@ body {
 .crm-logo-img {
   height: 34px;
   filter: none;
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 .crm-nav {
   height: 100%;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.crm-nav::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .crm-nav-list {

@@ -252,7 +252,7 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         const resJson = await res.json();
         const rawWords = resJson.NBest?.[0]?.Words || [];
 
-        const words = rawWords.map(w => {
+        const mappedWords = rawWords.map(w => {
             const rawOffset = Number(w.Offset);
             const rawDuration = Number(w.Duration);
             const startMs = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.round(rawOffset / 10000) : null;
@@ -266,6 +266,28 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
                 errorType: String(w.PronunciationAssessment?.ErrorType || 'None')
             };
         }).filter(w => w.word.length > 0 && w.startMs != null && w.endMs != null && w.endMs > w.startMs);
+
+        // Acoustic boundary calibration: prevent abutting words from bleeding into the next word's onset
+        const words = mappedWords.map((curr, idx) => {
+            const next = mappedWords[idx + 1];
+            if (!next) return curr;
+            const rawGap = next.startMs - curr.endMs;
+            let calibratedEndMs = curr.endMs;
+            // When words are contiguous (gap < 25ms):
+            if (rawGap < 25) {
+                const isMispronounced = curr.errorType !== 'None' || (curr.accuracyScore > 0 && curr.accuracyScore < 60);
+                const safetyPad = isMispronounced ? 25 : 15;
+                calibratedEndMs = Math.min(curr.endMs, next.startMs - safetyPad);
+            }
+            // Ensure minimum audible duration (at least 75ms)
+            if (calibratedEndMs - curr.startMs < 75) {
+                calibratedEndMs = Math.max(curr.startMs + 75, curr.endMs);
+            }
+            return {
+                ...curr,
+                endMs: calibratedEndMs
+            };
+        });
 
         return words.length > 0 ? words : null;
     } catch (err) {

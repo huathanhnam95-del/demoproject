@@ -264,15 +264,38 @@
 
 /* The sticky action footer. The timers and Check/Retry used to sit in the
    header, above the passage they act on; here they sit at the end of the flow
-   and stay reachable without scrolling back up. */
+   and stay reachable without scrolling back up.
+
+   Two fixed elements own the bottom of the viewport and both outranked this bar
+   at z-index 500, which left the primary action unreachable: .mobile-toolbar
+   (fixed, 60px, z-index 998) and .bel-chat-trigger (fixed, bottom-right,
+   z-index 900). The footer clears the toolbar by sitting above it in the stack
+   *and* insetting from it, and clears the mascot with a right-side safe area
+   rather than by covering it. */
 .spc-footer {
   position: sticky;
   bottom: 0;
-  z-index: var(--spc-z-sticky);
+  z-index: 999;
   margin-top: 20px;
   padding: 10px 0 12px;
   background: var(--spc-bg, #fff);
   border-top: 1px solid var(--spc-color-border);
+}
+
+/* Keep the attempt buttons out from under the chat mascot, which renders about
+   160px wide including its speech bubble. */
+@media (min-width: 768px) {
+  .spc-footer .spc-row--actions {
+    padding-right: calc(var(--spc-shell-pad) + 172px);
+  }
+}
+
+/* .mobile-toolbar is shown under 768px (style.css @media max-width: 767px) at a
+   fixed 60px; the bar rides above it rather than behind it. */
+@media (max-width: 767px) {
+  .spc-footer {
+    bottom: var(--mobile-toolbar-height, 60px);
+  }
 }
 
 /* Actions row: timers on the left, attempt buttons on the right. */
@@ -1186,6 +1209,19 @@
   box-shadow: none;
   padding: 10px 0;
   font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
+}
+
+/* The site header is `position: fixed` at z-index 1100, so a controller stuck to
+   top: 0 scrolled underneath it and took the question picker, the step indicator
+   and the view toggle out of sight. --site-header-height is declared on :root in
+   site-header.css and already re-declared to 98px below 900px, so this tracks it
+   without a second breakpoint. Scoped to the body class the header script sets,
+   so a page rendered without the header is not pushed down by a phantom offset. */
+body.has-site-header .spc-controller {
+  /* --site-header-height-actual is measured and published by site-header.js;
+     the static --site-header-height is only a min-height floor and under-reports
+     the rendered header by ~13px below 640px. */
+  top: var(--site-header-height-actual, var(--site-header-height, 0px));
 }
 
 /* Generated controller controls must not fall back to the browser's Arial

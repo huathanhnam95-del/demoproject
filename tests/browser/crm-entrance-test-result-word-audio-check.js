@@ -6,7 +6,9 @@ const path = require('path');
 const { chromium } = require('playwright');
 const { admin, db } = require(path.resolve('src', 'utils', 'firebase'));
 
-const TEST_ID = '5726ca5178ece2a551cbd2709366e02dcfd73cad19bd3b81d3db4c44ef685740';
+const cliArgs = process.argv.slice(2).filter(a => !a.startsWith('--'));
+const TEST_ID = cliArgs[0] || '5726ca5178ece2a551cbd2709366e02dcfd73cad19bd3b81d3db4c44ef685740';
+const isHeaded = process.argv.includes('--headed');
 const SCREENSHOT_DIR = path.resolve(__dirname, 'screenshots');
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
@@ -97,7 +99,7 @@ async function runBrowserTest() {
   const { server, origin } = await startHarnessServer();
   console.log(`[2] Harness server listening at: ${origin}`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: !isHeaded });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1200 },
     acceptDownloads: true
@@ -321,6 +323,13 @@ async function runBrowserTest() {
     console.log('\n========================================');
     console.log('ALL WORD AUDIO PLAYBACK TESTS PASSED!');
     console.log('========================================\n');
+
+    if (isHeaded) {
+      console.log('[Interactive Mode] Browser window is now open!');
+      console.log('Click on any green or red word to hear its audio segment.');
+      console.log('Close the browser window when you are done.\n');
+      await page.waitForEvent('close', { timeout: 0 }).catch(() => {});
+    }
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));

@@ -87,4 +87,22 @@
 
   body.insertAdjacentElement('afterbegin', header);
   body.classList.add('has-site-header');
+
+  // --site-header-height is a min-height floor, not the rendered height: below
+  // 640px the stacked brand/nav overflows it by ~13px. Anything that positions
+  // itself under the fixed header (sticky practice controllers, for one) needs
+  // the real number, so publish it and keep it current.
+  const publishHeight = () => {
+    const height = Math.round(header.getBoundingClientRect().height);
+    if (height > 0) {
+      document.documentElement.style.setProperty('--site-header-height-actual', `${height}px`);
+    }
+  };
+
+  publishHeight();
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(publishHeight).observe(header);
+  } else {
+    window.addEventListener('resize', publishHeight);
+  }
 })();

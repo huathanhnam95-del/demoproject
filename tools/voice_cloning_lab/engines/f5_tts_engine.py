@@ -69,14 +69,12 @@ class F5TTSEngine(BaseVoiceCloningEngine):
         """
         ref_path = Path(reference_audio_path)
         if ref_path.is_dir() or not ref_path.exists():
-            candidates = list(SAMPLES_DIR.glob(f"{ref_path.stem}*")) + list(SAMPLES_DIR.glob("*.webm")) + list(SAMPLES_DIR.glob("*.wav"))
-            valid_files = [p for p in candidates if p.is_file()]
-            if valid_files:
-                ref_path = valid_files[0]
+            # Check for exact stem matches in SAMPLES_DIR (e.g. .webm, .wav, .weba, .mp3)
+            candidates = [p for p in SAMPLES_DIR.glob(f"{ref_path.stem}.*") if p.is_file() and p.suffix.lower() in [".webm", ".wav", ".weba", ".mp3", ".ogg"]]
+            if candidates:
+                ref_path = candidates[0]
             else:
-                ref_path = SAMPLES_DIR / "my_saved_voice.webm"
-                if not ref_path.exists():
-                    raise FileNotFoundError(f"Reference audio not found: {reference_audio_path}")
+                raise FileNotFoundError(f"Reference audio not found on disk: {reference_audio_path}")
 
         # Decode using PyAV into 24kHz float32 mono
         container = av.open(str(ref_path))
@@ -92,14 +90,14 @@ class F5TTSEngine(BaseVoiceCloningEngine):
 
         audio_data = np.concatenate(chunks, axis=1)[0]  # shape: (samples,)
         
-        # Default to the authentic freshly recorded RA #15 prompt
-        if reference_transcript and len(reference_transcript.strip()) > 0 and len(reference_transcript.split()) <= 40:
+        # Use provided transcript or default to the authentic freshly recorded RA #15 prompt
+        if reference_transcript and len(reference_transcript.strip()) > 0:
             ref_text = reference_transcript.strip()
         else:
-            ref_text = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion."
+            ref_text = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon."
 
-        # Retain full natural audio length (up to 15s) without cutting words in half
-        max_samples = int(15.0 * TARGET_SAMPLE_RATE)
+        # Retain full natural audio length (up to 30s) without cutting words in half
+        max_samples = int(30.0 * TARGET_SAMPLE_RATE)
         slice_data = audio_data[:max_samples] if len(audio_data) > max_samples else audio_data
 
         clean_wav_path = SAMPLES_DIR / f"{ref_path.stem}_clean_24k.wav"

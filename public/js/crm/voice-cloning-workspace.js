@@ -18,6 +18,9 @@ window.CrmVoiceCloningWorkspace = (function () {
             recordingSeconds: 0,
             recordedAudioBlob: null,
             recordedAudioUrl: null,
+            uploadedReferenceAudioUrl: null,
+            uploadedReferenceAudioBlob: null,
+            restoredTestRefUrl: null,
             testAudioUrl: null,
             savedProfiles: []
         };
@@ -147,6 +150,8 @@ window.CrmVoiceCloningWorkspace = (function () {
                 state.mediaRecorder.onstop = () => {
                     state.recordedAudioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
                     state.recordedAudioUrl = URL.createObjectURL(state.recordedAudioBlob);
+                    state.uploadedReferenceAudioUrl = null;
+                    state.uploadedReferenceAudioBlob = null;
                     
                     if (dom.refAudioPreview) {
                         dom.refAudioPreview.src = state.recordedAudioUrl;
@@ -182,6 +187,8 @@ window.CrmVoiceCloningWorkspace = (function () {
 
             state.recordedAudioBlob = file;
             state.recordedAudioUrl = URL.createObjectURL(file);
+            state.uploadedReferenceAudioUrl = null;
+            state.uploadedReferenceAudioBlob = null;
 
             if (dom.refAudioPreview) {
                 dom.refAudioPreview.src = state.recordedAudioUrl;
@@ -200,14 +207,23 @@ window.CrmVoiceCloningWorkspace = (function () {
 
             if (dom.btnGenerateTest) {
                 dom.btnGenerateTest.disabled = true;
-                dom.btnGenerateTest.textContent = '⏳ Uploading Voice Sample…';
+                dom.btnGenerateTest.textContent = '⏳ Preparing Voice Sample…';
+            }
+            if (dom.testOutputBox) {
+                dom.testOutputBox.style.display = 'none';
             }
 
             try {
-                let referenceAudioUrl = state.uploadedReferenceAudioUrl || '/audio/voice-cloning/ra_15_reference.webm';
-
                 // 1. If user recorded fresh audio and not uploaded yet, upload to cloud
-                if (state.recordedAudioBlob && !state.uploadedReferenceAudioUrl) {
+                const needsUpload = state.recordedAudioBlob && (
+                    !state.uploadedReferenceAudioUrl || 
+                    state.uploadedReferenceAudioBlob !== state.recordedAudioBlob
+                );
+
+                if (needsUpload) {
+                    if (dom.btnGenerateTest) {
+                        dom.btnGenerateTest.textContent = '⏳ Uploading Fresh Voice Sample…';
+                    }
                     try {
                         const base64Data = await blobToBase64(state.recordedAudioBlob);
                         const uploadRes = await apiFetchJson('/api/admin/voice-cloning/upload-reference', {
@@ -220,13 +236,15 @@ window.CrmVoiceCloningWorkspace = (function () {
                             })
                         });
                         if (uploadRes?.audioUrl) {
-                            referenceAudioUrl = uploadRes.audioUrl;
-                            state.uploadedReferenceAudioUrl = referenceAudioUrl;
+                            state.uploadedReferenceAudioUrl = uploadRes.audioUrl;
+                            state.uploadedReferenceAudioBlob = state.recordedAudioBlob;
                         }
                     } catch (uploadErr) {
                         console.warn('[VoiceCloning] Audio upload fallback:', uploadErr);
                     }
                 }
+
+                const referenceAudioUrl = state.uploadedReferenceAudioUrl || state.restoredTestRefUrl || '/audio/voice-cloning/ra_15_reference.webm';
 
                 // 2. Enqueue dynamic test synthesis job for RA #18
                 if (dom.btnGenerateTest) {
@@ -384,9 +402,9 @@ window.CrmVoiceCloningWorkspace = (function () {
                         metricsBadge.textContent = `Ready (${job.durationSeconds || '0'}s • Cloned)`;
                     }
                     if (dom.btnSaveProfile) dom.btnSaveProfile.disabled = false;
-                    // Also reuse the reference audio URL so saving profile works immediately
-                    if (job.referenceAudioUrl && !state.uploadedReferenceAudioUrl) {
-                        state.uploadedReferenceAudioUrl = job.referenceAudioUrl;
+                    // Track the reference audio URL of this past test for fallback saving without blocking new recordings
+                    if (job.referenceAudioUrl) {
+                        state.restoredTestRefUrl = job.referenceAudioUrl;
                     }
                 } else if (job.status === 'pending' || job.status === 'processing') {
                     resumePollingTestJob(job.id);
@@ -408,11 +426,13 @@ window.CrmVoiceCloningWorkspace = (function () {
             if (dom.saveProfileStatus) dom.saveProfileStatus.textContent = 'Saving to cloud…';
 
             try {
-                let audioRef = state.uploadedReferenceAudioUrl || '/audio/voice-cloning/ra_15_reference.webm';
-                const promptText = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.";
-
                 // If user recorded fresh audio and hasn't uploaded yet, upload to cloud storage
-                if (state.recordedAudioBlob && !state.uploadedReferenceAudioUrl) {
+                const needsUpload = state.recordedAudioBlob && (
+                    !state.uploadedReferenceAudioUrl || 
+                    state.uploadedReferenceAudioBlob !== state.recordedAudioBlob
+                );
+
+                if (needsUpload) {
                     try {
                         const base64Data = await blobToBase64(state.recordedAudioBlob);
                         const uploadRes = await apiFetchJson('/api/admin/voice-cloning/upload-reference', {
@@ -425,13 +445,16 @@ window.CrmVoiceCloningWorkspace = (function () {
                             })
                         });
                         if (uploadRes?.audioUrl) {
-                            audioRef = uploadRes.audioUrl;
-                            state.uploadedReferenceAudioUrl = audioRef;
+                            state.uploadedReferenceAudioUrl = uploadRes.audioUrl;
+                            state.uploadedReferenceAudioBlob = state.recordedAudioBlob;
                         }
                     } catch (uploadErr) {
                         console.warn('[VoiceCloning] Audio upload fallback:', uploadErr);
                     }
                 }
+
+                const audioRef = state.uploadedReferenceAudioUrl || state.restoredTestRefUrl || '/audio/voice-cloning/ra_15_reference.webm';
+                const promptText = "The insults and criticisms were not unexpected. What was surprising was people's enthusiasm about the competition. Thousands have participated in the discussion, turning what began as a niche debate into a nationwide phenomenon.";
 
                 await apiFetchJson('/api/admin/voice-cloning/profiles', {
                     method: 'POST',

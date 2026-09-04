@@ -60,6 +60,7 @@ merriam-webster api key
 .survivalmode/audio/*.wav
 docs/audits/**/*.mp4
 docs/audits/**/*.webm
+scripts/entrance-test/audio_analysis/
 
 # Temporary / cloned repos
 tmp_skills_repo/

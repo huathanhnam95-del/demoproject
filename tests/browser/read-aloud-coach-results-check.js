@@ -81,6 +81,11 @@ function ok(label, pass, detail) {
         mk('e3', 'consonant_to_vowel', `${words[3]} ${words[4]}`, words[3] || 'c', words[4] || 'd', 'not_detected', '/‿/')
       ];
 
+      // Results only render into a mode that is in the RESULTS state; in PREP an
+      // async preview hydration is still in flight and legitimately wins the rail.
+      mode.state = 'RESULTS';
+      await new Promise((r) => setTimeout(r, 800));
+
       await mode.renderConnectedSpeechResults(
         { status: 'complete', version: 'cs-v1', events, summary: { detectedCount: 1, notDetectedCount: 2, uncertainCount: 0 } },
         { transcriptText: text, words: [], metrics: {}, sessionViewMode: 'advanced' }

@@ -169,6 +169,72 @@ function ok(label, pass, detail) {
         probe.panelOverflow <= 1 && probe.docOverflow <= 1,
         `panel=${probe.panelOverflow} doc=${probe.docOverflow}`);
 
+      // Reachability. Round 1 measured alignment at rest and passed while the
+      // primary action was sitting under a fixed tab bar and a chat mascot, and
+      // while the controller scrolled behind the fixed site header.
+      const reach = await page.evaluate(async () => {
+        // The guest chooser re-presents itself after a mode switch and covers the
+        // page at z-index 2000; it would fail every hit test on its own.
+        document.querySelectorAll('#entry-modal, .entry-modal, .auth-overlay, .guest-toast')
+          .forEach((el) => { el.style.display = 'none'; });
+        window.scrollTo(0, 400);
+        await new Promise((r) => setTimeout(r, 250));
+        const rect = (sel) => {
+          const el = document.querySelector(sel);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) return null;
+          return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+        };
+        const overlaps = (a, b) => !!a && !!b
+          && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+        const header = rect('.site-header');
+        const controller = rect('.spc-controller');
+        const footer = rect('.spc-footer');
+        const toolbar = rect('.mobile-toolbar');
+        const mascot = rect('.bel-chat-trigger');
+        const action = rect('.spc-slot-attempt > *:not([style*="display: none"])');
+
+        // The topmost visible attempt button decides whether the CTA is usable.
+        const attemptBtns = [...document.querySelectorAll('.spc-slot-attempt button')]
+          .filter((b) => getComputedStyle(b).display !== 'none');
+        const cta = attemptBtns.length ? attemptBtns[attemptBtns.length - 1].getBoundingClientRect() : null;
+        const ctaRect = cta ? { top: cta.top, bottom: cta.bottom, left: cta.left, right: cta.right } : null;
+
+        // Is the CTA's own centre point actually the element that receives a click?
+        let ctaHitTestOk = null;
+        if (attemptBtns.length) {
+          const btn = attemptBtns[attemptBtns.length - 1];
+          const r = btn.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          ctaHitTestOk = !!hit && (btn === hit || btn.contains(hit) || hit.contains(btn));
+        }
+
+        window.scrollTo(0, 0);
+        await new Promise((r) => setTimeout(r, 150));
+        return {
+          controllerBelowHeader: !!controller && !!header ? controller.top >= header.bottom - 1 : null,
+          footerAboveToolbar: !!footer && !!toolbar ? footer.bottom <= toolbar.top + 1 : 'no toolbar',
+          footerClearsMascot: !overlaps(ctaRect, mascot),
+          ctaHitTestOk,
+          hasAction: !!action || !!ctaRect
+        };
+      });
+
+      if (reach.controllerBelowHeader !== null) {
+        record(`controller clears the fixed site header on scroll ${tag}`,
+          reach.controllerBelowHeader === true);
+      }
+      if (reach.footerAboveToolbar !== 'no toolbar') {
+        record(`action bar sits above the mobile toolbar ${tag}`,
+          reach.footerAboveToolbar === true);
+      }
+      record(`primary action is not covered by the chat mascot ${tag}`,
+        reach.footerClearsMascot === true);
+      record(`primary action passes a hit test ${tag}`,
+        reach.ctaHitTestOk === true, `hitTest=${reach.ctaHitTestOk} hasAction=${reach.hasAction}`);
+
       // The auth chooser can re-present itself after a mode switch; it is not
       // part of what this check is looking at.
       await page.evaluate(() => {

@@ -19309,6 +19309,54 @@ body.readingjourney-active #readingjourney-root {
   min-width: 0;
 }
 
+/* Key for the marks drawn on the passage. Each entry shows only while its guide
+   is active, so it never explains a mark that is not on screen. */
+.ra-guide-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ra-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.ra-legend-item[hidden] {
+  display: none;
+}
+
+.ra-legend-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.ra-legend-swatch--linking {
+  border-bottom: 2px solid var(--coach-linking-strong);
+  border-radius: 0 0 9px 9px;
+}
+
+.ra-legend-swatch--reduced {
+  height: 14px;
+  border-radius: 3px;
+  background: var(--coach-reduced-tint);
+  border-bottom: 2px solid var(--coach-reduced-strong);
+}
+
+.ra-legend-swatch--sound {
+  height: 14px;
+  border-radius: 3px;
+  background: var(--coach-sound-tint);
+  border: 1px solid var(--coach-sound-strong);
+}
+
 /* ── Split: passage stage + coach rail ─────────────────────────────────── */
 
 .ra-split {
@@ -19319,11 +19367,17 @@ body.readingjourney-active #readingjourney-root {
 }
 
 .ra-stage {
-  flex: 1 1 520px;
+  flex: 1.35 1 520px;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* Short prompts used to leave a wide empty band under the text while the rail
+   overflowed beside it; capping the measure also keeps the line length readable. */
+.ra-stage .ra-prompt-stage {
+  max-width: 62ch;
 }
 
 .ra-prompt-stage {
@@ -19412,13 +19466,54 @@ body.readingjourney-active #readingjourney-root {
   max-width: 460px;
   min-width: 0;
   position: sticky;
-  top: 96px;
+  /* Clears the fixed site header plus the sticky controller beneath it. The old
+     96px was a guess that ignored both and let cards slide underneath. */
+  top: calc(var(--site-header-height-actual, var(--site-header-height, 76px)) + 76px);
+  /* Without a height bound the rail simply ran off the bottom of the viewport and
+     the fourth card was invisible with nothing to say so. */
+  max-height: calc(100vh - var(--site-header-height-actual, var(--site-header-height, 76px)) - var(--spc-footer-height, 72px) - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding-left: 24px;
   border-left: 1px solid var(--border-light, #e2e8f0);
   box-sizing: border-box;
+}
+
+/* A bounded scroller with a hard bottom edge looks like a clipped list, not a
+   scrollable one. The fade says "there is more" without adding chrome. */
+.ra-rail::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  display: block;
+  height: 28px;
+  margin-top: -28px;
+  flex: 0 0 auto;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--bg-main, #f8fafc));
+}
+
+/* The header stays put while the findings scroll under it. */
+.ra-rail-header,
+.ra-rail-summary {
+  position: sticky;
+  left: 0;
+  background: var(--bg-main, #f8fafc);
+  z-index: 1;
+}
+
+.ra-rail-header {
+  top: 0;
+  padding-top: 2px;
+}
+
+.ra-rail-summary {
+  top: 26px;
+  padding-bottom: 6px;
 }
 
 .ra-rail-header {
@@ -19504,10 +19599,22 @@ body.readingjourney-active #readingjourney-root {
 
   .ra-rail {
     position: static;
+    max-height: none;
+    overflow-y: visible;
     padding-left: 0;
     padding-top: 16px;
     border-left: none;
     border-top: 1px solid var(--border-light, #e2e8f0);
+  }
+
+  .ra-rail-header,
+  .ra-rail-summary {
+    position: static;
+  }
+
+  /* Nothing is clipped in the stacked layout, so nothing to fade. */
+  .ra-rail::after {
+    display: none;
   }
 }
 
@@ -19560,6 +19667,20 @@ body.readingjourney-active #readingjourney-root {
 
 .ra-timer-box--record .ra-timer-value {
   color: var(--danger, #ef4444);
+}
+
+/* Only the live phase gets a countdown at full size. */
+.ra-timer-box[data-timer-state="idle"] {
+  opacity: 0.55;
+}
+
+.ra-timer-box[data-timer-state="idle"] .ra-timer-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ra-timer-box[data-timer-state="active"] .ra-timer-value {
+  font-size: 1.6rem;
 }
 
 #mode-read-aloud #ra-read-aloud-controls {
@@ -20606,6 +20727,72 @@ body.readingjourney-active #readingjourney-root {
   font-size: 0.86rem;
   line-height: 1.4;
   color: var(--text-secondary, #4b5563);
+}
+
+/* Plain language leads the card. IPA used to be the first thing a learner read,
+   on a page that badges them A1; it is now a quiet trailing line, and the simple
+   tier drops it altogether. */
+.sc-card-say {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+  color: var(--text-primary, #111827);
+}
+
+.sc-card-say-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.sc-card-say strong {
+  font-weight: 700;
+  color: var(--sc-card-text, var(--coach-reduced-text));
+}
+
+.sc-card-ipa {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ra-rail[data-coach-tier="simple"] .sc-card-ipa {
+  display: none;
+}
+
+/* Browser-voice fallback reads as available but secondary to a recorded model. */
+.sc-audio-btn--synth {
+  border-style: dashed;
+}
+
+/* ── Focus states ──────────────────────────────────────────────────────────
+   None of the workbench's interactive elements had a focus ring, so a keyboard
+   learner could not tell which guide or card they were on. Uses the app-wide
+   focus tokens rather than inventing a treatment. */
+.ra-guide-chip:focus-visible,
+.sc-card-body:focus-visible,
+.ra-rail-toggle:focus-visible,
+.sc-compact-toggle:focus-visible,
+.ra-show-advanced-btn:focus-visible,
+.sc-audio-btn:focus-visible {
+  outline: var(--focus-ring, 2px solid #2563eb);
+  outline-offset: var(--focus-ring-offset, 2px);
+  border-radius: var(--radius, 8px);
+}
+
+/* The card body fills its card, so its ring reads better inset than outset. */
+.sc-card-body:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Keyboard focus should light the passage word the same way hovering does. */
+.sc-card-body:focus-visible ~ .sc-card-audio,
+.sc-guide-item:focus-within {
+  border-color: var(--sc-card-accent, var(--coach-linking-strong));
 }
 
 .sc-card-audio {

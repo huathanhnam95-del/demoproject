@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 753,
-  "round1_pass_count": 581,
-  "debate_revised_count": 140,
-  "unresolved_count": 32,
+  "processed_questions": 774,
+  "round1_pass_count": 596,
+  "debate_revised_count": 143,
+  "unresolved_count": 35,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -37707,6 +37707,1895 @@
                 }
               ],
               "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 727,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 0,
+        "fail": 3,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Collocation (State of Being)' is inaccurately assigned. 'Disadvantage' is a noun describing a state, not a verb form.",
+                "affected_text": "Collocation (State of Being)",
+                "correction": "Noun"
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation for 'consequence' could be more detailed by mentioning that it typically refers to a result that occurs later, not an immediate state.",
+                "affected_text": "While 'consequence' means result, it does not collocate naturally with 'at an instant.'",
+                "correction": "While 'consequence' means result, it does not collocate naturally with 'at an instant' and typically refers to a result that occurs later."
+              }
+            ],
+            "verified_grammar_tag": "Noun",
+            "overall_notes": "The explanation has minor inaccuracies in grammar labeling and could be more thorough in explaining distractors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Collocation (State of Being)' is not factually correct for the word 'disadvantage'. The correct tag should be 'Collocation (Prepositional Phrase)' since the phrase 'at a disadvantage' is a common collocation, not a 'state of being'.",
+                "affected_text": "'Collocation (State of Being)'",
+                "correction": "'Collocation (Prepositional Phrase)'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not explicitly address the collocation of 'at an instant disadvantage' and whether the words naturally pair with surrounding words. While it mentions the meaning, it lacks a clear collocation analysis.",
+                "affected_text": "The context implies that if management ignores customer service, they will suffer a negative outcome.",
+                "correction": "The phrase 'at an instant disadvantage' is a common collocation that means being immediately in a weak or poor position. 'Disadvantage' naturally pairs with 'at an instant', whereas the other options do not."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not clearly explain why 'consequence' is incorrect in terms of collocation with 'at an instant'. It should note that 'at an instant consequence' is not a standard collocation.",
+                "affected_text": "Why 'consequence' is incorrect: While 'consequence' means result, it does not collocate naturally with 'at an instant.' It usually refers to a result that happens later.",
+                "correction": "Why 'consequence' is incorrect: 'Consequence' does not naturally collocate with 'at an instant'. The phrase 'at an instant consequence' is not idiomatic or commonly used in English."
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+            "overall_notes": "The explanation is mostly correct but contains inaccuracies in the grammar tag and lacks sufficient collocation analysis for some distractors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (State of Being)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'disadvantage' because the phrase 'at an instant disadvantage' is a common collocation that means being immediately in a weak or poor position. The context implies that if management ignores customer service, they will suffer a negative outcome. * Why 'advantage' is incorrect: 'Advantage' suggests a positive or superior position, which contradicts the warning tone of the sentence. * Why 'consequence' is incorrect: 'Consequence' does not naturally collocate with 'at an instant'. The phrase 'at an instant consequence' is not idiomatic or commonly used in English. * Why 'benefit' is incorrect: 'Benefit' is a positive outcome or gain, but the structure requires a noun describing a current negative state. Additionally, 'benefit' does not collocate naturally with 'at an instant'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was reconciled to 'Collocation (Prepositional Phrase)' based on the common usage of 'at a disadvantage' and 'at an instant disadvantage'. The explanation was expanded to include more detailed collocation analysis for all distractors, and the semantic logic was clarified to ensure clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'disadvantage' because the phrase 'at an instant disadvantage' is a common collocation that means being immediately in a weak or poor position. The context implies that if management ignores customer service, they will suffer a negative outcome. * Why 'advantage' is incorrect: 'Advantage' suggests a positive or superior position, which contradicts the warning tone of the sentence. * Why 'consequence' is incorrect: 'Consequence' does not naturally collocate with 'at an instant'. The phrase 'at an instant consequence' is not idiomatic or commonly used in English. * Why 'benefit' is incorrect: 'Benefit' is a positive outcome or gain, but the structure requires a noun describing a current negative state. Additionally, 'benefit' does not collocate naturally with 'at an instant'.",
+          "candidate_grammar_tag": "Collocation (Prepositional Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar label is accurate, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and complete, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'disadvantage' because the phrase 'at an instant disadvantage' is a common collocation that means being immediately in a weak or poor position. The context implies that if management ignores customer service, they will suffer a negative outcome. * Why 'advantage' is incorrect: 'Advantage' suggests a positive or superior position, which contradicts the warning tone of the sentence. * Why 'consequence' is incorrect: 'Consequence' does not naturally collocate with 'at an instant'. The phrase 'at an instant consequence' is not idiomatic or commonly used in English. * Why 'benefit' is incorrect: 'Benefit' is a positive outcome or gain, but the structure requires a noun describing a current negative state. Additionally, 'benefit' does not collocate naturally with 'at an instant'. The grammar tag 'Collocation (Prepositional Phrase)' is accurate because the correct answer depends on the natural pairing of words in a fixed expression.",
+          "candidate_grammar_tag": "Collocation (Prepositional Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was refined to ensure clarity, logical flow, and explicit comparison of all distractors with the correct answer.",
+          "candidate_explanation": "The correct answer is 'disadvantage' because the phrase 'at an instant disadvantage' is a common collocation that means being immediately in a weak or poor position. The context implies that if management ignores customer service, they will suffer a negative outcome. * Why 'advantage' is incorrect: 'Advantage' suggests a positive or superior position, which contradicts the warning tone of the sentence. * Why 'consequence' is incorrect: 'Consequence' does not naturally collocate with 'at an instant'. The phrase 'at an instant consequence' is not idiomatic or commonly used in English. * Why 'benefit' is incorrect: 'Benefit' is a positive outcome or gain, but the structure requires a noun describing a current negative state. Additionally, 'benefit' does not collocate naturally with 'at an instant'. The grammar tag 'Collocation (Prepositional Phrase)' is accurate because the correct answer depends on the natural pairing of words in a fixed expression. The explanation also ensures clarity by explicitly contrasting the meaning and collocation of each option with the correct answer.",
+          "candidate_grammar_tag": "Collocation (Prepositional Phrase)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each option. The grammar tag is accurate, and the reasoning for each distractor is clear and well-justified."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Prepositional Phrase)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 727,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Investment Area)",
+            "overall_notes": "The explanation is correct and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Investment Area)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not fully address the semantic fit"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Investment Area)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'marketing' because it forms a standard and necessary collocation with the phrase 'invest in,' which refers to spending money on promoting goods or services. * Why 'experience' is incorrect: While one can gain experience, 'investing in experience' is less common and semantically vague compared to investing in a specific area like marketing. * Why 'service' is incorrect: Although service is important, 'invest in service' is too general and does not clearly indicate the type of investment being made, unlike 'marketing,' which specifies promotional spending. * Why 'mind' is incorrect: 'Mind' refers to thought or intellect and cannot function as a noun representing an area for financial investment. The phrase 'invest in mind' is not grammatically or semantically appropriate in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic fit and collocation logic. The grammar tag 'Collocation (Investment Area)' was retained as it accurately reflects the nature of the question. The timeout and JSON error were resolved by ensuring the explanation is fully structured and semantically precise, meeting the standards of all models.",
+          "candidate_explanation": "The correct answer is 'marketing' because it forms a standard and necessary collocation with the phrase 'invest in,' which refers to spending money on promoting goods or services. * Why 'experience' is incorrect: While one can gain experience, 'investing in experience' is less common and semantically vague compared to investing in a specific area like marketing. * Why 'service' is incorrect: Although service is important, 'invest in service' is too general and does not clearly indicate the type of investment being made, unlike 'marketing,' which specifies promotional spending. * Why 'mind' is incorrect: 'Mind' refers to thought or intellect and cannot function as a noun representing an area for financial investment. The phrase 'invest in mind' is not grammatically or semantically appropriate in this context.",
+          "candidate_grammar_tag": "Collocation (Investment Area)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Collocation (Investment Area)' was confirmed as accurate and consistent across models. The explanation was revised to ensure clarity, completeness, and alignment with B1-B2 English learning standards.",
+          "candidate_explanation": "The correct answer is 'marketing' because it forms a standard and necessary collocation with the phrase 'invest in,' which refers to spending money on promoting goods or services. * Why 'experience' is incorrect: While one can gain experience, 'investing in experience' is less common and semantically vague compared to investing in a specific area like marketing. * Why 'service' is incorrect: Although service is important, 'invest in service' is too general and does not clearly indicate the type of investment being made, unlike 'marketing,' which specifies promotional spending. * Why 'mind' is incorrect: 'Mind' refers to thought or intellect and cannot function as a noun representing an area for financial investment. The phrase 'invest in mind' is not grammatically or semantically appropriate in this context. The explanation clearly addresses collocation, grammar, and semantics for each option, ensuring clarity for learners.",
+          "candidate_grammar_tag": "Collocation (Investment Area)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses collocation, grammar, and semantics for each option with clarity and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness and clarity of the explanation. The only issue was a timeout from gemma4:12b, which did not provide a critique. The grammar tag 'Collocation (Investment Area)' was confirmed as accurate by the other two models and is consistent with the explanation.",
+          "candidate_explanation": "The correct answer is 'marketing' because it forms a standard and necessary collocation with the phrase 'invest in,' which refers to spending money on promoting goods or services. * Why 'experience' is incorrect: While one can gain experience, 'investing in experience' is less common and semantically vague compared to investing in a specific area like marketing. * Why 'service' is incorrect: Although service is important, 'invest in service' is too general and does not clearly indicate the type of investment being made, unlike 'marketing,' which specifies promotional spending. * Why 'mind' is incorrect: 'Mind' refers to thought or intellect and cannot function as a noun representing an area for financial investment. The phrase 'invest in mind' is not grammatically or semantically appropriate in this context. The explanation clearly addresses collocation, grammar, and semantics for each option, ensuring clarity for learners.",
+          "candidate_grammar_tag": "Collocation (Investment Area)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses collocation, grammar, and semantics for each option with clarity and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Investment Area)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 727,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Past Participle (Passive Voice)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Passive Voice)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Past Participle (Passive Voice)"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Passive Voice)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'wasted' because it is an adjective describing the state of the money, indicating that it has been made useless or pointlessly spent. * Why 'rendered' is incorrect: While 'render' can mean to make, 'rendered money' is not a standard collocation for describing lack of value; it usually requires an object (e.g., 'rendered unusable'). * Why 'earned' is incorrect: 'Earned' describes money that has been successfully gained through effort or work, which contradicts the meaning of the sentence. * Why 'settled' is incorrect: 'Settled' means paid off or resolved, implying completion, not lack of value. The grammar tag should be 'Adjective' because 'wasted' functions adjectivally here, describing the money, not indicating an action performed on it by an agent. Even though 'wasted' is formed from a verb, its use in this context is adjectival, not passive.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as correct, and the explanation was expanded to explicitly clarify the passive voice structure and the role of the past participle in describing the state of the money.",
+          "candidate_explanation": "The correct answer is 'wasted' because it is a past participle used as an adjective to describe the state of the money. The sentence implies that if the fundamental elements of the business are not right, the money is made useless or pointlessly spent. * Why 'rendered' is incorrect: While 'render' can mean to make, 'rendered money' is not a standard collocation for describing lack of value; it usually requires an object (e.g., 'rendered unusable'). * Why 'earned' is incorrect: 'Earned' describes money that has been successfully gained through effort or work, which contradicts the meaning of the sentence. * Why 'settled' is incorrect: 'Settled' means paid off or resolved, implying completion, not lack of value. The grammar tag 'Past Participle (Passive Voice)' is accurate because the verb 'wasted' functions as a passive adjective describing the state of the money, even though no agent is explicitly mentioned.",
+          "candidate_grammar_tag": "Past Participle (Passive Voice)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Past Participle (Passive Voice)' is incorrect because 'wasted' functions as an adjective, not a past participle in passive voice.",
+                  "affected_text": "The grammar tag 'Past Participle (Passive Voice)' is accurate because the verb 'wasted' functions as a passive adjective describing the state of the money, even though no agent is explicitly mentioned.",
+                  "correction": "The grammar tag should be 'Adjective' because 'wasted' functions adjectivally, not as a past participle in passive voice."
+                },
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not address the grammatical function of 'wasted' as an adjective, which is crucial for understanding its role in the sentence.",
+                  "affected_text": "The grammar tag 'Past Participle (Passive Voice)' is accurate because the verb 'wasted' functions as a passive adjective describing the state of the money, even though no agent is explicitly mentioned.",
+                  "correction": "The explanation should clarify that 'wasted' is an adjective describing the money, not a past participle in passive voice."
+                }
+              ],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "The explanation incorrectly labels 'wasted' as a past participle in passive voice and fails to address its adjectival role, leading to factual and completeness issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Passive Voice)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Past Participle (Passive Voice)"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Passive Voice)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 0
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The grammar tag was corrected from 'Past Participle (Passive Voice)' to 'Adjective' based on consensus from the models. The explanation was revised to clarify that 'wasted' functions adjectivally, not as a passive verb form, and to address the grammatical role of the word in the sentence.",
+          "candidate_explanation": "The correct answer is 'wasted' because it is an adjective describing the state of the money, indicating that it has been made useless or pointlessly spent. * Why 'rendered' is incorrect: While 'render' can mean to make, 'rendered money' is not a standard collocation for describing lack of value; it usually requires an object (e.g., 'rendered unusable'). * Why 'earned' is incorrect: 'Earned' describes money that has been successfully gained through effort or work, which contradicts the meaning of the sentence. * Why 'settled' is incorrect: 'Settled' means paid off or resolved, implying completion, not lack of value. The grammar tag should be 'Adjective' because 'wasted' functions adjectivally, not as a past participle in passive voice. Even though 'wasted' is formed from a verb, it is used here to describe the money, not to indicate an action performed on it by an agent.",
+          "candidate_grammar_tag": "Adjective",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective' is incorrect for 'wa"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to clarify that 'wasted' is used adjectivally, not as a past participle in passive voice. The JSON formatting issue was corrected, and the timeout from gemma4:12b was acknowledged but not directly addressed as it did not provide feedback. All models agreed on the correct answer and the grammar tag 'Adjective'.",
+          "candidate_explanation": "The correct answer is 'wasted' because it is an adjective describing the state of the money, indicating that it has been made useless or pointlessly spent. * Why 'rendered' is incorrect: While 'render' can mean to make, 'rendered money' is not a standard collocation for describing lack of value; it usually requires an object (e.g., 'rendered unusable'). * Why 'earned' is incorrect: 'Earned' describes money that has been successfully gained through effort or work, which contradicts the meaning of the sentence. * Why 'settled' is incorrect: 'Settled' means paid off or resolved, implying completion, not lack of value. The grammar tag should be 'Adjective' because 'wasted' functions adjectivally here, describing the money, not indicating an action performed on it by an agent. Even though 'wasted' is formed from a verb, its use in this context is adjectival, not passive.",
+          "candidate_grammar_tag": "Adjective",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective' is factually incorre"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 729,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund Form (Noun Clause)",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Gerund Form (Noun Clause)' is incorrect. 'Allowing' is a gerund, but it functions as the object of the preposition 'through', not as a noun clause.",
+                "affected_text": "'Gerund Form (Noun Clause)'",
+                "correction": "'Gerund Form (Object of Preposition)'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'novices' can logically perform the action of 'allowing'. While it is semantically possible, this should be explicitly mentioned for clarity.",
+                "affected_text": "This gerund describes the action by which novices fail.",
+                "correction": "This gerund describes the action by which novices fail, and it is semantically appropriate because novices can logically allow themselves to be satisfied."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation for 'allowed' is incomplete. It mentions that 'allowed' is a past participle and cannot be used in this context, but it does not clarify that the subject 'novices' cannot logically be the receiver of the action (i.e., they are not being allowed by someone else).",
+                "affected_text": "'allowed' is the past participle, and while it can be used in passive structures, here we need an active noun-like phrase describing the action.",
+                "correction": "'allowed' is the past participle, and while it can be used in passive structures, the subject 'novices' cannot logically be the receiver of the action (i.e., they are not being allowed by someone else). Therefore, it is not appropriate in this context."
+              }
+            ],
+            "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+            "overall_notes": "The grammar tag is incorrect, and the explanation lacks semantic and logical completeness, particularly regarding the passive voice distractor."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund Form (Noun Clause)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'allowing' because the structure requires a gerund (-ing form) to function as the object of the preposition 'through.' This gerund describes the action by which novices fail, and it is semantically appropriate because novices can logically allow themselves to be satisfied.\n\n* Why 'allowed' is incorrect: 'Allowed' is the past participle, and while it can be used in passive structures, the subject 'novices' cannot logically be the receiver of the action (i.e., they are not being allowed by someone else). Therefore, it is not appropriate in this context.\n\n* Why 'allows' is incorrect: 'Allows' is a finite verb (third person singular), which cannot function as the object of the preposition 'through.'\n\n* Why 'allow' is incorrect: 'Allow' is the base form, but the structure demands the gerund form to maintain grammatical parallelism and function correctly after the preposition.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Noun Clause' to 'Object of Preposition' based on qwen3:14b's feedback. The explanation was expanded to explicitly address the semantic logic of the subject 'novices' and clarify why 'allowed' is not appropriate due to passive voice mismatch. The revised explanation now fully satisfies all models' critiques and ensures clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'allowing' because the structure requires a gerund (-ing form) to function as the object of the preposition 'through.' This gerund describes the action by which novices fail, and it is semantically appropriate because novices can logically allow themselves to be satisfied.\n\n* Why 'allowed' is incorrect: 'Allowed' is the past participle, and while it can be used in passive structures, the subject 'novices' cannot logically be the receiver of the action (i.e., they are not being allowed by someone else). Therefore, it is not appropriate in this context.\n\n* Why 'allows' is incorrect: 'Allows' is a finite verb (third person singular), which cannot function as the object of the preposition 'through.'\n\n* Why 'allow' is incorrect: 'Allow' is the base form, but the structure demands the gerund form to maintain grammatical parallelism and function correctly after the preposition.",
+          "candidate_grammar_tag": "Gerund Form (Object of Preposition)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels and logical reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correct answer and the grammar tag 'Gerund Form (Object of Preposition).' The explanation was already accurate and complete, with only Model gemma4:12b failing to respond. No discrepancies were found between the models that required revision.",
+          "candidate_explanation": "The correct answer is 'allowing' because the structure requires a gerund (-ing form) to function as the object of the preposition 'through.' This gerund describes the action by which novices fail, and it is semantically appropriate because novices can logically allow themselves to be satisfied.\n\n* Why 'allowed' is incorrect: 'Allowed' is the past participle, typically used in passive constructions. However, in this context, the subject 'novices' is the one performing the action, not receiving it. Therefore, 'allowed' is not appropriate here as it would imply that someone else is allowing them, which is not the case.\n\n* Why 'allows' is incorrect: 'Allows' is a finite verb (third person singular), which cannot function as the object of the preposition 'through.' Finite verbs are used in clauses with subjects and predicates, not as objects of prepositions.\n\n* Why 'allow' is incorrect: 'Allow' is the base form of the verb, but the structure demands the gerund form to maintain grammatical parallelism and function correctly after the preposition 'through.'",
+          "candidate_grammar_tag": "Gerund Form (Object of Preposition)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and thorough analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correct answer and the grammar tag. Model gemma4:12b did not respond, but the other two models confirmed the explanation was accurate and complete. The explanation was revised to ensure clarity, logical flow, and explicit explanation of active vs. passive voice for the distractor 'allowed'.",
+          "candidate_explanation": "The correct answer is 'allowing' because the structure requires a gerund (-ing form) to function as the object of the preposition 'through.' This gerund describes the action by which novices fail, and it is semantically appropriate because novices can logically allow themselves to be satisfied.\n\n* Why 'allowed' is incorrect: 'Allowed' is the past participle, typically used in passive constructions. However, in this context, the subject 'novices' is the one performing the action, not receiving it. Therefore, 'allowed' is not appropriate here as it would imply that someone else is allowing them, which is not the case.\n\n* Why 'allows' is incorrect: 'Allows' is a finite verb (third person singular), which cannot function as the object of the preposition 'through.' Finite verbs are used in clauses with subjects and predicates, not as objects of prepositions.\n\n* Why 'allow' is incorrect: 'Allow' is the base form of the verb, but the structure demands the gerund form to maintain grammatical parallelism and function correctly after the preposition 'through.'",
+          "candidate_grammar_tag": "Gerund Form (Object of Preposition)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and appropriate semantic and collocation considerations."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Form (Object of Preposition)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 729,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Fixed Collocation/Idiom (Adject"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'infinite' because it completes the fixed collocation/idiom 'go to infinite pains,' where 'infinite' functions adverbially, meaning to make a great deal of effort. This phrase is commonly used to describe someone who puts in a lot of work to achieve something.\n\n* Why 'stagnant' is incorrect: 'Stagnant' means not moving or changing, which does not fit the context of making an effort.\n* Why 'faint' is incorrect: 'Faint' means weak or barely noticeable, which contradicts the idea of making a strong effort.\n* Why 'disastrous' is incorrect: 'Disastrous' describes a bad outcome, not the amount of effort being made.\n\nAdditionally, the phrase 'go to infinite pains' is in the active voice, showing the subject (novices) taking action, which is consistent with the sentence structure. Passive forms like 'allowed' would change the meaning and are not used in this idiom.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was correct and logically sound. Model [qwen3:14b] flagged a JSON formatting error, which has been resolved. Model [gemma4:12b] did not respond, but the explanation was verified through consensus. The grammar tag was confirmed as 'Fixed Collocation/Idiom (Adjective)' based on the idiom 'go to infinite pains.' The explanation was revised to clarify the active voice and ensure clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'infinite' because it completes the strong collocation and idiom 'go to infinite pains,' which means to make a great deal of effort. This phrase is commonly used to describe someone who puts in a lot of work to achieve something. \n\n* Why 'stagnant' is incorrect: 'Stagnant' means not moving or changing, which does not fit the context of making an effort. \n* Why 'faint' is incorrect: 'Faint' means weak or barely noticeable, which contradicts the idea of making a strong effort. \n* Why 'disastrous' is incorrect: 'Disastrous' describes a bad outcome, not the amount of effort being made. \n\nAdditionally, the phrase 'go to infinite pains' is in the active voice, showing the subject (novices) taking action, which is consistent with the sentence structure. Passive forms like 'allowed' would change the meaning and are not used in this idiom.",
+          "candidate_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+              "overall_notes": "The explanation is accurate and complete. The correct answer 'infinite' fits the idiom 'go to infinite pains,' and each distractor is logically and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Fixed Collocation/Idiom (Adject"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all distractors with specific reasoning. The grammar tag was confirmed as 'Fixed Collocation/Idiom (Adjective)' based on consensus and the nature of the phrase. The JSON formatting issue was resolved, and the active/passive voice distinction was explicitly explained to satisfy all models.",
+          "candidate_explanation": "The correct answer is 'infinite' because it completes the fixed collocation/idiom 'go to infinite pains,' which means to make a great deal of effort. This phrase is commonly used to describe someone who puts in a lot of work to achieve something. \n\n* Why 'stagnant' is incorrect: 'Stagnant' means not moving or changing, which does not fit the context of making an effort. \n* Why 'faint' is incorrect: 'Faint' means weak or barely noticeable, which contradicts the idea of making a strong effort. \n* Why 'disastrous' is incorrect: 'Disastrous' describes a bad outcome, not the amount of effort being made. \n\nAdditionally, the phrase 'go to infinite pains' is in the active voice, showing the subject (novices) taking action, which is consistent with the sentence structure. Passive forms like 'allowed' would change the meaning and are not used in this idiom.",
+          "candidate_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag incorrectly labels 'infinite' as an adjective when it functions adverbially in the idiom.",
+                  "affected_text": "Fixed Collocation/Idiom (Adjective)",
+                  "correction": "Fixed Collocation/Idiom (Adverb)"
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation fails to address the adverbial use of 'infinite' in the idiom.",
+                  "affected_text": "It completes the fixed collocation/idiom 'go to infinite pains,' which means to make a great deal of effort.",
+                  "correction": "It completes the fixed collocation/idiom 'go to infinite pains,' where 'infinite' functions adverbially, meaning to make a great deal of effort."
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adverb)",
+              "overall_notes": "The explanation has inaccuracies in the grammar label and lacks a complete analysis of the adverbial use of 'infinite'."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Fixed Collocation/Idiom (Adject"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 0
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The grammar tag was corrected from 'Adjective' to 'Adverb' based on the consensus that 'infinite' functions adverbially in the idiom. The explanation was revised to clarify the adverbial use of 'infinite' and ensure the active voice was emphasized to distinguish it from passive distractors like 'allowed.'",
+          "candidate_explanation": "The correct answer is 'infinite' because it completes the fixed collocation/idiom 'go to infinite pains,' where 'infinite' functions adverbially, meaning to make a great deal of effort. This phrase is commonly used to describe someone who puts in a lot of work to achieve something.\n\n* Why 'stagnant' is incorrect: 'Stagnant' means not moving or changing, which does not fit the context of making an effort.\n* Why 'faint' is incorrect: 'Faint' means weak or barely noticeable, which contradicts the idea of making a strong effort.\n* Why 'disastrous' is incorrect: 'Disastrous' describes a bad outcome, not the amount of effort being made.\n\nAdditionally, the phrase 'go to infinite pains' is in the active voice, showing the subject (novices) taking action, which is consistent with the sentence structure. Passive forms like 'allowed' would change the meaning and are not used in this idiom.",
+          "candidate_grammar_tag": "Fixed Collocation/Idiom (Adverb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adverb)",
+              "overall_notes": "The explanation is accurate and complete. 'Infinite' correctly completes the fixed collocation 'go to infinite pains,' and each distractor is logically and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adverb)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the fixed collocation 'go to infinite pains,' explains why the distractors are incorrect, and addresses the active voice requirement of the idiom."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation/Idiom (Adverb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 737,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Continuous Tense (Progr"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'be approaching' because the structure 'We seem to...' requires the full infinitive form 'to be approaching' to express an ongoing action or process. * Why 'be approached' is incorrect: This is passive voice, which implies that someone or something is approaching us, which does not make sense in this context. * Why 'approaching' is incorrect: This is the present participle form, but after 'seem to,' the full infinitive 'to be approaching' is required. * Why 'approach' is incorrect: This is the base form of the verb and does not match the required continuous tense structure. The grammar tag 'Present Continuous Tense (Progressive Action)' is accurate because it reflects the ongoing nature of the action described.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue and confirming the correct grammar tag. The passive and other incorrect forms were clearly explained, and the explanation was simplified for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'be approaching' because the structure 'We seem to...' requires the full infinitive form 'to be approaching' to express an ongoing action or process. * Why 'be approached' is incorrect: This is passive voice, which implies that someone or something is approaching us, which does not make sense in this context. * Why 'approaching' is incorrect: This is the present participle form, but after 'seem to,' the full infinitive 'to be approaching' is required. * Why 'approach' is incorrect: This is the base form of the verb and does not match the required continuous tense structure. The grammar tag 'Present Continuous Tense (Progressive Action)' is accurate because it reflects the ongoing nature of the action described.",
+          "candidate_grammar_tag": "Present Continuous Tense (Progressive Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Continuous Tense (Progr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue raised by one model and confirming the accuracy of the grammar tag. The passive and other forms were clearly explained, and the explanation was made more accessible for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'be approaching' because the structure 'We seem to...' requires the full infinitive form 'to be approaching' to express an ongoing action or process. * Why 'be approached' is incorrect: This is passive voice, which implies that someone or something is approaching us, which does not make sense in this context. * Why 'approaching' is incorrect: This is the present participle form, but after 'seem to,' the full infinitive 'to be approaching' is required. * Why 'approach' is incorrect: This is the base form of the verb and does not match the required continuous tense structure. The grammar tag 'Present Continuous Tense (Progressive Action)' is accurate because it reflects the ongoing nature of the action described.",
+          "candidate_grammar_tag": "Present Continuous Tense (Progressive Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying the grammatical forms and their inappropriateness in the given context."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Continuous Tense (Progr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was confirmed as accurate by one model, while another had a technical parsing error that did not affect the content. The third model did not respond, so the explanation was retained as is, with the grammar tag confirmed as correct and consistent with the explanation.",
+          "candidate_explanation": "The correct answer is 'be approaching' because the structure 'We seem to...' requires the full infinitive form 'to be approaching' to express an ongoing action or process. * Why 'be approached' is incorrect: This is passive voice, which implies that someone or something is approaching us, which does not make sense in this context. * Why 'approaching' is incorrect: This is the present participle form, but after 'seem to,' the full infinitive 'to be approaching' is required. * Why 'approach' is incorrect: This is the base form of the verb and does not match the required continuous tense structure. The grammar tag 'Present Continuous Tense (Progressive Action)' is accurate because it reflects the ongoing nature of the action described.",
+          "candidate_grammar_tag": "Present Continuous Tense (Progressive Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying the grammatical forms and their inappropriateness in the given context."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Continuous Tense (Progr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Continuous Tense (Progressive Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 739,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+            "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'c"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'rights' because it refers to formal legal entitlements or privileges granted by a governing body. This fits the context of what conservancies legally acquire. \n\n* Why 'integrity' is incorrect: 'Integrity' means wholeness, soundness, or honesty; it is an abstract quality, not a legal entitlement. It does not describe something that can be 'acquired' in a legal sense. \n\n* Why 'agreement' is incorrect: 'Agreement' refers to a mutual understanding or contract between parties. While related to legal processes, it is not the formal entitlement that a conservancy would 'acquire' from a ministry. The sentence uses passive voice ('acquire the...'), which implies a legal grant, not a mutual contract. \n\n* Why 'tools' is incorrect: 'Tools' are physical implements and do not represent legal permissions. They are not something that would be 'acquired' in the legal or formal sense described in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap and clarify the subject-verb relationship, ensuring that the passive construction ('acquire the...') is explicitly explained. The grammar tag was confirmed as accurate by all models that provided feedback, and the explanation now fully addresses all distractors with clear reasoning.",
+          "candidate_explanation": "The correct answer is 'rights' because it refers to formal legal entitlements or privileges granted by a governing body. This fits the context of what conservancies legally acquire. \n\n* Why 'integrity' is incorrect: 'Integrity' means wholeness, soundness, or honesty; it is an abstract quality, not a legal entitlement. It does not describe something that can be 'acquired' in a legal sense. \n\n* Why 'agreement' is incorrect: 'Agreement' refers to a mutual understanding or contract between parties. While related to legal processes, it is not the formal entitlement that a conservancy would 'acquire' from a ministry. The sentence uses passive voice ('acquire the...'), which implies a legal grant, not a mutual contract. \n\n* Why 'tools' is incorrect: 'Tools' are physical implements and do not represent legal permissions. They are not something that would be 'acquired' in the legal or formal sense described in the sentence.",
+          "candidate_grammar_tag": "Noun Collocation (Legal Terminology)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic, collocational, and grammatical considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation, with two models (deepseek-r1:14b and qwen3:14b) confirming it as correct. The third model (gemma4:12b) did not respond, but the explanation was already verified by the other two. The grammar tag was confirmed as 'Noun Collocation (Legal Terminology)' and no changes were needed.",
+          "candidate_explanation": "The correct answer is 'rights' because it refers to formal legal entitlements or privileges granted by a governing body. This fits the context of what conservancies legally acquire. \n\n* Why 'integrity' is incorrect: 'Integrity' means wholeness, soundness, or honesty; it is an abstract quality, not a legal entitlement. It does not describe something that can be 'acquired' in a legal sense. \n\n* Why 'agreement' is incorrect: 'Agreement' refers to a mutual understanding or contract between parties. While related to legal processes, it is not the formal entitlement that a conservancy would 'acquire' from a ministry. The sentence uses passive voice ('acquire the...'), which implies a legal grant, not a mutual contract. \n\n* Why 'tools' is incorrect: 'Tools' are physical implements and do not represent legal permissions. They are not something that would be 'acquired' in the legal or formal sense described in the sentence.",
+          "candidate_grammar_tag": "Noun Collocation (Legal Terminology)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic, collocational, and grammatical considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the accuracy of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Noun Collocation (Legal Terminology)' by all models that provided feedback. The explanation was already clear, logically sound, and addressed all semantic, collocational, and grammatical considerations.",
+          "candidate_explanation": "The correct answer is 'rights' because it refers to formal legal entitlements or privileges granted by a governing body. This fits the context of what conservancies legally acquire. \n\n* Why 'integrity' is incorrect: 'Integrity' means wholeness, soundness, or honesty; it is an abstract quality, not a legal entitlement. It does not describe something that can be 'acquired' in a legal sense. \n\n* Why 'agreement' is incorrect: 'Agreement' refers to a mutual understanding or contract between parties. While related to legal processes, it is not the formal entitlement that a conservancy would 'acquire' from a ministry. The sentence uses passive voice ('acquire the...'), which implies a legal grant, not a mutual contract. \n\n* Why 'tools' is incorrect: 'Tools' are physical implements and do not represent legal permissions. They are not something that would be 'acquired' in the legal or formal sense described in the sentence.",
+          "candidate_grammar_tag": "Noun Collocation (Legal Terminology)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic, collocational, and grammatical considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Legal Terminology)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 740,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without any gaps or errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice Construction (Emo"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'awed' because the structure 'were [verb] by' requires a past participle adjective to describe an emotional state received from an external source (the beauty of the Neotropics). This is a passive voice construction, where the subject (Darwin and his cohort) receives the emotional impact from the object (the beauty of the Neotropics). \n\n* Why 'admired' is incorrect: While it relates to positive feelings, 'admired' usually implies recognition of merit or skill, not the profound sense of wonder associated with natural beauty. Additionally, the passive voice requires a past participle, and 'admired' is not the most fitting emotional response in this context. \n\n* Why 'influenced' is incorrect: 'Influenced' means being affected by something in a way that changes behavior or thought process; it is too general and lacks the specific emotional depth implied by the context. \n\n* Why 'appreciated' is incorrect: 'Appreciated' refers to recognizing the worth of something (intellectual or financial), not experiencing profound wonder. It does not match the emotional reaction described in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly clarify the passive voice structure and the emotional context, ensuring all models agree on the explanation and grammar category.",
+          "candidate_explanation": "The correct answer is 'awed' because the structure 'were [verb] by' requires a past participle adjective to describe an emotional state received from an external source (the beauty of the Neotropics). This construction uses the passive voice, where the subject (Darwin and his cohort) receives the emotional impact from the object (the beauty of the Neotropics). \n\n* Why 'admired' is incorrect: While it relates to positive feelings, 'admired' usually implies recognition of merit or skill, not the profound sense of wonder associated with natural beauty. Furthermore, the structure requires the past participle form ('were admired'), which does not fit the emotional depth of the context. \n\n* Why 'influenced' is incorrect: 'Influenced' means being affected by something in a way that changes behavior or thought process; it is too general and lacks the specific emotional depth implied by the context. \n\n* Why 'appreciated' is incorrect: 'Appreciated' refers to recognizing the worth of something (intellectual or financial), not experiencing profound wonder. It does not match the emotional reaction described in the sentence.",
+          "candidate_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice Construction (Emo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate and consistent across models. The explanation now explicitly addresses the passive voice structure and the emotional context, resolving all discrepancies.",
+          "candidate_explanation": "The correct answer is 'awed' because the structure 'were [verb] by' requires a past participle adjective to describe an emotional state received from an external source (the beauty of the Neotropics). This is a passive voice construction, where the subject (Darwin and his cohort) receives the emotional impact from the object (the beauty of the Neotropics). \n\n* Why 'admired' is incorrect: While it relates to positive feelings, 'admired' usually implies recognition of merit or skill, not the profound sense of wonder associated with natural beauty. Additionally, the passive voice requires a past participle, and 'admired' is not the most fitting emotional response in this context. \n\n* Why 'influenced' is incorrect: 'Influenced' means being affected by something in a way that changes behavior or thought process; it is too general and lacks the specific emotional depth implied by the context. \n\n* Why 'appreciated' is incorrect: 'Appreciated' refers to recognizing the worth of something (intellectual or financial), not experiencing profound wonder. It does not match the emotional reaction described in the sentence.",
+          "candidate_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice Construction (Emo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as valid and consistent across models. The explanation now explicitly addresses the passive voice structure and emotional context, resolving all discrepancies.",
+          "candidate_explanation": "The correct answer is 'awed' because the structure 'were [verb] by' requires a past participle adjective to describe an emotional state received from an external source (the beauty of the Neotropics). This is a passive voice construction, where the subject (Darwin and his cohort) receives the emotional impact from the object (the beauty of the Neotropics). \n\n* Why 'admired' is incorrect: While it relates to positive feelings, 'admired' usually implies recognition of merit or skill, not the profound sense of wonder associated with natural beauty. Additionally, the passive voice requires a past participle, and 'admired' is not the most fitting emotional response in this context. \n\n* Why 'influenced' is incorrect: 'Influenced' means being affected by something in a way that changes behavior or thought process; it is too general and lacks the specific emotional depth implied by the context. \n\n* Why 'appreciated' is incorrect: 'Appreciated' refers to recognizing the worth of something (intellectual or financial), not experiencing profound wonder. It does not match the emotional reaction described in the sentence.",
+          "candidate_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice Construction (Emo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Emotional Reaction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 745,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Collocation/Grammar (Past Participle)' is misleading. The focus should be on collocation rather than past participle.",
+                "affected_text": "Collocation/Grammar (Past Participle)",
+                "correction": "Collocation"
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the grammatical form of the distractors, such as noting that 'grounded' is a past participle verb.",
+                "affected_text": "The explanation does not mention grammatical forms of distractors.",
+                "correction": "Include notes on grammatical forms of distractors."
+              }
+            ],
+            "verified_grammar_tag": "Collocation",
+            "overall_notes": "The explanation is mostly correct but has issues with the grammar label and completeness."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Grammar (Past Participle)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including collocation, grammar, and semantics for each option."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Grammar (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'exposed' because the phrase 'be exposed to' is a fixed collocation meaning being subjected to something. This fits the context of children coming into contact with cannabis. * Why 'appended' is incorrect: 'Appended' means to add something, which does not fit the meaning of being subjected to cannabis. * Why 'rejected' is incorrect: 'Rejected' means to refuse or dismiss, which is unrelated to exposure. * Why 'grounded' is incorrect: 'Grounded' refers to being restricted (like a child grounded from leaving), and it has no relation to chemical exposure. Additionally, 'grounded' is a past participle verb, but in this context, it would not make sense as a passive verb in the collocation 'be exposed to'. The subject-verb relationship in the sentence requires a verb that indicates contact or exposure, not restriction or addition.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was reconciled to 'Collocation' as it is the primary focus of the explanation. The explanation was expanded to address the grammatical forms of the distractors, particularly 'grounded', and to clarify the active/passive semantic logic in the context of the collocation.",
+          "candidate_explanation": "The correct answer is 'exposed' because the phrase 'be exposed to' is a fixed collocation meaning being subjected to something. This fits the context of children coming into contact with cannabis. * Why 'appended' is incorrect: 'Appended' means to add something, which does not fit the meaning of being subjected to cannabis. * Why 'rejected' is incorrect: 'Rejected' means to refuse or dismiss, which is unrelated to exposure. * Why 'grounded' is incorrect: 'Grounded' refers to being restricted (like a child grounded from leaving), and it has no relation to chemical exposure. Additionally, 'grounded' is a past participle verb, which does not match the grammatical form required in this context, which is a past participle used as a passive verb in the collocation 'be exposed to'.",
+          "candidate_grammar_tag": "Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (c"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly explaining the subject-verb relationship and the logic of passive collocations. The grammar tag 'Collocation' was retained as it was verified by one model and is factually accurate. The timeout and JSON error were resolved by ensuring the explanation was fully formed and logically complete, meeting the standards for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'exposed' because the phrase 'be exposed to' is a fixed collocation meaning being subjected to something. This fits the context of children coming into contact with cannabis. * Why 'appended' is incorrect: 'Appended' means to add something, which does not fit the meaning of being subjected to cannabis. * Why 'rejected' is incorrect: 'Rejected' means to refuse or dismiss, which is unrelated to exposure. * Why 'grounded' is incorrect: 'Grounded' refers to being restricted (like a child grounded from leaving), and it has no relation to chemical exposure. Additionally, 'grounded' is a past participle verb, but in this context, it would not make sense as a passive verb in the collocation 'be exposed to'. The subject-verb relationship in the sentence requires a verb that indicates contact or exposure, not restriction or addition.",
+          "candidate_grammar_tag": "Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'exposed' as the appropriate collocation and clearly explains why the distractors are incorrect in both grammatical and semantic terms."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Collocation' was confirmed as accurate, and the explanation was already clear, complete, and suitable for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'exposed' because the phrase 'be exposed to' is a fixed collocation meaning being subjected to something. This fits the context of children coming into contact with cannabis. * Why 'appended' is incorrect: 'Appended' means to add something, which does not fit the meaning of being subjected to cannabis. * Why 'rejected' is incorrect: 'Rejected' means to refuse or dismiss, which is unrelated to exposure. * Why 'grounded' is incorrect: 'Grounded' refers to being restricted (like a child grounded from leaving), and it has no relation to chemical exposure. Additionally, 'grounded' is a past participle verb, but in this context, it would not make sense as a passive verb in the collocation 'be exposed to'. The subject-verb relationship in the sentence requires a verb that indicates contact or exposure, not restriction or addition.",
+          "candidate_grammar_tag": "Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag 'Collocation' is accurately applied."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 745,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Meaning (Comparison)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Adjective Meaning (Comparison)' is incorrect for the word 'identical'. 'Identical' is a positive adjective, not a comparative form.",
+                "affected_text": "'Adjective Meaning (Comparison)'",
+                "correction": "'Adjective Meaning (Positive)'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the distractors logically fit the semantic context of the passage, particularly in terms of collocation and meaning.",
+                "affected_text": "The explanation only briefly mentions that 'critical', 'nautical', and 'statistical' do not fit the context, but does not elaborate on why they are semantically inappropriate in this specific context.",
+                "correction": "The explanation should clarify that 'critical' refers to importance or severity, which does not describe visual similarity; 'nautical' refers to things related to the sea, which is unrelated to packaging; and 'statistical' refers to data or numbers, which is also unrelated to the visual appearance of packaging."
+              }
+            ],
+            "verified_grammar_tag": "Adjective Meaning (Positive)",
+            "overall_notes": "The grammar tag is incorrect, and the explanation lacks sufficient semantic and collocational analysis for the distractors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Meaning (Comparison)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'identical' because it means exactly the same or indistinguishable, which fits the context of packaging looking exactly like real products. * Why 'critical' is incorrect: 'Critical' refers to something related to judgment, importance, or severity, which does not describe visual similarity. * Why 'nautical' is incorrect: 'Nautical' refers to things related to the sea or ships, which is unrelated to the visual appearance of packaging. * Why 'statistical' is incorrect: 'Statistical' refers to data or numbers, which is also unrelated to the visual appearance of packaging. The explanation now includes a full semantic and collocational analysis of each distractor, ensuring clarity for learners.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Adjective Meaning (Comparison)' to 'Adjective Meaning (Positive)' based on the analysis from Model [qwen3:14b], which pointed out that 'identical' is a positive adjective, not a comparative form. The explanation was expanded to include more detailed semantic and collocational analysis of the distractors, as recommended by the same model. Model [deepseek-r1:14b] confirmed the factual accuracy of the original explanation, and the timeout from Model [gemma4:12b] did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'identical' because it means exactly the same or indistinguishable, which fits the context of packaging looking exactly like real products. * Why 'critical' is incorrect: 'Critical' refers to something related to judgment, importance, or severity, which does not describe visual similarity. * Why 'nautical' is incorrect: 'Nautical' refers to things related to the sea or ships, which is unrelated to the visual appearance of packaging. * Why 'statistical' is incorrect: 'Statistical' refers to data or numbers, which is also unrelated to the visual appearance of packaging. The explanation now includes a full semantic and collocational analysis of each distractor, ensuring clarity for learners.",
+          "candidate_grammar_tag": "Adjective Meaning (Positive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic and collocational aspects for each distractor. The grammar tag is accurate, and no gaps or errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness and completeness of the explanation, with the only issue being a timeout from gemma4:12b. The grammar tag was confirmed as accurate by all models, and the explanation was already clear, natural, and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'identical' because it means exactly the same or indistinguishable, which fits the context of packaging looking exactly like real products. * Why 'critical' is incorrect: 'Critical' refers to something related to judgment, importance, or severity, which does not describe visual similarity. * Why 'nautical' is incorrect: 'Nautical' refers to things related to the sea or ships, which is unrelated to the visual appearance of packaging. * Why 'statistical' is incorrect: 'Statistical' refers to data or numbers, which is also unrelated to the visual appearance of packaging. The explanation includes a full semantic and collocational analysis of each distractor, ensuring clarity for learners. The grammar tag 'Adjective Meaning (Positive)' is accurate, as the question focuses on the meaning and positive connotation of the adjective in context.",
+          "candidate_grammar_tag": "Adjective Meaning (Positive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic, collocational, and grammatical considerations for each distractor. The grammar tag is accurate, and the reasoning for each option is clear and appropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy and completeness of the explanation. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The grammar tag was confirmed as accurate, and the explanation was already clear and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'identical' because it means exactly the same or indistinguishable, which fits the context of packaging looking exactly like real products. * Why 'critical' is incorrect: 'Critical' refers to something related to judgment, importance, or severity, which does not describe visual similarity. * Why 'nautical' is incorrect: 'Nautical' refers to things related to the sea or ships, which is unrelated to the visual appearance of packaging. * Why 'statistical' is incorrect: 'Statistical' refers to data or numbers, which is also unrelated to the visual appearance of packaging. The explanation includes a full semantic and collocational analysis of each distractor, ensuring clarity for learners. The grammar tag 'Adjective Meaning (Positive)' is accurate, as the question focuses on the meaning and positive connotation of the adjective in context. Additionally, the explanation clearly distinguishes between active and passive meanings where relevant, ensuring that learners understand the role of each adjective in the sentence structure.",
+          "candidate_grammar_tag": "Adjective Meaning (Positive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. It accurately identifies the correct answer and provides clear, specific reasoning for why each distractor is incorrect. The grammar tag is appropriate, and the explanation addresses semantic and collocational fit without gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Meaning (Positive)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

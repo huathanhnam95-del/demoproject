@@ -1558,6 +1558,19 @@
     }
     panel.appendChild(dom.footer);
 
+    // Publish the action bar's rendered height so fixed page furniture (the chat
+    // trigger) can sit clear of it instead of on top of the primary action.
+    // The bar's height changes with the mode and with wrapping, so measure it.
+    const publishFooterHeight = () => {
+      const height = Math.round(dom.footer.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--spc-footer-height', `${height}px`);
+    };
+    publishFooterHeight();
+    if (typeof ResizeObserver === 'function') {
+      state.footerResizeObserver = new ResizeObserver(publishFooterHeight);
+      state.footerResizeObserver.observe(dom.footer);
+    }
+
     applyFocusWidth(readFocusWidthPreference(), dom.focusBtn);
     dom.focusBtn.addEventListener('click', () => {
       const next = document.body.classList.contains(FOCUS_WIDTH_CLASS) ? false : true;
@@ -1620,9 +1633,14 @@
     if (state.dom.controller.parentNode) {
       state.dom.controller.remove();
     }
+    if (state.footerResizeObserver) {
+      state.footerResizeObserver.disconnect();
+      state.footerResizeObserver = null;
+    }
     if (state.dom.footer?.parentNode) {
       state.dom.footer.remove();
     }
+    document.documentElement.style.removeProperty('--spc-footer-height');
     if (state.steps?.element?.parentNode) {
       state.steps.element.remove();
     }

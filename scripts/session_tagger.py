@@ -2,7 +2,7 @@
 """
 scripts/session_tagger.py
 
-Manages production deployment markers in Google Antigravity chat session titles.
+Manages production deployment markers for Google Antigravity chat session titles.
 Convention:
 - When a session ends with a production deployment, tag title with prefix '(D) '.
 - When a conversation continues/resumes and is answered, remove prefix '(D) '.
@@ -17,12 +17,18 @@ import argparse
 import glob
 import json
 import os
+import re
 import shutil
 import sqlite3
+import ssl
+import subprocess
 import sys
+import urllib.error
+import urllib.request
 
 DEFAULT_PB_PATH = os.path.expanduser(r"~\.gemini\antigravity\agyhub_summaries_proto.pb")
 DEFAULT_CONV_DIR = os.path.expanduser(r"~\.gemini\antigravity\conversations")
+DEFAULT_ANNOTATIONS_DIR = os.path.expanduser(r"~\.gemini\antigravity\annotations")
 
 
 def encode_varint(val: int) -> bytes:
@@ -128,7 +134,98 @@ def resolve_active_cid(conv_dir: str = DEFAULT_CONV_DIR) -> str:
     return cid
 
 
-def get_session_title(cid: str, pb_path: str = DEFAULT_PB_PATH):
+def get_ls_server_info():
+    """Discover running language_server.exe CSRF token and local ports."""
+    cmd_cli = 'powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter \\"Name like \'%language_server%\'\\").CommandLine"'
+    try:
+        res = subprocess.run(cmd_cli, shell=True, capture_output=True, text=True, timeout=5)
+        out = res.stdout.strip()
+    except Exception:
+        out = ""
+
+    if not out:
+        return None, []
+
+    csrf_match = re.search(r"--csrf_token(?:=|\s+)([^\s]+)", out)
+    csrf = csrf_match.group(1) if csrf_match else None
+
+    cmd_pid = 'powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter \\"Name like \'%language_server%\'\\").ProcessId"'
+    try:
+        res_pid = subprocess.run(cmd_pid, shell=True, capture_output=True, text=True, timeout=5)
+        pids = [p.strip() for p in res_pid.stdout.strip().split() if p.strip().isdigit()]
+    except Exception:
+        pids = []
+
+    ports = []
+    if pids:
+        cmd_ports = f"powershell -NoProfile -Command \"Get-NetTCPConnection -OwningProcess {pids[0]} | Where-Object LocalAddress -eq '127.0.0.1' | Select-Object -ExpandProperty LocalPort\""
+        try:
+            res_ports = subprocess.run(cmd_ports, shell=True, capture_output=True, text=True, timeout=5)
+            for line in res_ports.stdout.strip().split():
+                if line.strip().isdigit():
+                    p = int(line.strip())
+                    if p not in ports:
+                        ports.append(p)
+        except Exception:
+            pass
+
+    return csrf, ports
+
+
+def update_via_rpc(cid: str, new_title: str) -> bool:
+    """Call language_server UpdateConversationAnnotations RPC."""
+    csrf, ports = get_ls_server_info()
+    if not csrf or not ports:
+        return False
+
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    headers = {
+        "Content-Type": "application/json",
+        "Connect-Protocol-Version": "1",
+        "x-codeium-csrf-token": csrf,
+    }
+    body = {
+        "cascadeId": cid,
+        "annotations": {
+            "title": new_title,
+        },
+    }
+    payload = json.dumps(body).encode("utf-8")
+
+    for port in ports:
+        for scheme in ("http", "https"):
+            url = f"{scheme}://127.0.0.1:{port}/exa.language_server_pb.LanguageServerService/UpdateConversationAnnotations"
+            try:
+                req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+                res = urllib.request.urlopen(req, context=ctx, timeout=3)
+                if res.status == 200:
+                    return True
+            except Exception:
+                continue
+    return False
+
+
+def get_session_title(
+    cid: str,
+    pb_path: str = DEFAULT_PB_PATH,
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+):
+    # 1. Check annotation file first (explicit custom title overrides summary)
+    annot_file = os.path.join(annotations_dir, f"{cid}.pbtxt")
+    if os.path.exists(annot_file):
+        try:
+            with open(annot_file, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            m = re.search(r'title\s*:\s*"([^"]+)"', content)
+            if m:
+                return m.group(1)
+        except Exception:
+            pass
+
+    # 2. Check protobuf summaries
     if not os.path.exists(pb_path):
         return None
     with open(pb_path, "rb") as f:
@@ -150,7 +247,7 @@ def get_session_title(cid: str, pb_path: str = DEFAULT_PB_PATH):
     return None
 
 
-def update_session_title(cid: str, new_title: str, pb_path: str = DEFAULT_PB_PATH) -> bool:
+def update_pb_title(cid: str, new_title: str, pb_path: str = DEFAULT_PB_PATH) -> bool:
     if not os.path.exists(pb_path):
         return False
     with open(pb_path, "rb") as f:
@@ -194,6 +291,30 @@ def update_session_title(cid: str, new_title: str, pb_path: str = DEFAULT_PB_PAT
     return False
 
 
+def update_annotation_file(cid: str, new_title: str, annotations_dir: str = DEFAULT_ANNOTATIONS_DIR):
+    os.makedirs(annotations_dir, exist_ok=True)
+    annot_file = os.path.join(annotations_dir, f"{cid}.pbtxt")
+    content = ""
+    if os.path.exists(annot_file):
+        try:
+            with open(annot_file, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+        except Exception:
+            pass
+
+    if 'title:"' in content or 'title: "' in content:
+        content = re.sub(r'title\s*:\s*"[^"]*"', f'title:"{new_title}"', content)
+    else:
+        content = f'title:"{new_title}" {content}'.strip()
+
+    try:
+        with open(annot_file, "w", encoding="utf-8") as f:
+            f.write(content + "\n")
+        return True
+    except Exception:
+        return False
+
+
 def sync_db_title(cid: str, old_title: str, new_title: str, conv_dir: str = DEFAULT_CONV_DIR):
     db_path = os.path.join(conv_dir, f"{cid}.db")
     if not os.path.exists(db_path):
@@ -201,7 +322,6 @@ def sync_db_title(cid: str, old_title: str, new_title: str, conv_dir: str = DEFA
     try:
         con = sqlite3.connect(db_path)
         cur = con.cursor()
-        # Check step 1
         rows = cur.execute("SELECT idx, step_payload FROM steps WHERE idx=1;").fetchall()
         for idx, payload in rows:
             if payload and old_title.encode("utf-8") in payload:
@@ -210,12 +330,16 @@ def sync_db_title(cid: str, old_title: str, new_title: str, conv_dir: str = DEFA
                 con.commit()
         con.close()
     except Exception:
-        # Non-fatal if DB is locked by active session
         pass
 
 
-def mark_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DEFAULT_CONV_DIR):
-    title = get_session_title(cid, pb_path=pb_path)
+def mark_deployed(
+    cid: str,
+    pb_path: str = DEFAULT_PB_PATH,
+    conv_dir: str = DEFAULT_CONV_DIR,
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+):
+    title = get_session_title(cid, pb_path=pb_path, annotations_dir=annotations_dir)
     if not title:
         return {"status": "error", "message": f"Conversation {cid} not found in index."}
 
@@ -229,9 +353,12 @@ def mark_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DEFA
         }
 
     new_title = f"(D) {title}"
-    success = update_session_title(cid, new_title, pb_path=pb_path)
-    if success:
-        sync_db_title(cid, title, new_title, conv_dir=conv_dir)
+    rpc_ok = update_via_rpc(cid, new_title)
+    pb_ok = update_pb_title(cid, new_title, pb_path=pb_path)
+    annot_ok = update_annotation_file(cid, new_title, annotations_dir=annotations_dir)
+    sync_db_title(cid, title, new_title, conv_dir=conv_dir)
+
+    if rpc_ok or pb_ok or annot_ok:
         return {
             "status": "success",
             "action": "marked_deployed",
@@ -239,12 +366,18 @@ def mark_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DEFA
             "old_title": title,
             "new_title": new_title,
             "is_deployed": True,
+            "method": "rpc" if rpc_ok else "disk",
         }
-    return {"status": "error", "message": "Failed to update title in protobuf index."}
+    return {"status": "error", "message": "Failed to update title via RPC or disk."}
 
 
-def remove_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DEFAULT_CONV_DIR):
-    title = get_session_title(cid, pb_path=pb_path)
+def remove_deployed(
+    cid: str,
+    pb_path: str = DEFAULT_PB_PATH,
+    conv_dir: str = DEFAULT_CONV_DIR,
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+):
+    title = get_session_title(cid, pb_path=pb_path, annotations_dir=annotations_dir)
     if not title:
         return {"status": "error", "message": f"Conversation {cid} not found in index."}
 
@@ -258,9 +391,12 @@ def remove_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DE
         }
 
     new_title = title[4:].strip()
-    success = update_session_title(cid, new_title, pb_path=pb_path)
-    if success:
-        sync_db_title(cid, title, new_title, conv_dir=conv_dir)
+    rpc_ok = update_via_rpc(cid, new_title)
+    pb_ok = update_pb_title(cid, new_title, pb_path=pb_path)
+    annot_ok = update_annotation_file(cid, new_title, annotations_dir=annotations_dir)
+    sync_db_title(cid, title, new_title, conv_dir=conv_dir)
+
+    if rpc_ok or pb_ok or annot_ok:
         return {
             "status": "success",
             "action": "removed_deployed",
@@ -268,12 +404,17 @@ def remove_deployed(cid: str, pb_path: str = DEFAULT_PB_PATH, conv_dir: str = DE
             "old_title": title,
             "new_title": new_title,
             "is_deployed": False,
+            "method": "rpc" if rpc_ok else "disk",
         }
-    return {"status": "error", "message": "Failed to update title in protobuf index."}
+    return {"status": "error", "message": "Failed to update title via RPC or disk."}
 
 
-def get_status(cid: str, pb_path: str = DEFAULT_PB_PATH):
-    title = get_session_title(cid, pb_path=pb_path)
+def get_status(
+    cid: str,
+    pb_path: str = DEFAULT_PB_PATH,
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+):
+    title = get_session_title(cid, pb_path=pb_path, annotations_dir=annotations_dir)
     if not title:
         return {"status": "error", "message": f"Conversation {cid} not found in index."}
     return {
@@ -290,6 +431,9 @@ def main():
     parser.add_argument("--cid", type=str, default=None, help="Target conversation UUID. Defaults to current active.")
     parser.add_argument("--pb-path", type=str, default=DEFAULT_PB_PATH, help="Path to agyhub_summaries_proto.pb")
     parser.add_argument("--conv-dir", type=str, default=DEFAULT_CONV_DIR, help="Path to conversations directory")
+    parser.add_argument(
+        "--annotations-dir", type=str, default=DEFAULT_ANNOTATIONS_DIR, help="Path to annotations directory"
+    )
 
     args = parser.parse_args()
 
@@ -302,11 +446,25 @@ def main():
             sys.exit(1)
 
     if args.action == "mark-deployed":
-        res = mark_deployed(cid, pb_path=args.pb_path, conv_dir=args.conv_dir)
+        res = mark_deployed(
+            cid,
+            pb_path=args.pb_path,
+            conv_dir=args.conv_dir,
+            annotations_dir=args.annotations_dir,
+        )
     elif args.action == "remove-deployed":
-        res = remove_deployed(cid, pb_path=args.pb_path, conv_dir=args.conv_dir)
+        res = remove_deployed(
+            cid,
+            pb_path=args.pb_path,
+            conv_dir=args.conv_dir,
+            annotations_dir=args.annotations_dir,
+        )
     elif args.action == "status":
-        res = get_status(cid, pb_path=args.pb_path)
+        res = get_status(
+            cid,
+            pb_path=args.pb_path,
+            annotations_dir=args.annotations_dir,
+        )
     else:
         res = {"status": "error", "message": f"Unknown action {args.action}"}
 

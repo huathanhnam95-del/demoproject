@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.115</div>
+  <div id="version-indicator" class="version-indicator">V1.8.116</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -5273,6 +5273,20 @@
               </div>
             </div>
             <div class="ra-guidebar-meta">
+              <!-- Nothing connected the blue curve under a word to "Linking", or the
+                   amber shading to "Reduced words". Each key shows only while its
+                   guide is on; JS toggles the hidden attribute. -->
+              <div id="ra-guide-legend" class="ra-guide-legend" aria-label="What the marks mean">
+                <span class="ra-legend-item" data-legend="linking" hidden>
+                  <span class="ra-legend-swatch ra-legend-swatch--linking" aria-hidden="true"></span>runs together
+                </span>
+                <span class="ra-legend-item" data-legend="reduced_words" hidden>
+                  <span class="ra-legend-swatch ra-legend-swatch--reduced" aria-hidden="true"></span>say lightly
+                </span>
+                <span class="ra-legend-item" data-legend="sound_changes" hidden>
+                  <span class="ra-legend-swatch ra-legend-swatch--sound" aria-hidden="true"></span>sounds blend
+                </span>
+              </div>
               <div id="ra-accuracy-readout" class="ra-accuracy-readout" hidden>
                 <span class="ra-accuracy-label">Accuracy</span>
                 <span class="ra-accuracy-score"><span id="ra-accuracy-value">--</span>%</span>
@@ -6214,7 +6228,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.115"></script>
+  <script src="/read-aloud-mode.js?v=1.8.116"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
@@ -6285,6 +6299,36 @@
 
     .bel-chat-trigger:hover {
       transform: scale(1.1) translateY(-5px);
+    }
+
+    /* The speaking practice shell puts its primary action (Start recording,
+       Check, Retry) in a sticky bar along the bottom of the panel, and the
+       trigger's bottom-right corner landed on top of it. --spc-footer-height is
+       measured and published by speaking-practice-controller.js, so the trigger
+       clears the real bar rather than a guessed one. Above 768px the bar also
+       keeps a right-side safe area, so only the vertical lift is needed there. */
+    body.spc-focus .bel-chat-trigger {
+      bottom: calc(var(--spc-footer-height, 64px) + 24px);
+    }
+
+    /* Below 768px the bar is full width and already sits above the 60px mobile
+       toolbar, so the trigger has to clear both. Lifting a 110px-tall mascot that
+       high parks it on the Speech Coach, so during practice it drops its speech
+       bubble and shrinks to a plain avatar button — still reachable, no longer
+       covering the thing the learner is reading. */
+    @media (max-width: 767px) {
+      body.spc-focus .bel-chat-trigger {
+        bottom: calc(var(--mobile-toolbar-height, 60px) + var(--spc-footer-height, 64px) + 10px);
+      }
+
+      body.spc-focus .bel-chat-speech-bubble {
+        display: none;
+      }
+
+      body.spc-focus .bel-chat-avatar {
+        width: 40px;
+        height: 40px;
+      }
     }
 
     /* Now that the trigger sits below the mobile toolbar's band, lift it clear of the

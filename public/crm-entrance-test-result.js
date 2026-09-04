@@ -52,21 +52,26 @@
     if (elements.userEmail) elements.userEmail.textContent = user.email || '';
     hideGate();
 
-    if (!testId) {
+    await loadAndRenderResult(testId);
+  }
+
+  async function loadAndRenderResult(tId) {
+    const targetTestId = tId || testId;
+    if (!targetTestId) {
       renderError('Missing testId in URL.');
       return;
     }
 
     renderLoading();
 
-    const json = await apiFetchJson(`/api/admin/entrance-tests/${encodeURIComponent(testId)}`, { method: 'GET' });
+    const json = await apiFetchJson(`/api/admin/entrance-tests/${encodeURIComponent(targetTestId)}`, { method: 'GET' });
     const test = json.test || {};
     const lead = json.lead || null;
     const student = json.student || null;
     const session = json.session || null;
 
-    const audioUrls = await fetchSpeakingAudioUrls(testId, test);
-    _cachedResultData = { testId, test, lead, student, session, audioUrls };
+    const audioUrls = await fetchSpeakingAudioUrls(targetTestId, test);
+    _cachedResultData = { testId: targetTestId, test, lead, student, session, audioUrls };
     renderResult(_cachedResultData);
   }
 
@@ -404,16 +409,22 @@
     const aWords = expectedText ? tokenize(expectedText) : [];
     let bWords = [];
     if (Array.isArray(words) && words.length > 0) {
-      bWords = words.map(w => ({
-        text: typeof w === 'string' ? w : String(w.word || w.text || ''),
-        startMs: Number(w.startMs),
-        endMs: Number(w.endMs)
-      })).filter(w => w.text.length > 0);
+      bWords = words.map((w, idx) => {
+        const next = words[idx + 1];
+        const nextStart = next && Number.isFinite(Number(next.startMs)) ? Number(next.startMs) : null;
+        return {
+          text: typeof w === 'string' ? w : String(w.word || w.text || ''),
+          startMs: Number(w.startMs),
+          endMs: Number(w.endMs),
+          nextStartMs: nextStart
+        };
+      }).filter(w => w.text.length > 0);
     } else if (transcriptText) {
       bWords = tokenize(transcriptText).map(text => ({
         text,
         startMs: null,
-        endMs: null
+        endMs: null,
+        nextStartMs: null
       }));
     }
 
@@ -424,7 +435,8 @@
       const isPlayable = Number.isFinite(wObj.startMs) && Number.isFinite(wObj.endMs) && wObj.endMs > wObj.startMs;
       const text = escapeHtml(wObj.text);
       if (isPlayable) {
-        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}" data-playable="true" title="Click to hear '${text}' (${formatTimeSec(wObj.startMs)})">${text}</button>`;
+        const nextStartAttr = Number.isFinite(wObj.nextStartMs) ? ` data-next-start-ms="${wObj.nextStartMs}"` : '';
+        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}"${nextStartAttr} data-playable="true" title="Click to hear '${text}' (${formatTimeSec(wObj.startMs)})">${text}</button>`;
       }
       return `<span class="crm-word-token ${typeClass}" data-playable="false">${text}</span>`;
     }
@@ -516,17 +528,69 @@
 
   let activeWordPlayback = null;
   let playbackRevision = 0;
+  let sharedAudioContext = null;
+  const audioBufferCache = new Map();
+
+  function getAudioContext() {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return null;
+    if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+      sharedAudioContext = new AudioContextCtor();
+    }
+    return sharedAudioContext;
+  }
+
+  async function getDecodedAudioBuffer(url) {
+    if (!url) return null;
+    if (audioBufferCache.has(url)) {
+      return audioBufferCache.get(url);
+    }
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+
+    const promise = (async () => {
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        return await ctx.decodeAudioData(arrayBuffer);
+      } catch (err) {
+        console.warn('[CRM Result] Failed to decode audio buffer for WebAudio:', err);
+        audioBufferCache.delete(url);
+        return null;
+      }
+    })();
+
+    audioBufferCache.set(url, promise);
+    return promise;
+  }
 
   function stopActiveWordPlayback({ pause = false } = {}) {
     playbackRevision++;
     if (!activeWordPlayback) return;
-    const { timer, token, audioEl } = activeWordPlayback;
+    const { timer, token, audioEl, sourceNode, gainNode, isWebAudio } = activeWordPlayback;
     if (timer) clearInterval(timer);
     if (token) {
       token.classList.remove('is-playing');
       token.removeAttribute('aria-pressed');
     }
-    if (pause && audioEl && !audioEl.paused) {
+    if (isWebAudio) {
+      if (sourceNode) {
+        try {
+          sourceNode.onended = null;
+          sourceNode.stop();
+          sourceNode.disconnect();
+        } catch (_) {
+          // Ignore state errors when stopping web audio node
+        }
+      }
+      if (gainNode) {
+        try {
+          gainNode.disconnect();
+        } catch (_) {
+          // Ignore gain node disconnect error
+        }
+      }
+    } else if (pause && audioEl && !audioEl.paused) {
       try {
         audioEl.pause();
       } catch (_) {
@@ -536,11 +600,11 @@
     activeWordPlayback = null;
   }
 
-  function playWordSegment(audioEl, startMs, endMs, token) {
-    if (!audioEl) return;
-    const start = Math.max(0, Number(startMs) / 1000);
-    const end = Math.max(0, Number(endMs) / 1000);
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+  async function playWordSegment(audioEl, rawStartMs, rawEndMs, token) {
+    if (!token) return;
+    const startMs = Number(rawStartMs);
+    const endMs = Number(rawEndMs);
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return;
 
     // Toggle off if currently playing this exact token
     if (activeWordPlayback && activeWordPlayback.token === token) {
@@ -551,17 +615,130 @@
     // Stop any previous active playback
     stopActiveWordPlayback({ pause: true });
 
+    // Calculate calibrated effectiveEndMs:
+    // When words are contiguous, next word onset easily bleeds into current word.
+    const rawNextStart = token.dataset.nextStartMs ? Number(token.dataset.nextStartMs) : null;
+    const isMispronounced = token.classList.contains('crm-transcript-added') || token.classList.contains('crm-transcript-error');
+
+    let effectiveEndMs = endMs;
+    if (Number.isFinite(rawNextStart) && rawNextStart > startMs) {
+      const gap = rawNextStart - endMs;
+      // Contiguous or tightly connected speech
+      if (gap < 100) {
+        if (isMispronounced) {
+          // Mispronounced words exhibit wider trailing co-articulation and stumbles
+          effectiveEndMs = Math.min(endMs - 35, rawNextStart - 50);
+        } else {
+          // Standard connected speech
+          effectiveEndMs = Math.min(endMs - 25, rawNextStart - 35);
+        }
+      }
+    }
+    // Clamp to guarantee minimum audible word duration (at least 75ms)
+    if (effectiveEndMs - startMs < 75) {
+      effectiveEndMs = Math.max(startMs + 75, endMs);
+    }
+
     const revision = ++playbackRevision;
 
-    // Mark current token
+    // Mark current token visually
     token.classList.add('is-playing');
     token.setAttribute('aria-pressed', 'true');
 
-    // Seek to start timestamp
+    activeWordPlayback = {
+      revision,
+      token,
+      audioEl,
+      isWebAudio: true
+    };
+
+    // Seek native audio element so visible scrubber aligns with word start
+    if (audioEl) {
+      try {
+        const duration = Number(audioEl.duration);
+        const maxStart = Number.isFinite(duration) && duration > 0 ? Math.max(0, duration - 0.001) : Number.POSITIVE_INFINITY;
+        audioEl.currentTime = Math.min(startMs / 1000, maxStart);
+      } catch (_) {
+        // Ignore seek error
+      }
+    }
+
+    const audioUrl = audioEl?.getAttribute('src') || '';
+    const ctx = getAudioContext();
+
+    // Try WebAudio first for sample-accurate hardware scheduling and anti-bleed envelope
+    if (ctx && audioUrl) {
+      if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+        try {
+          await ctx.resume();
+        } catch (_) {
+          // Ignore audio context resume error
+        }
+      }
+      if (playbackRevision !== revision) return;
+
+      const buffer = await getDecodedAudioBuffer(audioUrl);
+      if (playbackRevision !== revision) return;
+
+      if (buffer) {
+        const offsetSec = Math.max(0, startMs / 1000);
+        const maxDurationSec = Math.max(0, buffer.duration - offsetSec);
+        const durationSec = Math.min(Math.max(0.06, (effectiveEndMs - startMs) / 1000), maxDurationSec);
+
+        if (durationSec > 0) {
+          try {
+            const sourceNode = ctx.createBufferSource();
+            const gainNode = ctx.createGain();
+            sourceNode.buffer = buffer;
+
+            // Anti-bleed gain envelope: 15ms-20ms fade-out at the end
+            const fadeSec = Math.min(0.020, durationSec * 0.25);
+            gainNode.gain.setValueAtTime(1.0, ctx.currentTime);
+            gainNode.gain.setValueAtTime(1.0, ctx.currentTime + durationSec - fadeSec);
+            gainNode.gain.linearRampToValueAtTime(0.0, ctx.currentTime + durationSec);
+
+            sourceNode.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            sourceNode.onended = () => {
+              if (playbackRevision === revision) {
+                stopActiveWordPlayback({ pause: false });
+              }
+            };
+
+            activeWordPlayback = {
+              revision,
+              token,
+              audioEl,
+              sourceNode,
+              gainNode,
+              isWebAudio: true
+            };
+
+            sourceNode.start(0, offsetSec, durationSec);
+            return;
+          } catch (err) {
+            console.warn('[CRM Result] WebAudio playback failed, falling back to HTMLAudioElement:', err);
+          }
+        }
+      }
+    }
+
+    // Fallback to HTMLAudioElement with early-pause compensation
+    if (!audioEl) {
+      token.classList.remove('is-playing');
+      token.removeAttribute('aria-pressed');
+      return;
+    }
+
+    const startSec = Math.max(0, startMs / 1000);
+    // Early compensation: HTMLAudioElement pause latency is ~30-50ms
+    const compensatedEndSec = Math.max(startSec + 0.05, (effectiveEndMs - 40) / 1000);
+
     try {
       const duration = Number(audioEl.duration);
       const maxStart = Number.isFinite(duration) && duration > 0 ? Math.max(0, duration - 0.001) : Number.POSITIVE_INFINITY;
-      audioEl.currentTime = Math.min(start, maxStart);
+      audioEl.currentTime = Math.min(startSec, maxStart);
     } catch (err) {
       console.warn('[CRM Result] Failed to seek audio:', err);
       token.classList.remove('is-playing');
@@ -570,8 +747,6 @@
     }
 
     let hasStartedPlaying = false;
-
-    // Auto-pause timer when currentTime reaches end or finishes
     const timer = setInterval(() => {
       if (playbackRevision !== revision) {
         clearInterval(timer);
@@ -580,16 +755,17 @@
       if (!audioEl.paused) {
         hasStartedPlaying = true;
       }
-      if (audioEl.currentTime >= end || audioEl.ended || (hasStartedPlaying && audioEl.paused)) {
+      if (audioEl.currentTime >= compensatedEndSec || audioEl.ended || (hasStartedPlaying && audioEl.paused)) {
         stopActiveWordPlayback({ pause: true });
       }
-    }, 25);
+    }, 20);
 
     activeWordPlayback = {
       revision,
       timer,
       token,
-      audioEl
+      audioEl,
+      isWebAudio: false
     };
 
     audioEl.play().catch(err => {
@@ -605,7 +781,31 @@
     if (rootEl.dataset.crmSpeakingInteractionsBound === 'true') return;
     rootEl.dataset.crmSpeakingInteractionsBound = 'true';
 
-    rootEl.addEventListener('click', (e) => {
+    rootEl.addEventListener('click', async (e) => {
+      const alignBtn = e.target.closest('.crm-align-words-btn');
+      if (alignBtn) {
+        if (alignBtn.disabled) return;
+        const targetTestId = testId || String(new URLSearchParams(window.location.search).get('testId') || '').trim();
+        if (!targetTestId) return;
+
+        alignBtn.disabled = true;
+        const originalText = alignBtn.textContent;
+        alignBtn.textContent = 'Syncing...';
+
+        try {
+          await apiFetchJson(`/api/admin/entrance-tests/${encodeURIComponent(targetTestId)}/speaking/align-words`, {
+            method: 'POST'
+          });
+          await loadAndRenderResult(targetTestId);
+        } catch (err) {
+          console.error('[CRM Result] Word alignment error:', err);
+          alert(err.message || 'Failed to sync word timings.');
+          alignBtn.disabled = false;
+          alignBtn.textContent = originalText;
+        }
+        return;
+      }
+
       const token = e.target.closest('.crm-word-token');
       if (!token || token.dataset.playable !== 'true') return;
       const questionCard = token.closest('.crm-result-question');
@@ -654,9 +854,12 @@
               : '<div class="crm-result-muted">Audio not available.</div>';
 
             const diffedTranscript = (transcript || hasPlayableWords) ? computeTranscriptDiffHtml(expectedText, transcript, words) : '';
+            const syncBtnHtml = (!hasPlayableWords && audioUrl && transcript)
+              ? ` <button type="button" class="crm-btn crm-btn-secondary crm-align-words-btn" title="Sync acoustic word timings using Azure forced alignment">Sync Word Audio</button>`
+              : '';
 
             const transcriptHtml = (transcript || hasPlayableWords)
-              ? `<div class="crm-result-transcript"><strong>Transcript:</strong>${hasPlayableWords ? ' <span class="crm-transcript-hint">(Click any recognized word to play audio)</span>' : ''}<br>\n${diffedTranscript}</div>`
+              ? `<div class="crm-result-transcript"><strong>Transcript:</strong>${hasPlayableWords ? ' <span class="crm-transcript-hint">(Click any recognized word to play audio)</span>' : syncBtnHtml}<br>\n${diffedTranscript}</div>`
               : (asrError
                 ? `<div class="crm-result-transcript"><strong>ASR error:</strong>\n${escapeHtml(asrError)}</div>`
                 : '<div class="crm-result-muted">Transcript not available.</div>');
@@ -991,6 +1194,7 @@
 
     clone.querySelectorAll('audio').forEach((audio) => audio.remove());
     clone.querySelectorAll('.crm-transcript-hint').forEach((hint) => hint.remove());
+    clone.querySelectorAll('.crm-align-words-btn').forEach((btn) => btn.remove());
     return clone;
   }
 

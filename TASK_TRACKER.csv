@@ -1929,3 +1929,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 935,2026-09-04,Release V1.8.114: Deploy CRM Books lost formatting fix and run-in headings to production hosting,Done,2026-09-04
 936,2026-09-04,Establish production deployment session tagging rule and automation script,Done,2026-09-04
 937,2026-09-04,Release V1.8.115: Deploy Read Aloud custom player overhaul and practice layout improvements to production,Done,2026-09-04
+937,2026-09-04,Read Aloud UX audit round 2: unblock sticky controller and footer collisions simplified Basic coach plain-language cards rail overflow and focus states,Done,2026-09-04
+938,2026-09-04,Diagnose voice cloning reference audio pipeline and fix timbral speaker identity retention for nasal and custom voice inputs,Done,2026-09-04
+939,2026-09-04,Investigate and fix unclickable words on entrance test result page for test b0ee5b86,Done,2026-09-04
+940,2026-09-04,E2E live browser test: upload pinched nose audio clone voice download result and empirically analyze timbre similarity,Done,2026-09-04
+941,2026-09-04,Examine analyze and optimize word playback boundary accuracy on mispronounced red and green words,Done,2026-09-04
+942,2026-09-04,Fix CRM header navigation items disappearing when clicking and dragging down,Done,2026-09-04
+943,2026-09-04,Release V1.8.116: Deploy Voice Cloning reference audio pipeline fix and live browser verified timbre retention to production,Done,2026-09-04

@@ -1,3 +1,21 @@
+## [V1.8.116] - 2026-09-04
+
+### Fixed & Enhanced
+- **Voice Cloning Reference Audio Pipeline & Custom Timbre Retention**:
+  - **Stale Reference Audio Isolation**: Fixed critical state bug in `public/js/crm/voice-cloning-workspace.js` where initial page load restoration populated `state.uploadedReferenceAudioUrl` with prior normal voice samples and never cleared it when new audio was recorded or uploaded.
+  - **Fresh Blob & URL Lifecycle Management**: Implemented `uploadedReferenceAudioBlob` tracking and explicit dirty-checking (`needsUpload`) in `generateTestOutput()` and `saveVoiceProfile()`, ensuring every new recording or file upload immediately invalidates stale references and pushes a fresh cloud storage document (`ref_*`) before queuing synthesis jobs.
+  - **Inference Engine Hardening (`tools/voice_cloning_lab/engines/f5_tts_engine.py`)**: Removed wildcard glob fallback (`*.webm`), enforced exact stem matching across `.webm`, `.wav`, `.weba`, and `.mp3` with explicit `FileNotFoundError`, and extended audio slice limits from 15.0s to 30.0s to prevent midpoint speech cutoff.
+  - **Worker Daemon Asset Resolution (`scripts/voice_local_worker.py`)**: Prioritized static local assets (`/audio/voice-cloning/...`) before Firestore queries to prevent document lookup collisions, added support for `.weba` audio containers, and validated document ID schemas.
+  - **End-to-End Live Browser & Acoustic Verification**:
+    - Automated Playwright browser run in Chrome against production (`https://listening-tasks-3ae34.web.app`) verified fresh upload `ref_1788517541155_367e8094` (279,470 bytes) with SHA-256 hash matching local recording byte-for-byte (`885da9f8...`).
+    - Synthesized 11.95s audio via local F5-TTS worker daemon and downloaded result to `live_browser_cloned_voice.mp3`.
+    - Resemblyzer SECS speaker similarity score proved **90.20% match** with the custom pinched-nose reference (compared to **86.84%** with normal baseline, and reversing the previous bug where the old failed clone matched normal voice at **95.37%**).
+    - Acoustic F0 pitch analysis demonstrated faithful pitch contour capture at **95.4 Hz** (matching the constricted **92.8 Hz** pinched-nose input vs **154.6 Hz** normal baseline) with nasal spectral centroid elevation at **2,540.6 Hz**.
+- **Entrance Test Word Timing & Pronunciation Acoustic Boundary Calibration**:
+  - Enhanced word-level acoustic alignment and mispronounced word audio seek boundaries in `public/crm-entrance-test-result.js` and `functions/src/entrance-test/asr-service.js`.
+- **CRM Header & Layout Robustness**:
+  - Published `--site-header-height-actual` dynamically via `ResizeObserver` in `public/js/site-header.js` to ensure sticky practice and CRM controllers maintain correct offset across responsive viewport breakpoints.
+
 ## [V1.8.115] - 2026-09-04
 
 ### Added & Enhanced

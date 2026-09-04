@@ -839,10 +839,39 @@
 }
 
 .crm-result-pdf-shell .crm-transcript-hint,
+.crm-result-pdf-shell .crm-align-words-btn,
 @media print {
-  .crm-transcript-hint {
+  .crm-transcript-hint,
+  .crm-align-words-btn {
     display: none !important;
   }
+}
+
+.crm-align-words-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+}
+
+.crm-align-words-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.crm-align-words-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .crm-result-pdf-shell .crm-word-token {

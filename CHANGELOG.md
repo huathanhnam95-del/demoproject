@@ -1,3 +1,18 @@
+## [V1.8.119] - 2026-09-04
+
+### Fixed & Enhanced
+- **Client-Side Audio Enhancement Pipeline (Read Aloud & Entrance Test)**:
+  - **80 Hz High-Pass Biquad Filtering**: Integrated 2nd-order Butterworth high-pass filter (`frequency: 80Hz, Q: 0.707`) into client-side `OfflineAudioContext` pipelines across Read Aloud (`prepareWavBlob`) and Entrance Test (`prepareEntranceTestBlob`), attenuating 50/60Hz AC electrical hum, mechanical desk vibrations, and plosive breath pops while preserving all vowel formants and fundamental speech pitch ($F_0 \ge 85\text{ Hz}$).
+  - **16 kHz Mono Resampling**: Enforced browser sinc-resampling directly to 16,000 Hz 16-bit mono PCM WAV, matching Azure Speech and Whisper native acoustic model training frames while eliminating high-frequency noise and hiss above 8 kHz.
+  - **-3 dBFS Peak Normalization**: Calibrated digital peak normalization to -3 dBFS (~70.8% full scale) to boost quiet headset/laptop microphones to optimal signal-to-noise ratio without triggering Azure internal AGC distortion or digital clipping.
+  - **Leading & Trailing Silence Trimming**: Implemented frame-based RMS energy detection (10ms windows, dynamic threshold `max(0.008, maxRMS * 0.18)`) with 150ms temporal safety padding, eliminating dead air before speaking and after completion while strictly preserving internal inter-word pauses to safeguard Fluency and Prosody scoring.
+  - **iOS Safari Screen-Lock & Lifecycle Resilience**: Added 3-second `Promise.race` timeout fallback around `OfflineAudioContext.startRendering()`, ensuring audio capture gracefully recovers if iOS WebKit suspends audio processing on screen lock or tab switching.
+  - **Memory Leak & Context Lifecycle Hardening**: Fixed unclosed `AudioContext` leaks by utilizing the native zero-overhead `AudioBuffer` constructor where available and closing temporary fallback contexts within `finally` blocks.
+  - **Double-Preprocessing Guard in Entrance Test**: Ensured recordings preprocessed asynchronously in the stop listener are reused directly on submission (`isPreprocessed: true`), preventing redundant high-pass filtering and duplicate encoding latency.
+- **Speaking Practice Controller & Read Aloud Test Verification**:
+  - Re-verified 185/185 speaking controller tests passing (`tests/browser/speaking-controller-browser-check.js`).
+  - Added and verified 26/26 Read Aloud E2E fake-audio recording-check-results tests passing (`tests/browser/read-aloud-record-cycle-check.js`).
+
 ## [V1.8.118] - 2026-09-04
 
 ### Fixed & Enhanced

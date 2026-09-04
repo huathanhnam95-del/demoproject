@@ -108,9 +108,8 @@ async function captureSpeakingScreenshots(browser, server) {
         }, { timeout: 30000 });
         await desktopPage.evaluate(() => document.getElementById('ra-stop-btn')?.click());
         await desktopPage.waitForFunction(() => {
-            const audio = document.getElementById('ra-user-recording-audio');
             const check = document.getElementById('ra-check-btn');
-            return !!audio && getComputedStyle(audio).display !== 'none'
+            return window.ReadAloudMode?.state === 'RECORDED'
                 && !!check && getComputedStyle(check).display !== 'none';
         }, { timeout: 30000 });
         await desktopPage.screenshot({ path: screenshotPath('speaking-read-aloud-recorded-desktop.png'), fullPage: true });
@@ -334,7 +333,7 @@ async function runTest() {
         const speakLayout = await page3.evaluate(() => ({
             controllerCount: document.querySelectorAll('#mode-speak .spc-controller').length,
             legacyToolbarHidden: getComputedStyle(document.querySelector('#mode-speak > .unified-controls')).display === 'none',
-            replayInController: Boolean(document.querySelector('#mode-speak .spc-slot-media #replay-counter-speak'))
+            replayInController: Boolean(document.querySelector('#mode-speak .practice-audio-player #replay-counter-speak, #mode-speak .spc-slot-media #replay-counter-speak, #mode-speak #replay-counter-speak'))
         }));
         assert('Repeat Sentence has one active controller', speakLayout.controllerCount === 1);
         assert('Repeat Sentence legacy toolbar is hidden', speakLayout.legacyToolbarHidden);
@@ -456,10 +455,10 @@ async function runTest() {
             results.pickerShowsLabel = pillLabel?.textContent === 'Test Question 3';
 
             // Check controls were adopted
-            const playInSlot = controller?.querySelector('.spc-slot-media #synth-play-btn');
-            const recordInSlot = controller?.querySelector('.spc-slot-attempt #synth-record-btn');
-            const stopInSlot = controller?.querySelector('.spc-slot-attempt #synth-stop-btn');
-            const filterInSlot = controller?.querySelector('.spc-slot-advanced-setting #synth-filter-wrapper');
+            const playInSlot = testPanel.querySelector('.spc-slot-media #synth-play-btn');
+            const recordInSlot = testPanel.querySelector('.spc-slot-attempt #synth-record-btn');
+            const stopInSlot = testPanel.querySelector('.spc-slot-attempt #synth-stop-btn');
+            const filterInSlot = testPanel.querySelector('.spc-slot-advanced-setting #synth-filter-wrapper');
             results.playAdopted = !!playInSlot;
             results.recordAdopted = !!recordInSlot;
             results.stopAdopted = !!stopInSlot;
@@ -933,13 +932,12 @@ async function runTest() {
             SPC.activate('asq', { scope: 'pte' });
             const asqController = asqPanel?.querySelector('.spc-controller');
             results.asqMounted = !!asqController;
-            results.asqPlayAdopted = !!asqController?.querySelector('#asq-play-prompt-btn');
+            results.asqPlayAdopted = !!asqPanel?.querySelector('#asq-play-prompt-btn');
             results.asqActionRoles = [
-                actionRole(asqController, 'asq-play-prompt-btn'),
-                actionRole(asqController, 'asq-record-btn'),
-                actionRole(asqController, 'asq-stop-btn'),
-                actionRole(asqController, 'asq-redo-btn')
-            ].join(',') === 'play,record,stop,retry';
+                actionRole(asqPanel, 'asq-record-btn'),
+                actionRole(asqPanel, 'asq-stop-btn'),
+                actionRole(asqPanel, 'asq-redo-btn')
+            ].join(',') === 'record,stop,retry';
             results.asqNoToggle = asqController?.hasAttribute('data-spc-no-toggle') === true;
             SPC.unmount('asq');
 
@@ -950,12 +948,13 @@ async function runTest() {
             SPC.activate('rts', { scope: 'pte' });
             const rtsController = rtsPanel?.querySelector('.spc-controller');
             results.rtsMounted = !!rtsController;
+            results.rtsPlayAdopted = !!rtsPanel?.querySelector('#play-rts-btn');
             results.rtsActionRoles = [
-                actionRole(rtsController, 'play-rts-btn'),
-                actionRole(rtsController, 'rts-stop-btn'),
-                actionRole(rtsController, 'rts-retry-btn'),
-                actionRole(rtsController, 'rts-ai-score-btn'),
-                actionRole(rtsController, 'rts-next-question-btn')
+                actionRole(rtsPanel, 'play-rts-btn'),
+                actionRole(rtsPanel, 'rts-stop-btn'),
+                actionRole(rtsPanel, 'rts-retry-btn'),
+                actionRole(rtsPanel, 'rts-ai-score-btn'),
+                actionRole(rtsPanel, 'rts-next-question-btn')
             ].join(',') === 'play,stop,retry,ai,next';
             results.rtsNoToggle = rtsPanel?.querySelector('.spc-controller')?.hasAttribute('data-spc-no-toggle') === true;
             const rtsLegacyPicker = document.getElementById('rts-v7-picker-bar');
@@ -970,15 +969,15 @@ async function runTest() {
             SPC.activate('describe-image', { scope: 'pte' });
             const diController = diPanel?.querySelector('.spc-controller');
             results.diMounted = !!diController;
-            results.diPlayAdopted = !!diController?.querySelector('#play-di-btn');
+            results.diPlayAdopted = !!diPanel?.querySelector('#play-di-btn');
             results.diActionRoles = [
-                actionRole(diController, 'play-di-btn'),
-                actionRole(diController, 'di-stop-btn'),
-                actionRole(diController, 'di-retry-btn'),
-                actionRole(diController, 'di-submit-btn'),
-                actionRole(diController, 'di-results-retry-btn'),
-                actionRole(diController, 'di-next-question-btn'),
-                actionRole(diController, 'di-ai-btn')
+                actionRole(diPanel, 'play-di-btn'),
+                actionRole(diPanel, 'di-stop-btn'),
+                actionRole(diPanel, 'di-retry-btn'),
+                actionRole(diPanel, 'di-submit-btn'),
+                actionRole(diPanel, 'di-results-retry-btn'),
+                actionRole(diPanel, 'di-next-question-btn'),
+                actionRole(diPanel, 'di-ai-btn')
             ].join(',') === 'play,stop,retry,primary,retry,next,ai';
             results.diHasAdvanced = !!diController && !diController.hasAttribute('data-spc-no-toggle');
             // The filter is a real Settings control, so it belongs in the
@@ -992,12 +991,12 @@ async function runTest() {
             SPC.activate('notes', { scope: 'pte' });
             const notesController = notesPanel?.querySelector('.spc-controller');
             results.notesMountedInPte = !!notesController;
-            results.notesPlayAdopted = !!notesController?.querySelector('#play-notes-btn');
+            results.notesPlayAdopted = !!notesPanel?.querySelector('#play-notes-btn');
             results.notesActionRoles = [
-                actionRole(notesController, 'play-notes-btn'),
-                actionRole(notesController, 'notes-submit-btn'),
-                actionRole(notesController, 'notes-retry-btn'),
-                actionRole(notesController, 'recommended-btn-notes')
+                actionRole(notesPanel, 'play-notes-btn'),
+                actionRole(notesPanel, 'notes-submit-btn'),
+                actionRole(notesPanel, 'notes-retry-btn'),
+                actionRole(notesPanel, 'recommended-btn-notes')
             ].join(',') === 'play,primary,retry,support';
             results.notesHasAdvanced = !!notesController && !notesController.hasAttribute('data-spc-no-toggle');
             SPC.activate('notes', { scope: 'english' });
@@ -1009,14 +1008,14 @@ async function runTest() {
             SPC.activate('sgd', { scope: 'pte' });
             const sgdController = sgdPanel?.querySelector('.spc-controller');
             results.sgdMounted = !!sgdController;
-            results.sgdPlayAdopted = !!sgdController?.querySelector('#play-sgd-btn');
+            results.sgdPlayAdopted = !!sgdPanel?.querySelector('#play-sgd-btn');
             results.sgdActionRoles = [
-                actionRole(sgdController, 'play-sgd-btn'),
-                actionRole(sgdController, 'sgd-record-btn'),
-                actionRole(sgdController, 'sgd-stop-btn'),
-                actionRole(sgdController, 'sgd-submit-btn'),
-                actionRole(sgdController, 'sgd-retry-btn'),
-                actionRole(sgdController, 'recommended-btn-sgd')
+                actionRole(sgdPanel, 'play-sgd-btn'),
+                actionRole(sgdPanel, 'sgd-record-btn'),
+                actionRole(sgdPanel, 'sgd-stop-btn'),
+                actionRole(sgdPanel, 'sgd-submit-btn'),
+                actionRole(sgdPanel, 'sgd-retry-btn'),
+                actionRole(sgdPanel, 'recommended-btn-sgd')
             ].join(',') === 'play,record,stop,primary,retry,support';
             results.sgdHasAdvanced = !!sgdController && !sgdController.hasAttribute('data-spc-no-toggle');
             results.sgdDifficultyFilterAdopted = !!document.querySelector('#spc-settings-sheet-sgd #difficulty-filter-container-sgd');
@@ -1026,18 +1025,17 @@ async function runTest() {
             SPC.activate('speak', { scope: 'pte' });
             const speakController = speakPanel?.querySelector('.spc-controller');
             results.speakMounted = !!speakController;
-            results.speakPlayAdopted = !!speakController?.querySelector('#play-btn-speak');
-            results.speakRecordAdopted = !!speakController?.querySelector('#record-btn');
-            results.speakCheckAdopted = !!speakController?.querySelector('#check-btn-speak');
-            results.speakRetryAdopted = !!speakController?.querySelector('#retry-btn-speak');
+            results.speakPlayAdopted = !!speakPanel?.querySelector('#play-btn-speak');
+            results.speakRecordAdopted = !!speakPanel?.querySelector('#record-btn');
+            results.speakCheckAdopted = !!speakPanel?.querySelector('#check-btn-speak');
+            results.speakRetryAdopted = !!speakPanel?.querySelector('#retry-btn-speak');
             results.speakActionRoles = [
-                actionRole(speakController, 'play-btn-speak'),
-                actionRole(speakController, 'record-btn'),
-                actionRole(speakController, 'check-btn-speak'),
-                actionRole(speakController, 'retry-btn-speak'),
-                actionRole(speakController, 'shadow-mode-btn'),
-                actionRole(speakController, 'recommended-btn-speak')
-            ].join(',') === 'play,record,primary,retry,support,support';
+                actionRole(speakPanel, 'record-btn'),
+                actionRole(speakPanel, 'check-btn-speak'),
+                actionRole(speakPanel, 'retry-btn-speak'),
+                actionRole(speakPanel, 'shadow-mode-btn'),
+                actionRole(speakPanel, 'recommended-btn-speak')
+            ].join(',') === 'record,primary,retry,support,support';
             results.speakStatusBadgeHasNoActionRole = !speakController?.querySelector('#replay-counter-speak')?.dataset.spcActionRole;
             results.speakRecommendedAdopted = !!speakController?.querySelector('#recommended-btn-speak');
             const speakSettingsSheet = document.querySelector('#spc-settings-sheet-speak');
@@ -1351,7 +1349,8 @@ async function runTest() {
             await window.switchToMode('speak');
             await new Promise(resolve => setTimeout(resolve, 250));
 
-            const controller = document.querySelector('#mode-speak .spc-controller');
+            const speakPanel = document.querySelector('#mode-speak');
+            const controller = speakPanel?.querySelector('.spc-controller');
             const styleOf = (selector, pseudo = null) => {
                 const element = controller?.querySelector(selector);
                 return element ? getComputedStyle(element, pseudo) : null;
@@ -1359,10 +1358,10 @@ async function runTest() {
             const prev = controller?.querySelector('.spc-picker-prev');
             const next = controller?.querySelector('.spc-picker-next');
             const pill = controller?.querySelector('.spc-picker-pill');
-            const primary = controller?.querySelector('[data-spc-action-role="primary"]');
-            const retry = controller?.querySelector('[data-spc-action-role="retry"]');
-            const record = controller?.querySelector('[data-spc-action-role="record"]');
-            const support = controller?.querySelector('[data-spc-action-role="support"]');
+            const primary = speakPanel?.querySelector('[data-spc-action-role="primary"]');
+            const retry = speakPanel?.querySelector('[data-spc-action-role="retry"]');
+            const record = speakPanel?.querySelector('[data-spc-action-role="record"]');
+            const support = speakPanel?.querySelector('[data-spc-action-role="support"]');
             const normalPrev = prev ? getComputedStyle(prev) : null;
             const normalNext = next ? getComputedStyle(next) : null;
             const normalPill = pill ? getComputedStyle(pill) : null;

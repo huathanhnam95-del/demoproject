@@ -990,9 +990,12 @@
    * Falls back to raw blob on processing failure or 3-second timeout (iOS Safari screen-lock).
    */
   async function prepareEntranceTestBlob(rawBlob) {
+    let audioContext = null;
     try {
       const arrayBuffer = await rawBlob.arrayBuffer();
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextCtor) return { wavBlob: rawBlob, stats: null };
+      audioContext = new AudioContextCtor();
       const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
       const originalDurationMs = Math.round(decoded.duration * 1000);
 
@@ -1028,9 +1031,17 @@
         fbSrc.buffer = decoded;
         fbSrc.connect(fallback.destination);
         fbSrc.start(0);
-        rendered = await fallback.startRendering();
+        rendered = await Promise.race([
+          fallback.startRendering(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Fallback timeout')), 3000))
+        ]).catch(() => decoded);
       }
-      if (typeof audioContext.close === 'function') await audioContext.close().catch(() => {});
+
+      // Close decoding audioContext as soon as rendering completes
+      if (typeof audioContext.close === 'function') {
+        await audioContext.close().catch(() => {});
+        audioContext = null;
+      }
 
       // Peak normalization to -3 dBFS
       const channelData = rendered.getChannelData(0);
@@ -1078,12 +1089,27 @@
           const trimStart = Math.max(0, firstFrame * frameSize - padSamples);
           const trimEnd = Math.min(channelData.length, (lastFrame + 1) * frameSize + padSamples);
           const trimLength = trimEnd - trimStart;
-          if (trimLength < channelData.length * 0.9) {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            trimmedBuffer = ctx.createBuffer(1, trimLength, 16000);
-            const trimData = trimmedBuffer.getChannelData(0);
-            for (let i = 0; i < trimLength; i++) {
-              trimData[i] = channelData[trimStart + i];
+          if (trimLength > 0 && trimLength < channelData.length * 0.9) {
+            let tb = null;
+            if (typeof AudioBuffer === 'function') {
+              try {
+                tb = new AudioBuffer({ numberOfChannels: 1, length: trimLength, sampleRate: 16000 });
+              } catch (_) { tb = null; }
+            }
+            if (!tb) {
+              const ctx = new AudioContextCtor();
+              try {
+                tb = ctx.createBuffer(1, trimLength, 16000);
+              } finally {
+                if (typeof ctx.close === 'function') ctx.close().catch(() => {});
+              }
+            }
+            if (tb) {
+              trimmedBuffer = tb;
+              const trimData = trimmedBuffer.getChannelData(0);
+              for (let i = 0; i < trimLength; i++) {
+                trimData[i] = channelData[trimStart + i];
+              }
             }
           }
         }
@@ -1124,6 +1150,10 @@
     } catch (err) {
       console.warn('[EntranceTest] Audio preprocessing failed, using raw blob:', err);
       return { wavBlob: rawBlob, stats: null };
+    } finally {
+      if (audioContext && typeof audioContext.close === 'function') {
+        audioContext.close().catch(() => {});
+      }
     }
   }
 
@@ -1175,7 +1205,9 @@
             blob: wavBlob,
             rawBlob: blob,
             audioUrl: processedUrl,
-            mimeType: 'audio/wav'
+            mimeType: 'audio/wav',
+            isPreprocessed: true,
+            stats
           };
           // Revoke old URL
           try { URL.revokeObjectURL(audioUrl); } catch (_) { /* ignore */ }
@@ -1340,9 +1372,21 @@
 
     try {
       // Client-side DSP preprocessing: high-pass, normalize, trim, convert to 16kHz WAV
-      const { wavBlob, stats } = await prepareEntranceTestBlob(rec.blob);
-      const uploadBlob = wavBlob || rec.blob;
-      const uploadContentType = stats ? 'audio/wav' : (rec.blob.type || 'application/octet-stream');
+      // If audio was already preprocessed by the stop event handler, reuse it directly
+      let uploadBlob = rec.blob;
+      let uploadContentType = rec.mimeType || rec.blob.type || 'application/octet-stream';
+      let stats = rec.stats || null;
+
+      if (!rec.isPreprocessed) {
+        const prepResult = await prepareEntranceTestBlob(rec.rawBlob || rec.blob);
+        if (prepResult && prepResult.wavBlob && prepResult.stats) {
+          uploadBlob = prepResult.wavBlob;
+          uploadContentType = 'audio/wav';
+          stats = prepResult.stats;
+        }
+      } else {
+        uploadContentType = 'audio/wav';
+      }
 
       if (stats) {
         /* eslint-disable-next-line no-console */

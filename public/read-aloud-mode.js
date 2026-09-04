@@ -3947,46 +3947,55 @@ class ReadAloudMode {
     // decoding or quality validation fails.
     this.assessmentAudioBuffer = null;
     const arrayBuffer = await blob.arrayBuffer();
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-
-    const outputLength = Math.ceil(decoded.duration * 16000);
-    const offline = new OfflineAudioContext(1, outputLength, 16000);
-
-    // DSP chain: source → 80 Hz high-pass filter → destination
-    const source = offline.createBufferSource();
-    source.buffer = decoded;
-
-    const highpass = offline.createBiquadFilter();
-    highpass.type = 'highpass';
-    highpass.frequency.value = 80;
-    highpass.Q.value = 0.707; // Butterworth (maximally flat passband)
-
-    source.connect(highpass);
-    highpass.connect(offline.destination);
-    source.start(0);
-
-    // iOS Safari can suspend OfflineAudioContext when the screen locks.
-    // Apply a 3-second timeout fallback: skip DSP and use a basic resample.
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) throw new Error('AudioContext is not supported.');
+    const audioContext = new AudioContextCtor();
     let rendered;
+
     try {
-      rendered = await Promise.race([
-        offline.startRendering(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
-        )
-      ]);
-    } catch (timeoutErr) {
-      // Fallback: basic resample without DSP enhancements
-      console.warn('[ReadAloud] OfflineAudioContext timed out, falling back to basic resample:', timeoutErr.message);
-      const fallbackOffline = new OfflineAudioContext(1, outputLength, 16000);
-      const fallbackSource = fallbackOffline.createBufferSource();
-      fallbackSource.buffer = decoded;
-      fallbackSource.connect(fallbackOffline.destination);
-      fallbackSource.start(0);
-      rendered = await fallbackOffline.startRendering();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+
+      const outputLength = Math.ceil(decoded.duration * 16000);
+      const offline = new OfflineAudioContext(1, outputLength, 16000);
+
+      // DSP chain: source → 80 Hz high-pass filter → destination
+      const source = offline.createBufferSource();
+      source.buffer = decoded;
+
+      const highpass = offline.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 80;
+      highpass.Q.value = 0.707; // Butterworth (maximally flat passband)
+
+      source.connect(highpass);
+      highpass.connect(offline.destination);
+      source.start(0);
+
+      // iOS Safari can suspend OfflineAudioContext when the screen locks.
+      // Apply a 3-second timeout fallback: skip DSP and use a basic resample.
+      try {
+        rendered = await Promise.race([
+          offline.startRendering(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
+          )
+        ]);
+      } catch (timeoutErr) {
+        // Fallback: basic resample without DSP enhancements
+        console.warn('[ReadAloud] OfflineAudioContext timed out, falling back to basic resample:', timeoutErr.message);
+        const fallbackOffline = new OfflineAudioContext(1, outputLength, 16000);
+        const fallbackSource = fallbackOffline.createBufferSource();
+        fallbackSource.buffer = decoded;
+        fallbackSource.connect(fallbackOffline.destination);
+        fallbackSource.start(0);
+        rendered = await Promise.race([
+          fallbackOffline.startRendering(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Fallback timeout')), 3000))
+        ]).catch(() => decoded);
+      }
+    } finally {
+      if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
     }
-    if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
 
     // Peak normalization to -3 dBFS (target peak at ~70.8% of full scale)
     const channelData = rendered.getChannelData(0);
@@ -4089,12 +4098,26 @@ class ReadAloudMode {
     const trimmedLength = trimEnd - trimStart;
 
     // Skip trimming if it would remove less than 10% of total samples (not worth the overhead)
-    if (trimmedLength >= channelData.length * 0.9) return audioBuffer;
+    if (trimmedLength <= 0 || trimmedLength >= channelData.length * 0.9) return audioBuffer;
 
-    const AudioContextCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (!AudioContextCtor) return audioBuffer;
-
-    const trimmedBuffer = new (window.AudioContext || window.webkitAudioContext)().createBuffer(1, trimmedLength, sampleRate);
+    let trimmedBuffer = null;
+    if (typeof AudioBuffer === 'function') {
+      try {
+        trimmedBuffer = new AudioBuffer({ numberOfChannels: 1, length: trimmedLength, sampleRate });
+      } catch (_) {
+        trimmedBuffer = null;
+      }
+    }
+    if (!trimmedBuffer) {
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextCtor) return audioBuffer;
+      const tmpCtx = new AudioContextCtor();
+      try {
+        trimmedBuffer = tmpCtx.createBuffer(1, trimmedLength, sampleRate);
+      } finally {
+        if (typeof tmpCtx.close === 'function') tmpCtx.close().catch(() => {});
+      }
+    }
     const trimmedData = trimmedBuffer.getChannelData(0);
     for (let i = 0; i < trimmedLength; i++) {
       trimmedData[i] = channelData[trimStart + i];

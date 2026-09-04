@@ -1942,3 +1942,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 947,2026-09-04,Release V1.8.118: Deploy Entrance Test word playback boundary optimization and audit report to production,Done,2026-09-04
 948,2026-09-04,Review debug and refactor Read Aloud UX redesign and speaking controller tests,Done,2026-09-04
 949,2026-09-04,Release V1.8.119: Deploy client audio enhancement DSP pipeline and leak-free audio context refactoring to production,Done,2026-09-04
+950,2026-09-04,Review debug and refactor Read Aloud and speaking suites and clean up test debt,Done,2026-09-04
+951,2026-09-04,Perform real browser test uploading Zoom teaching audio for student test and verify final analysis result,Done,2026-09-04
+952,2026-09-04,Audit related files and write UI UX improvement handoff document for teaching sessions post-analysis,Done,2026-09-04

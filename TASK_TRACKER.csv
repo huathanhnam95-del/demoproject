@@ -1888,3 +1888,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 894,2026-09-04,Release V1.8.107: push to production with 3-local-LLM Write Essay enrichment and Gemini ASR,Done,2026-09-04
 895,2026-09-04,Configure Gemini secondary API key fallback in env and ASR pipeline,Done,2026-09-04
 896,2026-09-04,Integrate hardened Hugging Face Whisper safety net fallback in entrance test ASR,Done,2026-09-04
+897,2026-09-04,Echo Forge: generate authentic 16-bit pixel art character sprites and rebuild visual package,Done,2026-09-04
+898,2026-09-04,Echo Forge: Slay-the-Spire branching route with 3 acts stages and Warden bosses,Done,2026-09-04
+899,2026-09-04,Write Essay Step 1 overhaul: visual prompt flowchart essay type guide 2-column comparison and ready modal,Done,2026-09-04
+900,2026-09-04,Harden Hugging Face Whisper safety net with forced English language and Vietnamese hallucination filter,Done,2026-09-04
+901,2026-09-04,Write Essay Step 1 and ready modal: review debug and refactor with performance and a11y polish,Done,2026-09-04
+902,2026-09-04,Release V1.8.108: push to production with Gemini multi-key failover and hardened Whisper safety net,In Progress,

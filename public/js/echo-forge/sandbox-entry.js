@@ -12,8 +12,10 @@ import { createVisualPresenter } from './visual/presenter.js';
 import { createEchoForgeJuice } from './visual/juice.js';
 import { createEchoForgeSfx } from './audio/sfx.js';
 import { WARDENS, selectWardenMove, calculateMoveIncomingDamage } from './core/wardens.js';
-import { createInitialRunState, reduceRun, replayRun } from './core/run-reducer.js';
-import { getRewardById } from './core/rewards.js';
+import { createInitialRunState, createResumedRunState, reduceRun, replayRun } from './core/run-reducer.js';
+import { getRewardById, deriveRewardOffer, deriveCacheOffer } from './core/rewards.js';
+import { getAct, getNode } from './core/route.js';
+import { renderRouteMap } from './visual/route-map.js';
 
 const hooks = window.__ECHO_FORGE_TEST_HOOKS__ || {};
 const PARRY_WINDOW_MS = 4000;
@@ -30,6 +32,8 @@ const optionRow = document.querySelector('#option-row');
 const eventLog = document.querySelector('#event-log');
 const rewardSelectNode = document.querySelector('#reward-select');
 const rewardCardsNode = document.querySelector('#reward-cards');
+const mapSelectNode = document.querySelector('#map-select');
+const mapBodyNode = document.querySelector('#map-body');
 const summaryNode = document.querySelector('#summary');
 const feedbackNode = document.querySelector('#feedback');
 const feedbackText = document.querySelector('#feedback-text');
@@ -40,6 +44,8 @@ let juice = null;
 let wardenIndex = 0;
 let currentWarden = WARDENS[0];
 let currentMove = WARDENS[0].moves[0];
+/** Display name of the thing being fought — a minion, or the act's Warden. */
+let currentEncounterName = WARDENS[0].name;
 
 let run = null;
 let initialRunState = null;
@@ -204,16 +210,36 @@ function presentRewardSelection(offer) {
     card.append(title, desc, button);
     rewardCardsNode.appendChild(card);
   }
+  // The heading names what actually just happened: an ordinary victory, a
+  // Warden falling, or a cache being opened.
+  const source = run?.rewardSource || 'fight';
+  const headingNode = document.querySelector('#reward-heading');
+  const promptNode = document.querySelector('#reward-prompt');
+  if (headingNode) {
+    headingNode.textContent = source === 'boss'
+      ? 'Warden Defeated!'
+      : source === 'cache' ? 'Sealed Cache' : 'Victory!';
+  }
+  if (promptNode) {
+    promptNode.textContent = source === 'cache'
+      ? 'The cache yields three boons. Take one.'
+      : 'Claim a reward before you travel on.';
+  }
+
   battleNode.hidden = true;
+  if (mapSelectNode) mapSelectNode.hidden = true;
   rewardSelectNode.hidden = false;
   focusElement('#reward-heading');
-  setStatus(`Victory over ${currentWarden.name}! Choose a reward to proceed.`, 'success');
+  setStatus(
+    source === 'cache'
+      ? 'A sealed cache opens. Choose a boon.'
+      : `Victory over ${currentEncounterName}! Choose a reward.`,
+    'success',
+  );
 }
 
-function claimReward(rewardId) {
-  const runAction = { type: 'CLAIM_REWARD', rewardId };
-  runActions.push(runAction);
-  const runResult = reduceRun(run, runAction);
+/** Applies whatever run result came back, routing to the right screen. */
+function applyRunResult(runResult) {
   run = runResult.state;
   combat = run.combat;
 
@@ -222,23 +248,97 @@ function claimReward(rewardId) {
   }
   appendEvents(runResult.combatEvents);
 
-  rewardSelectNode.hidden = true;
+  syncEncounterIdentity();
+
+  if (run.status === 'map_pending') {
+    presentRouteMap();
+    return;
+  }
+
+  if (run.status === 'reward_pending' && run.rewardOffer) {
+    presentRewardSelection(run.rewardOffer);
+    return;
+  }
+
+  if (['victory', 'defeat', 'abandoned'].includes(run.status)) {
+    if (rewardSelectNode) rewardSelectNode.hidden = true;
+    if (mapSelectNode) mapSelectNode.hidden = true;
+    render();
+    return;
+  }
+
+  // Active: we are standing in a fight.
+  if (rewardSelectNode) rewardSelectNode.hidden = true;
+  if (mapSelectNode) mapSelectNode.hidden = true;
   summaryNode.hidden = true;
   battleNode.hidden = false;
+
+  render();
+  showChallenge(null);
+  setStatus(`${currentEncounterName}! Your turn — choose an attack.`);
+  focusFirstEnabledAttack();
+}
+
+/**
+ * Keeps the arena's identity in step with the node the player stands on.
+ * `data-warden` now names the act theme rather than a specific enemy, which is
+ * what lets ordinary fights share an act's look with its Warden.
+ */
+function syncEncounterIdentity() {
+  if (!run) return;
+  const node = getNode(run.route, run.nodeId);
+  const act = getAct(run.act);
 
   wardenIndex = run.wardenIndex;
   currentWarden = WARDENS[wardenIndex] || WARDENS[0];
   currentMove = currentWarden.moves[0];
-  root.dataset.warden = currentWarden.colorToken;
-  const enemyNameEl = document.querySelector('#enemy-name');
-  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
-  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
-  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+  currentEncounterName = node ? node.name : currentWarden.name;
 
-  render();
-  showChallenge(null);
-  setStatus(`Next opponent: ${currentWarden.name}! Your turn — choose an attack!`);
-  focusFirstEnabledAttack();
+  root.dataset.warden = act.colorToken;
+  root.dataset.act = String(run.act);
+  root.dataset.stage = act.stageId;
+  if (node) root.dataset.nodeType = node.type;
+  if (document.body) document.body.dataset.stage = act.stageId;
+
+  const enemyNameEl = document.querySelector('#enemy-name');
+  if (enemyNameEl) enemyNameEl.textContent = currentEncounterName;
+  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
+  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentEncounterName;
+}
+
+function presentRouteMap() {
+  if (!mapSelectNode || !mapBodyNode || !run) return;
+
+  battleNode.hidden = true;
+  summaryNode.hidden = true;
+  if (rewardSelectNode) rewardSelectNode.hidden = true;
+  mapSelectNode.hidden = false;
+
+  renderRouteMap({
+    container: mapBodyNode,
+    route: run.route,
+    act: run.act,
+    nodeId: run.nodeId,
+    visitedNodeIds: run.visitedNodeIds,
+    availableNodeIds: run.availableNodeIds,
+    onSelect: selectNode,
+  });
+
+  focusElement('#map-heading');
+  setStatus('Choose your path.', 'neutral');
+}
+
+function selectNode(nodeId) {
+  if (!run || run.status !== 'map_pending') return;
+  const runAction = { type: 'SELECT_NODE', nodeId };
+  runActions.push(runAction);
+  applyRunResult(reduceRun(run, runAction));
+}
+
+function claimReward(rewardId) {
+  const runAction = { type: 'CLAIM_REWARD', rewardId };
+  runActions.push(runAction);
+  applyRunResult(reduceRun(run, runAction));
 }
 
 function coreDispatch(action) {
@@ -262,10 +362,13 @@ function coreDispatch(action) {
     appendEvents(runResult.combatEvents);
     render();
 
-    if (run.status === 'reward_pending' && run.rewardOffer) {
+    if (run.status === 'map_pending') {
+      presentRouteMap();
+    } else if (run.status === 'reward_pending' && run.rewardOffer) {
       presentRewardSelection(run.rewardOffer);
     } else if (['victory', 'defeat', 'abandoned'].includes(run.status)) {
       if (rewardSelectNode) rewardSelectNode.hidden = true;
+      if (mapSelectNode) mapSelectNode.hidden = true;
     }
 
     return { state: combat, events: runResult.combatEvents };
@@ -332,7 +435,7 @@ function render() {
   }
   const blockButton = document.querySelector('#block-btn');
   if (blockButton) blockButton.disabled = !promptIsReady();
-  if (combat.status === 'victory') setStatus(`Victory! ${currentWarden.name} falls.`, 'success');
+  if (combat.status === 'victory') setStatus(`Victory! ${currentEncounterName} falls.`, 'success');
   if (combat.status === 'defeat') setStatus('Defeated — but every attempt sharpens your pronunciation.', 'warning');
   if (combat.status === 'abandoned') setStatus('Retreated. No progress changed.', 'neutral');
   renderSummary();
@@ -894,7 +997,7 @@ async function presentParry() {
   document.querySelector('#record-btn').disabled = false;
   showChallenge(parryChallenge, { hideTarget: true, promptLabel: '🎧 Listen & Repeat' });
   focusElement('#record-btn');
-  setStatus(`${currentWarden.name} strikes with a spoken word! Listening...`, 'neutral');
+  setStatus(`${currentEncounterName} strikes with a spoken word! Listening...`, 'neutral');
 
   await playParryAttackAudio(parryChallenge);
 
@@ -924,13 +1027,15 @@ function presentEnemyIntent() {
   focusElement(promptIsReady() ? '#block-btn' : '#parry-btn');
   const moveTell = currentMove ? ` [${currentMove.label}: ${currentMove.tell}]` : '';
   setStatus(promptIsReady()
-    ? `${currentWarden.name} attacks!${moveTell} Block or Parry to defend.`
-    : `${currentWarden.name} attacks!${moveTell} Parry is available.`);
+    ? `${currentEncounterName} attacks!${moveTell} Block or Parry to defend.`
+    : `${currentEncounterName} attacks!${moveTell} Parry is available.`);
 }
 
 function resumeSavedRun(savedRun) {
-  run = savedRun;
-  initialRunState = savedRun;
+  // The saved slice carries only a position. The route graph is rebuilt from
+  // the seed, so a tampered save cannot hand us its own map.
+  run = createResumedRunState(savedRun);
+  initialRunState = run;
   runActions = [];
   replayActions = [];
   preferences = createRunPreferences({
@@ -939,14 +1044,7 @@ function resumeSavedRun(savedRun) {
   });
   rng = createSeededRng(savedRun.seed || 0x4543484f);
 
-  wardenIndex = savedRun.wardenIndex;
-  currentWarden = WARDENS[wardenIndex] || WARDENS[0];
-  currentMove = currentWarden.moves[0];
-  root.dataset.warden = currentWarden.colorToken;
-  const enemyNameEl = document.querySelector('#enemy-name');
-  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
-  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
-  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+  syncEncounterIdentity();
 
   challengeHistory = new Set();
   runAttempts = [];
@@ -956,20 +1054,31 @@ function resumeSavedRun(savedRun) {
   if (resumeBtn) resumeBtn.hidden = true;
   document.querySelector('#abandon-btn').hidden = false;
 
-  if (savedRun.status === 'reward_pending') {
-    const offer = savedRun.rewardOffer || deriveRewardOffer(savedRun.seed, savedRun.wardenIndex);
-    presentRewardSelection(offer);
-  } else {
-    const entered = reduceRun(run, { type: 'ENTER_FIGHT' });
-    run = entered.state;
-    combat = run.combat;
-    initialState = combat;
-    battleNode.hidden = false;
-    render();
-    showChallenge(null);
-    setStatus(`Resumed campaign against ${currentWarden.name}! Your turn — choose an attack!`);
-    focusFirstEnabledAttack();
+  if (run.status === 'map_pending') {
+    presentRouteMap();
+    return;
   }
+
+  if (run.status === 'reward_pending') {
+    const offer = savedRun.rewardOffer && savedRun.rewardOffer.length
+      ? savedRun.rewardOffer
+      : savedRun.rewardSource === 'cache'
+        ? deriveCacheOffer(savedRun.seed, savedRun.floor)
+        : deriveRewardOffer(savedRun.seed, savedRun.floor);
+    presentRewardSelection(offer);
+    return;
+  }
+
+  const entered = reduceRun(run, { type: 'ENTER_FIGHT' });
+  run = entered.state;
+  combat = run.combat;
+  initialState = combat;
+  if (mapSelectNode) mapSelectNode.hidden = true;
+  battleNode.hidden = false;
+  render();
+  showChallenge(null);
+  setStatus(`Resumed campaign. ${currentEncounterName} awaits — choose an attack.`);
+  focusFirstEnabledAttack();
 }
 
 async function startRun() {
@@ -980,8 +1089,10 @@ async function startRun() {
   });
   rng = createSeededRng(seed);
 
-  const initialRun = createInitialRunState({ level: preferences.level, seed });
-  const startRunAction = { type: 'START_RUN', seed, level: preferences.level };
+  // Tests shorten the route so a full three-act walk stays quick.
+  const floorsPerAct = hooks.floorsPerAct;
+  const initialRun = createInitialRunState({ level: preferences.level, seed, floorsPerAct });
+  const startRunAction = { type: 'START_RUN', seed, level: preferences.level, floorsPerAct };
   runActions = [startRunAction];
   initialRunState = initialRun;
 
@@ -995,19 +1106,13 @@ async function startRun() {
     emitRunEvent(ev.type, ev.payload);
   }
 
-  wardenIndex = run.wardenIndex;
-  currentWarden = WARDENS[wardenIndex] || WARDENS[0];
-  currentMove = currentWarden.moves[0];
-  root.dataset.warden = currentWarden.colorToken;
-  const enemyNameEl = document.querySelector('#enemy-name');
-  if (enemyNameEl) enemyNameEl.textContent = currentWarden.name;
-  const enemyMeterNameEl = document.querySelector('#enemy-meter-name');
-  if (enemyMeterNameEl) enemyMeterNameEl.textContent = currentWarden.name;
+  syncEncounterIdentity();
 
   challengeHistory = new Set();
   runAttempts = [];
   summaryNode.hidden = true;
   if (rewardSelectNode) rewardSelectNode.hidden = true;
+  if (mapSelectNode) mapSelectNode.hidden = true;
   eventLog.replaceChildren();
   showFeedback({ tone: 'neutral', text: 'Choose an action to begin.' });
   setupNode.hidden = true;
@@ -1081,10 +1186,12 @@ async function init() {
     document.querySelector('#start-btn').disabled = false;
     const resumeBtn = document.querySelector('#resume-btn');
     const savedRun = hooks.savedRun !== undefined ? hooks.savedRun : window.__echoForgeBridge?.getSavedRun?.();
-    if (resumeBtn && savedRun && ['active', 'reward_pending'].includes(savedRun.status)) {
-      const targetWarden = WARDENS[savedRun.wardenIndex] || WARDENS[0];
+    if (resumeBtn && savedRun && ['active', 'reward_pending', 'map_pending'].includes(savedRun.status)) {
+      // Name the act the player left off in, which is meaningful whether they
+      // stopped mid-fight, on a reward, or standing on the map.
+      const stage = getAct(savedRun.act ?? savedRun.wardenIndex ?? 0);
       resumeBtn.hidden = false;
-      resumeBtn.textContent = `Resume Campaign (${targetWarden.name})`;
+      resumeBtn.textContent = `Resume Campaign (${stage.title})`;
       resumeBtn.addEventListener('click', () => resumeSavedRun(savedRun));
     }
     updateSetupDescriptions();
@@ -1121,6 +1228,25 @@ document.querySelector('#cancel-btn').addEventListener('click', cancelRecording)
 document.querySelector('#block-btn').addEventListener('click', presentBlock);
 document.querySelector('#parry-btn').addEventListener('click', presentParry);
 document.querySelector('#abandon-btn').addEventListener('click', () => {
+  // On the map or a reward screen there is no combat to abandon, but the run
+  // is still live — retreat has to end the run itself.
+  if (run && !combat?.status && ['map_pending', 'reward_pending'].includes(run.status)) {
+    const runAction = { type: 'ABANDON_RUN' };
+    runActions.push(runAction);
+    const runResult = reduceRun(run, runAction);
+    run = runResult.state;
+    combat = run.combat;
+    for (const ev of runResult.events) emitRunEvent(ev.type, ev.payload);
+    appendEvents(runResult.combatEvents);
+    if (mapSelectNode) mapSelectNode.hidden = true;
+    if (rewardSelectNode) rewardSelectNode.hidden = true;
+    battleNode.hidden = false;
+    document.querySelector('#abandon-btn').hidden = true;
+    setStatus('Retreated. No progress changed.', 'neutral');
+    renderSummary();
+    return;
+  }
+
   if (!combat || combat.status !== 'active') return;
   invalidateActiveOperation();
   promptAdapter?.cancel?.();
@@ -1139,6 +1265,7 @@ document.querySelector('#change-settings-btn').addEventListener('click', () => {
   stopParryCountdown();
   summaryNode.hidden = true;
   if (rewardSelectNode) rewardSelectNode.hidden = true;
+  if (mapSelectNode) mapSelectNode.hidden = true;
   battleNode.hidden = true;
   setupNode.hidden = false;
   document.querySelector('#abandon-btn').hidden = true;

@@ -1,0 +1,2484 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "1",
+  "title": "#1 Einstein",
+  "prompt": "“The only thing that interferes with my learning is education.” – Albert Einstein. What did he mean by that? Do you think he is correct?",
+  "source": {
+    "promptSha256": "5bfceb438b7e34244426b7328197a505fe891e6635629c96be5222c75b8b1aad",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "“The only thing that interferes with my learning is education.” – Albert Einstein.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What did he mean by that?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Do you think he is correct?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Education"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "interferes",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "learning",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "education",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "Einstein",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "correct",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Hỗ trợ quan điểm bằng hai lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "q1-agree-1",
+        "en": "Stifling of Innate Curiosity: Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+        "vi": "Bóp nghẹt trí tò mò bẩm sinh: Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-agree-2",
+        "en": "Emphasis on Rote Memorization: Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+        "vi": "Thiên lệch về học vẹt ghi nhớ: Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-agree-3",
+        "en": "One-Size-Fits-All Pace Restraints: Standardized classroom pacing forces exceptionally creative or unconventional minds into rigid bureaucratic frameworks that hinder self-directed discovery.",
+        "vi": "Ràng buộc tiến độ cào bằng: Tiến độ lớp học cào bằng ép buộc những cá nhân có tư duy sáng tạo hoặc khác biệt vào khuôn mẫu hành chính, cản trở sự tự khám phá.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-agree-4",
+        "en": "Disconnection from Real-World Reality: Academic syllabi often dwell on abstract theoretical doctrines disconnected from real-world entrepreneurial, social, and emotional competence.",
+        "vi": "Tách rời thực tiễn đời sống: Giáo trình hàn lâm thường tập trung vào giáo điều lý thuyết trừu tượng, xa rời năng lực khởi nghiệp, xã hội và cảm xúc ngoài đời thực.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-agree-5",
+        "en": "Fear of Academic Failure: Punitive grading systems instill a fear of making mistakes, discouraging bold intellectual risk-taking essential for genuine scientific innovation.",
+        "vi": "Nỗi sợ hãi thất bại học đường: Hệ thống tính điểm trừng phạt gieo rắc nỗi sợ phạm sai lầm, làm triệt tiêu tinh thần dám mạo hiểm trí tuệ vốn là cội nguồn của đột phá khoa học.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-agree-6",
+        "en": "Erosion of Autodidactic Motivation: Compulsory homework and coercive evaluation transform the joy of spontaneous learning into a burdensome chore, damaging lifelong motivation.",
+        "vi": "Làm suy mòn động lực tự học: Bài tập bắt buộc và sự đánh giá gượng ép biến niềm vui học tập tự nhiên thành nghĩa vụ nặng nề, làm tổn hại động lực tự học suốt đời.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "q1-disagree-1",
+        "en": "Foundational Literacy and Cognitive Tools: Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+        "vi": "Nền tảng học vấn và công cụ tư duy: Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "q1-disagree-2",
+        "en": "Structured Scientific Methodology: Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+        "vi": "Phương pháp luận khoa học bài bản: Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "q1-disagree-3",
+        "en": "Equalizer of Social Opportunity: Public schooling serves as a vital democratic equalizer, offering structured resources, laboratories, and accredited credentials to students from all socioeconomic strata.",
+        "vi": "Bình đẳng hóa cơ hội xã hội: Trường học công lập đóng vai trò bình đẳng hóa cơ hội, cung cấp tài nguyên, phòng thí nghiệm và bằng cấp cho học sinh thuộc mọi tầng lớp xã hội.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "q1-disagree-4",
+        "en": "Expert Mentorship and Guidance: Experienced educators guide learners past cognitive blind spots, condense centuries of accumulated human knowledge, and accelerate intellectual mastery.",
+        "vi": "Sự dẫn dắt từ các chuyên gia và người thầy: Các nhà giáo dục giàu kinh nghiệm giúp học sinh vượt qua điểm mù nhận thức, đúc kết tri thức hàng thế kỷ và rút ngắn con đường lĩnh hội.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "q1-disagree-5",
+        "en": "Collaborative and Social Development: Classroom environments foster teamwork, interdisciplinary debate, and cultural empathy, preparing graduates for cohesive civic participation.",
+        "vi": "Phát triển kỹ năng hợp tác và xã hội: Môi trường lớp học nuôi dưỡng tinh thần làm việc nhóm, tranh luận đa chiều và sự thấu cảm văn hóa, chuẩn bị cho sự hòa nhập xã hội.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "q1-disagree-6",
+        "en": "Standardized Professional Credentials: Formal certifications guarantee public safety and professional competence in critical fields such as medicine, engineering, and aviation.",
+        "vi": "Chứng nhận nghề nghiệp chuẩn hóa: Chứng chỉ học thuật chính quy bảo đảm an toàn công cộng và năng lực chuyên môn trong các lĩnh vực trọng yếu như y khoa, kỹ thuật và hàng không.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write a biography of the quoted figure; focus strictly on analyzing and evaluating the core claim.",
+        "vi": "Không viết về tiểu sử của nhân vật được trích dẫn; hãy tập trung phân tích và đánh giá đúng nhận định trong đề."
+      },
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh câu chung học thuộc và mọi ý không trả lời đúng yêu cầu."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    },
+    "comprehensionCheck": {
+      "mcq": {
+        "questionEn": "What is the primary objective of your essay response to Einstein's quote?",
+        "questionVi": "Nhiệm vụ cốt lõi mà bài viết của bạn phải đạt được khi phân tích câu nói của Einstein là gì?",
+        "correct": "a",
+        "options": [
+          {
+            "id": "a",
+            "textEn": "Interpret Einstein's intended meaning, declare a decisive stance (agree or disagree), and justify it with clear educational arguments.",
+            "textVi": "Giải thích ý nghĩa câu nói của Einstein, nêu rõ lập trường đồng ý hoặc phản bác, và bảo vệ quan điểm bằng các lập luận giáo dục cụ thể.",
+            "feedbackEn": "✓ Correct! PTE scoring requires both explaining the quote's core meaning and articulating a clear personal stance.",
+            "feedbackVi": "✓ Chính xác! Tiêu chí PTE yêu cầu bạn vừa phải giải thích thông điệp của câu nói, vừa phải xác lập lập trường rõ ràng."
+          },
+          {
+            "id": "b",
+            "textEn": "Recount the life biography and scientific discoveries of Albert Einstein in chronological order.",
+            "textVi": "Kể lại tiểu sử cuộc đời và các phát minh khoa học của Albert Einstein theo trình tự thời gian.",
+            "feedbackEn": "❌ Off-target: This is an argumentative essay on education, not a biographical summary of Einstein.",
+            "feedbackVi": "❌ Sai hướng: Đây là bài nghị luận về giáo dục, không phải bài tóm tắt tiểu sử Einstein."
+          },
+          {
+            "id": "c",
+            "textEn": "Advocate for completely shutting down all schools and universities without proposing any alternative.",
+            "textVi": "Kêu gọi xóa bỏ hoàn toàn trường học mà không đưa ra giải pháp hay phân tích thấu đáo.",
+            "feedbackEn": "❌ Too extreme: Academic essays require balanced, reasoned critique rather than radical overgeneralizations.",
+            "feedbackVi": "❌ Quá cực đoan: Bài viết học thuật cần lập luận có căn cứ và chiều sâu thay vì kết luận phiến diện."
+          }
+        ]
+      },
+      "gapFill": {
+        "instructionsEn": "Select the correct strategic blocks below to lock in the core essay execution plan:",
+        "instructionsVi": "Chọn các mảnh ghép chiến lược bên dưới để hoàn thiện khung chiến lược bài viết:",
+        "sentenceTemplateEn": "To excel in this essay, I must evaluate {slot1}, declare a {slot2}, and defend my position with {slot3}.",
+        "sentenceTemplateVi": "Để đạt điểm cao, tôi cần phân tích {slot1}, xác lập một {slot2}, và bảo vệ quan điểm bằng {slot3}.",
+        "slots": [
+          {
+            "id": "slot1",
+            "labelEn": "Prompt Focus",
+            "labelVi": "Trọng tâm đề bài",
+            "correctId": "c1",
+            "options": [
+              {
+                "id": "c1",
+                "textEn": "Einstein's critique of schooling",
+                "textVi": "quan điểm phản biện giáo dục của Einstein"
+              },
+              {
+                "id": "w1",
+                "textEn": "Einstein's physics discoveries",
+                "textVi": "phát minh vật lý của Einstein",
+                "hintEn": "Focus on schooling vs learning, not physics.",
+                "hintVi": "Tập trung vào giáo dục và học tập, không phải vật lý."
+              }
+            ]
+          },
+          {
+            "id": "slot2",
+            "labelEn": "Personal Stance",
+            "labelVi": "Lập trường cá nhân",
+            "correctId": "c2",
+            "options": [
+              {
+                "id": "c2",
+                "textEn": "decisive personal stance",
+                "textVi": "lập trường cá nhân dứt khoát"
+              },
+              {
+                "id": "w2",
+                "textEn": "neutral, evasive opinion",
+                "textVi": "quan điểm trung lập né tránh",
+                "hintEn": "PTE scoring penalizes an ambiguous stance.",
+                "hintVi": "PTE trừ điểm nếu không có lập trường rõ ràng."
+              }
+            ]
+          },
+          {
+            "id": "slot3",
+            "labelEn": "Argument Evidence",
+            "labelVi": "Căn cứ chứng minh",
+            "correctId": "c3",
+            "options": [
+              {
+                "id": "c3",
+                "textEn": "concrete real-world evidence",
+                "textVi": "dẫn chứng thực tế thuyết phục"
+              },
+              {
+                "id": "w3",
+                "textEn": "unsupported generalizations",
+                "textVi": "nhận định chung chung không căn cứ",
+                "hintEn": "Concrete examples are required for development.",
+                "hintVi": "Cần có dẫn chứng cụ thể để phát triển ý."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "system",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "test",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "learn",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "facts",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "rote memorization",
+            "collocation": "rely on rote memorization",
+            "level": "B2",
+            "meaningEn": "learning factual details through repetition rather than understanding the underlying concepts",
+            "meaningVi": "học vẹt thông qua lặp lại thay vì hiểu bản chất vấn đề",
+            "example": "Over-reliance on rote memorization prevents students from applying theoretical knowledge to unfamiliar real-world problems.",
+            "exampleVi": "Việc quá phụ thuộc vào học vẹt ngăn cản học sinh vận dụng kiến thức lý thuyết vào các vấn đề thực tế mới lạ."
+          },
+          {
+            "term": "intellectual curiosity",
+            "collocation": "stimulate intellectual curiosity",
+            "level": "B2",
+            "meaningEn": "a passionate desire to learn, explore, and question fundamental principles",
+            "meaningVi": "trí tò mò ham học hỏi và khao khát khám phá chân lý",
+            "example": "Einstein believed that formal academic curricula frequently extinguish the delicate spark of intellectual curiosity in young learners.",
+            "exampleVi": "Einstein tin rằng chương trình học chính quy thường dập tắt tia sáng tò mò trí tuệ non nớt của người học trẻ tuổi."
+          },
+          {
+            "term": "standardized curriculum",
+            "collocation": "rigid standardized curriculum",
+            "level": "B2",
+            "meaningEn": "a uniform course of study mandated across all schools regardless of individual student aptitudes",
+            "meaningVi": "chương trình giảng dạy chuẩn hóa đồng loạt bất chấp năng khiếu từng cá nhân",
+            "example": "A rigid standardized curriculum treats students as identical components rather than cultivating their unique creative capabilities.",
+            "exampleVi": "Chương trình chuẩn hóa cứng nhắc đối xử với học sinh như những sản phẩm đồng loạt thay vì nuôi dưỡng năng lực sáng tạo riêng biệt."
+          },
+          {
+            "term": "holistic education",
+            "collocation": "embrace holistic education",
+            "level": "C1",
+            "meaningEn": "an educational philosophy focusing on the complete intellectual, emotional, and social development of a person",
+            "meaningVi": "nền giáo dục toàn diện chú trọng cả trí tuệ, cảm xúc và kỹ năng sống",
+            "example": "Advocates argue that progressive institutions must embrace holistic education to balance academic knowledge with character formation.",
+            "exampleVi": "Các chuyên gia lập luận rằng các trường tiến bộ phải áp dụng giáo dục toàn diện để cân bằng kiến thức với rèn luyện nhân cách."
+          },
+          {
+            "term": "critical inquiry",
+            "collocation": "foster critical inquiry",
+            "level": "C1",
+            "meaningEn": "the practice of methodically analyzing, questioning, and evaluating claims rather than accepting them passively",
+            "meaningVi": "tư duy phản biện và tinh thần truy vấn bản chất sự việc",
+            "example": "True scholarship begins when classrooms encourage critical inquiry instead of demanding unquestioning obedience to textbooks.",
+            "exampleVi": "Học thuật thực thụ chỉ bắt đầu khi lớp học khuyến khích tinh thần truy vấn phản biện thay vì đòi hỏi sự tuân phục giáo điều."
+          },
+          {
+            "term": "pedagogical rigidity",
+            "collocation": "suffer from pedagogical rigidity",
+            "level": "C1",
+            "meaningEn": "inflexible teaching methods that stifle adaptation and diverse learning styles",
+            "meaningVi": "sự cứng nhắc trong phương pháp giảng dạy làm triệt tiêu sự thích ứng",
+            "example": "Einstein's primary grievance was rooted in pedagogical rigidity, which punished nonconformist students for asking challenging questions.",
+            "exampleVi": "Bất bình lớn nhất của Einstein bắt nguồn từ sự cứng nhắc sư phạm, vốn trừng phạt học sinh khác biệt chỉ vì đặt ra câu hỏi hóc búa."
+          },
+          {
+            "term": "autonomous learning",
+            "collocation": "promote autonomous learning",
+            "level": "B2",
+            "meaningEn": "self-directed study driven by personal interest and independent research",
+            "meaningVi": "tự học độc lập xuất phát từ đam mê và nghiên cứu cá nhân",
+            "example": "The digital era empowers autonomous learning, allowing individuals to acquire specialized skills far beyond institutional boundaries.",
+            "exampleVi": "Kỷ nguyên số tạo điều kiện cho việc tự học độc lập, giúp mọi người lĩnh hội kỹ năng chuyên sâu vượt ra ngoài khuôn khổ trường lớp."
+          },
+          {
+            "term": "academic conformity",
+            "collocation": "discourage academic conformity",
+            "level": "C1",
+            "meaningEn": "pressuring students to align strictly with standard institutional viewpoints and conventions",
+            "meaningVi": "sự rập khuôn học thuật ép buộc học sinh tuân theo khuôn mẫu định sẵn",
+            "example": "Groundbreaking discoveries emerge from daring hypothesis testing, whereas academic conformity merely reinforces existing paradigms.",
+            "exampleVi": "Những phát kiến đột phá sinh ra từ việc dám thử nghiệm giả thuyết táo bạo, trong khi sự rập khuôn học thuật chỉ củng cố định kiến cũ."
+          }
+        ],
+        "collocations": [
+          {
+            "term": "active participant",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "active participation",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "artificial intelligence",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "binary system",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          }
+        ],
+        "grammar": [
+          {
+            "name": "Concession and Stance (Although / While)",
+            "pattern": "Although formal schooling imparts indispensable foundational literacy, it frequently suppresses the uninhibited curiosity necessary for genuine innovation.",
+            "patternVi": "Mặc dù trường học chính quy trang bị học vấn nền tảng không thể thiếu, nó thường bóp nghẹt tính tò mò tự do cần thiết cho sự đổi mới đích thực."
+          },
+          {
+            "name": "Cause and Consequence (Inasmuch as / Given that)",
+            "pattern": "Given that standardized examinations incentivize rote memorization over conceptual mastery, many graduates retain negligible functional knowledge once assessments conclude.",
+            "patternVi": "Xét thấy thi cử chuẩn hóa khuyến khích học vẹt hơn là thấu hiểu bản chất, rất nhiều học sinh không còn giữ lại được kiến thức thực tế sau khi thi xong."
+          },
+          {
+            "name": "Inversion for Strong Academic Emphasis (Not only... but also)",
+            "pattern": "Not only does institutional rigidity constrain creative thinking, but it also instills a pervasive fear of failure that paralyzes intellectual exploration.",
+            "patternVi": "Sự cứng nhắc học đường không chỉ kìm hãm tư duy sáng tạo, mà nó còn gieo rắc nỗi sợ thất bại làm tê liệt sự khám phá trí tuệ."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-a2_b1",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree",
+          "stanceLabelVi": "Phiên bản 1: Đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            },
+            {
+              "id": "q1-agree-3",
+              "titleEn": "One-Size-Fits-All Pace Restraints",
+              "titleVi": "Ràng buộc tiến độ cào bằng",
+              "pointEn": "Standardized classroom pacing forces exceptionally creative or unconventional minds into rigid bureaucratic frameworks that hinder self-directed discovery.",
+              "pointVi": "Tiến độ lớp học cào bằng ép buộc những cá nhân có tư duy sáng tạo hoặc khác biệt vào khuôn mẫu hành chính, cản trở sự tự khám phá.",
+              "strategyVi": "Lấy dẫn chứng về những thiên tài hay nhà sáng tạo thường cảm thấy ngột ngạt trong môi trường giáo dục lớp học truyền thống.",
+              "writingCue": "Highlight that self-paced exploration produces groundbreaking discoveries that inflexible academic syllabi often stifle."
+            },
+            {
+              "id": "q1-agree-4",
+              "titleEn": "Disconnection from Real-World Reality",
+              "titleVi": "Tách rời thực tiễn đời sống",
+              "pointEn": "Academic syllabi often dwell on abstract theoretical doctrines disconnected from real-world entrepreneurial, social, and emotional competence.",
+              "pointVi": "Giáo trình hàn lâm thường tập trung vào giáo điều lý thuyết trừu tượng, xa rời năng lực khởi nghiệp, xã hội và cảm xúc ngoài đời thực.",
+              "strategyVi": "Chỉ ra khoảng cách giữa bằng cấp học vấn và năng lực thực tế trong môi trường làm việc và giải quyết khủng hoảng.",
+              "writingCue": "Illustrate how lifelong learning through empirical trial-and-error yields resilient real-world competence far beyond academic dogma."
+            },
+            {
+              "id": "q1-agree-5",
+              "titleEn": "Fear of Academic Failure",
+              "titleVi": "Nỗi sợ hãi thất bại học đường",
+              "pointEn": "Punitive grading systems instill a fear of making mistakes, discouraging bold intellectual risk-taking essential for genuine scientific innovation.",
+              "pointVi": "Hệ thống tính điểm trừng phạt gieo rắc nỗi sợ phạm sai lầm, làm triệt tiêu tinh thần dám mạo hiểm trí tuệ vốn là cội nguồn của đột phá khoa học.",
+              "strategyVi": "Lập luận rằng học tập thực sự đòi hỏi thử nghiệm và sai lầm; giáo dục truyền thống lại phạt học sinh khi mắc lỗi.",
+              "writingCue": "Demonstrate that fear of failing exams forces learners into safe, conventional answers rather than innovative exploration."
+            },
+            {
+              "id": "q1-agree-6",
+              "titleEn": "Erosion of Autodidactic Motivation",
+              "titleVi": "Làm suy mòn động lực tự học",
+              "pointEn": "Compulsory homework and coercive evaluation transform the joy of spontaneous learning into a burdensome chore, damaging lifelong motivation.",
+              "pointVi": "Bài tập bắt buộc và sự đánh giá gượng ép biến niềm vui học tập tự nhiên thành nghĩa vụ nặng nề, làm tổn hại động lực tự học suốt đời.",
+              "strategyVi": "Nhấn mạnh sự khác biệt giữa 'bị ép học' để thi và 'khao khát học' xuất phát từ nội tại.",
+              "writingCue": "Conclude that true education should nurture autonomous discovery rather than imposing coercive academic fatigue."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-a2_b1",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree",
+          "stanceLabelVi": "Phiên bản 2: Không đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            },
+            {
+              "id": "q1-disagree-3",
+              "titleEn": "Equalizer of Social Opportunity",
+              "titleVi": "Bình đẳng hóa cơ hội xã hội",
+              "pointEn": "Public schooling serves as a vital democratic equalizer, offering structured resources, laboratories, and accredited credentials to students from all socioeconomic strata.",
+              "pointVi": "Trường học công lập đóng vai trò bình đẳng hóa cơ hội, cung cấp tài nguyên, phòng thí nghiệm và bằng cấp cho học sinh thuộc mọi tầng lớp xã hội.",
+              "strategyVi": "Chỉ ra rằng người nghèo không có điều kiện tự do tìm tòi nếu không có hệ thống trường lớp công cộng cung cấp cơ sở vật chất.",
+              "writingCue": "Emphasize how structured academic environments provide institutional access to state-of-the-art libraries and specialized equipment."
+            },
+            {
+              "id": "q1-disagree-4",
+              "titleEn": "Expert Mentorship and Guidance",
+              "titleVi": "Sự dẫn dắt từ các chuyên gia và người thầy",
+              "pointEn": "Experienced educators guide learners past cognitive blind spots, condense centuries of accumulated human knowledge, and accelerate intellectual mastery.",
+              "pointVi": "Các nhà giáo dục giàu kinh nghiệm giúp học sinh vượt qua điểm mù nhận thức, đúc kết tri thức hàng thế kỷ và rút ngắn con đường lĩnh hội.",
+              "strategyVi": "Giải thích rằng tự mày mò tốn nhiều thời gian và dễ nản lòng; người thầy truyền cảm hứng chính là chất xúc tác cho sự học.",
+              "writingCue": "Highlight that skilled mentors inspire passion and correct fundamental misconceptions that solitary learners might never detect."
+            },
+            {
+              "id": "q1-disagree-5",
+              "titleEn": "Collaborative and Social Development",
+              "titleVi": "Phát triển kỹ năng hợp tác và xã hội",
+              "pointEn": "Classroom environments foster teamwork, interdisciplinary debate, and cultural empathy, preparing graduates for cohesive civic participation.",
+              "pointVi": "Môi trường lớp học nuôi dưỡng tinh thần làm việc nhóm, tranh luận đa chiều và sự thấu cảm văn hóa, chuẩn bị cho sự hòa nhập xã hội.",
+              "strategyVi": "Nhấn mạnh rằng trường học là nơi dạy cách chung sống và làm việc với người khác, điều mà tự học đơn độc không thể đem lại.",
+              "writingCue": "Demonstrate that interpersonal skills and collective collaboration are honed through structured peer interactions in schools."
+            },
+            {
+              "id": "q1-disagree-6",
+              "titleEn": "Standardized Professional Credentials",
+              "titleVi": "Chứng nhận nghề nghiệp chuẩn hóa",
+              "pointEn": "Formal certifications guarantee public safety and professional competence in critical fields such as medicine, engineering, and aviation.",
+              "pointVi": "Chứng chỉ học thuật chính quy bảo đảm an toàn công cộng và năng lực chuyên môn trong các lĩnh vực trọng yếu như y khoa, kỹ thuật và hàng không.",
+              "strategyVi": "Lập luận thực tế: xã hội không thể tin cậy một bác sĩ hay kỹ sư tự phong mà không qua trường lớp đào tạo và thi cử kiểm chuẩn.",
+              "writingCue": "Argue that complex modern professions demand rigorous accredited curricula to protect public welfare and ensure technical mastery."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Learning at school can sometimes block real understanding.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "School systems sometimes teach things that do not help people learn for life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the focus is often on passing tests, not on real knowledge in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students may learn dates for a test, but they forget the information later.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the learning is only for the test, not for life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the system teaches facts, but not how to think.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that school life can limit a person's own interests.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the school must cover many subjects for all students in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student who loves art might have to spend time on hard math lessons.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the student feels that their own interests are not important enough.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that school limits personal passion.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the system focuses on passing tests rather than real knowledge, and it can limit a person's own interests by covering many subjects.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "School education helps people learn many things about life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Learning in school is very helpful for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, school teaches students how to think clearly in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students learn to read books and write essays in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they can share their ideas with others in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that school helps students think better.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "School also gives students important life skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because learning in a group helps people talk to others in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students work on group projects with friends in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they learn how to share tasks and listen well in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that school helps people grow.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "School helps students think better, and it also gives students important life skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "memorization",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "rote learning",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "curricula",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "motivation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "rote memorization",
+            "collocation": "rely on rote memorization",
+            "level": "B2",
+            "meaningEn": "learning factual details through repetition rather than understanding the underlying concepts",
+            "meaningVi": "học vẹt thông qua lặp lại thay vì hiểu bản chất vấn đề",
+            "example": "Over-reliance on rote memorization prevents students from applying theoretical knowledge to unfamiliar real-world problems.",
+            "exampleVi": "Việc quá phụ thuộc vào học vẹt ngăn cản học sinh vận dụng kiến thức lý thuyết vào các vấn đề thực tế mới lạ."
+          },
+          {
+            "term": "intellectual curiosity",
+            "collocation": "stimulate intellectual curiosity",
+            "level": "B2",
+            "meaningEn": "a passionate desire to learn, explore, and question fundamental principles",
+            "meaningVi": "trí tò mò ham học hỏi và khao khát khám phá chân lý",
+            "example": "Einstein believed that formal academic curricula frequently extinguish the delicate spark of intellectual curiosity in young learners.",
+            "exampleVi": "Einstein tin rằng chương trình học chính quy thường dập tắt tia sáng tò mò trí tuệ non nớt của người học trẻ tuổi."
+          },
+          {
+            "term": "standardized curriculum",
+            "collocation": "rigid standardized curriculum",
+            "level": "B2",
+            "meaningEn": "a uniform course of study mandated across all schools regardless of individual student aptitudes",
+            "meaningVi": "chương trình giảng dạy chuẩn hóa đồng loạt bất chấp năng khiếu từng cá nhân",
+            "example": "A rigid standardized curriculum treats students as identical components rather than cultivating their unique creative capabilities.",
+            "exampleVi": "Chương trình chuẩn hóa cứng nhắc đối xử với học sinh như những sản phẩm đồng loạt thay vì nuôi dưỡng năng lực sáng tạo riêng biệt."
+          },
+          {
+            "term": "holistic education",
+            "collocation": "embrace holistic education",
+            "level": "C1",
+            "meaningEn": "an educational philosophy focusing on the complete intellectual, emotional, and social development of a person",
+            "meaningVi": "nền giáo dục toàn diện chú trọng cả trí tuệ, cảm xúc và kỹ năng sống",
+            "example": "Advocates argue that progressive institutions must embrace holistic education to balance academic knowledge with character formation.",
+            "exampleVi": "Các chuyên gia lập luận rằng các trường tiến bộ phải áp dụng giáo dục toàn diện để cân bằng kiến thức với rèn luyện nhân cách."
+          },
+          {
+            "term": "critical inquiry",
+            "collocation": "foster critical inquiry",
+            "level": "C1",
+            "meaningEn": "the practice of methodically analyzing, questioning, and evaluating claims rather than accepting them passively",
+            "meaningVi": "tư duy phản biện và tinh thần truy vấn bản chất sự việc",
+            "example": "True scholarship begins when classrooms encourage critical inquiry instead of demanding unquestioning obedience to textbooks.",
+            "exampleVi": "Học thuật thực thụ chỉ bắt đầu khi lớp học khuyến khích tinh thần truy vấn phản biện thay vì đòi hỏi sự tuân phục giáo điều."
+          },
+          {
+            "term": "pedagogical rigidity",
+            "collocation": "suffer from pedagogical rigidity",
+            "level": "C1",
+            "meaningEn": "inflexible teaching methods that stifle adaptation and diverse learning styles",
+            "meaningVi": "sự cứng nhắc trong phương pháp giảng dạy làm triệt tiêu sự thích ứng",
+            "example": "Einstein's primary grievance was rooted in pedagogical rigidity, which punished nonconformist students for asking challenging questions.",
+            "exampleVi": "Bất bình lớn nhất của Einstein bắt nguồn từ sự cứng nhắc sư phạm, vốn trừng phạt học sinh khác biệt chỉ vì đặt ra câu hỏi hóc búa."
+          },
+          {
+            "term": "autonomous learning",
+            "collocation": "promote autonomous learning",
+            "level": "B2",
+            "meaningEn": "self-directed study driven by personal interest and independent research",
+            "meaningVi": "tự học độc lập xuất phát từ đam mê và nghiên cứu cá nhân",
+            "example": "The digital era empowers autonomous learning, allowing individuals to acquire specialized skills far beyond institutional boundaries.",
+            "exampleVi": "Kỷ nguyên số tạo điều kiện cho việc tự học độc lập, giúp mọi người lĩnh hội kỹ năng chuyên sâu vượt ra ngoài khuôn khổ trường lớp."
+          },
+          {
+            "term": "academic conformity",
+            "collocation": "discourage academic conformity",
+            "level": "C1",
+            "meaningEn": "pressuring students to align strictly with standard institutional viewpoints and conventions",
+            "meaningVi": "sự rập khuôn học thuật ép buộc học sinh tuân theo khuôn mẫu định sẵn",
+            "example": "Groundbreaking discoveries emerge from daring hypothesis testing, whereas academic conformity merely reinforces existing paradigms.",
+            "exampleVi": "Những phát kiến đột phá sinh ra từ việc dám thử nghiệm giả thuyết táo bạo, trong khi sự rập khuôn học thuật chỉ củng cố định kiến cũ."
+          }
+        ],
+        "collocations": [
+          {
+            "term": "have limitations",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "impose limitations",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "limited access",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "limited capacity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          }
+        ],
+        "grammar": [
+          {
+            "name": "Concession and Stance (Although / While)",
+            "pattern": "Although formal schooling imparts indispensable foundational literacy, it frequently suppresses the uninhibited curiosity necessary for genuine innovation.",
+            "patternVi": "Mặc dù trường học chính quy trang bị học vấn nền tảng không thể thiếu, nó thường bóp nghẹt tính tò mò tự do cần thiết cho sự đổi mới đích thực."
+          },
+          {
+            "name": "Cause and Consequence (Inasmuch as / Given that)",
+            "pattern": "Given that standardized examinations incentivize rote memorization over conceptual mastery, many graduates retain negligible functional knowledge once assessments conclude.",
+            "patternVi": "Xét thấy thi cử chuẩn hóa khuyến khích học vẹt hơn là thấu hiểu bản chất, rất nhiều học sinh không còn giữ lại được kiến thức thực tế sau khi thi xong."
+          },
+          {
+            "name": "Inversion for Strong Academic Emphasis (Not only... but also)",
+            "pattern": "Not only does institutional rigidity constrain creative thinking, but it also instills a pervasive fear of failure that paralyzes intellectual exploration.",
+            "patternVi": "Sự cứng nhắc học đường không chỉ kìm hãm tư duy sáng tạo, mà nó còn gieo rắc nỗi sợ thất bại làm tê liệt sự khám phá trí tuệ."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-b2",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree",
+          "stanceLabelVi": "Phiên bản 1: Đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            },
+            {
+              "id": "q1-agree-3",
+              "titleEn": "One-Size-Fits-All Pace Restraints",
+              "titleVi": "Ràng buộc tiến độ cào bằng",
+              "pointEn": "Standardized classroom pacing forces exceptionally creative or unconventional minds into rigid bureaucratic frameworks that hinder self-directed discovery.",
+              "pointVi": "Tiến độ lớp học cào bằng ép buộc những cá nhân có tư duy sáng tạo hoặc khác biệt vào khuôn mẫu hành chính, cản trở sự tự khám phá.",
+              "strategyVi": "Lấy dẫn chứng về những thiên tài hay nhà sáng tạo thường cảm thấy ngột ngạt trong môi trường giáo dục lớp học truyền thống.",
+              "writingCue": "Highlight that self-paced exploration produces groundbreaking discoveries that inflexible academic syllabi often stifle."
+            },
+            {
+              "id": "q1-agree-4",
+              "titleEn": "Disconnection from Real-World Reality",
+              "titleVi": "Tách rời thực tiễn đời sống",
+              "pointEn": "Academic syllabi often dwell on abstract theoretical doctrines disconnected from real-world entrepreneurial, social, and emotional competence.",
+              "pointVi": "Giáo trình hàn lâm thường tập trung vào giáo điều lý thuyết trừu tượng, xa rời năng lực khởi nghiệp, xã hội và cảm xúc ngoài đời thực.",
+              "strategyVi": "Chỉ ra khoảng cách giữa bằng cấp học vấn và năng lực thực tế trong môi trường làm việc và giải quyết khủng hoảng.",
+              "writingCue": "Illustrate how lifelong learning through empirical trial-and-error yields resilient real-world competence far beyond academic dogma."
+            },
+            {
+              "id": "q1-agree-5",
+              "titleEn": "Fear of Academic Failure",
+              "titleVi": "Nỗi sợ hãi thất bại học đường",
+              "pointEn": "Punitive grading systems instill a fear of making mistakes, discouraging bold intellectual risk-taking essential for genuine scientific innovation.",
+              "pointVi": "Hệ thống tính điểm trừng phạt gieo rắc nỗi sợ phạm sai lầm, làm triệt tiêu tinh thần dám mạo hiểm trí tuệ vốn là cội nguồn của đột phá khoa học.",
+              "strategyVi": "Lập luận rằng học tập thực sự đòi hỏi thử nghiệm và sai lầm; giáo dục truyền thống lại phạt học sinh khi mắc lỗi.",
+              "writingCue": "Demonstrate that fear of failing exams forces learners into safe, conventional answers rather than innovative exploration."
+            },
+            {
+              "id": "q1-agree-6",
+              "titleEn": "Erosion of Autodidactic Motivation",
+              "titleVi": "Làm suy mòn động lực tự học",
+              "pointEn": "Compulsory homework and coercive evaluation transform the joy of spontaneous learning into a burdensome chore, damaging lifelong motivation.",
+              "pointVi": "Bài tập bắt buộc và sự đánh giá gượng ép biến niềm vui học tập tự nhiên thành nghĩa vụ nặng nề, làm tổn hại động lực tự học suốt đời.",
+              "strategyVi": "Nhấn mạnh sự khác biệt giữa 'bị ép học' để thi và 'khao khát học' xuất phát từ nội tại.",
+              "writingCue": "Conclude that true education should nurture autonomous discovery rather than imposing coercive academic fatigue."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-b2",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree",
+          "stanceLabelVi": "Phiên bản 2: Không đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            },
+            {
+              "id": "q1-disagree-3",
+              "titleEn": "Equalizer of Social Opportunity",
+              "titleVi": "Bình đẳng hóa cơ hội xã hội",
+              "pointEn": "Public schooling serves as a vital democratic equalizer, offering structured resources, laboratories, and accredited credentials to students from all socioeconomic strata.",
+              "pointVi": "Trường học công lập đóng vai trò bình đẳng hóa cơ hội, cung cấp tài nguyên, phòng thí nghiệm và bằng cấp cho học sinh thuộc mọi tầng lớp xã hội.",
+              "strategyVi": "Chỉ ra rằng người nghèo không có điều kiện tự do tìm tòi nếu không có hệ thống trường lớp công cộng cung cấp cơ sở vật chất.",
+              "writingCue": "Emphasize how structured academic environments provide institutional access to state-of-the-art libraries and specialized equipment."
+            },
+            {
+              "id": "q1-disagree-4",
+              "titleEn": "Expert Mentorship and Guidance",
+              "titleVi": "Sự dẫn dắt từ các chuyên gia và người thầy",
+              "pointEn": "Experienced educators guide learners past cognitive blind spots, condense centuries of accumulated human knowledge, and accelerate intellectual mastery.",
+              "pointVi": "Các nhà giáo dục giàu kinh nghiệm giúp học sinh vượt qua điểm mù nhận thức, đúc kết tri thức hàng thế kỷ và rút ngắn con đường lĩnh hội.",
+              "strategyVi": "Giải thích rằng tự mày mò tốn nhiều thời gian và dễ nản lòng; người thầy truyền cảm hứng chính là chất xúc tác cho sự học.",
+              "writingCue": "Highlight that skilled mentors inspire passion and correct fundamental misconceptions that solitary learners might never detect."
+            },
+            {
+              "id": "q1-disagree-5",
+              "titleEn": "Collaborative and Social Development",
+              "titleVi": "Phát triển kỹ năng hợp tác và xã hội",
+              "pointEn": "Classroom environments foster teamwork, interdisciplinary debate, and cultural empathy, preparing graduates for cohesive civic participation.",
+              "pointVi": "Môi trường lớp học nuôi dưỡng tinh thần làm việc nhóm, tranh luận đa chiều và sự thấu cảm văn hóa, chuẩn bị cho sự hòa nhập xã hội.",
+              "strategyVi": "Nhấn mạnh rằng trường học là nơi dạy cách chung sống và làm việc với người khác, điều mà tự học đơn độc không thể đem lại.",
+              "writingCue": "Demonstrate that interpersonal skills and collective collaboration are honed through structured peer interactions in schools."
+            },
+            {
+              "id": "q1-disagree-6",
+              "titleEn": "Standardized Professional Credentials",
+              "titleVi": "Chứng nhận nghề nghiệp chuẩn hóa",
+              "pointEn": "Formal certifications guarantee public safety and professional competence in critical fields such as medicine, engineering, and aviation.",
+              "pointVi": "Chứng chỉ học thuật chính quy bảo đảm an toàn công cộng và năng lực chuyên môn trong các lĩnh vực trọng yếu như y khoa, kỹ thuật và hàng không.",
+              "strategyVi": "Lập luận thực tế: xã hội không thể tin cậy một bác sĩ hay kỹ sư tự phong mà không qua trường lớp đào tạo và thi cử kiểm chuẩn.",
+              "writingCue": "Argue that complex modern professions demand rigorous accredited curricula to protect public welfare and ensure technical mastery."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Einstein’s quote suggests that formal schooling might sometimes block a person’s natural ability to learn.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is that school systems often focus too much on memorization.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students spend time learning facts they might forget later.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student might memorize dates for a history test, but not understand the real events.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the knowledge feels useless once the test is finished.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that rote learning can limit true understanding.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that school curricula can be too narrow in their scope.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that they do not allow for personal interests or unique talents.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a student who loves art might be forced to spend time on difficult math problems.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the student loses motivation and feels disconnected from their studies.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that rigid education can hurt natural development.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because excessive focus on rote memorization limits deep understanding, and narrow curricula fail to accommodate individual talents and interests.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people believe that formal school learning gets in the way of natural personal development.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "School education actually helps students develop skills outside of the classroom.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, schools provide structured ways to learn many different subjects.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, group projects teach students how to work together on a common goal.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students gain important teamwork skills that they use in their future jobs.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that school learning is very helpful for personal growth.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Formal schooling gives students necessary knowledge for life after school.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that curriculum covers essential subjects like science and history.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that learning about global history helps students understand current world events.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that graduates are better prepared to make informed decisions in their lives.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that school education supports personal development.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "School learning helps develop skills, and formal schooling gives students necessary knowledge for life after school.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "impedes",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "memorization",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "underdeveloped",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "curiosity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "rote memorization",
+            "collocation": "rely on rote memorization",
+            "level": "B2",
+            "meaningEn": "learning factual details through repetition rather than understanding the underlying concepts",
+            "meaningVi": "học vẹt thông qua lặp lại thay vì hiểu bản chất vấn đề",
+            "example": "Over-reliance on rote memorization prevents students from applying theoretical knowledge to unfamiliar real-world problems.",
+            "exampleVi": "Việc quá phụ thuộc vào học vẹt ngăn cản học sinh vận dụng kiến thức lý thuyết vào các vấn đề thực tế mới lạ."
+          },
+          {
+            "term": "intellectual curiosity",
+            "collocation": "stimulate intellectual curiosity",
+            "level": "B2",
+            "meaningEn": "a passionate desire to learn, explore, and question fundamental principles",
+            "meaningVi": "trí tò mò ham học hỏi và khao khát khám phá chân lý",
+            "example": "Einstein believed that formal academic curricula frequently extinguish the delicate spark of intellectual curiosity in young learners.",
+            "exampleVi": "Einstein tin rằng chương trình học chính quy thường dập tắt tia sáng tò mò trí tuệ non nớt của người học trẻ tuổi."
+          },
+          {
+            "term": "standardized curriculum",
+            "collocation": "rigid standardized curriculum",
+            "level": "B2",
+            "meaningEn": "a uniform course of study mandated across all schools regardless of individual student aptitudes",
+            "meaningVi": "chương trình giảng dạy chuẩn hóa đồng loạt bất chấp năng khiếu từng cá nhân",
+            "example": "A rigid standardized curriculum treats students as identical components rather than cultivating their unique creative capabilities.",
+            "exampleVi": "Chương trình chuẩn hóa cứng nhắc đối xử với học sinh như những sản phẩm đồng loạt thay vì nuôi dưỡng năng lực sáng tạo riêng biệt."
+          },
+          {
+            "term": "holistic education",
+            "collocation": "embrace holistic education",
+            "level": "C1",
+            "meaningEn": "an educational philosophy focusing on the complete intellectual, emotional, and social development of a person",
+            "meaningVi": "nền giáo dục toàn diện chú trọng cả trí tuệ, cảm xúc và kỹ năng sống",
+            "example": "Advocates argue that progressive institutions must embrace holistic education to balance academic knowledge with character formation.",
+            "exampleVi": "Các chuyên gia lập luận rằng các trường tiến bộ phải áp dụng giáo dục toàn diện để cân bằng kiến thức với rèn luyện nhân cách."
+          },
+          {
+            "term": "critical inquiry",
+            "collocation": "foster critical inquiry",
+            "level": "C1",
+            "meaningEn": "the practice of methodically analyzing, questioning, and evaluating claims rather than accepting them passively",
+            "meaningVi": "tư duy phản biện và tinh thần truy vấn bản chất sự việc",
+            "example": "True scholarship begins when classrooms encourage critical inquiry instead of demanding unquestioning obedience to textbooks.",
+            "exampleVi": "Học thuật thực thụ chỉ bắt đầu khi lớp học khuyến khích tinh thần truy vấn phản biện thay vì đòi hỏi sự tuân phục giáo điều."
+          },
+          {
+            "term": "pedagogical rigidity",
+            "collocation": "suffer from pedagogical rigidity",
+            "level": "C1",
+            "meaningEn": "inflexible teaching methods that stifle adaptation and diverse learning styles",
+            "meaningVi": "sự cứng nhắc trong phương pháp giảng dạy làm triệt tiêu sự thích ứng",
+            "example": "Einstein's primary grievance was rooted in pedagogical rigidity, which punished nonconformist students for asking challenging questions.",
+            "exampleVi": "Bất bình lớn nhất của Einstein bắt nguồn từ sự cứng nhắc sư phạm, vốn trừng phạt học sinh khác biệt chỉ vì đặt ra câu hỏi hóc búa."
+          },
+          {
+            "term": "autonomous learning",
+            "collocation": "promote autonomous learning",
+            "level": "B2",
+            "meaningEn": "self-directed study driven by personal interest and independent research",
+            "meaningVi": "tự học độc lập xuất phát từ đam mê và nghiên cứu cá nhân",
+            "example": "The digital era empowers autonomous learning, allowing individuals to acquire specialized skills far beyond institutional boundaries.",
+            "exampleVi": "Kỷ nguyên số tạo điều kiện cho việc tự học độc lập, giúp mọi người lĩnh hội kỹ năng chuyên sâu vượt ra ngoài khuôn khổ trường lớp."
+          },
+          {
+            "term": "academic conformity",
+            "collocation": "discourage academic conformity",
+            "level": "C1",
+            "meaningEn": "pressuring students to align strictly with standard institutional viewpoints and conventions",
+            "meaningVi": "sự rập khuôn học thuật ép buộc học sinh tuân theo khuôn mẫu định sẵn",
+            "example": "Groundbreaking discoveries emerge from daring hypothesis testing, whereas academic conformity merely reinforces existing paradigms.",
+            "exampleVi": "Những phát kiến đột phá sinh ra từ việc dám thử nghiệm giả thuyết táo bạo, trong khi sự rập khuôn học thuật chỉ củng cố định kiến cũ."
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "name": "Concession and Stance (Although / While)",
+            "pattern": "Although formal schooling imparts indispensable foundational literacy, it frequently suppresses the uninhibited curiosity necessary for genuine innovation.",
+            "patternVi": "Mặc dù trường học chính quy trang bị học vấn nền tảng không thể thiếu, nó thường bóp nghẹt tính tò mò tự do cần thiết cho sự đổi mới đích thực."
+          },
+          {
+            "name": "Cause and Consequence (Inasmuch as / Given that)",
+            "pattern": "Given that standardized examinations incentivize rote memorization over conceptual mastery, many graduates retain negligible functional knowledge once assessments conclude.",
+            "patternVi": "Xét thấy thi cử chuẩn hóa khuyến khích học vẹt hơn là thấu hiểu bản chất, rất nhiều học sinh không còn giữ lại được kiến thức thực tế sau khi thi xong."
+          },
+          {
+            "name": "Inversion for Strong Academic Emphasis (Not only... but also)",
+            "pattern": "Not only does institutional rigidity constrain creative thinking, but it also instills a pervasive fear of failure that paralyzes intellectual exploration.",
+            "patternVi": "Sự cứng nhắc học đường không chỉ kìm hãm tư duy sáng tạo, mà nó còn gieo rắc nỗi sợ thất bại làm tê liệt sự khám phá trí tuệ."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-c1",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree",
+          "stanceLabelVi": "Phiên bản 1: Đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            },
+            {
+              "id": "q1-agree-3",
+              "titleEn": "One-Size-Fits-All Pace Restraints",
+              "titleVi": "Ràng buộc tiến độ cào bằng",
+              "pointEn": "Standardized classroom pacing forces exceptionally creative or unconventional minds into rigid bureaucratic frameworks that hinder self-directed discovery.",
+              "pointVi": "Tiến độ lớp học cào bằng ép buộc những cá nhân có tư duy sáng tạo hoặc khác biệt vào khuôn mẫu hành chính, cản trở sự tự khám phá.",
+              "strategyVi": "Lấy dẫn chứng về những thiên tài hay nhà sáng tạo thường cảm thấy ngột ngạt trong môi trường giáo dục lớp học truyền thống.",
+              "writingCue": "Highlight that self-paced exploration produces groundbreaking discoveries that inflexible academic syllabi often stifle."
+            },
+            {
+              "id": "q1-agree-4",
+              "titleEn": "Disconnection from Real-World Reality",
+              "titleVi": "Tách rời thực tiễn đời sống",
+              "pointEn": "Academic syllabi often dwell on abstract theoretical doctrines disconnected from real-world entrepreneurial, social, and emotional competence.",
+              "pointVi": "Giáo trình hàn lâm thường tập trung vào giáo điều lý thuyết trừu tượng, xa rời năng lực khởi nghiệp, xã hội và cảm xúc ngoài đời thực.",
+              "strategyVi": "Chỉ ra khoảng cách giữa bằng cấp học vấn và năng lực thực tế trong môi trường làm việc và giải quyết khủng hoảng.",
+              "writingCue": "Illustrate how lifelong learning through empirical trial-and-error yields resilient real-world competence far beyond academic dogma."
+            },
+            {
+              "id": "q1-agree-5",
+              "titleEn": "Fear of Academic Failure",
+              "titleVi": "Nỗi sợ hãi thất bại học đường",
+              "pointEn": "Punitive grading systems instill a fear of making mistakes, discouraging bold intellectual risk-taking essential for genuine scientific innovation.",
+              "pointVi": "Hệ thống tính điểm trừng phạt gieo rắc nỗi sợ phạm sai lầm, làm triệt tiêu tinh thần dám mạo hiểm trí tuệ vốn là cội nguồn của đột phá khoa học.",
+              "strategyVi": "Lập luận rằng học tập thực sự đòi hỏi thử nghiệm và sai lầm; giáo dục truyền thống lại phạt học sinh khi mắc lỗi.",
+              "writingCue": "Demonstrate that fear of failing exams forces learners into safe, conventional answers rather than innovative exploration."
+            },
+            {
+              "id": "q1-agree-6",
+              "titleEn": "Erosion of Autodidactic Motivation",
+              "titleVi": "Làm suy mòn động lực tự học",
+              "pointEn": "Compulsory homework and coercive evaluation transform the joy of spontaneous learning into a burdensome chore, damaging lifelong motivation.",
+              "pointVi": "Bài tập bắt buộc và sự đánh giá gượng ép biến niềm vui học tập tự nhiên thành nghĩa vụ nặng nề, làm tổn hại động lực tự học suốt đời.",
+              "strategyVi": "Nhấn mạnh sự khác biệt giữa 'bị ép học' để thi và 'khao khát học' xuất phát từ nội tại.",
+              "writingCue": "Conclude that true education should nurture autonomous discovery rather than imposing coercive academic fatigue."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-agree-1",
+              "titleEn": "Stifling of Innate Curiosity",
+              "titleVi": "Bóp nghẹt trí tò mò bẩm sinh",
+              "pointEn": "Rigid standardized curricula enforce uniform testing, which suppresses students' innate curiosity and original critical thinking.",
+              "pointVi": "Chương trình chuẩn hóa cứng nhắc áp đặt thi cử rập khuôn, bóp nghẹt tính hiếu kỳ bẩm sinh và tư duy phản biện độc lập của học sinh.",
+              "strategyVi": "Giải thích cách thức việc chấm điểm thi cử áp đặt khiến học sinh chỉ tập trung vào việc vượt qua kỳ thi thay vì khám phá đam mê thực sự.",
+              "writingCue": "Topic sentence: 'First and foremost, institutionalized schooling often prioritizes rote test preparation over intellectual curiosity.' Then cite standardized exam pressure."
+            },
+            {
+              "id": "q1-agree-2",
+              "titleEn": "Emphasis on Rote Memorization",
+              "titleVi": "Thiên lệch về học vẹt ghi nhớ",
+              "pointEn": "Traditional education predominantly rewards rote memorization rather than deep conceptual understanding and practical problem-solving.",
+              "pointVi": "Giáo dục truyền thống chủ yếu tưởng thưởng cho khả năng học vẹt thuộc lòng hơn là sự thấu hiểu bản chất và kỹ năng giải quyết vấn đề thực tế.",
+              "strategyVi": "Phân tích rằng việc nhớ tạm kiến thức để trả bài thi sẽ nhanh chóng bị quên lãng, đúng như nhận định của Einstein.",
+              "writingCue": "Explain the forgetting curve: students memorize factual data for exams but retain little practical capability once tests conclude."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-c1",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree",
+          "stanceLabelVi": "Phiên bản 2: Không đồng ý",
+          "candidatePoints": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            },
+            {
+              "id": "q1-disagree-3",
+              "titleEn": "Equalizer of Social Opportunity",
+              "titleVi": "Bình đẳng hóa cơ hội xã hội",
+              "pointEn": "Public schooling serves as a vital democratic equalizer, offering structured resources, laboratories, and accredited credentials to students from all socioeconomic strata.",
+              "pointVi": "Trường học công lập đóng vai trò bình đẳng hóa cơ hội, cung cấp tài nguyên, phòng thí nghiệm và bằng cấp cho học sinh thuộc mọi tầng lớp xã hội.",
+              "strategyVi": "Chỉ ra rằng người nghèo không có điều kiện tự do tìm tòi nếu không có hệ thống trường lớp công cộng cung cấp cơ sở vật chất.",
+              "writingCue": "Emphasize how structured academic environments provide institutional access to state-of-the-art libraries and specialized equipment."
+            },
+            {
+              "id": "q1-disagree-4",
+              "titleEn": "Expert Mentorship and Guidance",
+              "titleVi": "Sự dẫn dắt từ các chuyên gia và người thầy",
+              "pointEn": "Experienced educators guide learners past cognitive blind spots, condense centuries of accumulated human knowledge, and accelerate intellectual mastery.",
+              "pointVi": "Các nhà giáo dục giàu kinh nghiệm giúp học sinh vượt qua điểm mù nhận thức, đúc kết tri thức hàng thế kỷ và rút ngắn con đường lĩnh hội.",
+              "strategyVi": "Giải thích rằng tự mày mò tốn nhiều thời gian và dễ nản lòng; người thầy truyền cảm hứng chính là chất xúc tác cho sự học.",
+              "writingCue": "Highlight that skilled mentors inspire passion and correct fundamental misconceptions that solitary learners might never detect."
+            },
+            {
+              "id": "q1-disagree-5",
+              "titleEn": "Collaborative and Social Development",
+              "titleVi": "Phát triển kỹ năng hợp tác và xã hội",
+              "pointEn": "Classroom environments foster teamwork, interdisciplinary debate, and cultural empathy, preparing graduates for cohesive civic participation.",
+              "pointVi": "Môi trường lớp học nuôi dưỡng tinh thần làm việc nhóm, tranh luận đa chiều và sự thấu cảm văn hóa, chuẩn bị cho sự hòa nhập xã hội.",
+              "strategyVi": "Nhấn mạnh rằng trường học là nơi dạy cách chung sống và làm việc với người khác, điều mà tự học đơn độc không thể đem lại.",
+              "writingCue": "Demonstrate that interpersonal skills and collective collaboration are honed through structured peer interactions in schools."
+            },
+            {
+              "id": "q1-disagree-6",
+              "titleEn": "Standardized Professional Credentials",
+              "titleVi": "Chứng nhận nghề nghiệp chuẩn hóa",
+              "pointEn": "Formal certifications guarantee public safety and professional competence in critical fields such as medicine, engineering, and aviation.",
+              "pointVi": "Chứng chỉ học thuật chính quy bảo đảm an toàn công cộng và năng lực chuyên môn trong các lĩnh vực trọng yếu như y khoa, kỹ thuật và hàng không.",
+              "strategyVi": "Lập luận thực tế: xã hội không thể tin cậy một bác sĩ hay kỹ sư tự phong mà không qua trường lớp đào tạo và thi cử kiểm chuẩn.",
+              "writingCue": "Argue that complex modern professions demand rigorous accredited curricula to protect public welfare and ensure technical mastery."
+            }
+          ],
+          "points": [
+            {
+              "id": "q1-disagree-1",
+              "titleEn": "Foundational Literacy and Cognitive Tools",
+              "titleVi": "Nền tảng học vấn và công cụ tư duy",
+              "pointEn": "Formal education provides indispensable foundational literacy, numeracy, and systematic reasoning tools upon which all subsequent self-directed learning is built.",
+              "pointVi": "Giáo dục chính quy trang bị nền tảng biết chữ, tính toán và các công cụ lập luận có hệ thống mà mọi sự tự học sau này đều phải dựa vào.",
+              "strategyVi": "Khẳng định rằng nếu không có trường lớp dạy chữ và logic cơ bản, một người không thể tự đọc sách hay tự nghiên cứu chuyên sâu.",
+              "writingCue": "Topic sentence: 'On the other hand, structured education delivers indispensable cognitive foundations that enable self-directed intellectual inquiry.'"
+            },
+            {
+              "id": "q1-disagree-2",
+              "titleEn": "Structured Scientific Methodology",
+              "titleVi": "Phương pháp luận khoa học bài bản",
+              "pointEn": "Academic institutions introduce students to rigorous scientific methodology, verifiable evidence standards, and disciplined peer critique.",
+              "pointVi": "Các cơ sở giáo dục giới thiệu cho học sinh phương pháp luận khoa học chuẩn xác, chuẩn mực dẫn chứng và sự phản biện học thuật có kỷ luật.",
+              "strategyVi": "Lập luận rằng tự học không có phương pháp luận rất dễ rơi vào ngụy biện, mê tín hoặc thiên kiến nhận thức.",
+              "writingCue": "Explain that institutional rigor protects learners from misinformation by cultivating disciplined analytical frameworks."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Albert Einstein's statement suggests that formal education can sometimes impede genuine intellectual growth.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The structured nature of academic schooling often prioritizes memorization over genuine understanding.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students may focus on passing examinations rather than acquiring deep knowledge in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student might memorize historical dates without grasping the underlying social causes.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, their ability to apply knowledge to novel situations remains underdeveloped.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the curriculum sometimes stifles natural curiosity.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the rigid structure of the educational system limits individual intellectual exploration.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that standardized testing measures conformity, not creativity.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that students who pursue unconventional interests may feel pressured to abandon them.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that their unique aptitudes are overlooked in favor of easily quantifiable academic skills.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that formal schooling restricts self-directed learning.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that school education can sometimes stop real learning.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the emphasis on rote memorization often impedes deep understanding, and the rigid system frequently restricts individual intellectual exploration.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people argue that formal schooling negatively impacts a student's natural ability to learn.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Structured academic environments actually provide essential frameworks for cognitive development.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, schools introduce systematic methods for acquiring diverse knowledge.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, classroom discussions and structured assignments help students organize complex information.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This process significantly enhances critical thinking skills, allowing students to analyze material deeply.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, education acts as a vital catalyst for intellectual growth.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, educational institutions offer crucial opportunities for social and emotional maturation.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that students interact with a diverse range of peers and instructors.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that group projects necessitate collaboration and compromise among individuals.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that Such experiences build essential life skills, preparing students for professional life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that Thus, schooling is instrumental in developing well-rounded, capable citizens.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that school education interferes with learning.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because structured academic environments provide essential frameworks for cognitive development, and educational institutions offer crucial opportunities for social and emotional maturation.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:49.206440+00:00"
+  }
+}

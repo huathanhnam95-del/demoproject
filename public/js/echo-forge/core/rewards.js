@@ -69,6 +69,61 @@ export function deriveRewardOffer(seed = 0, wardenIndex = 0) {
 }
 
 /**
+ * Deterministically generates a 3-reward draft for a sealed cache node.
+ *
+ * Uses a different salt from `deriveRewardOffer` so a cache never mirrors the
+ * post-fight draft on the same seed and floor.
+ *
+ * @param {number} seed
+ * @param {number} floor
+ * @returns {Reward[]}
+ */
+export function deriveCacheOffer(seed = 0, floor = 0) {
+  let hash = (Number(seed) ^ (floor * 2246822519) ^ 0x9e3779b9) >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 16), 0x85ebca6b) >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 13), 0xc2b2ae35) >>> 0;
+  hash = (hash ^ (hash >>> 16)) >>> 0;
+
+  const picked = [];
+  for (let step = 0; step < 3; step += 1) {
+    let index = (hash >>> (step * 5)) % REWARDS.length;
+    // Walk forward until we land on something not already drafted.
+    let guard = 0;
+    while (picked.includes(REWARDS[index]) && guard < REWARDS.length) {
+      index = (index + 1) % REWARDS.length;
+      guard += 1;
+    }
+    picked.push(REWARDS[index]);
+  }
+
+  return picked;
+}
+
+/**
+ * Resting at a quiet alcove. Restores 30% of maximum health — deliberately
+ * distinct from `second_wind`, which restores 60% of *missing* health.
+ *
+ * Returns the same shape as `applyRewardEffect` so callers can spread it
+ * identically.
+ *
+ * @param {{ heroMaxHp: number, carriedHeroHp: number, modifiers: object }} runState
+ * @returns {{ heroMaxHp: number, carriedHeroHp: number, modifiers: object, healed: number }}
+ */
+export function applyRestEffect(runState) {
+  const heroMaxHp = runState.heroMaxHp;
+  const before = runState.carriedHeroHp;
+  const heal = Math.round(heroMaxHp * 0.30);
+  const carriedHeroHp = Math.min(heroMaxHp, before + heal);
+
+  return {
+    heroMaxHp,
+    carriedHeroHp,
+    modifiers: { ...runState.modifiers },
+    healed: carriedHeroHp - before,
+  };
+}
+
+/**
  * Applies a reward to run state fields and returns the updated fields.
  * @param {{ heroMaxHp: number, carriedHeroHp: number, modifiers: { focusStart: number, resonanceStart: number, blockReliefBonus: number } }} runState
  * @param {string} rewardId

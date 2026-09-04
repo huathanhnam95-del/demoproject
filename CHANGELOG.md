@@ -1,3 +1,16 @@
+## [V1.8.108] - 2026-09-04
+
+### Added & Enhanced
+- **Entrance Test ASR Resiliency & Safety Net Architecture**:
+  - **Multi-Key Billed Failover**: Configured `GEMINI_API_KEY_BACKUP` supporting automatic failover from primary key to secondary billed account key (`serviceTier: standard`) upon 429 quota exhaustion or 400/403 errors.
+  - **Hardened Hugging Face Whisper Safety Net**: Implemented final provider-level safety net in `functions/src/entrance-test/asr-service.js` using `openai/whisper-large-v3` via structured JSON with `generate_kwargs: { language: 'english' }` to prevent Whisper from misidentifying pauses as Vietnamese.
+  - **Defensive Hallucination & Vietnamese Diacritic Filter**: Enhanced `cleanHallucinatedLoops()` with tone-marked Vietnamese word stripping, completely eliminating silence hallucinations.
+  - **Entrance Test Rescoring**: Rescored test `5726ca5178ece2a551cbd2709366e02dcfd73cad19bd3b81d3db4c44ef685740` with 100% clean English transcriptions (Question 1: 73.0%, Question 2: 59.6%, Question 3: 90.6%).
+- **Echo Forge 16-Bit Pixel Art & Slay-the-Spire Branching Route**:
+  - Generated authentic 16-bit pixel art character sprites, added branching 3-act route map with Warden bosses, and verified with unit and browser test suites.
+- **Write Essay Step 1 Overhaul**:
+  - Visual prompt flowchart, essay type guide, 2-column comparison, and ready modal.
+
 ## [V1.8.107] - 2026-09-04
 
 ### Added & Enhanced

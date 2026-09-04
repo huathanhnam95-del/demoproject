@@ -1,0 +1,691 @@
+<title>Echo Forge Pixel Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --void:#070b14;--deep:#0f172a;--panel:#151f36;--panel2:#1c2942;
+    --line:#26344f;--line-hi:#3a4b6d;
+    --text:#e6ecf7;--dim:#93a2c0;--faint:#63739a;
+    --cyan:#22d3ee;--cyan-pale:#a5f3fc;--violet:#a78bfa;--amber:#fbbf24;--amber-pale:#fde68a;
+    --display:"Silkscreen","Courier New",monospace;
+    --body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--void);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px 90px}
+
+  header.top{padding:60px 0 32px;border-bottom:1px solid var(--line);margin-bottom:48px}
+  .kicker{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:var(--cyan);margin:0 0 20px}
+  h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,4.6vw,38px);line-height:1.3;margin:0 0 22px;text-wrap:balance}
+  h1 em{font-style:normal;color:var(--amber)}
+  .lede{font-size:17px;color:var(--dim);max-width:60ch;margin:0}
+
+  section{margin-bottom:62px}
+  h2{font-family:var(--display);font-weight:400;font-size:16px;color:var(--cyan);margin:0 0 6px}
+  .sub{color:var(--dim);max-width:64ch;margin:0 0 24px;font-size:15px}
+
+  .stage{background:var(--deep);border:1px solid var(--line);padding:24px 22px 20px}
+
+  .row{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:20px;align-items:center}
+  .lbl{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.05em;margin-right:2px}
+  button.pose,button.res{
+    font-family:var(--display);font-size:10px;background:var(--panel);color:var(--dim);
+    border:1px solid var(--line);padding:10px 12px;cursor:pointer;transition:background .12s,color .12s,border-color .12s;
+  }
+  button.pose:hover,button.res:hover{border-color:var(--line-hi);color:var(--text)}
+  button.pose[aria-pressed="true"]{background:var(--cyan);color:var(--void);border-color:var(--cyan)}
+  button.res[aria-pressed="true"]{background:var(--violet);color:var(--void);border-color:var(--violet)}
+  button.pose:focus-visible,button.res:focus-visible,button.act:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .viewer{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:36px;padding:16px 0 22px;min-height:250px}
+  .slot{display:flex;flex-direction:column;align-items:center;gap:11px}
+  .slot canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+  .tag{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.04em}
+
+  .scales{display:flex;align-items:flex-end;justify-content:center;gap:26px;padding-top:20px;border-top:1px solid var(--line);flex-wrap:wrap}
+
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+  button.act{font-family:var(--display);font-size:10px;background:var(--amber);color:var(--void);border:1px solid var(--amber);padding:11px 15px;cursor:pointer}
+  button.act:hover{background:var(--amber-pale);border-color:var(--amber-pale)}
+  .hint{font-family:var(--mono);font-size:11px;color:var(--faint)}
+
+  .wardens{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .warden{background:var(--deep);padding:20px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .warden canvas{display:block;image-rendering:pixelated}
+  .wname{font-family:var(--display);font-size:10.5px;line-height:1.6}
+  .wstat{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  .wtaunt{font-size:12.5px;color:var(--dim);font-style:italic;line-height:1.5;max-width:25ch}
+
+  .tech{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .tcell{background:var(--panel);padding:16px 16px 18px}
+  .tcell h3{font-family:var(--body);font-weight:600;font-size:14.5px;margin:0 0 5px;color:var(--text)}
+  .tcell p{margin:0;font-size:13.5px;color:var(--dim);line-height:1.6}
+
+  .swatches{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .sw{background:var(--panel);padding:11px 12px;flex:1 1 132px;min-width:132px}
+  .ramp{display:flex;height:30px;margin-bottom:8px;border:1px solid rgba(255,255,255,.08)}
+  .ramp i{flex:1}
+  .sw-name{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+
+  .mock{border:1px solid var(--line);background:var(--deep);overflow:hidden}
+  .mock-hud{display:flex;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .hud-side{flex:1;min-width:0}
+  .hud-side.right{text-align:right}
+  .hud-name{font-family:var(--display);font-size:9.5px;margin-bottom:7px;line-height:1.5}
+  .bar{height:10px;background:var(--void);border:1px solid var(--line);position:relative}
+  .bar i{position:absolute;top:1px;bottom:1px;left:1px;display:block}
+  .hud-num{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:5px}
+  .mock-field{display:flex;align-items:flex-end;justify-content:space-between;padding:22px 26px 0;gap:14px;
+    background:radial-gradient(120% 80% at 50% 100%,rgba(34,211,238,.06),transparent 62%)}
+  .mock-field canvas{display:block;image-rendering:pixelated}
+  .ground{height:3px;background:linear-gradient(90deg,transparent,var(--line-hi),transparent);margin:0 26px}
+  .dmg{font-family:var(--display);font-size:15px;color:var(--amber);align-self:flex-start;margin-bottom:40px}
+  .mock-cards{display:flex;gap:1px;background:var(--line);border-top:1px solid var(--line);margin-top:20px}
+  .mc{background:var(--panel);padding:12px 9px;flex:1;text-align:center}
+  .mc-t{font-family:var(--display);font-size:8.5px;line-height:1.6;margin-bottom:5px}
+  .mc-m{font-family:var(--mono);font-size:9px;color:var(--faint)}
+
+  code{font-family:var(--mono);font-size:.86em;background:var(--panel2);padding:1px 5px;color:var(--cyan-pale);word-break:break-word}
+
+  .busy{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:center;padding:26px 0}
+
+  @media (max-width:760px){
+    .wardens,.tech{grid-template-columns:1fr}
+    .viewer{gap:24px}.scales{gap:16px}
+    .wrap{padding:0 18px 70px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">ECHO FORGE / ART DIRECTION V2</p>
+    <h1>Volumetric sprites, rendered down to <em>pixels</em></h1>
+    <p class="lede">
+      These aren't drawn as flat coloured squares. Each character is built from 3D volumes —
+      spheres, capsules, boxes, octahedra — lit by a single raked light source and then quantised
+      into pixel-art tone ramps. Real form, real shading, and the resolution is a dial.
+    </p>
+  </header>
+
+  <section>
+    <h2>THE HERO</h2>
+    <p class="sub">
+      Five poses against the current art's one. Change the grid resolution to find the density you
+      want — every sprite re-renders from the same 3D rig, so nothing is redrawn by hand.
+    </p>
+
+    <div class="stage">
+      <div class="row"><span class="lbl">GRID</span><span id="res-bar"></span></div>
+      <div class="row"><span class="lbl">POSE</span><span id="pose-bar"></span></div>
+      <div class="viewer" id="hero-viewer"><div class="busy">rendering…</div></div>
+      <div class="scales" id="hero-scales"></div>
+      <div class="controls">
+        <button class="act" id="play" type="button">&#9654; PLAY ATTACK</button>
+        <span class="hint">idle → wind-up → strike → idle · 200ms / 260ms</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>HOW THE 3D READ IS PRODUCED</h2>
+    <p class="sub">Four techniques, all applied at render time rather than painted by hand.</p>
+    <div class="tech">
+      <div class="tcell">
+        <h3>Five-tone ramps, not two</h3>
+        <p>Each material carries a five-step ramp from deep shadow to specular. Surface luminance
+        picks the step, so curvature turns into banding that reads as volume.</p>
+      </div>
+      <div class="tcell">
+        <h3>One raked key light</h3>
+        <p>A single light from upper-left-front shades every primitive consistently. Nothing is lit
+        ad hoc, so all nine sprites agree about where the sun is.</p>
+      </div>
+      <div class="tcell">
+        <h3>Rim light on the turning edge</h3>
+        <p>Surfaces angled away from the viewer pick up a bright fringe. This is what separates the
+        figure from the background and sells depth more than any other single cue.</p>
+      </div>
+      <div class="tcell">
+        <h3>Contact shadow</h3>
+        <p>A soft elliptical shadow pools under the feet. Without it a sprite floats; with it, it
+        stands on the stage floor.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>THE WARDENS</h2>
+    <p class="sub">
+      Faceted crystal constructs — octahedral shells around an emissive core. One rig, three tone
+      ramps, so three distinct opponents cost no extra art and no manifest change.
+    </p>
+    <div class="wardens" id="wardens"></div>
+  </section>
+
+  <section>
+    <h2>WARDEN STATES</h2>
+    <p class="sub">
+      The current enemy has one frame and never reacts. These are the four it needs — resting,
+      telegraphing, struck, and broken.
+    </p>
+    <div class="stage"><div class="viewer" id="warden-states"></div></div>
+  </section>
+
+  <section>
+    <h2>TONE RAMPS</h2>
+    <p class="sub">
+      Still inside the locked slate / cyan / violet / amber anchors from
+      <code>visual-contract.v1.json</code> — the ramps interpolate within them rather than adding hues.
+    </p>
+    <div class="swatches" id="swatches"></div>
+  </section>
+
+  <section>
+    <h2>THE STAGE, ASSEMBLED</h2>
+    <p class="sub">Sprites, chunky HUD, and a damage number in place.</p>
+    <div class="mock">
+      <div class="mock-hud">
+        <div class="hud-side">
+          <div class="hud-name" style="color:var(--cyan)">RESONANT</div>
+          <div class="bar"><i style="width:72%;background:var(--cyan)"></i></div>
+          <div class="hud-num">72 / 100 · FOCUS ▰▰▱ · COMBO 3</div>
+        </div>
+        <div class="hud-side right">
+          <div class="hud-name" style="color:var(--violet)">THE HOLLOW VOWEL</div>
+          <div class="bar"><i style="width:44%;background:#8b5cf6"></i></div>
+          <div class="hud-num">53 / 120 · ROUND 4</div>
+        </div>
+      </div>
+      <div class="mock-field">
+        <div id="mock-hero"></div>
+        <div class="dmg">-34!</div>
+        <div id="mock-warden"></div>
+      </div>
+      <div class="ground"></div>
+      <div class="mock-cards">
+        <div class="mc"><div class="mc-t" style="color:var(--cyan)">PRECISION STRIKE</div><div class="mc-m">WORD · 20 DMG</div></div>
+        <div class="mc"><div class="mc-t" style="color:var(--amber)">STRESS BREAKER</div><div class="mc-m">STRESS · 24 · 1 FOCUS</div></div>
+        <div class="mc"><div class="mc-t" style="color:var(--violet)">ECHO CHAIN</div><div class="mc-m">PHRASE · 26 · 1 FOCUS</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>WHAT THIS MEANS FOR PRODUCTION</h2>
+    <p class="sub">
+      The build pipeline rasterises hand-authored SVG through Playwright into hash-verified PNGs.
+      The renderer here emits a pixel grid, and a grid of solid cells is trivially expressible as
+      <code>&lt;rect&gt;</code> elements — which is exactly what that sanitiser accepts.
+    </p>
+    <div class="tech">
+      <div class="tcell">
+        <h3>Rig once, export every frame</h3>
+        <p>Poses are joint positions, not drawings. New frames — enemy hit, defeat, victory — cost
+        a few coordinates rather than a fresh sprite.</p>
+      </div>
+      <div class="tcell">
+        <h3>Resolution stays a decision, not a rewrite</h3>
+        <p>If 64 reads better than 48 at 360px, re-export at 64. The contract canvas is 256, which
+        divides evenly by 32, 48 is 5.33 — so 32, 64 and 128 stay pixel-exact.</p>
+      </div>
+      <div class="tcell">
+        <h3>Nine frames redrawn in place</h3>
+        <p>Same four asset IDs, same canvas sizes, same frame counts. Only the SVG sources change,
+        then <code>--rebuild</code>. Zero test edits.</p>
+      </div>
+      <div class="tcell">
+        <h3>Tints stay CSS</h3>
+        <p>Three Wardens from one exported sprite by overriding the violet tokens on a
+        <code>data-warden</code> attribute. No extra assets.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- palette ramps (dark -> bright) ----------
+  var RAMPS = {
+    arm : ['#0a2f3d','#0d5d75','#0891b2','#22d3ee','#8beefa'],
+    sub : ['#070c14','#111a28','#1e293b','#334155','#4d5d78'],
+    trim: ['#0d5d75','#0891b2','#22d3ee','#67e8f9','#d2f9fe'],
+    cape: ['#061c25','#0a4457','#07708c','#0d95b4','#1bbcda'],
+    core: ['#7c3a06','#b45309','#f59e0b','#fbbf24','#fef3c7'],
+    vis : ['#0891b2','#22d3ee','#67e8f9','#a5f3fc','#e6fdff'],
+    vio : ['#1e0d4a','#3d1a80','#5b21b6','#8b5cf6','#c4b0fc'],
+    viod: ['#120927','#2a1263','#4c1d95','#6d28d9','#9d78fa'],
+    rose: ['#4c0519','#9f1239','#e11d48','#fb7185','#fecdd3']
+  };
+
+  var EMISSIVE = { core:true, vis:true };
+
+  function hex2rgb(h){
+    return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  }
+  function buildRamps(over){
+    var out = {};
+    for (var k in RAMPS){
+      var src = (over && over[k]) ? over[k] : RAMPS[k];
+      out[k] = src.map(hex2rgb);
+    }
+    return out;
+  }
+  var BASE_RAMPS = buildRamps(null);
+
+  // ---------- scalar SDFs ----------
+  function sphereD(px,py,pz,cx,cy,cz,r){
+    var dx=px-cx, dy=py-cy, dz=pz-cz;
+    return Math.sqrt(dx*dx+dy*dy+dz*dz)-r;
+  }
+  function capsuleD(px,py,pz,ax,ay,az,bx,by,bz,r){
+    var pax=px-ax, pay=py-ay, paz=pz-az;
+    var bax=bx-ax, bay=by-ay, baz=bz-az;
+    var bb=bax*bax+bay*bay+baz*baz;
+    var h=bb>0?(pax*bax+pay*bay+paz*baz)/bb:0;
+    h = h<0?0:(h>1?1:h);
+    var dx=pax-bax*h, dy=pay-bay*h, dz=paz-baz*h;
+    return Math.sqrt(dx*dx+dy*dy+dz*dz)-r;
+  }
+  function boxD(px,py,pz,cx,cy,cz,bx,by,bz,rr){
+    var qx=Math.abs(px-cx)-bx, qy=Math.abs(py-cy)-by, qz=Math.abs(pz-cz)-bz;
+    var mx=qx>0?qx:0, my=qy>0?qy:0, mz=qz>0?qz:0;
+    var outside=Math.sqrt(mx*mx+my*my+mz*mz);
+    var inside=Math.min(Math.max(qx,Math.max(qy,qz)),0);
+    return outside+inside-rr;
+  }
+  function octaD(px,py,pz,cx,cy,cz,s){
+    return (Math.abs(px-cx)+Math.abs(py-cy)+Math.abs(pz-cz)-s)*0.57735027;
+  }
+
+  // primitive builders
+  function S(cx,cy,cz,r,m){ return {t:0,cx:cx,cy:cy,cz:cz,r:r,m:m}; }
+  function C(ax,ay,az,bx,by,bz,r,m){ return {t:1,ax:ax,ay:ay,az:az,bx:bx,by:by,bz:bz,r:r,m:m}; }
+  function B(cx,cy,cz,bx,by,bz,rr,m,rot){ return {t:2,cx:cx,cy:cy,cz:cz,bx:bx,by:by,bz:bz,r:rr,m:m,rot:rot||0}; }
+  function O(cx,cy,cz,s,m){ return {t:3,cx:cx,cy:cy,cz:cz,s:s,m:m}; }
+
+  var _m = null;
+  function mapScene(prims,px,py,pz){
+    var best=1e9, mat=null;
+    for (var i=0;i<prims.length;i++){
+      var p=prims[i], d;
+      if (p.t===0) d=sphereD(px,py,pz,p.cx,p.cy,p.cz,p.r);
+      else if (p.t===1) d=capsuleD(px,py,pz,p.ax,p.ay,p.az,p.bx,p.by,p.bz,p.r);
+      else if (p.t===2){
+        var x=px,y=py;
+        if (p.rot){
+          var ox=px-p.cx, oy=py-p.cy, ca=Math.cos(p.rot), sa=Math.sin(p.rot);
+          x=ox*ca+oy*sa+p.cx; y=-ox*sa+oy*ca+p.cy;
+        }
+        d=boxD(x,y,pz,p.cx,p.cy,p.cz,p.bx,p.by,p.bz,p.r);
+      }
+      else d=octaD(px,py,pz,p.cx,p.cy,p.cz,p.s);
+      if (d<best){ best=d; mat=p.m; }
+    }
+    _m=mat;
+    return best;
+  }
+
+  // ---------- renderer ----------
+  var LX=-0.55, LY=0.74, LZ=0.66;
+  (function(){ var l=Math.sqrt(LX*LX+LY*LY+LZ*LZ); LX/=l;LY/=l;LZ/=l; })();
+
+  function renderSprite(prims, N, opts){
+    opts = opts || {};
+    var ext = opts.ext || 13;
+    var ramps = opts.ramps || BASE_RAMPS;
+    var shY = opts.shadowY, shRX = opts.shadowRX || 5.2, shRY = opts.shadowRY || 1.3;
+
+    var cv = document.createElement('canvas');
+    cv.width = N; cv.height = N;
+    var ctx = cv.getContext('2d');
+    var img = ctx.createImageData(N,N);
+    var data = img.data;
+    var step = 2*ext/N;
+    var mask = new Uint8Array(N*N);
+
+    for (var py=0; py<N; py++){
+      var wy = ext - (py+0.5)*step;
+      for (var px=0; px<N; px++){
+        var wx = -ext + (px+0.5)*step;
+        var idx = (py*N+px)*4;
+
+        var t=0, hit=false, hz=0;
+        for (var s=0; s<44; s++){
+          var z = 22 - t;
+          var d = mapScene(prims, wx, wy, z);
+          if (d < 0.022){ hit=true; hz=z; break; }
+          t += d>0.06 ? d : 0.06;
+          if (t > 44) break;
+        }
+
+        if (!hit){
+          if (shY !== undefined){
+            var ux=(wx-(opts.shadowX||0))/shRX, uy=(wy-shY)/shRY;
+            var q=ux*ux+uy*uy;
+            if (q<1){
+              var a=(1-q)*(1-q)*150;
+              data[idx]=3; data[idx+1]=6; data[idx+2]=12; data[idx+3]=a;
+            }
+          }
+          continue;
+        }
+
+        var mat=_m;
+        var e=0.03;
+        var nx = mapScene(prims,wx+e,wy,hz)-mapScene(prims,wx-e,wy,hz);
+        var ny = mapScene(prims,wx,wy+e,hz)-mapScene(prims,wx,wy-e,hz);
+        var nz = mapScene(prims,wx,wy,hz+e)-mapScene(prims,wx,wy,hz-e);
+        var nl = Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+        nx/=nl; ny/=nl; nz/=nl;
+
+        var ramp = ramps[mat] || ramps.sub;
+        var k;
+        if (EMISSIVE[mat]) k = ramp.length-1;
+        else {
+          var diff = nx*LX+ny*LY+nz*LZ; if (diff<0) diff=0;
+          var face = nz>0?nz:0;
+          var rim = Math.pow(1-face, 3);
+          var lum = 0.14 + diff*0.80 + rim*0.42;
+          k = Math.floor(lum*ramp.length);
+          if (k<0) k=0; if (k>ramp.length-1) k=ramp.length-1;
+        }
+        var c = ramp[k];
+        data[idx]=c[0]; data[idx+1]=c[1]; data[idx+2]=c[2]; data[idx+3]=255;
+        mask[py*N+px]=1;
+      }
+    }
+
+    // 1px contour just outside the silhouette
+    for (var y=0; y<N; y++){
+      for (var x=0; x<N; x++){
+        if (mask[y*N+x]) continue;
+        var near = (x>0&&mask[y*N+x-1]) || (x<N-1&&mask[y*N+x+1]) ||
+                   (y>0&&mask[(y-1)*N+x]) || (y<N-1&&mask[(y+1)*N+x]);
+        if (!near) continue;
+        var o=(y*N+x)*4;
+        data[o]=4; data[o+1]=8; data[o+2]=16; data[o+3]=255;
+      }
+    }
+
+    ctx.putImageData(img,0,0);
+    return cv;
+  }
+
+  // ---------- hero rig ----------
+  function heroRig(o){
+    o = o || {};
+    var lean = o.lean||0, drop = o.drop||0;
+    var lElb=o.lElb||[-4.4,0.7,0.7], lHnd=o.lHnd||[-4.2,-2.4,1.3];
+    var rElb=o.rElb||[ 4.4,0.7,0.7], rHnd=o.rHnd||[ 4.2,-2.4,1.3];
+    var capeZ=o.capeZ||-2.7, capeRot=o.capeRot||0, capeY=o.capeY||2.2;
+    var lFx=o.lFx!==undefined?o.lFx:-1.8, rFx=o.rFx!==undefined?o.rFx:1.8;
+    var lFy=o.lFy||0, rFy=o.rFy||0;
+    var eyeMat=o.eyeMat||'vis';
+    var L = lean, D = drop;
+
+    return [
+      // cape behind
+      B(L*0.5, capeY-D, capeZ, 3.3, 5.1, 0.55, 0.7, 'cape', capeRot),
+      // legs
+      C(-1.5,-1.6-D,0, lFx,-5.6+lFy,0.2, 1.2,'sub'),
+      C(lFx,-5.6+lFy,0.2, lFx,-9.3+lFy,0.3, 0.98,'sub'),
+      B(lFx,-10.3+lFy,0.7, 1.25,0.85,1.85, 0.35,'arm'),
+      C( 1.5,-1.6-D,0, rFx,-5.6+rFy,0.2, 1.2,'sub'),
+      C(rFx,-5.6+rFy,0.2, rFx,-9.3+rFy,0.3, 0.98,'sub'),
+      B(rFx,-10.3+rFy,0.7, 1.25,0.85,1.85, 0.35,'arm'),
+      // pelvis + torso
+      B(L*0.4,-1.1-D,0, 2.5,1.15,1.6, 0.7,'sub'),
+      B(L, 2.3-D, 0, 2.95,3.3,1.8, 1.05,'arm'),
+      B(L, 0.4-D, 0.6, 2.3,1.0,1.5, 0.6,'trim'),
+      S(L, 3.0-D, 1.85, 0.95,'core'),
+      // shoulders + arms
+      S(L-3.5, 4.4-D, 0, 1.75,'arm'),
+      S(L+3.5, 4.4-D, 0, 1.75,'arm'),
+      C(L-3.6,3.9-D,0, lElb[0],lElb[1]-D,lElb[2], 1.02,'arm'),
+      C(lElb[0],lElb[1]-D,lElb[2], lHnd[0],lHnd[1]-D,lHnd[2], 0.86,'sub'),
+      S(lHnd[0],lHnd[1]-D,lHnd[2], 1.0,'trim'),
+      C(L+3.6,3.9-D,0, rElb[0],rElb[1]-D,rElb[2], 1.02,'arm'),
+      C(rElb[0],rElb[1]-D,rElb[2], rHnd[0],rHnd[1]-D,rHnd[2], 0.86,'sub'),
+      S(rHnd[0],rHnd[1]-D,rHnd[2], 1.0,'trim'),
+      // neck + head
+      C(L,5.4-D,0, L,6.4-D,0, 1.05,'sub'),
+      S(L, 7.4-D, 0.1, 2.55,'sub'),
+      S(L, 7.9-D, -0.45, 2.85,'arm'),
+      B(L, 7.15-D, 2.05, 1.75,0.5,0.5, 0.18, eyeMat),
+      B(L, 10.4-D, -0.5, 0.42,1.35,1.55, 0.18,'trim')
+    ];
+  }
+
+  var HERO_POSES = {
+    idle: {},
+    windup: { lean:-0.9, drop:1.1, capeRot:0.16, capeZ:-3.2,
+      lElb:[-5.2,0.4,-0.9], lHnd:[-5.6,-1.9,-2.3],
+      rElb:[ 4.2,0.5,-0.6], rHnd:[ 4.4,-1.6,-2.0],
+      lFx:-2.4, rFx:2.2 },
+    strike: { lean:1.5, drop:0.35, capeRot:-0.3, capeZ:-3.6,
+      lElb:[-4.6,0.2,-1.4], lHnd:[-4.4,-2.6,-2.2],
+      rElb:[ 5.4,2.6,1.8],  rHnd:[ 8.4,3.1,3.2],
+      lFx:-3.0, rFx:2.6, eyeMat:'vis' },
+    hit: { lean:-1.4, drop:0.5, capeRot:0.32, capeZ:-2.2,
+      lElb:[-5.4,1.8,1.2], lHnd:[-6.2,-0.4,2.2],
+      rElb:[ 4.6,1.9,1.2], rHnd:[ 5.4,-0.3,2.2],
+      lFx:-2.6, rFx:1.4, eyeMat:'rose' },
+    victory: { lean:0, drop:-0.5, capeRot:0, capeZ:-3.0,
+      lElb:[-5.0,4.6,0.4], lHnd:[-5.4,7.6,0.8],
+      rElb:[ 5.0,4.6,0.4], rHnd:[ 5.4,7.6,0.8],
+      lFx:-1.9, rFx:1.9 }
+  };
+
+  var HERO_ORDER = ['idle','windup','strike','hit','victory'];
+  var HERO_LABEL = {idle:'IDLE',windup:'WIND-UP',strike:'STRIKE',hit:'HIT',victory:'VICTORY'};
+
+  // ---------- warden rig ----------
+  function wardenRig(state){
+    var core = state==='hit' ? 'rose' : 'core';
+    if (state==='telegraph'){
+      return [
+        O(0,1.2,0, 7.4,'vio'), O(0,1.2,1.2, 4.6,'viod'),
+        S(0,1.2,3.0, 2.2, core),
+        O(0,9.0,0, 2.9,'vio'), O(0,-7.4,0, 3.1,'vio'),
+        O(-9.2,3.0,1.0, 2.0,'vio'), O(9.2,3.0,1.0, 2.0,'vio'),
+        O(-8.0,-3.6,0.5, 1.6,'vio'), O(8.0,-3.6,0.5, 1.6,'vio'),
+        O(0,1.2,-4.4, 2.4,'viod')
+      ];
+    }
+    if (state==='hit'){
+      return [
+        O(0.8,1.0,0, 6.5,'vio'), O(0.8,1.0,1.0, 3.9,'viod'),
+        S(0.8,1.0,2.7, 1.7, core),
+        O(1.6,8.0,0, 2.2,'vio'), O(0.2,-6.6,0, 2.5,'vio'),
+        B(-2.4,1.0,3.2, 0.22,4.4,0.6, 0.05,'sub', 0.30),
+        B( 3.6,0.4,3.0, 0.22,3.4,0.6, 0.05,'sub',-0.42),
+        O(-8.6,4.2,0.8, 1.5,'vio'), O(8.8,2.0,0.8, 1.4,'vio'),
+        O(-7.4,-4.6,0.4, 1.1,'vio')
+      ];
+    }
+    if (state==='broken'){
+      return [
+        O(-2.6,2.4,0, 3.0,'viod'), O(3.2,0.4,-0.4, 2.6,'viod'),
+        O(-1.0,-3.6,0.4, 2.3,'viod'), O(2.6,4.6,0.6, 1.8,'viod'),
+        S(-0.4,1.0,1.6, 1.0,'core'),
+        O(-8.4,5.2,0.6, 1.4,'vio'), O(8.0,3.4,0.4, 1.2,'vio'),
+        O(-6.6,-5.4,0.2, 1.1,'vio'), O(7.2,-4.6,0.2, 1.3,'vio'),
+        O(0.6,-8.4,0, 1.5,'viod'), O(-4.0,-7.2,0.4, 1.0,'vio')
+      ];
+    }
+    return [
+      O(0,1.0,0, 6.6,'vio'), O(0,1.0,1.1, 4.0,'viod'),
+      S(0,1.0,2.8, 1.8, core),
+      O(0,8.2,0, 2.5,'vio'), O(0,-6.8,0, 2.7,'vio'),
+      O(-8.4,2.6,0.8, 1.7,'vio'), O(8.4,2.6,0.8, 1.7,'vio'),
+      O(-7.2,-3.2,0.4, 1.25,'vio'), O(7.2,-3.2,0.4, 1.25,'vio'),
+      O(0,1.0,-4.0, 2.2,'viod')
+    ];
+  }
+
+  var WARDEN_ORDER = ['idle','telegraph','hit','broken'];
+  var WARDEN_LABEL = {idle:'IDLE',telegraph:'TELEGRAPH',hit:'STRUCK',broken:'BROKEN'};
+
+  var TINTS = [
+    { name:'THE HOLLOW VOWEL', hp:'120 HP · 20 DMG', accent:'#a78bfa',
+      taunt:'Your vowels are empty. I will hear the hollow in them.', over:null },
+    { name:'THE BROKEN STRESS', hp:'150 HP · 26 DMG', accent:'#fb923c',
+      taunt:'Every syllable you flatten, I sharpen into a blade.',
+      over:{ vio:['#4a1703','#7c2d12','#c2410c','#fb923c','#fed7aa'],
+             viod:['#2b0d02','#5a1f0a','#9a3412','#ea580c','#fb923c'] } },
+    { name:'THE SEVERED CHAIN', hp:'185 HP · 32 DMG', accent:'#f87171',
+      taunt:'Speak the whole phrase, or speak nothing at all.',
+      over:{ vio:['#450a0a','#7f1d1d','#b91c1c','#f87171','#fecaca'],
+             viod:['#2a0505','#5c1010','#991b1b','#dc2626','#f87171'] } }
+  ];
+
+  // ---------- render queue ----------
+  var cache = {};
+  var RES = 64;
+
+  function heroCanvas(pose, n){
+    var key='h:'+pose+':'+n;
+    if (!cache[key]) cache[key]=renderSprite(heroRig(HERO_POSES[pose]), n,
+      { ext:13, shadowY:-11.4, shadowX:0, shadowRX:5.4, shadowRY:1.35 });
+    return cache[key];
+  }
+  function wardenCanvas(state, n, tintIdx){
+    var ti = tintIdx||0;
+    var key='w:'+state+':'+n+':'+ti;
+    if (!cache[key]){
+      var ramps = ti===0 ? BASE_RAMPS : buildRamps(TINTS[ti].over);
+      cache[key]=renderSprite(wardenRig(state), n, { ext:13, ramps:ramps });
+    }
+    return cache[key];
+  }
+  function show(cv, size){
+    var c = cv.cloneNode(true);
+    c.getContext('2d').drawImage(cv,0,0);
+    c.style.width = size+'px'; c.style.height = size+'px';
+    return c;
+  }
+
+  // ---------- UI ----------
+  var current='idle';
+  var viewer=document.getElementById('hero-viewer');
+  var scales=document.getElementById('hero-scales');
+  var poseBar=document.getElementById('pose-bar');
+  var resBar=document.getElementById('res-bar');
+
+  function paintHero(){
+    var cv=heroCanvas(current,RES);
+    viewer.innerHTML='';
+    var slot=document.createElement('div'); slot.className='slot';
+    slot.appendChild(show(cv,288));
+    var tg=document.createElement('span'); tg.className='tag';
+    tg.textContent=HERO_LABEL[current]+' · '+RES+'×'+RES+' grid';
+    slot.appendChild(tg); viewer.appendChild(slot);
+
+    scales.innerHTML='';
+    [48,80,128,192].forEach(function(px){
+      var s=document.createElement('div'); s.className='slot';
+      s.appendChild(show(cv,px));
+      var t=document.createElement('span'); t.className='tag'; t.textContent=px+'px';
+      s.appendChild(t); scales.appendChild(s);
+    });
+
+    Array.prototype.forEach.call(poseBar.children,function(b){
+      b.setAttribute('aria-pressed', b.dataset.pose===current?'true':'false');
+    });
+  }
+
+  HERO_ORDER.forEach(function(name){
+    var b=document.createElement('button');
+    b.className='pose'; b.type='button'; b.dataset.pose=name;
+    b.setAttribute('aria-pressed','false'); b.textContent=HERO_LABEL[name];
+    b.addEventListener('click',function(){ current=name; paintHero(); });
+    poseBar.appendChild(b);
+  });
+
+  [32,64,128].forEach(function(n){
+    var b=document.createElement('button');
+    b.className='res'; b.type='button'; b.dataset.res=String(n);
+    b.setAttribute('aria-pressed', n===RES?'true':'false');
+    b.textContent=n+'×'+n;
+    b.addEventListener('click',function(){
+      RES=n;
+      Array.prototype.forEach.call(resBar.children,function(x){
+        x.setAttribute('aria-pressed', Number(x.dataset.res)===RES?'true':'false');
+      });
+      paintHero(); paintWardenStates();
+    });
+    resBar.appendChild(b);
+  });
+
+  var playing=false;
+  document.getElementById('play').addEventListener('click',function(){
+    if (playing) return;
+    playing=true;
+    var seq=[['windup',200],['strike',260],['strike',200],['idle',0]], t=0;
+    seq.forEach(function(step){
+      setTimeout(function(){ current=step[0]; paintHero(); }, t);
+      t+=step[1];
+    });
+    setTimeout(function(){ playing=false; }, t+40);
+  });
+
+  function paintWardenStates(){
+    var box=document.getElementById('warden-states');
+    box.innerHTML='';
+    WARDEN_ORDER.forEach(function(name){
+      var s=document.createElement('div'); s.className='slot';
+      s.appendChild(show(wardenCanvas(name,RES,0),176));
+      var t=document.createElement('span'); t.className='tag'; t.textContent=WARDEN_LABEL[name];
+      s.appendChild(t); box.appendChild(s);
+    });
+  }
+
+  function paintWardens(){
+    var box=document.getElementById('wardens');
+    box.innerHTML='';
+    TINTS.forEach(function(w,i){
+      var d=document.createElement('div'); d.className='warden';
+      d.appendChild(show(wardenCanvas('idle',64,i),168));
+      var n=document.createElement('div'); n.className='wname';
+      n.style.color=w.accent; n.textContent=w.name; d.appendChild(n);
+      var s=document.createElement('div'); s.className='wstat'; s.textContent=w.hp; d.appendChild(s);
+      var q=document.createElement('div'); q.className='wtaunt'; q.textContent='“'+w.taunt+'”';
+      d.appendChild(q); box.appendChild(d);
+    });
+  }
+
+  function paintSwatches(){
+    var names={arm:'armour',sub:'body / slate',trim:'trim',cape:'cape',core:'core (emissive)',
+               vis:'visor (emissive)',vio:'warden shell',viod:'warden deep',rose:'damage'};
+    var box=document.getElementById('swatches');
+    box.innerHTML=Object.keys(RAMPS).map(function(k){
+      return '<div class="sw"><div class="ramp">'+RAMPS[k].map(function(c){
+        return '<i style="background:'+c+'"></i>'; }).join('')+
+        '</div><div class="sw-name">'+(names[k]||k)+'</div></div>';
+    }).join('');
+  }
+
+  function paintMock(){
+    document.getElementById('mock-hero').appendChild(show(heroCanvas('strike',64),150));
+    document.getElementById('mock-warden').appendChild(show(wardenCanvas('hit',64,0),150));
+  }
+
+  // progressive so the page paints first
+  var jobs=[paintHero,paintWardens,paintWardenStates,paintSwatches,paintMock];
+  (function next(){
+    var job=jobs.shift();
+    if (!job) return;
+    try { job(); } catch(e){ /* keep going */ }
+    requestAnimationFrame(next);
+  })();
+})();
+</script>

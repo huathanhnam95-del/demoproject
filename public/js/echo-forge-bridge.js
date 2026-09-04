@@ -101,6 +101,17 @@ export function createEchoForgeBridge({
         break;
       }
 
+      // Route position must survive a reload. Without these, closing the tab
+      // while standing on the map would drop the player back to the start of
+      // the floor they had already left.
+      case 'run.map.offered':
+      case 'run.node.entered': {
+        if (latestRunState) {
+          saveRun(latestRunState, storage, now());
+        }
+        break;
+      }
+
       case 'run.completed':
       case 'run.failed':
       case 'run.abandoned': {

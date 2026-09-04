@@ -1,0 +1,1169 @@
+<title>Why Echo Forge Isn't a Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg: #f6f6fa;
+    --surface: #ffffff;
+    --surface-2: #eeeef5;
+    --border: #dcdce8;
+    --border-soft: #e8e8f0;
+    --text: #15151e;
+    --text-dim: #55556b;
+    --text-faint: #85859c;
+    --cyan: #0e7490;
+    --cyan-bg: #e0f4f9;
+    --violet: #6d28d9;
+    --violet-bg: #eee8fd;
+    --amber: #a16207;
+    --amber-bg: #fdf3d9;
+    --red: #be123c;
+    --red-bg: #fce8ed;
+    --shadow: 0 1px 2px rgba(20, 20, 40, .06);
+
+    --display: "Chakra Petch", "Trebuchet MS", sans-serif;
+    --body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #090c15;
+      --surface: #111624;
+      --surface-2: #182031;
+      --border: #26304a;
+      --border-soft: #1c2436;
+      --text: #e9ebf4;
+      --text-dim: #9ba4bd;
+      --text-faint: #6a7390;
+      --cyan: #22d3ee;
+      --cyan-bg: #0c2c36;
+      --violet: #a78bfa;
+      --violet-bg: #241b42;
+      --amber: #fbbf24;
+      --amber-bg: #33280c;
+      --red: #fb7185;
+      --red-bg: #3a1220;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #090c15;
+    --surface: #111624;
+    --surface-2: #182031;
+    --border: #26304a;
+    --border-soft: #1c2436;
+    --text: #e9ebf4;
+    --text-dim: #9ba4bd;
+    --text-faint: #6a7390;
+    --cyan: #22d3ee;
+    --cyan-bg: #0c2c36;
+    --violet: #a78bfa;
+    --violet-bg: #241b42;
+    --amber: #fbbf24;
+    --amber-bg: #33280c;
+    --red: #fb7185;
+    --red-bg: #3a1220;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  /* ---------- header ---------- */
+
+  header.masthead {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(34px, 6.2vw, 54px);
+    line-height: 1.04;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 22px;
+  }
+
+  h1 .accent { color: var(--cyan); }
+
+  .standfirst {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 62ch;
+    margin: 0 0 32px;
+  }
+
+  .scope {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+
+  .scope b {
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { margin-bottom: 72px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 27px;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 8px;
+  }
+
+  .section-note {
+    color: var(--text-dim);
+    max-width: 66ch;
+    margin: 0 0 32px;
+  }
+
+  p { max-width: 66ch; }
+
+  /* ---------- thesis panels ---------- */
+
+  .legs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .leg {
+    background: var(--surface);
+    padding: 22px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .leg-step {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .leg-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--cyan);
+  }
+
+  .leg-should {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .leg-is {
+    font-size: 14px;
+    line-height: 1.5;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    color: var(--text);
+  }
+
+  .leg-is b {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  /* ---------- timeline chart ---------- */
+
+  .clock {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 26px 24px 22px;
+  }
+
+  .clock-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 20px;
+    margin-bottom: 26px;
+  }
+
+  .clock-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .clock-stat {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .clock-stat b {
+    color: var(--amber);
+    font-weight: 500;
+  }
+
+  .phase { margin-bottom: 22px; }
+
+  .phase-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .bar {
+    display: flex;
+    height: 34px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+
+  .seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-faint);
+    border-right: 1px solid var(--bg);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .seg:last-child { border-right: 0; }
+
+  .seg.act {
+    background: var(--cyan);
+    color: var(--bg);
+    font-weight: 500;
+  }
+
+  .seg.wait { background: var(--surface-2); }
+
+  .seg.net {
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--surface-2) 0 5px,
+      var(--border-soft) 5px 10px
+    );
+  }
+
+  .bar-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .bar-key span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    flex: none;
+  }
+
+  .swatch.act { background: var(--cyan); }
+  .swatch.wait { background: var(--surface-2); border: 1px solid var(--border); }
+  .swatch.net {
+    background: repeating-linear-gradient(-45deg, var(--surface-2) 0 4px, var(--border) 4px 8px);
+    border: 1px solid var(--border);
+  }
+
+  .clock-foot {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* ---------- findings ---------- */
+
+  .group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 48px 0 4px;
+  }
+
+  .group-head:first-of-type { margin-top: 0; }
+
+  .group-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    flex: none;
+  }
+
+  .group-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .group-sub {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    margin: 0 0 24px;
+    max-width: 64ch;
+  }
+
+  .finding {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    gap: 0 18px;
+    padding: 20px 0 22px 16px;
+    border-top: 1px solid var(--border-soft);
+    border-left: 2px solid var(--border);
+  }
+
+  .finding.crit { border-left-color: var(--red); }
+  .finding.high { border-left-color: var(--amber); }
+  .finding.med { border-left-color: var(--violet); }
+
+  .f-id {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    padding-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .f-body { min-width: 0; }
+
+  .f-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 17.5px;
+    line-height: 1.3;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+
+  .f-sev {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+
+  .crit .f-sev { background: var(--red-bg); color: var(--red); }
+  .high .f-sev { background: var(--amber-bg); color: var(--amber); }
+  .med .f-sev { background: var(--violet-bg); color: var(--violet); }
+
+  .f-body p {
+    margin: 0 0 10px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .f-body p:last-child { margin-bottom: 0; }
+
+  .f-body strong { color: var(--text); font-weight: 600; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .f-fix {
+    margin-top: 12px;
+    padding: 11px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 2px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-dim);
+  }
+
+  .f-fix b {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+
+  /* ---------- roadmap ---------- */
+
+  .tier {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .tier-head {
+    padding: 16px 20px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+  }
+
+  .tier-n {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+
+  .tier-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 17px;
+  }
+
+  .tier-cost {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-left: auto;
+  }
+
+  .tier ol {
+    margin: 0;
+    padding: 6px 20px 18px 40px;
+  }
+
+  .tier li {
+    margin: 12px 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    padding-left: 4px;
+  }
+
+  .tier li strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ---------- closing ---------- */
+
+  .closing {
+    border-left: 2px solid var(--cyan);
+    padding: 4px 0 4px 22px;
+  }
+
+  .closing p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 0 0 14px;
+  }
+
+  .closing p:last-child { margin-bottom: 0; }
+
+  .closing em {
+    color: var(--cyan);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* ---------- responsive ---------- */
+
+  @media (max-width: 720px) {
+    .legs { grid-template-columns: 1fr; }
+    .finding { grid-template-columns: 1fr; gap: 6px; }
+    .f-id { padding-top: 0; }
+    .wrap { padding: 0 20px 72px; }
+    header.masthead { padding-top: 48px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Feature audit · Echo Forge</p>
+    <h1>It's a measurement harness <span class="accent">wearing a health bar</span></h1>
+    <p class="standfirst">
+      The redesign repainted the surface. Underneath, Echo Forge is still the pronunciation lab
+      it was built as — and every one of the three things that make a combat loop feel like a
+      game is either missing or inverted.
+    </p>
+    <div class="scope">
+      <span><b>Read:</b> 11 modules, 9 sprites, 100 challenges</span>
+      <span><b>Findings:</b> 18</span>
+      <span><b>Critical:</b> 7</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>The loop has three legs. All three are broken.</h2>
+    <p class="section-note">
+      A combat turn works when the player makes a real choice, acts on it quickly, and gets an
+      immediate physical answer that changes the next choice. Echo Forge breaks each leg for a
+      different reason, which is why no amount of restyling fixes it.
+    </p>
+
+    <div class="legs">
+      <div class="leg">
+        <span class="leg-step">Leg 01</span>
+        <span class="leg-name">Decide</span>
+        <span class="leg-should">Read the situation, weigh options with real trade-offs, commit.</span>
+        <span class="leg-is">
+          The Warden is <b>a number and nothing else</b>. It has no moves to read, so Block vs
+          Parry is a coin flip and the three attack cards differ only by a damage constant.
+        </span>
+      </div>
+      <div class="leg">
+        <span class="leg-step">Leg 02</span>
+        <span class="leg-name">Act</span>
+        <span class="leg-should">Execute fast enough that intent and action feel like one motion.</span>
+        <span class="leg-is">
+          A round runs ~15.6 seconds, of which <b>about 2.4 are you</b>. The rest is countdowns,
+          silence detection, and a naked network wait.
+        </span>
+      </div>
+      <div class="leg">
+        <span class="leg-step">Leg 03</span>
+        <span class="leg-name">React</span>
+        <span class="leg-should">The world answers physically — impact, sound, motion, numbers.</span>
+        <span class="leg-is">
+          <b>Nothing moves and nothing sounds.</b> The HP bar teleports, the Warden never
+          animates, there is no SFX layer at all, and the reward is a six-clause paragraph.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where a round actually goes</h2>
+    <p class="section-note">
+      Every duration below is a literal constant in the source except the analysis round-trip,
+      which is an estimate. Cyan is the only time you are doing something.
+    </p>
+
+    <div class="clock">
+      <div class="clock-head">
+        <span class="clock-title">One full round — attack, then defend by Parry</span>
+        <span class="clock-stat">15.6 s total · <b>2.4 s of agency (15%)</b></span>
+      </div>
+
+      <div class="phase">
+        <div class="phase-label"><span>Your attack</span><span>7.7 s</span></div>
+        <div class="bar">
+          <div class="seg wait" style="flex: 2000">2.0s countdown</div>
+          <div class="seg act" style="flex: 1200">speak</div>
+          <div class="seg wait" style="flex: 1000">1.0s silence</div>
+          <div class="seg net" style="flex: 2000">analysis</div>
+          <div class="seg wait" style="flex: 1500">1.5s hold</div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-label"><span>The Warden's turn</span><span>7.9 s</span></div>
+        <div class="bar">
+          <div class="seg wait" style="flex: 1200">TTS</div>
+          <div class="seg wait" style="flex: 1000">1.0s</div>
+          <div class="seg act" style="flex: 1200">speak</div>
+          <div class="seg wait" style="flex: 1000">1.0s silence</div>
+          <div class="seg net" style="flex: 2000">analysis</div>
+          <div class="seg wait" style="flex: 1500">1.5s hold</div>
+        </div>
+      </div>
+
+      <div class="bar-key">
+        <span><i class="swatch act"></i> you, acting</span>
+        <span><i class="swatch wait"></i> fixed delay in code</span>
+        <span><i class="swatch net"></i> network round-trip (est.)</span>
+      </div>
+
+      <p class="clock-foot">
+        The 2.0 s and 1.0 s countdowns are <code>startAutoRecordCountdown()</code>, the silence
+        tails are the 1000 ms VAD threshold in <code>startSilenceDetection()</code>, and the
+        1.5 s hold is <code>RESULT_READABILITY_HOLD_MS</code>. Roughly 5 seconds per round is
+        ceremony that could be deleted outright, and another 4 could hide inside an animation.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Findings</h2>
+    <p class="section-note">
+      Grouped by the leg each one breaks. File references are to <code>public/js/echo-forge/</code>
+      unless stated.
+    </p>
+
+    <!-- ===== DECIDE ===== -->
+    <div class="group-head">
+      <span class="group-tag">Leg 01</span>
+      <span class="group-title">Decide — the choice is decorative</span>
+    </div>
+    <p class="group-sub">
+      Five of the six decisions the UI offers resolve to a dominant option the player can't see.
+    </p>
+
+    <div class="finding crit">
+      <div class="f-id">F—01</div>
+      <div class="f-body">
+        <div class="f-title">The Warden has no body and no brain</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          Enemy state is <code>{ hp, maxHp }</code> — that is the entire character
+          (<code>core/combat-reducer.js:64</code>). Damage is a module-level constant,
+          <code>ENEMY_BASE_DAMAGE = 20</code> (<code>sandbox-entry.js:14</code>). There is one
+          enemy, it has one attack, and it always hits for 20.
+        </p>
+        <p>
+          The event <code>enemy.intent.presented</code> already fires — with an
+          <strong>empty payload</strong> (<code>combat-reducer.js:127</code>). The scaffolding
+          for intent exists and was never filled in. Because there is nothing to read, "Block or
+          Parry" isn't a decision; it's a menu of two unrelated minigames.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Give the intent event a real payload — move name, damage, and type — and render it as a
+          telegraph above the Warden. Add 3–4 move types where Block and Parry are correct
+          answers to different ones. This single change converts the defend phase from a coin
+          flip into a read.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding crit">
+      <div class="f-id">F—02</div>
+      <div class="f-body">
+        <div class="f-title">The Focus economy strangles the card system</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          Focus starts at 1 and caps at 3 (<code>core/policy.js:8</code>). The only source in the
+          entire game is a correct Block, which returns exactly 1
+          (<code>core/combat-math.js:35</code>). Two of the three attack cards cost 1 Focus.
+        </p>
+        <p>
+          Over a six-round fight you can afford roughly <strong>two</strong> non-basic attacks.
+          Every other turn you press Precision Strike because it is the only free option — so the
+          card row that dominates the screen is, in practice, one button.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Either grant +1 Focus at the start of each round, or make Focus the resource that
+          scoring well generates. The cards should be a rotation, not a locked cabinet.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—03</div>
+      <div class="f-body">
+        <div class="f-title">The three cards are one card with three prices</div>
+        <span class="f-sev">High</span>
+        <p>
+          Precision 20 / Stress 24 / Echo 26 base damage (<code>core/policy.js:14–39</code>). No
+          status effects, no enemy weaknesses, no targeting differences — the only variable is
+          the number and which engine scores it. When Focus is available, Echo Chain strictly
+          dominates Stress Breaker.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Attach an effect to each: Precision builds Combo faster, Stress Breaker staggers the
+          Warden's next attack, Echo Chain hits twice on a high score. Then give enemies
+          resistances so the right card changes per fight.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—04</div>
+      <div class="f-body">
+        <div class="f-title">Damage is perfectly deterministic</div>
+        <span class="f-sev">High</span>
+        <p>
+          <code>calculateAttackDamage()</code> (<code>core/combat-math.js:17</code>) has no
+          variance and no crit tier. The same score always produces the same number. The curve
+          itself is good — score 50 yields 13 damage, score 90 yields 26 — but a fight with zero
+          surprise has no texture.
+        </p>
+        <p>
+          Worse, that 2× spread is <strong>invisible</strong>. Nothing tells the player that
+          pushing 75 → 90 nearly doubles their output, so the skill the game is built to teach is
+          never surfaced as a reason to try harder.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Add a crit tier above ~92 with its own sound and colour, and show the multiplier on the
+          damage number itself — <code>26 ×1.3</code> — so the curve becomes legible through play.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ACT ===== -->
+    <div class="group-head">
+      <span class="group-tag">Leg 02</span>
+      <span class="group-title">Act — the action is slow and disembodied</span>
+    </div>
+    <p class="group-sub">
+      Roughly 85% of a round is the player waiting for a timer or a server.
+    </p>
+
+    <div class="finding crit">
+      <div class="f-id">F—05</div>
+      <div class="f-body">
+        <div class="f-title">Five seconds per round are pure ceremony</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          Every attack opens with a hard 2-second countdown
+          (<code>startAutoRecordCountdown(2)</code>, <code>sandbox-entry.js:336</code>) and closes
+          with a 1-second silence tail before the recording even stops
+          (<code>sandbox-entry.js:306</code>). The Parry path adds another second. None of it is
+          load time — it is deliberately inserted delay.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Delete the countdown; open the mic the instant the card is chosen and show a "GO" flash.
+          Drop the silence threshold to ~450 ms. That recovers ~3.5 s per round with no
+          architectural change.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—06</div>
+      <div class="f-body">
+        <div class="f-title">The network wait is naked instead of hidden</div>
+        <span class="f-sev">High</span>
+        <p>
+          <code>stopAndAnalyze()</code> posts "Analyzing your pronunciation…"
+          (<code>sandbox-entry.js:445</code>) and the presenter loops a four-frame spinner
+          (<code>visual/presenter.js:41</code>). The attack animation then plays
+          <em>after</em> the response lands.
+        </p>
+        <p>
+          This is backwards. In a game the wind-up animation <strong>is</strong> the loading
+          state — the hero lunges while the request is in flight, and the impact frame lands
+          whenever the score arrives.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Start the wind-up on recording stop, not on response. Gate only the impact frame on the
+          result. A 1–2 s round-trip disappears entirely inside a 1.2 s swing.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-id">F—07</div>
+      <div class="f-body">
+        <div class="f-title">The microphone is re-acquired every attempt</div>
+        <span class="f-sev">Medium</span>
+        <p>
+          <code>makeCapture()</code> then <code>start()</code> runs on every single recording
+          (<code>sandbox-entry.js:384–386</code>) rather than holding one stream open for the
+          battle, adding <code>getUserMedia</code> latency to each turn.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Acquire once in <code>startRun()</code>, keep the stream, and gate recording on a flag.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== REACT ===== -->
+    <div class="group-head">
+      <span class="group-tag">Leg 03</span>
+      <span class="group-title">React — nothing hits back</span>
+    </div>
+    <p class="group-sub">
+      This group is the largest source of "it doesn't feel like a game," and it is also the
+      cheapest to fix.
+    </p>
+
+    <div class="finding crit">
+      <div class="f-id">F—08</div>
+      <div class="f-body">
+        <div class="f-title">There is no juice of any kind</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          <code>renderMeters()</code> (<code>sandbox-entry.js:158</code>) assigns
+          <code>progress.value</code> directly, so <strong>the HP bar teleports</strong>. There
+          are no floating damage numbers, no hit flash, no screen shake, no knockback, no combo
+          pop, no drain tween. The single most important moment in the game — landing a hit —
+          renders as a bar quietly changing width.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          The highest impact-per-line work in this audit: a damage number that arcs off the
+          target and fades, a 90 ms white flash on the struck sprite, a 6 px shake on the stage,
+          and an eased HP tween over ~400 ms with a lagging "ghost" bar behind it. Roughly 150
+          lines across the presenter and the stylesheet.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding crit">
+      <div class="f-id">F—09</div>
+      <div class="f-body">
+        <div class="f-title">The game is completely silent</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          There is no SFX layer anywhere in the feature. The only audio paths that exist are TTS
+          prompt playback and microphone capture. No impact sound, no crit sting, no enemy
+          telegraph cue, no victory or defeat music, no UI clicks.
+        </p>
+        <p>
+          Sound is roughly half of perceived game feel, and its absence is very likely a large
+          part of what you are reacting to without being able to name it.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Eight short WebAudio samples — light hit, heavy hit, crit, enemy wind-up, enemy impact,
+          block success, victory, defeat — plus a low ambient loop. Under 200 KB total and a
+          single small module.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding crit">
+      <div class="f-id">F—10</div>
+      <div class="f-body">
+        <div class="f-title">The characters are pictograms that never move</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          The whole visual set is nine PNGs: one hero idle, one enemy idle, four spinner frames,
+          and three "combat result" frames — and <strong>all three result frames are the
+          hero</strong>. The Warden has no wind-up, no attack, no hit reaction, and no death. It
+          is the same static 256 px icon from the first turn to the last.
+        </p>
+        <p>
+          Both sprites are flat vector icons rather than characters: a stick figure in a cape and
+          an abstract shield. Nothing about them expresses state, threat, or damage.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Minimum viable set per side: idle, wind-up, attack, hit, defeated. Ten frames instead
+          of two. Even reusing the current art with squash, tilt and offset transforms would be a
+          large improvement before any new art is commissioned.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—11</div>
+      <div class="f-body">
+        <div class="f-title">The reward for a good hit is a lab report</div>
+        <span class="f-sev">High</span>
+        <p>
+          <code>formatAnalysisFeedback()</code> (<code>core/learner-feedback.js:55</code>) joins
+          six clauses into one paragraph, rendered on every single turn:
+          <em>"Score: 78/100. Azure word accuracy: 78. Pronunciation focus: initial /h/ and final
+          diphthong. Your attempt met the action threshold. 18 damage dealt."</em>
+        </p>
+        <p>
+          That is genuinely useful coaching sitting in exactly the wrong place. It occupies the
+          instant that should belong to impact, and by round four the player has stopped reading
+          it.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Split the channels. In the moment: a verdict word and a number — <code>PERFECT · 26</code>.
+          Move the phoneme evidence to the post-fight summary and an on-demand "why?" toggle,
+          where it will actually be read.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-id">F—12</div>
+      <div class="f-body">
+        <div class="f-title">The ultimate ability is a checkbox</div>
+        <span class="f-sev">Medium</span>
+        <p>
+          Resonance Burst charges across the entire fight and then fires as
+          <code>#burst-toggle</code>, a checkbox beside the attack cards
+          (<code>sandbox-entry.js:188</code>). No animation, no fanfare, no confirmation that
+          something big happened.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Make it a charged button that visibly fills as Resonance climbs, pulses when ready, and
+          triggers a distinct full-stage effect and sound on use.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== META ===== -->
+    <div class="group-head">
+      <span class="group-tag">Meta</span>
+      <span class="group-title">The run has no stakes and no memory</span>
+    </div>
+    <p class="group-sub">
+      Even with all three legs fixed, there is currently no reason to play a second time.
+    </p>
+
+    <div class="finding crit">
+      <div class="f-id">F—13</div>
+      <div class="f-body">
+        <div class="f-title">The RNG seed is hardcoded — every run is identical</div>
+        <span class="f-sev">Critical</span>
+        <p>
+          <code>rng = createSeededRng(0x4543484f)</code> — a fixed literal
+          (<code>sandbox-entry.js:768</code>). Every run at a given level draws
+          <strong>the same challenges in the same order, forever</strong>. Determinism that
+          belongs in the test harness has shipped into the product, and it removes replay value
+          completely.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          One line. Seed from <code>Date.now()</code> in normal play and let
+          <code>__ECHO_FORGE_TEST_HOOKS__</code> inject the fixed seed for tests — the hook
+          system is already in place.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—14</div>
+      <div class="f-body">
+        <div class="f-title">Nothing carries between runs</div>
+        <span class="f-sev">High</span>
+        <p>
+          Victory leads to a statistics card and a "Play Again" button that resets to an identical
+          fight. Nothing is unlocked, nothing persists, nothing was at risk. A single fight is
+          about six rounds — too short to be a session and too flat to be a highlight.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Wrap fights in a run: three escalating Wardens, HP carried between them, and a choice of
+          reward after each — heal, add a card, or upgrade one. That is the smallest structure
+          that turns six rounds into a session worth finishing.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-id">F—15</div>
+      <div class="f-body">
+        <div class="f-title">The information architecture is still a laboratory</div>
+        <span class="f-sev">High</span>
+        <p>
+          The entry point is <code>sandbox-entry.js</code>, the root is
+          <code>#echo-forge-root[data-state]</code>, and the dev panel offers Replay, Export JSON
+          and Export CSV of timing telemetry. Collapsing that behind a
+          <code>&lt;details&gt;</code> hid it; it did not change what the page is organised
+          around, which is proving the engine works.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Move telemetry behind a <code>?dev=1</code> query parameter, rename the entry module,
+          and let the battle own the full viewport.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-id">F—16</div>
+      <div class="f-body">
+        <div class="f-title">No onboarding for the three resources</div>
+        <span class="f-sev">Medium</span>
+        <p>
+          Focus, Resonance and Combo appear as bare numbers in the meter row and are never
+          explained. A new player's only hint is a tooltip reading
+          <em>"Azure word evidence · base damage 20 · No Focus cost"</em> — engine vocabulary,
+          not player vocabulary.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          A three-turn scripted opening that introduces attacking, spending Focus, and defending —
+          then rewrite the card tooltips in player language.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-id">F—17</div>
+      <div class="f-body">
+        <div class="f-title">There is no fiction at all</div>
+        <span class="f-sev">Medium</span>
+        <p>
+          Nothing establishes what the Echo Warden is, why it is being fought, or what winning
+          means. The name promises a world; the screen delivers two icons and a progress bar.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Two or three sentences on the setup screen and one line of Warden dialogue per fight.
+          Cheap, and it makes the sprites read as characters instead of markers.
+        </div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-id">F—18</div>
+      <div class="f-body">
+        <div class="f-title">The content pool is thin for repeat play</div>
+        <span class="f-sev">Medium</span>
+        <p>
+          100 challenges total, exactly 20 per CEFR level, split across word, phrase and listening
+          types. A single fight consumes roughly 14 of them, so a level's pool is close to
+          exhausted in two runs — a problem that only becomes visible once F—13 is fixed and runs
+          stop being identical.
+        </p>
+        <div class="f-fix">
+          <b>Fix</b>
+          Target ~60 per level before promoting this out of sandbox. The generation pipeline in
+          <code>scripts/echo-forge/</code> already exists.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What to do, in order</h2>
+    <p class="section-note">
+      Sequenced by felt improvement per hour of work. Tier 1 alone will change your answer to
+      "does this feel like a game."
+    </p>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-n">Tier 1</span>
+        <span class="tier-name">Make it feel physical</span>
+        <span class="tier-cost">~1 evening · no architecture change</span>
+      </div>
+      <ol>
+        <li><strong>Juice pass.</strong> Floating damage numbers, hit flash, screen shake, eased HP drain with a ghost bar. Fixes F—08.</li>
+        <li><strong>Sound pass.</strong> Eight SFX plus an ambient loop. Fixes F—09.</li>
+        <li><strong>Delete the ceremony.</strong> Drop both auto-record countdowns, shorten the silence tail to 450 ms, hold one mic stream per battle. Fixes F—05 and F—07.</li>
+        <li><strong>Move the wind-up in front of the network call</strong> so latency plays as animation. Fixes F—06.</li>
+        <li><strong>Unhardcode the RNG seed.</strong> One line. Fixes F—13.</li>
+      </ol>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-n">Tier 2</span>
+        <span class="tier-name">Make the decisions real</span>
+        <span class="tier-cost">~1 weekend · touches the reducer</span>
+      </div>
+      <ol>
+        <li><strong>Enemy intent system.</strong> Fill the existing <code>enemy.intent.presented</code> payload, render a telegraph, add 3–4 Warden moves that Block and Parry answer differently. Fixes F—01.</li>
+        <li><strong>Loosen Focus and differentiate the cards</strong> with per-card effects and enemy resistances. Fixes F—02 and F—03.</li>
+        <li><strong>Crit tier and visible multipliers</strong> so the scoring curve becomes learnable through play. Fixes F—04.</li>
+        <li><strong>Sprite states.</strong> Idle, wind-up, attack, hit, defeated per side — transforms on the existing art first, new art later. Fixes F—10.</li>
+        <li><strong>Charged Resonance Burst button</strong> with its own effect. Fixes F—12.</li>
+      </ol>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head">
+        <span class="tier-n">Tier 3</span>
+        <span class="tier-name">Give it a reason to exist twice</span>
+        <span class="tier-cost">Ongoing · product-level</span>
+      </div>
+      <ol>
+        <li><strong>Run structure.</strong> Three escalating fights, carried HP, a reward choice between each. Fixes F—14.</li>
+        <li><strong>Split the feedback channels</strong> — verdict in the moment, coaching on the summary. Fixes F—11.</li>
+        <li><strong>Meta-progression</strong>: unlocked cards, best streak, persistent per-phoneme mastery.</li>
+        <li><strong>Onboarding, fiction, and de-sandboxing</strong> the shell. Fixes F—15, F—16, F—17.</li>
+        <li><strong>Grow the catalog</strong> toward 60 challenges per level. Fixes F—18.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>The one-line version</h2>
+    <div class="closing">
+      <p>
+        Echo Forge measures pronunciation accurately and then <em>reports</em> the result. A game
+        would <em>react</em> to it.
+      </p>
+      <p>
+        Everything in Tier 1 is about replacing a report with a reaction, and none of it requires
+        touching the combat model or the analysis engines. That is where I would start.
+      </p>
+    </div>
+  </section>
+
+</div>

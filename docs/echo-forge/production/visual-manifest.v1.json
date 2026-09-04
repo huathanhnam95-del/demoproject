@@ -3,7 +3,7 @@
   "contractId": "echo-forge-visual-v1",
   "schemaVersion": "echo-forge-visual-manifest-v1",
   "manifestStage": "production-ready",
-  "sourceSha256": "9742e3f2fa845c2a9e104307f15525e29f26a48cc269a3949e1003e5e727cdd7",
+  "sourceSha256": "b6964dcf05ae808383fe0cbb553a58ea1a5020d78c263d31d7f81c8c25814900",
   "assetIds": [
     "ef-hero-idle",
     "ef-enemy-idle",
@@ -22,7 +22,7 @@
           "frameIndex": 0,
           "name": "idle",
           "path": "ef-hero-idle/idle.png",
-          "sha256": "489885e26e2099254b4c9cc41c37a00cde70206b8394f2b20491c264ddb4d39e",
+          "sha256": "73c014bc5cf9ce59da367de9f57f8d67cda203b81cd2c08803253200faa6efa4",
           "width": 256,
           "height": 256,
           "alpha": true
@@ -51,7 +51,7 @@
           "frameIndex": 0,
           "name": "idle",
           "path": "ef-enemy-idle/idle.png",
-          "sha256": "30b9991d1c6a3816bd5df9deb04b854f4d716a28d4c5ee7208d60a9253bf227b",
+          "sha256": "8662557c26a975b1090bb9ff1572677a2112c7ab49aee617517893a4f3ce08a9",
           "width": 256,
           "height": 256,
           "alpha": true

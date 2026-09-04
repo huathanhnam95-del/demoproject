@@ -8,6 +8,22 @@
 export const ECHO_FORGE_RUN_STORAGE_KEY = 'ef_run_v1';
 export const ECHO_FORGE_RUN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+/** Node ids are positional: f{floor}n{index}. */
+const NODE_ID_PATTERN = /^f\d{1,3}n\d{1,2}$/;
+const NODE_TYPES = new Set(['fight', 'rest', 'cache', 'boss']);
+const REWARD_SOURCES = new Set(['fight', 'boss', 'cache']);
+const ACT_COUNT = 3;
+const DEFAULT_FLOORS_PER_ACT = 4;
+
+const VALID_STATUSES = [
+  'active',
+  'reward_pending',
+  'map_pending',
+  'victory',
+  'defeat',
+  'abandoned',
+];
+
 function getStorage(storage) {
   if (storage && typeof storage.getItem === 'function' && typeof storage.setItem === 'function') {
     return storage;
@@ -44,7 +60,7 @@ export function normalizeSavedRun(raw, now = Date.now()) {
   if (!runId) return null;
 
   const status = normalizeScalar(raw.status);
-  if (!['active', 'reward_pending', 'victory', 'defeat', 'abandoned'].includes(status)) {
+  if (!VALID_STATUSES.includes(status)) {
     return null;
   }
 
@@ -78,6 +94,9 @@ export function normalizeSavedRun(raw, now = Date.now()) {
     ? raw.ledger.map((entry) => ({
         wardenIndex: Number(entry?.wardenIndex) || 0,
         wardenId: normalizeScalar(entry?.wardenId),
+        nodeId: NODE_ID_PATTERN.test(String(entry?.nodeId ?? '')) ? String(entry.nodeId) : null,
+        nodeType: NODE_TYPES.has(entry?.nodeType) ? entry.nodeType : null,
+        act: Number.isInteger(Number(entry?.act)) ? Number(entry.act) : 0,
         outcome: normalizeScalar(entry?.outcome),
         rounds: Number(entry?.rounds) || 0,
         finalHeroHp: Number(entry?.finalHeroHp) || 0,
@@ -94,19 +113,58 @@ export function normalizeSavedRun(raw, now = Date.now()) {
     })).filter((r) => r.id);
   }
 
+  // ── Route position ──────────────────────────────────────────────────────
+  // The route graph itself is deliberately NOT persisted. It is regenerated
+  // from the seed on resume, so a hand-edited blob cannot inject its own map.
+  // Only where the player stands is saved.
+
+  const floorsPerAct = Number.isInteger(Number(raw.floorsPerAct))
+    ? Math.max(2, Math.min(6, Number(raw.floorsPerAct)))
+    : DEFAULT_FLOORS_PER_ACT;
+  const totalFloors = floorsPerAct * ACT_COUNT;
+
+  // A legacy save carries no floor. Map its wardenIndex onto that act's entry
+  // floor, which is exactly where the old linear run would have been.
+  const rawFloor = Number(raw.floor);
+  const floor = Number.isInteger(rawFloor) && rawFloor >= 0 && rawFloor < totalFloors
+    ? rawFloor
+    : Math.min(totalFloors - 1, wardenIndex * floorsPerAct);
+
+  const act = Math.min(ACT_COUNT - 1, Math.floor(floor / floorsPerAct));
+
+  const nodeId = NODE_ID_PATTERN.test(String(raw.nodeId ?? ''))
+    ? String(raw.nodeId)
+    : `f${floor}n0`;
+
+  const visitedNodeIds = Array.isArray(raw.visitedNodeIds)
+    ? raw.visitedNodeIds
+        .map((id) => String(id ?? ''))
+        .filter((id) => NODE_ID_PATTERN.test(id))
+        .slice(0, 64)
+    : Array.from({ length: floor + 1 }, (_, i) => `f${i}n0`);
+
+  const rewardSource = REWARD_SOURCES.has(raw.rewardSource) ? raw.rewardSource : null;
+
   return {
     schemaVersion: 'echo-forge-run-v1',
     runId,
     status,
     level: validLevel,
     seed,
+    floorsPerAct,
+    act,
+    floor,
+    nodeId,
+    visitedNodeIds,
     wardenIndex,
     heroMaxHp,
     carriedHeroHp,
     modifiers,
     rewardOffer,
+    rewardSource,
     claimedRewards,
     combat: null, // Ephemeral combat state is never persisted
+    // route is intentionally absent — see above
     ledger,
     savedAt,
   };

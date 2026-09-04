@@ -41,6 +41,8 @@ async function installHooks(page) {
     window.__ECHO_FORGE_TEST_HOOKS__ = {
       seed: 42,
       singleFight: false,
+      // Two floors per act: an ordinary fight, then the act Warden.
+      floorsPerAct: 2,
       analysisClient: { prewarmV3: async () => ({ durationMs: 5, available: true, httpCode: 200, errorCode: null }) },
       createAudioCapture: () => ({
         start: async () => {},
@@ -111,6 +113,43 @@ async function installHooks(page) {
 
     await page.goto(baseUrl, { waitUntil: 'networkidle' });
     await page.waitForSelector('#echo-forge-root[data-state="ready"]');
+
+    /** Plays out whatever fight is on screen until it resolves. */
+    async function clearCurrentFight() {
+      for (let guard = 0; guard < 200; guard += 1) {
+        const combat = await page.evaluate(() => window.echoForgeSandbox.getState());
+        if (!combat || combat.status !== 'active') return;
+        if (combat.turn === 'player') {
+          await page.click('[data-card="precision_strike"]');
+        } else {
+          await page.click('#parry-btn');
+        }
+        await page.click('#record-btn');
+        await page.click('#stop-btn');
+        await page.waitForTimeout(100);
+      }
+    }
+
+    /**
+     * Claims any pending reward and walks the map by always taking the first
+     * node, which is the pinned spine, until a battle is on screen again.
+     */
+    async function advanceToNextFight() {
+      for (let guard = 0; guard < 12; guard += 1) {
+        if (await page.locator('#battle').isVisible()) return;
+        if (await page.locator('#reward-select').isVisible()) {
+          await page.locator('.reward-card button').first().click();
+          continue;
+        }
+        if (await page.locator('#map-select').isVisible()) {
+          await page.locator('.ef-map-node:not([disabled])').first().click();
+          continue;
+        }
+        if (await page.locator('#summary').isVisible()) return;
+        await page.waitForTimeout(50);
+      }
+      throw new Error('the map never led back into a battle');
+    }
 
     // 1. Begin battle
     await page.selectOption('#level-select', 'B1');
@@ -209,12 +248,16 @@ async function installHooks(page) {
       }
     }
 
-    // Claim reward to enter Fight 2
-    await page.waitForSelector('#reward-select:not([hidden])');
-    await page.locator('.reward-card button').first().click();
+    // Claim the reward, then route through the map to the Act I Warden.
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Echo Sentinel');
+    await clearCurrentFight();
 
-    // Verify Cinder Weaver (Fight 2)
-    await page.waitForSelector('#battle:not([hidden])');
+    // Act II opens on an ordinary fight; route on to its Warden.
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Ember Mote');
+    await clearCurrentFight();
+    await advanceToNextFight();
     assert.equal(await page.locator('#enemy-name').textContent(), 'Cinder Weaver');
     assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'cinder');
 
@@ -242,12 +285,11 @@ async function installHooks(page) {
       }
     }
 
-    // Claim reward to enter Fight 3
-    await page.waitForSelector('#reward-select:not([hidden])');
-    await page.locator('.reward-card button').last().click();
-
-    // Verify Void Singer (Fight 3)
-    await page.waitForSelector('#battle:not([hidden])');
+    // Route through Act III: an ordinary fight, then the final Warden.
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Null Shade');
+    await clearCurrentFight();
+    await advanceToNextFight();
     assert.equal(await page.locator('#enemy-name').textContent(), 'Void Singer');
     assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'void');
 

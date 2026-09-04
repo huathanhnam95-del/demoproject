@@ -2,9 +2,9 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 651,
-  "round1_pass_count": 511,
-  "debate_revised_count": 115,
+  "processed_questions": 658,
+  "round1_pass_count": 515,
+  "debate_revised_count": 118,
   "unresolved_count": 25,
   "debate_transcripts": [
     {
@@ -28954,6 +28954,551 @@
                 }
               ],
               "verified_grammar_tag": "Adjective (Descriptive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 601,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Semantic Appropriateness/Definition",
+            "overall_notes": "The explanation is correct and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, even though they are not passive voice. It should still explain why the meaning of the distractors does not fit the context.",
+                "affected_text": "Why other options are wrong: 'Tone' relates to mood or sound quality and has no connection to cultural practices.",
+                "correction": "Why other options are wrong: 'Tone' relates to mood or sound quality and has no connection to cultural practices. It does not logically fit the context of something that is passed down through generations."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not sufficiently explain why 'condition' is semantically inappropriate in the context of an oral tradition.",
+                "affected_text": "Why other options are wrong: 'Condition' refers to a state of being (e.g., good condition) and is too general.",
+                "correction": "Why other options are wrong: 'Condition' refers to a state of being (e.g., good condition) and is too general. It does not logically fit the context of something that is passed down through generations."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not sufficiently explain why 'prediction' is semantically inappropriate in the context of an oral tradition.",
+                "affected_text": "Why other options are wrong: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes.",
+                "correction": "Why other options are wrong: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes. It does not logically fit the context of something that is passed down through generations."
+              }
+            ],
+            "verified_grammar_tag": "Semantic Appropriateness/Definition",
+            "overall_notes": "The grammar tag is correct, but the explanation lacks sufficient semantic analysis for the distractors, failing to clearly explain why they do not fit the context of an oral tradition."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Semantic Appropriateness/Definition",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'tradition' because it refers to customs, beliefs, or practices that are passed down from one generation to the next. This concept perfectly encapsulates what folklore represents, as it is a collection of cultural expressions maintained through oral transmission.\n\n* Why 'tone' is incorrect: 'Tone' relates to mood or sound quality and has no connection to cultural practices. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'condition' is incorrect: 'Condition' refers to a state of being (e.g., good condition) and is too general. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'prediction' is incorrect: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes. It does not logically fit the context of something that is passed down through generations.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gaps identified by Model [qwen3:14b], ensuring that each distractor is clearly explained in terms of its incompatibility with the context of an oral tradition. Model [deepseek-r1:14b] confirmed the original explanation was correct, and the grammar tag was retained as 'Semantic Appropriateness/Definition' after consensus.",
+          "candidate_explanation": "The correct answer is 'tradition' because it refers to customs, beliefs, or practices that are passed down from one generation to the next. This concept perfectly encapsulates what folklore represents, as it is a collection of cultural expressions maintained through oral transmission.\n\n* Why 'tone' is incorrect: 'Tone' relates to mood or sound quality and has no connection to cultural practices. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'condition' is incorrect: 'Condition' refers to a state of being (e.g., good condition) and is too general. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'prediction' is incorrect: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes. It does not logically fit the context of something that is passed down through generations.",
+          "candidate_grammar_tag": "Semantic Appropriateness/Definition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of semantic appropriateness and definition. Each distractor is clearly explained with logical reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was already logically sound, clear, and appropriate for B1-B2 learners. No changes were necessary to address the timeout error, as it did not provide any substantive critique.",
+          "candidate_explanation": "The correct answer is 'tradition' because it refers to customs, beliefs, or practices that are passed down from one generation to the next. This concept perfectly encapsulates what folklore represents, as it is a collection of cultural expressions maintained through oral transmission.\n\n* Why 'tone' is incorrect: 'Tone' relates to mood or sound quality and has no connection to cultural practices. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'condition' is incorrect: 'Condition' refers to a state of being (e.g., good condition) and is too general. It does not logically fit the context of something that is passed down through generations.\n\n* Why 'prediction' is incorrect: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes. It does not logically fit the context of something that is passed down through generations.",
+          "candidate_grammar_tag": "Semantic Appropriateness/Definition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic and contextual considerations for each option. No grammatical, reasoning, or semantic gaps were identified."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Semantic Appropriateness/Definition' based on the content and context of the explanation. The explanation was revised to ensure clarity, logical structure, and proper use of grammar, including subject-verb agreement and passive voice where appropriate.",
+          "candidate_explanation": "The correct answer is 'tradition' because it refers to customs, beliefs, or practices that are passed down from one generation to the next. This concept perfectly encapsulates what folklore represents, as it is a collection of cultural expressions maintained through oral transmission. \n\n* Why 'tone' is incorrect: 'Tone' relates to mood or sound quality and has no connection to cultural practices. It does not logically fit the context of something that is passed down through generations. \n\n* Why 'condition' is incorrect: 'Condition' refers to a state of being (e.g., good condition) and is too general. It does not logically fit the context of something that is passed down through generations. \n\n* Why 'prediction' is incorrect: 'Prediction' means guessing about the future, which is not what 'oral tradition' describes. It does not logically fit the context of something that is passed down through generations. \n\nAdditionally, the explanation ensures subject-verb agreement and semantic logic by using active and passive voice appropriately, especially in the phrase 'are said to constitute an oral tradition,' which clearly reflects the passive construction used to describe a concept that is defined by others.",
+          "candidate_grammar_tag": "Semantic Appropriateness/Definition",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Semantic Appropriateness/Definition",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 602,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (b"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'lure' because it means to attract or tempt someone, which fits the context of business schools trying to gain new students. \n\n* Why 'punish' is incorrect: 'Punish' means to inflict suffering, which contradicts the goal of attracting students. \n* Why 'teach' is incorrect: While related to education, 'teach' describes an action of giving knowledge, not the motive for the schools' actions. The sentence requires a verb that shows the *reason* behind the schools' strategy. \n* Why 'encourage' is incorrect: Although 'encourage' means to support, 'lure' is a stronger and more precise word here, suggesting active attraction or temptation, which better captures the competitive nature of admissions. \n\nThe subject (business schools) is acting *actively* to attract students, so the verb must reflect an active motive, not a passive or indirect one. This is why 'lure' is the best fit in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, completeness, and alignment with all models. The JSON formatting issue was resolved, and the semantic logic between subject and verb was explicitly addressed. All models agreed on the grammar tag and the correctness of the explanation.",
+          "candidate_explanation": "The correct answer is 'lure' because it means to attract or tempt someone, which fits the context of business schools trying to gain new students. \n\n* Why 'punish' is incorrect: 'Punish' means to inflict suffering, which contradicts the goal of attracting students. \n* Why 'teach' is incorrect: While related to education, 'teach' describes an action of giving knowledge, not the motive for the schools' actions. The sentence requires a verb that shows the *reason* behind the schools' strategy. \n* Why 'encourage' is incorrect: Although 'encourage' means to support, 'lure' is a stronger and more precise word here, suggesting active attraction or temptation, which better captures the competitive nature of admissions. \n\nThe subject (business schools) is acting *actively* to attract students, so the verb must reflect an active motive, not a passive or indirect one. This is why 'lure' is the best fit in this context.",
+          "candidate_grammar_tag": "Verb Choice/Contextual Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of semantic fit, contextual meaning, and verb choice. It clearly explains why 'lure' is the best choice and why the other options are semantically or contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness and clarity of the explanation. The timeout from gemma4:12b did not affect the consensus. The grammar tag was confirmed as accurate, and the explanation was already well-structured, requiring no major revisions.",
+          "candidate_explanation": "The correct answer is 'lure' because it means to attract or tempt someone, which fits the context of business schools trying to gain new students. \n\n* Why 'punish' is incorrect: 'Punish' means to inflict suffering, which contradicts the goal of attracting students. \n* Why 'teach' is incorrect: While related to education, 'teach' describes an action of giving knowledge, not the motive for the schools' actions. The sentence requires a verb that shows the *reason* behind the schools' strategy. \n* Why 'encourage' is incorrect: Although 'encourage' means to support, 'lure' is a stronger and more precise word here, suggesting active attraction or temptation, which better captures the competitive nature of admissions. \n\nThe subject (business schools) is acting *actively* to attract students, so the verb must reflect an active motive, not a passive or indirect one. This is why 'lure' is the best fit in this context.",
+          "candidate_grammar_tag": "Verb Choice/Contextual Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of semantic meaning, collocation, and contextual fit. It correctly identifies the grammar tag and provides clear reasoning for why 'lure' is the best choice and why the other options are incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Verb Choice/Contextual Meaning' by all models that provided feedback. The explanation was already clear, accurate, and suitable for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'lure' because it means to attract or tempt someone, which fits the context of business schools trying to gain new students. \n\n* Why 'punish' is incorrect: 'Punish' means to inflict suffering, which contradicts the goal of attracting students. \n* Why 'teach' is incorrect: While related to education, 'teach' describes an action of giving knowledge, not the motive for the schools' actions. The sentence requires a verb that shows the *reason* behind the schools' strategy. \n* Why 'encourage' is incorrect: Although 'encourage' means to support, 'lure' is a stronger and more precise word here, suggesting active attraction or temptation, which better captures the competitive nature of admissions. \n\nThe subject (business schools) is acting *actively* to attract students, so the verb must reflect an active motive, not a passive or indirect one. This is why 'lure' is the best fit in this context.",
+          "candidate_grammar_tag": "Verb Choice/Contextual Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of verb choice in context. It correctly identifies the semantic and contextual fit of 'lure' and clearly explains why the other options are inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Choice/Contextual Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 603,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (t"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'forgotten' because the sentence uses the passive voice structure ('were' + past participle). In passive voice, the subject (the books) is receiving the action (being forgotten), which fits the context of an old, unused bookcase. 'Forgotten' is a past participle verb that matches the auxiliary verb 'were'.\n\n* Why 'forbidden' is incorrect: Although it is a past participle, it means 'not allowed by rule,' which does not match the context of neglect or being unused. It implies a restriction, not an absence of use.\n\n* Why 'meaningful' is incorrect: This is an adjective, not a past participle, and cannot function as the main verb in this passive structure. It describes the books, not what happened to them.\n\n* Why 'useful' is incorrect: This is also an adjective, not a past participle, and does not fit the required grammatical structure. It describes the books' value, not the action performed on them.\n\nThe passive voice is used here to emphasize the state of the books (being forgotten) rather than who forgot them, which is a common feature in English when the doer of the action is unknown or unimportant.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the passive voice structure and the subject-verb relationship, ensuring clarity for B1-B2 learners. The grammar tag was confirmed as 'Passive Voice (Past Participle)' based on consensus and the structure of the sentence. The JSON formatting issue was resolved, and the timeout was acknowledged but not affecting the content.",
+          "candidate_explanation": "The correct answer is 'forgotten' because the sentence uses the passive voice structure ('were' + past participle). This construction requires a verb in the past participle form. 'Forgotten' means the books were neglected or overlooked over time, which fits the context of an old, unused bookcase. \n\n* Why 'forbidden' is incorrect: Although it is a past participle, it means 'not allowed by rule,' which does not match the context of neglect or being unused. \n\n* Why 'meaningful' is incorrect: This is an adjective, not a past participle, and cannot function as the main verb in this passive structure. \n\n* Why 'useful' is incorrect: This is also an adjective, not a past participle, and does not fit the required grammatical structure. \n\nThe subject (the books) is receiving the action (being forgotten), which is a key feature of passive voice. This helps explain why only a past participle verb can be used here.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (t"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly cover the subject-verb relationship in passive voice, resolving any potential semantic gaps.",
+          "candidate_explanation": "The correct answer is 'forgotten' because the sentence uses the passive voice structure ('were' + past participle). In passive voice, the subject (the books) is receiving the action (being forgotten), which fits the context of an old, unused bookcase. 'Forgotten' is a past participle verb that matches the auxiliary verb 'were'.\n\n* Why 'forbidden' is incorrect: Although it is a past participle, it means 'not allowed by rule,' which does not match the context of neglect or being unused. It implies a restriction, not an absence of use.\n\n* Why 'meaningful' is incorrect: This is an adjective, not a past participle, and cannot function as the main verb in this passive structure. It describes the books, not what happened to them.\n\n* Why 'useful' is incorrect: This is also an adjective, not a past participle, and does not fit the required grammatical structure. It describes the books' value, not the action performed on them.\n\nThe passive voice is used here to emphasize the state of the books (being forgotten) rather than who forgot them, which is a common feature in English when the doer of the action is unknown or unimportant.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and contextual considerations. It correctly identifies the grammar tag, explains why each distractor is incorrect, and provides a clear rationale for the correct answer."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the grammar tag 'Passive Voice (Past Participle)' and the correctness of the explanation. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already accurate, logical, and complete, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'forgotten' because the sentence uses the passive voice structure ('were' + past participle). In passive voice, the subject (the books) is receiving the action (being forgotten), which fits the context of an old, unused bookcase. 'Forgotten' is a past participle verb that matches the auxiliary verb 'were'.\n\n* Why 'forbidden' is incorrect: Although it is a past participle, it means 'not allowed by rule,' which does not match the context of neglect or being unused. It implies a restriction, not an absence of use. Additionally, it changes the meaning of the sentence to suggest the books were banned, which is not supported by the context.\n\n* Why 'meaningful' is incorrect: This is an adjective, not a past participle, and cannot function as the main verb in this passive structure. It describes the books, not what happened to them.\n\n* Why 'useful' is incorrect: This is also an adjective, not a past participle, and does not fit the required grammatical structure. It describes the books' value, not the action performed on them.\n\nThe passive voice is used here to emphasize the state of the books (being forgotten) rather than who forgot them, which is a common feature in English when the doer of the action is unknown or unimportant.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations. It correctly identifies the grammar tag, explains why each distractor is incorrect, and provides a clear rationale for the correct answer."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

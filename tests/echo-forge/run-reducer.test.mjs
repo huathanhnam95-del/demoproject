@@ -45,11 +45,25 @@ test('START_RUN action initializes run and spawns first warden combat', () => {
   assert.equal(state.combat.enemy.maxHp, 120); // Echo Sentinel
   assert.equal(state.wardenIndex, 0);
 
-  assert.equal(events.length, 2);
-  assert.equal(events[0].type, 'run.started');
-  assert.equal(events[1].type, 'run.fight.started');
-  assert.equal(events[1].payload.wardenIndex, 0);
-  assert.equal(events[1].payload.wardenId, 'echo_sentinel');
+  assert.deepEqual(events.map((event) => event.type), [
+    'run.started',
+    'run.route.generated',
+    'run.act.entered',
+    'run.node.entered',
+    'run.fight.started',
+  ]);
+  assert.equal(events[2].payload.act, 0);
+  assert.equal(events[2].payload.stageId, 'resonant_hall');
+  assert.equal(events[3].payload.nodeId, 'f0n0');
+  assert.equal(events[3].payload.nodeType, 'fight');
+  assert.equal(events[4].payload.wardenIndex, 0);
+  assert.equal(events[4].payload.wardenId, 'echo_sentinel');
+
+  // The run now opens on an ordinary fight in Act I, not straight onto a Warden.
+  assert.equal(state.act, 0);
+  assert.equal(state.floor, 0);
+  assert.equal(state.nodeId, 'f0n0');
+  assert.deepEqual([...state.visitedNodeIds], ['f0n0']);
 
   assert.equal(combatEvents.length, 1);
   assert.equal(combatEvents[0].type, 'combat.started');
@@ -127,11 +141,22 @@ test('multi-fight run transitions to reward_pending on fight 1 victory and carri
   });
   state = claimResult.state;
 
-  assert.equal(state.status, 'active');
-  assert.equal(state.wardenIndex, 1);
-  assert.equal(state.combat.enemy.maxHp, 150); // Cinder Weaver
+  // Claiming a reward now opens the branching map instead of spawning the next
+  // fight directly. The player chooses where to go.
+  assert.equal(state.status, 'map_pending');
+  assert.equal(state.combat, null);
+  assert.ok(state.availableNodeIds.length >= 1);
   assert.equal(claimResult.events.some((e) => e.type === 'run.reward.claimed'), true);
-  assert.equal(claimResult.events.some((e) => e.type === 'run.fight.started'), true);
+  assert.equal(claimResult.events.some((e) => e.type === 'run.map.offered'), true);
+
+  // Taking the first offered node leads into the next encounter.
+  const nextId = state.availableNodeIds[0];
+  const selectResult = reduceRun(state, { type: 'SELECT_NODE', nodeId: nextId });
+  state = selectResult.state;
+
+  assert.equal(state.nodeId, nextId);
+  assert.ok(state.visitedNodeIds.includes(nextId));
+  assert.equal(selectResult.events.some((e) => e.type === 'run.node.entered'), true);
 });
 
 test('singleFight flag finishes run immediately upon first victory', () => {

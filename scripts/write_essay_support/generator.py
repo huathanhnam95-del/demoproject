@@ -33,7 +33,7 @@ def _requirements(prompt_type: str) -> list[dict[str, Any]]:
         "agree_disagree": [
             ("answer", "State how far you agree or disagree.", "Nêu mức độ đồng ý hoặc không đồng ý."),
             ("reasons", "Support your position with two clear reasons.", "Hỗ trợ quan điểm bằng hai lý do rõ ràng."),
-            ("examples", "Use relevant examples when they strengthen an idea.", "Dùng ví dụ phù hợp khi chúng làm rõ ý."),
+            ("examples", "Use relevant examples when they strengthen an idea.", "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."),
         ],
         "discuss_both_views": [
             ("both_views", "Explain both views fairly.", "Giải thích công bằng cả hai quan điểm."),

@@ -421,8 +421,8 @@ def build_essay_pack(q: Dict[str, Any], deepseek: Dict[str, Any],
                     "id": "b",
                     "textEn": "Provide a descriptive historical overview without taking any personal stance.",
                     "textVi": "Cung cấp một bản tóm tắt mô tả lịch sử mà không nêu quan điểm cá nhân.",
-                    "feedbackEn": "Incorrect. Descriptive summaries fail the Task Response criterion because no stance is defended.",
-                    "feedbackVi": "Sai. Mô tả đơn thuần sẽ mất điểm Task Response vì không đưa ra lập trường rõ ràng."
+                    "feedbackEn": "Incorrect. Descriptive summaries fail the Content and Development criteria because no stance is defended.",
+                    "feedbackVi": "Sai. Mô tả đơn thuần sẽ mất điểm Nội dung (Content) và Phát triển ý (Development) vì không đưa ra lập trường rõ ràng."
                 },
                 {
                     "id": "c",

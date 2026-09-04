@@ -3498,3 +3498,804 @@
   font-size: 0.84rem;
   line-height: 1.4;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* ── Write Essay Step 1 Overhaul & Pedagogical Visualizations ────────────── */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+#mode-essay .essay-step1-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#mode-essay .essay-step1-part {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#mode-essay .essay-step1-part-header {
+  align-items: center;
+  border-bottom: 1.5px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  display: flex;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+
+#mode-essay .essay-step1-part-pill {
+  background: var(--essay-accent, #9a5722);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-step1-part-title {
+  color: var(--essay-ink, #2c2418);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ── Part 1: Deconstructed Prompt Hero ───────────────────────────────────── */
+
+#mode-essay .essay-guided-dissector-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#mode-essay .essay-guided-prompt-hero {
+  background: rgba(154, 87, 34, 0.04);
+  border: 1px solid rgba(154, 87, 34, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  padding: 16px 18px;
+}
+
+#mode-essay .essay-guided-prompt-hero-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+#mode-essay .essay-prompt-hero-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#mode-essay .essay-prompt-hero-badge {
+  color: var(--essay-accent, #9a5722);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-prompt-hero-hint {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.78rem;
+}
+
+#mode-essay .essay-guided-prompt-flow-text {
+  align-items: baseline;
+  color: var(--essay-ink, #2c2418);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+#mode-essay .essay-prompt-hl {
+  align-items: baseline;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+#mode-essay .essay-prompt-hl.hl-1 {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e3a8a;
+}
+#mode-essay .essay-prompt-hl.hl-2 {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #065f46;
+}
+#mode-essay .essay-prompt-hl.hl-3 {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+#mode-essay .essay-prompt-hl.hl-4 {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #5b21b6;
+}
+
+#mode-essay .essay-prompt-hl:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+#mode-essay .essay-prompt-hl.hl-1.is-selected {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+#mode-essay .essay-prompt-hl.hl-2.is-selected {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+}
+#mode-essay .essay-prompt-hl.hl-3.is-selected {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+}
+#mode-essay .essay-prompt-hl.hl-4.is-selected {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+}
+
+#mode-essay .essay-prompt-hl-num {
+  align-items: center;
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+#mode-essay .essay-prompt-hl.hl-1 .essay-prompt-hl-num { background: #2563eb; }
+#mode-essay .essay-prompt-hl.hl-2 .essay-prompt-hl-num { background: #059669; }
+#mode-essay .essay-prompt-hl.hl-3 .essay-prompt-hl-num { background: #d97706; }
+#mode-essay .essay-prompt-hl.hl-4 .essay-prompt-hl-num { background: #7c3aed; }
+
+#mode-essay .essay-prompt-hl-body {
+  font-weight: 500;
+}
+
+/* ── Part 1: Visual Flowchart Connectors & Cards ─────────────────────────── */
+
+#mode-essay .essay-guided-flowchart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#mode-essay .essay-flowchart-arrow-strip {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  padding: 0 10px;
+}
+
+@media (max-width: 640px) {
+  #mode-essay .essay-flowchart-arrow-strip {
+    display: none;
+  }
+}
+
+#mode-essay .essay-flowchart-arrow-col {
+  align-items: center;
+  color: var(--essay-muted, #6f5f4e);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 600;
+  justify-content: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+#mode-essay .essay-flowchart-arrow-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+#mode-essay .essay-flowchart-arrow-col.is-selected {
+  color: var(--essay-accent, #9a5722);
+  font-weight: 700;
+}
+
+#mode-essay .essay-flowchart-nodes-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+#mode-essay .essay-flowchart-card {
+  background: var(--essay-card, #fff);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#mode-essay .essay-flowchart-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+#mode-essay .essay-flowchart-card.is-selected {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+#mode-essay .essay-flowchart-card.card-1.is-selected {
+  border-color: #2563eb;
+  outline: 2px solid rgba(37, 99, 235, 0.3);
+}
+#mode-essay .essay-flowchart-card.card-2.is-selected {
+  border-color: #059669;
+  outline: 2px solid rgba(5, 150, 105, 0.3);
+}
+#mode-essay .essay-flowchart-card.card-3.is-selected {
+  border-color: #d97706;
+  outline: 2px solid rgba(217, 119, 6, 0.3);
+}
+#mode-essay .essay-flowchart-card.card-4.is-selected {
+  border-color: #7c3aed;
+  outline: 2px solid rgba(124, 58, 237, 0.3);
+}
+
+#mode-essay .essay-flowchart-card-head {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.1));
+  display: flex;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+#mode-essay .essay-flowchart-card-num {
+  align-items: center;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+#mode-essay .essay-flowchart-card-num.num-1 { background: #2563eb; }
+#mode-essay .essay-flowchart-card-num.num-2 { background: #059669; }
+#mode-essay .essay-flowchart-card-num.num-3 { background: #d97706; }
+#mode-essay .essay-flowchart-card-num.num-4 { background: #7c3aed; }
+
+#mode-essay .essay-flowchart-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#mode-essay .essay-flowchart-card-role {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+#mode-essay .essay-flowchart-card-target {
+  align-self: flex-start;
+  background: rgba(154, 87, 34, 0.08);
+  border-radius: 6px;
+  color: var(--essay-accent, #9a5722);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 2px 7px;
+}
+
+#mode-essay .essay-flowchart-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#mode-essay .essay-thought-action {
+  background: rgba(16, 185, 129, 0.05);
+  border-left: 3px solid #10b981;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+#mode-essay .essay-thought-label {
+  color: #047857;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-thought-text {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+#mode-essay .essay-thought-avoidance {
+  background: rgba(239, 68, 68, 0.05);
+  border-left: 3px solid #ef4444;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+#mode-essay .essay-thought-avoidance-label {
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-thought-avoidance-text {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ── Part 2: Essay Type Card & Recognition Guide ─────────────────────────── */
+
+#mode-essay .essay-guided-type-card {
+  background: var(--essay-card, #fff);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.18));
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+#mode-essay .essay-type-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#mode-essay .essay-type-badge-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+#mode-essay .essay-type-badge {
+  align-items: center;
+  color: var(--essay-ink, #2c2418);
+  display: flex;
+  gap: 6px;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-type-tag {
+  background: var(--essay-accent, #9a5722);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-type-trigger-row {
+  align-items: center;
+  background: rgba(110, 84, 54, 0.05);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+#mode-essay .essay-type-trigger-label {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-type-trigger-code {
+  color: var(--essay-accent, #9a5722);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+#mode-essay .essay-type-reasoning {
+  background: rgba(154, 87, 34, 0.04);
+  border-left: 3px solid var(--essay-accent, #9a5722);
+  border-radius: 8px;
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
+#mode-essay .essay-type-reasoning strong {
+  color: var(--essay-ink, #2c2418);
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+#mode-essay .essay-type-reasoning p {
+  margin: 0;
+}
+
+#mode-essay .essay-type-blueprint {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#mode-essay .essay-blueprint-title {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-blueprint-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+#mode-essay .essay-blueprint-step {
+  align-items: flex-start;
+  background: rgba(110, 84, 54, 0.04);
+  border: 1px solid rgba(110, 84, 54, 0.1);
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+#mode-essay .essay-blueprint-step-num {
+  align-items: center;
+  background: var(--essay-accent, #9a5722);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+#mode-essay .essay-blueprint-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#mode-essay .essay-blueprint-step-part {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-blueprint-step-role {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+/* ── Part 2: PTE Scoring Criteria Guide ──────────────────────────────────── */
+
+#mode-essay .essay-guided-req-guide {
+  background: var(--essay-card, #fff);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+#mode-essay .essay-guided-req-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#mode-essay .essay-guided-req-badge {
+  color: var(--essay-accent, #9a5722);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-guided-req-subtext {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+#mode-essay .essay-guided-req-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+#mode-essay .essay-guided-req-card-static {
+  align-items: flex-start;
+  background: rgba(110, 84, 54, 0.03);
+  border: 1px solid rgba(110, 84, 54, 0.1);
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+#mode-essay .essay-guided-req-num {
+  align-items: center;
+  background: rgba(154, 87, 34, 0.15);
+  border-radius: 50%;
+  color: var(--essay-accent, #9a5722);
+  display: flex;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+#mode-essay .essay-guided-req-text {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* ── Part 2: 2-Column Comparative Ideation with Bullet Points ────────────── */
+
+#mode-essay .essay-guided-approaches-box {
+  background: var(--essay-card, #fff);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.18));
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+#mode-essay .essay-guided-approaches-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#mode-essay .essay-guided-approaches-badge {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-guided-approaches-sub {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+#mode-essay .essay-guided-stance-columns {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+#mode-essay .essay-guided-stance-col {
+  background: rgba(110, 84, 54, 0.02);
+  border: 1px solid var(--essay-border-soft, rgba(110, 84, 54, 0.15));
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+#mode-essay .essay-guided-stance-col.is-agree {
+  background: rgba(16, 185, 129, 0.02);
+  border-top: 3px solid #10b981;
+}
+
+#mode-essay .essay-guided-stance-col.is-disagree {
+  background: rgba(245, 158, 11, 0.02);
+  border-top: 3px solid #f59e0b;
+}
+
+#mode-essay .essay-guided-stance-col.is-general {
+  border-top: 3px solid var(--essay-accent, #9a5722);
+}
+
+#mode-essay .essay-guided-stance-head {
+  align-items: center;
+  border-bottom: 1px solid rgba(110, 84, 54, 0.1);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+#mode-essay .essay-guided-stance-badge {
+  align-items: center;
+  color: var(--essay-ink, #2c2418);
+  display: flex;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+#mode-essay .essay-guided-stance-count {
+  background: rgba(110, 84, 54, 0.08);
+  border-radius: 10px;
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 7px;
+}
+
+#mode-essay .essay-guided-bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style-type: disc;
+  margin: 0;
+  padding-left: 20px;
+}
+
+#mode-essay .essay-guided-bullet-list li {
+  color: var(--essay-ink, #2c2418);
+  font-size: 0.84rem;
+  line-height: 1.48;
+}
+
+#mode-essay .essay-bullet-lead {
+  color: var(--essay-ink, #2c2418);
+  font-weight: 700;
+}
+
+/* ── In-App Ready Confirmation Modal ─────────────────────────────────────── */
+
+.essay-ready-modal-backdrop {
+  align-items: center;
+  animation: essayFadeIn 0.18s ease-out;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: rgba(15, 12, 9, 0.65);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 100000;
+}
+
+.essay-ready-modal-box {
+  animation: essayScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--essay-card, #ffffff);
+  border: 1px solid var(--essay-border, rgba(110, 84, 54, 0.2));
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  max-width: 480px;
+  padding: 28px 24px 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.essay-ready-modal-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.essay-ready-modal-title {
+  color: var(--essay-ink, #2c2418);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.essay-ready-modal-desc {
+  color: var(--essay-muted, #6f5f4e);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 24px;
+  text-align: left;
+}
+
+.essay-ready-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .essay-ready-modal-box {
+    padding: 20px 16px;
+  }
+  .essay-ready-modal-actions {
+    flex-direction: column-reverse;
+  }
+  .essay-ready-modal-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.essay-ready-modal-btn {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  transition: all 0.15s ease;
+}
+
+.essay-ready-modal-btn-back {
+  background: transparent;
+  border-color: var(--essay-border-soft, rgba(110, 84, 54, 0.25));
+  color: var(--essay-muted, #6f5f4e);
+}
+
+.essay-ready-modal-btn-back:hover {
+  background: rgba(110, 84, 54, 0.06);
+  color: var(--essay-ink, #2c2418);
+}
+
+.essay-ready-modal-btn-cont {
+  background: var(--essay-accent, #9a5722);
+  box-shadow: 0 2px 8px rgba(154, 87, 34, 0.3);
+  color: #fff;
+}
+
+.essay-ready-modal-btn-cont:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+@keyframes essayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes essayScaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

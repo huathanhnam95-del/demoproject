@@ -42,6 +42,9 @@ async function installHooks(page) {
     window.__ECHO_FORGE_TEST_HOOKS__ = {
       seed: 0x4543484f,
       singleFight: false,
+      // Two floors per act keeps a full three-act walk to six encounters:
+      // an ordinary fight then the act Warden, three times over.
+      floorsPerAct: 2,
       sfx: {
         attack: () => {},
         burst: () => {},
@@ -155,17 +158,39 @@ async function installHooks(page) {
       }
     }
 
-    // --- FIGHT 1: Echo Sentinel ---
-    assert.equal(await page.locator('#enemy-name').textContent(), 'Echo Sentinel');
+    // Claims whatever reward is on offer, then walks the map by always taking
+    // the first node. Node index 0 is pinned on every floor and the spine edge
+    // always exists, so this path is deterministic.
+    async function advanceToNextFight() {
+      for (let guard = 0; guard < 10; guard += 1) {
+        if (await page.locator('#battle').isVisible()) return;
+
+        if (await page.locator('#reward-select').isVisible()) {
+          await page.locator('.reward-card button').first().click();
+          continue;
+        }
+        if (await page.locator('#map-select').isVisible()) {
+          await page.locator('.ef-map-node:not([disabled])').first().click();
+          continue;
+        }
+        if (await page.locator('#summary').isVisible()) return;
+        await page.waitForTimeout(50);
+      }
+      throw new Error('the map never led back into a battle');
+    }
+
+    // --- ACT I: an ordinary fight before the Warden ---
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Chime Wisp');
     assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'sentinel');
+    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-act'), '0');
 
     await performCombatLoopUntilDefeat();
 
-    // Reward screen 1 appears
+    // Reward screen for an ordinary victory
     await page.waitForSelector('#reward-select:not([hidden])');
     assert.equal(await page.locator('#battle').isHidden(), true);
     assert.equal(await page.locator('.reward-card').count(), 2);
-    assert.match(await page.locator('#reward-heading').textContent(), /Warden Defeated/);
+    assert.match(await page.locator('#reward-heading').textContent(), /Victory/);
 
     // Verify touch target requirements on reward cards
     for (const box of await page.locator('.reward-card button').evaluateAll((nodes) =>
@@ -180,61 +205,119 @@ async function installHooks(page) {
     assert.equal(await page.locator('#resume-btn').isVisible(), true);
     assert.match(await page.locator('#resume-btn').textContent(), /Resume Campaign/);
     await page.locator('#resume-btn').click();
-
-    // Reward screen 1 resumes
     await page.waitForSelector('#reward-select:not([hidden])');
     assert.equal(await page.locator('#battle').isHidden(), true);
 
-    // Claim reward 1
+    // --- The map appears once the reward is claimed ---
     await page.locator('.reward-card button').first().click();
-
-    // --- FIGHT 2: Cinder Weaver ---
-    await page.waitForSelector('#battle:not([hidden])');
-    assert.equal(await page.locator('#reward-select').isHidden(), true);
-    assert.equal(await page.locator('#enemy-name').textContent(), 'Cinder Weaver');
-    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'cinder');
-
-    const runStateAfterReward1 = await page.evaluate(() => window.echoForgeSandbox.getRunState());
-    assert.equal(runStateAfterReward1.wardenIndex, 1);
-    assert.equal(runStateAfterReward1.claimedRewards.length, 1);
-
-    await performCombatLoopUntilDefeat();
-
-    // Reward screen 2 appears
-    await page.waitForSelector('#reward-select:not([hidden])');
+    await page.waitForSelector('#map-select:not([hidden])');
     assert.equal(await page.locator('#battle').isHidden(), true);
-    assert.equal(await page.locator('.reward-card').count(), 2);
-
-    // Claim reward 2
-    await page.locator('.reward-card button').last().click();
-
-    // --- FIGHT 3: Void Singer ---
-    await page.waitForSelector('#battle:not([hidden])');
     assert.equal(await page.locator('#reward-select').isHidden(), true);
-    assert.equal(await page.locator('#enemy-name').textContent(), 'Void Singer');
-    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'void');
 
-    const runStateAfterReward2 = await page.evaluate(() => window.echoForgeSandbox.getRunState());
-    assert.equal(runStateAfterReward2.wardenIndex, 2);
-    assert.equal(runStateAfterReward2.claimedRewards.length, 2);
+    const mapState = await page.evaluate(() => window.echoForgeSandbox.getRunState());
+    assert.equal(mapState.status, 'map_pending');
+    assert.equal(mapState.combat, null, 'no fight is queued behind the map');
+    assert.ok(mapState.availableNodeIds.length >= 1, 'somewhere to go');
 
+    // Only the reachable nodes are offered, and they are exactly the ones the
+    // run state says are reachable.
+    const enabledIds = await page.locator('.ef-map-node:not([disabled])')
+      .evaluateAll((nodes) => nodes.map((n) => n.dataset.nodeId));
+    assert.deepEqual(enabledIds.sort(), [...mapState.availableNodeIds].sort());
+
+    // Unreachable nodes are rendered but inert.
+    const disabledCount = await page.locator('.ef-map-node[disabled]').count();
+    assert.ok(disabledCount >= 1, 'the rest of the act is visible but locked');
+
+    // Map controls clear the touch-target floor at 360px.
+    for (const box of await page.locator('.ef-map-node').evaluateAll((nodes) =>
+      nodes.map((n) => ({ id: n.dataset.nodeId, width: n.getBoundingClientRect().width, height: n.getBoundingClientRect().height }))
+    )) {
+      assert.ok(box.width >= 44 && box.height >= 44, `Map node touch target: ${box.id}`);
+    }
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      'the map does not overflow 360px',
+    );
+
+    // The act header names where the player is.
+    assert.match(await page.locator('.ef-map-numeral').textContent(), /Act I\b/);
+    assert.match(await page.locator('.ef-map-title').textContent(), /Resonant Hall/);
+
+    // --- Reloading while standing on the map resumes onto the map ---
+    await page.reload();
+    await page.waitForSelector('#setup:not([hidden])');
+    assert.equal(await page.locator('#resume-btn').isVisible(), true);
+    await page.locator('#resume-btn').click();
+    await page.waitForSelector('#map-select:not([hidden])');
+    const resumedMap = await page.evaluate(() => window.echoForgeSandbox.getRunState());
+    assert.equal(resumedMap.status, 'map_pending');
+    assert.equal(resumedMap.floor, mapState.floor, 'resumed on the same floor');
+    assert.deepEqual(resumedMap.availableNodeIds, mapState.availableNodeIds);
+
+    // --- ACT I boss: Echo Sentinel ---
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Echo Sentinel');
+    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'sentinel');
+    await performCombatLoopUntilDefeat();
+    assert.match(await page.locator('#reward-heading').textContent(), /Warden Defeated/);
+
+    // --- ACT II ---
+    await advanceToNextFight();
+    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'cinder');
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Ember Mote');
+    const act2 = await page.evaluate(() => window.echoForgeSandbox.getRunState());
+    assert.equal(act2.act, 1);
+    assert.equal(act2.wardenIndex, 1);
     await performCombatLoopUntilDefeat();
 
-    // --- RUN SUMMARY (Victory across all 3 fights) ---
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Cinder Weaver');
+    await performCombatLoopUntilDefeat();
+
+    // --- ACT III ---
+    await advanceToNextFight();
+    assert.equal(await page.locator('#echo-forge-root').getAttribute('data-warden'), 'void');
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Null Shade');
+    const act3 = await page.evaluate(() => window.echoForgeSandbox.getRunState());
+    assert.equal(act3.act, 2);
+    assert.equal(act3.wardenIndex, 2);
+    await performCombatLoopUntilDefeat();
+
+    await advanceToNextFight();
+    assert.equal(await page.locator('#enemy-name').textContent(), 'Void Singer');
+    await performCombatLoopUntilDefeat();
+
+    // --- RUN SUMMARY (victory across all three acts) ---
     await page.waitForSelector('#summary:not([hidden])');
     assert.equal(await page.locator('#reward-select').isHidden(), true);
+    assert.equal(await page.locator('#map-select').isHidden(), true);
     assert.match(await page.locator('#summary-outcome').textContent(), /Victory/);
 
     const finalRunState = await page.evaluate(() => window.echoForgeSandbox.getRunState());
     assert.equal(finalRunState.status, 'victory');
-    assert.equal(finalRunState.ledger.length, 3);
-    assert.equal(finalRunState.claimedRewards.length, 2);
+    assert.equal(finalRunState.act, 2, 'finished in the final act');
+    assert.equal(finalRunState.ledger.length, 6, 'six encounters at two floors per act');
+
+    // All three Wardens fell, in order, as act bosses.
+    assert.deepEqual(
+      finalRunState.ledger.filter((e) => e.nodeType === 'boss').map((e) => e.wardenId),
+      ['echo_sentinel', 'cinder_weaver', 'void_singer'],
+    );
+
+    // The recorded path is the pinned spine, since we always took the first node.
+    assert.deepEqual(
+      finalRunState.visitedNodeIds,
+      ['f0n0', 'f1n0', 'f2n0', 'f3n0', 'f4n0', 'f5n0'],
+    );
 
     // Verify Replay
     await page.click('#replay-btn');
     const replayedState = await page.evaluate(() => window.echoForgeSandbox.getRunState());
     assert.equal(replayedState.status, 'victory');
-    assert.equal(replayedState.ledger.length, 3);
+    assert.equal(replayedState.ledger.length, 6);
+    assert.deepEqual(replayedState.visitedNodeIds, finalRunState.visitedNodeIds);
 
     // Screenshot artifact
     await page.screenshot({ path: path.join(artifacts, 'run-victory-summary.png'), fullPage: true });

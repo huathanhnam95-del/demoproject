@@ -1,0 +1,1243 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "5",
+  "title": "#5 Transportation Networks",
+  "prompt": "As cities expand, governments should look forward to creating better networks of public transport available for everyone rather than building more roads for vehicle owning population. To what extent do you agree or disagree?",
+  "source": {
+    "promptSha256": "8690f33beb55c91b1a79490e8640daabf41abc8663e285d0d1a9c15af4772119",
+    "bank": "pte_bank"
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "As cities expand, governments should look forward to creating better networks of public transport available for everyone rather than building more roads for vehicle owning population.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "To what extent do you agree or disagree?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "City development"
+    ],
+    "hardVocabulary": [],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State a clear and decisive stance on the issue.",
+        "vi": "Nêu lập trường rõ ràng và dứt khoát về vấn đề."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two well-developed reasons.",
+        "vi": "Bảo vệ quan điểm bằng hai lý do được phát triển mạch lạc."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant real-world examples to substantiate claims.",
+        "vi": "Sử dụng các dẫn chứng thực tế phù hợp để chứng minh."
+      }
+    ],
+    "angles": [
+      {
+        "id": "angle-1",
+        "en": "Practical Real-World Impact",
+        "vi": "Tác động thực tế"
+      },
+      {
+        "id": "angle-2",
+        "en": "Systemic & Institutional Perspective",
+        "vi": "Góc nhìn hệ thống & thể chế"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Overgeneralizing the benefits of public transport without considering alternative perspectives.",
+        "vi": "Làm.general.over.benefit.public.transport.without.considering.alternative.perspectives"
+      },
+      {
+        "en": "Focusing solely on infrastructure development without addressing the human factor in urban planning.",
+        "vi": "Focus.only.infrastructure.development.without.addressing.human.factor.urban.planning"
+      },
+      {
+        "en": "Neglecting to explore the long-term economic and environmental consequences of road expansion.",
+        "vi": "Neglect.explore.long-term.economic.environmental.consequences.road.expansion"
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "Should I balance both viewpoints?",
+        "questionVi": "Tôi có nên phân tích cả hai chiều hướng không?",
+        "answerEn": "Yes, acknowledging counter-perspectives strengthens the sophistication of your argument before concluding.",
+        "answerVi": "Có, việc thừa nhận các quan điểm đối lập sẽ gia tăng tính thuyết phục trước khi đưa ra kết luận."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "Targeting high lexical resource and cohesive progression.",
+      "contextVi": "Tập trung vào vốn từ vựng học thuật và phát triển lập luận mạch lạc.",
+      "includedContext": [
+        "core arguments",
+        "academic vocabulary"
+      ],
+      "excludes": [
+        "informal idioms"
+      ]
+    },
+    "comprehensionCheck": {
+      "mcq": {
+        "questionEn": "What is the primary requirement for a high-scoring response to this 'To what extent do you agree or disagree' prompt?",
+        "questionVi": "Yêu cầu chính để đạt điểm cao cho đề bài 'Bạn đồng ý hay không đồng ý đến mức độ nào' này là gì?",
+        "correct": "a",
+        "options": [
+          {
+            "id": "a",
+            "textEn": "Clearly state a specific position (agree, disagree, or partially agree) and support it with logical arguments regarding urban planning.",
+            "textVi": "Nêu rõ quan điểm cụ thể (đồng ý, không đồng ý, hoặc đồng ý một phần) và hỗ trợ bằng các lập luận logic về quy hoạch đô thị.",
+            "feedbackEn": "Correct. To score high, you must take a clear stance and develop it consistently throughout the essay.",
+            "feedbackVi": "Chính xác. Để đạt điểm cao, bạn phải đưa ra quan điểm rõ ràng và phát triển nó xuyên suốt bài viết."
+          },
+          {
+            "id": "b",
+            "textEn": "Provide a balanced overview of both public transport and road construction without choosing a side.",
+            "textVi": "Cung cấp cái nhìn cân bằng về cả phương tiện công cộng và xây dựng đường sá mà không cần chọn phe.",
+            "feedbackEn": "Incorrect. This is a 'To what extent' prompt; failing to take a clear stance will lower your score for Content and Development.",
+            "feedbackVi": "Sai. Đây là dạng đề 'To what extent'; việc không đưa ra quan điểm rõ ràng sẽ làm giảm điểm của bạn ở phần nội dung."
+          },
+          {
+            "id": "c",
+            "textEn": "Describe the history of urban expansion and the evolution of transportation systems.",
+            "textVi": "Mô tả lịch sử mở rộng đô thị và sự phát triển của các hệ thống giao thông.",
+            "feedbackEn": "Incorrect. This is a 'distractor'—it is off-topic as it focuses on history rather than the specific policy debate.",
+            "feedbackVi": "Sai. Đây là 'bẫy'—nội dung bị lạc đề vì nó tập trung vào lịch sử thay vì cuộc tranh luận chính sách cụ thể."
+          }
+        ]
+      },
+      "gapFill": {
+        "sentenceTemplateEn": "To construct a high-scoring response, I must evaluate {slot1}, declare a {slot2}, and substantiate my argument with {slot3}.",
+        "sentenceTemplateVi": "Để xây dựng một bài viết đạt điểm cao, tôi phải phân tích {slot1}, xác lập một {slot2}, và củng cố lập luận bằng {slot3}.",
+        "slots": [
+          {
+            "id": "slot1",
+            "labelEn": "Core Debate Focus",
+            "labelVi": "Trọng tâm tranh luận",
+            "correctId": "c1",
+            "options": [
+              {
+                "id": "c1",
+                "textEn": "infrastructure priorities concerning city development",
+                "textVi": "ưu tiên cơ sở hạ tầng về city development"
+              },
+              {
+                "id": "w1",
+                "textEn": "superficial descriptive trends",
+                "textVi": "xu hướng mô tả bề nổi",
+                "hintEn": "Focus on policy priorities, not just descriptions.",
+                "hintVi": "Tập trung vào ưu tiên chính sách thay vì chỉ mô tả."
+              }
+            ]
+          },
+          {
+            "id": "slot2",
+            "labelEn": "Author Stance",
+            "labelVi": "Lập trường tác giả",
+            "correctId": "c2",
+            "options": [
+              {
+                "id": "c2",
+                "textEn": "clear, decisive policy verdict",
+                "textVi": "phán quyết chính sách rõ ràng, dứt khoát"
+              },
+              {
+                "id": "w2",
+                "textEn": "vague or evasive neutrality",
+                "textVi": "sự trung lập né tránh hoặc mơ hồ",
+                "hintEn": "PTE requires a consistent, decisive stance.",
+                "hintVi": "PTE yêu cầu lập trường nhất quán, dứt khoát."
+              }
+            ]
+          },
+          {
+            "id": "slot3",
+            "labelEn": "Evidence Base",
+            "labelVi": "Căn cứ chứng minh",
+            "correctId": "c3",
+            "options": [
+              {
+                "id": "c3",
+                "textEn": "concrete socioeconomic examples",
+                "textVi": "các ví dụ kinh tế - xã hội cụ thể"
+              },
+              {
+                "id": "w3",
+                "textEn": "unsupported personal assumptions",
+                "textVi": "các giả định cá nhân thiếu cơ sở",
+                "hintEn": "Concrete evidence is mandatory for development.",
+                "hintVi": "Cần có bằng chứng cụ thể để phát triển ý."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "B2 Academic writing competency requiring well-developed arguments and lexical precision.",
+      "coreTargets": [
+        "urban infrastructure",
+        "equitable access",
+        "sustainable mobility",
+        "multimodal integration"
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "urban infrastructure",
+            "collocation": "enhance urban infrastructure",
+            "level": "C1",
+            "meaningEn": "Improve the physical systems supporting city functionality",
+            "meaningVi": "Cải thiện các hệ thống vật lý hỗ trợ chức năng của thành phố",
+            "enGloss": "Improve city systems",
+            "viGloss": "Cải thiện hệ thống thành phố",
+            "example": "Enhancing urban infrastructure through integrated public transport networks can significantly reduce traffic congestion in densely populated areas.",
+            "exampleVi": "Việc cải thiện cơ sở hạ tầng đô thị thông qua các mạng lưới giao thông công cộng tích hợp có thể làm giảm đáng kể ùn tắc giao thông ở các khu vực đông dân cư."
+          },
+          {
+            "term": "equitable access",
+            "collocation": "ensure equitable access",
+            "level": "C1",
+            "meaningEn": "Provide fair opportunities for all citizens to use services",
+            "meaningVi": "Đảm bảo cơ hội công bằng cho tất cả công dân sử dụng dịch vụ",
+            "enGloss": "Fair service availability",
+            "viGloss": "Sự sẵn có dịch vụ công bằng",
+            "example": "Governments must ensure equitable access to public transport systems to address socioeconomic disparities in urban areas.",
+            "exampleVi": "Chính phủ phải đảm bảo tiếp cận công bằng với hệ thống giao thông công cộng để giải quyết chênh lệch kinh tế xã hội ở khu vực đô thị."
+          },
+          {
+            "term": "sustainable mobility",
+            "collocation": "promote sustainable mobility",
+            "level": "C1",
+            "meaningEn": "Encourage environmentally responsible transportation methods",
+            "meaningVi": "Khuyến khích phương thức di chuyển có trách nhiệm với môi trường",
+            "enGloss": "Eco-friendly transport",
+            "viGloss": "Di chuyển thân thiện môi trường",
+            "example": "Promoting sustainable mobility through expanded metro systems reduces carbon emissions and alleviates road congestion.",
+            "exampleVi": "Việc thúc đẩy di chuyển bền vững thông qua việc mở rộng hệ thống tàu điện ngầm làm giảm lượng khí thải carbon và giảm ùn tắc đường."
+          },
+          {
+            "term": "multimodal integration",
+            "collocation": "achieve multimodal integration",
+            "level": "C1",
+            "meaningEn": "Coordinate different transportation modes for seamless connectivity",
+            "meaningVi": "Tích hợp nhiều phương thức giao thông để kết nối liền mạch",
+            "enGloss": "Transport coordination",
+            "viGloss": "Tọa độ giao thông",
+            "example": "Achieving multimodal integration between buses, trams, and subways is crucial for creating efficient urban transport ecosystems.",
+            "exampleVi": "Việc đạt được tích hợp đa phương thức giữa xe buýt, xe điện và tàu ngầm là rất quan trọng để tạo ra hệ sinh thái giao thông đô thị hiệu quả."
+          },
+          {
+            "term": "spatial equity",
+            "collocation": "address spatial equity",
+            "level": "C1",
+            "meaningEn": "Resolve disparities in resource distribution across geographic areas",
+            "meaningVi": "Giải quyết chênh lệch phân bổ tài nguyên giữa các khu vực địa lý",
+            "enGloss": "Geographic fairness",
+            "viGloss": "Công bằng địa lý",
+            "example": "Addressing spatial equity in transport planning ensures marginalized communities are not excluded from urban development benefits.",
+            "exampleVi": "Giải quyết công bằng không gian trong quy hoạch giao thông đảm bảo các cộng đồng bị bỏ rơi không bị loại khỏi lợi ích phát triển đô thị."
+          },
+          {
+            "term": "carbon footprint",
+            "collocation": "minimize carbon footprint",
+            "level": "B2",
+            "meaningEn": "Reduce environmental impact through lower emissions",
+            "meaningVi": "Giảm tác động môi trường thông qua việc phát thải ít hơn",
+            "enGloss": "Emission reduction",
+            "viGloss": "Giảm phát thải",
+            "example": "Investing in electric buses helps minimize the carbon footprint of urban transport systems.",
+            "exampleVi": "Đầu tư vào xe buýt điện giúp giảm lượng khí thải carbon của hệ thống giao thông đô thị."
+          },
+          {
+            "term": "operational efficiency",
+            "collocation": "optimize operational efficiency",
+            "level": "B2",
+            "meaningEn": "Maximize productivity while minimizing resource use",
+            "meaningVi": "Tối ưu hóa hiệu quả vận hành",
+            "enGloss": "Productivity optimization",
+            "viGloss": "Tối ưu hóa năng suất",
+            "example": "Optimizing operational efficiency in metro systems can reduce waiting times and increase passenger capacity.",
+            "exampleVi": "Tối ưu hóa hiệu quả vận hành trong hệ thống tàu điện ngầm có thể giảm thời gian chờ và tăng năng lực chở khách."
+          },
+          {
+            "term": "regulatory frameworks",
+            "collocation": "strengthen regulatory frameworks",
+            "level": "C1",
+            "meaningEn": "Reinforce legal structures governing transport policies",
+            "meaningVi": "Củng cố khung pháp lý điều chỉnh chính sách giao thông",
+            "enGloss": "Legal policy structures",
+            "viGloss": "Cấu trúc chính sách pháp lý",
+            "example": "Strengthening regulatory frameworks for public transport can ensure compliance with safety and accessibility standards.",
+            "exampleVi": "Củng cố khung pháp lý cho giao thông công cộng có thể đảm bảo tuân thủ các tiêu chuẩn an toàn và tiếp cận."
+          }
+        ],
+        "grammar": [
+          {
+            "name": "Concession & Contrast",
+            "pattern": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "patternVi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn.",
+            "en": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "vi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn."
+          },
+          {
+            "name": "Cause/Condition",
+            "pattern": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "patternVi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị.",
+            "en": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "vi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị."
+          },
+          {
+            "name": "Emphasis / Inversion",
+            "pattern": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "patternVi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển.",
+            "en": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "vi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển."
+          }
+        ],
+        "cohesion": [
+          {
+            "term": "Furthermore",
+            "en": "Furthermore",
+            "vi": "Hơn nữa",
+            "enGloss": "addition",
+            "viGloss": "bổ sung ý"
+          },
+          {
+            "term": "Conversely",
+            "en": "Conversely",
+            "vi": "Ngược lại",
+            "enGloss": "contrast",
+            "viGloss": "tương phản"
+          },
+          {
+            "term": "Consequently",
+            "en": "Consequently",
+            "vi": "Do đó",
+            "enGloss": "result",
+            "viGloss": "kết quả"
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-b2",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree / Support",
+          "stanceLabelVi": "Phiên bản 1: Agree / Hỗ trợ",
+          "en": "Version 1: Agree / Support",
+          "vi": "Phiên bản 1: Agree / Hỗ trợ",
+          "candidatePoints": [
+            {
+              "id": "q5-s1-1",
+              "titleEn": "Environmental Sustainability",
+              "titleVi": "Tính bền vững môi trường",
+              "pointEn": "Investing in public transport reduces carbon emissions and combats climate change effectively.",
+              "pointVi": "Tài trợ cho.giao thông công cộng giảm lượng carbon và chống biến đổi khí hậu hiệu quả.",
+              "strategyVi": "Use data from international studies on urban emissions and cite specific Vietnamese policies like the National Green Growth Strategy.",
+              "writingCue": "Public transport networks are essential for reducing carbon emissions, as evidenced by studies showing a 20% reduction in urban areas with improved systems.",
+              "en": "Environmental Sustainability",
+              "vi": "Tính bền vững môi trường"
+            },
+            {
+              "id": "q5-s1-2",
+              "titleEn": "Cost-Effectiveness",
+              "titleVi": "Hiệu quả chi phí",
+              "pointEn": "Public transport infrastructure is more economically viable in the long term compared to road expansion.",
+              "pointVi": "Cơ sở hạ tầng giao thông công cộng hiệu quả chi phí hơn trong dài hạn so với mở rộng đường.",
+              "strategyVi": "Compare life-cycle costs of public transport vs. road projects, using examples like the metro systems in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Long-term cost analysis demonstrates that public transport investments yield higher economic returns than road construction.",
+              "en": "Cost-Effectiveness",
+              "vi": "Hiệu quả chi phí"
+            },
+            {
+              "id": "q5-s1-3",
+              "titleEn": "Reduced Traffic Congestion",
+              "titleVi": "Giảm ùn tắc giao thông",
+              "pointEn": "Expanding public transport decreases traffic congestion and improves commute times for urban residents.",
+              "pointVi": "Mở rộng.giao.transport.giảm.traffic.congestion.và.improve.time.commute.urban.residents.",
+              "strategyVi": "Cite traffic flow models and case studies from cities like Singapore and Tokyo.",
+              "writingCue": "Research shows that cities with robust public transport systems experience a 30% reduction in peak-hour traffic congestion.",
+              "en": "Reduced Traffic Congestion",
+              "vi": "Giảm ùn tắc giao thông"
+            },
+            {
+              "id": "q5-s1-4",
+              "titleEn": "Healthier Communities",
+              "titleVi": "Cộng đồng khỏe mạnh",
+              "pointEn": "Public transport promotes active commuting, leading to better public health outcomes.",
+              "pointVi": "Giao.transport.promotes.active.commuting.lead.to.better.public.health.outcomes.",
+              "strategyVi": "Link to Vietnamese health reports on rising obesity rates and the benefits of walking and cycling.",
+              "writingCue": "Studies indicate that increased use of public transport correlates with a 20% reduction in urban health issues like obesity.",
+              "en": "Healthier Communities",
+              "vi": "Cộng đồng khỏe mạnh"
+            },
+            {
+              "id": "q5-s1-5",
+              "titleEn": "Social Equity",
+              "titleVi": "Bình đẳng xã hội",
+              "pointEn": "Public transport ensures equal access to opportunities for all income groups, reducing social inequality.",
+              "pointVi": "Giao.transport.chắc.cơ.hiếm.cơ.hiếm.mọi.lớp.người.reduce.social.inequality.",
+              "strategyVi": "Reference the Ministry of Transport's reports on public transport accessibility in urban areas.",
+              "writingCue": "Public transport systems are critical for ensuring social equity, as they provide mobility for low-income families.",
+              "en": "Social Equity",
+              "vi": "Bình đẳng xã hội"
+            },
+            {
+              "id": "q5-s1-6",
+              "titleEn": "Technological Integration",
+              "titleVi": "Tích hợp công nghệ",
+              "pointEn": "Modern public transport systems can integrate smart technologies, improving efficiency and user experience.",
+              "pointVi": "Công.transport.modern.có.thể.integrate.smart.technologies.improve.efficiency.user.experience.",
+              "strategyVi": "Discuss the implementation of smart ticketing systems and real-time tracking in Vietnamese cities.",
+              "writingCue": "Smart technologies in public transport systems enhance urban mobility, as seen in cities like Seoul and Barcelona.",
+              "en": "Technological Integration",
+              "vi": "Tích hợp công nghệ"
+            }
+          ]
+        },
+        {
+          "id": "plan-2-b2",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree / Alternative",
+          "stanceLabelVi": "Phiên bản 2:不同意 / Thay thế",
+          "en": "Version 2: Disagree / Alternative",
+          "vi": "Phiên bản 2:不同意 / Thay thế",
+          "candidatePoints": [
+            {
+              "id": "q5-s2-1",
+              "titleEn": "Economic Growth",
+              "titleVi": "Tăng trưởng kinh tế",
+              "pointEn": "Expanding roads supports economic growth by facilitating goods movement and business expansion.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.chiến.lược.kinh.tế.và.expand.business.",
+              "strategyVi": "Cite GDP growth rates in cities with robust road networks, such as Los Angeles and Shanghai.",
+              "writingCue": "Economic data shows that road expansion correlates with a 15% increase in GDP growth over five years.",
+              "en": "Economic Growth",
+              "vi": "Tăng trưởng kinh tế"
+            },
+            {
+              "id": "q5-s2-2",
+              "titleEn": "Emergency Response",
+              "titleVi": "Phản ứng khẩn cấp",
+              "pointEn": "Road networks are critical for emergency services, ensuring timely responses during crises.",
+              "pointVi": "Cơ.sở.đường.có.vai trò.quan.trọng.trong.phản.ứng.khẩn.cấp.",
+              "strategyVi": "Reference the role of roads in disaster response during events like the 2020 flood in Hanoi.",
+              "writingCue": "Road networks are essential for emergency services, as they enable rapid response during natural disasters.",
+              "en": "Emergency Response",
+              "vi": "Phản ứng khẩn cấp"
+            },
+            {
+              "id": "q5-s2-3",
+              "titleEn": "Last Mile Connectivity",
+              "titleVi": "Liên kết cuối cùng",
+              "pointEn": "Roads provide last-mile connectivity, which public transport systems often fail to address effectively.",
+              "pointVi": "Đường.phục vụ.last.mile.connectivity.mà.giao.transport.công.cộng.không.phải.làm.good.",
+              "strategyVi": "Cite examples of last-mile delivery services in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Roads are indispensable for providing last-mile connectivity, which is often overlooked by public transport systems.",
+              "en": "Last Mile Connectivity",
+              "vi": "Liên kết cuối cùng"
+            },
+            {
+              "id": "q5-s2-4",
+              "titleEn": "Infrastructure Costs",
+              "titleVi": "Chi phí hạ tầng",
+              "pointEn": "Building roads is often more cost-effective in the short term compared to extensive public transport networks.",
+              "pointVi": "Xây.đường.là.phương án.chi phí.hạ tầng.anh.hiếm.trong.kiểm.phong.của.public.transport.networks.",
+              "strategyVi": "Compare initial construction costs of roads vs. public transport projects, using data from the Ministry of Transport.",
+              "writingCue": "Fiscal analysis shows that road construction is more budget-friendly in the short term than public transport investments.",
+              "en": "Infrastructure Costs",
+              "vi": "Chi phí hạ tầng"
+            },
+            {
+              "id": "q5-s2-5",
+              "titleEn": "Political Pressures",
+              "titleVi": "Pressures.político",
+              "pointEn": "Politicians often prioritize road projects due to short-term voter appeal, despite long-term consequences.",
+              "pointVi": "Công.político.often.priority.road.projects.việc.short.term.appeal.voter.despite.long.term.consequences.",
+              "strategyVi": "Analyze recent infrastructure decisions in Vietnam's National Assembly sessions.",
+              "writingCue": "Political pressures often lead to prioritization of road projects over sustainable public transport solutions.",
+              "en": "Political Pressures",
+              "vi": "Pressures.político"
+            },
+            {
+              "id": "q5-s2-6",
+              "titleEn": "Tourism Development",
+              "titleVi": "Phát triển du lịch",
+              "pointEn": "Road expansion supports tourism by improving access to scenic areas and attractions.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.phát.triễn.du.lịch.bởi.cải thiện.access.to.diễn.phong.quan.và.atracción.",
+              "strategyVi": "Cite examples of tourist destinations in Vietnam where road infrastructure has boosted visitation rates.",
+              "writingCue": "Improved road networks are crucial for enhancing tourism access, as seen in destinations like Halong Bay and Sapa.",
+              "en": "Tourism Development",
+              "vi": "Phát triển du lịch"
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ],
+        "disagree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ]
+      }
+    },
+    "b2": {
+      "cefrEvidence": "B2 Academic writing competency requiring well-developed arguments and lexical precision.",
+      "coreTargets": [
+        "urban infrastructure",
+        "equitable access",
+        "sustainable mobility",
+        "multimodal integration"
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "urban infrastructure",
+            "collocation": "enhance urban infrastructure",
+            "level": "C1",
+            "meaningEn": "Improve the physical systems supporting city functionality",
+            "meaningVi": "Cải thiện các hệ thống vật lý hỗ trợ chức năng của thành phố",
+            "enGloss": "Improve city systems",
+            "viGloss": "Cải thiện hệ thống thành phố",
+            "example": "Enhancing urban infrastructure through integrated public transport networks can significantly reduce traffic congestion in densely populated areas.",
+            "exampleVi": "Việc cải thiện cơ sở hạ tầng đô thị thông qua các mạng lưới giao thông công cộng tích hợp có thể làm giảm đáng kể ùn tắc giao thông ở các khu vực đông dân cư."
+          },
+          {
+            "term": "equitable access",
+            "collocation": "ensure equitable access",
+            "level": "C1",
+            "meaningEn": "Provide fair opportunities for all citizens to use services",
+            "meaningVi": "Đảm bảo cơ hội công bằng cho tất cả công dân sử dụng dịch vụ",
+            "enGloss": "Fair service availability",
+            "viGloss": "Sự sẵn có dịch vụ công bằng",
+            "example": "Governments must ensure equitable access to public transport systems to address socioeconomic disparities in urban areas.",
+            "exampleVi": "Chính phủ phải đảm bảo tiếp cận công bằng với hệ thống giao thông công cộng để giải quyết chênh lệch kinh tế xã hội ở khu vực đô thị."
+          },
+          {
+            "term": "sustainable mobility",
+            "collocation": "promote sustainable mobility",
+            "level": "C1",
+            "meaningEn": "Encourage environmentally responsible transportation methods",
+            "meaningVi": "Khuyến khích phương thức di chuyển có trách nhiệm với môi trường",
+            "enGloss": "Eco-friendly transport",
+            "viGloss": "Di chuyển thân thiện môi trường",
+            "example": "Promoting sustainable mobility through expanded metro systems reduces carbon emissions and alleviates road congestion.",
+            "exampleVi": "Việc thúc đẩy di chuyển bền vững thông qua việc mở rộng hệ thống tàu điện ngầm làm giảm lượng khí thải carbon và giảm ùn tắc đường."
+          },
+          {
+            "term": "multimodal integration",
+            "collocation": "achieve multimodal integration",
+            "level": "C1",
+            "meaningEn": "Coordinate different transportation modes for seamless connectivity",
+            "meaningVi": "Tích hợp nhiều phương thức giao thông để kết nối liền mạch",
+            "enGloss": "Transport coordination",
+            "viGloss": "Tọa độ giao thông",
+            "example": "Achieving multimodal integration between buses, trams, and subways is crucial for creating efficient urban transport ecosystems.",
+            "exampleVi": "Việc đạt được tích hợp đa phương thức giữa xe buýt, xe điện và tàu ngầm là rất quan trọng để tạo ra hệ sinh thái giao thông đô thị hiệu quả."
+          },
+          {
+            "term": "spatial equity",
+            "collocation": "address spatial equity",
+            "level": "C1",
+            "meaningEn": "Resolve disparities in resource distribution across geographic areas",
+            "meaningVi": "Giải quyết chênh lệch phân bổ tài nguyên giữa các khu vực địa lý",
+            "enGloss": "Geographic fairness",
+            "viGloss": "Công bằng địa lý",
+            "example": "Addressing spatial equity in transport planning ensures marginalized communities are not excluded from urban development benefits.",
+            "exampleVi": "Giải quyết công bằng không gian trong quy hoạch giao thông đảm bảo các cộng đồng bị bỏ rơi không bị loại khỏi lợi ích phát triển đô thị."
+          },
+          {
+            "term": "carbon footprint",
+            "collocation": "minimize carbon footprint",
+            "level": "B2",
+            "meaningEn": "Reduce environmental impact through lower emissions",
+            "meaningVi": "Giảm tác động môi trường thông qua việc phát thải ít hơn",
+            "enGloss": "Emission reduction",
+            "viGloss": "Giảm phát thải",
+            "example": "Investing in electric buses helps minimize the carbon footprint of urban transport systems.",
+            "exampleVi": "Đầu tư vào xe buýt điện giúp giảm lượng khí thải carbon của hệ thống giao thông đô thị."
+          },
+          {
+            "term": "operational efficiency",
+            "collocation": "optimize operational efficiency",
+            "level": "B2",
+            "meaningEn": "Maximize productivity while minimizing resource use",
+            "meaningVi": "Tối ưu hóa hiệu quả vận hành",
+            "enGloss": "Productivity optimization",
+            "viGloss": "Tối ưu hóa năng suất",
+            "example": "Optimizing operational efficiency in metro systems can reduce waiting times and increase passenger capacity.",
+            "exampleVi": "Tối ưu hóa hiệu quả vận hành trong hệ thống tàu điện ngầm có thể giảm thời gian chờ và tăng năng lực chở khách."
+          },
+          {
+            "term": "regulatory frameworks",
+            "collocation": "strengthen regulatory frameworks",
+            "level": "C1",
+            "meaningEn": "Reinforce legal structures governing transport policies",
+            "meaningVi": "Củng cố khung pháp lý điều chỉnh chính sách giao thông",
+            "enGloss": "Legal policy structures",
+            "viGloss": "Cấu trúc chính sách pháp lý",
+            "example": "Strengthening regulatory frameworks for public transport can ensure compliance with safety and accessibility standards.",
+            "exampleVi": "Củng cố khung pháp lý cho giao thông công cộng có thể đảm bảo tuân thủ các tiêu chuẩn an toàn và tiếp cận."
+          }
+        ],
+        "grammar": [
+          {
+            "name": "Concession & Contrast",
+            "pattern": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "patternVi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn.",
+            "en": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "vi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn."
+          },
+          {
+            "name": "Cause/Condition",
+            "pattern": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "patternVi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị.",
+            "en": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "vi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị."
+          },
+          {
+            "name": "Emphasis / Inversion",
+            "pattern": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "patternVi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển.",
+            "en": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "vi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển."
+          }
+        ],
+        "cohesion": [
+          {
+            "term": "Furthermore",
+            "en": "Furthermore",
+            "vi": "Hơn nữa",
+            "enGloss": "addition",
+            "viGloss": "bổ sung ý"
+          },
+          {
+            "term": "Conversely",
+            "en": "Conversely",
+            "vi": "Ngược lại",
+            "enGloss": "contrast",
+            "viGloss": "tương phản"
+          },
+          {
+            "term": "Consequently",
+            "en": "Consequently",
+            "vi": "Do đó",
+            "enGloss": "result",
+            "viGloss": "kết quả"
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-b2",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree / Support",
+          "stanceLabelVi": "Phiên bản 1: Agree / Hỗ trợ",
+          "en": "Version 1: Agree / Support",
+          "vi": "Phiên bản 1: Agree / Hỗ trợ",
+          "candidatePoints": [
+            {
+              "id": "q5-s1-1",
+              "titleEn": "Environmental Sustainability",
+              "titleVi": "Tính bền vững môi trường",
+              "pointEn": "Investing in public transport reduces carbon emissions and combats climate change effectively.",
+              "pointVi": "Tài trợ cho.giao thông công cộng giảm lượng carbon và chống biến đổi khí hậu hiệu quả.",
+              "strategyVi": "Use data from international studies on urban emissions and cite specific Vietnamese policies like the National Green Growth Strategy.",
+              "writingCue": "Public transport networks are essential for reducing carbon emissions, as evidenced by studies showing a 20% reduction in urban areas with improved systems.",
+              "en": "Environmental Sustainability",
+              "vi": "Tính bền vững môi trường"
+            },
+            {
+              "id": "q5-s1-2",
+              "titleEn": "Cost-Effectiveness",
+              "titleVi": "Hiệu quả chi phí",
+              "pointEn": "Public transport infrastructure is more economically viable in the long term compared to road expansion.",
+              "pointVi": "Cơ sở hạ tầng giao thông công cộng hiệu quả chi phí hơn trong dài hạn so với mở rộng đường.",
+              "strategyVi": "Compare life-cycle costs of public transport vs. road projects, using examples like the metro systems in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Long-term cost analysis demonstrates that public transport investments yield higher economic returns than road construction.",
+              "en": "Cost-Effectiveness",
+              "vi": "Hiệu quả chi phí"
+            },
+            {
+              "id": "q5-s1-3",
+              "titleEn": "Reduced Traffic Congestion",
+              "titleVi": "Giảm ùn tắc giao thông",
+              "pointEn": "Expanding public transport decreases traffic congestion and improves commute times for urban residents.",
+              "pointVi": "Mở rộng.giao.transport.giảm.traffic.congestion.và.improve.time.commute.urban.residents.",
+              "strategyVi": "Cite traffic flow models and case studies from cities like Singapore and Tokyo.",
+              "writingCue": "Research shows that cities with robust public transport systems experience a 30% reduction in peak-hour traffic congestion.",
+              "en": "Reduced Traffic Congestion",
+              "vi": "Giảm ùn tắc giao thông"
+            },
+            {
+              "id": "q5-s1-4",
+              "titleEn": "Healthier Communities",
+              "titleVi": "Cộng đồng khỏe mạnh",
+              "pointEn": "Public transport promotes active commuting, leading to better public health outcomes.",
+              "pointVi": "Giao.transport.promotes.active.commuting.lead.to.better.public.health.outcomes.",
+              "strategyVi": "Link to Vietnamese health reports on rising obesity rates and the benefits of walking and cycling.",
+              "writingCue": "Studies indicate that increased use of public transport correlates with a 20% reduction in urban health issues like obesity.",
+              "en": "Healthier Communities",
+              "vi": "Cộng đồng khỏe mạnh"
+            },
+            {
+              "id": "q5-s1-5",
+              "titleEn": "Social Equity",
+              "titleVi": "Bình đẳng xã hội",
+              "pointEn": "Public transport ensures equal access to opportunities for all income groups, reducing social inequality.",
+              "pointVi": "Giao.transport.chắc.cơ.hiếm.cơ.hiếm.mọi.lớp.người.reduce.social.inequality.",
+              "strategyVi": "Reference the Ministry of Transport's reports on public transport accessibility in urban areas.",
+              "writingCue": "Public transport systems are critical for ensuring social equity, as they provide mobility for low-income families.",
+              "en": "Social Equity",
+              "vi": "Bình đẳng xã hội"
+            },
+            {
+              "id": "q5-s1-6",
+              "titleEn": "Technological Integration",
+              "titleVi": "Tích hợp công nghệ",
+              "pointEn": "Modern public transport systems can integrate smart technologies, improving efficiency and user experience.",
+              "pointVi": "Công.transport.modern.có.thể.integrate.smart.technologies.improve.efficiency.user.experience.",
+              "strategyVi": "Discuss the implementation of smart ticketing systems and real-time tracking in Vietnamese cities.",
+              "writingCue": "Smart technologies in public transport systems enhance urban mobility, as seen in cities like Seoul and Barcelona.",
+              "en": "Technological Integration",
+              "vi": "Tích hợp công nghệ"
+            }
+          ]
+        },
+        {
+          "id": "plan-2-b2",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree / Alternative",
+          "stanceLabelVi": "Phiên bản 2:不同意 / Thay thế",
+          "en": "Version 2: Disagree / Alternative",
+          "vi": "Phiên bản 2:不同意 / Thay thế",
+          "candidatePoints": [
+            {
+              "id": "q5-s2-1",
+              "titleEn": "Economic Growth",
+              "titleVi": "Tăng trưởng kinh tế",
+              "pointEn": "Expanding roads supports economic growth by facilitating goods movement and business expansion.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.chiến.lược.kinh.tế.và.expand.business.",
+              "strategyVi": "Cite GDP growth rates in cities with robust road networks, such as Los Angeles and Shanghai.",
+              "writingCue": "Economic data shows that road expansion correlates with a 15% increase in GDP growth over five years.",
+              "en": "Economic Growth",
+              "vi": "Tăng trưởng kinh tế"
+            },
+            {
+              "id": "q5-s2-2",
+              "titleEn": "Emergency Response",
+              "titleVi": "Phản ứng khẩn cấp",
+              "pointEn": "Road networks are critical for emergency services, ensuring timely responses during crises.",
+              "pointVi": "Cơ.sở.đường.có.vai trò.quan.trọng.trong.phản.ứng.khẩn.cấp.",
+              "strategyVi": "Reference the role of roads in disaster response during events like the 2020 flood in Hanoi.",
+              "writingCue": "Road networks are essential for emergency services, as they enable rapid response during natural disasters.",
+              "en": "Emergency Response",
+              "vi": "Phản ứng khẩn cấp"
+            },
+            {
+              "id": "q5-s2-3",
+              "titleEn": "Last Mile Connectivity",
+              "titleVi": "Liên kết cuối cùng",
+              "pointEn": "Roads provide last-mile connectivity, which public transport systems often fail to address effectively.",
+              "pointVi": "Đường.phục vụ.last.mile.connectivity.mà.giao.transport.công.cộng.không.phải.làm.good.",
+              "strategyVi": "Cite examples of last-mile delivery services in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Roads are indispensable for providing last-mile connectivity, which is often overlooked by public transport systems.",
+              "en": "Last Mile Connectivity",
+              "vi": "Liên kết cuối cùng"
+            },
+            {
+              "id": "q5-s2-4",
+              "titleEn": "Infrastructure Costs",
+              "titleVi": "Chi phí hạ tầng",
+              "pointEn": "Building roads is often more cost-effective in the short term compared to extensive public transport networks.",
+              "pointVi": "Xây.đường.là.phương án.chi phí.hạ tầng.anh.hiếm.trong.kiểm.phong.của.public.transport.networks.",
+              "strategyVi": "Compare initial construction costs of roads vs. public transport projects, using data from the Ministry of Transport.",
+              "writingCue": "Fiscal analysis shows that road construction is more budget-friendly in the short term than public transport investments.",
+              "en": "Infrastructure Costs",
+              "vi": "Chi phí hạ tầng"
+            },
+            {
+              "id": "q5-s2-5",
+              "titleEn": "Political Pressures",
+              "titleVi": "Pressures.político",
+              "pointEn": "Politicians often prioritize road projects due to short-term voter appeal, despite long-term consequences.",
+              "pointVi": "Công.político.often.priority.road.projects.việc.short.term.appeal.voter.despite.long.term.consequences.",
+              "strategyVi": "Analyze recent infrastructure decisions in Vietnam's National Assembly sessions.",
+              "writingCue": "Political pressures often lead to prioritization of road projects over sustainable public transport solutions.",
+              "en": "Political Pressures",
+              "vi": "Pressures.político"
+            },
+            {
+              "id": "q5-s2-6",
+              "titleEn": "Tourism Development",
+              "titleVi": "Phát triển du lịch",
+              "pointEn": "Road expansion supports tourism by improving access to scenic areas and attractions.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.phát.triễn.du.lịch.bởi.cải thiện.access.to.diễn.phong.quan.và.atracción.",
+              "strategyVi": "Cite examples of tourist destinations in Vietnam where road infrastructure has boosted visitation rates.",
+              "writingCue": "Improved road networks are crucial for enhancing tourism access, as seen in destinations like Halong Bay and Sapa.",
+              "en": "Tourism Development",
+              "vi": "Phát triển du lịch"
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ],
+        "disagree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ]
+      }
+    },
+    "c1": {
+      "cefrEvidence": "B2 Academic writing competency requiring well-developed arguments and lexical precision.",
+      "coreTargets": [
+        "urban infrastructure",
+        "equitable access",
+        "sustainable mobility",
+        "multimodal integration"
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "urban infrastructure",
+            "collocation": "enhance urban infrastructure",
+            "level": "C1",
+            "meaningEn": "Improve the physical systems supporting city functionality",
+            "meaningVi": "Cải thiện các hệ thống vật lý hỗ trợ chức năng của thành phố",
+            "enGloss": "Improve city systems",
+            "viGloss": "Cải thiện hệ thống thành phố",
+            "example": "Enhancing urban infrastructure through integrated public transport networks can significantly reduce traffic congestion in densely populated areas.",
+            "exampleVi": "Việc cải thiện cơ sở hạ tầng đô thị thông qua các mạng lưới giao thông công cộng tích hợp có thể làm giảm đáng kể ùn tắc giao thông ở các khu vực đông dân cư."
+          },
+          {
+            "term": "equitable access",
+            "collocation": "ensure equitable access",
+            "level": "C1",
+            "meaningEn": "Provide fair opportunities for all citizens to use services",
+            "meaningVi": "Đảm bảo cơ hội công bằng cho tất cả công dân sử dụng dịch vụ",
+            "enGloss": "Fair service availability",
+            "viGloss": "Sự sẵn có dịch vụ công bằng",
+            "example": "Governments must ensure equitable access to public transport systems to address socioeconomic disparities in urban areas.",
+            "exampleVi": "Chính phủ phải đảm bảo tiếp cận công bằng với hệ thống giao thông công cộng để giải quyết chênh lệch kinh tế xã hội ở khu vực đô thị."
+          },
+          {
+            "term": "sustainable mobility",
+            "collocation": "promote sustainable mobility",
+            "level": "C1",
+            "meaningEn": "Encourage environmentally responsible transportation methods",
+            "meaningVi": "Khuyến khích phương thức di chuyển có trách nhiệm với môi trường",
+            "enGloss": "Eco-friendly transport",
+            "viGloss": "Di chuyển thân thiện môi trường",
+            "example": "Promoting sustainable mobility through expanded metro systems reduces carbon emissions and alleviates road congestion.",
+            "exampleVi": "Việc thúc đẩy di chuyển bền vững thông qua việc mở rộng hệ thống tàu điện ngầm làm giảm lượng khí thải carbon và giảm ùn tắc đường."
+          },
+          {
+            "term": "multimodal integration",
+            "collocation": "achieve multimodal integration",
+            "level": "C1",
+            "meaningEn": "Coordinate different transportation modes for seamless connectivity",
+            "meaningVi": "Tích hợp nhiều phương thức giao thông để kết nối liền mạch",
+            "enGloss": "Transport coordination",
+            "viGloss": "Tọa độ giao thông",
+            "example": "Achieving multimodal integration between buses, trams, and subways is crucial for creating efficient urban transport ecosystems.",
+            "exampleVi": "Việc đạt được tích hợp đa phương thức giữa xe buýt, xe điện và tàu ngầm là rất quan trọng để tạo ra hệ sinh thái giao thông đô thị hiệu quả."
+          },
+          {
+            "term": "spatial equity",
+            "collocation": "address spatial equity",
+            "level": "C1",
+            "meaningEn": "Resolve disparities in resource distribution across geographic areas",
+            "meaningVi": "Giải quyết chênh lệch phân bổ tài nguyên giữa các khu vực địa lý",
+            "enGloss": "Geographic fairness",
+            "viGloss": "Công bằng địa lý",
+            "example": "Addressing spatial equity in transport planning ensures marginalized communities are not excluded from urban development benefits.",
+            "exampleVi": "Giải quyết công bằng không gian trong quy hoạch giao thông đảm bảo các cộng đồng bị bỏ rơi không bị loại khỏi lợi ích phát triển đô thị."
+          },
+          {
+            "term": "carbon footprint",
+            "collocation": "minimize carbon footprint",
+            "level": "B2",
+            "meaningEn": "Reduce environmental impact through lower emissions",
+            "meaningVi": "Giảm tác động môi trường thông qua việc phát thải ít hơn",
+            "enGloss": "Emission reduction",
+            "viGloss": "Giảm phát thải",
+            "example": "Investing in electric buses helps minimize the carbon footprint of urban transport systems.",
+            "exampleVi": "Đầu tư vào xe buýt điện giúp giảm lượng khí thải carbon của hệ thống giao thông đô thị."
+          },
+          {
+            "term": "operational efficiency",
+            "collocation": "optimize operational efficiency",
+            "level": "B2",
+            "meaningEn": "Maximize productivity while minimizing resource use",
+            "meaningVi": "Tối ưu hóa hiệu quả vận hành",
+            "enGloss": "Productivity optimization",
+            "viGloss": "Tối ưu hóa năng suất",
+            "example": "Optimizing operational efficiency in metro systems can reduce waiting times and increase passenger capacity.",
+            "exampleVi": "Tối ưu hóa hiệu quả vận hành trong hệ thống tàu điện ngầm có thể giảm thời gian chờ và tăng năng lực chở khách."
+          },
+          {
+            "term": "regulatory frameworks",
+            "collocation": "strengthen regulatory frameworks",
+            "level": "C1",
+            "meaningEn": "Reinforce legal structures governing transport policies",
+            "meaningVi": "Củng cố khung pháp lý điều chỉnh chính sách giao thông",
+            "enGloss": "Legal policy structures",
+            "viGloss": "Cấu trúc chính sách pháp lý",
+            "example": "Strengthening regulatory frameworks for public transport can ensure compliance with safety and accessibility standards.",
+            "exampleVi": "Củng cố khung pháp lý cho giao thông công cộng có thể đảm bảo tuân thủ các tiêu chuẩn an toàn và tiếp cận."
+          }
+        ],
+        "grammar": [
+          {
+            "name": "Concession & Contrast",
+            "pattern": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "patternVi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn.",
+            "en": "Although expanding road networks may seem beneficial, prioritizing public transport can lead to more sustainable urban growth.",
+            "vi": "Mặc dù việc mở rộng mạng lưới đường bộ có vẻ hữu ích, nhưng ưu tiên giao thông công cộng có thể dẫn đến sự phát triển đô thị bền vững hơn."
+          },
+          {
+            "name": "Cause/Condition",
+            "pattern": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "patternVi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị.",
+            "en": "Inasmuch as cities expand, the need for efficient public transport becomes increasingly critical to manage urban sprawl.",
+            "vi": "Càng mở rộng, sự cần thiết của giao thông công cộng hiệu quả càng trở nên quan trọng để quản lý sự lan rộng đô thị."
+          },
+          {
+            "name": "Emphasis / Inversion",
+            "pattern": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "patternVi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển.",
+            "en": "Not only does investing in public transport reduce traffic congestion, but it also promotes social equity by ensuring equitable access to mobility.",
+            "vi": "Không chỉ đầu tư vào giao thông công cộng làm giảm ùn tắc giao thông, mà nó còn thúc đẩy công bằng xã hội bằng cách đảm bảo tiếp cận công bằng với di chuyển."
+          }
+        ],
+        "cohesion": [
+          {
+            "term": "Furthermore",
+            "en": "Furthermore",
+            "vi": "Hơn nữa",
+            "enGloss": "addition",
+            "viGloss": "bổ sung ý"
+          },
+          {
+            "term": "Conversely",
+            "en": "Conversely",
+            "vi": "Ngược lại",
+            "enGloss": "contrast",
+            "viGloss": "tương phản"
+          },
+          {
+            "term": "Consequently",
+            "en": "Consequently",
+            "vi": "Do đó",
+            "enGloss": "result",
+            "viGloss": "kết quả"
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-b2",
+          "stance": "agree",
+          "stanceLabelEn": "Version 1: Agree / Support",
+          "stanceLabelVi": "Phiên bản 1: Agree / Hỗ trợ",
+          "en": "Version 1: Agree / Support",
+          "vi": "Phiên bản 1: Agree / Hỗ trợ",
+          "candidatePoints": [
+            {
+              "id": "q5-s1-1",
+              "titleEn": "Environmental Sustainability",
+              "titleVi": "Tính bền vững môi trường",
+              "pointEn": "Investing in public transport reduces carbon emissions and combats climate change effectively.",
+              "pointVi": "Tài trợ cho.giao thông công cộng giảm lượng carbon và chống biến đổi khí hậu hiệu quả.",
+              "strategyVi": "Use data from international studies on urban emissions and cite specific Vietnamese policies like the National Green Growth Strategy.",
+              "writingCue": "Public transport networks are essential for reducing carbon emissions, as evidenced by studies showing a 20% reduction in urban areas with improved systems.",
+              "en": "Environmental Sustainability",
+              "vi": "Tính bền vững môi trường"
+            },
+            {
+              "id": "q5-s1-2",
+              "titleEn": "Cost-Effectiveness",
+              "titleVi": "Hiệu quả chi phí",
+              "pointEn": "Public transport infrastructure is more economically viable in the long term compared to road expansion.",
+              "pointVi": "Cơ sở hạ tầng giao thông công cộng hiệu quả chi phí hơn trong dài hạn so với mở rộng đường.",
+              "strategyVi": "Compare life-cycle costs of public transport vs. road projects, using examples like the metro systems in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Long-term cost analysis demonstrates that public transport investments yield higher economic returns than road construction.",
+              "en": "Cost-Effectiveness",
+              "vi": "Hiệu quả chi phí"
+            },
+            {
+              "id": "q5-s1-3",
+              "titleEn": "Reduced Traffic Congestion",
+              "titleVi": "Giảm ùn tắc giao thông",
+              "pointEn": "Expanding public transport decreases traffic congestion and improves commute times for urban residents.",
+              "pointVi": "Mở rộng.giao.transport.giảm.traffic.congestion.và.improve.time.commute.urban.residents.",
+              "strategyVi": "Cite traffic flow models and case studies from cities like Singapore and Tokyo.",
+              "writingCue": "Research shows that cities with robust public transport systems experience a 30% reduction in peak-hour traffic congestion.",
+              "en": "Reduced Traffic Congestion",
+              "vi": "Giảm ùn tắc giao thông"
+            },
+            {
+              "id": "q5-s1-4",
+              "titleEn": "Healthier Communities",
+              "titleVi": "Cộng đồng khỏe mạnh",
+              "pointEn": "Public transport promotes active commuting, leading to better public health outcomes.",
+              "pointVi": "Giao.transport.promotes.active.commuting.lead.to.better.public.health.outcomes.",
+              "strategyVi": "Link to Vietnamese health reports on rising obesity rates and the benefits of walking and cycling.",
+              "writingCue": "Studies indicate that increased use of public transport correlates with a 20% reduction in urban health issues like obesity.",
+              "en": "Healthier Communities",
+              "vi": "Cộng đồng khỏe mạnh"
+            },
+            {
+              "id": "q5-s1-5",
+              "titleEn": "Social Equity",
+              "titleVi": "Bình đẳng xã hội",
+              "pointEn": "Public transport ensures equal access to opportunities for all income groups, reducing social inequality.",
+              "pointVi": "Giao.transport.chắc.cơ.hiếm.cơ.hiếm.mọi.lớp.người.reduce.social.inequality.",
+              "strategyVi": "Reference the Ministry of Transport's reports on public transport accessibility in urban areas.",
+              "writingCue": "Public transport systems are critical for ensuring social equity, as they provide mobility for low-income families.",
+              "en": "Social Equity",
+              "vi": "Bình đẳng xã hội"
+            },
+            {
+              "id": "q5-s1-6",
+              "titleEn": "Technological Integration",
+              "titleVi": "Tích hợp công nghệ",
+              "pointEn": "Modern public transport systems can integrate smart technologies, improving efficiency and user experience.",
+              "pointVi": "Công.transport.modern.có.thể.integrate.smart.technologies.improve.efficiency.user.experience.",
+              "strategyVi": "Discuss the implementation of smart ticketing systems and real-time tracking in Vietnamese cities.",
+              "writingCue": "Smart technologies in public transport systems enhance urban mobility, as seen in cities like Seoul and Barcelona.",
+              "en": "Technological Integration",
+              "vi": "Tích hợp công nghệ"
+            }
+          ]
+        },
+        {
+          "id": "plan-2-b2",
+          "stance": "disagree",
+          "stanceLabelEn": "Version 2: Disagree / Alternative",
+          "stanceLabelVi": "Phiên bản 2:不同意 / Thay thế",
+          "en": "Version 2: Disagree / Alternative",
+          "vi": "Phiên bản 2:不同意 / Thay thế",
+          "candidatePoints": [
+            {
+              "id": "q5-s2-1",
+              "titleEn": "Economic Growth",
+              "titleVi": "Tăng trưởng kinh tế",
+              "pointEn": "Expanding roads supports economic growth by facilitating goods movement and business expansion.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.chiến.lược.kinh.tế.và.expand.business.",
+              "strategyVi": "Cite GDP growth rates in cities with robust road networks, such as Los Angeles and Shanghai.",
+              "writingCue": "Economic data shows that road expansion correlates with a 15% increase in GDP growth over five years.",
+              "en": "Economic Growth",
+              "vi": "Tăng trưởng kinh tế"
+            },
+            {
+              "id": "q5-s2-2",
+              "titleEn": "Emergency Response",
+              "titleVi": "Phản ứng khẩn cấp",
+              "pointEn": "Road networks are critical for emergency services, ensuring timely responses during crises.",
+              "pointVi": "Cơ.sở.đường.có.vai trò.quan.trọng.trong.phản.ứng.khẩn.cấp.",
+              "strategyVi": "Reference the role of roads in disaster response during events like the 2020 flood in Hanoi.",
+              "writingCue": "Road networks are essential for emergency services, as they enable rapid response during natural disasters.",
+              "en": "Emergency Response",
+              "vi": "Phản ứng khẩn cấp"
+            },
+            {
+              "id": "q5-s2-3",
+              "titleEn": "Last Mile Connectivity",
+              "titleVi": "Liên kết cuối cùng",
+              "pointEn": "Roads provide last-mile connectivity, which public transport systems often fail to address effectively.",
+              "pointVi": "Đường.phục vụ.last.mile.connectivity.mà.giao.transport.công.cộng.không.phải.làm.good.",
+              "strategyVi": "Cite examples of last-mile delivery services in Hanoi and Ho Chi Minh City.",
+              "writingCue": "Roads are indispensable for providing last-mile connectivity, which is often overlooked by public transport systems.",
+              "en": "Last Mile Connectivity",
+              "vi": "Liên kết cuối cùng"
+            },
+            {
+              "id": "q5-s2-4",
+              "titleEn": "Infrastructure Costs",
+              "titleVi": "Chi phí hạ tầng",
+              "pointEn": "Building roads is often more cost-effective in the short term compared to extensive public transport networks.",
+              "pointVi": "Xây.đường.là.phương án.chi phí.hạ tầng.anh.hiếm.trong.kiểm.phong.của.public.transport.networks.",
+              "strategyVi": "Compare initial construction costs of roads vs. public transport projects, using data from the Ministry of Transport.",
+              "writingCue": "Fiscal analysis shows that road construction is more budget-friendly in the short term than public transport investments.",
+              "en": "Infrastructure Costs",
+              "vi": "Chi phí hạ tầng"
+            },
+            {
+              "id": "q5-s2-5",
+              "titleEn": "Political Pressures",
+              "titleVi": "Pressures.político",
+              "pointEn": "Politicians often prioritize road projects due to short-term voter appeal, despite long-term consequences.",
+              "pointVi": "Công.político.often.priority.road.projects.việc.short.term.appeal.voter.despite.long.term.consequences.",
+              "strategyVi": "Analyze recent infrastructure decisions in Vietnam's National Assembly sessions.",
+              "writingCue": "Political pressures often lead to prioritization of road projects over sustainable public transport solutions.",
+              "en": "Political Pressures",
+              "vi": "Pressures.político"
+            },
+            {
+              "id": "q5-s2-6",
+              "titleEn": "Tourism Development",
+              "titleVi": "Phát triển du lịch",
+              "pointEn": "Road expansion supports tourism by improving access to scenic areas and attractions.",
+              "pointVi": "Mở rộng.đường.phổ.hoại.giúp.phát.triễn.du.lịch.bởi.cải thiện.access.to.diễn.phong.quan.và.atracción.",
+              "strategyVi": "Cite examples of tourist destinations in Vietnam where road infrastructure has boosted visitation rates.",
+              "writingCue": "Improved road networks are crucial for enhancing tourism access, as seen in destinations like Halong Bay and Sapa.",
+              "en": "Tourism Development",
+              "vi": "Phát triển du lịch"
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ],
+        "disagree": [
+          {
+            "paragraph": "intro",
+            "depth": 3,
+            "modelSentence": "In contemporary society, this issue has ignited substantial debate."
+          },
+          {
+            "paragraph": "body1",
+            "depth": 3,
+            "modelSentence": "Primarily, empirical evidence underscores the critical importance of this factor."
+          },
+          {
+            "paragraph": "body2",
+            "depth": 3,
+            "modelSentence": "Equally significant is the broader implication on systemic development."
+          },
+          {
+            "paragraph": "conclusion",
+            "depth": 3,
+            "modelSentence": "In conclusion, while multiple perspectives exist, a balanced approach is essential."
+          }
+        ]
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_MAJORITY",
+    "councilVerified": true,
+    "models": [
+      "deepseek-r1:14b",
+      "qwen3:14b",
+      "gemma4:12b"
+    ],
+    "timestamp": "2026-09-03 23:27:32"
+  }
+}

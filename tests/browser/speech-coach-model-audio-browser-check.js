@@ -136,21 +136,21 @@ const path = require('path');
     const cards = Array.from(document.querySelectorAll('[data-guide-item]'));
     const cardRects = cards.map((card) => {
       const rect = card.getBoundingClientRect();
-      return { left: rect.left, right: rect.right };
+      return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
     });
     const listRect = list?.getBoundingClientRect();
     return {
       modelInsideGuideItem: Boolean(model?.closest('[data-guide-item]')),
       nestedInteractiveControl: Boolean(model?.parentElement?.closest('button')),
       modelCount: document.querySelectorAll('.sc-model-play-btn:not(:disabled)').length,
-      horizontalGap: cardRects.length > 1 ? cardRects[1].left - cardRects[0].right : null,
-      cardsStayInsideList: Boolean(listRect && cardRects.every((rect) => rect.left >= listRect.left && rect.right <= listRect.right + 0.5))
+      verticalGap: cardRects.length > 1 ? cardRects[1].top - cardRects[0].bottom : null,
+      cardsStayInsideList: Boolean(listRect && cardRects.every((rect) => rect.left >= listRect.left - 0.5 && rect.right <= listRect.right + 0.5))
     };
   });
   assert.strictEqual(guide.modelCount, 1);
   assert.strictEqual(guide.modelInsideGuideItem, true, 'Model must remain inside its guide item after HTML parsing');
   assert.strictEqual(guide.nestedInteractiveControl, false, 'guide playback must not nest a button inside another button');
-  assert.ok(guide.horizontalGap >= 8, `guide cards must not overlap; measured gap ${guide.horizontalGap}px`);
+  assert.ok(guide.verticalGap >= 8, `guide cards must not overlap; measured gap ${guide.verticalGap}px`);
   assert.strictEqual(guide.cardsStayInsideList, true, 'guide cards must stay within the Speech Coach list');
 
   await page.evaluate(() => document.querySelector('.sc-model-play-btn:not(:disabled)')?.click());

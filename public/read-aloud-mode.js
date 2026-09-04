@@ -534,7 +534,9 @@ class ReadAloudMode {
     });
     document.getElementById('ra-v7-jump-list')?.addEventListener('click', (event) => this.handleQuestionPickerV7JumpClick(event));
     document.getElementById('ra-v7-panel-filters')?.addEventListener('click', (event) => this.handleQuestionPickerV7FilterClick(event));
-    document.addEventListener('keydown', (event) => this.handleQuestionPickerV7Keydown(event), true);
+    if (document.getElementById('ra-v7-sheet')) {
+      document.addEventListener('keydown', (event) => this.handleQuestionPickerV7Keydown(event), true);
+    }
 
     // Header audio shortcuts (v7 proxy buttons)
     document.getElementById('header-ra-play-audio-btn')?.addEventListener('click', () => this.playAudio());

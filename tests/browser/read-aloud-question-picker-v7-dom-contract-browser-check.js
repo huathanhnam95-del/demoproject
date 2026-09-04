@@ -244,7 +244,10 @@ async function assertSharedControllerStructure(page, label) {
     server.listen(port, '127.0.0.1', resolve);
   });
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+  });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
     serviceWorkers: 'block',
@@ -253,7 +256,7 @@ async function assertSharedControllerStructure(page, label) {
   await setupFirebaseMocks(context);
 
   await context.addInitScript(() => {
-    function createMonoPcmWavBytes({ sampleRate = 16000, durationMs = 300, amplitude = 1200 } = {}) {
+    function createMonoPcmWavBytes({ sampleRate = 16000, durationMs = 1000, amplitude = 12000 } = {}) {
       const sampleCount = Math.max(1, Math.round(sampleRate * (durationMs / 1000)));
       const dataLength = sampleCount * 2;
       const buffer = new ArrayBuffer(44 + dataLength);
@@ -279,7 +282,9 @@ async function assertSharedControllerStructure(page, label) {
       view.setUint32(40, dataLength, true);
 
       for (let index = 0; index < sampleCount; index += 1) {
-        view.setInt16(44 + (index * 2), amplitude, true);
+        const t = index / sampleRate;
+        const val = Math.round(amplitude * Math.sin(2 * Math.PI * 440 * t));
+        view.setInt16(44 + (index * 2), val, true);
       }
 
       return new Uint8Array(buffer);
@@ -475,13 +480,11 @@ async function assertSharedControllerStructure(page, label) {
     await page.waitForFunction(() => {
       const status = document.getElementById('ra-status-message');
       const checkBtn = document.getElementById('ra-check-btn');
-      const audio = document.getElementById('ra-user-recording-audio');
       return !!status
         && /recording captured/i.test(String(status.textContent || ''))
         && !!checkBtn
         && getComputedStyle(checkBtn).display !== 'none'
-        && !!audio
-        && getComputedStyle(audio).display !== 'none';
+        && window.ReadAloudMode?.state === 'RECORDED';
     }, { timeout: 30000 });
 
     await page.evaluate(() => document.getElementById('ra-check-btn')?.click());

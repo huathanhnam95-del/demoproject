@@ -1,3 +1,20 @@
+## [V1.8.120] - 2026-09-04
+
+### Enhanced & Overhauled
+- **Read Aloud Practice UX Overhaul & Shared Speaking Shell Alignment**:
+  - **Unified Shell Grid**: Standardized all seven speaking modes to `--spc-shell-max: 1180px` (`.spc-shell-grid`), eliminating multi-column fragmentation and converting the controller from a floating box/card into a clean flat bar with a hairline border.
+  - **Steps & Sticky Action Footer**: Embedded navigation steps into `.spc-slot-steps` inside `.spc-row--primary` and moved primary recording/playback controls to a persistent sticky footer (`.spc-footer`), keeping actions anchored beneath the content.
+  - **Modern Workbench Layout**: Decomposed Read Aloud into `.ra-workbench` containing `.ra-stage` (1.35fr measure-capped reading area) and `.ra-rail` (speech coach card rail) side-by-side on desktop.
+  - **Speech Coach Tokenization**: Replaced all inline hardcoded hex colors with accessible CSS variables (`--coach-*` tokens in `public/design-tokens.css`), audited to surpass WCAG AA requirements (4.84:1 to 6.81:1).
+  - **Two-Tier Pedagogy**: Structured practice into `simple` (Basic) and `full` (Advanced) tiers via `getActiveConnectedSpeechModes()`. Basic keeps essential marks and plain language while hiding distracting IPA and complex chips; `#ra-show-advanced-btn` promotes the user smoothly to Advanced with seeded state.
+  - **Beginner-Friendly Card Hierarchy**: Upgraded coach cards with `sayItLike` phonetic sound-alikes ("uh", "tuh", "thuh"), plain-language explanations, and synthesis speech fallback when recorded clips are unavailable.
+  - **Responsive & Header-Safe Positioning**: Header clearance via dynamic `--site-header-height-actual`, mobile bottom toolbar clearance (`z-index: 999`), and mascot avatar reduction under 768px to prevent occlusion.
+  - **Dynamic Timer Emphasis**: Collapsed dual timers into `data-timer-state` driven emphasis, shrinking the idle timer and spotlighting the active countdown.
+- **Speaking Controller Test Suite Stabilization & Regression Hardening**:
+  - **440 Hz DSP Waveform Mock**: Synthesized 440 Hz sinusoidal waveform for synthetic browser audio mocks, passing the 80 Hz high-pass filter cleanly.
+  - **Event Listener Hygiene**: Gated global document keydown listener in `ReadAloudMode` behind `#ra-v7-sheet` to eliminate unnecessary DOM queries on non-v7 modes.
+  - **Geometry & Contract Assertions**: Updated rail card geometry checks to assert vertical spacing and fixed controller vs footer query scoping across 13 test suites (442 passing assertions).
+
 ## [V1.8.119] - 2026-09-04
 
 ### Fixed & Enhanced

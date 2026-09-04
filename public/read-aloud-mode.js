@@ -3949,15 +3949,66 @@ class ReadAloudMode {
     const arrayBuffer = await blob.arrayBuffer();
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-    const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+
+    const outputLength = Math.ceil(decoded.duration * 16000);
+    const offline = new OfflineAudioContext(1, outputLength, 16000);
+
+    // DSP chain: source → 80 Hz high-pass filter → destination
     const source = offline.createBufferSource();
     source.buffer = decoded;
-    source.connect(offline.destination);
+
+    const highpass = offline.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 80;
+    highpass.Q.value = 0.707; // Butterworth (maximally flat passband)
+
+    source.connect(highpass);
+    highpass.connect(offline.destination);
     source.start(0);
-    const rendered = await offline.startRendering();
+
+    // iOS Safari can suspend OfflineAudioContext when the screen locks.
+    // Apply a 3-second timeout fallback: skip DSP and use a basic resample.
+    let rendered;
+    try {
+      rendered = await Promise.race([
+        offline.startRendering(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
+        )
+      ]);
+    } catch (timeoutErr) {
+      // Fallback: basic resample without DSP enhancements
+      console.warn('[ReadAloud] OfflineAudioContext timed out, falling back to basic resample:', timeoutErr.message);
+      const fallbackOffline = new OfflineAudioContext(1, outputLength, 16000);
+      const fallbackSource = fallbackOffline.createBufferSource();
+      fallbackSource.buffer = decoded;
+      fallbackSource.connect(fallbackOffline.destination);
+      fallbackSource.start(0);
+      rendered = await fallbackOffline.startRendering();
+    }
     if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
 
-    const quality = this.validateAudioBufferQuality(rendered);
+    // Peak normalization to -3 dBFS (target peak at ~70.8% of full scale)
+    const channelData = rendered.getChannelData(0);
+    let maxPeak = 0;
+    for (let i = 0; i < channelData.length; i++) {
+      const absVal = Math.abs(channelData[i]);
+      if (absVal > maxPeak) maxPeak = absVal;
+    }
+    if (maxPeak > 0) {
+      const targetPeak = Math.pow(10, -3 / 20); // ~0.7079
+      const gain = targetPeak / maxPeak;
+      if (gain < 0.99 || gain > 1.01) {
+        for (let i = 0; i < channelData.length; i++) {
+          channelData[i] = Math.max(-1, Math.min(1, channelData[i] * gain));
+        }
+      }
+    }
+
+    // Leading/trailing silence trimming (preserve inter-word pauses)
+    const trimmed = this.trimSilence(rendered, 150);
+
+    const quality = this.validateAudioBufferQuality(trimmed);
     if (!quality.passed) {
       const error = new Error('Audio quality validation failed');
       error.code = 'INVALID_AUDIO';
@@ -3965,8 +4016,90 @@ class ReadAloudMode {
       throw error;
     }
 
-    this.assessmentAudioBuffer = rendered;
-    return this.audioBufferToWav(rendered);
+    this.assessmentAudioBuffer = trimmed;
+    return this.audioBufferToWav(trimmed);
+  }
+
+  /**
+   * Detects speech boundaries using frame-based RMS energy thresholding.
+   * Returns { firstSampleIndex, lastSampleIndex, speechDurationMs, frameRms, maxRms, threshold }
+   * or null if no speech is detected.
+   */
+  detectSpeechBoundaries(channelData, sampleRate) {
+    const totalSamples = channelData.length;
+    const frameSize = Math.max(1, Math.round(sampleRate * 0.01)); // 10ms frames
+    const frameDurationMs = (frameSize / sampleRate) * 1000;
+    const frameRms = [];
+
+    for (let offset = 0; offset < totalSamples; offset += frameSize) {
+      const end = Math.min(totalSamples, offset + frameSize);
+      let energy = 0;
+      for (let i = offset; i < end; i++) {
+        const val = channelData[i];
+        energy += val * val;
+      }
+      frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
+    }
+
+    const maxRms = frameRms.reduce((highest, val) => Math.max(highest, val), 0);
+    const minimumFrameRms = 0.01;
+    if (maxRms < minimumFrameRms) return null;
+
+    const minimumFrameThreshold = 0.008;
+    const frameRmsFraction = 0.18;
+    const threshold = Math.max(minimumFrameThreshold, maxRms * frameRmsFraction);
+
+    let firstSpeechFrame = -1;
+    let lastSpeechFrame = -1;
+    let speechFrameCount = 0;
+
+    for (let i = 0; i < frameRms.length; i++) {
+      if (frameRms[i] >= threshold) {
+        speechFrameCount++;
+        if (firstSpeechFrame === -1) firstSpeechFrame = i;
+        lastSpeechFrame = i;
+      }
+    }
+
+    if (firstSpeechFrame === -1 || lastSpeechFrame === -1) return null;
+
+    const firstSampleIndex = firstSpeechFrame * frameSize;
+    const lastSampleIndex = Math.min(totalSamples - 1, (lastSpeechFrame + 1) * frameSize - 1);
+    const speechDurationMs = Math.round((lastSpeechFrame - firstSpeechFrame + 1) * frameDurationMs);
+
+    return { firstSampleIndex, lastSampleIndex, speechDurationMs, speechFrameCount, frameRms, maxRms, threshold };
+  }
+
+  /**
+   * Trims leading and trailing silence from an AudioBuffer, preserving inter-word pauses.
+   * Adds paddingMs of silence padding on both sides to avoid cutting breath/onset transients.
+   * Returns the original buffer unchanged if no speech boundaries are detected or if
+   * trimming would remove less than 10% of the total duration.
+   */
+  trimSilence(audioBuffer, paddingMs = 150) {
+    const channelData = audioBuffer.getChannelData(0);
+    const sampleRate = audioBuffer.sampleRate;
+    const boundaries = this.detectSpeechBoundaries(channelData, sampleRate);
+
+    if (!boundaries) return audioBuffer;
+
+    const paddingSamples = Math.round((paddingMs / 1000) * sampleRate);
+    const trimStart = Math.max(0, boundaries.firstSampleIndex - paddingSamples);
+    const trimEnd = Math.min(channelData.length, boundaries.lastSampleIndex + 1 + paddingSamples);
+    const trimmedLength = trimEnd - trimStart;
+
+    // Skip trimming if it would remove less than 10% of total samples (not worth the overhead)
+    if (trimmedLength >= channelData.length * 0.9) return audioBuffer;
+
+    const AudioContextCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!AudioContextCtor) return audioBuffer;
+
+    const trimmedBuffer = new (window.AudioContext || window.webkitAudioContext)().createBuffer(1, trimmedLength, sampleRate);
+    const trimmedData = trimmedBuffer.getChannelData(0);
+    for (let i = 0; i < trimmedLength; i++) {
+      trimmedData[i] = channelData[trimStart + i];
+    }
+    return trimmedBuffer;
   }
 
   validateAudioBufferQuality(audioBuffer) {
@@ -3988,54 +4121,20 @@ class ReadAloudMode {
       return { passed: false, reason: 'no_speech' };
     }
 
-    const frameSize = Math.max(1, Math.round(sampleRate * 0.01));
-    const frameDurationMs = (frameSize / sampleRate) * 1000;
-    const frameRms = [];
+    // Delegate speech boundary detection to the shared helper
+    const boundaries = this.detectSpeechBoundaries(channelData, sampleRate);
 
-    for (let offset = 0; offset < totalSamples; offset += frameSize) {
-      const end = Math.min(totalSamples, offset + frameSize);
-      let energy = 0;
-      for (let i = offset; i < end; i++) {
-        const val = channelData[i];
-        energy += val * val;
-      }
-      frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
-    }
-
-    const maxRms = frameRms.reduce((highest, val) => Math.max(highest, val), 0);
-    const minimumFrameRms = 0.01;
-    if (maxRms < minimumFrameRms) {
+    if (!boundaries) {
       return { passed: false, reason: 'no_speech' };
     }
 
-    const minimumFrameThreshold = 0.008;
-    const frameRmsFraction = 0.18;
-    const threshold = Math.max(minimumFrameThreshold, maxRms * frameRmsFraction);
-    
-    let firstSpeechFrame = -1;
-    let lastSpeechFrame = -1;
-    let speechFrameCount = 0;
-
-    for (let i = 0; i < frameRms.length; i++) {
-      if (frameRms[i] >= threshold) {
-        speechFrameCount++;
-        if (firstSpeechFrame === -1) firstSpeechFrame = i;
-        lastSpeechFrame = i;
-      }
-    }
-
-    if (firstSpeechFrame === -1 || lastSpeechFrame === -1) {
-      return { passed: false, reason: 'no_speech' };
-    }
-
-    const speechDurationMs = Math.round((lastSpeechFrame - firstSpeechFrame + 1) * frameDurationMs);
     const clippedRatio = clippedSamples / totalSamples;
 
-    if (speechDurationMs < 250) {
+    if (boundaries.speechDurationMs < 250) {
       return { passed: false, reason: 'too_short' };
     }
 
-    if (speechDurationMs > 40000) {
+    if (boundaries.speechDurationMs > 40000) {
       return { passed: false, reason: 'too_long' };
     }
 

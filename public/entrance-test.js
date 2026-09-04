@@ -983,6 +983,150 @@
     return '';
   }
 
+  /**
+   * Client-side DSP preprocessing for entrance test speaking recordings.
+   * Applies: 80 Hz high-pass → 16 kHz mono resample → -3 dBFS normalize → lead/trail trim → WAV.
+   * Returns { wavBlob, stats } where stats includes duration and peak info.
+   * Falls back to raw blob on processing failure or 3-second timeout (iOS Safari screen-lock).
+   */
+  async function prepareEntranceTestBlob(rawBlob) {
+    try {
+      const arrayBuffer = await rawBlob.arrayBuffer();
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+      const originalDurationMs = Math.round(decoded.duration * 1000);
+
+      const outputLength = Math.ceil(decoded.duration * 16000);
+      const offline = new OfflineAudioContext(1, outputLength, 16000);
+
+      // DSP chain: source → 80 Hz high-pass → destination
+      const source = offline.createBufferSource();
+      source.buffer = decoded;
+
+      const highpass = offline.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 80;
+      highpass.Q.value = 0.707; // Butterworth
+
+      source.connect(highpass);
+      highpass.connect(offline.destination);
+      source.start(0);
+
+      // 3-second timeout fallback for iOS Safari
+      let rendered;
+      try {
+        rendered = await Promise.race([
+          offline.startRendering(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
+          )
+        ]);
+      } catch (_) {
+        console.warn('[EntranceTest] OfflineAudioContext timed out, using basic resample');
+        const fallback = new OfflineAudioContext(1, outputLength, 16000);
+        const fbSrc = fallback.createBufferSource();
+        fbSrc.buffer = decoded;
+        fbSrc.connect(fallback.destination);
+        fbSrc.start(0);
+        rendered = await fallback.startRendering();
+      }
+      if (typeof audioContext.close === 'function') await audioContext.close().catch(() => {});
+
+      // Peak normalization to -3 dBFS
+      const channelData = rendered.getChannelData(0);
+      let maxPeak = 0;
+      for (let i = 0; i < channelData.length; i++) {
+        const absVal = Math.abs(channelData[i]);
+        if (absVal > maxPeak) maxPeak = absVal;
+      }
+      const peakBefore = maxPeak;
+      if (maxPeak > 0) {
+        const targetPeak = Math.pow(10, -3 / 20); // ~0.7079
+        const gain = targetPeak / maxPeak;
+        if (gain < 0.99 || gain > 1.01) {
+          for (let i = 0; i < channelData.length; i++) {
+            channelData[i] = Math.max(-1, Math.min(1, channelData[i] * gain));
+          }
+        }
+      }
+
+      // Leading/trailing silence trimming
+      let trimmedBuffer = rendered;
+      const frameSize = Math.max(1, Math.round(16000 * 0.01));
+      const frameRms = [];
+      for (let offset = 0; offset < channelData.length; offset += frameSize) {
+        const end = Math.min(channelData.length, offset + frameSize);
+        let energy = 0;
+        for (let i = offset; i < end; i++) {
+          energy += channelData[i] * channelData[i];
+        }
+        frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
+      }
+      const maxRms = frameRms.reduce((h, v) => Math.max(h, v), 0);
+      if (maxRms >= 0.01) {
+        const threshold = Math.max(0.008, maxRms * 0.18);
+        let firstFrame = -1;
+        let lastFrame = -1;
+        for (let i = 0; i < frameRms.length; i++) {
+          if (frameRms[i] >= threshold) {
+            if (firstFrame === -1) firstFrame = i;
+            lastFrame = i;
+          }
+        }
+        if (firstFrame !== -1 && lastFrame !== -1) {
+          const padSamples = Math.round(0.15 * 16000); // 150ms padding
+          const trimStart = Math.max(0, firstFrame * frameSize - padSamples);
+          const trimEnd = Math.min(channelData.length, (lastFrame + 1) * frameSize + padSamples);
+          const trimLength = trimEnd - trimStart;
+          if (trimLength < channelData.length * 0.9) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            trimmedBuffer = ctx.createBuffer(1, trimLength, 16000);
+            const trimData = trimmedBuffer.getChannelData(0);
+            for (let i = 0; i < trimLength; i++) {
+              trimData[i] = channelData[trimStart + i];
+            }
+          }
+        }
+      }
+
+      // Encode as WAV
+      const trimmedData = trimmedBuffer.getChannelData(0);
+      const dataLength = trimmedData.length;
+      const wavBuf = new ArrayBuffer(44 + dataLength * 2);
+      const view = new DataView(wavBuf);
+      const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + dataLength * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, 16000, true);
+      view.setUint32(28, 32000, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, dataLength * 2, true);
+      let offset = 44;
+      for (let i = 0; i < dataLength; i++) {
+        const s = Math.max(-1, Math.min(1, trimmedData[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        offset += 2;
+      }
+
+      const wavBlob = new Blob([wavBuf], { type: 'audio/wav' });
+      const trimmedDurationMs = Math.round((dataLength / 16000) * 1000);
+      return {
+        wavBlob,
+        stats: { originalDurationMs, trimmedDurationMs, peakBefore, peakAfter: Math.pow(10, -3 / 20) }
+      };
+    } catch (err) {
+      console.warn('[EntranceTest] Audio preprocessing failed, using raw blob:', err);
+      return { wavBlob: rawBlob, stats: null };
+    }
+  }
+
   function clearSpeakingRecording(questionId) {
     const prev = appState.speaking[questionId] || null;
     const audioUrl = prev?.audioUrl;
@@ -1018,6 +1162,27 @@
       appState.speaking[questionId] = { blob, audioUrl, mimeType: blob.type || 'audio/webm' };
       appState.recording = null;
       render();
+
+      // Asynchronously preprocess for cleaner local playback (non-blocking)
+      prepareEntranceTestBlob(blob).then(({ wavBlob, stats }) => {
+        const current = appState.speaking[questionId];
+        if (!current || current.uploaded) return; // Already submitted, skip update
+        if (stats && wavBlob) {
+          const processedUrl = URL.createObjectURL(wavBlob);
+          // Update the playback blob and URL to the processed version
+          appState.speaking[questionId] = {
+            ...current,
+            blob: wavBlob,
+            rawBlob: blob,
+            audioUrl: processedUrl,
+            mimeType: 'audio/wav'
+          };
+          // Revoke old URL
+          try { URL.revokeObjectURL(audioUrl); } catch (_) { /* ignore */ }
+          // Re-render to update the audio element src
+          render();
+        }
+      }).catch(() => { /* Preprocessing failed silently, raw blob remains */ });
     });
 
     appState.recording = { questionId, recorder, stream, chunks };
@@ -1064,20 +1229,24 @@
     const subtitleEl = wrap.querySelector('#et-upload-subtitle');
     const submitBtn = elements.card.querySelector('#btn-submit');
 
-    const title = upload.phase === 'processing' ? 'Processing audio…' : 'Uploading audio…';
+    const title = upload.phase === 'processing' ? 'Processing audio…'
+      : upload.phase === 'formatting' ? 'Formatting audio…'
+      : 'Uploading audio…';
     const percentText = upload.phase === 'uploading' && typeof upload.percent === 'number'
       ? `${clamp(upload.percent, 0, 100)}%`
       : '';
     const subtitle = upload.phase === 'processing'
       ? 'Upload finished. Please wait while we process and score your recording.'
-      : 'Uploading audio, please keep this tab open.';
+      : upload.phase === 'formatting'
+        ? 'Enhancing audio clarity before upload…'
+        : 'Uploading audio, please keep this tab open.';
 
     if (titleEl) titleEl.textContent = title;
     if (percentEl) percentEl.textContent = percentText;
     if (subtitleEl) subtitleEl.textContent = subtitle;
 
     if (fillEl) {
-      const shouldIndeterminate = upload.phase === 'processing';
+      const shouldIndeterminate = upload.phase === 'processing' || upload.phase === 'formatting';
       fillEl.classList.toggle('indeterminate', shouldIndeterminate);
       if (shouldIndeterminate) {
         fillEl.style.width = '';
@@ -1087,7 +1256,9 @@
     }
 
     if (submitBtn) {
-      submitBtn.textContent = upload.phase === 'processing' ? 'Processing…' : 'Uploading…';
+      submitBtn.textContent = upload.phase === 'processing' ? 'Processing…'
+        : upload.phase === 'formatting' ? 'Formatting…'
+        : 'Uploading…';
     }
   }
 
@@ -1164,15 +1335,30 @@
       return;
     }
 
-    appState.uploading = { questionId, phase: 'uploading', percent: 0 };
+    appState.uploading = { questionId, phase: 'formatting', percent: 0 };
     render();
 
     try {
+      // Client-side DSP preprocessing: high-pass, normalize, trim, convert to 16kHz WAV
+      const { wavBlob, stats } = await prepareEntranceTestBlob(rec.blob);
+      const uploadBlob = wavBlob || rec.blob;
+      const uploadContentType = stats ? 'audio/wav' : (rec.blob.type || 'application/octet-stream');
+
+      if (stats) {
+        /* eslint-disable-next-line no-console */
+        console.log('[EntranceTest] Audio preprocessed:', stats);
+      }
+
+      if (!appState.uploading || appState.uploading.questionId !== questionId) return;
+      appState.uploading.phase = 'uploading';
+      appState.uploading.percent = 0;
+      updateSpeakingUploadUi();
+
       const url = `/api/entrance-tests/speaking/upload?token=${encodeURIComponent(token)}&questionId=${encodeURIComponent(questionId)}`;
       const json = await xhrUploadAudio({
         url,
-        blob: rec.blob,
-        contentType: rec.blob.type || 'application/octet-stream',
+        blob: uploadBlob,
+        contentType: uploadContentType,
         onProgress: (pct) => {
           if (!appState.uploading || appState.uploading.questionId !== questionId) return;
           if (typeof pct === 'number') {

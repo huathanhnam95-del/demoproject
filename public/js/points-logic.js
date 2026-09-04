@@ -236,14 +236,3 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateF1Accuracy
     };
 }
-
-export {
-    CONFIG,
-    calculateActivityPoints,
-    distributePointsToSkills,
-    calculatePerformanceScore,
-    updateRating,
-    getCefrLevel,
-    calculateOverallRating,
-    calculateF1Accuracy
-};

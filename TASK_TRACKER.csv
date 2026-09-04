@@ -1921,7 +1921,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 927,2026-09-04,Replace small native audio player with custom audio controller in Read Aloud practice mode,Done,2026-09-04
 928,2026-09-04,Fix Voice Cloning premature polling timeout and implement automatic latest cloned audio recovery,Done,2026-09-04
 929,2026-09-04,Fix lost formatting and run-in headings across all CRM books in reader and extraction pipeline,Done,2026-09-04
-930,2026-09-04,Debug and improve Entrance Test word-sound timing accuracy using V4 pronunciation segmentation,In Progress,
+930,2026-09-04,Debug and improve Entrance Test word-sound timing accuracy using V4 pronunciation segmentation,Done,2026-09-04
 931,2026-09-04,Fix CRM Student Courses 401 Unauthorized teaching sessions student ID and student modal title and deploy V1.8.112 to production,Done,2026-09-04
 932,2026-09-04,Implement 3-layout visualizer toggle and natural Vietnamese copy for Guided Essay Step 1,Done,2026-09-04
 933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,Done,2026-09-04
@@ -1938,3 +1938,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 943,2026-09-04,Release V1.8.116: Deploy Voice Cloning reference audio pipeline fix and live browser verified timbre retention to production,Done,2026-09-04
 944,2026-09-04,Execute Read Aloud UX redesign handoff plan — deployment audit and fake-device CI fix and ra-ux-verify inversion review,Done,2026-09-04
 945,2026-09-04,Release V1.8.117: Deploy CRM header drag fix and connected speech data updates to production,Done,2026-09-04
+946,2026-09-04,Client-side audio enhancement pipeline for recording playback clarity and scoring accuracy,In Progress,
+947,2026-09-04,Release V1.8.118: Deploy Entrance Test word playback boundary optimization and audit report to production,Done,2026-09-04
+948,2026-09-04,Review debug and refactor Read Aloud UX redesign and speaking controller tests,In Progress,

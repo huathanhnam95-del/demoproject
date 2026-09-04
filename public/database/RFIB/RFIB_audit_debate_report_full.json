@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 783,
-  "round1_pass_count": 601,
-  "debate_revised_count": 147,
-  "unresolved_count": 35,
+  "processed_questions": 797,
+  "round1_pass_count": 612,
+  "debate_revised_count": 149,
+  "unresolved_count": 36,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -40678,6 +40678,553 @@
             }
           ],
           "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 765,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Meaning (Figurative Langua"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'unearthed' because it means to discover or reveal something that was previously hidden or unknown, which perfectly describes the process of scientific discovery. * Why 'unsolved' is incorrect: This adjective describes a problem that has not been solved (e.g., an unsolved mystery), and it does not fit the context of discovering a correlation. * Why 'untitled' is incorrect: This adjective means lacking a title, which is unrelated to the context of scientific findings. * Why 'unfilled' is incorrect: This adjective means something that has not been completed or filled in, which does not match the meaning of revealing or discovering a correlation. Additionally, the grammar tag 'Verb Meaning (Figurative Language)' is accurate because 'unearthed' is used figuratively to describe the act of revealing hidden information, similar to how 'dig up' might be used in a non-literal sense.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting issue raised by Model [qwen3:14b], ensuring valid JSON structure. The grammar tag was confirmed as accurate, and the explanation was expanded to clarify the figurative use of 'unearthed' and the inappropriateness of the distractors in context.",
+          "candidate_explanation": "The correct answer is 'unearthed' because it means to discover or reveal something that was previously hidden or unknown, which perfectly describes the process of scientific discovery. * Why 'unsolved' is incorrect: This adjective describes a problem that has not been solved (e.g., an unsolved mystery), and it does not fit the context of discovering a correlation. * Why 'untitled' is incorrect: This adjective means lacking a title, which is unrelated to the context of scientific findings. * Why 'unfilled' is incorrect: This adjective means something that has not been completed or filled in, which does not match the meaning of revealing or discovering a correlation. Additionally, the grammar tag 'Verb Meaning (Figurative Language)' is accurate because 'unearthed' is used figuratively to describe the act of revealing hidden information, similar to how 'dig up' might be used in a non-literal sense.",
+          "candidate_grammar_tag": "Verb Meaning (Figurative Language)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is appropriately assigned, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced by explicitly addressing the passive voice construction, which was not previously mentioned but is relevant to understanding the use of 'unearthed' in the context of scientific writing.",
+          "candidate_explanation": "The correct answer is 'unearthed' because it means to discover or reveal something that was previously hidden or unknown, which perfectly describes the process of scientific discovery. * Why 'unsolved' is incorrect: This adjective describes a problem that has not been solved (e.g., an unsolved mystery), and it does not fit the context of discovering a correlation. * Why 'untitled' is incorrect: This adjective means lacking a title, which is unrelated to the context of scientific findings. * Why 'unfilled' is incorrect: This adjective means something that has not been completed or filled in, which does not match the meaning of revealing or discovering a correlation. The grammar tag 'Verb Meaning (Figurative Language)' is accurate because 'unearthed' is used figuratively to describe the act of revealing hidden information, similar to how 'dig up' might be used in a non-literal sense. Additionally, the verb is used in the passive voice ('have been unearthed'), which is common in scientific writing to emphasize the discovery rather than the discoverer.",
+          "candidate_grammar_tag": "Verb Meaning (Figurative Language)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is accurate and complete. 'Unearthed' is correctly identified as the appropriate word, and each distractor is logically and factually addressed. The grammar tag is correctly applied."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar label accuracy, reasoning, semantic context, and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be complete, logically sound, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'unearthed' because it means to discover or reveal something that was previously hidden or unknown, which perfectly describes the process of scientific discovery. * Why 'unsolved' is incorrect: This adjective describes a problem that has not been solved (e.g., an unsolved mystery), and it does not fit the context of discovering a correlation. * Why 'untitled' is incorrect: This adjective means lacking a title, which is unrelated to the context of scientific findings. * Why 'unfilled' is incorrect: This adjective means something that has not been completed or filled in, which does not match the meaning of revealing or discovering a correlation. The grammar tag 'Verb Meaning (Figurative Language)' is accurate because 'unearthed' is used figuratively to describe the act of revealing hidden information, similar to how 'dig up' might be used in a non-literal sense. Additionally, the verb is used in the passive voice ('have been unearthed'), which is common in scientific writing to emphasize the discovery rather than the discoverer. This passive construction is appropriate here because the focus is on the finding itself, not on who made the discovery.",
+          "candidate_grammar_tag": "Verb Meaning (Figurative Language)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is accurate, and all distractors are correctly analyzed with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Meaning (Figurative Language)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 774,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+            "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and clear semantic and collocation analysis."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation (Verb + Abstract No"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'tackle' because it is a strong and formal verb that means 'to deal with' or 'confront' a serious problem, such as the biodiversity crisis. \n\n* Why 'work' is incorrect: While 'work on' can be used in some contexts, it is too vague and less direct than 'tackle' when referring to addressing a major global issue. \n\n* Why 'figure' is incorrect: 'Figure' usually means to calculate or imagine something, not to take direct action against a crisis. It does not fit the context of addressing a serious problem. \n\n* Why 'redress' is incorrect: 'Redress' specifically refers to correcting an injustice or wrong, which is too narrow for the general concept of managing a global crisis. \n\nAdditionally, the grammar tag 'Collocation (Verb + Abstract Noun)' is accurate because 'tackle' is the best collocation with the abstract noun 'crisis' in this context. The other options do not form as natural or appropriate collocations with 'crisis'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate by all models that provided feedback. The explanation now explicitly addresses the collocation between the verb and the abstract noun 'crisis', and explains why each distractor is less suitable in this context.",
+          "candidate_explanation": "The correct answer is 'tackle' because it is a strong and formal verb that means 'to deal with' or 'confront' a serious problem, such as the biodiversity crisis. \n\n* Why 'work' is incorrect: While 'work on' can be used in some contexts, it is too vague and less direct than 'tackle' when referring to addressing a major global issue. \n\n* Why 'figure' is incorrect: 'Figure' usually means to calculate or imagine something, not to take direct action against a crisis. It does not fit the context of addressing a serious problem. \n\n* Why 'redress' is incorrect: 'Redress' specifically refers to correcting an injustice or wrong, which is too narrow for the general concept of managing a global crisis. \n\nAdditionally, the grammar tag 'Collocation (Verb + Abstract Noun)' is accurate because 'tackle' is the best collocation with the abstract noun 'crisis' in this context. The other options do not form as natural or appropriate collocations with 'crisis'.",
+          "candidate_grammar_tag": "Collocation (Verb + Abstract Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "The explanation is accurate and complete, with correct reasoning for each distractor and appropriate grammar labeling."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was refined to ensure clarity and completeness for B1-B2 learners, and all critiques were addressed.",
+          "candidate_explanation": "The correct answer is 'tackle' because it is a strong and formal verb that means 'to deal with' or 'confront' a serious problem, such as the biodiversity crisis. \n\n* Why 'work' is incorrect: While 'work on' can be used in some contexts, it is too vague and less direct than 'tackle' when referring to addressing a major global issue. 'Work' does not convey the urgency or active effort required to address a crisis. \n\n* Why 'figure' is incorrect: 'Figure' usually means to calculate or imagine something, not to take direct action against a crisis. It does not fit the context of addressing a serious problem. \n\n* Why 'redress' is incorrect: 'Redress' specifically refers to correcting an injustice or wrong, which is too narrow for the general concept of managing a global crisis. It implies a specific type of action that is not clearly present in the context. \n\nAdditionally, the grammar tag 'Collocation (Verb + Abstract Noun)' is accurate because 'tackle' is the best collocation with the abstract noun 'crisis' in this context. The other options do not form as natural or appropriate collocations with 'crisis'. The explanation also ensures clarity for B1-B2 English learners by using simple, direct language and bullet points for each distractor.",
+          "candidate_grammar_tag": "Collocation (Verb + Abstract Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly applied, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all valid concerns. The grammar tag was confirmed as accurate, and the explanation was structured to be accessible for B1-B2 learners. The timeout and JSON error were resolved by ensuring the response was properly formatted and semantically complete.",
+          "candidate_explanation": "The correct answer is 'tackle' because it is a strong and formal verb that means 'to deal with' or 'confront' a serious problem, such as the biodiversity crisis. It conveys the active and urgent effort required to address a major global issue.\n\n* Why 'work' is incorrect: While 'work on' can be used in some contexts, it is too vague and less direct than 'tackle' when referring to addressing a major global issue. 'Work' does not convey the urgency or active effort required to address a crisis.\n\n* Why 'figure' is incorrect: 'Figure' usually means to calculate or imagine something, not to take direct action against a crisis. It does not fit the context of addressing a serious problem.\n\n* Why 'redress' is incorrect: 'Redress' specifically refers to correcting an injustice or wrong, which is too narrow for the general concept of managing a global crisis. It implies a specific type of action that is not clearly present in the context.\n\nThe grammar tag 'Collocation (Verb + Abstract Noun)' is accurate because 'tackle' is the best collocation with the abstract noun 'crisis' in this context. The other options do not form as natural or appropriate collocations with 'crisis'. The explanation also ensures clarity for B1-B2 English learners by using simple, direct language and bullet points for each distractor.",
+          "candidate_grammar_tag": "Collocation (Verb + Abstract Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It clearly explains why 'tackle' is the best choice and why the other options are inappropriate in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Abstract Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 776,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Grammatical)",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammatical)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Grammatical)' is"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammatical)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'expected' because the sentence uses a passive structure: 'Extinctions are [verb] to continue.' In passive voice, the subject ('Extinctions') receives the action, and the verb must be in the past participle form (V3). This is because the sentence refers to a prediction made by scientific reports, not a decision or an ongoing action. \n\n* Why 'decided' is incorrect: Although it is a past participle, it implies a conscious choice was made by someone, which is not the context of scientific predictions. \n\n* Why 'expecting' is incorrect: This is a present participle. If we used this form, the sentence would require an auxiliary verb (e.g., *are expecting*) to be grammatically correct, but the passive structure demands V3. \n\n* Why 'projected' is incorrect: While it is also a past participle and relates to prediction, 'expected' is the more precise term used in this context when referring to scientific reports detailing anticipated trends.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag 'Passive Voice (Grammatical)' was retained as it is factually correct and consistent with the sentence structure. The explanation now explicitly clarifies the passive voice construction and the reasoning behind the correct answer and distractors.",
+          "candidate_explanation": "The correct answer is 'expected' because the sentence uses a passive structure: 'Extinctions are [verb] to continue.' In passive voice, the subject ('Extinctions') receives the action, and the verb must be in the past participle form (V3). This is because the sentence refers to a prediction made by scientific reports, not a decision or an ongoing action. \n\n* Why 'decided' is incorrect: Although it is a past participle, it implies a conscious choice was made by someone, which is not the context of scientific predictions. \n\n* Why 'expecting' is incorrect: This is a present participle. If we used this form, the sentence would require an auxiliary verb (e.g., *are expecting*) to be grammatically correct, but the passive structure demands V3. \n\n* Why 'projected' is incorrect: While it is also a past participle and relates to prediction, 'expected' is the more precise term used in this context when referring to scientific reports detailing anticipated trends.",
+          "candidate_grammar_tag": "Passive Voice (Grammatical)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'E"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The grammar tag was confirmed as 'Passive Voice (Grammatical)' based on the structure of the sentence and the use of a past participle. The timeout and JSON error were resolved by ensuring the explanation was fully formatted and semantically complete.",
+          "candidate_explanation": "The correct answer is 'expected' because the sentence uses a passive structure: 'Extinctions are [verb] to continue.' In passive voice, the subject ('Extinctions') receives the action, and the verb must be in the past participle form (V3). This is because the sentence refers to a prediction made by scientific reports, not a decision or an ongoing action. \n\n* Why 'decided' is incorrect: Although it is a past participle, it implies a conscious choice was made by someone, which is not the context of scientific predictions. \n\n* Why 'expecting' is incorrect: This is a present participle. If we used this form, the sentence would require an auxiliary verb (e.g., *are expecting*) to be grammatically correct, but the passive structure demands V3. \n\n* Why 'projected' is incorrect: While it is also a past participle and relates to prediction, 'expected' is the more precise term used in this context when referring to scientific reports detailing anticipated trends.",
+          "candidate_grammar_tag": "Passive Voice (Grammatical)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'E"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The JSON formatting issue was corrected, and the grammar tag was confirmed as accurate. All models agreed on the grammar tag and the correctness of 'expected' as the answer.",
+          "candidate_explanation": "The correct answer is 'expected' because the sentence uses a passive structure: 'Extinctions are [verb] to continue.' In passive voice, the subject ('Extinctions') receives the action, and the verb must be in the past participle form (V3). This is because the sentence refers to a prediction made by scientific reports, not a decision or an ongoing action. \n\n* Why 'decided' is incorrect: Although it is a past participle, it implies a conscious choice was made by someone, which is not the context of scientific predictions. \n\n* Why 'expecting' is incorrect: This is a present participle. If we used this form, the sentence would require an auxiliary verb (e.g., *are expecting*) to be grammatically correct, but the passive structure demands V3. \n\n* Why 'projected' is incorrect: While it is also a past participle and relates to prediction, 'expected' is the more precise term used in this context when referring to scientific reports detailing anticipated trends.",
+          "candidate_grammar_tag": "Passive Voice (Grammatical)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'E"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammatical)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
         }
       ]
     }

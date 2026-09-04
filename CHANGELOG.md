@@ -1,4 +1,21 @@
+## [V1.8.118] - 2026-09-04
+
+### Fixed & Enhanced
+- **Entrance Test Word-Level Playback & Acoustic Boundary Optimization**:
+  - **WebAudio Hardware-Accurate Playback Engine**: Overhauled word token playback in `public/crm-entrance-test-result.js` using WebAudio API (`AudioContext` + `AudioBufferSourceNode.start(0, offset, duration)`) to eliminate the 20-50ms pause latency overshoot inherent to `HTMLAudioElement` polling loops (`setInterval`).
+  - **Anti-Bleed Gain Envelope**: Integrated dynamic 15-20ms linear fade-out ramp (`GainNode.linearRampToValueAtTime`) at the end of word playback, cleanly attenuating co-articulatory trailing transitions.
+  - **Context-Aware Boundary Calibration**: Added dynamic calculation of `effectiveEndMs` based on inter-word gap (`gap < 100ms`), with aggressive safety pullback for contiguous words (25ms pad for fluent words, 35ms pad for mispronounced words) and a 75ms minimum audible duration guard.
+  - **Backend Azure Acoustic Calibration**: In `functions/src/entrance-test/asr-service.js`, calibrated raw Azure alignment intervals (`gap < 25ms`) to prevent phonetic bleeding into next word onsets.
+  - **Historical Test Word Backfill**: Implemented `scripts/entrance-test/backfill-all-aligned-words.js` to backfill missing word-level timestamps across historical entrance tests, plus an on-demand alignment endpoint (`POST /api/admin/entrance-tests/:testId/speaking/align-words`) and frontend sync action.
+  - **Empirical Acoustic Audit**: Ran comprehensive acoustic verification script (`scripts/entrance-test/full_audit.js`) analyzing 128 contiguous word pairs across 6 speaking questions from 2 candidate tests, verifying:
+    - 0/128 overshoot violations (100% stop before next word onset).
+    - Next-word acoustic bleed reduced from **70.9%** average down to **0.0%** (128/128 pairs with zero bleed).
+    - 0 duration violations below the 75ms audible threshold.
+- **RFIB Consensus & Audit Updates**:
+  - Updated RFIB debate reports and consensus records.
+
 ## [V1.8.117] - 2026-09-04
+
 
 ### Fixed & Enhanced
 - **CRM Admin Header Navigation & Scroll Stabilization**:

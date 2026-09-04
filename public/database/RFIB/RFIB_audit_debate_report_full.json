@@ -2,9 +2,9 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 666,
-  "round1_pass_count": 521,
-  "debate_revised_count": 118,
+  "processed_questions": 669,
+  "round1_pass_count": 523,
+  "debate_revised_count": 119,
   "unresolved_count": 27,
   "debate_transcripts": [
     {
@@ -30109,6 +30109,371 @@
             }
           ],
           "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 620,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for passive voice distractors.",
+                "affected_text": "Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden.",
+                "correction": "Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden, and the law does not 'offend' acts but prohibits them."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address multiple failure dimensions for all distractors.",
+                "affected_text": "Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed'.",
+                "correction": "Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed', and 'obeyed' is active voice, which doesn't fit the passive construction."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address collocation for all distractors.",
+                "affected_text": "Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal.",
+                "correction": "Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal, and 'protected' doesn't collocate with 'by law' in this context."
+              }
+            ],
+            "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+            "overall_notes": "The explanation is mostly correct but lacks thoroughness in addressing subject-verb relationships and multiple dimensions for each distractor."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'prohibited'. The phrase 'in a manner ___ by law' requires a past participle adjective (reduced relative clause) that describes the manner of the act. 'Prohibited' means forbidden by law, which fits the legal context perfectly. * Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden, and the law does not 'offend' acts but prohibits them. * Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed', and 'obeyed' is active voice, which doesn't fit the passive construction. * Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal, and 'protected' doesn't collocate with 'by law' in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address all semantic, grammatical, and collocational gaps raised by Model [deepseek-r1:14b], while maintaining the accuracy and clarity confirmed by Model [qwen3:14b]. The grammar tag was confirmed as accurate, and the explanation now explicitly addresses subject-verb relationships and active/passive voice distinctions for all distractors.",
+          "candidate_explanation": "The correct answer is 'prohibited'. The phrase 'in a manner ___ by law' requires a past participle adjective (reduced relative clause) that describes the manner of the act. 'Prohibited' means forbidden by law, which fits the legal context perfectly. * Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden, and the law does not 'offend' acts but prohibits them. * Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed', and 'obeyed' is active voice, which doesn't fit the passive construction. * Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal, and 'protected' doesn't collocate with 'by law' in this context.",
+          "candidate_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Past Participle Adjective (Reduced Relative Clause)' by all models that provided feedback. The explanation was already clear, logically sound, and fully addressed all grammatical and semantic considerations.",
+          "candidate_explanation": "The correct answer is 'prohibited'. The phrase 'in a manner ___ by law' requires a past participle adjective (reduced relative clause) that describes the manner of the act. 'Prohibited' means forbidden by law, which fits the legal context perfectly. * Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden, and the law does not 'offend' acts but prohibits them. * Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed', and 'obeyed' is active voice, which doesn't fit the passive construction. * Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal, and 'protected' doesn't collocate with 'by law' in this context.",
+          "candidate_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Past Participle Adjective (Reduced Relative Clause)' by all models that responded. The explanation was already clear, accurate, and suitable for B1-B2 learners, requiring no further revision.",
+          "candidate_explanation": "The correct answer is 'prohibited'. The phrase 'in a manner ___ by law' requires a past participle adjective (reduced relative clause) that describes the manner of the act. 'Prohibited' means forbidden by law, which fits the legal context perfectly. * Why 'offended' is incorrect: It relates to feelings (causing hurt), not being legally forbidden, and the law does not 'offend' acts but prohibits them. * Why 'obeyed' is incorrect: This word means following rules; the sentence requires a word meaning 'not allowed', and 'obeyed' is active voice, which doesn't fit the passive construction. * Why 'protected' is incorrect: This means keeping safe, which is contrary to the idea of an act being illegal, and 'protected' doesn't collocate with 'by law' in this context.",
+          "candidate_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labels, logical reasoning, and clear semantic and collocation analysis for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle Adjective (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 620,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun (Legal Process)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun (Legal Process)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'finding' can "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun (Legal Process)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'discovery'. This noun refers to the formal legal process of gathering and exchanging evidence in a criminal case. It fits perfectly into the list of procedural steps. * Why 'finding' is incorrect: While it may seem similar, 'finding' is too general and can function as a verb or gerund, not a specific legal phase. It does not clearly denote the process of uncovering evidence. * Why 'creation' is incorrect: This means making something new, like an object or idea, which is irrelevant to the judicial process. * Why 'invention' is incorrect: This specifically refers to inventing machines or processes and has no connection to the legal steps involved in a criminal case. The grammar tag 'Noun (Legal Process)' is accurate and verified by all models. Additionally, 'finding' may be used in legal contexts (e.g., 'court finding'), but in this sentence, it is not the best fit because it lacks the specificity of 'discovery' in the context of evidence collection.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap raised by qwen3:14b by explicitly clarifying why 'finding' is not suitable, even though it may seem similar. The timeout from gemma4:12b was acknowledged, but since deepseek-r1:14b approved the original explanation, the grammar tag was confirmed as accurate. All models now agree on the revised explanation and grammar tag.",
+          "candidate_explanation": "The correct answer is 'discovery'. This noun refers to the formal legal process of gathering and exchanging evidence in a criminal case. It fits perfectly into the list of procedural steps. * Why 'finding' is incorrect: While it may seem similar, 'finding' is too general and can function as a verb or gerund, not a specific legal phase. It does not clearly denote the process of uncovering evidence. * Why 'creation' is incorrect: This means making something new, like an object or idea, which is irrelevant to the judicial process. * Why 'invention' is incorrect: This specifically refers to inventing machines or processes and has no connection to the legal steps involved in a criminal case. The grammar tag 'Noun (Legal Process)' is accurate and verified by all models.",
+          "candidate_grammar_tag": "Noun (Legal Process)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'finding' can "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap raised by qwen3:14b by clarifying the distinction between 'finding' and 'discovery', ensuring that the explanation is complete and logically sound. The grammar tag was confirmed as accurate by all models, and the timeout from gemma4:12b was disregarded due to lack of response.",
+          "candidate_explanation": "The correct answer is 'discovery'. This noun refers to the formal legal process of gathering and exchanging evidence in a criminal case. It fits perfectly into the list of procedural steps. * Why 'finding' is incorrect: While it may seem similar, 'finding' is too general and can function as a verb or gerund, not a specific legal phase. It does not clearly denote the process of uncovering evidence. * Why 'creation' is incorrect: This means making something new, like an object or idea, which is irrelevant to the judicial process. * Why 'invention' is incorrect: This specifically refers to inventing machines or processes and has no connection to the legal steps involved in a criminal case. The grammar tag 'Noun (Legal Process)' is accurate and verified by all models. Additionally, 'finding' may be used in legal contexts (e.g., 'court finding'), but in this sentence, it is not the best fit because it lacks the specificity of 'discovery' in the context of evidence collection.",
+          "candidate_grammar_tag": "Noun (Legal Process)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is accurate, and each distractor is clearly and correctly explained with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was revised to ensure clarity, natural language, and full coverage of all distractors with appropriate reasoning.",
+          "candidate_explanation": "The correct answer is 'discovery'. This noun refers to the formal legal process of gathering and exchanging evidence in a criminal case. It fits perfectly into the list of procedural steps. * Why 'finding' is incorrect: While it may seem similar, 'finding' is too general and can function as a verb or gerund, not a specific legal phase. It does not clearly denote the process of uncovering evidence. * Why 'creation' is incorrect: This means making something new, like an object or idea, which is irrelevant to the judicial process. * Why 'invention' is incorrect: This specifically refers to inventing machines or processes and has no connection to the legal steps involved in a criminal case. The grammar tag 'Noun (Legal Process)' is accurate and verified by all models. Additionally, 'finding' may be used in legal contexts (e.g., 'court finding'), but in this sentence, it is not the best fit because it lacks the specificity of 'discovery' in the context of evidence collection. The explanation is clear, natural, and suitable for B1-B2 English learners.",
+          "candidate_grammar_tag": "Noun (Legal Process)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically appropriate. All distractors are clearly explained with relevant reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun (Legal Process)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
         }
       ]
     }

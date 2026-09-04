@@ -1,3 +1,17 @@
+## [V1.8.110] - 2026-09-04
+
+### Added & Enhanced
+- **RFIB 3-Model Local LLM Consensus & Debate Pipeline**:
+  - Executed 3-model debate pipeline (DeepSeek R1 14B, Qwen 2.5 14B, Gemma 2 9B) across Reading Fill in the Blanks question bank.
+  - Multi-round consensus approval verifying factual accuracy, grammar classification tags, distractor justification, and concise learner summaries.
+  - Updated verified dataset artifacts: `RFIB_audited_full.jsonl` and full debate telemetry report `RFIB_audit_debate_report_full.json`.
+- **CRM Books Collections & Tagging System Friction Removal**:
+  - **Quick-Tag Popover Keyboard Navigation**: Arrow up/down selection and Enter key match prioritization so existing tags take priority over new tag creation.
+  - **Manage & Create Tags Modal**: Comprehensive tag manager displaying existing tags with color dots, book usage counts, and cascading deletion confirmation.
+  - **Target Collection Selector on Deletion**: Replaced native browser alerts with custom modal allowing explicit selection of target destination collection when deleting a non-empty collection.
+  - **Bidirectional Tag Name/ID Filtering**: Enhanced `filterBooksByTags` to resolve both tag IDs and names via available tags across both AND and OR matching modes.
+  - **Sidebar & Card Polish**: Clickable tag chips on sidebar book cards to toggle filters, empty folder `+ Add Books` CTA button, and synchronized folder chevron collapse state.
+
 ## [V1.8.109] - 2026-09-04
 
 ### Added & Enhanced

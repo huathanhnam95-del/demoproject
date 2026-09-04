@@ -1926,5 +1926,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 932,2026-09-04,Implement 3-layout visualizer toggle and natural Vietnamese copy for Guided Essay Step 1,Done,2026-09-04
 933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,Done,2026-09-04
 934,2026-09-04,Redesign Read Aloud practice page with aligned shared shell grid focus width and side-rail Speech Coach,In Progress,
-935,2026-09-04,Release V1.8.114: Deploy CRM Books lost formatting fix and run-in headings to production hosting,In Progress,
+935,2026-09-04,Release V1.8.114: Deploy CRM Books lost formatting fix and run-in headings to production hosting,Done,2026-09-04
 

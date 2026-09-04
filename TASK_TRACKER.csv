@@ -1945,3 +1945,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 950,2026-09-04,Review debug and refactor Read Aloud and speaking suites and clean up test debt,Done,2026-09-04
 951,2026-09-04,Perform real browser test uploading Zoom teaching audio for student test and verify final analysis result,Done,2026-09-04
 952,2026-09-04,Audit related files and write UI UX improvement handoff document for teaching sessions post-analysis,Done,2026-09-04
+953,2026-09-04,Teaching Session Analysis Viewer UI UX optimization: structured report briefing fullscreen mode and diagram pan zoom,In Progress,
+954,2026-09-04,Release V1.8.120: Deploy Read Aloud UX redesign overhaul and speaking suite stabilization to production,Done,2026-09-04

@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 658,
-  "round1_pass_count": 515,
+  "processed_questions": 666,
+  "round1_pass_count": 521,
   "debate_revised_count": 118,
-  "unresolved_count": 25,
+  "unresolved_count": 27,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -29503,6 +29503,612 @@
             }
           ],
           "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 608,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Collocation (Meeting needs"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'cater' because it is a verb that collocates with the preposition 'to' and means to provide for or meet the needs of a group. The phrase 'goods and services that cater to human needs' fits perfectly in this context. * Why 'add' is incorrect: While 'add' relates to increase, it does not convey the meaning of meeting specific requirements or supplying goods. * Why 'design' is incorrect: This verb means to plan or create a blueprint, which is different from actually providing goods and services. * Why 'relate' is incorrect: This verb usually means to connect ideas or feel connected; it cannot be used here to mean supplying needs. Additionally, 'relate' is a passive verb and does not fit the active voice required in this sentence structure.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting issue and clarify the grammatical structure, particularly the active vs. passive voice for the distractor 'relate'. The grammar tag was confirmed as accurate and consistent across models.",
+          "candidate_explanation": "The correct answer is 'cater' because it is a verb that collocates with the preposition 'to' and means to provide for or meet the needs of a group. The phrase 'goods and services that cater to human needs' fits perfectly in this context. * Why 'add' is incorrect: While 'add' relates to increase, it does not convey the meaning of meeting specific requirements or supplying goods. * Why 'design' is incorrect: This verb means to plan or create a blueprint, which is different from actually providing goods and services. * Why 'relate' is incorrect: This verb usually means to connect ideas or feel connected; it cannot be used here to mean supplying needs. Additionally, 'relate' is a passive verb and does not fit the active voice required in this sentence structure.",
+          "candidate_grammar_tag": "Verb Collocation (Meeting needs)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Collocation (Meeting needs"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as correct by deepseek-r1:14b, and the explanation was made consistent with the active voice requirement, resolving all discrepancies.",
+          "candidate_explanation": "The correct answer is 'cater' because it is a verb that collocates with the preposition 'to' and means to provide for or meet the needs of a group. The phrase 'goods and services that cater to human needs' fits perfectly in this context. * Why 'add' is incorrect: While 'add' relates to increase, it does not convey the meaning of meeting specific requirements or supplying goods. * Why 'design' is incorrect: This verb means to plan or create a blueprint, which is different from actually providing goods and services. * Why 'relate' is incorrect: This verb usually means to connect ideas or feel connected; it cannot be used here to mean supplying needs. Additionally, 'relate' is a passive verb and does not fit the active voice required in this sentence structure.",
+          "candidate_grammar_tag": "Verb Collocation (Meeting needs)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Collocation (Meeting needs"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as accurate, and the explanation was structured to clearly differentiate between active and passive verb usage, satisfying all models.",
+          "candidate_explanation": "The correct answer is 'cater' because it is a verb that collocates with the preposition 'to' and means to provide for or meet the needs of a group. The phrase 'goods and services that cater to human needs' fits perfectly in this context. * Why 'add' is incorrect: While 'add' relates to increase, it does not convey the meaning of meeting specific requirements or supplying goods. * Why 'design' is incorrect: This verb means to plan or create a blueprint, which is different from actually providing goods and services. * Why 'relate' is incorrect: This verb usually means to connect ideas or feel connected; it cannot be used here to mean supplying needs. Additionally, 'relate' is a passive verb and does not fit the active voice required in this sentence structure.",
+          "candidate_grammar_tag": "Verb Collocation (Meeting needs)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Collocation (Meeting needs"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Meeting needs)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 608,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 't"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'occupied' because the sentence requires a passive voice construction: 'the type of work [PAST PARTICIPLE] by the majority.' This means that the work was taken up or carried out by the population. The subject 'work' logically receives the action of being 'occupied' because it is the type of work that is done by the population. \n\n* Why 'canopied' is incorrect: This word refers to covering something with a canopy and is unrelated to the concept of work being performed or taken up by people. It does not fit the semantic context of the sentence. \n\n* Why 'built' is incorrect: Using it here would imply that the work was constructed or created, which is not the intended meaning. The sentence is about work being performed, not about the work being built. \n\n* Why 'simplified' is incorrect: This means made easier, which is not appropriate in this context. The sentence is about the type of work that is done by the population, not about the work being made easier.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic logic of passive voice and explicitly explaining the subject-verb relationship. The grammar tag was confirmed as accurate, and the explanation was structured to meet the needs of B1-B2 English learners with clear bullet points.",
+          "candidate_explanation": "The correct answer is 'occupied' because the sentence requires a passive voice construction: 'the type of work [PAST PARTICIPLE] by the majority.' This means that the work was performed or taken up *by* the population. * Why 'canopied' is incorrect: This word relates to covering something with a canopy and has no connection to types of labor. * Why 'built' is incorrect: While it is a past participle, using it here would imply the work itself was constructed, rather than being performed by people. * Why 'simplified' is incorrect: This means made easier; the sentence requires a word describing the state or nature of the work that is done. The grammar tag 'Passive Voice / Past Participle Usage (Subject receives action)' is accurate because the subject 'work' receives the action of being 'occupied' by the population.",
+          "candidate_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address whether the subject 'work' can logically be the receiver of the action 'occupied'.",
+                  "affected_text": "This means that the work was performed or taken up by the population.",
+                  "correction": "This means that the work was taken up or carried out by the population. The subject 'work' logically receives the action of being 'occupied' because it is the type of work that is done by the population."
+                },
+                {
+                  "type": "reasoning_error",
+                  "description": "The explanation for 'canopied' is too vague and does not clearly explain why it is semantically inappropriate in this context.",
+                  "affected_text": "This word relates to covering something with a canopy and has no connection to types of labor.",
+                  "correction": "This word refers to covering something with a canopy and is unrelated to the concept of work being performed or taken up by people. It does not fit the semantic context of the sentence."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation for 'built' does not fully address the semantic inappropriateness of the word in the context of the sentence.",
+                  "affected_text": "using it here would imply the work itself was constructed, rather than being performed by people.",
+                  "correction": "using it here would imply that the work was constructed or created, which is not the intended meaning. The sentence is about work being performed, not about the work being built."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation for 'simplified' does not clearly address the semantic mismatch with the context of the sentence.",
+                  "affected_text": "This means made easier; the sentence requires a word describing the state or nature of the work that is done.",
+                  "correction": "This means made easier, which is not appropriate in this context. The sentence is about the type of work that is done by the population, not about the work being made easier."
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "The grammar tag is accurate, but the explanation lacks sufficient semantic and logical analysis for the distractors, particularly in addressing whether the subject can logically receive the action."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic and logical gaps pointed out by Model [qwen3:14b], ensuring clarity on why 'work' can logically receive the action of being 'occupied.' The grammar tag was confirmed as accurate, and the reasoning for each distractor was expanded to be more precise and contextually relevant, aligning with all models' expectations.",
+          "candidate_explanation": "The correct answer is 'occupied' because the sentence requires a passive voice construction: 'the type of work [PAST PARTICIPLE] by the majority.' This means that the work was taken up or carried out by the population. The subject 'work' logically receives the action of being 'occupied' because it is the type of work that is done by the population. \n\n* Why 'canopied' is incorrect: This word refers to covering something with a canopy and is unrelated to the concept of work being performed or taken up by people. It does not fit the semantic context of the sentence. \n\n* Why 'built' is incorrect: Using it here would imply that the work was constructed or created, which is not the intended meaning. The sentence is about work being performed, not about the work being built. \n\n* Why 'simplified' is incorrect: This means made easier, which is not appropriate in this context. The sentence is about the type of work that is done by the population, not about the work being made easier.",
+          "candidate_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'w"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic logic of the passive voice construction. The grammar tag was confirmed as accurate, and the explanation was structured to be accessible to B1-B2 English learners. The JSON formatting issue was resolved, and the timeout was not a concern for the final synthesis.",
+          "candidate_explanation": "The correct answer is 'occupied' because the sentence requires a passive voice construction: 'the type of work [PAST PARTICIPLE] by the majority.' This means that the work was taken up or carried out by the population. The subject 'work' logically receives the action of being 'occupied' because it is the type of work that is done by the population. \n\n* Why 'canopied' is incorrect: This word refers to covering something with a canopy and is unrelated to the concept of work being performed or taken up by people. It does not fit the semantic context of the sentence. \n\n* Why 'built' is incorrect: Using it here would imply that the work was constructed or created, which is not the intended meaning. The sentence is about work being performed, not about the work being built. \n\n* Why 'simplified' is incorrect: This means made easier, which is not appropriate in this context. The sentence is about the type of work that is done by the population, not about the work being made easier.",
+          "candidate_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'w"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice / Past Participle Usage (Subject receives action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 619,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether 'findings' is semantically appropriate in the context of the passage, despite being a close synonym to 'discoveries'.",
+                "affected_text": "Why 'findings' is incorrect: While similar, 'discoveries' carries more weight and precision when referring to major paradigm-shifting scientific breakthroughs.",
+                "correction": "Why 'findings' is incorrect: While similar, 'findings' is more general and less precise than 'discoveries' when referring to major paradigm-shifting scientific breakthroughs. 'Discoveries' implies a more significant and transformative revelation, which better fits the context of dark energy and dark matter."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address the collocation and semantic fit of 'discoveries' with the surrounding context, such as 'require a shift in our perception'.",
+                "affected_text": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs. This accurately describes the results of studying dark energy and dark matter.",
+                "correction": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs that have significant implications for our understanding of the universe. This accurately describes the results of studying dark energy and dark matter, which require a shift in our perception."
+              }
+            ],
+            "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+            "overall_notes": "The explanation is mostly correct but lacks completeness in addressing the semantic and collocational nuances of 'findings' and the broader context of the sentence."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs that have significant implications for our understanding of the universe. This accurately describes the results of studying dark energy and dark matter, which require a shift in our perception, similar to Copernicus’s revelation. * Why 'inventions' is incorrect: 'Inventions' are things created by humans, not natural cosmic phenomena. * Why 'creations' is incorrect: 'Creations' generally implies something made by a creator (often divine), which is too broad for scientific findings. * Why 'findings' is incorrect: While similar, 'findings' is more general and less precise than 'discoveries' when referring to major paradigm-shifting scientific breakthroughs. 'Discoveries' implies a more significant and transformative revelation, which better fits the context of dark energy and dark matter. Additionally, the use of 'discoveries' aligns with the active voice and subject-verb logic, emphasizing the role of scientists in uncovering these phenomena, rather than passively receiving them. The explanation also clarifies the semantic distinction between 'findings' and 'discoveries', ensuring that the most precise term is selected for the context of scientific breakthroughs.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocational nuances of 'findings' and to better align with the context of the sentence, particularly the phrase 'require a shift in our perception.' The grammar tag was confirmed as accurate and consistent across all models.",
+          "candidate_explanation": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs that have significant implications for our understanding of the universe. This accurately describes the results of studying dark energy and dark matter, which require a shift in our perception, similar to Copernicus’s revelation. * Why 'inventions' is incorrect: 'Inventions' are things created by humans, not natural cosmic phenomena. * Why 'creations' is incorrect: 'Creations' generally implies something made by a creator (often divine), which is too broad for scientific findings. * Why 'findings' is incorrect: While similar, 'findings' is more general and less precise than 'discoveries' when referring to major paradigm-shifting scientific breakthroughs. 'Discoveries' implies a more significant and transformative revelation, which better fits the context of dark energy and dark matter.",
+          "candidate_grammar_tag": "Noun Choice (Scientific Findings)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'findings' is "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic distinction between 'findings' and 'discoveries', clarify the subject-verb logic, and ensure clarity for B1-B2 learners. The grammar tag was confirmed as accurate and consistent across all models, with the only issue being a parsing error in one model’s response, which was resolved by refining the explanation’s structure.",
+          "candidate_explanation": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs that have significant implications for our understanding of the universe. This accurately describes the results of studying dark energy and dark matter, which require a shift in our perception, similar to Copernicus’s revelation. * Why 'inventions' is incorrect: 'Inventions' are things created by humans, not natural cosmic phenomena. * Why 'creations' is incorrect: 'Creations' generally implies something made by a creator (often divine), which is too broad for scientific findings. * Why 'findings' is incorrect: While similar, 'findings' is more general and less precise than 'discoveries' when referring to major paradigm-shifting scientific breakthroughs. 'Discoveries' implies a more significant and transformative revelation, which better fits the context of dark energy and dark matter. Additionally, the use of 'discoveries' aligns with the active voice and subject-verb logic, emphasizing the role of scientists in uncovering these phenomena, rather than passively receiving them.",
+          "candidate_grammar_tag": "Noun Choice (Scientific Findings)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'findings' is "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap raised by qwen3:14b by explicitly distinguishing between 'findings' and 'discoveries', and clarifying the context of scientific breakthroughs. The grammar tag was confirmed as 'Noun Choice (Scientific Findings)' based on consensus and the nature of the question. The timeout from gemma4:12b was not a substantive critique, and the explanation was already validated by deepseek-r1:14b.",
+          "candidate_explanation": "The correct answer is 'discoveries' because it refers to major scientific findings or breakthroughs that have significant implications for our understanding of the universe. This accurately describes the results of studying dark energy and dark matter, which require a shift in our perception, similar to Copernicus’s revelation. * Why 'inventions' is incorrect: 'Inventions' are things created by humans, not natural cosmic phenomena. * Why 'creations' is incorrect: 'Creations' generally implies something made by a creator (often divine), which is too broad for scientific findings. * Why 'findings' is incorrect: While similar, 'findings' is more general and less precise than 'discoveries' when referring to major paradigm-shifting scientific breakthroughs. 'Discoveries' implies a more significant and transformative revelation, which better fits the context of dark energy and dark matter. Additionally, the use of 'discoveries' aligns with the active voice and subject-verb logic, emphasizing the role of scientists in uncovering these phenomena, rather than passively receiving them. The explanation also clarifies the semantic distinction between 'findings' and 'discoveries', ensuring that the most precise term is selected for the context of scientific breakthroughs.",
+          "candidate_grammar_tag": "Noun Choice (Scientific Findings)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Scientific Findings)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
         }
       ]
     }

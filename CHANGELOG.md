@@ -1,3 +1,20 @@
+## [V1.8.109] - 2026-09-04
+
+### Added & Enhanced
+- **Write Essay Step 1 Pedagogical Flowchart & Strategy Overhaul**:
+  - **Part 1 Deconstructed Question Prompt Hero & Visual Flowchart**: Interactive clause highlights connected via directional arrows to cards dissecting role, target paragraph, development actions, and thought avoidance traps.
+  - **Part 2 Essay Type Card & Strategic Blueprint**: Automatic type detection (Opinion/Agree-Disagree, Problem-Solution, Advantages-Disadvantages, Both Views) with structured 4-paragraph PTE blueprint.
+  - **PTE Rubric Alignment & Natural Vietnamese**: Purged all occurrences of `"Task Response"` across the entire codebase and 287 question support packs; updated scoring criteria phrasing to `"Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."`.
+  - **2-Column Comparative Ideation**: Structured approach suggestions into side-by-side stance columns with clear bulleted points.
+  - **Bilingual In-App Ready Confirmation Modal**: Designed accessible confirmation modal with WCAG 2.1 Tab focus trap, Escape key handling, and seamless handoff into the writing phase.
+  - **Contextual Guidance & Avoidance Polishing**: Contextualized avoidance phrasing distinguishing quotes (e.g. Einstein) from general topic premises (e.g. Diet vs Exercise).
+- **Echo Forge Phase 3 & Stage Environments**:
+  - **Pure CSS Parallax Depth Scaffold**: Multi-layer environment with Sky, Far, Mid, Ground, Motes, and Foreground layers for Act I (The Resonant Hall), Act II (The Cinder Forge), and Act III (The Void Beneath).
+  - **Act Title Cards**: Animated cubic-bezier title card announcements with node modulation for Rest and Cache nodes.
+  - **Scene Controller & Combat FX**: Parallax camera shifts synchronized with player and warden combat animations.
+- **Describe Image Dashboard Polish**:
+  - Adjusted card description text to remove "within 40 seconds" for clean, aligned horizontal action buttons across tutorial cards.
+
 ## [V1.8.108] - 2026-09-04
 
 ### Added & Enhanced

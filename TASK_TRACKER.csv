@@ -1894,6 +1894,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 900,2026-09-04,Harden Hugging Face Whisper safety net with forced English language and Vietnamese hallucination filter,Done,2026-09-04
 901,2026-09-04,Write Essay Step 1 and ready modal: review debug and refactor with performance and a11y polish,Done,2026-09-04
 902,2026-09-04,Release V1.8.108: push to production with Gemini multi-key failover and hardened Whisper safety net,Done,2026-09-04
-903,2026-09-04,Echo Forge Phase 3: Stage environments pure CSS depth scaffold title cards and encounter scaling,In Progress,
+903,2026-09-04,Echo Forge Phase 3: Stage environments pure CSS depth scaffold title cards and encounter scaling,Done,2026-09-04
 904,2026-09-04,Diagnose and resolve localhost not running error by starting local dev server,Done,2026-09-04
-905,2026-09-04,Remove within 40 seconds from Describe Image card description for horizontal button alignment,In Progress,
+905,2026-09-04,Remove within 40 seconds from Describe Image card description for horizontal button alignment,Done,2026-09-04
+906,2026-09-04,Echo Forge Phase 3 and stages: review debug and refactor with scene lifecycle and visual polish,Done,2026-09-04
+907,2026-09-04,Promote Cloud Run V4 candidate to production live traffic,Done,2026-09-04
+908,2026-09-04,Diagnose and resolve localhost access issue and start dev server,In Progress,
+909,2026-09-04,Release V1.8.109: push to production with Write Essay Step 1 overhaul and Echo Forge Stage environments,In Progress,

@@ -348,17 +348,33 @@ export function getSuccessorIds(route, nodeId) {
 }
 
 /**
- * The one place fight difficulty is decided.
+ * The single place fight difficulty is decided.
  *
- * Today every fight and boss shares a single stat block, which is a deliberate
- * simplification: it keeps the baseline reproducible and leaves tuning for
- * later. When difficulty work begins, it begins here.
+ * Scales progressively across acts, with escalating minion and Warden boss stat blocks:
+ * - Act 0 (Resonant Hall): Minion 90 HP / 15 DMG; Boss (Echo Sentinel) 120 HP / 20 DMG
+ * - Act 1 (Cinder Forge):  Minion 110 HP / 18 DMG; Boss (Cinder Weaver) 140 HP / 22 DMG
+ * - Act 2 (Void Beneath):  Minion 130 HP / 20 DMG; Boss (Void Singer) 160 HP / 25 DMG
  *
  * @param {RouteNode} node
  * @returns {{ maxHp: number, baseDamage: number, moveSetId: string }}
  */
 export function nodeCombatProfile(node) {
-  return { maxHp: 120, baseDamage: 20, moveSetId: 'baseline' };
+  const act = Number.isInteger(node?.act) ? Math.max(0, Math.min(2, node.act)) : 0;
+  const isBoss = node?.type === 'boss';
+
+  if (act === 0) {
+    return isBoss
+      ? { maxHp: 120, baseDamage: 20, moveSetId: 'sentinel' }
+      : { maxHp: 90, baseDamage: 15, moveSetId: 'baseline' };
+  }
+  if (act === 1) {
+    return isBoss
+      ? { maxHp: 140, baseDamage: 22, moveSetId: 'cinder' }
+      : { maxHp: 110, baseDamage: 18, moveSetId: 'baseline' };
+  }
+  return isBoss
+    ? { maxHp: 160, baseDamage: 25, moveSetId: 'void' }
+    : { maxHp: 130, baseDamage: 20, moveSetId: 'baseline' };
 }
 
 /**

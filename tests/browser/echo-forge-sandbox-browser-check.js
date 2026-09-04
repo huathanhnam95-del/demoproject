@@ -183,7 +183,7 @@ async function installHooks(page, { includePromptHook = true } = {}) {
     await page.click('#record-btn');
     await page.click('#stop-btn');
     await page.waitForFunction(() => window.echoForgeSandbox.getState().turn === 'enemy');
-    assert.equal((await page.evaluate(() => window.echoForgeSandbox.getState())).enemy.hp, 90);
+    assert.equal((await page.evaluate(() => window.echoForgeSandbox.getState())).enemy.hp, 60);
     assert.match(await page.locator('#feedback-text').textContent(), /Score: 100/);
     assert.match(await page.locator('#feedback-text').textContent(), /30 damage/);
     assert.equal(await page.locator('#event-log li').first().getAttribute('data-event-type'), 'enemy.intent.presented');

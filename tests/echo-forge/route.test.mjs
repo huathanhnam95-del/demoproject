@@ -183,7 +183,7 @@ test('middle floors branch into two or three nodes', () => {
   assert.ok(sawTwo && sawThree, 'both branch widths occur across seeds');
 });
 
-test('all fights share one profile while difficulty tuning is deferred', () => {
+test('combat profile scales progressively by act and node type', () => {
   const route = generateRoute(0x4543484f);
   const combat = route.floors
     .flatMap((floor) => floor.nodes)
@@ -191,11 +191,14 @@ test('all fights share one profile while difficulty tuning is deferred', () => {
 
   assert.ok(combat.length > 0);
   for (const node of combat) {
-    assert.deepEqual(nodeCombatProfile(node), {
-      maxHp: 120,
-      baseDamage: 20,
-      moveSetId: 'baseline',
-    }, `${node.id} uses the shared stat block`);
+    const profile = nodeCombatProfile(node);
+    assert.ok(profile.maxHp >= 90 && profile.maxHp <= 160);
+    assert.ok(profile.baseDamage >= 15 && profile.baseDamage <= 25);
+    if (node.type === 'boss') {
+      assert.ok(['sentinel', 'cinder', 'void'].includes(profile.moveSetId));
+    } else {
+      assert.equal(profile.moveSetId, 'baseline');
+    }
   }
 });
 

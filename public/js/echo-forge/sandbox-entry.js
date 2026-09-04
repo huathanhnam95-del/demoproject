@@ -10,6 +10,7 @@ import { LEVEL_DESCRIPTORS, SUPPORT_DESCRIPTORS, describeActionCard, formatAnaly
 import { createInitialCombatState, reduceCombat, replayCombat } from './core/combat-reducer.js';
 import { createVisualPresenter } from './visual/presenter.js';
 import { createEchoForgeJuice } from './visual/juice.js';
+import { createEchoForgeScene } from './visual/scene.js';
 import { createEchoForgeSfx } from './audio/sfx.js';
 import { WARDENS, selectWardenMove, calculateMoveIncomingDamage } from './core/wardens.js';
 import { createInitialRunState, createResumedRunState, reduceRun, replayRun } from './core/run-reducer.js';
@@ -41,6 +42,7 @@ const parryCountdown = document.querySelector('#parry-countdown');
 const visualPresenter = createVisualPresenter({ root });
 let sfx = null;
 let juice = null;
+let scene = null;
 let wardenIndex = 0;
 let currentWarden = WARDENS[0];
 let currentMove = WARDENS[0].moves[0];
@@ -1199,6 +1201,7 @@ async function init() {
 
     sfx = createEchoForgeSfx({ enabled: true, testHooks: hooks });
     juice = createEchoForgeJuice({ root, sfx });
+    scene = createEchoForgeScene({ root, documentRef: document });
     const soundToggle = root.querySelector('#sound-toggle');
     if (soundToggle) {
       soundToggle.checked = sfx.isEnabled();
@@ -1263,6 +1266,9 @@ document.querySelector('#play-again-btn').addEventListener('click', () => { void
 document.querySelector('#change-settings-btn').addEventListener('click', () => {
   invalidateActiveOperation();
   stopParryCountdown();
+  scene?.reset?.();
+  if (document.body) delete document.body.dataset.stage;
+  if (root) delete root.dataset.stage;
   summaryNode.hidden = true;
   if (rewardSelectNode) rewardSelectNode.hidden = true;
   if (mapSelectNode) mapSelectNode.hidden = true;

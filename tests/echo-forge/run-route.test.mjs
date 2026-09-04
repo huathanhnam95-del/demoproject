@@ -37,7 +37,7 @@ function turnAction(combat) {
       useBurst: false,
       analysis: scored(100),
     }
-    : { type: 'RESOLVE_BLOCK', outcome: 'correct', enemyBaseDamage: 20 };
+    : { type: 'RESOLVE_PARRY', timing: 'timely', score: 100, analysis: scored(100), enemyBaseDamage: 20 };
 }
 
 /** Drives combat at the current node until it resolves. Returns the last events too. */

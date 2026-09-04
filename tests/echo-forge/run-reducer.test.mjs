@@ -42,7 +42,7 @@ test('START_RUN action initializes run and spawns first warden combat', () => {
 
   assert.equal(state.status, 'active');
   assert.ok(state.combat !== null);
-  assert.equal(state.combat.enemy.maxHp, 120); // Echo Sentinel
+  assert.equal(state.combat.enemy.maxHp, 90); // Act 0 opening minion
   assert.equal(state.wardenIndex, 0);
 
   assert.deepEqual(events.map((event) => event.type), [
@@ -216,7 +216,7 @@ test('replayRun deterministically reproduces complete run state', () => {
 
   const replayed = replayRun(initial, actions);
   assert.equal(replayed.state.status, 'active');
-  assert.equal(replayed.state.combat.enemy.hp, 90);
+  assert.equal(replayed.state.combat.enemy.hp, 60);
   assert.ok(replayed.events.length >= 2);
 });
 

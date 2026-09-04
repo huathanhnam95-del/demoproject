@@ -28,6 +28,7 @@ const CRM_BOOK_LINKS = 'crmBookLinks';
 const CRM_BOOK_COLLECTIONS = 'crmBookCollections';
 const CRM_BOOK_TAGS = 'crmBookTags';
 const CRM_BOOK_SHARES = 'crmBookShares';
+const CRM_TEACHING_SESSIONS = 'crmTeachingSessions';
 const ENTRANCE_TESTS = 'entranceTests';
 const ENTRANCE_TEST_LINK_RECOVERY = 'entranceTestLinkRecovery';
 
@@ -67,6 +68,7 @@ module.exports = {
     CRM_BOOK_COLLECTIONS,
     CRM_BOOK_TAGS,
     CRM_BOOK_SHARES,
+    CRM_TEACHING_SESSIONS,
     ENTRANCE_TESTS,
     ENTRANCE_TEST_LINK_RECOVERY,
     CLASSROOM_MODULES,

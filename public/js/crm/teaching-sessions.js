@@ -194,18 +194,280 @@ window.CrmTeachingSessions = (function () {
         return processedLines.join('<br>').replace(/<br><div/g, '<div').replace(/<\/div><br>/g, '</div>').replace(/<br><h/g, '<h').replace(/<br><blockquote/g, '<blockquote');
     }
 
-    async function renderMermaid(container, mermaidCode, diagramType) {
-        if (!container) return;
-        if (!mermaidCode || !mermaidCode.trim()) {
-            container.innerHTML = `<div style="text-align:center;color:#94a3b8;padding:32px;">No ${diagramType || 'diagram'} available for this session.</div>`;
-            return;
+    function classifySeverity(str) {
+        if (!str) return 'minor';
+        const s = String(str).toLowerCase();
+        if (s.includes('critical') || s.includes('nghiêm trọng') || s.includes('🔴') || s.includes('high') || s.includes('p1')) return 'critical';
+        if (s.includes('warning') || s.includes('trung bình') || s.includes('🟡') || s.includes('medium') || s.includes('p2') || s.includes('p3')) return 'warning';
+        return 'minor';
+    }
+
+    function classifyOutcome(str) {
+        if (!str) return 'practice';
+        const s = String(str).toLowerCase();
+        if (s.includes('mastered') || s.includes('nắm vững') || s.includes('thành thạo')) return 'mastered';
+        if (s.includes('partial') || s.includes('một phần') || s.includes('tiến bộ')) return 'partial';
+        return 'practice';
+    }
+
+    function stripLeadingEmoji(str) {
+        if (!str) return '';
+        return String(str).replace(/^[\p{Extended_Pictographic}\uFE0F\s\-:]+/u, '').trim();
+    }
+
+    function normalizeReport(session) {
+        if (!session) return null;
+        let rep = session.report;
+        if (typeof rep === 'string') {
+            try {
+                rep = JSON.parse(rep);
+            } catch (_) {
+                rep = null;
+            }
+        }
+        if (!rep || typeof rep !== 'object') return null;
+
+        const summary = rep.summary || {};
+        let whatTaught = rep.what_taught || rep.whatTaught || [];
+        let problems = rep.student_problems_and_solutions || rep.studentProblemsAndSolutions || [];
+        const nextBriefing = rep.next_lesson_briefing || rep.nextLessonBriefing || {};
+
+        // Legacy schema shim (from Python CLI logger where problems and solutions were separate arrays)
+        if ((!Array.isArray(problems) || problems.length === 0) && Array.isArray(rep.student_problems)) {
+            const solutionsMap = {};
+            (rep.teacher_solutions || []).forEach((sol) => {
+                const pid = sol.targeted_problem_id || sol.problem_id;
+                if (pid) solutionsMap[pid] = sol;
+            });
+            const responseMap = {};
+            (rep.student_response || []).forEach((res) => {
+                const pid = res.targeted_problem_id || res.problem_id;
+                if (pid) responseMap[pid] = res;
+            });
+
+            problems = rep.student_problems.map((prob) => {
+                const pid = prob.problem_id;
+                const sol = solutionsMap[pid] || {};
+                const resp = responseMap[pid] || {};
+                return {
+                    issue_summary: prob.issue_summary || prob.issue || '',
+                    student_error_quote: prob.student_error_quote || prob.quote || '',
+                    teacher_solution: sol.explanation_or_rule || sol.solution || '',
+                    severity: prob.severity || 'Medium',
+                    student_outcome: resp.final_verdict_or_score || resp.verdict || 'Needs Practice',
+                    outcome_evidence: resp.evidence_quote || ''
+                };
+            });
         }
 
-        if (!window.mermaid) {
-            container.innerHTML = `<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:12px;overflow:auto;">${escapeHtml(mermaidCode)}</pre>`;
-            return;
+        const hasSummary = Boolean(summary.core_topic || summary.quick_recap_60s);
+        const hasContent = (Array.isArray(whatTaught) && whatTaught.length > 0) || (Array.isArray(problems) && problems.length > 0);
+        if (!hasSummary && !hasContent) return null;
+
+        return {
+            summary: {
+                core_topic: summary.core_topic || session.title || 'Teaching Session',
+                quick_recap_60s: summary.quick_recap_60s || '',
+                student_readiness_level: summary.student_readiness_level || 'Good'
+            },
+            whatTaught: Array.isArray(whatTaught) ? whatTaught : [],
+            problems: Array.isArray(problems) ? problems : [],
+            nextBriefing: {
+                warmup_tasks: Array.isArray(nextBriefing.warmup_tasks) ? nextBriefing.warmup_tasks : [],
+                followup_error_focus: Array.isArray(nextBriefing.followup_error_focus) ? nextBriefing.followup_error_focus : [],
+                recommended_homework: Array.isArray(nextBriefing.recommended_homework) ? nextBriefing.recommended_homework : []
+            }
+        };
+    }
+
+    function renderBriefing(session) {
+        const norm = normalizeReport(session);
+        if (!norm) {
+            // Graceful fallback to legacy markdown parser
+            return `<div class="teaching-session-markdown-content">${convertMarkdownToHtml(session.markdownReport || '')}</div>`;
         }
 
+        const { summary, whatTaught, problems, nextBriefing } = norm;
+        const readinessClean = stripLeadingEmoji(summary.student_readiness_level);
+        const readinessClass = readinessClean.toLowerCase().includes('good') || readinessClean.toLowerCase().includes('khá') || readinessClean.toLowerCase().includes('tốt')
+            ? 'readiness-good'
+            : (readinessClean.toLowerCase().includes('weak') || readinessClean.toLowerCase().includes('yếu') ? 'readiness-warning' : '');
+
+        let html = `
+            <div class="crm-briefing-header">
+                <h1 class="crm-briefing-topic">${escapeHtml(summary.core_topic)}</h1>
+                <div class="crm-briefing-meta-row">
+                    <div class="crm-briefing-meta-items">
+                        ${session.focusSkill ? `<span class="crm-category-chip">${escapeHtml(session.focusSkill)}</span>` : ''}
+                        <span>${formatRelativeDate(session.sessionDate || session.createdAt)}</span>
+                        ${session.audioDurationSec ? `<span>· ${formatDuration(session.audioDurationSec)}</span>` : ''}
+                        ${session.teacherName ? `<span>· ${escapeHtml(session.teacherName)}</span>` : ''}
+                    </div>
+                    ${readinessClean ? `
+                        <div class="crm-briefing-readiness-chip ${readinessClass}">
+                            <span>Readiness:</span> <strong>${escapeHtml(readinessClean)}</strong>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        // 1. 60-Second Lead Recap
+        if (summary.quick_recap_60s) {
+            html += `
+                <div class="crm-briefing-recap-box">
+                    <p>${escapeHtml(summary.quick_recap_60s)}</p>
+                </div>
+            `;
+        }
+
+        // 2. What Was Taught (Đã giảng dạy) - Definition List
+        if (whatTaught.length > 0) {
+            html += `
+                <section class="crm-briefing-section">
+                    <div class="crm-briefing-section-heading">
+                        <span>Đã giảng dạy</span>
+                        <span class="crm-briefing-heading-count">${whatTaught.length} chủ điểm</span>
+                    </div>
+                    <div class="crm-knowledge-list">
+            `;
+            whatTaught.forEach((item) => {
+                const cat = stripLeadingEmoji(item.category || 'Core');
+                const topic = stripLeadingEmoji(item.topic || '');
+                const rule = item.key_rule || '';
+                const examples = Array.isArray(item.examples) ? item.examples : (item.examples ? [item.examples] : []);
+
+                html += `
+                    <div class="crm-knowledge-item">
+                        <div class="crm-knowledge-header">
+                            ${cat ? `<span class="crm-category-chip">${escapeHtml(cat)}</span>` : ''}
+                            <strong class="crm-knowledge-topic">${escapeHtml(topic)}</strong>
+                        </div>
+                        ${rule ? `<p class="crm-knowledge-rule">${escapeHtml(rule)}</p>` : ''}
+                        ${examples.length > 0 ? `
+                            <div class="crm-knowledge-examples">
+                                ${examples.map(ex => `<span class="crm-example-chip">${escapeHtml(ex)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            html += `
+                    </div>
+                </section>
+            `;
+        }
+
+        // 3. Problems and Solutions (Lỗi & Cách sửa)
+        if (problems.length > 0) {
+            const practiceCount = problems.filter(p => classifyOutcome(p.student_outcome) !== 'mastered').length;
+            const countLabel = practiceCount > 0 
+                ? `${problems.length} lỗi · ${practiceCount} cần củng cố`
+                : `${problems.length} lỗi đã xử lý`;
+
+            html += `
+                <section class="crm-briefing-section">
+                    <div class="crm-briefing-section-heading">
+                        <span>Lỗi & cách sửa</span>
+                        <span class="crm-briefing-heading-count">${countLabel}</span>
+                    </div>
+                    <div class="crm-problems-list">
+            `;
+
+            problems.forEach((prob) => {
+                const sev = classifySeverity(prob.severity);
+                const out = classifyOutcome(prob.student_outcome);
+                const issue = stripLeadingEmoji(prob.issue_summary || 'Phát hiện lỗi');
+                const outcomeLabel = stripLeadingEmoji(prob.student_outcome || (out === 'mastered' ? 'Đã nắm vững' : 'Cần củng cố'));
+
+                html += `
+                    <div class="crm-problem-row">
+                        <div class="crm-problem-header">
+                            <div class="crm-problem-title-wrap">
+                                <span class="crm-severity-dot severity-${sev}" title="Mức độ: ${sev}"></span>
+                                <strong class="crm-problem-title">${escapeHtml(issue)}</strong>
+                            </div>
+                            <span class="crm-outcome-chip outcome-${out}">${escapeHtml(outcomeLabel)}</span>
+                        </div>
+                        ${prob.student_error_quote ? `
+                            <blockquote class="crm-problem-quote">"${escapeHtml(prob.student_error_quote)}"</blockquote>
+                        ` : ''}
+                        ${prob.teacher_solution ? `
+                            <p class="crm-problem-solution"><strong>Giải pháp:</strong> ${escapeHtml(prob.teacher_solution)}</p>
+                        ` : ''}
+                        ${prob.outcome_evidence ? `
+                            <p class="crm-problem-evidence">${escapeHtml(prob.outcome_evidence)}</p>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </section>
+            `;
+        }
+
+        // 4. Next Lesson Plan (Buổi học tiếp theo)
+        const warmups = nextBriefing.warmup_tasks || [];
+        const followups = nextBriefing.followup_error_focus || [];
+        const homework = nextBriefing.recommended_homework || [];
+
+        if (warmups.length > 0 || followups.length > 0 || homework.length > 0) {
+            html += `
+                <section class="crm-briefing-section">
+                    <div class="crm-briefing-section-heading">
+                        <span>Buổi học tiếp theo</span>
+                    </div>
+            `;
+
+            if (warmups.length > 0) {
+                html += `
+                    <div class="crm-next-plan-block">
+                        <h4 class="crm-next-plan-subtitle">Warmup đầu giờ</h4>
+                        <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--crm-text-main);">
+                            ${warmups.map(w => `<li style="margin-bottom: 4px;">${escapeHtml(w)}</li>`).join('')}
+                        </ol>
+                    </div>
+                `;
+            }
+
+            if (followups.length > 0) {
+                html += `
+                    <div class="crm-next-plan-block">
+                        <h4 class="crm-next-plan-subtitle">Trọng tâm theo dõi</h4>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--crm-text-main);">
+                            ${followups.map(f => `<li style="margin-bottom: 4px;">${escapeHtml(f)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (homework.length > 0) {
+                html += `
+                    <div class="crm-next-plan-block">
+                        <h4 class="crm-next-plan-subtitle">Bài tập về nhà</h4>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            ${homework.map(h => `
+                                <div class="crm-checklist-item">
+                                    <span class="crm-checklist-box">☐</span>
+                                    <span>${escapeHtml(h)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `</section>`;
+        }
+
+        return html;
+    }
+
+    let isMermaidInitialized = false;
+    function ensureMermaidInitialized() {
+        if (!window.mermaid || isMermaidInitialized) return;
         try {
             window.mermaid.initialize({
                 startOnLoad: false,
@@ -213,10 +475,34 @@ window.CrmTeachingSessions = (function () {
                 securityLevel: 'loose',
                 mindmap: { useMaxWidth: true }
             });
+            isMermaidInitialized = true;
+        } catch (e) {
+            console.warn('[Teaching Sessions] Mermaid init warning:', e);
+        }
+    }
 
+    async function renderMermaid(container, mermaidCode, diagramType) {
+        if (!container) return;
+        if (!mermaidCode || !mermaidCode.trim()) {
+            container.innerHTML = `<div style="text-align:center;color:var(--crm-text-muted);padding:32px;">No ${diagramType || 'diagram'} available for this session.</div>`;
+            return;
+        }
+
+        if (!window.mermaid) {
+            container.innerHTML = `<pre style="background:var(--crm-surface-dim);padding:12px;border-radius:6px;font-size:12px;overflow:auto;">${escapeHtml(mermaidCode)}</pre>`;
+            return;
+        }
+
+        ensureMermaidInitialized();
+
+        try {
             const uniqueId = `mermaid-${diagramType || 'diag'}-${Date.now()}`;
             const { svg } = await window.mermaid.render(uniqueId, mermaidCode);
-            container.innerHTML = svg;
+            container.innerHTML = `<div class="diagram-transform-wrapper">${svg}</div>`;
+            const stageEl = container.closest('.crm-diagram-stage');
+            if (stageEl) {
+                attachDiagramPanZoom(stageEl);
+            }
         } catch (err) {
             console.error('[Teaching Sessions] Mermaid render error:', err);
             container.innerHTML = `
@@ -225,6 +511,188 @@ window.CrmTeachingSessions = (function () {
                     <pre style="background:#ffffff;border:1px solid #fde68a;padding:8px;border-radius:4px;font-size:11px;margin-top:8px;overflow:auto;">${escapeHtml(mermaidCode)}</pre>
                 </div>
             `;
+        }
+    }
+
+    function attachDiagramPanZoom(stageEl) {
+        if (!stageEl) return;
+        if (typeof stageEl._panZoomCleanup === 'function') {
+            stageEl._panZoomCleanup();
+            stageEl._panZoomCleanup = null;
+        }
+
+        const container = stageEl.querySelector('.mermaid-diagram-container');
+        const svg = container ? container.querySelector('svg') : null;
+        if (!container || !svg) return;
+
+        let wrapper = container.querySelector('.diagram-transform-wrapper');
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'diagram-transform-wrapper';
+            wrapper.appendChild(svg);
+            container.appendChild(wrapper);
+        }
+
+        let scale = 1.0;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        const zoomResetBtn = stageEl.querySelector('.btn-diagram-zoom-reset');
+        const zoomInBtn = stageEl.querySelector('.btn-diagram-zoom-in');
+        const zoomOutBtn = stageEl.querySelector('.btn-diagram-zoom-out');
+        const downloadBtn = stageEl.querySelector('.btn-diagram-download-svg');
+
+        function updateTransform() {
+            wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            if (zoomResetBtn) {
+                zoomResetBtn.textContent = `${Math.round(scale * 100)}%`;
+            }
+        }
+
+        function fitToView() {
+            const stageRect = stageEl.getBoundingClientRect();
+            const bbox = (typeof svg.getBBox === 'function') ? svg.getBBox() : { width: svg.clientWidth || 800, height: svg.clientHeight || 500 };
+            if (bbox.width > 0 && bbox.height > 0 && stageRect.width > 0 && stageRect.height > 0) {
+                const availW = stageRect.width - 60;
+                const availH = stageRect.height - 60;
+                const scaleW = availW / bbox.width;
+                const scaleH = availH / bbox.height;
+                scale = Math.min(Math.max(Math.min(scaleW, scaleH), 0.35), 1.5);
+            } else {
+                scale = 1.0;
+            }
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        const onZoomIn = () => {
+            scale = Math.min(scale * 1.25, 4.0);
+            updateTransform();
+        };
+
+        const onZoomOut = () => {
+            scale = Math.max(scale / 1.25, 0.3);
+            updateTransform();
+        };
+
+        const onReset = () => {
+            if (scale === 1.0 && translateX === 0 && translateY === 0) {
+                fitToView();
+            } else {
+                scale = 1.0;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+            }
+        };
+
+        const onDownload = () => {
+            downloadDiagramSvg(stageEl);
+        };
+
+        const onWheel = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    scale = Math.min(scale * 1.15, 4.0);
+                } else {
+                    scale = Math.max(scale / 1.15, 0.3);
+                }
+                updateTransform();
+            }
+        };
+
+        const onPointerDown = (e) => {
+            if (e.target.closest('.crm-diagram-toolbar')) return;
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            container.classList.add('is-dragging');
+            if (container.setPointerCapture && e.pointerId) {
+                try { container.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        };
+
+        const onPointerUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            container.classList.remove('is-dragging');
+            if (container.releasePointerCapture && e.pointerId) {
+                try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+            }
+        };
+
+        zoomInBtn?.addEventListener('click', onZoomIn);
+        zoomOutBtn?.addEventListener('click', onZoomOut);
+        zoomResetBtn?.addEventListener('click', onReset);
+        downloadBtn?.addEventListener('click', onDownload);
+        container.addEventListener('wheel', onWheel, { passive: false });
+        container.addEventListener('pointerdown', onPointerDown);
+        container.addEventListener('pointermove', onPointerMove);
+        container.addEventListener('pointerup', onPointerUp);
+        container.addEventListener('pointercancel', onPointerUp);
+
+        // Initial fit
+        fitToView();
+
+        stageEl._panZoomCleanup = () => {
+            zoomInBtn?.removeEventListener('click', onZoomIn);
+            zoomOutBtn?.removeEventListener('click', onZoomOut);
+            zoomResetBtn?.removeEventListener('click', onReset);
+            downloadBtn?.removeEventListener('click', onDownload);
+            container.removeEventListener('wheel', onWheel);
+            container.removeEventListener('pointerdown', onPointerDown);
+            container.removeEventListener('pointermove', onPointerMove);
+            container.removeEventListener('pointerup', onPointerUp);
+            container.removeEventListener('pointercancel', onPointerUp);
+        };
+    }
+
+    function downloadDiagramSvg(stageEl, filename) {
+        if (!stageEl) return;
+        const svg = stageEl.querySelector('svg');
+        if (!svg) {
+            alert('No diagram found to export.');
+            return;
+        }
+        try {
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svg);
+            if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            if (!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
+                source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+
+            const title = (currentSession && currentSession.title) ? currentSession.title.toLowerCase().replace(/[^a-z0-9_-]/gi, '_') : 'teaching_session';
+            const pane = stageEl.closest('.teaching-session-view-pane');
+            const viewType = pane && pane.id.includes('flowchart') ? 'flowchart' : 'mindmap';
+            const name = filename || `${title}_${viewType}.svg`;
+
+            const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('[Teaching Sessions] Export diagram SVG error:', err);
+            alert('Could not export SVG diagram: ' + err.message);
         }
     }
 
@@ -403,6 +871,33 @@ window.CrmTeachingSessions = (function () {
         }
     }
 
+    function toggleFullscreen(forceState) {
+        const modalEl = document.getElementById('crm-teaching-session-modal');
+        if (!modalEl) return;
+        const isFs = typeof forceState === 'boolean'
+            ? forceState
+            : !modalEl.classList.contains('is-fullscreen');
+
+        modalEl.classList.toggle('is-fullscreen', isFs);
+        try {
+            localStorage.setItem('crm.teachingSession.fullscreen', isFs ? 'true' : 'false');
+        } catch (_) {}
+
+        // Update breadcrumb
+        const breadcrumbEl = document.getElementById('teaching-session-breadcrumb');
+        if (breadcrumbEl && currentSession) {
+            const badge = document.getElementById('crm-student-id-badge');
+            const studentBadgeText = badge ? badge.textContent.trim() : (currentStudentId || 'Student');
+            breadcrumbEl.textContent = `CRM › Students › ${studentBadgeText.replace(/^ID:\s*/i, '')} › Sessions › ${currentSession.title || 'Session'}`;
+        }
+
+        // Refit active diagram if visible
+        const activeStage = modalEl.querySelector('.teaching-session-view-pane:not([style*="display: none"]) .crm-diagram-stage');
+        if (activeStage) {
+            attachDiagramPanZoom(activeStage);
+        }
+    }
+
     async function openSessionDetail(sessionId) {
         try {
             const headers = await getAuthHeaders();
@@ -424,11 +919,20 @@ window.CrmTeachingSessions = (function () {
             const mindmapContainer = document.getElementById('teaching-session-mindmap-container');
             const flowchartContainer = document.getElementById('teaching-session-flowchart-container');
             const audioPlayer = document.getElementById('teaching-session-audio-player');
+            const breadcrumbEl = document.getElementById('teaching-session-breadcrumb');
 
-            if (titleEl) titleEl.textContent = session.title || 'Teaching Session Report';
+            if (titleEl) titleEl.textContent = session.title || 'Teaching Session';
             if (statusEl) {
-                statusEl.textContent = session.status || 'analyzed';
-                statusEl.className = `crm-badge ${session.status === 'analyzed' ? 'crm-badge-success' : 'crm-badge-warning'}`;
+                const rawStatus = session.status || 'analyzed';
+                statusEl.textContent = stripLeadingEmoji(rawStatus);
+                statusEl.className = `crm-session-status-badge status-${rawStatus.toLowerCase()}`;
+            }
+
+            // Breadcrumb
+            if (breadcrumbEl) {
+                const badge = document.getElementById('crm-student-id-badge');
+                const studentBadgeText = badge ? badge.textContent.trim() : (currentStudentId || 'Student');
+                breadcrumbEl.textContent = `CRM › Students › ${studentBadgeText.replace(/^ID:\s*/i, '')} › Sessions › ${session.title || 'Session'}`;
             }
 
             // Raw JSON
@@ -436,35 +940,54 @@ window.CrmTeachingSessions = (function () {
                 rawJsonEl.textContent = JSON.stringify(session, null, 2);
             }
 
-            // Audio Player
+            // Audio Player & Tab Visibility
+            const audioTab = document.getElementById('tab-teaching-session-audio');
             if (audioPlayer) {
                 if (session.audioUrl) {
                     audioPlayer.src = session.audioUrl;
-                    audioPlayer.style.display = 'block';
+                    if (audioTab) audioTab.style.display = 'inline-block';
+                    const audioMeta = document.getElementById('teaching-session-audio-meta');
+                    if (audioMeta) {
+                        audioMeta.textContent = session.audioDurationSec 
+                            ? `Recording duration: ${formatDuration(session.audioDurationSec)}`
+                            : 'Full recording playback';
+                    }
                 } else {
                     audioPlayer.removeAttribute('src');
-                    audioPlayer.style.display = 'none';
+                    if (audioTab) audioTab.style.display = 'none';
                 }
             }
 
-            // Markdown Report HTML
+            // Structured Briefing HTML (Default)
             if (reportHtmlEl) {
-                reportHtmlEl.innerHTML = convertMarkdownToHtml(session.markdownReport || (session.report ? JSON.stringify(session.report, null, 2) : ''));
+                reportHtmlEl.innerHTML = renderBriefing(session);
             }
 
-            // Render Mindmap & Flowchart
-            switchSessionView('mindmap');
-            if (mindmapContainer) {
-                renderMermaid(mindmapContainer, session.mermaidMindmap, 'mindmap');
-            }
-            if (flowchartContainer) {
-                renderMermaid(flowchartContainer, session.mermaidFlowchart, 'flowchart');
-            }
+            // Set default view to 'report' (Briefing)
+            switchSessionView('report');
 
             // Open modal
             if (modalEl) {
                 modalEl.style.display = 'flex';
                 modalEl.setAttribute('aria-hidden', 'false');
+            }
+
+            // Check saved fullscreen preference
+            try {
+                const savedFs = localStorage.getItem('crm.teachingSession.fullscreen');
+                if (savedFs === 'true') {
+                    toggleFullscreen(true);
+                } else {
+                    toggleFullscreen(false);
+                }
+            } catch (_) {}
+
+            // Render Mindmap & Flowchart
+            if (mindmapContainer && session.mermaidMindmap) {
+                await renderMermaid(mindmapContainer, session.mermaidMindmap, 'mindmap');
+            }
+            if (flowchartContainer && session.mermaidFlowchart) {
+                await renderMermaid(flowchartContainer, session.mermaidFlowchart, 'flowchart');
             }
 
         } catch (err) {
@@ -480,6 +1003,15 @@ window.CrmTeachingSessions = (function () {
         document.querySelectorAll('.teaching-session-view-pane').forEach((pane) => {
             pane.style.display = pane.id === `teaching-session-view-${viewName}` ? 'block' : 'none';
         });
+
+        // If switching to a diagram, fit/refit pan-zoom
+        if (viewName === 'mindmap' || viewName === 'flowchart') {
+            const activePane = document.getElementById(`teaching-session-view-${viewName}`);
+            const stage = activePane ? activePane.querySelector('.crm-diagram-stage') : null;
+            if (stage) {
+                attachDiagramPanZoom(stage);
+            }
+        }
     }
 
     async function deleteSession(sessionId) {
@@ -592,7 +1124,7 @@ window.CrmTeachingSessions = (function () {
             const createRes = await resp.json();
 
             if (!createRes.success) {
-                throw new Error(createRes.error || 'Failed to create session');
+                throw new Error(createRes.message || createRes.error || 'Failed to create session');
             }
 
             if (progressLabel) progressLabel.textContent = 'Upload complete! AI analysis in progress...';
@@ -747,6 +1279,28 @@ window.CrmTeachingSessions = (function () {
                 }
             });
         }
+
+        // Fullscreen Mode Toggle Button
+        const fsBtn = document.getElementById('btn-teaching-session-fullscreen');
+        if (fsBtn) {
+            fsBtn.addEventListener('click', () => {
+                toggleFullscreen();
+            });
+        }
+
+        // Two-Stage Escape Key Handling: 1st exits fullscreen, 2nd closes modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const modalEl = document.getElementById('crm-teaching-session-modal');
+            if (!modalEl || modalEl.style.display === 'none') return;
+
+            if (modalEl.classList.contains('is-fullscreen')) {
+                e.stopPropagation();
+                toggleFullscreen(false);
+            } else {
+                closeModal();
+            }
+        });
     }
 
     // Auto-init on DOM ready or immediate if ready
@@ -765,6 +1319,9 @@ window.CrmTeachingSessions = (function () {
         deleteSession,
         triggerAnalysis,
         renderMermaid,
-        convertMarkdownToHtml
+        convertMarkdownToHtml,
+        normalizeReport,
+        renderBriefing,
+        toggleFullscreen
     };
 })();

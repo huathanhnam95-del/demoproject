@@ -85,6 +85,8 @@
     let guidedStep1PipelineStep = 1;
     let guidedStep1StationTab = 'blueprint';
     let guidedStep1SelectedChips = new Set(['agree-0', 'agree-1', 'disagree-0']);
+    let guidedLanguageKitTab = 'all'; // 'all' | 'vocab' | 'collo' | 'grammar' | 'cohesion'
+    let guidedPlanExpandedNode = null; // node index: 0 (intro), 1 (body1), 2 (body2), 3 (concl)
 
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
@@ -406,14 +408,35 @@
         if (el.guidedRail) el.guidedRail.scrollTop = 0;
     }
 
+    function getScaffoldSentences(levelData, activePlan) {
+        if (!levelData || !levelData.scaffolds) return [];
+        if (Array.isArray(levelData.scaffolds)) return levelData.scaffolds;
+        const candidates = [
+            activePlan?.variantId,
+            activePlan?.stance,
+            activePlan?.id,
+            guidedSelectedVariantId,
+            'agree',
+            'disagree',
+            'default'
+        ].filter(Boolean);
+        for (const key of candidates) {
+            if (Array.isArray(levelData.scaffolds[key]) && levelData.scaffolds[key].length > 0) {
+                return levelData.scaffolds[key];
+            }
+        }
+        const firstKey = Object.keys(levelData.scaffolds)[0];
+        return firstKey && Array.isArray(levelData.scaffolds[firstKey]) ? levelData.scaffolds[firstKey] : [];
+    }
+
     /**
      * Synthesize user's constructed sentences and outline into a clean scaffolding draft.
      */
     function compileUserScaffoldDraft(levelData) {
         if (!guidedPack || !levelData) return null;
         const common = guidedPack.common || {};
-        const activePlan = (levelData.plans || []).find(p => p.variantId === guidedSelectedVariantId) || levelData.plans?.[0] || {};
-        const variantId = activePlan.variantId || 'agree';
+        const activePlan = (levelData.plans || []).find(p => (p.variantId || p.stance || p.id) === guidedSelectedVariantId) || levelData.plans?.[0] || {};
+        const variantId = activePlan.variantId || activePlan.stance || 'agree';
         const [body1Point, body2Point] = getSelectedPointsForPlan(activePlan, levelData, common);
         const stance = String(activePlan.stance || variantId).toLowerCase();
         const isDisagree = stance.includes('disagree');
@@ -428,7 +451,7 @@
         const cleanP2 = cleanArgumentClaim(body2Point || 'holistic learning approaches provide essential life skills');
 
         // Check user-assembled sentences from Step 5
-        const sentences = levelData.scaffolds?.[variantId] || [];
+        const sentences = getScaffoldSentences(levelData, activePlan);
         const introUser = [];
         const body1User = [];
         const body2User = [];
@@ -1800,6 +1823,39 @@
                 if (guidedExpandedColloViIds.has(term)) guidedExpandedColloViIds.delete(term);
                 else guidedExpandedColloViIds.add(term);
                 renderGuidedSupport();
+            }
+        } else if (action === 'set-language-kit-tab') {
+            guidedLanguageKitTab = target.dataset.tab || 'all';
+            renderGuidedSupport();
+        } else if (action === 'toggle-plan-node') {
+            const nodeIdx = parseInt(target.dataset.nodeIndex, 10);
+            guidedPlanExpandedNode = (guidedPlanExpandedNode === nodeIdx ? null : nodeIdx);
+            renderGuidedSupport();
+        } else if (action === 'transfer-sentence') {
+            const sId = target.dataset.sentenceId;
+            const levelData = guidedPack?.levels?.[guidedLevel] || {};
+            const activePlan = (levelData.plans || []).find(p => (p.variantId || p.stance || p.id) === guidedSelectedVariantId) || levelData.plans?.[0] || {};
+            const allSentences = getScaffoldSentences(levelData, activePlan);
+            const sentence = allSentences.find(s => (s.sentenceId || `sent_${s.index || 1}`) === sId);
+            const inputEl = el.essayInput || document.getElementById('essay-input');
+            if (sentence && inputEl) {
+                const assembled = getUserAssembledSentence(sentence, sId, true);
+                const textToInsert = (assembled && !assembled.includes('_____'))
+                    ? assembled
+                    : getAuthenticModelSentence(sentence, currentEntry, activePlan, sentence.index);
+                if (textToInsert) {
+                    const curVal = (inputEl.value || '').trim();
+                    inputEl.value = curVal ? `${curVal} ${textToInsert}` : textToInsert;
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputEl.focus();
+                    const origText = target.innerHTML;
+                    target.innerHTML = '✓ ' + guidedText('Added!', 'Đã thêm vào bài!');
+                    target.classList.add('is-added');
+                    setTimeout(() => {
+                        target.innerHTML = origText;
+                        target.classList.remove('is-added');
+                    }, 1800);
+                }
             }
         } else if (action === 'set-depth') {
             guidedHintDepth = Math.min(3, Math.max(1, Number(target.dataset.depth) || 1));
@@ -4362,6 +4418,78 @@
         };
     }
 
+    function getVocabEssayTip(item, currentEntry, activePlan) {
+        const term = String(item.term || '').trim().toLowerCase();
+        const tips = {
+            'memorization': 'Dùng từ này khi viết Thân bài 1 để nhấn mạnh: việc chỉ học thuộc lòng máy móc sẽ khiến học sinh mau quên và mất đi tư duy phản biện thực tế.',
+            'rote learning': 'Dùng trong câu nêu nguyên nhân: lối học vẹt kìm hãm sự sáng tạo tự nhiên và khiến học sinh lúng túng khi gặp các bài toán giải quyết vấn đề mới.',
+            'curricula': 'Dùng khi đưa ra giải pháp: các trường học cần đổi mới chương trình đào tạo linh hoạt hơn để kích thích học sinh tự do khám phá.',
+            'curriculum': 'Dùng khi đưa ra giải pháp: chương trình học hiện đại cần cân bằng giữa lý thuyết trên lớp và kỹ năng thực tiễn ngoài đời sống.',
+            'motivation': 'Dùng khi phân tích tâm lý người học: động lực tự thân (intrinsic motivation) là yếu tố quyết định giúp duy trì sự tiến bộ lâu dài.',
+            'natural development': 'Dùng để bảo vệ quan điểm tự do học tập: việc gò ép khuôn mẫu quá sớm sẽ cản trở sự phát triển năng khiếu tự nhiên của người học.',
+            'critical thinking': 'Dùng làm luận điểm cốt lõi: giáo dục thế kỷ 21 không chỉ dừng lại ở truyền thụ kiến thức mà phải rèn luyện năng lực phản biện.',
+            'autonomous': 'Dùng khi đề cao việc tự học: khả năng học tập tự chủ giúp học sinh chủ động theo đuổi đam mê mà không phụ thuộc vào thi cử.',
+            'collaborative skills': 'Dùng ở Thân bài 2 khi bảo vệ trường học: môi trường lớp học giúp rèn luyện kỹ năng làm việc nhóm và giao tiếp liên cá nhân.',
+            'foundational': 'Dùng để khẳng định vai trò trường học: cung cấp kiến thức nền tảng vững chắc trước khi người học có thể tự do sáng tạo.',
+            'technological advancement': 'Dùng khi phân tích bối cảnh: công nghệ ngày nay giúp việc tiếp cận kho tàng tri thức trở nên thuận tiện và đa dạng hơn.',
+            'academic achievement': 'Dùng để phản biện: điểm số trên lớp không phải là thước đo duy nhất cho năng lực toàn diện của một cá nhân.'
+        };
+        if (tips[term]) return tips[term];
+        const gloss = item.viGloss || item.vi || item.meaningVi || '';
+        if (gloss) {
+            return `Dùng từ này trong câu phân tích hoặc dẫn chứng về "${gloss}". Hãy kết hợp với các từ nối như "Specifically" hoặc "For instance" để câu văn tự nhiên và thuyết phục.`;
+        }
+        return 'Dùng từ này trong câu chủ đề hoặc câu giải thích để nâng cao vốn từ vựng học thuật cho bài viết.';
+    }
+
+    function getColloEssayTip(item, currentEntry, activePlan) {
+        const term = String(item.term || '').trim().toLowerCase();
+        const tips = {
+            'have limitations': 'Dùng để mở đầu phản biện: nêu rõ rằng phương pháp hoặc chính sách hiện tại vẫn còn những điểm hạn chế nhất định.',
+            'impose limitations': 'Dùng khi phân tích nguyên nhân: các quy định khắt khe đang vô tình áp đặt rào cản lên sự tự do đổi mới.',
+            'limited access': 'Dùng trong câu dẫn chứng thực tế: học sinh ở vùng sâu vùng xa còn gặp nhiều bất lợi trong việc tiếp cận công nghệ.',
+            'limited capacity': 'Dùng để nêu lý do khách quan: các cơ sở giáo dục có nguồn lực giới hạn nên khó có thể đáp ứng riêng cho từng cá nhân.',
+            'active participant': 'Dùng để miêu tả người học tích cực: chủ động tham gia thảo luận và đóng góp ý kiến thay vì chỉ ngồi nghe thụ động.',
+            'active participation': 'Dùng làm luận điểm: sự tham gia tích cực vào các hoạt động tập thể giúp bồi dưỡng kỹ năng lãnh đạo.',
+            'binary system': 'Dùng để phê phán cách đánh giá cứng nhắc: chỉ phân loại đúng/sai nhị phân sẽ bỏ sót nhiều tiềm năng sáng tạo.',
+            'critical thinking': 'Dùng khi khẳng định mục tiêu giáo dục: rèn luyện tư duy phản biện để biết tự đặt câu hỏi và giải quyết vấn đề.',
+            'curriculum design': 'Dùng khi đưa ra khuyến nghị: thiết kế chương trình học cần cập nhật liên tục theo nhu cầu thực tế của xã hội.',
+            'academic achievement': 'Dùng để lập luận cân bằng: thành tích học tập tốt là cần thiết nhưng không nên đánh đổi sức khỏe tinh thần.',
+            'higher education': 'Dùng để nhấn mạnh tầm quan trọng của bậc đại học: đóng vai trò bàn đạp thúc đẩy sự phát triển nghề nghiệp.',
+            'technological advancement': 'Dùng để phân tích xu hướng: sự phát triển công nghệ mở ra cơ hội học tập suốt đời cho mọi người.'
+        };
+        if (tips[term]) return tips[term];
+        return 'Dùng cụm từ này để diễn đạt tự nhiên theo chuẩn văn phong học thuật, giúp nâng điểm tiêu chí Từ vựng (Lexical Resource).';
+    }
+
+    function generateNaturalConclusion(plan, currentPrompt, thesisText, level) {
+        const stance = String(plan?.stance || plan?.variantId || 'agree').toLowerCase();
+        const isDisagree = stance.includes('disagree');
+        const promptText = String(currentPrompt || currentEntry?.prompt || '').trim();
+
+        if (promptText.includes('interferes with my learning') || promptText.includes('Einstein')) {
+            if (level === 'a2_b1') {
+                return isDisagree
+                    ? "In conclusion, while schools have some flaws, formal education is still essential for students to build useful life skills."
+                    : "In conclusion, schools should give students more freedom to explore their own interests and enjoy true learning.";
+            } else if (level === 'c1') {
+                return isDisagree
+                    ? "In conclusion, despite the inevitable constraints of standardized curricula, institutional education remains an indispensable foundation for intellectual rigor and social cohesion."
+                    : "In conclusion, educational institutions must urgently evolve to cultivate self-directed intellectual passion rather than perpetuating rigid pedagogical compliance.";
+            } else {
+                return isDisagree
+                    ? "In conclusion, having analyzed both perspectives, I maintain that reforming curriculum flexibility is far more beneficial than abandoning structured formal schooling."
+                    : "In conclusion, having evaluated both sides, I firmly reaffirm that education systems must adapt to nurture students' intrinsic curiosity and creative freedom.";
+            }
+        }
+
+        const topic = (currentEntry?.verifiedPrimaryTopic || 'this subject').toLowerCase();
+        if (isDisagree) {
+            return `In conclusion, having examined both viewpoints, I reaffirm that ${topic} brings vital advantages that warrant continued support and refinement.`;
+        }
+        return `In conclusion, while acknowledging alternative concerns, I maintain that addressing the key challenges of ${topic} is crucial for sustainable progress.`;
+    }
+
     /**
      * Highlights target terms in example sentences for both English and Vietnamese.
      * Supports markdown **term**, inflections (plurals, -ed, -ing), and phrase matching.
@@ -4378,32 +4506,39 @@
         // 2. Identify candidate terms to highlight
         const candidates = [];
         if (lang === 'en') {
-            if (targetTerm) candidates.push(targetTerm.trim());
+            if (targetTerm) {
+                const cleanTerm = targetTerm.trim();
+                candidates.push(cleanTerm);
+                if (cleanTerm.endsWith('s') && cleanTerm.length > 3) candidates.push(cleanTerm.slice(0, -1));
+            }
         } else {
-            // Vietnamese candidate: extract clean phrase from candidate or gloss
+            // Vietnamese candidate: extract clean phrases from fallbackCandidate and targetTerm
             if (fallbackCandidate) {
-                const rawParts = fallbackCandidate.split(/[/(;:]/)[0].trim();
-                if (rawParts.length >= 2) candidates.push(rawParts);
-                // Also extract head phrase if combined with common linkers
-                const headPhrase = rawParts.split(/\s+(?:thông qua|bằng cách|để|thay vì|như|với)\s+/i)[0].trim();
-                if (headPhrase && headPhrase !== rawParts && headPhrase.length >= 3) {
-                    candidates.unshift(headPhrase);
-                }
+                const clean = fallbackCandidate.replace(/[[\]().,;:]/g, ' ').trim();
+                const rawParts = clean.split(/\s+(?:hoặc|hay|tức|nghĩa là|\/)\s+/i);
+                rawParts.forEach(p => {
+                    const t = p.trim();
+                    if (t.length >= 2 && !candidates.includes(t)) candidates.push(t);
+                });
             }
             if (targetTerm && !candidates.includes(targetTerm.trim())) {
                 candidates.push(targetTerm.trim());
             }
         }
 
-        // 3. Search and wrap candidates safely
+        // Sort candidates by descending length so longer multi-word phrases match first
+        candidates.sort((a, b) => b.length - a.length);
+
+        // 3. Search and wrap candidates safely without regex lastIndex bugs
         for (const cand of candidates) {
             if (!cand || cand.length < 2) continue;
             const escaped = cand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const pattern = lang === 'en'
-                ? new RegExp('(\\b' + escaped + '(?:s|es|ed|ing)?\\b)', 'gi')
+                ? new RegExp('\\b(' + escaped + '(?:s|es|ed|ing)?)\\b', 'gi')
                 : new RegExp('(' + escaped + ')', 'gi');
 
             if (pattern.test(text)) {
+                pattern.lastIndex = 0;
                 return text.replace(pattern, '<strong class="essay-term-hl">$1</strong>');
             }
         }
@@ -4418,64 +4553,70 @@
         const activePlan = (levelData.plans || []).find(p => (p.variantId || p.id || p.stance) === guidedSelectedVariantId) || levelData.plans?.[0] || {};
         const [body1Point, body2Point] = getSelectedPointsForPlan(activePlan, levelData, common);
 
-        // 1. Core Vocabulary with Level-Adapted Examples & <?> Vietnamese Toggle
+        // 1. Core Vocabulary with Level-Adapted Examples & <?> Vietnamese Toggle (Flat toolbelt tiles, zero box-in-box)
         const vocabulary = kit.vocabulary || [];
-        const vocabHtml = vocabulary.length ? `<div class="essay-guided-target-grid">${vocabulary.map(item => {
+        const vocabHtml = vocabulary.length ? `<div class="essay-guided-toolbelt-grid">${vocabulary.map(item => {
             const selected = guidedSelectedTargetIds.includes(item.term);
             const full = !selected && guidedSelectedTargetIds.length >= GUIDED_MAX_TARGETS;
             const vocabInfo = getVocabContextExample(item, currentEntry, guidedPack, guidedLevel);
             const isViOpen = guidedExpandedVocabViIds.has(item.term);
             const enExampleHtml = highlightSentenceTerms(vocabInfo.en, item.term, 'en');
             const viExampleHtml = highlightSentenceTerms(vocabInfo.vi, item.term, 'vi', item.viGloss || item.vi || item.meaningVi || '');
-            return `<div class="essay-guided-target-card${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" role="button" tabindex="0">
-                <div class="essay-guided-target-head">
-                    <div class="essay-guided-target-title-wrap">
-                        <span class="essay-guided-target-checkbox">${selected ? '✓' : '+'}</span>
-                        <strong class="essay-guided-target-term">${escapeHtml(item.term)}</strong>
-                        <span class="essay-guided-target-gloss">${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
-                    </div>
-                    <button type="button" class="essay-guided-vocab-vi-toggle${isViOpen ? ' is-open' : ''}" data-guided-action="toggle-vocab-vi" data-term="${escapeHtml(item.term)}" title="${isViOpen ? guidedText('Hide explanation', 'Thu gọn giải thích') : guidedText('Show explanation', 'Xem giải thích chi tiết & ngữ cảnh')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
-                        <span aria-hidden="true">?</span>
+            const writingTip = getVocabEssayTip(item, currentEntry, activePlan);
+            return `<div class="essay-guided-toolbelt-card${selected ? ' is-selected' : ''}">
+                <div class="essay-guided-toolbelt-head">
+                    <button type="button" class="essay-guided-toolbelt-select-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(item.term)}" title="${selected ? guidedText('Remove target', 'Bỏ chọn mục tiêu') : guidedText('Select target', 'Chọn làm mục tiêu')}">
+                        <span class="essay-guided-toolbelt-checkbox">${selected ? '✓' : '+'}</span>
+                        <strong class="essay-guided-toolbelt-term">${escapeHtml(item.term)}</strong>
+                        <span class="essay-guided-toolbelt-gloss">${escapeHtml(bilingual(item, 'enGloss', 'viGloss'))}</span>
+                    </button>
+                    <button type="button" class="essay-guided-toolbelt-tip-toggle${isViOpen ? ' is-open' : ''}" data-guided-action="toggle-vocab-vi" data-term="${escapeHtml(item.term)}" title="${isViOpen ? guidedText('Hide writing tip', 'Thu gọn mẹo viết') : guidedText('Show writing tip', 'Xem mẹo triển khai vào bài')}">
+                        <span>?</span>
                     </button>
                 </div>
-                <div class="essay-guided-vocab-example">
-                    <span class="essay-guided-vocab-example-label">${guidedText('In an essay', 'Ví dụ trong bài')}</span>
-                    <p class="essay-guided-vocab-example-text">"${enExampleHtml}"</p>
+                <div class="essay-guided-toolbelt-bilingual">
+                    <p class="essay-guided-toolbelt-en">&ldquo;${enExampleHtml}&rdquo;</p>
+                    <p class="essay-guided-toolbelt-vi">&ldquo;${viExampleHtml}&rdquo;</p>
                 </div>
                 ${isViOpen ? `
-                <div class="essay-guided-vocab-vi-box">
-                    <span class="essay-guided-vocab-vi-label">${guidedText('Vietnamese', 'Nghĩa & ngữ cảnh')}</span>
-                    <p class="essay-guided-vocab-vi-text">${viExampleHtml}</p>
+                <div class="essay-guided-toolbelt-tip-box">
+                    <span class="essay-guided-toolbelt-tip-label">💡 ${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
+                    <p class="essay-guided-toolbelt-tip-text">${escapeHtml(writingTip)}</p>
                 </div>` : ''}
             </div>`;
         }).join('')}</div>` : '';
 
-        // 2. Collocations with Contextual Usage & <?> Vietnamese Toggle
+        // 2. Collocations with Contextual Usage & <?> Vietnamese Toggle (Flat toolbelt tiles, zero box-in-box)
         const collocations = kit.collocations || [];
-        const colloHtml = collocations.length ? `<div class="essay-guided-collo-grid">${collocations.map(item => {
+        const colloHtml = collocations.length ? `<div class="essay-guided-toolbelt-grid">${collocations.map(item => {
             const info = getCollocationInfo(item, currentEntry, guidedLevel);
             const isColloViOpen = guidedExpandedColloViIds.has(item.term);
             const colloEnHtml = highlightSentenceTerms(info.example, item.term, 'en');
             const colloViHtml = highlightSentenceTerms(info.exampleVi, item.term, 'vi', info.viCandidate || info.meaning || item.viGloss || '');
-            return `<div class="essay-guided-collo-card">
-                <div class="essay-guided-collo-head">
-                    <div class="essay-guided-collo-title-wrap">
-                        <strong class="essay-guided-collo-term">${escapeHtml(item.term)}</strong>
-                        <span class="essay-guided-collo-meaning">${escapeHtml(info.meaning)}</span>
+            const writingTip = getColloEssayTip(item, currentEntry, activePlan);
+            return `<div class="essay-guided-toolbelt-card">
+                <div class="essay-guided-toolbelt-head">
+                    <div class="essay-guided-toolbelt-title-wrap">
+                        <strong class="essay-guided-toolbelt-term">${escapeHtml(item.term)}</strong>
+                        <span class="essay-guided-toolbelt-meaning">${escapeHtml(info.meaning)}</span>
                     </div>
-                    <button type="button" class="essay-guided-vocab-vi-toggle${isColloViOpen ? ' is-open' : ''}" data-guided-action="toggle-collo-vi" data-term="${escapeHtml(item.term)}" title="${isColloViOpen ? guidedText('Hide explanation', 'Thu gọn giải thích') : guidedText('Show explanation', 'Xem bản dịch tiếng Việt')}" aria-label="${guidedText('Show explanation', 'Xem giải thích')}">
-                        <span aria-hidden="true">?</span>
+                    <button type="button" class="essay-guided-toolbelt-tip-toggle${isColloViOpen ? ' is-open' : ''}" data-guided-action="toggle-collo-vi" data-term="${escapeHtml(item.term)}" title="${isColloViOpen ? guidedText('Hide writing tip', 'Thu gọn mẹo viết') : guidedText('Show writing tip', 'Xem mẹo triển khai vào bài')}">
+                        <span>?</span>
                     </button>
                 </div>
-                <p class="essay-guided-collo-example"><em>&ldquo;${colloEnHtml}&rdquo;</em></p>
+                <div class="essay-guided-toolbelt-bilingual">
+                    <p class="essay-guided-toolbelt-en">&ldquo;${colloEnHtml}&rdquo;</p>
+                    <p class="essay-guided-toolbelt-vi">&ldquo;${colloViHtml}&rdquo;</p>
+                </div>
                 ${isColloViOpen ? `
-                <div class="essay-guided-collo-vi-box">
-                    <p class="essay-guided-collo-vi-text"><em>&ldquo;${colloViHtml}&rdquo;</em></p>
+                <div class="essay-guided-toolbelt-tip-box">
+                    <span class="essay-guided-toolbelt-tip-label">💡 ${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
+                    <p class="essay-guided-toolbelt-tip-text">${escapeHtml(writingTip)}</p>
                 </div>` : ''}
             </div>`;
         }).join('')}</div>` : '';
 
-        // 3. Sentence Pattern Workbench with Slot-Filling Demo
+        // 3. Sentence Pattern Workbench with Visual Formula Tokens
         const isDisagree = String(activePlan.stance || activePlan.variantId).toLowerCase().includes('disagree');
         const promptText = String(currentEntry?.prompt || '').toLowerCase();
         let appliedPattern = '';
@@ -4506,8 +4647,8 @@
             <div class="essay-guided-pattern-purpose">
                 <strong>${guidedText('Advanced Academic Sentence Models', 'Các mẫu câu phức chuẩn học thuật')}</strong>
                 <span>${guidedText(
-                    'PTE awards maximum Grammatical Range for using diverse complex sentence structures. Choose from the models below:',
-                    'PTE chấm điểm tối đa tiêu chí Ngữ pháp khi bài viết sử dụng đa dạng các cấu trúc câu phức. Chọn mẫu câu phù hợp bên dưới:'
+                    'Using diverse complex sentence structures earns high Grammatical Range scores. Choose from the models below:',
+                    'Sử dụng đa dạng cấu trúc câu phức giúp đạt điểm tối đa tiêu chí Ngữ pháp. Tham khảo công thức bên dưới:'
                 )}</span>
             </div>
             <div class="essay-guided-pattern-list">
@@ -4517,9 +4658,12 @@
                         <span class="essay-guided-pattern-badge">${escapeHtml(g.name || `Model ${gIdx + 1}`)}</span>
                         ${g.purpose ? `<p class="essay-guided-pattern-purpose-note">${escapeHtml(g.purpose)}</p>` : ''}
                     </div>
-                    <div class="essay-guided-pattern-row">
-                        <span class="essay-guided-pattern-sublabel">${guidedText('Formula', 'Công thức')}</span>
-                        <code class="essay-guided-pattern-code">${escapeHtml(g.pattern || '')}</code>
+                    <div class="essay-guided-formula-tokens">
+                        <span class="essay-guided-formula-token is-concession">[Mệnh đề nhượng bộ X]</span>
+                        <span class="essay-guided-formula-plus">+</span>
+                        <span class="essay-guided-formula-token is-stance">[Lập trường của bạn Y]</span>
+                        <span class="essay-guided-formula-plus">+</span>
+                        <span class="essay-guided-formula-token is-reason">[Lý do cốt lõi Z]</span>
                     </div>
                     <div class="essay-guided-pattern-row">
                         <span class="essay-guided-pattern-sublabel">${guidedText('Applied example', 'Ví dụ áp dụng')}</span>
@@ -4534,52 +4678,36 @@
             </div>
         </div>`;
 
-        // 4. Cohesive Linking Words by Essay Writing Stages (Expanded Options)
+        // 4. Cohesive Linking Words (4 Writing Stages)
         const linkingStages = [
             {
                 badgeEn: 'Stage 1 · Body 1 Opener',
-                badgeVi: 'Bước 1 · Mở đoạn Thân bài 1',
-                words: ['To begin with', 'First and foremost', 'Principally', 'In the first place', 'At the outset'],
+                badgeVi: 'Chặng 1 · Mở Thân bài 1',
+                words: ['To begin with', 'First and foremost', 'Principally', 'In the first place'],
                 purposeEn: 'Introduce your first selected main point in Body 1.',
                 purposeVi: 'Mở đầu Thân bài 1 và giới thiệu Luận điểm 1 đã chọn.',
                 example: `To begin with, ${asClause(body1Point || 'rigid educational frameworks frequently suppress curiosity')}.`
             },
             {
                 badgeEn: 'Stage 2 · Elaboration & Mechanism',
-                badgeVi: 'Bước 2 · Phân tích lý do / cơ chế',
-                words: ['Specifically', 'In other words', 'More precisely', 'To elucidate', 'Namely'],
+                badgeVi: 'Chặng 2 · Phân tích lý do & Cơ chế',
+                words: ['Specifically', 'In other words', 'More precisely', 'To elucidate'],
                 purposeEn: 'Explain why or how this phenomenon occurs in detail.',
-                purposeVi: 'Giải thích chi tiết tại sao hiện tượng/vấn đề này lại xảy ra.',
+                purposeVi: 'Giải thích chi tiết tại sao hiện tượng hoặc vấn đề này lại xảy ra.',
                 example: 'Specifically, when schools enforce rote memorization, students lose intrinsic motivation to explore independently.'
             },
             {
-                badgeEn: 'Stage 3 · Real-World Evidence',
-                badgeVi: 'Bước 3 · Đưa dẫn chứng thực tế',
-                words: ['For instance', 'A clear illustration is', 'To exemplify', 'Case in point', 'Evidence indicates that'],
-                purposeEn: 'Provide concrete empirical evidence or examples.',
-                purposeVi: 'Cung cấp dẫn chứng hoặc ví dụ thực tế minh họa cho luận điểm.',
-                example: 'For instance, students who focus only on standardized tests often struggle with practical creative problem solving.'
-            },
-            {
-                badgeEn: 'Stage 4 · Consequence & Impact',
-                badgeVi: 'Bước 4 · Nêu hệ quả & Kết nối',
-                words: ['Consequently', 'As a result', 'It follows that', 'Inevitably', 'Accordingly'],
-                purposeEn: 'State the direct consequence connecting back to your thesis.',
-                purposeVi: 'Nêu hệ quả trực tiếp và liên kết chặt chẽ trở lại luận đề.',
-                example: 'Consequently, excessive curriculum rigidity diminishes natural intellectual curiosity.'
-            },
-            {
-                badgeEn: 'Stage 5 · Body 2 Transition',
-                badgeVi: 'Bước 5 · Chuyển tiếp sang Thân bài 2',
-                words: ['Furthermore', 'In addition', 'Equally important', 'On the other hand', 'Conversely', 'By contrast'],
+                badgeEn: 'Stage 3 · Body 2 Transition',
+                badgeVi: 'Chặng 3 · Chuyển tiếp Thân bài 2',
+                words: ['Furthermore', 'In addition', 'Equally important', 'On the other hand', 'Conversely'],
                 purposeEn: 'Transition smoothly to your second main argument in Body 2.',
                 purposeVi: 'Chuyển ý mượt mà sang Luận điểm 2 ở Thân bài 2.',
                 example: `Furthermore, ${asClause(body2Point || 'structured schooling provides essential collaborative skills')}.`
             },
             {
-                badgeEn: 'Stage 6 · Conclusion Synthesis',
-                badgeVi: 'Bước 6 · Khẳng định lại ở Kết bài',
-                words: ['In conclusion', 'To recapitulate', 'Ultimately', 'In the final analysis', 'All things considered'],
+                badgeEn: 'Stage 4 · Conclusion Synthesis',
+                badgeVi: 'Chặng 4 · Khẳng định lại ở Kết bài',
+                words: ['In conclusion', 'To recapitulate', 'Ultimately', 'In the final analysis'],
                 purposeEn: 'Reaffirm your position with finality in the conclusion.',
                 purposeVi: 'Tóm lược và khẳng định lại lập trường ở đoạn kết bài.',
                 example: 'In conclusion, having examined both viewpoints, I firmly maintain that a balanced educational approach is vital.'
@@ -4590,8 +4718,8 @@
         <div class="essay-guided-cohesion-stages">
             <p class="essay-guided-cohesion-intro">
                 ${guidedText(
-                    'Transitions in the order you will need them, tied to the main points you chose.',
-                    'Từ nối xếp theo đúng thứ tự bạn sẽ cần, gắn với luận điểm bạn đã chọn.'
+                    'Transitions organized by the 4 essay writing stages, tied directly to your selected points.',
+                    'Hệ thống từ nối theo 4 chặng viết bài, gắn liền với các luận điểm bạn đã chọn.'
                 )}
             </p>
             <div class="essay-guided-cohesion-cards">
@@ -4613,16 +4741,77 @@
         </div>`;
 
         const used = guidedSelectedTargetIds.length;
-        return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Select vocabulary with level-adapted examples, contextual collocations, and paragraph-by-paragraph cohesive linking words.', 'Chọn từ vựng theo trình độ, các cụm từ học thuật và hệ thống từ nối liên kết trực tiếp với dàn bài của bạn.'))}
-            <div class="essay-guided-meter${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
-                <span>${guidedText('Targets you commit to using', 'Mục tiêu bạn cam kết sẽ dùng')}${guidedHelpBtn('targets')}</span>
+        const toolbeltNavHtml = `
+        <div class="essay-guided-toolbelt-nav" role="tablist" aria-label="${guidedText('Language kit categories', 'Danh mục đồ nghề')}">
+            <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'all' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="all">
+                ${guidedText('All Tools', 'Tất cả')}
+            </button>
+            <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'vocab' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="vocab">
+                🎯 ${guidedText('Vocabulary', 'Từ vựng cốt lõi')} (${vocabulary.length})
+            </button>
+            <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'collo' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="collo">
+                ✨ ${guidedText('Collocations', 'Cụm từ ghi điểm')} (${collocations.length})
+            </button>
+            <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'grammar' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="grammar">
+                📐 ${guidedText('Sentence Models', 'Mẫu câu chuẩn')} (${grammarPatterns.length})
+            </button>
+            <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'cohesion' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="cohesion">
+                🔗 ${guidedText('Roadmap', 'Từ nối 4 chặng')} (${linkingStages.length})
+            </button>
+        </div>`;
+
+        const commitMeterHtml = `
+        <div class="essay-guided-meter-bar${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
+            <div class="essay-guided-meter-info">
+                <span>🎯 ${guidedText('Target words to use in your essay:', 'Từ khóa bạn chọn dùng vào bài viết:')}</span>
                 <strong>${used}/${GUIDED_MAX_TARGETS}</strong>
             </div>
-            ${guidedGroup('vocabulary', guidedText('Core Vocabulary with Context Examples', 'Từ vựng cốt lõi & Ví dụ theo trình độ'), vocabHtml, { count: vocabulary.length, defaultOpen: true })}
-            ${guidedGroup('collocations', guidedText('Collocations & Academic Usage', 'Cụm từ đi kèm & Cách dùng học thuật'), colloHtml, { count: collocations.length, defaultOpen: true })}
-            ${guidedGroup('grammar', guidedText('Complex sentence pattern', 'Mẫu câu phức'), grammarHtml, { count: 1, defaultOpen: true, help: 'pattern' })}
-            ${guidedGroup('cohesion', guidedText('Linking words, in order', 'Từ nối theo thứ tự'), cohesionHtml, { count: linkingStages.length, defaultOpen: true, help: 'cohesion' })}
+            <div class="essay-guided-meter-track">
+                <div class="essay-guided-meter-fill" style="width: ${Math.min(100, (used / GUIDED_MAX_TARGETS) * 100)}%;"></div>
+            </div>
+        </div>`;
+
+        let sectionsHtml = '';
+        if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'vocab') {
+            sectionsHtml += `<div class="essay-guided-toolbelt-section">
+                <div class="essay-guided-toolbelt-sec-head">
+                    <strong>🎯 ${guidedText('Core Vocabulary', 'Từ vựng cốt lõi theo trình độ')}</strong>
+                    <span>${guidedText('Select up to 3 words to commit to using in your essay draft.', 'Chọn tối đa 3 từ tâm đắc để cam kết sử dụng vào bài viết.')}</span>
+                </div>
+                ${vocabHtml}
+            </div>`;
+        }
+        if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'collo') {
+            sectionsHtml += `<div class="essay-guided-toolbelt-section">
+                <div class="essay-guided-toolbelt-sec-head">
+                    <strong>✨ ${guidedText('Academic Collocations', 'Cụm từ ghi điểm học thuật')}</strong>
+                    <span>${guidedText('Natural combinations to impress examiners and boost Lexical Resource.', 'Các cụm từ đi liền tự nhiên giúp bài viết uyển chuyển và đúng chuẩn.')}</span>
+                </div>
+                ${colloHtml}
+            </div>`;
+        }
+        if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'grammar') {
+            sectionsHtml += `<div class="essay-guided-toolbelt-section">
+                <div class="essay-guided-toolbelt-sec-head">
+                    <strong>📐 ${guidedText('Complex Sentence Models', 'Mẫu câu phức ghi điểm')}</strong>
+                </div>
+                ${grammarHtml}
+            </div>`;
+        }
+        if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'cohesion') {
+            sectionsHtml += `<div class="essay-guided-toolbelt-section">
+                <div class="essay-guided-toolbelt-sec-head">
+                    <strong>🔗 ${guidedText('Cohesive Linking Roadmap', 'Từ nối theo 4 chặng bài viết')}</strong>
+                </div>
+                ${cohesionHtml}
+            </div>`;
+        }
+
+        return `<section class="essay-guided-section">
+            ${guidedSectionHead(section, guidedText('Essential vocabulary, collocations, sentence patterns, and linking words for your essay.', 'Túi đồ nghề từ vựng, cụm từ ghi điểm, mẫu câu chuẩn và từ nối 4 chặng cho bài viết của bạn.'))}
+            ${commitMeterHtml}
+            ${toolbeltNavHtml}
+            ${sectionsHtml}
         </section>`;
     }
 
@@ -4640,23 +4829,89 @@
 
         const [body1Text, body2Text] = getSelectedPointsForPlan(plan, levelData, common);
         const naturalThesis = generateNaturalThesis(plan, currentEntry?.prompt, guidedLevel);
-        const rows = [
-            { label: guidedText('Thesis Statement', 'Câu luận đề (Thesis)'), text: naturalThesis },
-            { label: guidedText('Body 1 (Main Point 1)', 'Thân bài 1 (Luận điểm 1)'), text: cleanArgumentClaim(body1Text) },
-            { label: guidedText('Body 2 (Main Point 2)', 'Thân bài 2 (Luận điểm 2)'), text: cleanArgumentClaim(body2Text) },
-        ].filter(row => String(row.text || '').trim());
-        const copyText = rows.map(row => `${row.label}: ${row.text}`).join('\n');
+        const naturalConclusion = generateNaturalConclusion(plan, currentEntry?.prompt, naturalThesis, guidedLevel);
+
+        const nodes = [
+            {
+                stepNum: 1,
+                tagEn: 'Introduction',
+                tagVi: '1. Mở bài',
+                labelEn: 'Thesis Statement',
+                labelVi: 'Câu luận đề (Thesis)',
+                text: naturalThesis,
+                tipEn: 'Paraphrase the prompt in Sentence 1, then state your clear thesis in Sentence 2 to set up your essay direction.',
+                tipVi: 'Diễn đạt lại đề bài ở câu 1, sau đó nêu rõ lập trường của bạn ở câu 2 để định hướng toàn bài viết.'
+            },
+            {
+                stepNum: 2,
+                tagEn: 'Body Paragraph 1',
+                tagVi: '2. Thân bài 1',
+                labelEn: 'Main Point 1',
+                labelVi: 'Luận điểm then chốt 1',
+                text: cleanArgumentClaim(body1Text) || 'Rigid curriculum suppresses natural creativity.',
+                tipEn: 'State your main topic clearly, explain the underlying cause/mechanism, and support it with a concrete real-world example.',
+                tipVi: 'Nêu câu chủ đề rõ ràng, phân tích sâu nguyên nhân hoặc cơ chế, và minh họa bằng ví dụ thực tế thuyết phục.'
+            },
+            {
+                stepNum: 3,
+                tagEn: 'Body Paragraph 2',
+                tagVi: '3. Thân bài 2',
+                labelEn: 'Main Point 2',
+                labelVi: 'Luận điểm then chốt 2',
+                text: cleanArgumentClaim(body2Text) || 'Structured schooling builds essential collaborative habits.',
+                tipEn: 'Use a smooth transition (Furthermore / On the other hand) to present your second argument or address the opposing viewpoint.',
+                tipVi: 'Dùng từ nối chuyển ý mượt mà để phân tích khía cạnh bổ trợ hoặc phản biện quan điểm đối lập.'
+            },
+            {
+                stepNum: 4,
+                tagEn: 'Conclusion',
+                tagVi: '4. Kết bài',
+                labelEn: 'Synthesis & Final Thought',
+                labelVi: 'Khẳng định lập trường & Thông điệp',
+                text: naturalConclusion,
+                tipEn: 'Reiterate your core thesis without repeating verbatim, summarize both main points, and leave a forward-looking thought.',
+                tipVi: 'Khẳng định lại lập trường mà không lặp lại nguyên văn, tóm lược ngắn gọn 2 luận điểm và đưa ra thông điệp mở rộng.'
+            }
+        ];
+
+        const copyText = nodes.map(n => `${guidedText(n.tagEn, n.tagVi)} - ${guidedText(n.labelEn, n.labelVi)}:\n${n.text}`).join('\n\n');
+
+        const nodesHtml = nodes.map((node, idx) => {
+            const isExpanded = guidedPlanExpandedNode === idx;
+            return `
+            <div class="essay-plan-timeline-card${isExpanded ? ' is-expanded' : ''}">
+                <div class="essay-plan-node-header">
+                    <div class="essay-plan-badge-group">
+                        <span class="essay-plan-step-num">${node.stepNum}</span>
+                        <span class="essay-plan-step-tag">${escapeHtml(guidedText(node.tagEn, node.tagVi))}</span>
+                        <strong class="essay-plan-step-title">${escapeHtml(guidedText(node.labelEn, node.labelVi))}</strong>
+                    </div>
+                    <button type="button" class="essay-plan-tip-toggle${isExpanded ? ' is-open' : ''}" data-guided-action="toggle-plan-node" data-node-index="${idx}" title="${isExpanded ? guidedText('Hide tip', 'Thu gọn mẹo') : guidedText('Show writing strategy', 'Xem bí kíp viết đoạn')}">
+                        <span>${isExpanded ? '▲ ' + guidedText('Hide tip', 'Thu gọn') : '💡 ' + guidedText('Writing strategy', 'Bí kíp viết')}</span>
+                    </button>
+                </div>
+                <p class="essay-plan-node-text">${escapeHtml(node.text)}</p>
+                ${isExpanded ? `
+                <div class="essay-plan-strategy-tip">
+                    <span class="essay-plan-strategy-label">💡 ${guidedText('How to write this paragraph:', 'Cách phát triển đoạn này:')}</span>
+                    <p class="essay-plan-strategy-content">${escapeHtml(guidedText(node.tipEn, node.tipVi))}</p>
+                </div>` : ''}
+            </div>
+            ${idx < nodes.length - 1 ? `
+            <div class="essay-plan-timeline-connector">
+                <span class="essay-plan-connector-line"></span>
+                <span class="essay-plan-connector-arrow">↓</span>
+            </div>` : ''}`;
+        }).join('');
+
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('This outline follows your chosen stance and selected main points.', 'Dàn ý hoàn chỉnh được xây dựng dựa trên lập trường và luận điểm bạn đã chọn.'))}
-            <div class="essay-guided-plan">
-                ${rows.map((row, index) => `<div class="essay-guided-plan-row">
-                    <span class="essay-guided-plan-index" aria-hidden="true">${index + 1}</span>
-                    <div><span class="essay-guided-plan-label">${escapeHtml(row.label)}</span><p>${escapeHtml(row.text)}</p></div>
-                </div>`).join('')}
+            ${guidedSectionHead(section, guidedText('Visual 4-paragraph outline connected to your chosen stance and ideas.', 'Bản đồ dàn ý 4 chặng kết nối trực tiếp với lập trường và ý tưởng bạn đã chọn.'))}
+            <div class="essay-plan-timeline">
+                ${nodesHtml}
             </div>
             <div class="essay-guided-inline-actions">
-                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">${guidedText('Copy outline', 'Sao chép dàn ý')}</button>
-                <span class="essay-guided-source-note">${guidedText('Source:', 'Nguồn:')} ${escapeHtml(plan.sampleSourceStatus || 'sample')}${guidedHelpBtn('plan-source')}</span>
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">📋 ${guidedText('Copy outline', 'Sao chép toàn bộ dàn ý')}</button>
+                <span class="essay-guided-source-note">${guidedText('Stance:', 'Lập trường:')} <strong>${escapeHtml(plan.title || plan.stance || 'Balanced')}</strong></span>
             </div>
         </section>`;
     }
@@ -4843,8 +5098,8 @@
         return `
         <div class="essay-guided-frame is-interactive">
             <div class="essay-guided-frame-head">
-                <span class="essay-guided-reveal-label">${guidedText('Fill in the blanks', 'Điền vào chỗ trống')}${guidedHelpBtn('frame')}</span>
-                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">${guidedText('Copy sentence', 'Sao chép câu')}</button>
+                <span class="essay-guided-reveal-label">✏️ ${guidedText('Assemble your sentence', 'Ghép câu của bạn')}${guidedHelpBtn('frame')}</span>
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">📋 ${guidedText('Copy sentence', 'Sao chép câu')}</button>
             </div>
             ${inputsHtml}
         </div>`;
@@ -4852,13 +5107,12 @@
 
     function renderGuidedFurther(levelData) {
         const section = GUIDED_SECTIONS[4];
-        const activePlan = (levelData.plans || []).find(p => p.variantId === guidedSelectedVariantId) || levelData.plans?.[0] || {};
-        const variantId = activePlan.variantId || 'default';
-        const allSentences = levelData.scaffolds?.[variantId] || [];
+        const activePlan = (levelData.plans || []).find(p => (p.variantId || p.stance || p.id) === guidedSelectedVariantId) || levelData.plans?.[0] || {};
+        const allSentences = getScaffoldSentences(levelData, activePlan);
         const depths = [
-            { depth: 1, en: '1 · Purpose', vi: 'Mức 1: Mục đích câu' },
-            { depth: 2, en: '2 · Fillable Frame', vi: 'Mức 2: Khung câu mẫu' },
-            { depth: 3, en: '3 · Full Model', vi: 'Mức 3: Câu hoàn chỉnh mẫu' },
+            { depth: 1, en: '1 · Purpose', vi: 'Mức 1 · Mục đích câu' },
+            { depth: 2, en: '2 · Fillable Frame', vi: 'Mức 2 · Khung ghép câu' },
+            { depth: 3, en: '3 · Full Model', vi: 'Mức 3 · Câu mẫu tham khảo' },
         ];
 
         // Paragraph sentence counts
@@ -4883,8 +5137,8 @@
 
         const workflowGuideHtml = `
         <div class="essay-guided-scaffold-guide-compact">
-            <span class="essay-guided-scaffold-guide-pill">💡 ${guidedText('Sentence Builder', 'Xây dựng câu')}</span>
-            <span class="essay-guided-scaffold-guide-text">${guidedText('Fill in the blanks below to draft your essay. Your sentences automatically transfer to your essay draft.', 'Gõ trực tiếp vào các chỗ trống bên dưới để viết câu. Các câu sẽ tự động chuyển vào bài viết của bạn.')}</span>
+            <span class="essay-guided-scaffold-guide-pill">💡 ${guidedText('Sentence Construction Studio', 'Xưởng ghép câu hoàn chỉnh')}</span>
+            <span class="essay-guided-scaffold-guide-text">${guidedText('Draft sentences below and click "Add to draft" to transfer directly into your final essay.', 'Ghép câu theo gợi ý bên dưới và bấm "Đưa câu vào bài" để hoàn thiện bài luận từng bước.')}</span>
         </div>`;
 
         const scaffoldTabsHtml = `
@@ -4907,8 +5161,8 @@
         </div>`;
 
         const depthSwitch = `<div class="essay-guided-depth">
-            <span class="essay-guided-depth-label">${guidedText('Hint level', 'Mức gợi ý')}${guidedHelpBtn('hint-level')}</span>
-            <div class="essay-guided-depth-track" role="group" aria-label="${guidedText('Hint level', 'Mức gợi ý')}">
+            <span class="essay-guided-depth-label">${guidedText('Hint level', 'Mức độ gợi ý')}${guidedHelpBtn('hint-level')}</span>
+            <div class="essay-guided-depth-track" role="group" aria-label="${guidedText('Hint level', 'Mức độ gợi ý')}">
                 ${depths.map(item => `<button type="button" class="${guidedHintDepth === item.depth ? 'is-active' : ''}" data-guided-action="set-depth" data-depth="${item.depth}" aria-pressed="${guidedHintDepth === item.depth ? 'true' : 'false'}">${escapeHtml(guidedText(item.en, item.vi))}</button>`).join('')}
             </div>
         </div>`;
@@ -4931,12 +5185,12 @@
                 : '';
             const model = guidedHintDepth >= 3 && modelSentence
                 ? `<div class="essay-guided-model">
-                    <span class="essay-guided-reveal-label">${guidedText('Model sentence', 'Câu mẫu')}</span>
+                    <span class="essay-guided-reveal-label">${guidedText('Model sentence', 'Câu mẫu tham khảo')}</span>
                     <p class="essay-guided-model-text">${escapeHtml(modelSentence)}</p>
                 </div>`
                 : '';
             const reveal = guidedHintDepth < 3
-                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show fillable frame' : 'Show model sentence', guidedHintDepth === 1 ? 'Hiện khung câu' : 'Hiện câu mẫu')}</button>`
+                ? `<button type="button" class="essay-guided-ghost-btn" data-guided-action="reveal-hint" data-depth="${guidedHintDepth + 1}">${guidedText(guidedHintDepth === 1 ? 'Show fillable frame' : 'Show model sentence', guidedHintDepth === 1 ? 'Hiện khung ghép câu' : 'Hiện câu mẫu')}</button>`
                 : '';
             return `${heading}<article class="essay-guided-sentence">
                 <div class="essay-guided-sentence-meta">
@@ -4947,6 +5201,7 @@
                 ${frame}${model}
                 <div class="essay-guided-sentence-actions">
                     ${reveal}
+                    <button type="button" class="essay-guided-transfer-btn" data-guided-action="transfer-sentence" data-sentence-id="${escapeHtml(sId)}">📝 ${guidedText('Add to draft', 'Đưa câu vào bài')}</button>
                     <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? '✓ ' + guidedText('Target set', 'Đã chọn mục tiêu') : '+ ' + guidedText('Track as target', 'Chọn làm mục tiêu')}</button>
                     ${guidedHelpBtn('targets')}
                 </div>
@@ -4954,7 +5209,7 @@
         }).join('');
 
         return `<section class="essay-guided-section">
-            ${guidedSectionHead(section, guidedText('Build your essay sentence-by-sentence. Type directly into the blanks to auto-transfer into your final essay.', 'Xây dựng bài viết theo từng câu. Gõ trực tiếp vào chỗ trống để câu tự động chuyển sang bài viết hoàn chỉnh.'))}
+            ${guidedSectionHead(section, guidedText('Build your essay sentence-by-sentence. Type directly into the blanks or use model sentences to stream into your final essay.', 'Xây dựng bài viết theo từng câu. Gõ trực tiếp vào chỗ trống hoặc dùng câu mẫu để chuyển sang bài viết hoàn chỉnh.'))}
             ${workflowGuideHtml}
             <!-- Frozen while the sentence list scrolls: paragraph and hint level are
                  the two controls a learner reaches for mid-list. -->

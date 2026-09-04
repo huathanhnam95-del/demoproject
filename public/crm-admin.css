@@ -11541,50 +11541,639 @@ mark.crm-highlight:hover {
 }
 
 .teaching-session-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--crm-border);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================================================
+   Teaching Session Viewer — UI/UX Optimization Block
+   ========================================================= */
+
+.crm-teaching-session-viewer-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10050;
+  transition: padding 0.2s ease;
+}
+
+.crm-teaching-session-viewer-container {
+  max-width: 1100px;
+  width: 95vw;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--crm-surface);
+  border-radius: var(--crm-radius);
+  box-shadow: var(--crm-shadow);
+  border: 1px solid var(--crm-border);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Fullscreen presentation mode */
+.crm-teaching-session-viewer-overlay.is-fullscreen {
+  padding: 0;
+}
+
+.crm-teaching-session-viewer-overlay.is-fullscreen .crm-teaching-session-viewer-container {
+  max-width: none;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+}
+
+.crm-teaching-session-viewer-overlay.is-fullscreen .icon-expand {
+  display: none !important;
+}
+
+.crm-teaching-session-viewer-overlay.is-fullscreen .icon-compress {
+  display: block !important;
+}
+
+/* Header & Breadcrumb */
+.crm-session-viewer-header {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: var(--crm-surface);
+  border-bottom: 1px solid var(--crm-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crm-session-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-session-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--crm-text-dark);
+}
+
+.crm-session-breadcrumb {
+  display: none;
+  font-size: 12px;
+  color: var(--crm-text-muted);
+  margin-bottom: 4px;
+}
+
+.crm-teaching-session-viewer-overlay.is-fullscreen .crm-session-breadcrumb {
+  display: block;
+}
+
+.crm-session-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status Chips */
+.crm-session-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.crm-session-status-badge.status-analyzed {
+  background: var(--crm-success-bg);
+  color: var(--crm-success-text);
+  border: 1px solid rgba(22, 101, 52, 0.2);
+}
+
+.crm-session-status-badge.status-processing,
+.crm-session-status-badge.status-uploaded {
+  background: var(--crm-warning-bg);
+  color: var(--crm-warning-text);
+  border: 1px solid rgba(146, 64, 14, 0.2);
+}
+
+.crm-session-status-badge.status-error {
+  background: var(--crm-danger-bg);
+  color: var(--crm-danger-text);
+  border: 1px solid rgba(153, 27, 27, 0.2);
+}
+
+/* Sub-tabs toolbar */
+.crm-session-viewer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: var(--crm-surface-dim);
+  border-bottom: 1px solid var(--crm-border);
+  flex-shrink: 0;
+}
+
+.crm-session-tabs-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .crm-session-viewer-nav .crm-tab-btn {
   background: transparent;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  border: 1px solid transparent;
+  color: var(--crm-text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .crm-session-viewer-nav .crm-tab-btn:hover {
-  background: #ffffff;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--crm-surface);
+  color: var(--crm-text-dark);
+  border-color: var(--crm-border);
 }
 
 .crm-session-viewer-nav .crm-tab-btn.active {
-  background: #3b82f6;
-  border-color: #2563eb;
+  background: var(--crm-primary);
+  border-color: var(--crm-primary);
   color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 1px 3px rgba(23, 122, 68, 0.2);
+}
+
+.crm-session-viewer-nav .crm-tab-btn-muted {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Content Area - NO BOXES IN BOXES */
+.crm-session-viewer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--crm-surface);
+}
+
+.teaching-session-view-pane {
+  width: 100%;
+}
+
+/* Briefing Pane & Structured Typography */
+.teaching-session-briefing-wrap {
+  max-width: 82ch;
+  margin: 0 auto;
+  color: var(--crm-text-main);
+  line-height: 1.6;
+}
+
+/* Header Strip */
+.crm-briefing-header {
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--crm-border);
+}
+
+.crm-briefing-topic {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--crm-text-dark);
+  line-height: 1.3;
+}
+
+.crm-briefing-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--crm-text-muted);
+}
+
+.crm-briefing-meta-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-briefing-readiness-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--crm-neutral-bg);
+  color: var(--crm-neutral-text);
+  border: 1px solid var(--crm-border);
+}
+
+.crm-briefing-readiness-chip.readiness-good {
+  background: var(--crm-success-bg);
+  color: var(--crm-success-text);
+  border-color: rgba(22, 101, 52, 0.2);
+}
+
+.crm-briefing-readiness-chip.readiness-warning {
+  background: var(--crm-warning-bg);
+  color: var(--crm-warning-text);
+  border-color: rgba(146, 64, 14, 0.2);
+}
+
+/* 60-Second Lead Recap */
+.crm-briefing-recap-box {
+  margin: 0 0 28px 0;
+  padding: 14px 18px;
+  background: var(--crm-primary-light);
+  border-left: 4px solid var(--crm-primary);
+  border-radius: 0 6px 6px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #14532d;
+}
+
+.crm-briefing-recap-box p {
+  margin: 0;
+}
+
+/* Sections */
+.crm-briefing-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--crm-border-light);
+}
+
+.crm-briefing-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.crm-briefing-section-heading {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--crm-text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crm-briefing-heading-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--crm-text-muted);
+}
+
+/* Knowledge Taught - Definition List */
+.crm-knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crm-knowledge-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crm-knowledge-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.crm-category-chip {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--crm-neutral-bg);
+  color: var(--crm-neutral-text);
+  border: 1px solid var(--crm-border);
+}
+
+.crm-knowledge-topic {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--crm-text-dark);
+}
+
+.crm-knowledge-rule {
+  font-size: 14px;
+  color: var(--crm-text-main);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.crm-knowledge-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.crm-example-chip {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  background: var(--crm-surface-dim);
+  color: var(--crm-text-dark);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--crm-border);
+}
+
+/* Problems and Solutions Rows */
+.crm-problems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crm-problem-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--crm-border-light);
+}
+
+.crm-problem-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.crm-problem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.crm-problem-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-severity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.crm-severity-dot.severity-critical {
+  background: var(--crm-danger);
+}
+
+.crm-severity-dot.severity-warning {
+  background: var(--crm-warning);
+}
+
+.crm-severity-dot.severity-minor {
+  background: var(--crm-success);
+}
+
+.crm-problem-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--crm-text-dark);
+}
+
+/* Outcome chips */
+.crm-outcome-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.crm-outcome-chip.outcome-mastered {
+  background: var(--crm-success-bg);
+  color: var(--crm-success-text);
+  border: 1px solid rgba(22, 101, 52, 0.2);
+}
+
+.crm-outcome-chip.outcome-partial {
+  background: var(--crm-warning-bg);
+  color: var(--crm-warning-text);
+  border: 1px solid rgba(146, 64, 14, 0.2);
+}
+
+.crm-outcome-chip.outcome-practice {
+  background: var(--crm-danger-bg);
+  color: var(--crm-danger-text);
+  border: 1px solid rgba(153, 27, 27, 0.2);
+}
+
+.crm-problem-quote {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 6px 12px;
+  background: var(--crm-danger-bg);
+  color: var(--crm-danger-text);
+  border-left: 3px solid var(--crm-danger);
+  border-radius: 0 4px 4px 0;
+  margin: 0;
+}
+
+.crm-problem-solution {
+  font-size: 13px;
+  color: var(--crm-text-main);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.crm-problem-evidence {
+  font-size: 12px;
+  color: var(--crm-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Next Lesson Plan Blocks */
+.crm-next-plan-block {
+  margin-bottom: 16px;
+}
+
+.crm-next-plan-subtitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--crm-text-muted);
+  margin: 0 0 6px 0;
+}
+
+.crm-checklist-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.crm-checklist-box {
+  color: var(--crm-text-muted);
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Diagram Stage, Zoom/Pan Canvas, Toolbar */
+.crm-diagram-stage {
+  position: relative;
+  width: 100%;
+  min-height: 520px;
+  height: calc(100vh - 240px);
+  max-height: 800px;
+  background: var(--crm-surface);
+  border: 1px solid var(--crm-border);
+  border-radius: var(--crm-radius);
+  overflow: hidden;
+}
+
+.crm-teaching-session-viewer-overlay.is-fullscreen .crm-diagram-stage {
+  height: calc(100vh - 140px);
+  max-height: none;
+  border-radius: 0;
+  border: none;
+}
+
+.crm-diagram-toolbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--crm-border);
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.crm-diagram-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--crm-text-main);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-diagram-btn:hover {
+  background: var(--crm-surface-dim);
+  border-color: var(--crm-border);
+  color: var(--crm-text-dark);
+}
+
+.crm-diagram-btn-label {
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--crm-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.crm-diagram-btn-label:hover {
+  background: var(--crm-surface-dim);
+  color: var(--crm-text-dark);
+  border-color: var(--crm-border);
 }
 
 .mermaid-diagram-container {
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+}
+
+.mermaid-diagram-container.is-dragging {
+  cursor: grabbing;
+}
+
+.mermaid-diagram-container .diagram-transform-wrapper {
+  display: inline-block;
+  transform-origin: center center;
+  transition: transform 0.05s linear;
 }
 
 .mermaid-diagram-container svg {
-  max-width: 100%;
-  height: auto;
+  display: block;
+  max-width: none !important;
 }
 
-.teaching-session-markdown-content table {
-  margin: 12px 0;
+/* Audio Strip Pane */
+.teaching-session-audio-panel {
+  max-width: 680px;
+  margin: 40px auto;
+  padding: 24px;
+  border: 1px solid var(--crm-border);
+  border-radius: var(--crm-radius);
+  background: var(--crm-surface);
+  text-align: center;
+}
+
+.teaching-session-audio-panel audio {
   width: 100%;
-  border-collapse: collapse;
+  margin-top: 16px;
 }
 
-.teaching-session-markdown-content th,
-.teaching-session-markdown-content td {
-  border: 1px solid #e2e8f0;
-  padding: 8px 12px;
+.audio-panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--crm-text-dark);
+}
+
+.audio-panel-sub {
+  font-size: 13px;
+  color: var(--crm-text-muted);
+  margin-top: 4px;
+}
+
+/* Raw JSON Code */
+.teaching-session-json-code {
+  background: #0f172a;
+  color: #38bdf8;
+  padding: 16px;
+  border-radius: var(--crm-radius);
+  font-size: 12px;
+  overflow: auto;
+  max-height: 600px;
 }
 
 /* ============================================

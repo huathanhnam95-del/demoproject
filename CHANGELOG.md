@@ -1,3 +1,19 @@
+## [V1.8.121] - 2026-09-05
+
+### Enhanced & Overhauled
+- **CRM Teaching Session Analysis Viewer UI/UX Optimization**:
+  - **Structured Briefing as Default Active Tab (`data-view="report"`)**: Modal opens directly to the briefing view, eliminating the extra click to navigate away from the decorative mindmap. Content renders directly from structured `session.report` JSON in chronological pedagogical order with graceful fallback to markdown.
+  - **Scannable Knowledge Taught Definition List**: Replaced wide, unreadable 4-column table with a clean definition list featuring skill category chips (`TÍNH LIÊN KẾT`, `TÍNH MẠCH LẠC`, `TỪ VỰNG`), bold concept headers, concise explanations, and syntax-styled example code blocks.
+  - **Categorized Errors & Solutions with Outcome Chips**: Grouped error cards featuring colored severity dots (🔴 critical, 🟡 warning, 🔵 minor) and outcome chips (`Đã Nắm Vững (Mastered)`, `Tiến Bộ Một Phần (Partial)`, `Cần Luyện Thêm (Practice)`).
+  - **De-emojified Chrome**: Cleaned emoji prefixes from navigation tabs (`Briefing` · `Mindmap` · `Flowchart` · `Audio` · `Data`) and section headers for a refined SaaS interface.
+  - **Flat Single-Surface Layout**: Eliminated nested card hierarchies ("boxes-in-boxes"), inner borders, and redundant container shadows; content flows directly on `--crm-surface`.
+  - **Fullscreen Presentation Mode**: Header expand/compress toggle button (`#btn-teaching-session-fullscreen`), full viewport layout (`.is-fullscreen`), header breadcrumbs (`CRM › Students › {id} › Sessions › {title}`), and two-stage Escape key navigation (1st exits fullscreen, 2nd closes modal) with `localStorage` preference persistence.
+  - **Interactive Diagram Pan & Zoom**: Floating toolbars (`.crm-diagram-toolbar`) on Mindmap and Flowchart stages with Zoom In (`+`), Zoom Out (`−`), Reset/Fit (`100%`), direct SVG Export download (`↓`), and pointer-capture drag-to-pan.
+- **Guided Write Essay Steps 3–5 Visual Overhaul & Pedagogical Grounding**:
+  - **Step 3 (Language Kit)**: Target commit meter (`0/3` or `3/6` targets), category filter pills (`[Tất cả]`, `[🎯 Từ vựng cốt lõi]`, `[✨ Cụm từ ghi điểm]`, `[📐 Mẫu câu chuẩn]`, `[🔗 Từ nối 4 chặng]`), flat single-layer cards (`.essay-guided-toolbelt-card`), bilingual term highlighting (`.essay-term-hl`), actionable `<?>` strategy tips, grammar formula chips, and 4-stage cohesion roadmap stepper.
+  - **Step 4 (Make a Plan)**: 4-milestone flowchart timeline (`1. Mở bài` ➔ `2. Thân bài 1` ➔ `3. Thân bài 2` ➔ `4. Kết bài`) with expandable writing tips.
+  - **Step 5 (Sentence Builder)**: Sentence Construction Studio with 3-tier hint depth (`1 · Purpose`, `2 · Fillable Frame`, `3 · Full Model`) and one-click insertion into `#essay-input` with live word counter updates.
+
 ## [V1.8.120] - 2026-09-04
 
 ### Enhanced & Overhauled

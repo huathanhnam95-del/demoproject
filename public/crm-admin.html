@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260904-v1.8.119">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260905-v1.8.121">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +16,8 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260904-v1.8.119&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260904-v1.8.119&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260905-v1.8.121&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260905-v1.8.121&bgm=v2" />
 </head>
 
 <body>
@@ -2822,51 +2822,102 @@
   </div>
 
   <!-- Teaching Session Report & Mindmap Modal -->
-  <div id="crm-teaching-session-modal" class="crm-modal-overlay" aria-hidden="true" style="display: none;">
-    <div class="crm-modal-container" style="max-width: 1100px; width: 95vw; height: 90vh; display: flex; flex-direction: column;">
-      <div class="crm-modal-header" style="flex-shrink: 0;">
-        <div class="crm-modal-title-row" style="display: flex; align-items: center; gap: 10px;">
-          <h2 id="teaching-session-modal-title" style="margin: 0; font-size: 18px;">Teaching Session Report</h2>
-          <span id="teaching-session-status-badge" class="crm-badge"></span>
+  <div id="crm-teaching-session-modal" class="crm-modal-overlay crm-teaching-session-viewer-overlay" aria-hidden="true" style="display: none;">
+    <div class="crm-modal-container crm-teaching-session-viewer-container">
+      <div class="crm-modal-header crm-session-viewer-header">
+        <div class="crm-modal-title-row">
+          <nav id="teaching-session-breadcrumb" class="crm-session-breadcrumb" aria-label="Breadcrumb"></nav>
+          <div class="crm-session-title-wrap">
+            <h2 id="teaching-session-modal-title" class="crm-session-title">Teaching Session</h2>
+            <span id="teaching-session-status-badge" class="crm-session-status-badge"></span>
+          </div>
         </div>
-        <button id="btn-close-teaching-session-modal" class="crm-icon-btn text-dark" title="Close" type="button">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-          </svg>
-        </button>
+        <div class="crm-session-header-actions">
+          <button id="btn-teaching-session-fullscreen" class="crm-icon-btn text-dark" title="Toggle Fullscreen" type="button" aria-label="Toggle Fullscreen">
+            <svg class="icon-expand" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+            <svg class="icon-compress" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display: none;">
+              <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-14v3h3v2h-5V5h2z"/>
+            </svg>
+          </button>
+          <button id="btn-close-teaching-session-modal" class="crm-icon-btn text-dark" title="Close" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+            </svg>
+          </button>
+        </div>
       </div>
-      <div class="crm-modal-body" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
+      <div class="crm-modal-body crm-session-viewer-body">
         <!-- Top Toolbar with Sub-tabs -->
-        <div class="crm-session-viewer-nav" style="display: flex; gap: 8px; padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
-          <button class="crm-tab-btn active" data-view="mindmap" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">🧠 Visual Mindmap</button>
-          <button class="crm-tab-btn" data-view="flowchart" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📊 Teaching Flowchart</button>
-          <button class="crm-tab-btn" data-view="report" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📋 Pre-Class Briefing Card</button>
-          <button class="crm-tab-btn" data-view="audio" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">🎵 Audio Recording</button>
-          <button class="crm-tab-btn" data-view="json" type="button" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">📝 Raw JSON</button>
+        <div class="crm-session-viewer-nav">
+          <div class="crm-session-tabs-group">
+            <button class="crm-tab-btn active" data-view="report" type="button">Briefing</button>
+            <button class="crm-tab-btn" data-view="mindmap" type="button">Mindmap</button>
+            <button class="crm-tab-btn" data-view="flowchart" type="button">Flowchart</button>
+            <button id="tab-teaching-session-audio" class="crm-tab-btn" data-view="audio" type="button">Audio</button>
+          </div>
+          <button class="crm-tab-btn crm-tab-btn-muted" data-view="json" type="button" title="View Raw JSON Data">Data</button>
         </div>
         <!-- Content Panes -->
-        <div class="crm-session-viewer-content" style="flex: 1; overflow-y: auto; padding: 20px; background: #f1f5f9;">
-          <div id="teaching-session-view-mindmap" class="teaching-session-view-pane" style="display: block;">
-            <div id="teaching-session-mindmap-container" class="mermaid-diagram-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; min-height: 450px; display: flex; justify-content: center; align-items: center; overflow: auto;"></div>
+        <div class="crm-session-viewer-content">
+          <!-- Briefing Pane (Default) -->
+          <div id="teaching-session-view-report" class="teaching-session-view-pane" style="display: block;">
+            <div id="teaching-session-report-html" class="teaching-session-briefing-wrap"></div>
           </div>
-          <div id="teaching-session-view-flowchart" class="teaching-session-view-pane" style="display: none;">
-            <div id="teaching-session-flowchart-container" class="mermaid-diagram-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; min-height: 450px; display: flex; justify-content: center; align-items: center; overflow: auto;"></div>
-          </div>
-          <div id="teaching-session-view-report" class="teaching-session-view-pane" style="display: none;">
-            <div id="teaching-session-report-html" class="teaching-session-markdown-content" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; line-height: 1.6; color: #1e293b;"></div>
-          </div>
-          <div id="teaching-session-view-audio" class="teaching-session-view-pane" style="display: none;">
-            <div id="teaching-session-audio-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 32px; text-align: center;">
-              <h4 style="margin-top: 0; margin-bottom: 12px; color: #334155;">Lesson Audio Recording</h4>
-              <audio id="teaching-session-audio-player" controls style="width: 100%; max-width: 600px; margin: 0 auto;"></audio>
+
+          <!-- Mindmap Pane -->
+          <div id="teaching-session-view-mindmap" class="teaching-session-view-pane" style="display: none;">
+            <div class="crm-diagram-stage">
+              <div class="crm-diagram-toolbar">
+                <button class="btn-diagram-zoom-out crm-diagram-btn" title="Zoom Out" type="button" aria-label="Zoom Out">−</button>
+                <button class="btn-diagram-zoom-reset crm-diagram-btn-label" title="Fit to View / Reset 100%" type="button">100%</button>
+                <button class="btn-diagram-zoom-in crm-diagram-btn" title="Zoom In" type="button" aria-label="Zoom In">+</button>
+                <button class="btn-diagram-download-svg crm-diagram-btn" title="Download Diagram SVG" type="button" aria-label="Download Diagram SVG">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="teaching-session-mindmap-container" class="mermaid-diagram-container"></div>
             </div>
           </div>
+
+          <!-- Flowchart Pane -->
+          <div id="teaching-session-view-flowchart" class="teaching-session-view-pane" style="display: none;">
+            <div class="crm-diagram-stage">
+              <div class="crm-diagram-toolbar">
+                <button class="btn-diagram-zoom-out crm-diagram-btn" title="Zoom Out" type="button" aria-label="Zoom Out">−</button>
+                <button class="btn-diagram-zoom-reset crm-diagram-btn-label" title="Fit to View / Reset 100%" type="button">100%</button>
+                <button class="btn-diagram-zoom-in crm-diagram-btn" title="Zoom In" type="button" aria-label="Zoom In">+</button>
+                <button class="btn-diagram-download-svg crm-diagram-btn" title="Download Diagram SVG" type="button" aria-label="Download Diagram SVG">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="teaching-session-flowchart-container" class="mermaid-diagram-container"></div>
+            </div>
+          </div>
+
+          <!-- Audio Pane -->
+          <div id="teaching-session-view-audio" class="teaching-session-view-pane" style="display: none;">
+            <div class="teaching-session-audio-panel">
+              <div class="teaching-session-audio-info">
+                <div class="audio-panel-title">Lesson Audio Recording</div>
+                <div class="audio-panel-sub" id="teaching-session-audio-meta">Full recording playback</div>
+              </div>
+              <audio id="teaching-session-audio-player" controls preload="metadata"></audio>
+            </div>
+          </div>
+
+          <!-- Raw Data Pane -->
           <div id="teaching-session-view-json" class="teaching-session-view-pane" style="display: none;">
-            <pre id="teaching-session-json-raw" style="background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 8px; font-size: 12px; overflow: auto; max-height: 500px;"></pre>
+            <pre id="teaching-session-json-raw" class="teaching-session-json-code"></pre>
           </div>
         </div>
       </div>
-      <div class="crm-modal-footer" style="flex-shrink: 0; display: flex; justify-content: space-between;">
+      <div class="crm-modal-footer crm-session-viewer-footer">
         <button id="btn-copy-teaching-report" class="crm-btn-secondary" type="button">Copy Report Markdown</button>
         <button id="btn-close-teaching-session-bottom" class="crm-btn-primary" type="button">Close</button>
       </div>
@@ -2888,60 +2939,60 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260904-v1.8.119"></script>
-  <script src="js/classroom-api.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/utils.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/state.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/dom.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/courses.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/schedule-availability.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/students.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/student-360.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/student-courses.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/classrooms.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/leads.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/activities.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/enrollments.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/attendance.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/finance-workflow.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/finance.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/communications.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/staff-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/student-finance.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/live-delivery.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/classroom-modal.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/student-modal.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/course-modal.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/lead-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/communications-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/books-workspace.js?v=20260904-v1.8.119&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/dashboard.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/governance.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/index.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/devtools-access.js?v=20260904-v1.8.119&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260904-v1.8.119"></script>
-  <script src="arpabet-ipa-map.js?v=20260904-v1.8.119"></script>
-  <script src="phonetics.js?v=20260904-v1.8.119"></script>
+  <script src="js/auth-session-guard.js?v=20260905-v1.8.121"></script>
+  <script src="js/classroom-api.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/utils.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/state.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/dom.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/courses.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/schedule-availability.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/students.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/student-360.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/student-courses.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/classrooms.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/leads.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/activities.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/enrollments.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/attendance.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/finance-workflow.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/finance.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/communications.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/staff-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/student-finance.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/live-delivery.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/classroom-modal.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/student-modal.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/course-modal.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/lead-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/communications-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/books-workspace.js?v=20260905-v1.8.121&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/dashboard.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/governance.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/index.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/devtools-access.js?v=20260905-v1.8.121&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260905-v1.8.121"></script>
+  <script src="arpabet-ipa-map.js?v=20260905-v1.8.121"></script>
+  <script src="phonetics.js?v=20260905-v1.8.121"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260904-v1.8.119"></script>
-  <script src="crm-admin.js?v=20260904-v1.8.119"></script>
-  <script src="js/crm/segmentation-study.js?v=20260904-v1.8.119" defer></script>
+  <script src="js/crm/teaching-sessions.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260905-v1.8.121"></script>
+  <script src="crm-admin.js?v=20260905-v1.8.121"></script>
+  <script src="js/crm/segmentation-study.js?v=20260905-v1.8.121" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

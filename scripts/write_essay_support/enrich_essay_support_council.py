@@ -104,7 +104,34 @@ def repair_json_text(content: str) -> str:
     if open_curly > close_curly:
         content += "}" * (open_curly - close_curly)
 
+    # Clean any leaked Chinese characters in Vietnamese copy
+    for k, v in VIETNAMESE_SANITIZE_MAP.items():
+        content = content.replace(k, v)
+
     return content
+
+
+VIETNAMESE_SANITIZE_MAP = {
+    '\u529b\u91cf': 'sức mạnh',
+    '\u4e0d\u540c\u610f': 'Phản đối',
+    '\u5bcc\u542b': 'giàu',
+    '\u80a5\u80d6': 'béo phì',
+    '\u505a\u5f3a': 'tăng cường',
+    '\u652f': 'ủng hộ',
+    '\u996e\u98df': 'chế độ ăn uống',
+    '\u6308': 'nắm bắt',
+    '\u79cf\u6570\u767e': 'hàng trăm',
+    '\u79cf': 'hàng',
+    '\u808c\u8089': 'cơ bắp',
+    '\u7406\u60f3\u7684': 'lý tưởng',
+    '\u89c2\u70b9': 'quan điểm',
+    'Concentrate on': 'Tập trung vào',
+    'promotes a holistic': 'thúc đẩy cách tiếp cận toàn diện',
+    'oversimplifying': 'đơn giản hóa quá mức',
+    '挈 giềng挈 giềng': 'trọng tâm',
+    ':_agree / ủng hộ': ': Đồng ý / Ủng hộ',
+    ':不同意 / thay thế': ': Phản đối / Hướng khác',
+}
 
 
 # ==============================================================================
@@ -117,7 +144,7 @@ class OllamaClient:
         self.timeout = timeout
 
     def generate_json(self, model: str, system_prompt: str, user_prompt: str,
-                      temperature: float = 0.2, num_predict: int = 2400) -> Dict[str, Any]:
+                      temperature: float = 0.2, num_predict: int = 3600) -> Dict[str, Any]:
         url = f"{self.base_url}/api/chat"
         payload = {
             "model": model,
@@ -130,7 +157,7 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": num_predict,
-                "num_ctx": 4096
+                "num_ctx": 8192
             }
         }
 
@@ -703,7 +730,7 @@ def enrich_single_question(q: Dict[str, Any], client: OllamaClient,
     print(f"  -> [Stage 1] Querying {MODELS['reasoner']} for 12 distinct arguments & traps...", flush=True)
     ds_sys, ds_user = build_deepseek_prompt(q)
     t_ds = time.time()
-    ds_data = client.generate_json(MODELS["reasoner"], ds_sys, ds_user, temperature=0.3, num_predict=3200)
+    ds_data = client.generate_json(MODELS["reasoner"], ds_sys, ds_user, temperature=0.3, num_predict=4800)
     print(f"     Done in {time.time() - t_ds:.1f}s", flush=True)
 
     # 2. Qwen 3 (Language Kit & Grammar)
@@ -763,7 +790,7 @@ def enrich_batch_stage_optimized(questions: List[Dict[str, Any]], client: Ollama
         print(f"  [{idx}/{total_q}] Q{q['id']}: Generating arguments & traps...", flush=True)
         sys_p, usr_p = build_deepseek_prompt(q)
         t0 = time.time()
-        ds_results[q["id"]] = client.generate_json(MODELS["reasoner"], sys_p, usr_p, temperature=0.3, num_predict=3200)
+        ds_results[q["id"]] = client.generate_json(MODELS["reasoner"], sys_p, usr_p, temperature=0.3, num_predict=4800)
         print(f"         Done in {time.time() - t0:.1f}s", flush=True)
 
     # Stage 2: Qwen 3 for all questions

@@ -1,3 +1,16 @@
+## [V1.8.117] - 2026-09-04
+
+### Fixed & Enhanced
+- **CRM Admin Header Navigation & Scroll Stabilization**:
+  - **Zero-Displacement Header Layout**: Resolved layout defect where downward clicking and dragging, trackpad gestures, or middle-click autoscrolling on `.crm-header` scrolled navigation links off-screen into hidden negative space.
+  - **Desktop Overflow Normalization**: Updated `.crm-nav` on desktop (`> 1100px`) to `overflow: visible`, eliminating accidental vertical scrolling caused by the nested 184px `top: 100%` Courses & Classes dropdown inflating `scrollHeight`.
+  - **Mobile Drawer Separation**: Preserved `position: fixed; overflow-y: auto;` in mobile/tablet slide-out drawer (`@media (max-width: 1100px)`).
+  - **Interaction Protection**: Added `user-select: none; -webkit-user-select: none;` on `.crm-header`, `-webkit-user-drag: none;` on the BEL logo, and `draggable="false"` on the image element to prevent text selection and image drag ghosts.
+  - **Dropdown Hit-Testing Restoration**: Fixed pointer hit-testing on the "Courses & Classes" dropdown menu items, ensuring dropdown actions are directly clickable and never blocked by `<main>`.
+- **Connected Speech & Data Pipeline Updates**:
+  - Updated connected speech indexes and featured prompts for Read Aloud speech coaching.
+  - Updated RFIB audit consensus and debate reports.
+
 ## [V1.8.116] - 2026-09-04
 
 ### Fixed & Enhanced

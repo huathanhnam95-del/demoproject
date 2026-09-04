@@ -54,7 +54,7 @@ const path = require('path');
     return el && el.offsetHeight > 0;
   });
 
-  // 4. Check action buttons are visible and NOT inside SPC controller
+  // 4. Check action buttons are visible and adopted into the controller footer
   results.recordBtnVisible = await page.evaluate(() => {
     const btn = document.getElementById('ra-record-btn');
     return btn && btn.offsetHeight > 0;

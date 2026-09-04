@@ -381,13 +381,6 @@ class ReadAloudMode {
     return new Set(['linking', 'reduced_words']);
   }
 
-  /** Modes to render marks and coach cards for, given the current tier. */
-  getActiveCoachModes() {
-    return this.getCoachTier() === 'simple'
-      ? this.getSimpleTierModes()
-      : new Set(this.connectedSpeechModes || []);
-  }
-
   getLegacyConnectedSpeechLevel(mode = this.connectedSpeechLevel) {
     const normalized = this.normalizeConnectedSpeechMode(mode);
     if (normalized === 'linking') return 'v1_linking';
@@ -484,9 +477,10 @@ class ReadAloudMode {
         // learner arriving in Advanced for the first time has an empty chip set and
         // would land on a blank passage — a step backwards from what they were just
         // looking at. Carry the simple tier's guides across as the starting point.
-        if (this.getEffectiveViewMode() === 'advanced' && !this.connectedSpeechModes?.size) {
+        if (this.getEffectiveViewMode() === 'advanced' && !this.connectedSpeechModes?.size && !this._hasSeededAdvancedModes) {
           this.connectedSpeechModes = new Set(this.getSimpleTierModes());
-          this.connectedSpeechLevel = ReadAloudMode.dominantConnectedSpeechMode(this.connectedSpeechModes);
+          this.sessionConnectedSpeechModes = new Set(this.getSimpleTierModes());
+          this._hasSeededAdvancedModes = true;
           this.updatePromptGuideButtons();
         }
         if (typeof this.renderPromptForCurrentView === 'function') {

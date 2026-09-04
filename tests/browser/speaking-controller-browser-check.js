@@ -208,7 +208,13 @@ async function dismissBlockingOverlays(page) {
 
 async function runTest() {
     console.log('--- Starting Speaking Controller Browser Check (Wave 0) ---');
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({
+      headless: true,
+      args: [
+        '--use-fake-device-for-media-stream',
+        '--use-fake-ui-for-media-stream'
+      ]
+    });
     let passed = 0;
     let failed = 0;
 

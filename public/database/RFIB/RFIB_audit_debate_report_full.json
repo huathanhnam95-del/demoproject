@@ -2,9 +2,9 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 774,
-  "round1_pass_count": 596,
-  "debate_revised_count": 143,
+  "processed_questions": 783,
+  "round1_pass_count": 601,
+  "debate_revised_count": 147,
   "unresolved_count": 35,
   "debate_transcripts": [
     {
@@ -39596,6 +39596,1084 @@
                 }
               ],
               "verified_grammar_tag": "Adjective Meaning (Positive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 754,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar label is accurate, and each distractor is clearly and correctly explained."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective Collocation (Reduced "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'available' because it functions as an adjective describing the sources. In this context, we are talking about materials that could be found or used in the library. \n\n* Why 'decipherable' is incorrect: This means something can be decoded (like a cipher), which is too specific and doesn't mean generally accessible. \n* Why 'saleable' is incorrect: This describes whether an item can be sold, which is irrelevant to the materials' existence in the library collection. \n* Why 'conceivable' is incorrect: This means something can be imagined or thought of; it does not describe physical accessibility. \n\nThe grammar tag 'Adjective Collocation (Reduced Relative Clause)' is accurate because the phrase 'sources available in your college or university’s library' is a reduced form of the relative clause 'sources that are available in your college or university’s library'. This structure is common in academic and formal writing to make sentences more concise.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was correct and the grammar tag was accurate. Model [qwen3:14b] initially had a JSON parsing error but did not dispute the content or grammar tag. Model [gemma4:12b] did not respond, so no further action was needed. The grammar tag was confirmed as accurate and the explanation was revised to be more explicit and clear for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'available' because it functions as an adjective describing the sources. In this context, we are talking about materials that could be found or used in the library. \n\n* Why 'decipherable' is incorrect: This means something can be decoded (like a cipher), which is too specific and doesn't mean generally accessible. \n* Why 'saleable' is incorrect: This describes whether an item can be sold, which is irrelevant to the materials' existence in the library collection. \n* Why 'conceivable' is incorrect: This means something can be imagined or thought of; it does not describe physical accessibility. \n\nThe grammar tag 'Adjective Collocation (Reduced Relative Clause)' is accurate because the phrase 'sources available in your college or university’s library' is a reduced form of the relative clause 'sources that are available in your college or university’s library'. This structure is common in academic and formal writing to make sentences more concise.",
+          "candidate_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labeling and logical reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is appropriately assigned, and each distractor is clearly and correctly explained with regard to meaning and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the accuracy of the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was refined to ensure clarity and completeness for B1-B2 learners, with explicit attention to semantics and grammar structure.",
+          "candidate_explanation": "The correct answer is 'available' because it describes the sources that can be found or used in the library. In this context, we are talking about materials that are physically present and accessible in the library collection.\n\n* Why 'decipherable' is incorrect: This means something can be decoded, like a cipher or code, which is too specific and not related to general accessibility.\n\n* Why 'saleable' is incorrect: This describes whether an item can be sold, which is not relevant to the presence or use of materials in a library.\n\n* Why 'conceivable' is incorrect: This means something can be imagined or thought of, which does not describe physical accessibility or presence in the library.\n\nThe grammar tag 'Adjective Collocation (Reduced Relative Clause)' is accurate because the phrase 'sources available in your college or university’s library' is a shortened version of the relative clause 'sources that are available in your college or university’s library'. This structure is common in formal writing to make sentences more concise and clear.",
+          "candidate_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is appropriately assigned, and each distractor is clearly and correctly explained with relevant reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was refined to explicitly clarify the active nature of the adjective 'available' and to ensure clarity for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'available' because it describes the sources that can be found or used in the library. In this context, we are talking about materials that are physically present and accessible in the library collection.\n\n* Why 'decipherable' is incorrect: This means something can be decoded, like a cipher or code, which is too specific and not related to general accessibility.\n\n* Why 'saleable' is incorrect: This describes whether an item can be sold, which is not relevant to the presence or use of materials in a library. It implies a commercial transaction, which is not the focus here.\n\n* Why 'conceivable' is incorrect: This means something can be imagined or thought of, which does not describe physical accessibility or presence in the library. It is more abstract and not related to the actual availability of materials.\n\nThe grammar tag 'Adjective Collocation (Reduced Relative Clause)' is accurate because the phrase 'sources available in your college or university’s library' is a shortened version of the relative clause 'sources that are available in your college or university’s library'. This structure is common in formal writing to make sentences more concise and clear. The use of the adjective 'available' in this context is active, indicating that the sources are accessible, rather than being acted upon in a passive way.",
+          "candidate_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. The grammar label is accurate, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is appropriately assigned, and each distractor is clearly and correctly explained with relevant reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Reduced Relative Clause)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 754,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'obtained' because the structure 'materials could be...' requires a past participle to form the passive voice. This construction shows that the materials were acquired by someone else (the student/researcher), fitting the context of receiving items from other libraries. \n\n* Why 'sustained' is incorrect: This means maintaining life or support, which has no relation to acquiring physical materials. \n* Why 'refrained' is incorrect: This means holding back or stopping oneself, which is the opposite action needed here. \n* Why 'guaranteed' is incorrect: This describes certainty (a promise), not the act of receiving or getting the materials. \n\nThe passive voice is used here because the focus is on the action (materials being obtained) rather than who performed the action (the library or interlibrary service).",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all distractors with specific semantic reasoning. The grammar tag was confirmed as 'Passive Voice (Past Participle)' based on the structure 'could be obtained.' The JSON formatting issue was resolved, and the timeout was accounted for by ensuring the explanation is fully self-contained and clear.",
+          "candidate_explanation": "The correct answer is 'obtained' because the structure 'materials could be...' requires a past participle to form the passive voice. This construction shows that the materials were acquired by someone else (the student/researcher), fitting the context of receiving items from other libraries. \n\n* Why 'sustained' is incorrect: This means maintaining life or support, which has no relation to acquiring physical materials. \n* Why 'refrained' is incorrect: This means holding back or stopping oneself, which is the opposite action needed here. \n* Why 'guaranteed' is incorrect: This describes certainty (a promise), not the act of receiving or getting the materials. \n\nThe passive voice is used here because the focus is on the action (materials being obtained) rather than who performed the action (the library or interlibrary service).",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly assigned, and each distractor is properly analyzed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, reasoning, semantics, and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Passive Voice (Past Participle)' by all models that provided feedback. The explanation was refined to ensure clarity, completeness, and explicit focus on the subject-verb relationship in passive constructions.",
+          "candidate_explanation": "The correct answer is 'obtained' because the structure 'materials could be...' requires a past participle to form the passive voice. This construction shows that the materials were acquired by someone else (the student/researcher), fitting the context of receiving items from other libraries. \n\n* Why 'sustained' is incorrect: This means maintaining life or support, which has no relation to acquiring physical materials. \n* Why 'refrained' is incorrect: This means holding back or stopping oneself, which is the opposite action needed here. \n* Why 'guaranteed' is incorrect: This describes certainty (a promise), not the act of receiving or getting the materials. \n\nThe passive voice is used here because the focus is on the action (materials being obtained) rather than who performed the action (the library or interlibrary service). This is a common structure in academic and formal writing when the doer of the action is not important or is implied.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for the correct and incorrect options."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Passive Voice (Past Participle)' by all models that provided feedback. The explanation was refined to ensure clarity, completeness, and explicit focus on the subject-verb relationship in passive constructions, making it suitable for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'obtained' because the structure 'materials could be...' requires a past participle to form the passive voice. This construction shows that the materials were acquired by someone else (the student/researcher), fitting the context of receiving items from other libraries. \n\n* Why 'sustained' is incorrect: This means maintaining life or support, which has no relation to acquiring physical materials. \n* Why 'refrained' is incorrect: This means holding back or stopping oneself, which is the opposite action needed here. \n* Why 'guaranteed' is incorrect: This describes certainty (a promise), not the act of receiving or getting the materials. \n\nThe passive voice is used here because the focus is on the action (materials being obtained) rather than who performed the action (the library or interlibrary service). This is a common structure in academic and formal writing when the doer of the action is not important or is implied. Additionally, the use of 'obtained' fits naturally with the context of receiving materials through interlibrary loan services, which is a clear and common collocation in academic writing.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, collocation, and reasoning for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 755,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective Usage (Modifying the "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'distinguishing' because it is an adjective that describes a unique or characteristic feature. It modifies the noun 'feature,' specifying what kind of feature print sources possess.\n\n* Why 'brainwashing' is incorrect: This is a gerund or present participle used as a verb form, meaning to manipulate ideas, which has no relation to describing a physical or defining quality.\n\n* Why 'refurbishing' is incorrect: This means restoring or renovating something, and it cannot describe the inherent nature or defining quality of a feature.\n\n* Why 'establishing' is incorrect: While 'establishing' can be a verb or adjective in some contexts, here it does not fit the meaning required. The sentence needs a participle that describes what makes the source unique, which is 'distinguishing.'\n\nThe grammar tag 'Adjective Usage (Modifying the noun 'feature')' is accurate, as 'distinguishing' functions as an adjective describing the noun 'feature.' Additionally, the explanation clearly distinguishes between active and passive meanings, ensuring that the semantic logic is clear for learners.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as correct by deepseek-r1:14b and is consistent with the function of 'distinguishing' in the sentence. The timeout from gemma4:12b was not a direct critique but was accounted for by ensuring the explanation is robust and complete.",
+          "candidate_explanation": "The correct answer is 'distinguishing' because it is an adjective that describes a unique or characteristic feature. It modifies the noun 'feature,' specifying what kind of feature print sources possess.\n\n* Why 'brainwashing' is incorrect: This is a gerund or present participle used as a verb form, meaning to manipulate ideas, which has no relation to describing a physical or defining quality.\n\n* Why 'refurbishing' is incorrect: This means restoring or renovating something, and it cannot describe the inherent nature or defining quality of a feature.\n\n* Why 'establishing' is incorrect: While 'establishing' can be an adjective in some contexts, here it does not fit the meaning required. The sentence needs a participle that describes what makes the source unique, which is 'distinguishing.'\n\nAdditionally, the grammar tag 'Adjective Usage (Modifying the noun 'feature')' is accurate, as 'distinguishing' functions as an adjective describing the noun 'feature.'",
+          "candidate_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address the semantic inappropr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was correct and complete. Model [qwen3:14b] initially had a parsing error but did not raise substantive issues. Model [gemma4:12b] did not respond. The explanation was revised to ensure clarity, completeness, and grammatical accuracy, resolving any potential semantic gaps and ensuring the grammar tag was explicitly confirmed.",
+          "candidate_explanation": "The correct answer is 'distinguishing' because it is an adjective that describes a unique or characteristic feature. It modifies the noun 'feature,' specifying what kind of feature print sources possess.\n\n* Why 'brainwashing' is incorrect: This is a gerund or present participle used as a verb form, meaning to manipulate ideas, which has no relation to describing a physical or defining quality.\n\n* Why 'refurbishing' is incorrect: This means restoring or renovating something, and it cannot describe the inherent nature or defining quality of a feature.\n\n* Why 'establishing' is incorrect: While 'establishing' can be a verb or adjective in some contexts, here it does not fit the meaning required. The sentence needs a participle that describes what makes the source unique, which is 'distinguishing.'\n\nThe grammar tag 'Adjective Usage (Modifying the noun 'feature')' is accurate, as 'distinguishing' functions as an adjective describing the noun 'feature.' Additionally, the explanation clearly distinguishes between active and passive meanings, ensuring that the semantic logic is clear for learners.",
+          "candidate_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and addressed all grammatical and semantic considerations.",
+          "candidate_explanation": "The correct answer is 'distinguishing' because it is an adjective that describes a unique or characteristic feature. It modifies the noun 'feature,' specifying what kind of feature print sources possess.\n\n* Why 'brainwashing' is incorrect: This is a gerund or present participle used as a verb form, meaning to manipulate ideas, which has no relation to describing a physical or defining quality.\n\n* Why 'refurbishing' is incorrect: This means restoring or renovating something, and it cannot describe the inherent nature or defining quality of a feature.\n\n* Why 'establishing' is incorrect: While 'establishing' can be a verb or adjective in some contexts, here it does not fit the meaning required. The sentence needs a participle that describes what makes the source unique, which is 'distinguishing.'\n\nThe grammar tag 'Adjective Usage (Modifying the noun 'feature')' is accurate, as 'distinguishing' functions as an adjective describing the noun 'feature.' Additionally, the explanation clearly distinguishes between active and passive meanings, ensuring that the semantic logic is clear for learners.",
+          "candidate_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical and semantic considerations. The grammar tag is accurate, and each distractor is clearly and correctly explained with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Modifying the noun 'feature')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 761,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Form (Nominalization)",
+            "overall_notes": "The explanation is accurate and complete. The grammar label is correct, the reasoning is logical, and each distractor is properly addressed."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, even though they are not passive voice. It should still consider whether the meaning of the distractors aligns with the context of 'spread of cultural ideas'.",
+                "affected_text": "Why 'fulmination' is incorrect: It refers to an act of causing harm, which has no relation to spreading culture.",
+                "correction": "Why 'fulmination' is incorrect: It refers to an act of causing harm, which is semantically incompatible with the context of 'the spread of cultural ideas'. The subject in the sentence is not performing an act of harm, but rather facilitating the movement of cultural ideas."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not sufficiently address the semantic incompatibility of 'accommodation' with the context of cultural diffusion. It should clarify that 'accommodation' implies adjustment or adaptation, not the movement or transmission of ideas.",
+                "affected_text": "Why 'accommodation' is incorrect: This word means adjusting or providing shelter, not describing the spread of ideas.",
+                "correction": "Why 'accommodation' is incorrect: This word implies adjustment or adaptation, which is not the same as the movement or transmission of cultural ideas. The context requires a term that describes the process of dissemination, not modification."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not clearly explain why 'prevention' is semantically incompatible with the context of cultural diffusion. It should emphasize that 'prevention' implies stopping something, which is the opposite of diffusion.",
+                "affected_text": "Why 'prevention' is incorrect: This means stopping something, which is the opposite action of diffusion.",
+                "correction": "Why 'prevention' is incorrect: This means stopping something, which is semantically opposite to the concept of cultural diffusion. The context requires a term that describes the process of spreading, not halting."
+              }
+            ],
+            "verified_grammar_tag": "Noun Form (Nominalization)",
+            "overall_notes": "The grammar tag is correct, but the explanation lacks sufficient semantic analysis for the distractors, particularly in terms of how their meanings align or misalign with the context of cultural diffusion."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Form (Nominalization)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'spread' because it functions as a noun meaning the movement or expansion of ideas from one place to another. This concept perfectly defines cultural diffusion. * Why 'fulmination' is incorrect: It is a noun referring to an act of causing harm, which is semantically incompatible with the context of 'the spread of cultural ideas'. The subject in the sentence is not performing an act of harm, but rather facilitating the movement of cultural ideas. * Why 'accommodation' is incorrect: This is a noun implying adjustment or adaptation, which is not the same as the movement or transmission of cultural ideas. The context requires a term that describes the process of dissemination, not modification. * Why 'prevention' is incorrect: This is a noun meaning stopping something, which is semantically opposite to the concept of cultural diffusion. The context requires a term that describes the process of spreading, not halting.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gaps identified by Model [qwen3:14b], ensuring that each distractor's incompatibility with the context of cultural diffusion was clearly explained. Model [deepseek-r1:14b] confirmed the accuracy of the original explanation, and the grammar tag was retained as 'Noun Form (Nominalization)' since it remains factually correct. The explanation now explicitly considers subject-verb semantic logic and is suitable for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'spread' because it functions as a noun meaning the movement or expansion of ideas from one place to another. This concept perfectly defines cultural diffusion. * Why 'fulmination' is incorrect: It refers to an act of causing harm, which is semantically incompatible with the context of 'the spread of cultural ideas'. The subject in the sentence is not performing an act of harm, but rather facilitating the movement of cultural ideas. * Why 'accommodation' is incorrect: This word implies adjustment or adaptation, which is not the same as the movement or transmission of cultural ideas. The context requires a term that describes the process of dissemination, not modification. * Why 'prevention' is incorrect: This means stopping something, which is semantically opposite to the concept of cultural diffusion. The context requires a term that describes the process of spreading, not halting.",
+          "candidate_grammar_tag": "Noun Form (Nominalization)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not address the grammatical form of the distractors, which is required for a complete analysis.",
+                  "affected_text": "The explanation only discusses the meaning of the distractors, not their grammatical forms.",
+                  "correction": "Each distractor's grammatical form should be mentioned, e.g., 'Fulmination is a noun referring to causing harm...' etc."
+                }
+              ],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is incomplete as it misses the grammatical analysis of the distractors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. The grammar tag is accurate, and the reasoning for each distractor is clear and well-justified."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to include the grammatical form of each distractor, as requested by Model [deepseek-r1:14b], while maintaining the factual accuracy and clarity praised by Model [qwen3:14b]. The grammar tag was confirmed as 'Noun Form (Nominalization)', and the explanation now explicitly addresses the semantic and grammatical mismatch between the distractors and the context.",
+          "candidate_explanation": "The correct answer is 'spread' because it functions as a noun meaning the movement or expansion of ideas from one place to another. This concept perfectly defines cultural diffusion. * Why 'fulmination' is incorrect: It is a noun referring to an act of causing harm, which is semantically incompatible with the context of 'the spread of cultural ideas'. The subject in the sentence is not performing an act of harm, but rather facilitating the movement of cultural ideas. * Why 'accommodation' is incorrect: This is a noun implying adjustment or adaptation, which is not the same as the movement or transmission of cultural ideas. The context requires a term that describes the process of dissemination, not modification. * Why 'prevention' is incorrect: This is a noun meaning stopping something, which is semantically opposite to the concept of cultural diffusion. The context requires a term that describes the process of spreading, not halting.",
+          "candidate_grammar_tag": "Noun Form (Nominalization)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. No errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Noun Form (Nominalization)' by all models that provided feedback. The explanation was already clear, accurate, and suitable for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'spread' because it functions as a noun meaning the movement or expansion of ideas from one place to another. This concept perfectly defines cultural diffusion. * Why 'fulmination' is incorrect: It is a noun referring to an act of causing harm, which is semantically incompatible with the context of 'the spread of cultural ideas'. The subject in the sentence is not performing an act of harm, but rather facilitating the movement of cultural ideas. * Why 'accommodation' is incorrect: This is a noun implying adjustment or adaptation, which is not the same as the movement or transmission of cultural ideas. The context requires a term that describes the process of dissemination, not modification. * Why 'prevention' is incorrect: This is a noun meaning stopping something, which is semantically opposite to the concept of cultural diffusion. The context requires a term that describes the process of spreading, not halting. Additionally, the grammar tag 'Noun Form (Nominalization)' is accurate because the sentence requires a noun to complete the meaning of the verb 'describe'.",
+          "candidate_grammar_tag": "Noun Form (Nominalization)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is accurate, and each distractor is clearly and correctly explained with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Form (Nominalization)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 761,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Form (Infinitive)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Form (Infinitive)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form (Infinitive)' is inco"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Form (Infinitive)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'convert' because it means changing one's religious beliefs or adopting a new faith. This action was forced upon the original inhabitants during colonization, which fits the context of cultural diffusion. * Why 'reply' is incorrect: This verb means to give an answer in response to something said, which does not match the action being described. * Why 'add' is incorrect: This simple verb means to increase quantity or put something extra; it does not describe a change in belief system. * Why 'require' is incorrect: Although the Spanish may have required conversion, the sentence structure focuses on the action taken by the original inhabitants (the object of the force), making 'convert' the most accurate and grammatically appropriate choice. The verb 'convert' is in the infinitive form, which is the correct grammatical form needed to complete the sentence in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag 'Verb Form (Infinitive)' was confirmed as correct, and the explanation was expanded to explicitly clarify the subject-verb relationship, particularly for the passive distractor 'require'.",
+          "candidate_explanation": "The correct answer is 'convert' because it means changing one's religious beliefs or adopting a new faith. This action was forced upon the original inhabitants during colonization, which fits the context of cultural diffusion. * Why 'reply' is incorrect: This verb means to give an answer in response to something said, which does not match the action being described. * Why 'add' is incorrect: This simple verb means to increase quantity or put something extra; it does not describe a change in belief system. * Why 'require' is incorrect: While the Spanish did require this, 'convert' is the specific action taken by the inhabitants (the object of the force), making it the most accurate fit for the sentence structure. The verb 'convert' is in the infinitive form, which is the correct grammatical form needed to complete the sentence in this context.",
+          "candidate_grammar_tag": "Verb Form (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form (Infinitive)' is inco"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag 'Verb Form (Infinitive)' was confirmed as correct and consistent with the sentence structure. The explanation was also made more explicit in its semantic logic, particularly in distinguishing between active and passive roles in the context of the distractor 'require'.",
+          "candidate_explanation": "The correct answer is 'convert' because it means changing one's religious beliefs or adopting a new faith. This action was forced upon the original inhabitants during colonization, which fits the context of cultural diffusion. * Why 'reply' is incorrect: This verb means to give an answer in response to something said, which does not match the action being described. * Why 'add' is incorrect: This simple verb means to increase quantity or put something extra; it does not describe a change in belief system. * Why 'require' is incorrect: Although the Spanish may have required conversion, the sentence structure focuses on the action taken by the original inhabitants (the object of the force), making 'convert' the most accurate and grammatically appropriate choice. The verb 'convert' is in the infinitive form, which is the correct grammatical form needed to complete the sentence in this context.",
+          "candidate_grammar_tag": "Verb Form (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and logical, and the semantic and collocation context is properly addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation, the correctness of the grammar tag, and the reasoning for the correct answer. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was refined to explicitly clarify the subject-verb relationship and the use of the infinitive in a passive context, ensuring clarity for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'convert' because it means changing one's religious beliefs or adopting a new faith. This action was forced upon the original inhabitants during colonization, which fits the context of cultural diffusion. * Why 'reply' is incorrect: This verb means to give an answer in response to something said, which does not match the action being described. * Why 'add' is incorrect: This simple verb means to increase quantity or put something extra; it does not describe a change in belief system. * Why 'require' is incorrect: Although the Spanish may have required conversion, the sentence structure focuses on the action taken by the original inhabitants (the object of the force), making 'convert' the most accurate and grammatically appropriate choice. The verb 'convert' is in the infinitive form, which is the correct grammatical form needed to complete the sentence in this context. Additionally, the use of the infinitive form aligns with the passive construction of the sentence, where the subject (original inhabitants) is receiving the action, and the verb must reflect the intended outcome of that action.",
+          "candidate_grammar_tag": "Verb Form (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form (Infinitive)' is inco"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 762,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'sustainable' because it refers to travel that can be maintained over time without harming the environment or local communities, which aligns perfectly with the goals of ecotourism. * Why 'acquired' is incorrect: 'Acquired' is typically used in the passive voice (e.g., 'skills acquired through training') and does not describe a type of travel. * Why 'obtainable' is incorrect: 'Obtainable' means something that can be obtained or reached, which is not a suitable adjective for describing a type of travel. * Why 'preventable' is incorrect: 'Preventable' refers to something that can be avoided (like a disease), which is unrelated to the concept of travel. The correct grammar tag is 'Adjective Collocation (Semantic Fit)' because the sentence requires an adjective that fits both the context of travel and the environmental goals of ecotourism.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly explaining the subject-verb logic for passive distractors like 'acquired.' The grammar tag was confirmed as accurate, and the explanation was clarified to ensure it is accessible to B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'sustainable' because it refers to travel that can be maintained over time without harming the environment or local communities, which aligns perfectly with the goals of ecotourism. * Why 'acquired' is incorrect: 'Acquired' is typically used in the passive voice (e.g., 'skills acquired through training') and does not describe a type of travel. * Why 'obtainable' is incorrect: 'Obtainable' means something that can be obtained or reached, which is not a suitable adjective for describing a type of travel. * Why 'preventable' is incorrect: 'Preventable' refers to something that can be avoided (like a disease), which is unrelated to the concept of travel. The correct grammar tag is 'Adjective Collocation (Semantic Fit)' because the sentence requires an adjective that fits both the context of travel and the environmental goals of ecotourism.",
+          "candidate_grammar_tag": "Adjective Collocation (Semantic Fit)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly applied, and each distractor is appropriately addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was already clear, accurate, and addressed all distractors with appropriate semantic and grammatical reasoning.",
+          "candidate_explanation": "The correct answer is 'sustainable' because it refers to travel that can be maintained over time without harming the environment or local communities, which aligns perfectly with the goals of ecotourism. * Why 'acquired' is incorrect: 'Acquired' is typically used in the passive voice (e.g., 'skills acquired through training') and does not describe a type of travel. * Why 'obtainable' is incorrect: 'Obtainable' means something that can be obtained or reached, which is not a suitable adjective for describing a type of travel. * Why 'preventable' is incorrect: 'Preventable' refers to something that can be avoided (like a disease), which is unrelated to the concept of travel. The correct grammar tag is 'Adjective Collocation (Semantic Fit)' because the sentence requires an adjective that fits both the context of travel and the environmental goals of ecotourism.",
+          "candidate_grammar_tag": "Adjective Collocation (Semantic Fit)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was already clear, accurate, and addressed all aspects of the question.",
+          "candidate_explanation": "The correct answer is 'sustainable' because it refers to travel that can be maintained over time without harming the environment or local communities, which aligns perfectly with the goals of ecotourism. * Why 'acquired' is incorrect: 'Acquired' is typically used in the passive voice (e.g., 'skills acquired through training') and does not describe a type of travel. * Why 'obtainable' is incorrect: 'Obtainable' means something that can be obtained or reached, which is not a suitable adjective for describing a type of travel. * Why 'preventable' is incorrect: 'Preventable' refers to something that can be avoided (like a disease), which is unrelated to the concept of travel. The correct grammar tag is 'Adjective Collocation (Semantic Fit)' because the sentence requires an adjective that fits both the context of travel and the environmental goals of ecotourism.",
+          "candidate_grammar_tag": "Adjective Collocation (Semantic Fit)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Collocation (Semantic Fit)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

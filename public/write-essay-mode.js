@@ -77,6 +77,15 @@
         guidedViewMode = localStorage.getItem(GUIDED_VIEW_MODE_KEY) || 'mindmap';
     } catch (_) {}
 
+    const GUIDED_STEP1_LAYOUT_KEY = 'pte_guided_step1_layout';
+    let guidedStep1Layout = 'whiteboard';
+    try {
+        guidedStep1Layout = localStorage.getItem(GUIDED_STEP1_LAYOUT_KEY) || 'whiteboard';
+    } catch (_) {}
+    let guidedStep1PipelineStep = 1;
+    let guidedStep1StationTab = 'blueprint';
+    let guidedStep1SelectedChips = new Set(['agree-0', 'agree-1', 'disagree-0']);
+
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
     const RANDOM_MODE_KEY = 'pte_random_nav_mode';
@@ -1676,6 +1685,37 @@
                 } catch (_) {}
                 renderGuidedSupport();
             }
+        } else if (action === 'set-step1-layout') {
+            const layout = target.dataset.layout;
+            if (['whiteboard', 'stations', 'hud', 'list'].includes(layout)) {
+                guidedStep1Layout = layout;
+                try {
+                    localStorage.setItem(GUIDED_STEP1_LAYOUT_KEY, layout);
+                } catch (_) {}
+                renderGuidedSupport();
+            }
+        } else if (action === 'select-pipeline-step') {
+            const stepNum = parseInt(target.dataset.stepNum, 10);
+            if (!isNaN(stepNum)) {
+                guidedStep1PipelineStep = stepNum;
+                renderGuidedSupport();
+            }
+        } else if (action === 'select-station-tab') {
+            const station = target.dataset.station;
+            if (station) {
+                guidedStep1StationTab = station;
+                renderGuidedSupport();
+            }
+        } else if (action === 'toggle-side-chip') {
+            const chipId = target.dataset.chipId;
+            if (chipId) {
+                if (guidedStep1SelectedChips.has(chipId)) {
+                    guidedStep1SelectedChips.delete(chipId);
+                } else {
+                    guidedStep1SelectedChips.add(chipId);
+                }
+                renderGuidedSupport();
+            }
         } else if (action === 'go-section') {
             goToGuidedSection(target.dataset.sectionId);
         } else if (action === 'toggle-group') {
@@ -1855,7 +1895,7 @@
     }
 
     function renderGuidedMindMapSVGLines() {
-        if (guidedViewMode !== 'mindmap') return;
+        if (guidedSection === 'understand' ? (guidedStep1Layout !== 'whiteboard') : (guidedViewMode !== 'mindmap')) return;
 
         // 1. Step 1: Prompt Mind Map
         const promptCanvas = document.getElementById('essay-prompt-mindmap-canvas');
@@ -2507,6 +2547,31 @@
     }
 
     function renderGuidedViewToggle() {
+        if (guidedSection === 'understand') {
+            return `
+            <div class="essay-guided-view-toggle-bar">
+                <span class="essay-guided-view-toggle-label">${guidedText('Layout Mode:', 'Cách xem:')}</span>
+                <div class="essay-guided-view-toggle" role="group" aria-label="${guidedText('Select view mode', 'Chọn cách xem')}">
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'whiteboard' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="whiteboard" title="${guidedText('Whiteboard Canvas', 'Bảng vẽ ý tưởng')}">
+                        <span class="essay-view-toggle-icon">🗺️</span>
+                        <span>${guidedText('Whiteboard', 'Bảng vẽ ý tưởng')}</span>
+                    </button>
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'stations' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="stations" title="${guidedText('Station Tabs', 'Chia theo trạm')}">
+                        <span class="essay-view-toggle-icon">🏛️</span>
+                        <span>${guidedText('Station Tabs', 'Chia theo trạm')}</span>
+                    </button>
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'hud' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="hud" title="${guidedText('Quick Summary', 'Tóm tắt nhanh')}">
+                        <span class="essay-view-toggle-icon">⚡</span>
+                        <span>${guidedText('Quick Summary', 'Tóm tắt nhanh')}</span>
+                    </button>
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'list' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="list" title="${guidedText('Compact List', 'Danh sách')}">
+                        <span class="essay-view-toggle-icon">📋</span>
+                        <span>${guidedText('Compact List', 'Danh sách')}</span>
+                    </button>
+                </div>
+            </div>`;
+        }
+
         return `
         <div class="essay-guided-view-toggle-bar">
             <span class="essay-guided-view-toggle-label">${guidedText('Ideation View:', 'Góc nhìn tư duy:')}</span>
@@ -3331,9 +3396,147 @@
             `}
         </div>`;
 
+        let contentHtml = '';
+        if (guidedStep1Layout === 'whiteboard') {
+            contentHtml = renderStep1Whiteboard(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml);
+        } else if (guidedStep1Layout === 'stations') {
+            contentHtml = renderStep1Stations(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml);
+        } else if (guidedStep1Layout === 'hud') {
+            contentHtml = renderStep1Hud(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml);
+        } else {
+            contentHtml = renderStep1List(segmentsHtml, essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml);
+        }
+
         return `<section class="essay-guided-section essay-step1-container">
             ${renderGuidedViewToggle()}
-            <!-- Part 1: Understanding parts of the question -->
+            ${contentHtml}
+        </section>`;
+    }
+
+    function renderStep1Whiteboard(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
+        const segmentsHtml = renderInteractivePromptStructure(segments, promptText);
+        const stanceKeys = Object.keys(grouped);
+
+        let twoSidesHtml = '';
+        if (stanceKeys.length >= 2) {
+            const side1Key = stanceKeys[0];
+            const side2Key = stanceKeys[1];
+            const meta1 = stanceLabels[side1Key] || { en: 'Stance 1', vi: 'Phe 1', icon: '👍', tone: 'agree' };
+            const meta2 = stanceLabels[side2Key] || { en: 'Stance 2', vi: 'Phe 2', icon: '👎', tone: 'disagree' };
+            const items1 = grouped[side1Key] || [];
+            const items2 = grouped[side2Key] || [];
+
+            let side1Count = 0;
+            items1.forEach((_, idx) => { if (guidedStep1SelectedChips.has(`${side1Key}-${idx}`)) side1Count++; });
+            let side2Count = 0;
+            items2.forEach((_, idx) => { if (guidedStep1SelectedChips.has(`${side2Key}-${idx}`)) side2Count++; });
+
+            twoSidesHtml = `
+            <div class="essay-wb-twosides-box">
+                <div class="essay-wb-section-head">
+                    <span class="essay-wb-section-badge">⚖️ ${guidedText('Two Angles to Consider', 'So sánh 2 phe')}</span>
+                    <p class="essay-wb-section-sub">${guidedText('Click on ideas to test which direction is easier and more natural for you to write:', 'Bấm chọn thử các ý để xem bạn thấy phe nào dễ viết và thuyết phục hơn:')}</p>
+                </div>
+                <div class="essay-wb-twosides-grid">
+                    <div class="essay-wb-side-card is-${meta1.tone}">
+                        <div class="essay-wb-side-head">
+                            <span class="essay-wb-side-title">${meta1.icon} ${escapeHtml(guidedText(meta1.en, meta1.vi))}</span>
+                            <span class="essay-wb-side-count">${side1Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                        </div>
+                        <div class="essay-wb-side-chips">
+                            ${items1.map((item, idx) => {
+                                const chipId = `${side1Key}-${idx}`;
+                                const isPicked = guidedStep1SelectedChips.has(chipId);
+                                const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
+                                return `
+                                <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
+                                    <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
+                                    <span>${escapeHtml(rawText)}</span>
+                                </button>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="essay-wb-side-card is-${meta2.tone}">
+                        <div class="essay-wb-side-head">
+                            <span class="essay-wb-side-title">${meta2.icon} ${escapeHtml(guidedText(meta2.en, meta2.vi))}</span>
+                            <span class="essay-wb-side-count">${side2Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                        </div>
+                        <div class="essay-wb-side-chips">
+                            ${items2.map((item, idx) => {
+                                const chipId = `${side2Key}-${idx}`;
+                                const isPicked = guidedStep1SelectedChips.has(chipId);
+                                const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
+                                return `
+                                <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
+                                    <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
+                                    <span>${escapeHtml(rawText)}</span>
+                                </button>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        const blueprint = essayTypeInfo.blueprint || [];
+        const activeStepIdx = Math.max(0, Math.min(guidedStep1PipelineStep - 1, blueprint.length - 1));
+        const activeBlueprint = blueprint[activeStepIdx] || { partVi: 'Đoạn ' + guidedStep1PipelineStep, roleVi: 'Nhiệm vụ đoạn' };
+
+        let stepTrap = null;
+        if (traps && traps.length > 0) {
+            if (activeStepIdx === 0 && traps[1]) stepTrap = traps[1];
+            else if (activeStepIdx === 1 && traps[0]) stepTrap = traps[0];
+            else if (activeStepIdx === 2 && traps[2]) stepTrap = traps[2];
+            else stepTrap = traps[0];
+        }
+
+        const pipelineHtml = `
+        <div class="essay-wb-pipeline-box">
+            <div class="essay-wb-section-head">
+                <span class="essay-wb-section-badge">🏛️ ${guidedText('4-Paragraph Blueprint', 'Khung dàn ý 4 đoạn')}</span>
+                <p class="essay-wb-section-sub">${guidedText('Click on each paragraph to view its primary mission and common pitfalls to avoid:', 'Bấm vào từng đoạn để xem nhiệm vụ chính và mẹo tránh mất điểm:')}</p>
+            </div>
+            <div class="essay-wb-pipeline-stepper">
+                ${blueprint.map((b, idx) => {
+                    const stepNum = idx + 1;
+                    const isActive = stepNum === guidedStep1PipelineStep;
+                    return `
+                    <button type="button" class="essay-wb-pipe-btn${isActive ? ' is-active' : ''}" data-guided-action="select-pipeline-step" data-step-num="${stepNum}">
+                        <div class="essay-wb-pipe-top">
+                            <span class="essay-wb-pipe-num">${stepNum}</span>
+                            <span class="essay-wb-pipe-label">${escapeHtml(guidedText(b.partEn, b.partVi))}</span>
+                        </div>
+                        <div class="essay-wb-pipe-role">${escapeHtml(guidedText(b.roleEn, b.roleVi))}</div>
+                        <div class="essay-wb-pipe-footer">
+                            <span class="essay-wb-pipe-tag">${idx === 0 ? '2-3 câu' : (idx === 3 ? '1-2 câu' : '4-5 câu')}</span>
+                            ${isActive ? '<span class="essay-wb-pipe-trap-badge">⚠️ Lưu ý</span>' : ''}
+                        </div>
+                    </button>`;
+                }).join('')}
+            </div>
+
+            <div class="essay-wb-pipeline-drawer">
+                <div class="essay-wb-drawer-head">
+                    <span class="essay-wb-drawer-pill">🎯 ${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeBlueprint.partEn, activeBlueprint.partVi))}</span>
+                </div>
+                <div class="essay-wb-drawer-content">
+                    <p class="essay-wb-drawer-mission">
+                        <strong>${guidedText('Mission:', 'Nhiệm vụ chính:')}</strong> ${escapeHtml(guidedText(activeBlueprint.roleEn, activeBlueprint.roleVi))}
+                    </p>
+                    ${stepTrap ? `
+                    <div class="essay-wb-drawer-trap">
+                        <span class="essay-wb-drawer-trap-icon">⚠️</span>
+                        <div class="essay-wb-drawer-trap-text">
+                            <strong>${guidedText('Watch out:', 'Lưu ý tránh mất điểm:')}</strong>
+                            <span>${escapeHtml(guidedText(stepTrap.mistakeEn || stepTrap.en, stepTrap.mistakeVi || stepTrap.vi))}</span>
+                        </div>
+                    </div>` : ''}
+                </div>
+            </div>
+        </div>`;
+
+        return `
+        <div class="essay-guided-whiteboard-layout">
             <div class="essay-step1-part essay-step1-part-1">
                 <div class="essay-step1-part-header">
                     <span class="essay-step1-part-pill">Part 1</span>
@@ -3341,8 +3544,200 @@
                 </div>
                 ${segmentsHtml}
             </div>
+            <div class="essay-step1-part essay-step1-part-2">
+                <div class="essay-step1-part-header">
+                    <span class="essay-step1-part-pill">Part 2</span>
+                    <h3 class="essay-step1-part-title">${guidedText('Stances & Structure', 'So sánh 2 phe & Khung dàn ý')}</h3>
+                </div>
+                ${twoSidesHtml}
+                ${pipelineHtml}
+                ${mcqHtml}
+                ${gapFillHtml}
+            </div>
+        </div>`;
+    }
 
-            <!-- Part 2: Type of essay & Strategic Blueprint -->
+    function renderStep1Stations(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
+        const blueprint = essayTypeInfo.blueprint || [];
+        const stanceKeys = Object.keys(grouped);
+
+        const navHtml = `
+        <div class="essay-stations-nav-bar">
+            <span class="essay-stations-nav-label">${guidedText('Quick Stations:', 'Xem theo từng phần:')}</span>
+            <div class="essay-stations-nav" role="tablist">
+                <button type="button" class="essay-station-tab-btn${guidedStep1StationTab === 'blueprint' ? ' is-active' : ''}" data-guided-action="select-station-tab" data-station="blueprint">
+                    <span>🏛️</span>
+                    <span>${guidedText('Station 1: 4-Paragraph Outline', 'Trạm 1: Dàn ý 4 đoạn')}</span>
+                </button>
+                <button type="button" class="essay-station-tab-btn${guidedStep1StationTab === 'stances' ? ' is-active' : ''}" data-guided-action="select-station-tab" data-station="stances">
+                    <span>⚖️</span>
+                    <span>${guidedText('Station 2: Two Angles', 'Trạm 2: Hai hướng làm bài')}</span>
+                </button>
+                <button type="button" class="essay-station-tab-btn${guidedStep1StationTab === 'traps' ? ' is-active' : ''}" data-guided-action="select-station-tab" data-station="traps">
+                    <span>⚠️</span>
+                    <span>${guidedText('Station 3: Tips & Practice', 'Trạm 3: Mẹo tránh lỗi & Luyện tập')}</span>
+                </button>
+            </div>
+        </div>`;
+
+        let paneContent = '';
+        if (guidedStep1StationTab === 'blueprint') {
+            paneContent = `
+            <div class="essay-station-pane is-blueprint">
+                <div class="essay-station-blueprint-grid">
+                    <div class="essay-station-type-card">
+                        <span class="essay-station-card-badge">🔍 ${guidedText('Essay Type', 'Dạng bài nhận biết')}</span>
+                        <h4 class="essay-station-type-title">${escapeHtml(guidedText(essayTypeInfo.titleEn, essayTypeInfo.titleVi))}</h4>
+                        <p class="essay-station-type-desc">${escapeHtml(guidedText(essayTypeInfo.howToRecognizeEn, essayTypeInfo.howToRecognizeVi))}</p>
+                        <div class="essay-station-trigger">
+                            <span class="essay-station-trigger-lbl">${guidedText('Trigger in prompt:', 'Từ khóa trong đề:')}</span>
+                            <code>${escapeHtml(guidedText(essayTypeInfo.triggerPhraseEn, essayTypeInfo.triggerPhraseVi))}</code>
+                        </div>
+                    </div>
+                    <div class="essay-station-outline-card">
+                        <span class="essay-station-card-badge">📐 ${guidedText('4-Paragraph Structure', 'Khung bài 4 đoạn')}</span>
+                        <div class="essay-station-outline-rows">
+                            ${blueprint.map((b, idx) => `
+                            <div class="essay-station-outline-row">
+                                <span class="essay-station-outline-num">${idx + 1}</span>
+                                <div class="essay-station-outline-text">
+                                    <strong class="essay-station-outline-part">${escapeHtml(guidedText(b.partEn, b.partVi))}</strong>
+                                    <span class="essay-station-outline-role">${escapeHtml(guidedText(b.roleEn, b.roleVi))}</span>
+                                </div>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        } else if (guidedStep1StationTab === 'stances') {
+            paneContent = `
+            <div class="essay-station-pane is-stances">
+                <div class="essay-station-stances-grid">
+                    ${stanceKeys.slice(0, 2).map(key => {
+                        const meta = stanceLabels[key] || { en: 'Stance', vi: 'Phe', icon: '📌', tone: 'general' };
+                        const items = grouped[key] || [];
+                        return `
+                        <div class="essay-station-stance-card is-${meta.tone}">
+                            <div class="essay-station-stance-head">
+                                <span class="essay-station-stance-title">${meta.icon} ${escapeHtml(guidedText(meta.en, meta.vi))}</span>
+                                <span class="essay-station-stance-count">${items.length} ${guidedText('ideas', 'ý')}</span>
+                            </div>
+                            <ul class="essay-station-bullet-list">
+                                ${items.map(item => {
+                                    const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
+                                    return `<li>${escapeHtml(rawText)}</li>`;
+                                }).join('')}
+                            </ul>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        } else {
+            paneContent = `
+            <div class="essay-station-pane is-traps">
+                <div class="essay-station-traps-cards">
+                    ${(traps || []).slice(0, 3).map((item, idx) => `
+                    <div class="essay-station-trap-card">
+                        <div class="essay-station-trap-head">
+                            <span class="essay-station-trap-badge">⚠️ ${guidedText('Tip', 'Lưu ý')} #${idx + 1}</span>
+                            <h4 class="essay-station-trap-title">${escapeHtml(guidedText(item.titleEn, item.titleVi) || '')}</h4>
+                        </div>
+                        <div class="essay-station-trap-body">
+                            <div class="essay-station-trap-row is-wrong">
+                                <span class="essay-station-trap-tag">🛑 ${guidedText('Avoid', 'Nên tránh')}</span>
+                                <p>${escapeHtml(guidedText(item.mistakeEn || item.en, item.mistakeVi || item.vi))}</p>
+                            </div>
+                            ${item.fixVi || item.fixEn ? `
+                            <div class="essay-station-trap-row is-right">
+                                <span class="essay-station-trap-tag">💡 ${guidedText('Do this', 'Nên làm')}</span>
+                                <p>${escapeHtml(guidedText(item.fixEn, item.fixVi))}</p>
+                            </div>` : ''}
+                        </div>
+                    </div>`).join('')}
+                </div>
+                ${mcqHtml}
+                ${gapFillHtml}
+            </div>`;
+        }
+
+        return `
+        <div class="essay-guided-stations-layout">
+            ${navHtml}
+            ${paneContent}
+        </div>`;
+    }
+
+    function renderStep1Hud(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
+        const blueprint = essayTypeInfo.blueprint || [];
+        
+        const ribbonHtml = `
+        <div class="essay-hud-ribbon-box">
+            <span class="essay-hud-section-label">1. ${guidedText('4-Step Flow', 'Mạch bài viết 4 đoạn')}</span>
+            <div class="essay-hud-ribbon">
+                ${blueprint.map((b, idx) => `
+                <div class="essay-hud-ribbon-step">
+                    <span class="essay-hud-step-num">${idx + 1}</span>
+                    <div class="essay-hud-step-text">
+                        <strong class="essay-hud-step-part">${escapeHtml(guidedText(b.partEn, b.partVi))}</strong>
+                        <span class="essay-hud-step-role">${escapeHtml(guidedText(b.roleEn, b.roleVi))}</span>
+                    </div>
+                </div>
+                ${idx < blueprint.length - 1 ? '<span class="essay-hud-ribbon-arrow">→</span>' : ''}
+                `).join('')}
+            </div>
+        </div>`;
+
+        const dontItems = [];
+        const doItems = [];
+        (traps || []).slice(0, 3).forEach(t => {
+            if (t.mistakeVi || t.mistakeEn) dontItems.push(guidedText(t.mistakeEn, t.mistakeVi));
+            if (t.fixVi || t.fixEn) doItems.push(guidedText(t.fixEn, t.fixVi));
+        });
+
+        const doDontHtml = `
+        <div class="essay-hud-dodont-box">
+            <span class="essay-hud-section-label">2. ${guidedText('Do vs Don\'t Guidelines', 'Cách viết nên làm & nên tránh')}</span>
+            <div class="essay-hud-dodont-grid">
+                <div class="essay-hud-dodont-col is-dont">
+                    <div class="essay-hud-dodont-head">
+                        <span class="essay-hud-dodont-icon">✕</span>
+                        <h4 class="essay-hud-dodont-title">${guidedText('WHAT TO AVOID', 'NÊN TRÁNH ✕')}</h4>
+                    </div>
+                    <ul class="essay-hud-dodont-list">
+                        ${dontItems.map(txt => `<li><span class="bullet">•</span><span>${escapeHtml(txt)}</span></li>`).join('')}
+                    </ul>
+                </div>
+                <div class="essay-hud-dodont-col is-do">
+                    <div class="essay-hud-dodont-head">
+                        <span class="essay-hud-dodont-icon">✓</span>
+                        <h4 class="essay-hud-dodont-title">${guidedText('WHAT TO DO', 'NÊN LÀM ✓')}</h4>
+                    </div>
+                    <ul class="essay-hud-dodont-list">
+                        ${doItems.map(txt => `<li><span class="bullet">•</span><span>${escapeHtml(txt)}</span></li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>`;
+
+        return `
+        <div class="essay-guided-hud-layout">
+            ${ribbonHtml}
+            ${doDontHtml}
+            ${mcqHtml}
+            ${gapFillHtml}
+        </div>`;
+    }
+
+    function renderStep1List(segmentsHtml, essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml) {
+        return `
+        <div class="essay-guided-list-layout">
+            <div class="essay-step1-part essay-step1-part-1">
+                <div class="essay-step1-part-header">
+                    <span class="essay-step1-part-pill">Part 1</span>
+                    <h3 class="essay-step1-part-title">${guidedText('Understanding Parts of the Question', 'Hiểu nhanh các vế của đề bài')}</h3>
+                </div>
+                ${segmentsHtml}
+            </div>
             <div class="essay-step1-part essay-step1-part-2">
                 <div class="essay-step1-part-header">
                     <span class="essay-step1-part-pill">Part 2</span>
@@ -3350,12 +3745,12 @@
                 </div>
                 ${essayTypeCardHtml}
                 ${reqsHtml}
-                ${trapsHtml ? guidedGroup('traps', guidedText('Common Mistakes to Avoid', 'Lỗi phổ biến cần tránh với đề này'), trapsHtml, { count: traps.length, tone: 'warn', defaultOpen: true, help: 'traps' }) : ''}
+                ${trapsHtml}
                 ${anglesHtml}
                 ${mcqHtml}
                 ${gapFillHtml}
             </div>
-        </section>`;
+        </div>`;
     }
 
     function getAvailablePointsForPlan(plan, levelData, common) {

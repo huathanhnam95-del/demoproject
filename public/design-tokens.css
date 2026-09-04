@@ -174,4 +174,33 @@
   /* Transitions — named properties, not `all`. `all` includes outline-width, which made
      focus rings fade in over the transition duration instead of appearing on focus. */
   --transition-base: color 0.25s ease-out, background-color 0.25s ease-out, border-color 0.25s ease-out, box-shadow 0.25s ease-out, transform 0.25s ease-out, opacity 0.25s ease-out;
+
+  /* Speech Coach — one hue per connected-speech family, so a guide chip, the
+     annotation it draws in the passage, and the card that explains it all read
+     as the same thing. These were previously hex literals generated inside JS
+     template strings (read-aloud-mode.js), which put them out of reach of every
+     stylesheet and made the coach impossible to restyle. */
+  --coach-linking-strong: var(--blue-600);
+  --coach-linking-text: #1d4ed8;
+  --coach-linking-tint: rgba(37, 99, 235, 0.12);
+  --coach-linking-surface: #f5f8ff;
+
+  --coach-reduced-strong: #d97706;
+  --coach-reduced-text: #92400e;
+  --coach-reduced-tint: rgba(217, 119, 6, 0.14);
+  --coach-reduced-surface: #fffaf0;
+
+  --coach-sound-strong: #b45309;
+  --coach-sound-text: #92400e;
+  --coach-sound-tint: rgba(180, 83, 9, 0.14);
+  --coach-sound-surface: #fffaf0;
+
+  /* Scored outcomes. Distinct from the family hues above: family says *what*
+     the pattern is, status says how the attempt went. */
+  --coach-status-success: #047857;
+  --coach-status-success-tint: #d1fae5;
+  --coach-status-error: #b91c1c;
+  --coach-status-error-tint: #fee2e2;
+  --coach-status-uncertain: #92400e;
+  --coach-status-uncertain-tint: #fef3c7;
 }

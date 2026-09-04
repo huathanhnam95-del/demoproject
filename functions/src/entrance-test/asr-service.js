@@ -62,6 +62,65 @@ function getGeminiApiKeys() {
     return keys.filter((k, i, self) => self.indexOf(k) === i);
 }
 
+function getAzureSpeechCredentials() {
+    let key = process.env.AZURE_SPEECH_KEY ? process.env.AZURE_SPEECH_KEY.trim() : '';
+    let region = process.env.AZURE_SPEECH_REGION ? process.env.AZURE_SPEECH_REGION.trim() : '';
+
+    if (!key || !region) {
+        const candidates = [
+            path.resolve(__dirname, '..', '..', '.env'),
+            path.resolve(__dirname, '..', '..', '..', '.env')
+        ];
+        for (const p of candidates) {
+            try {
+                if (fs.existsSync(p)) {
+                    const content = fs.readFileSync(p, 'utf8');
+                    for (const line of content.split('\n')) {
+                        const trimmed = line.trim();
+                        if (!key && trimmed.startsWith('AZURE_SPEECH_KEY=')) {
+                            key = trimmed.split('=')[1]?.trim().replace(/^['"]|['"]$/g, '') || '';
+                        }
+                        if (!region && trimmed.startsWith('AZURE_SPEECH_REGION=')) {
+                            region = trimmed.split('=')[1]?.trim().replace(/^['"]|['"]$/g, '') || '';
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+    }
+    return { key, region: region || 'southeastasia' };
+}
+
+/**
+ * Resolves appropriate audio MIME type for Azure Speech REST API.
+ */
+function resolveAzureAudioMimeType(contentType, audioBuffer) {
+    if (Buffer.isBuffer(audioBuffer) && audioBuffer.length >= 4) {
+        // RIFF header -> WAV
+        if (audioBuffer[0] === 0x52 && audioBuffer[1] === 0x49 && audioBuffer[2] === 0x46 && audioBuffer[3] === 0x46) {
+            return 'audio/wav; codecs=audio/pcm';
+        }
+        // ID3 or MP3 sync frame
+        if ((audioBuffer[0] === 0x49 && audioBuffer[1] === 0x44 && audioBuffer[2] === 0x33) ||
+            (audioBuffer[0] === 0xFF && (audioBuffer[1] & 0xE0) === 0xE0)) {
+            return 'audio/mp3';
+        }
+        // EBML (WebM)
+        if (audioBuffer[0] === 0x1A && audioBuffer[1] === 0x45 && audioBuffer[2] === 0xDF && audioBuffer[3] === 0xA3) {
+            return 'audio/webm; codecs=opus';
+        }
+        // OggS
+        if (audioBuffer[0] === 0x4F && audioBuffer[1] === 0x67 && audioBuffer[2] === 0x67 && audioBuffer[3] === 0x53) {
+            return 'audio/ogg; codecs=opus';
+        }
+    }
+    const ct = String(contentType || '').toLowerCase().trim();
+    if (ct.includes('wav')) return 'audio/wav; codecs=audio/pcm';
+    if (ct.includes('mp3') || ct.includes('mpeg')) return 'audio/mp3';
+    if (ct.includes('ogg')) return 'audio/ogg; codecs=opus';
+    return 'audio/webm; codecs=opus';
+}
+
 /**
  * Normalizes audio content type to standard MIME type accepted by Gemini.
  */
@@ -110,6 +169,111 @@ function cleanHallucinatedLoops(text, options = {}) {
 
     // Normalize whitespace
     return cleaned.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Performs high-precision forced acoustic alignment using Azure Speech Pronunciation Assessment.
+ * Aligns the spoken transcript text directly against acoustic audio frames, returning millisecond-accurate
+ * word boundaries (Offset and Duration) matching the Read Aloud engine.
+ *
+ * @param {Buffer} audioBuffer - Audio data
+ * @param {string} referenceText - Target text to align against (candidate transcript or expected passage)
+ * @param {string} [contentType] - Input MIME type
+ * @returns {Promise<Array<{word: string, startMs: number, endMs: number, accuracyScore: number, errorType: string}>|null>}
+ */
+async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
+    const { key, region } = getAzureSpeechCredentials();
+    if (!key || !region) return null;
+
+    const cleanRef = String(referenceText || '')
+        .replace(/[.,;:!?\u2019'"]/g, ' ')
+        .replace(/\$/g, ' dollars ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!cleanRef) return null;
+
+    let finalBuffer = audioBuffer;
+    let mime = resolveAzureAudioMimeType(contentType, audioBuffer);
+
+    // Convert audio to 16kHz mono PCM WAV if ffmpeg is available for highest acoustic alignment fidelity
+    try {
+        const { spawnSync } = require('child_process');
+        const ffmpegRes = spawnSync('ffmpeg', [
+            '-loglevel', 'error',
+            '-i', 'pipe:0',
+            '-ac', '1',
+            '-ar', '16000',
+            '-f', 'wav',
+            'pipe:1'
+        ], {
+            input: audioBuffer,
+            maxBuffer: 50 * 1024 * 1024,
+            windowsHide: true
+        });
+        if (ffmpegRes.status === 0 && Buffer.isBuffer(ffmpegRes.stdout) && ffmpegRes.stdout.length > 44) {
+            finalBuffer = ffmpegRes.stdout;
+            mime = 'audio/wav; codecs=audio/pcm; samplerate=16000';
+        }
+    } catch (_) {
+        // Fallback to sending original buffer with resolved mime type
+    }
+
+    const config = {
+        ReferenceText: cleanRef,
+        GradingSystem: 'HundredMark',
+        Granularity: 'Word',
+        PhonemeAlphabet: 'IPA',
+        EnableMiscue: true
+    };
+    const header = Buffer.from(JSON.stringify(config)).toString('base64');
+    const endpoint = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': mime,
+                'Ocp-Apim-Subscription-Key': key,
+                'Pronunciation-Assessment': header
+            },
+            body: finalBuffer
+        });
+
+        if (!res.ok) {
+            console.warn(`[EntranceTest ASR] Azure alignment returned status ${res.status}`);
+            return null;
+        }
+        const resJson = await res.json();
+        const rawWords = resJson.NBest?.[0]?.Words || [];
+
+        const words = rawWords.map(w => {
+            const rawOffset = Number(w.Offset);
+            const rawDuration = Number(w.Duration);
+            const startMs = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.round(rawOffset / 10000) : null;
+            const durMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.round(rawDuration / 10000) : null;
+            const endMs = startMs != null && durMs != null ? startMs + durMs : null;
+            return {
+                word: String(w.Word || '').trim(),
+                startMs,
+                endMs,
+                accuracyScore: Math.round(Number(w.PronunciationAssessment?.AccuracyScore) || 0),
+                errorType: String(w.PronunciationAssessment?.ErrorType || 'None')
+            };
+        }).filter(w => w.word.length > 0 && w.startMs != null && w.endMs != null && w.endMs > w.startMs);
+
+        return words.length > 0 ? words : null;
+    } catch (err) {
+        console.warn('[EntranceTest ASR] Azure alignment error:', err?.message || err);
+        return null;
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 /**
@@ -185,7 +349,29 @@ async function transcribeAudio(audioBuffer, contentType, options = {}) {
                 const cleaned = cleanHallucinatedLoops(rawText);
 
                 if (cleaned) {
-                    return cleaned;
+                    let words = null;
+                    try {
+                        words = await alignAudioWithAzure(audioBuffer, cleaned, contentType);
+                    } catch (alignErr) {
+                        console.warn('[EntranceTest ASR] Azure alignment attempt failed:', alignErr?.message || alignErr);
+                    }
+
+                    // Fallback to Whisper for word timestamps if Azure alignment yielded no words
+                    if (!words || words.length === 0) {
+                        try {
+                            const hfRes = await transcribeWithHuggingFace(audioBuffer, contentType);
+                            if (Array.isArray(hfRes?.words) && hfRes.words.length > 0) {
+                                words = hfRes.words;
+                            }
+                        } catch (_) {
+                            // Non-blocking fallback
+                        }
+                    }
+
+                    return Object.assign(new String(cleaned), {
+                        text: cleaned,
+                        words: words && words.length > 0 ? words : null
+                    });
                 }
             } catch (err) {
                 lastError = err;
@@ -327,6 +513,10 @@ function extractWordsFromChunks(chunks) {
                 endMs = startMs + 600;
             }
         }
+        // Cap excessive chunk duration (e.g. >1.8s) to prevent absorbing inter-word pauses
+        if (endMs - startMs > 1800) {
+            endMs = startMs + 1000;
+        }
         return {
             word: rawWord,
             startMs,
@@ -338,6 +528,9 @@ function extractWordsFromChunks(chunks) {
 module.exports = {
     transcribeAudio,
     transcribeWithHuggingFace,
+    alignAudioWithAzure,
+    getAzureSpeechCredentials,
+    resolveAzureAudioMimeType,
     extractWordsFromChunks,
     cleanHallucinatedLoops,
     resolveGeminiAudioMimeType,

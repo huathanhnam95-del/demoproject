@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.114</div>
+  <div id="version-indicator" class="version-indicator">V1.8.115</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -5250,47 +5250,51 @@
              No manual HTML needed — the controller.register() handles it.
              Settings ⚙ button is injected into SPC primary row by initSettingsSheet(). -->
 
-        <!-- ═══════ ZONE 2: TEXT PASSAGE ═══════ -->
-        <div class="ra-zone-passage" style="max-width: 900px; margin: 0 auto; padding: 20px;">
-          <div id="ra-prompt-layout"
-            style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 18px; margin-bottom: 0;">
-            <div class="ra-prompt-box"
-              style="flex: 1 1 620px; min-width: 280px; font-size: 1.15rem; line-height: 1.6; text-align: left; min-height: 120px; display: flex; flex-direction: column; gap: 14px; position: relative;">
-              <div id="ra-prompt-card-header"
-                style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
-                <div id="ra-guide-instruction" style="font-size: 0.92rem; color: var(--text-muted); max-width: 480px; font-weight: 500;">Select a guide mode below to highlight pause groups, linking, reduced words, or sound changes.</div>
-                <div id="ra-prompt-guides-group" role="group" aria-label="Prompt guides"
-                  style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: 20px; background: rgba(37, 99, 235, 0.08); max-width: 100%;">
-                  <button id="ra-toggle-chunking-btn" type="button" aria-pressed="false"
-                    style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Chunking</button>
-                  <div id="ra-connected-speech-group" role="group" aria-label="Connected speech"
-                    style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; max-width: 100%;">
-                    <button id="ra-toggle-linking-btn" type="button" aria-pressed="false"
-                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Linking</button>
-                    <button id="ra-toggle-reduced-words-btn" type="button" aria-pressed="false"
-                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Reduced
-                      words</button>
-                    <button id="ra-toggle-sound-changes-btn" type="button" aria-pressed="false"
-                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Sound
-                      changes</button>
-                  </div>
-                </div>
+        <!-- ═══════ ZONES 2–4: PRACTICE WORKBENCH ═══════
+             One grid, shared with the SPC controller via .spc-shell-grid. The
+             passage and its Speech Coach sit side by side so a marked word and
+             the card explaining it are in one line of sight; below 940px the
+             rail stacks under the stage. Presentation lives in style.css —
+             inline styles here are state (JS display toggles) only. -->
+        <div class="ra-workbench spc-shell-grid">
+
+          <div class="ra-guidebar">
+            <div id="ra-prompt-guides-group" class="ra-guide-chips" role="group" aria-label="Prompt guides">
+              <button id="ra-toggle-chunking-btn" class="ra-guide-chip ra-guide-chip--chunking" type="button"
+                aria-pressed="false">Chunking</button>
+              <div id="ra-connected-speech-group" class="ra-guide-chip-group" role="group"
+                aria-label="Connected speech">
+                <button id="ra-toggle-linking-btn" class="ra-guide-chip ra-guide-chip--linking" type="button"
+                  aria-pressed="false">Linking</button>
+                <button id="ra-toggle-reduced-words-btn" class="ra-guide-chip ra-guide-chip--reduced" type="button"
+                  aria-pressed="false">Reduced words</button>
+                <button id="ra-toggle-sound-changes-btn" class="ra-guide-chip ra-guide-chip--sound" type="button"
+                  aria-pressed="false">Sound changes</button>
               </div>
-              <div id="ra-linking-status" aria-live="polite" aria-atomic="true"
-                style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+            </div>
+            <div class="ra-guidebar-meta">
+              <div id="ra-accuracy-readout" class="ra-accuracy-readout" hidden>
+                <span class="ra-accuracy-label">Accuracy</span>
+                <span class="ra-accuracy-score"><span id="ra-accuracy-value">--</span>%</span>
               </div>
-              <div id="ra-prompt-stage"
-                style="position: relative; min-height: 120px; padding-top: 8px; padding-bottom: 24px;">
-                <p id="ra-prompt-plain"
-                  style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
-                  Loading text...</p>
-                <p id="ra-text-prompt" class="ra-text" style="margin: 0; position: relative; z-index: 1;">Loading
-                  text...</p>
-                <svg id="ra-linking-overlay" aria-hidden="true"
-                  style="display: none; pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;"></svg>
-                <div id="ra-connected-speech-badges" aria-hidden="true"
-                  style="display: none; pointer-events: none; position: absolute; inset: 0; overflow: visible;"></div>
-                <div id="ra-sound-change-tooltip" class="ra-sound-change-tooltip" role="tooltip" aria-hidden="true" style="display: none;">
+            </div>
+          </div>
+
+          <div id="ra-guide-instruction" class="ra-guide-instruction">Select a guide mode above to highlight pause
+            groups, linking, reduced words, or sound changes.</div>
+
+          <div class="ra-split">
+            <div class="ra-stage">
+              <div id="ra-linking-status" class="ra-sr-only" aria-live="polite" aria-atomic="true"></div>
+              <div id="ra-prompt-stage" class="ra-prompt-stage">
+                <p id="ra-prompt-plain" class="ra-sr-only">Loading text...</p>
+                <p id="ra-text-prompt" class="ra-text">Loading text...</p>
+                <svg id="ra-linking-overlay" class="ra-linking-overlay" aria-hidden="true"
+                  style="display: none;"></svg>
+                <div id="ra-connected-speech-badges" class="ra-connected-speech-badges" aria-hidden="true"
+                  style="display: none;"></div>
+                <div id="ra-sound-change-tooltip" class="ra-sound-change-tooltip" role="tooltip" aria-hidden="true"
+                  style="display: none;">
                   <div class="ra-sound-change-tooltip__arrow"></div>
                   <div class="ra-sound-change-tooltip__header">
                     <span class="ra-sound-change-tooltip__badge">Sound Change</span>
@@ -5301,39 +5305,90 @@
                   <div class="ra-sound-change-tooltip__explanation"></div>
                 </div>
               </div>
-              <div id="ra-linking-fallback-list" style="display: none !important; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div id="ra-linking-fallback-list" class="ra-linking-fallback-list"></div>
+              <div id="ra-linking-a11y-summary" class="ra-sr-only" aria-live="polite" aria-atomic="true"></div>
+
+              <!-- Results flow under the stage on the panel background. The old
+                   .ra-card--results wrapper was a card inside a card. -->
+              <div id="ra-result-box" class="ra-results-block" style="display: none;">
+                <div id="ra-transcript-feedback" class="ra-feedback-text"></div>
+                <div id="ra-feedback-mode-hint" class="ra-feedback-mode-hint" hidden></div>
+                <div id="ra-show-advanced-container" class="ra-show-advanced-container" style="display: none;">
+                  <button id="ra-show-advanced-btn" class="ra-show-advanced-btn" type="button">✨ Show Advanced
+                    Analysis</button>
+                </div>
               </div>
-              <div id="ra-linking-a11y-summary" aria-live="polite" aria-atomic="true"
-                style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+
+              <div id="ra-real-audio-player-wrapper" class="ra-real-audio-player-wrapper" style="display: none;">
+                <div class="ra-audio-source-tabs" id="ra-audio-source-tabs" role="tablist"
+                  aria-label="Audio source selector">
+                  <button id="ra-source-tab-yours" class="ra-source-tab active" type="button" role="tab"
+                    aria-selected="true" aria-controls="ra-player-section">
+                    <span class="material-symbols-outlined" aria-hidden="true">mic</span>
+                    <span>Your Recording</span>
+                  </button>
+                  <button id="ra-source-tab-sample" class="ra-source-tab" type="button" role="tab"
+                    aria-selected="false" aria-controls="ra-player-section">
+                    <span class="material-symbols-outlined" aria-hidden="true">volume_up</span>
+                    <span id="ra-source-tab-sample-label">Sample Audio</span>
+                  </button>
+                </div>
+                <section id="ra-player-section" class="ra-audio practice-audio-player" aria-label="Audio player">
+                  <button id="ra-custom-play-btn" class="ra-play-btn" type="button" aria-label="Play recording">
+                    <span id="ra-custom-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                    <span id="ra-custom-play-label">Play</span>
+                  </button>
+                  <div class="ra-progress-wrap">
+                    <div class="ra-progress" aria-hidden="true">
+                      <div id="ra-custom-progress-fill" class="ra-progress-fill"></div>
+                    </div>
+                    <input id="ra-custom-seek" class="ra-seek" type="range" min="0" max="100" step="0.1" value="0"
+                      aria-label="Audio timeline">
+                  </div>
+                  <span id="ra-custom-audio-time" class="ra-audio-time">00:00 / 00:00</span>
+                  <label class="ra-volume-label" for="ra-custom-volume">Volume</label>
+                  <input id="ra-custom-volume" class="ra-volume" type="range" min="0" max="1" step="0.05" value="1">
+                </section>
               </div>
+
+              <div id="ra-status-message" class="ra-status-msg"></div>
             </div>
+
+            <!-- Speech Coach rail. Sits beside the passage, not 400px below it. -->
+            <aside id="ra-connected-speech-box" class="ra-rail" style="display: none;" aria-label="Speech coach">
+              <div class="ra-rail-header">
+                <div class="ra-rail-titles">
+                  <span id="ra-connected-speech-label" class="ra-rail-title">Speech Coach</span>
+                  <span id="ra-connected-speech-meta" class="ra-rail-meta">Preview</span>
+                </div>
+                <button id="ra-speech-coach-toggle" class="ra-rail-toggle" type="button" aria-expanded="true"
+                  title="Hide/show Speech Coach">👁 Hide</button>
+              </div>
+              <div id="ra-connected-speech-summary" class="ra-rail-summary">Feedback Details</div>
+              <div id="ra-connected-speech-paragraph" class="ra-rail-paragraph"></div>
+              <div id="ra-connected-speech-list" class="ra-rail-list" aria-live="polite">
+                <!-- JS injects guide cards (preview) or scored findings (results) here. -->
+              </div>
+              <div id="ra-connected-speech-mode-hint" class="ra-feedback-mode-hint" hidden></div>
+            </aside>
           </div>
         </div>
 
-        <!-- ═══════ ZONE 3: ACTION BAR (timers + status + controls) ═══════ -->
-        <div class="ra-zone-actions" style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
-          <!-- Timers -->
-          <div class="ra-status-bar" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 12px;">
-            <div class="ra-timer-box" id="ra-prep-timer-box" style="text-align: center;">
-              <div class="ra-timer-label"
-                style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Prep
-                Time</div>
-              <div class="ra-timer-value" id="ra-prep-time"
-                style="font-size: 2rem; font-weight: bold; color: var(--brand-primary);">00:40</div>
-            </div>
-            <div class="ra-timer-box" id="ra-record-timer-box" style="text-align: center; opacity: 0.4;">
-              <div class="ra-timer-label"
-                style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">
-                Record Time</div>
-              <div class="ra-timer-value" id="ra-record-time"
-                style="font-size: 2rem; font-weight: bold; color: var(--danger, #ef4444);">00:40</div>
-            </div>
-          </div>
+        <!-- Zone 3 action controls (timers, record/stop/check/retry) are declared in
+             Zone 5 below and adopted into the SPC sticky footer at runtime. -->
 
-          <!-- Action Buttons -->
-          <div id="ra-read-aloud-controls" class="unified-controls"
-            style="width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none; border: none; margin-bottom: 0;">
-            <div class="control-toolbar" style="justify-content: center;">
+        <!-- ═══════ ZONE 3 SOURCE: ACTION CONTROLS (adopted by SPC footer) ═══════ -->
+        <div class="ra-zone-actions-source">
+          <div class="ra-timer-box" id="ra-prep-timer-box">
+            <div class="ra-timer-label">Prep Time</div>
+            <div class="ra-timer-value" id="ra-prep-time">00:40</div>
+          </div>
+          <div class="ra-timer-box ra-timer-box--record" id="ra-record-timer-box">
+            <div class="ra-timer-label">Record Time</div>
+            <div class="ra-timer-value" id="ra-record-time">00:40</div>
+          </div>
+          <div id="ra-read-aloud-controls" class="unified-controls">
+            <div class="control-toolbar">
               <div class="function-group">
                 <button id="ra-record-btn" class="modern-btn modern-btn--record" type="button" disabled>Start
                   Recording</button>
@@ -5348,97 +5403,6 @@
                   style="display: none;">Retry</button>
               </div>
             </div>
-          </div>
-
-          <!-- Real Audio Controller and Player -->
-          <div id="ra-real-audio-player-wrapper" class="ra-real-audio-player-wrapper" style="display: none;">
-            <!-- Source Selector Tabs -->
-            <div class="ra-audio-source-tabs" id="ra-audio-source-tabs" role="tablist" aria-label="Audio source selector">
-              <button id="ra-source-tab-yours" class="ra-source-tab active" type="button" role="tab" aria-selected="true" aria-controls="ra-player-section">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 1.1rem;">mic</span>
-                <span>Your Recording</span>
-              </button>
-              <button id="ra-source-tab-sample" class="ra-source-tab" type="button" role="tab" aria-selected="false" aria-controls="ra-player-section">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 1.1rem;">volume_up</span>
-                <span id="ra-source-tab-sample-label">Sample Audio</span>
-              </button>
-            </div>
-
-            <!-- Custom Audio Controller Section -->
-            <section id="ra-player-section" class="ra-audio practice-audio-player" aria-label="Audio player">
-              <button id="ra-custom-play-btn" class="ra-play-btn" type="button" aria-label="Play recording">
-                <span id="ra-custom-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                <span id="ra-custom-play-label">Play</span>
-              </button>
-              <div class="ra-progress-wrap">
-                <div class="ra-progress" aria-hidden="true">
-                  <div id="ra-custom-progress-fill" class="ra-progress-fill"></div>
-                </div>
-                <input id="ra-custom-seek" class="ra-seek" type="range" min="0" max="100" step="0.1" value="0"
-                  aria-label="Audio timeline">
-              </div>
-              <span id="ra-custom-audio-time" class="ra-audio-time">00:00 / 00:00</span>
-              <label class="ra-volume-label" for="ra-custom-volume">Volume</label>
-              <input id="ra-custom-volume" class="ra-volume" type="range" min="0" max="1" step="0.05" value="1">
-            </section>
-          </div>
-
-          <!-- Status Message -->
-          <div id="ra-status-message" class="ra-status-msg"
-            style="font-weight: 500; color: var(--text-muted); min-height: 24px; text-align: center; margin-top: 8px;"></div>
-
-
-        </div>
-
-        <!-- ═══════ ZONE 4: RESULTS ═══════ -->
-        <div class="ra-zone-results" style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
-          <!-- Accuracy Results -->
-          <div id="ra-result-box" class="ra-result ra-card ra-card--results"
-            style="display: none; margin-bottom: 20px;">
-            <div class="ra-accuracy-score" style="font-size: 2.5rem; font-weight: 800; color: var(--success, #059669);">
-              <span id="ra-accuracy-value">--</span>%
-            </div>
-            <div class="ra-accuracy-label"
-              style="text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">
-              Accuracy</div>
-            <div id="ra-transcript-feedback" class="ra-feedback-text"
-              style="font-size: 1.1rem; line-height: 1.5; position: relative;">
-              <!-- Overlay SVG will be injected here during Results rendering if enabled -->
-            </div>
-            <div id="ra-feedback-mode-hint" class="ra-feedback-mode-hint" hidden></div>
-            <div id="ra-show-advanced-container" style="display: none; margin-top: 16px; text-align: center;">
-              <button id="ra-show-advanced-btn" type="button" class="modern-btn"
-                style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: #ffffff; color: var(--brand-primary, #2563eb); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
-                ✨ Show Advanced Analysis
-              </button>
-            </div>
-          </div>
-
-          <!-- Connected Speech Coach -->
-          <div id="ra-connected-speech-box" class="ra-result ra-card ra-card--coach"
-            style="display: none; width: 100%; margin-bottom: 20px;">
-            <div
-              style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
-              <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
-                <div id="ra-connected-speech-label"
-                  style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
-                  Speech Coach</div>
-                <div id="ra-connected-speech-meta"
-                  style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
-                  Preview</div>
-                <button id="ra-speech-coach-toggle" type="button" aria-expanded="true" title="Hide/show Speech Coach"
-                  style="padding: 3px 10px; border-radius: 999px; border: 1px solid #d1d5db; background: #fff; color: #4b5563; font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap;">👁
-                  Hide</button>
-              </div>
-              <div id="ra-connected-speech-summary"
-                style="font-size: 0.98rem; color: #374151; margin-top: 4px; font-weight: 600;">Feedback Details</div>
-            </div>
-            <div id="ra-connected-speech-paragraph" style="margin-bottom: 16px; position: relative;"></div>
-            <div id="ra-connected-speech-list"
-              aria-live="polite">
-              <!-- JS injects populated feedback columns here. -->
-            </div>
-            <div id="ra-connected-speech-mode-hint" class="ra-feedback-mode-hint" hidden></div>
           </div>
         </div>
 
@@ -6250,7 +6214,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.114"></script>
+  <script src="/read-aloud-mode.js?v=1.8.115"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

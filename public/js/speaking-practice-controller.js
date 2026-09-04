@@ -19,6 +19,8 @@
   const STORAGE_KEY = 'bel:speaking-controller:view:v1';
   const VALID_VIEWS = new Set(['basic', 'advanced']);
   const FALLBACK_VIEW = 'basic';
+  const FOCUS_WIDTH_KEY = 'bel:speaking-controller:focus-width:v1';
+  const FOCUS_WIDTH_CLASS = 'spc-focus';
 
   // All valid scope:mode combinations.
   // DEFAULT_ENABLED_TARGETS was merged into TARGETS since all production adapters are now integrated.
@@ -47,6 +49,7 @@
 
   /** @type {string} in-memory view fallback */
   let inMemoryView = FALLBACK_VIEW;
+  let inMemoryFocusWidth = true;
 
   /** @type {number} scroll-lock counter */
   let scrollLockCount = 0;
@@ -105,6 +108,34 @@
 
   function getPreferredView() {
     return readStoredView();
+  }
+
+  /* ═══════════════════════════ FOCUS WIDTH ═══════════════════════════ */
+
+  // Practice modes want a wider working surface than the 1100px reading column
+  // the rest of the app uses — the Read Aloud passage and its coach rail cannot
+  // both breathe inside it. Wide is the default; the preference only records a
+  // deliberate opt-out.
+  function readFocusWidthPreference() {
+    try {
+      const stored = localStorage.getItem(FOCUS_WIDTH_KEY);
+      if (stored === null) return true;
+      return stored !== 'off';
+    } catch (_) {
+      return inMemoryFocusWidth;
+    }
+  }
+
+  function writeFocusWidthPreference(enabled) {
+    inMemoryFocusWidth = !!enabled;
+    try {
+      localStorage.setItem(FOCUS_WIDTH_KEY, enabled ? 'on' : 'off');
+    } catch (_) { /* quota or private mode */ }
+  }
+
+  function applyFocusWidth(enabled, button) {
+    document.body.classList.toggle(FOCUS_WIDTH_CLASS, !!enabled);
+    if (button) button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   }
 
   function setPreferredView(view) {
@@ -667,9 +698,9 @@
     controller.dataset.spcMode = config.modeId;
     controller.dataset.spcView = FALLBACK_VIEW;
 
-    // Row 1: Primary (picker + toggle)
+    // Row 1: Primary (picker + steps + toggle)
     const row1 = document.createElement('div');
-    row1.className = 'spc-row spc-row--primary';
+    row1.className = 'spc-row spc-row--primary spc-shell-grid';
 
     const pickerNav = document.createElement('div');
     pickerNav.className = 'spc-picker-nav';
@@ -754,16 +785,37 @@
     settingsBtn.setAttribute('aria-label', 'Settings');
     settingsBtn.innerHTML = '⚙ Settings';
 
+    // Focus width toggle. Practice screens read better on a wide working surface
+    // than inside the 1100px reading column the rest of the app uses, so the wide
+    // layout is the default and this button is the way back out of it.
+    const focusBtn = document.createElement('button');
+    focusBtn.className = 'spc-view-toggle-btn spc-focus-btn';
+    focusBtn.type = 'button';
+    focusBtn.title = 'Toggle wide practice layout';
+    focusBtn.setAttribute('aria-label', 'Toggle wide practice layout');
+    focusBtn.setAttribute('aria-pressed', 'true');
+    focusBtn.textContent = '⛶';
+
     toggle.appendChild(basicBtn);
     toggle.appendChild(advancedBtn);
     toggle.appendChild(settingsBtn);
+    toggle.appendChild(focusBtn);
+
+    // Steps live in the primary row rather than on a dedicated rail above it.
+    // As their own row they cost every speaking mode ~44px of chrome before the
+    // learner reaches any content, and they introduced a third column width.
+    const slotSteps = document.createElement('div');
+    slotSteps.className = 'spc-slot-steps';
 
     row1.appendChild(pickerNav);
+    row1.appendChild(slotSteps);
     row1.appendChild(toggle);
 
-    // Row 2: Actions (media + attempt)
+    // Row 2: Actions (media + attempt). Lives in the sticky footer below, not in
+    // the header — the primary action belongs at the end of the flow, under the
+    // content it acts on.
     const row2 = document.createElement('div');
-    row2.className = 'spc-row spc-row--actions';
+    row2.className = 'spc-row spc-row--actions spc-shell-grid';
 
     const slotMedia = document.createElement('div');
     slotMedia.className = 'spc-slot-media';
@@ -773,9 +825,14 @@
     row2.appendChild(slotMedia);
     row2.appendChild(slotAttempt);
 
+    const footer = document.createElement('div');
+    footer.className = 'spc-footer';
+    footer.dataset.spcMode = config.modeId;
+    footer.appendChild(row2);
+
     // Row 3: Advanced
     const row3 = document.createElement('div');
-    row3.className = 'spc-row spc-row--advanced';
+    row3.className = 'spc-row spc-row--advanced spc-shell-grid';
 
     const activeChip = document.createElement('span');
     activeChip.className = 'spc-active-chip';
@@ -794,15 +851,14 @@
     row3.appendChild(slotAdvSetting);
 
     controller.appendChild(row1);
-    controller.appendChild(row2);
     controller.appendChild(row3);
 
     return {
-      controller, row1, row2, row3,
+      controller, footer, row1, row2, row3,
       pickerNav, prevBtn, pill, pillId, pillLabel, pillArrow, nextBtn,
       orderToggle,
-      toggle, basicBtn, advancedBtn, settingsBtn,
-      slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
+      toggle, basicBtn, advancedBtn, settingsBtn, focusBtn,
+      slotSteps, slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
       activeChip
     };
   }
@@ -1492,14 +1548,22 @@
 
     hideLegacyPicker(config, state);
 
-    // Steps first, then the controller. The step indicator used to be inserted *after*
-    // the control bar, so the primary action ("Start recording now") appeared before the
-    // thing that tells you which phase you are in — the reader met the button before the
-    // context for it.
+    // Header at the top, action footer at the bottom, steps inside the header's
+    // primary row. The step indicator still precedes the primary action in reading
+    // order — the reader meets the phase before the button for it — but it no
+    // longer costs a row of its own.
     panel.insertBefore(dom.controller, panel.firstChild);
     if (steps?.element) {
-      panel.insertBefore(steps.element, dom.controller);
+      dom.slotSteps.appendChild(steps.element);
     }
+    panel.appendChild(dom.footer);
+
+    applyFocusWidth(readFocusWidthPreference(), dom.focusBtn);
+    dom.focusBtn.addEventListener('click', () => {
+      const next = document.body.classList.contains(FOCUS_WIDTH_CLASS) ? false : true;
+      writeFocusWidthPreference(next);
+      applyFocusWidth(next, dom.focusBtn);
+    });
 
     // Build picker
     buildPicker(config, state);
@@ -1556,6 +1620,9 @@
     if (state.dom.controller.parentNode) {
       state.dom.controller.remove();
     }
+    if (state.dom.footer?.parentNode) {
+      state.dom.footer.remove();
+    }
     if (state.steps?.element?.parentNode) {
       state.steps.element.remove();
     }
@@ -1566,6 +1633,12 @@
     }
 
     activeControllers.delete(modeId);
+
+    // The wide practice layout belongs to the practice screens, not to the
+    // dashboard the learner returns to.
+    if (!activeControllers.size) {
+      document.body.classList.remove(FOCUS_WIDTH_CLASS);
+    }
   }
 
   function setViewToggleDisabled(disabled) {
@@ -1595,7 +1668,9 @@
       }
     }
 
-    const toggleBtns = document.querySelectorAll('.spc-view-toggle-btn, .spc-settings-btn, #spc-view-basic, #spc-view-advanced');
+    // The focus-width button only changes layout, never practice state, so it
+    // stays live while a recording is in flight.
+    const toggleBtns = document.querySelectorAll('.spc-view-toggle-btn:not(.spc-focus-btn), .spc-settings-btn, #spc-view-basic, #spc-view-advanced');
     toggleBtns.forEach(btn => {
       btn.disabled = isDisable;
       btn.style.pointerEvents = isDisable ? 'none' : '';

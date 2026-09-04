@@ -1925,6 +1925,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 931,2026-09-04,Fix CRM Student Courses 401 Unauthorized teaching sessions student ID and student modal title and deploy V1.8.112 to production,Done,2026-09-04
 932,2026-09-04,Implement 3-layout visualizer toggle and natural Vietnamese copy for Guided Essay Step 1,Done,2026-09-04
 933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,Done,2026-09-04
-934,2026-09-04,Redesign Read Aloud practice page with aligned shared shell grid focus width and side-rail Speech Coach,In Progress,
+934,2026-09-04,Redesign Read Aloud practice page with aligned shared shell grid focus width and side-rail Speech Coach,Done,2026-09-04
 935,2026-09-04,Release V1.8.114: Deploy CRM Books lost formatting fix and run-in headings to production hosting,Done,2026-09-04
-
+936,2026-09-04,Establish production deployment session tagging rule and automation script,Done,2026-09-04
+937,2026-09-04,Release V1.8.115: Deploy Read Aloud custom player overhaul and practice layout improvements to production,Done,2026-09-04

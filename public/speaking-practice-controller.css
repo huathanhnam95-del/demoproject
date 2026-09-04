@@ -55,6 +55,27 @@
   --spc-action-focus: #9a5722;
   --spc-control-min-height: var(--spc-control-height);
   --spc-control-radius: 12px;
+
+  /* One shell grid for every speaking mode. Before this token the controller
+     filled the container (1020px), the step rail capped itself at 1100px, and
+     the mode zones hard-coded 900px — three left edges on one screen. Every row
+     and every mode zone now measures from the same place. */
+  --spc-shell-max: 1180px;
+  --spc-shell-pad: 24px;
+}
+
+.spc-shell-grid {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--spc-shell-max);
+  margin-inline: auto;
+  padding-inline: var(--spc-shell-pad);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --spc-shell-pad: 14px;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -73,14 +94,15 @@
 }
 
 /* Shared Speaking flow preview. It intentionally lives on the panel
-   background, without another card, border, or shadow layer. */
+   background, without another card, border, or shadow layer.
+
+   It sits inside the controller's primary row rather than on a rail of its own:
+   as a separate row it cost every speaking mode a full band of chrome before
+   the learner reached any content, and its 1100px cap was one of the three
+   competing column widths on the page. */
 .spc-steps {
   box-sizing: border-box;
-  width: 100%;
-  /* Clear the controller's bottom border so the step markers do not sit
-     flush against (and visually clip) the card edge. */
-  margin-top: 12px;
-  padding: 4px 12px 8px;
+  min-width: 0;
   color: #64748b;
   font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
 }
@@ -88,10 +110,9 @@
 .spc-steps__list {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -101,7 +122,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex: 1 1 0;
   min-width: 0;
   /* Was #94a3b8 (gray-400) — 2.56:1 on white, on every one of the seven Speaking
      modes. An upcoming step is quieter than the current one, but its label is
@@ -144,9 +164,20 @@
 }
 
 .spc-step-connector {
-  flex: 0 1 44px;
+  flex: 0 0 20px;
   height: 1px;
   background: #e2e8f0;
+}
+
+/* Centre slot of the primary row. It takes whatever the picker and the view
+   toggle leave, and gives it up first when the row runs out of space. */
+.spc-slot-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .spc-step[data-state="complete"],
@@ -167,11 +198,24 @@
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
 }
 
-@media (max-width: 640px) {
-  .spc-steps {
-    padding: 4px 4px 8px;
+/* Inside the primary row there is no space for three labels alongside the
+   picker and the view toggle. Only the phase the learner is actually in keeps
+   its word; the others stay as numbered markers, which is what a progress
+   indicator needs to say anyway. */
+@media (max-width: 1080px) {
+  .spc-step:not([data-state="current"]) .spc-step__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
+}
 
+@media (max-width: 640px) {
   .spc-steps__list {
     gap: 4px;
   }
@@ -189,7 +233,7 @@
   }
 
   .spc-step-connector {
-    flex-basis: 16px;
+    flex-basis: 12px;
   }
 }
 
@@ -212,21 +256,49 @@
   flex-wrap: wrap;
 }
 
-/* Primary row: picker fills space, toggle sits on the right */
+/* Primary row: picker left, steps centre, view toggle right. */
 .spc-row--primary {
   flex-wrap: nowrap;
+  gap: 12px;
 }
 
-/* Actions row: keep related controls together within the controller surface. */
+/* The sticky action footer. The timers and Check/Retry used to sit in the
+   header, above the passage they act on; here they sit at the end of the flow
+   and stay reachable without scrolling back up. */
+.spc-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--spc-z-sticky);
+  margin-top: 20px;
+  padding: 10px 0 12px;
+  background: var(--spc-bg, #fff);
+  border-top: 1px solid var(--spc-color-border);
+}
+
+/* Actions row: timers on the left, attempt buttons on the right. */
 .spc-row--actions {
-  justify-content: flex-start;
-  column-gap: 12px;
+  justify-content: space-between;
+  column-gap: 16px;
 }
 
 .spc-row--actions .spc-slot-media,
 .spc-row--actions .spc-slot-attempt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex: 0 1 auto;
   min-width: 0;
+}
+
+.spc-row--actions .spc-slot-attempt {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* An empty footer is chrome with nothing in it — modes that adopt no media or
+   attempt controls should not pay for a border and 40px of height. */
+.spc-footer:not(:has(.spc-slot-media > *)):not(:has(.spc-slot-attempt > *)) {
+  display: none;
 }
 
 /* Advanced row: visibility controlled via data attribute (see §8) */
@@ -237,11 +309,14 @@
 /* --------------------------------------------------------------------------
    4. Picker Navigation
    -------------------------------------------------------------------------- */
+/* The picker is the row's primary control and gets first claim on the width;
+   the step indicator in the centre slot gives its space up first. Without a
+   flex-basis here the pill collapsed to its ID and dropped the question text. */
 .spc-picker-nav {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 360px;
   max-width: 580px;
   min-width: 0;
 }
@@ -377,6 +452,20 @@
 
 .spc-view-toggle-btn:hover:not([aria-pressed="true"]):not([aria-checked="true"]) {
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* Focus-width toggle. Icon-only and quieter than Basic/Advanced — it changes
+   the layout, not what the learner is practising. */
+.spc-focus-btn {
+  padding: 0 10px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-muted, #5f6368);
+}
+
+.spc-focus-btn[aria-pressed="true"] {
+  font-weight: 400;
+  color: var(--spc-color-primary);
 }
 
 /* Question order toggle (random vs in-order). Mirrors the view toggle's
@@ -1084,12 +1173,18 @@
    13. RFIB-aligned navigation and adopted action recipes
    -------------------------------------------------------------------------- */
 
+/* A flat sticky bar, not a card. As a bordered, shadowed, rounded panel it read
+   as a widget floating over the page rather than the page's own chrome, and its
+   12px inline padding pushed every row 12px off the grid the content below sits
+   on — the visible half of the alignment problem. Horizontal rhythm now comes
+   from .spc-shell-grid alone. */
 .spc-controller {
   background: #fff;
-  border: 1px solid var(--spc-action-border);
-  border-radius: var(--spc-control-radius);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-  padding: 12px;
+  border: none;
+  border-bottom: 1px solid var(--spc-color-border);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 10px 0;
   font-family: var(--font-body, 'Outfit', system-ui, sans-serif);
 }
 

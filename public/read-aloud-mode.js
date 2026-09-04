@@ -73,6 +73,18 @@ class ReadAloudMode {
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
+    // The toggle wrote 'ra-speech-coach-visible' but nothing ever read it, so
+    // the flag started undefined and the coach opened collapsed every session.
+    // Now that the coach sits in a rail beside the passage rather than in a card
+    // far below it, open is the useful default.
+    this.speechCoachVisible = (() => {
+      try {
+        const stored = localStorage.getItem('ra-speech-coach-visible');
+        return stored === null ? true : stored !== 'false';
+      } catch (_) {
+        return true;
+      }
+    })();
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
     this.activeSoundChangeTooltipId = null;
@@ -2216,14 +2228,9 @@ class ReadAloudMode {
     const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
     const chunkAvailable = !!this.currentPromptChunkedText && this.currentPromptRenderState?.chunkingAvailable !== false;
 
-    // Color map: each guide button has a unique active color
-    const colorMap = new Map([
-      [chunkBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
-      [linkingBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
-      [reducedWordsBtn, { bg: '#d97706', shadow: 'rgba(217, 119, 6, 0.25)' }],
-      [soundChangesBtn, { bg: '#b45309', shadow: 'rgba(180, 83, 9, 0.25)' }]
-    ]);
-
+    // Active colour comes from the chip's own .ra-guide-chip--* class in
+    // style.css, keyed off aria-pressed. It used to be painted here on every
+    // render, which put the guide palette out of reach of every stylesheet.
     [
       [chunkBtn, this.chunkingEnabled, chunkAvailable],
       [linkingBtn, this.isConnectedSpeechModeActive('linking'), true],
@@ -2237,17 +2244,6 @@ class ReadAloudMode {
         button.setAttribute('aria-checked', displayActive ? 'true' : 'false');
       }
       button.disabled = !available;
-      const colors = colorMap.get(button);
-      if (displayActive && colors) {
-        button.style.background = colors.bg;
-        button.style.color = '#ffffff';
-        button.style.boxShadow = '0 1px 3px ' + colors.shadow;
-      } else {
-        button.style.background = 'transparent';
-        button.style.color = '#1f2937';
-        button.style.boxShadow = 'none';
-      }
-      button.style.opacity = available ? '1' : '0.45';
       if (button === chunkBtn) {
         button.title = available ? 'Show semantic chunking markers.' : 'Chunking unavailable for this prompt.';
       } else if (button === linkingBtn) {
@@ -2272,7 +2268,7 @@ class ReadAloudMode {
         if (this.isConnectedSpeechModeActive('sound_changes')) activeGuides.push('sound_changes');
 
         if (activeGuides.length === 0) {
-          instructionEl.textContent = 'Select a guide mode below to highlight pause groups, linking, reduced words, or sound changes.';
+          instructionEl.textContent = 'Select a guide mode above to highlight pause groups, linking, reduced words, or sound changes.';
         } else if (activeGuides.length === 1) {
           const mode = activeGuides[0];
           if (mode === 'chunking') {
@@ -2690,6 +2686,9 @@ class ReadAloudMode {
     const showAdvBtn = document.getElementById('ra-show-advanced-btn');
     if (resultBox) resultBox.style.display = 'none';
     if (accuracyElement) accuracyElement.textContent = '--';
+    // The score reads as a stat next to the guide chips rather than a 2.5rem
+    // number in a card of its own, so it hides separately from the result block.
+    document.getElementById('ra-accuracy-readout')?.setAttribute('hidden', '');
     if (feedbackElement) feedbackElement.innerHTML = '';
     if (showAdvContainer) showAdvContainer.style.display = 'none';
     if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
@@ -2710,6 +2709,7 @@ class ReadAloudMode {
     const checkBtn = document.getElementById('ra-check-btn');
     const retryBtn = document.getElementById('ra-retry-btn');
     if (resultBox) resultBox.style.display = 'block';
+    document.getElementById('ra-accuracy-readout')?.removeAttribute('hidden');
     if (checkBtn) checkBtn.style.display = 'none';
     if (retryBtn) {
       retryBtn.style.display = 'inline-flex';
@@ -2798,7 +2798,13 @@ class ReadAloudMode {
       playBtn.disabled = false;
       
       if (audioEl) {
-        audioEl.style.display = 'none';
+        audioEl.style.display = 'inline-block';
+        audioEl.style.width = '0px';
+        audioEl.style.height = '0px';
+        audioEl.style.opacity = '0';
+        audioEl.style.position = 'absolute';
+        audioEl.style.pointerEvents = 'none';
+        audioEl.style.overflow = 'hidden';
         audioEl.removeAttribute('controls');
       }
 
@@ -2825,6 +2831,12 @@ class ReadAloudMode {
       
       if (audioEl) {
         audioEl.style.display = 'none';
+        audioEl.style.width = '';
+        audioEl.style.height = '';
+        audioEl.style.opacity = '';
+        audioEl.style.position = '';
+        audioEl.style.pointerEvents = '';
+        audioEl.style.overflow = '';
       }
       if (realPlayerWrapper) {
         realPlayerWrapper.style.display = 'none';
@@ -4257,26 +4269,17 @@ class ReadAloudMode {
       && !this.currentGuideHasVisibleAssimilation;
 
     const escapeHtml = ReadAloudMode.escapeHtml;
-    const paletteForLayer = (layer) => {
-      if (layer === 'assimilation') {
-        return {
-          badgeStyle: 'background: rgba(180, 83, 9, 0.14); color: #92400e;',
-          borderStyle: 'border-left: 2px solid #b45309;'
-        };
-      }
-      if (layer === 'weak_forms') {
-        return {
-          badgeStyle: 'background: rgba(217, 119, 6, 0.14); color: #92400e;',
-          borderStyle: 'border-left: 2px solid #d97706;'
-        };
-      }
-      return {
-        badgeStyle: 'background: rgba(37, 99, 235, 0.12); color: #1d4ed8;',
-        borderStyle: 'border-left: 2px solid #2563eb;'
-      };
+    // One class per connected-speech family. The palette used to be six hex
+    // literals returned from here into inline style attributes, which put the
+    // coach's colours out of reach of every stylesheet; they are now tokens
+    // (--coach-*) applied through .sc-card--*.
+    const layerClass = (layer) => {
+      if (layer === 'assimilation') return 'sc-card--sound';
+      if (layer === 'weak_forms') return 'sc-card--reduced';
+      return 'sc-card--linking';
     };
 
-    box.style.display = 'block';
+    box.style.display = '';
     label.textContent = 'Speech Coach';
     meta.textContent = this.connectedSpeechPanelMode === 'results' ? 'Feedback' : 'Preview';
     const toggleBtn = document.getElementById('ra-speech-coach-toggle');
@@ -4284,46 +4287,40 @@ class ReadAloudMode {
       toggleBtn.textContent = this.speechCoachVisible ? '\ud83d\udc41 Hide' : '\ud83d\udc41 Show';
       toggleBtn.setAttribute('aria-expanded', this.speechCoachVisible ? 'true' : 'false');
     }
-    if (!this.speechCoachVisible) {
-      list.style.display = 'none';
-      summary.style.display = 'none';
-    } else {
-      summary.style.display = '';
-    }
+    summary.style.display = this.speechCoachVisible ? '' : 'none';
     summary.textContent = noSoundChangeMessage
       ? 'No sound changes in this sentence.'
       : (compactView && !showFullList
         ? 'Start here.'
         : `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`);
     const renderGuideCard = (item, selected) => {
-      const palette = paletteForLayer(item.layer);
       const guideEvent = item.category === 'sound_changes' ? this.getSpeechCoachGuideEvent(item) : null;
       const modelAudio = guideEvent
         ? this._buildSpeechCoachPlaybackControls(guideEvent, -1, false, 'Play the model sound-change example')
         : '';
       const spokenAs = item.spokenAs
-        ? `<span style="font-size:0.86rem; color:#92400e; margin-left:6px;"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
+        ? `<span class="sc-card-ipa"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
         : '';
       return `
-        <div class="sc-guide-item" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-selected="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:8px 12px; border-radius:8px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'};">
-          <button type="button" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:0; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer;">
-            <span style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-              <span style="display:flex; align-items:baseline;">
-                <strong style="font-size:0.95rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
+        <div class="sc-guide-item sc-card ${layerClass(item.layer)}" data-guide-item="${escapeHtml(item.id)}" data-guide-category="${escapeHtml(item.category || '')}" data-start-word="${Number.isFinite(item.startWordIndex) ? item.startWordIndex : ''}" data-end-word="${Number.isFinite(item.endWordIndex) ? item.endWordIndex : ''}" data-selected="${selected ? 'true' : 'false'}">
+          <button type="button" class="sc-card-body" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}">
+            <span class="sc-card-head">
+              <span class="sc-card-title">
+                <strong class="sc-card-word">${escapeHtml(item.label || 'Hint')}</strong>
                 ${spokenAs}
               </span>
-              <span style="padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
+              <span class="sc-card-badge">${escapeHtml(item.badge || 'Hint')}</span>
             </span>
-            <span style="font-size:0.86rem; color:#4b5563; line-height:1.35;">${escapeHtml(item.explanation || '')}</span>
+            <span class="sc-card-tip">${escapeHtml(item.explanation || '')}</span>
           </button>
-          ${modelAudio ? `<div style="display:flex; justify-content:flex-start; margin-top:2px;">${modelAudio}</div>` : ''}
+          ${modelAudio ? `<div class="sc-card-audio">${modelAudio}</div>` : ''}
         </div>
       `;
     };
     const renderItemList = (itemList) => itemList.map((item) => renderGuideCard(item, item.id === this.selectedGuideItemId)).join('');
     const noSoundChangeHtml = noSoundChangeMessage
       ? `
-        <div data-role="guide-no-sound-change" style="padding:10px 12px; border-radius:8px; border:1px solid rgba(180, 83, 9, 0.18); background:rgba(180, 83, 9, 0.08); color:#92400e; font-size:0.9rem; line-height:1.45;">
+        <div class="sc-empty-note" data-role="guide-no-sound-change">
           This sentence still has linking or reduced words, but no sound-change example.
         </div>
       `
@@ -4332,29 +4329,32 @@ class ReadAloudMode {
       const selectedIndex = Math.max(0, items.findIndex((item) => item.id === selectedItem.id));
       const compactCard = renderGuideCard(selectedItem, true);
       const toggleLabel = showFullList ? 'Hide' : 'See more';
-      list.style.display = 'flex';
-      list.style.flexDirection = 'column';
-      list.style.gap = '10px';
+      list.style.display = '';
       list.innerHTML = `
-        <div data-role="guide-selected-summary" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="sc-compact" data-role="guide-selected-summary">
           ${noSoundChangeHtml}
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:0.84rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">
+          <div class="sc-compact-counter">
             <span>Start here</span>
             <span>${selectedIndex + 1} of ${items.length}</span>
           </div>
           <div data-role="guide-selected-card">${compactCard}</div>
-          <button type="button" data-role="guide-toggle-details" aria-expanded="${showFullList ? 'true' : 'false'}" style="align-self:flex-start; padding:8px 12px; border-radius:999px; border:1px solid #d1d5db; background:#fff; color:#1f2937; font-weight:600; cursor:pointer;">${escapeHtml(toggleLabel)}</button>
+          <button type="button" class="sc-compact-toggle" data-role="guide-toggle-details" aria-expanded="${showFullList ? 'true' : 'false'}">${escapeHtml(toggleLabel)}</button>
         </div>
-        <div data-role="guide-expanded-list" style="display:${showFullList ? 'flex' : 'none'}; flex-direction:column; gap:10px;">
+        <div class="sc-compact-expanded" data-role="guide-expanded-list" style="display:${showFullList ? '' : 'none'};">
           ${renderItemList(items)}
         </div>
       `;
     } else {
-      list.style.display = 'grid';
-      list.style.gap = '10px';
+      list.style.display = '';
       list.innerHTML = `${noSoundChangeHtml}${renderItemList(items)}`;
     }
+    // Applied after the render branches above, which both write to
+    // list.style.display — before them the Hide toggle was overridden on every
+    // re-render and the panel came back visible.
+    if (!this.speechCoachVisible) list.style.display = 'none';
+    this.bindGuideRailHover(list);
     this.syncGuideSelectionState();
+    this.scrollSelectedGuideCardIntoView();
   }
 
   renderRecognizedTranscript(words = [], recognizedText = '', events = [], metrics = {}) {
@@ -5065,142 +5065,10 @@ class ReadAloudMode {
     return section;
   }
 
-  /** Build annotated paragraph with token highlights and SVG linking overlay */
-  async _buildAnnotatedParagraph(events, wrapper, transcriptText = this.currentPromptPlainText) {
-    const annotatedContainer = document.createElement('div');
-    annotatedContainer.className = 'sc-annotated-paragraph';
-    const paragraphText = String(transcriptText || this.currentPromptPlainText || '').trim();
-
-    let usedTokenAnnotation = false;
-    if (window.ReadAloudLinking && paragraphText) {
-      try {
-        const analysisOptions = { connectedSpeechLevel: 'sound_changes', enabledRuleSet: 'connected-speech-v3' };
-        const targetPromptKey = `result:${this.currentQuestionId || 'unknown'}:${paragraphText}`;
-        const analysis = await this.getPromptAnalysis(targetPromptKey, paragraphText, analysisOptions);
-        const tokens = analysis.tokens;
-        if (tokens && tokens.length > 0) {
-          const wordMap = window.ReadAloudLinking.renderLinkingLayer(annotatedContainer, { tokens, boundaries: [], tokenAnnotations: [] });
-
-          const cleanWord = (s) => String(s || '').toLowerCase().replace(/[^\w]/g, '').trim();
-
-          // Apply status-based CSS classes to matching word spans
-          events.forEach((ev, evIndex) => {
-            if (!ev.phrase) return;
-            const targetWord = cleanWord(ev.phrase);
-            if (!targetWord) return;
-            let matched = false;
-            wordMap.forEach((span) => {
-              if (matched) return;
-              const spanText = cleanWord(span.textContent);
-              if (spanText === targetWord && !span.dataset.scSingleHighlighted) {
-                span.dataset.scSingleHighlighted = 'true';
-                
-                // Add event index (supporting multiple space-separated indices)
-                const existing = span.dataset.eventIndex;
-                span.dataset.eventIndex = existing ? `${existing} ${evIndex}` : String(evIndex);
-
-                span.classList.add('sc-token-highlight');
-                const isEvReduced = ev.category === 'weak_forms' || String(ev.family).includes('reduced') || ev.category === 'reduced_words';
-                if (ev.status === 'detected') {
-                  span.classList.add('sc-token--success');
-                  if (isEvReduced) span.classList.add('sc-token-bg--success');
-                } else if (ev.status === 'not_detected') {
-                  span.classList.add('sc-token--error');
-                  if (isEvReduced) span.classList.add('sc-token-bg--error');
-                } else {
-                  span.classList.add('sc-token--uncertain');
-                  if (isEvReduced) span.classList.add('sc-token-bg--uncertain');
-                }
-                span.title = ev.feedbackText || '';
-                span.style.cursor = 'pointer';
-                matched = true;
-              }
-            });
-          });
-
-          // Tag linking events on adjacent word spans in wordMap
-          events.forEach((ev, evIndex) => {
-            if (!ev.phrase) return;
-            const phraseParts = String(ev.phrase).split(/\s+/).map(cleanWord).filter(Boolean);
-            if (phraseParts.length < 2) return;
-
-            let matched = false;
-            wordMap.forEach((leftSpan, index) => {
-              if (matched) return;
-              let allMatch = true;
-              const matchingSpans = [];
-              for (let i = 0; i < phraseParts.length; i++) {
-                const targetSpan = wordMap.get(index + i);
-                if (!targetSpan || cleanWord(targetSpan.textContent) !== phraseParts[i]) {
-                  allMatch = false;
-                  break;
-                }
-                matchingSpans.push(targetSpan);
-              }
-
-              const matchKey = `scLinking_${evIndex}`;
-              if (allMatch && matchingSpans.length === phraseParts.length && !leftSpan.dataset[matchKey]) {
-                matchingSpans.forEach((span) => {
-                  const existing = span.dataset.eventIndex;
-                  span.dataset.eventIndex = existing ? `${existing} ${evIndex}` : String(evIndex);
-                });
-                leftSpan.dataset[matchKey] = 'true';
-                matched = true;
-              }
-            });
-          });
-
-          // SVG linking overlay
-          const overlaySvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          overlaySvg.classList.add('sc-linking-overlay');
-          annotatedContainer.insertBefore(overlaySvg, annotatedContainer.firstChild);
-
-          const overlayBoundaries = analysis.boundaries.map((b) => {
-            const leftWord = b.leftDisplay || b.leftWord || '';
-            const rightWord = b.rightDisplay || b.rightWord || '';
-            const bPhrase = `${leftWord} ${rightWord}`.toLowerCase().trim();
-            const matchEvent = events.find((ev) => {
-              const evPhraseLower = (ev.phrase || ev.eventId || '').toLowerCase().trim();
-              const isEventLinking = ev.category === 'linking' || ev.category === 'sound_changes' || ev.layer === 'assimilation' || ev.layer === 'linking' || this.normalizeConnectedSpeechMode(ev.family) === 'linking' || ev.category === 'consonant_to_vowel';
-              return evPhraseLower === bPhrase && isEventLinking;
-            });
-            if (matchEvent) {
-              const color = matchEvent.status === 'detected' ? '#10b981' : matchEvent.status === 'not_detected' ? '#ef4444' : '#f59e0b';
-              return { ...b, strokeColor: color };
-            }
-            return { ...b, confidence: 'low' };
-          });
-
-          if (wrapper) {
-            wrapper.innerHTML = '';
-            wrapper.appendChild(annotatedContainer);
-            // These are linking arcs, so ask for that family explicitly. Without
-            // it renderOverlay early-returns and the whole overlay silently
-            // disappears — which is exactly what happened between V1.6.1 and
-            // V1.8.28, when the family gate was introduced.
-            window.ReadAloudLinking.renderOverlay(
-              overlaySvg,
-              annotatedContainer,
-              { boundaries: overlayBoundaries },
-              wordMap,
-              { focusFamilies: ['linking'] }
-            );
-            usedTokenAnnotation = true;
-          }
-        }
-      } catch (tokenErr) {
-        console.warn('Token annotation failed, falling back to plain text:', tokenErr);
-      }
-    }
-
-    if (!usedTokenAnnotation) {
-      if (wrapper) wrapper.innerHTML = '';
-      annotatedContainer.textContent = paragraphText;
-      if (wrapper) wrapper.appendChild(annotatedContainer);
-    }
-
-    return usedTokenAnnotation;
-  }
+  /* _buildAnnotatedParagraph() was removed here. It built a second, separately
+     annotated copy of the passage for the coach panel and was never called by
+     any render path. Results now annotate the one passage in .ra-prompt-stage
+     that the learner is already reading. */
 
   async primeSharedPronunciations(events = []) {
     const phonetics = window.Phonetics;
@@ -5292,7 +5160,7 @@ class ReadAloudMode {
         cardHeader.dataset.scAccordionToggle = accordionId;
 
         const ipaInfo = this._getReducedWordIpaInfo(group.phrase);
-        const ipaHtml = ipaInfo ? ` <span style="font-size: 0.75rem; font-family: ui-monospace, monospace; color: #059669; font-weight: 500;">(Strong ${ipaInfo.strong} · Weak ${ipaInfo.reduced})</span>` : '';
+        const ipaHtml = ipaInfo ? ` <span class="sc-inline-ipa">(Strong ${ipaInfo.strong} · Weak ${ipaInfo.reduced})</span>` : '';
 
         const labelSide = document.createElement('div');
         labelSide.className = 'sc-accordion-label';
@@ -5365,8 +5233,8 @@ class ReadAloudMode {
         const ipaInfo = this._getReducedWordIpaInfo(group.phrase);
         const ipaHtml = ipaInfo ? `
           <div style="font-size: 0.72rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
-            <span style="color: #9ca3af; text-decoration: line-through; font-size: 0.68rem;">${ipaInfo.strong}</span>
-            <span style="color: #059669; font-weight: 600;">Weak ${ipaInfo.reduced}</span>
+            <span class="sc-ipa-strong">${ipaInfo.strong}</span>
+            <span class="sc-ipa-weak">Weak ${ipaInfo.reduced}</span>
           </div>
         ` : '';
 
@@ -5382,7 +5250,7 @@ class ReadAloudMode {
             <div class="sc-single-card-copy">
               <div class="sc-single-card-title-row">
                 <strong class="sc-word-title" style="font-size: 0.98rem; font-weight: 600;">${escapeHtml(group.phrase)}</strong>
-                <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
+                <span class="sc-section-time">${timeText}</span>
               </div>
               ${ipaHtml}
             </div>
@@ -5508,9 +5376,9 @@ class ReadAloudMode {
       cardHeader.className = 'sc-accordion-header sc-accordion-header--error';
 
       cardHeader.innerHTML = `
-        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; cursor: pointer; flex-wrap: wrap;">
-          <strong class="sc-word-title" style="font-size: 0.98rem; color: #111827;">${escapeHtml(phrase)}</strong>
-          <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}">
+          <strong class="sc-word-title">${escapeHtml(phrase)}</strong>
+          <span class="sc-ipa-badge">${escapeHtml(ipaDetails.linkedIPA)}</span>
         </div>
         <div class="sc-accordion-controls">
           ${playButtonHtml}
@@ -5531,20 +5399,20 @@ class ReadAloudMode {
       const reasonExplanation = this._getNeedsAttentionReasonText(event);
 
       cardContent.innerHTML = `
-        <div class="sc-instance" style="padding-top: 10px;">
-          <div style="font-size: 0.76rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+        <div class="sc-instance sc-instance--detail">
+          <div class="sc-detail-label">
             Category: ${escapeHtml(categoryLabel)}
           </div>
-          <div class="sc-instance-feedback" style="color: #991b1b; font-weight: 500;">
+          <div class="sc-instance-feedback sc-instance-feedback--error">
             ${escapeHtml(reasonExplanation.reason)}
           </div>
 
-          <div style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 8px 12px; border-radius: 6px; margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: #b91c1c; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Target IPA:</span>
-            <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #dc2626; margin: 0 4px;">➔</strong> <strong style="color: #b91c1c; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
+          <div class="sc-ipa-row">
+            <span class="sc-ipa-chip">Target IPA:</span>
+            <span><span class="sc-ipa-part">${escapeHtml(ipaDetails.ipa1)}</span> + <span class="sc-ipa-part">${escapeHtml(ipaDetails.ipa2)}</span> <strong class="sc-ipa-arrow">➔</strong> <strong class="sc-ipa-result">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
           </div>
 
-          <div style="font-size: 0.84rem; color: #374151; margin-top: 8px; background: #fff5f5; padding: 8px 10px; border-radius: 6px; border-left: 2px solid #ef4444;">
+          <div class="sc-fix-note">
             <strong>How to fix:</strong> ${escapeHtml(reasonExplanation.tip)}
           </div>
         </div>
@@ -5594,12 +5462,12 @@ class ReadAloudMode {
       cardHeader.className = 'sc-accordion-header sc-accordion-header--success';
 
       cardHeader.innerHTML = `
-        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}" style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; cursor: pointer; flex-wrap: wrap;">
-          <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink: 0;">
+        <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}">
+          <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
-          <strong class="sc-word-title" style="font-size: 0.98rem; color: #065f46;">${escapeHtml(phrase)}</strong>
-          <span class="sc-ipa-badge" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${escapeHtml(ipaDetails.linkedIPA)}</span>
+          <strong class="sc-word-title">${escapeHtml(phrase)}</strong>
+          <span class="sc-ipa-badge">${escapeHtml(ipaDetails.linkedIPA)}</span>
         </div>
         <div class="sc-accordion-controls">
           ${playButtonHtml}
@@ -5619,20 +5487,20 @@ class ReadAloudMode {
       const reasonExplanation = this._getSuccessLinkReasonText(event);
 
       cardContent.innerHTML = `
-        <div class="sc-instance" style="padding-top: 10px;">
-          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #047857; margin-bottom: 4px;">
+        <div class="sc-instance sc-instance--detail">
+          <div class="sc-detail-label">
             ✓ Seamless Link Connected
           </div>
-          <div class="sc-instance-feedback" style="color: #111827; font-weight: 500;">
+          <div class="sc-instance-feedback">
             ${escapeHtml(reasonExplanation.reason)}
           </div>
 
-          <div style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 8px 12px; border-radius: 6px; margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: #15803d; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">IPA Style:</span>
-            <span><span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa1)}</span> + <span style="color: #4b5563;">${escapeHtml(ipaDetails.ipa2)}</span> <strong style="color: #047857; margin: 0 4px;">➔</strong> <strong style="color: #047857; font-size: 0.88rem;">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
+          <div class="sc-ipa-row">
+            <span class="sc-ipa-chip">IPA Style:</span>
+            <span><span class="sc-ipa-part">${escapeHtml(ipaDetails.ipa1)}</span> + <span class="sc-ipa-part">${escapeHtml(ipaDetails.ipa2)}</span> <strong class="sc-ipa-arrow">➔</strong> <strong class="sc-ipa-result">${escapeHtml(ipaDetails.linkedIPA)}</strong></span>
           </div>
 
-          <div style="font-size: 0.84rem; color: #065f46; margin-top: 8px; background: #ecfdf5; padding: 8px 10px; border-radius: 6px; border-left: 2px solid #10b981;">
+          <div class="sc-fix-note">
             <strong>Why you nailed it:</strong> ${escapeHtml(reasonExplanation.tip)}
           </div>
         </div>
@@ -5966,6 +5834,68 @@ class ReadAloudMode {
     this.renderConnectedSpeechGuidePanel();
   }
 
+  /**
+   * Keep the rail scrolled to whichever card matches the current selection, so
+   * clicking a marked word in the passage brings its explanation into view
+   * instead of leaving the learner to hunt for it.
+   */
+  scrollSelectedGuideCardIntoView() {
+    const selectedGuideId = String(this.selectedGuideItemId || '');
+    if (!selectedGuideId || this.connectedSpeechPanelMode !== 'guide') return;
+    const list = document.getElementById('ra-connected-speech-list');
+    if (!list) return;
+    const card = list.querySelector(`.sc-guide-item[data-guide-item="${CSS.escape(selectedGuideId)}"]`);
+    if (!card) return;
+    try {
+      card.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    } catch (_) {
+      card.scrollIntoView(false);
+    }
+  }
+
+  /**
+   * Hovering a coach card lights the word it describes, up in the passage. The
+   * results view already did this against the recognized transcript; the
+   * preview view had no link between a card and its word at all.
+   */
+  bindGuideRailHover(container) {
+    if (!container || container.dataset.raGuideHoverBound === 'true') return;
+    container.dataset.raGuideHoverBound = 'true';
+
+    // Join on word index, not on data-guide-target: the stage only carries
+    // guide targets for weak forms and sound changes, so a linking card had
+    // nothing to point at. Every rendered word carries data-word-index.
+    const highlight = (card, on) => {
+      const stage = document.getElementById('ra-prompt-stage');
+      if (!stage || !card) return;
+      const start = Number(card.getAttribute('data-start-word'));
+      const end = Number(card.getAttribute('data-end-word'));
+      const guideId = card.getAttribute('data-guide-item');
+      const matched = new Set();
+      if (Number.isFinite(start)) {
+        const last = Number.isFinite(end) ? end : start;
+        for (let i = Math.min(start, last); i <= Math.max(start, last); i += 1) {
+          stage.querySelectorAll(`[data-word-index="${i}"]`).forEach((n) => matched.add(n));
+        }
+      }
+      if (guideId) {
+        stage.querySelectorAll(`[data-guide-target="${CSS.escape(guideId)}"]`).forEach((n) => matched.add(n));
+      }
+      matched.forEach((node) => node.classList.toggle('sc-token--hovered', on));
+    };
+
+    container.addEventListener('mouseover', (e) => {
+      const card = e.target.closest('.sc-guide-item');
+      if (card) highlight(card, true);
+    });
+    container.addEventListener('mouseout', (e) => {
+      const card = e.target.closest('.sc-guide-item');
+      if (!card) return;
+      if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+      highlight(card, false);
+    });
+  }
+
   syncGuideSelectionState() {
     const selectedGuideId = String(this.selectedGuideItemId || '');
     document.querySelectorAll('[data-guide-target]').forEach((node) => {
@@ -5975,6 +5905,10 @@ class ReadAloudMode {
       if (node.matches('button, [role="button"]')) {
         node.setAttribute('aria-pressed', selected ? 'true' : 'false');
       }
+      // The card wrapper carries the selected styling, and only the inner
+      // button is tagged with data-guide-target — without this the highlight
+      // stayed on whichever card happened to render first.
+      node.closest('.sc-guide-item')?.setAttribute('data-selected', selected ? 'true' : 'false');
       if (node.closest('#ra-linking-fallback-list')) {
         const layer = String(node.getAttribute('data-guide-layer') || 'linking');
         const layerStyles = layer === 'assimilation'

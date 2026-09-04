@@ -42,10 +42,11 @@ const path = require('path');
   // 1. Check SPC controller exists
   results.spcControllerExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .spc-controller'));
 
-  // 2. Check zones exist
-  results.zonePassageExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-zone-passage'));
-  results.zoneActionsExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-zone-actions'));
-  results.zoneResultsExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-zone-results'));
+  // 2. Check workbench parts exist. The old .ra-zone-* wrappers were three
+  //    separately-measured columns; they are one .ra-workbench grid now.
+  results.workbenchExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-workbench'));
+  results.stageExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-stage'));
+  results.railExists = await page.evaluate(() => !!document.querySelector('#mode-read-aloud .ra-rail'));
 
   // 3. Check text passage is visible
   results.textPromptVisible = await page.evaluate(() => {
@@ -58,13 +59,11 @@ const path = require('path');
     const btn = document.getElementById('ra-record-btn');
     return btn && btn.offsetHeight > 0;
   });
-  results.recordBtnInZoneActions = await page.evaluate(() => {
+  // The attempt controls are adopted into the shell's sticky footer now, so
+  //    the primary action sits at the end of the flow instead of above the text.
+  results.recordBtnInFooter = await page.evaluate(() => {
     const btn = document.getElementById('ra-record-btn');
-    return btn && btn.closest('.ra-zone-actions') !== null;
-  });
-  results.recordBtnNotInSpc = await page.evaluate(() => {
-    const btn = document.getElementById('ra-record-btn');
-    return btn && btn.closest('.spc-controller') === null;
+    return !!btn && btn.closest('.spc-footer') !== null;
   });
 
   // 5. Check timers are visible and in Zone 3
@@ -72,16 +71,17 @@ const path = require('path');
     const el = document.getElementById('ra-prep-timer-box');
     return el && el.offsetHeight > 0;
   });
-  results.prepTimerInZoneActions = await page.evaluate(() => {
+  results.prepTimerInFooter = await page.evaluate(() => {
     const el = document.getElementById('ra-prep-timer-box');
-    return el && el.closest('.ra-zone-actions') !== null;
+    return !!el && el.closest('.spc-footer') !== null;
   });
 
-  // 6. Check SPC actions row is hidden (no media/attempt controls adopted)
-  results.spcActionsRowHidden = await page.evaluate(() => {
+  // 6. The actions row now carries the adopted timers and attempt buttons, so
+  //    it must be visible rather than hidden.
+  results.spcActionsRowVisible = await page.evaluate(() => {
     const row = document.querySelector('#mode-read-aloud .spc-row--actions');
     if (!row) return 'not_found';
-    return getComputedStyle(row).display === 'none';
+    return getComputedStyle(row).display !== 'none';
   });
 
   // 7. Check old broken buttons don't exist
@@ -101,14 +101,26 @@ const path = require('path');
     return !!document.querySelector('#mode-read-aloud .spc-view-toggle');
   });
 
-  // 10. Check DOM order: passage comes BEFORE actions in DOM
+  // 10. The passage still precedes the attempt controls: the learner meets the
+  //     text before the button that acts on it.
   results.passageBeforeActions = await page.evaluate(() => {
-    const passage = document.querySelector('#mode-read-aloud .ra-zone-passage');
-    const actions = document.querySelector('#mode-read-aloud .ra-zone-actions');
+    const passage = document.querySelector('#mode-read-aloud .ra-stage');
+    const actions = document.querySelector('#mode-read-aloud .spc-footer');
     if (!passage || !actions) return false;
-    const passageRect = passage.getBoundingClientRect();
-    const actionsRect = actions.getBoundingClientRect();
-    return passageRect.top < actionsRect.top;
+    return passage.getBoundingClientRect().top < actions.getBoundingClientRect().top;
+  });
+
+  // 11. Everything measures from one shared grid — the bug this redesign fixed.
+  results.gridAligned = await page.evaluate(() => {
+    const edge = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return Math.round(r.left + (parseFloat(getComputedStyle(el).paddingLeft) || 0));
+    };
+    const edges = [edge('#mode-read-aloud .spc-row--primary'), edge('#mode-read-aloud .ra-guidebar'), edge('#mode-read-aloud .ra-stage')];
+    if (edges.some((v) => v === null)) return false;
+    return Math.max(...edges) - Math.min(...edges) <= 1;
   });
 
   // Take screenshot

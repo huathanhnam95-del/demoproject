@@ -1,3 +1,20 @@
+## [V1.8.115] - 2026-09-04
+
+### Added & Enhanced
+- **Read Aloud Custom Audio Controller & Player Overhaul**:
+  - **Custom Component Architecture**: Replaced the native, unstyled browser HTML5 `<audio controls>` player in Read Aloud practice mode (`/pte-practice/speaking/read-aloud/1019`) with a real, modern `.practice-audio-player` component system matching WFD, SST, RS, ASQ, and SGD.
+  - **Full Controller Feature Set**: Integrated dual audio source switcher tabs (**🎙️ Your Recording** & **🔊 Sample Audio**), animated Play/Pause toggle with dynamic icon and status readout, precision interactive scrub seekbar with hover feedback, and volume slider.
+  - **Transcript & Speech Coach Audio Synchronization**: Synchronized word-token click-to-play playback directly with the custom audio player's timeline, progress indicators, and playback state in `public/read-aloud-mode.js`.
+  - **Flat UI Layout Design**: Applied flat component styling adhering to design rules by avoiding nested card structures ("boxes in boxes"), integrating seamlessly into the primary layout.
+  - **Backward Compatibility**: Retained underlying audio engine with zero-dimension hidden DOM state, maintaining complete backwards compatibility for existing automated test suites.
+- **Guided Essay Prompt Breakdown & Interactive Visual Mind Map**:
+  - Restructured Guided Essay Step 1 with a 3-layout visualizer toggle (Mind Map, Flowchart, and Cards).
+  - Enhanced prompt breakdown with stance badges, detailed argument elaboration, and localized natural Vietnamese guidance copy.
+- **Speaking Practice Controller Alignment**:
+  - Unified speaking controller layout across desktop (1440px) and mobile (390px) viewports with sticky action bar, zero-card flatten styling, and side-rail Speech Coach integration.
+- **Entrance Test Word-Level Pronunciation Timing**:
+  - Integrated Azure Speech acoustic alignment in `functions/src/entrance-test/asr-service.js` for millisecond-accurate word boundaries with Whisper timestamp fallback.
+
 ## [V1.8.114] - 2026-09-04
 
 ### Fixed & Enhanced

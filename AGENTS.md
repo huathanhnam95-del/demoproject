@@ -46,6 +46,10 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 ## Deployment Rule
 
 - **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.
+- **Production Deployment Session Naming (`(D)`)**:
+  - Whenever a conversation or session is ended with a production deployment, change its name to `(D) <title>` to mark it as deployed.
+  - To automate this, run: `python scripts/session_tagger.py mark-deployed`.
+  - If a deployed conversation continues later, after answering the user's initial prompt, automatically rename it to remove the `(D) ` prefix by running: `python scripts/session_tagger.py remove-deployed`.
 
 ## Implementation Plan Approval Rule
 

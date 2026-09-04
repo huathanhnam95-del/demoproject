@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 733,
-  "round1_pass_count": 570,
-  "debate_revised_count": 134,
-  "unresolved_count": 29,
+  "processed_questions": 753,
+  "round1_pass_count": 581,
+  "debate_revised_count": 140,
+  "unresolved_count": 32,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -34857,6 +34857,2856 @@
                 }
               ],
               "verified_grammar_tag": "Past Perfect Tense (Action before Past Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 705,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Abstract Plural Noun (Collocati"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'assumptions.' Scientists make observations, have assumptions, and do experiments. This structure uses a plural abstract noun after 'have' to match the parallel structure with 'make observations.'\n\n* Why 'thinking' is incorrect: 'Thinking' is an uncountable gerund/noun and does not fit the required countable, plural context. It is too vague and does not clearly refer to the specific ideas or hypotheses that scientists hold before testing.\n\n* Why 'hyperbole' is incorrect: 'Hyperbole' refers to exaggeration, which is not a formal idea or hypothesis that scientists hold. It is unrelated to the scientific process and does not fit the context of the sentence.\n\n* Why 'principles' is incorrect: While 'principles' is a plural noun, it is more commonly used to describe established rules or values, not the initial ideas or hypotheses that scientists form before testing. It is not the best fit for the stage of the scientific process described here.\n\nThe grammar tag 'Abstract Plural Noun (Collocation)' is accurate because it refers to the type of noun that logically follows the verb 'have' in this context, emphasizing possession of an idea or belief. The subject-verb relationship is active, as the scientists are the ones possessing the assumptions, not being acted upon.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy. The grammar tag was confirmed as valid by the passing model, and the JSON formatting issue was resolved by ensuring proper structure. The timeout from gemma4:12b was not a concern for the content, and the explanation was refined to be more accessible for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'assumptions.' Scientists make observations, have assumptions, and do experiments. This structure uses a plural abstract noun after 'have' to match the parallel structure with 'make observations.'\n\n* Why 'thinking' is incorrect: 'Thinking' is an uncountable gerund/noun and does not fit the required countable, plural context.\n* Why 'hyperbole' is incorrect: 'Hyperbole' refers to exaggeration, which is not a formal idea or hypothesis that scientists hold.\n* Why 'principles' is incorrect: While 'principles' is a plural noun, it is more commonly used to describe established rules or values, not the initial ideas or hypotheses that scientists form before testing.\n\nThe grammar tag 'Abstract Plural Noun (Collocation)' is accurate because it refers to the type of noun that logically follows the verb 'have' in this context, emphasizing possession of an idea or belief.",
+          "candidate_grammar_tag": "Abstract Plural Noun (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic clarity and ensure that all grammatical and contextual aspects were explicitly covered. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly address the subject-verb relationship and the context of each distractor. The timeout and JSON error were resolved by ensuring the explanation was fully complete and properly formatted.",
+          "candidate_explanation": "The correct answer is 'assumptions.' Scientists make observations, have assumptions, and do experiments. This structure uses a plural abstract noun after 'have' to match the parallel structure with 'make observations.'\n\n* Why 'thinking' is incorrect: 'Thinking' is an uncountable gerund/noun and does not fit the required countable, plural context. It is too vague and does not clearly refer to the specific ideas or hypotheses that scientists hold before testing.\n\n* Why 'hyperbole' is incorrect: 'Hyperbole' refers to exaggeration, which is not a formal idea or hypothesis that scientists hold. It is unrelated to the scientific process and does not fit the context of the sentence.\n\n* Why 'principles' is incorrect: While 'principles' is a plural noun, it is more commonly used to describe established rules or values, not the initial ideas or hypotheses that scientists form before testing. It is not the best fit for the stage of the scientific process described here.\n\nThe grammar tag 'Abstract Plural Noun (Collocation)' is accurate because it refers to the type of noun that logically follows the verb 'have' in this context, emphasizing possession of an idea or belief. The subject-verb relationship is active, as the scientists are the ones possessing the assumptions, not being acted upon.",
+          "candidate_grammar_tag": "Abstract Plural Noun (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was already clear, logical, and complete, and no changes were necessary to satisfy all models.",
+          "candidate_explanation": "The correct answer is 'assumptions.' Scientists make observations, have assumptions, and do experiments. This structure uses a plural abstract noun after 'have' to match the parallel structure with 'make observations.'\n\n* Why 'thinking' is incorrect: 'Thinking' is an uncountable gerund/noun and does not fit the required countable, plural context. It is too vague and does not clearly refer to the specific ideas or hypotheses that scientists hold before testing.\n\n* Why 'hyperbole' is incorrect: 'Hyperbole' refers to exaggeration, which is not a formal idea or hypothesis that scientists hold. It is unrelated to the scientific process and does not fit the context of the sentence.\n\n* Why 'principles' is incorrect: While 'principles' is a plural noun, it is more commonly used to describe established rules or values, not the initial ideas or hypotheses that scientists form before testing. It is not the best fit for the stage of the scientific process described here.\n\nThe grammar tag 'Abstract Plural Noun (Collocation)' is accurate because it refers to the type of noun that logically follows the verb 'have' in this context, emphasizing possession of an idea or belief. The subject-verb relationship is active, as the scientists are the ones possessing the assumptions, not being acted upon.",
+          "candidate_grammar_tag": "Abstract Plural Noun (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Abstract Plural Noun (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 705,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "The explanation is accurate, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'experiments.' In scientific writing, the verb 'do' collocates strongly with 'experiments' to describe the process of testing hypotheses. This phrase ('do experiments') is standard academic English. * Why 'essays' is incorrect: 'Essays' are written compositions and do not represent a physical or procedural test in science. * Why 'assignments' is incorrect: 'Assignments' refer to tasks given by an instructor, which is outside the scope of general scientific practice described here. * Why 'thesis' is incorrect: While a thesis involves research, it is usually the final written work (a singular concept), not the action that follows assumptions. The correct action is conducting experiments. Additionally, the subject-verb relationship in the sentence is active, meaning the scientist is performing the action, which aligns with 'do experiments' rather than any passive or abstract alternatives.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic logic of subject-verb relationships and explicitly explaining why the distractors are incorrect. The grammar tag was confirmed as 'Collocation (Verb + Noun)' based on consensus and verification.",
+          "candidate_explanation": "The correct answer is 'experiments.' In scientific writing, the verb 'do' collocates strongly with 'experiments' to describe the process of testing hypotheses. This phrase ('do experiments') is standard academic English. * Why 'essays' is incorrect: 'Essays' are written compositions and do not represent a physical or procedural test in science. * Why 'assignments' is incorrect: 'Assignments' refer to tasks given by an instructor, which is outside the scope of general scientific practice described here. * Why 'thesis' is incorrect: While a thesis involves research, it is usually the final written work (a singular concept), not the action that follows assumptions. The correct action is conducting experiments. Additionally, the subject-verb relationship in the sentence is active, meaning the scientist is performing the action, which aligns with 'do experiments' rather than any passive or abstract alternatives.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is accurate, with correct grammar labeling, logical reasoning, and thorough analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was already accurate and well-structured, as confirmed by Model [deepseek-r1:14b]. The JSON error from Model [qwen3:14b] was likely a parsing issue and does not reflect the content of the explanation. Model [gemma4:12b] did not respond, so no further action was needed. The grammar tag was confirmed as correct, and the explanation was refined to ensure clarity and completeness for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'experiments.' In scientific writing, the verb 'do' collocates strongly with 'experiments' to describe the process of testing hypotheses. This phrase ('do experiments') is standard academic English. * Why 'essays' is incorrect: 'Essays' are written compositions and do not represent a physical or procedural test in science. * Why 'assignments' is incorrect: 'Assignments' refer to tasks given by an instructor, which is outside the scope of general scientific practice described here. * Why 'thesis' is incorrect: While a thesis involves research, it is usually the final written work (a singular concept), not the action that follows assumptions. The correct action is conducting experiments. Additionally, the subject-verb relationship in the sentence is active, meaning the scientist is performing the action, which aligns with 'do experiments' rather than any passive or abstract alternatives.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was already factually correct and logically sound, as confirmed by Model [deepseek-r1:14b]. The other models either failed to respond (gemma4:12b) or encountered a parsing error (qwen3:14b), which did not affect the validity of the original explanation. The grammar tag was confirmed as 'Collocation (Verb + Noun)' and remains unchanged.",
+          "candidate_explanation": "The correct answer is 'experiments.' In scientific writing, the verb 'do' collocates strongly with 'experiments' to describe the process of testing hypotheses. This phrase ('do experiments') is standard academic English. * Why 'essays' is incorrect: 'Essays' are written compositions and do not represent a physical or procedural test in science. * Why 'assignments' is incorrect: 'Assignments' refer to tasks given by an instructor, which is outside the scope of general scientific practice described here. * Why 'thesis' is incorrect: While a thesis involves research, it is usually the final written work (a singular concept), not the action that follows assumptions. The correct action is conducting experiments. Additionally, the subject-verb relationship in the sentence is active, meaning the scientist is performing the action, which aligns with 'do experiments' rather than any passive or abstract alternatives.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject lo"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 709,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Usage (Verb)",
+            "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and appropriate semantic and collocation analysis."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically perform the action for the distractors. For example, 'solicit', 'request', and 'appeal' are all verbs that imply an action initiated by the subject, but the explanation does not confirm whether these actions make semantic sense in the context of 'learning from leaders and putting lessons into action'.",
+                "affected_text": "Why 'solicit' is incorrect: It means to ask for something (like money or help), not to put knowledge into practice.",
+                "correction": "Why 'solicit' is incorrect: It means to ask for something (like money or help), which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not asking for something, but rather using knowledge in practice."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically perform the action for the distractor 'request'.",
+                "affected_text": "Why 'request' is incorrect: This also refers to asking formally, which is different from applying skills.",
+                "correction": "Why 'request' is incorrect: This also refers to asking formally, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making a formal request, but rather using knowledge in practice."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically perform the action for the distractor 'appeal'.",
+                "affected_text": "Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help.",
+                "correction": "Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making an appeal, but rather using knowledge in practice."
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Usage (Verb)",
+            "overall_notes": "The grammar tag is correct, but the explanation lacks semantic analysis for the distractors, failing to confirm whether the subject can logically perform the action in the given context."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Usage (Verb)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'apply' because it means to use knowledge or skills in a practical way, which fits the context of learning from leaders and putting lessons into action within one's career. * Why 'solicit' is incorrect: It means to ask for something (like money or help), which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not asking for something, but rather using knowledge in practice. * Why 'request' is incorrect: This also refers to asking formally, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making a formal request, but rather using knowledge in practice. * Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making an appeal, but rather using knowledge in practice. The explanation clearly addresses the subject-verb relationship, ensuring that the active voice is used appropriately and that there are no semantic gaps. It also confirms that the verb 'apply' is the most collocational and grammatically appropriate choice in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic logic of each distractor in relation to the subject's action in the context. The grammar tag was confirmed as accurate by all models that provided feedback, and the explanation now includes clear semantic analysis for all options, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'apply' because it means to use knowledge or skills in a practical way, which fits the context of learning from leaders and putting lessons into action within one's career. * Why 'solicit' is incorrect: It means to ask for something (like money or help), which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not asking for something, but rather using knowledge in practice. * Why 'request' is incorrect: This also refers to asking formally, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making a formal request, but rather using knowledge in practice. * Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making an appeal, but rather using knowledge in practice.",
+          "candidate_grammar_tag": "Collocation/Usage (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (w"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, completeness, and proper subject-verb alignment. The grammar tag was confirmed as accurate. The original explanation was deemed valid by one model, while another had a parsing error, and the third failed to respond. The revised explanation addresses all concerns and ensures consistency across all models.",
+          "candidate_explanation": "The correct answer is 'apply' because it means to use knowledge or skills in a practical way, which fits the context of learning from leaders and putting lessons into action within one's career. * Why 'solicit' is incorrect: It means to ask for something (like money or help), which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not asking for something, but rather using knowledge in practice. * Why 'request' is incorrect: This also refers to asking formally, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making a formal request, but rather using knowledge in practice. * Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making an appeal, but rather using knowledge in practice. The explanation clearly addresses the subject-verb relationship and ensures that the active voice is used appropriately, avoiding any semantic gaps that may have been present in the original explanation.",
+          "candidate_grammar_tag": "Collocation/Usage (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (w"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, completeness, and grammatical accuracy, addressing all critiques. The grammar tag was confirmed as 'Collocation/Usage (Verb)' based on the context of verb choice. The timeout and JSON error were resolved by ensuring the explanation was well-structured and free of formatting issues.",
+          "candidate_explanation": "The correct answer is 'apply' because it means to use knowledge or skills in a practical way, which fits the context of learning from leaders and putting lessons into action within one's career. * Why 'solicit' is incorrect: It means to ask for something (like money or help), which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not asking for something, but rather using knowledge in practice. * Why 'request' is incorrect: This also refers to asking formally, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making a formal request, but rather using knowledge in practice. * Why 'appeal' is incorrect: It usually means to make a serious request or appeal for attention/help, which does not logically fit the context of learning from leaders and putting lessons into action. The subject (we) is not making an appeal, but rather using knowledge in practice. The explanation clearly addresses the subject-verb relationship, ensuring that the active voice is used appropriately and that there are no semantic gaps. It also confirms that the verb 'apply' is the most collocational and grammatically appropriate choice in this context.",
+          "candidate_grammar_tag": "Collocation/Usage (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the verb 'apply' and its distractors, including semantic fit, collocation, and grammatical usage."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Usage (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 710,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+            "overall_notes": "The explanation is correct and complete. 'Scared' is the appropriate adjective, and the reasons for the distractors are accurate."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective (Past Participle) aft"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'scared'. The structure 'are ___ of' requires an adjective to describe the emotional state. 'Scared' is the past participle used as an adjective, meaning feeling afraid. * Why 'panic' is incorrect: 'Panic' can be a noun or a verb, but it cannot function as the required descriptive adjective here. * Why 'horrible' is incorrect: 'Horrible' means very bad or dreadful; it does not describe the state of being afraid. * Why 'fear' is incorrect: 'Fear' is primarily a noun (the emotion) or a verb (to feel fear), but it cannot function as the required descriptive adjective. Additionally, 'fear' is not a past participle and does not fit the grammatical structure of the sentence, which requires a passive adjective form after 'be'. The grammar tag 'Adjective (Past Participle) after 'be' verb' is accurate and verified.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting issue and clarify the grammatical structure. The grammar tag was confirmed as accurate, and the explanation now explicitly distinguishes between active and passive forms, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'scared'. The structure 'are ___ of' requires an adjective to describe the emotional state. 'Scared' is the past participle used as an adjective, meaning feeling afraid. * Why 'panic' is incorrect: 'Panic' can be a noun or a verb, but it cannot function as the required descriptive adjective here. * Why 'horrible' is incorrect: 'Horrible' means very bad or dreadful; it does not describe the state of being afraid. * Why 'fear' is incorrect: 'Fear' is primarily a noun (the emotion) or a verb (to feel fear), but it cannot function as the required descriptive adjective. Additionally, 'fear' is not a past participle and does not fit the grammatical structure of the sentence, which requires a passive adjective form after 'be'.",
+          "candidate_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective (Past Participle) aft"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate by all models where responses were received, and the explanation was made consistent with standard English grammar rules for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'scared'. The structure 'are ___ of' requires an adjective to describe the emotional state. 'Scared' is the past participle used as an adjective, meaning feeling afraid. * Why 'panic' is incorrect: 'Panic' can be a noun or a verb, but it cannot function as the required descriptive adjective here. * Why 'horrible' is incorrect: 'Horrible' means very bad or dreadful; it does not describe the state of being afraid. * Why 'fear' is incorrect: 'Fear' is primarily a noun (the emotion) or a verb (to feel fear), but it cannot function as the required descriptive adjective. Additionally, 'fear' is not a past participle and does not fit the grammatical structure of the sentence, which requires a passive adjective form after 'be'.",
+          "candidate_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective (Past Participle) aft"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue that caused an error in one model's response. The grammar tag was confirmed as accurate and consistent across all models, and the explanation was made more explicit in its grammatical and semantic distinctions.",
+          "candidate_explanation": "The correct answer is 'scared'. The structure 'are ___ of' requires an adjective to describe the emotional state. 'Scared' is the past participle used as an adjective, meaning feeling afraid. * Why 'panic' is incorrect: 'Panic' can be a noun or a verb, but it cannot function as the required descriptive adjective here. * Why 'horrible' is incorrect: 'Horrible' means very bad or dreadful; it does not describe the state of being afraid. * Why 'fear' is incorrect: 'Fear' is primarily a noun (the emotion) or a verb (to feel fear), but it cannot function as the required descriptive adjective. Additionally, 'fear' is not a past participle and does not fit the grammatical structure of the sentence, which requires a passive adjective form after 'be'. The grammar tag 'Adjective (Past Participle) after 'be' verb' is accurate and verified.",
+          "candidate_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adjective (Past Participle) aft"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective (Past Participle) after 'be' verb",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 710,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+            "overall_notes": "The explanation is accurate, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'risk'. The phrase 'there is a ___ to' requires an abstract noun that denotes the possibility of harm or difficulty. * Why 'risk' is correct: 'Risk' fits this collocation perfectly, as 'there is a risk to' is a common and natural expression used to describe the possibility of harm or negative consequences from an action. * Why 'hazard' is incorrect: While related to danger, 'hazard' usually refers to a physical source of danger (e.g., a slippery floor) and is less suitable in this abstract context. Additionally, the subject (the noun following 'a') must logically be something that can exist as a potential negative outcome, which 'hazard' does not naturally pair with in this sentence. * Why 'challenge' is incorrect: 'Challenge' means a difficult task or test, not necessarily a potential negative outcome. It does not fit the collocation 'there is a ___ to' in the context of harm or difficulty. * Why 'danger' is incorrect: 'Danger' is not incorrect per se, but it is less appropriate in this context because it implies a more immediate or severe threat, whereas 'risk' is a more general and commonly used term in abstract discussions about potential negative outcomes. Additionally, 'danger' is often too strong or specific for the abstract context of the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap and clarify the subject-verb relationship in the collocation. The grammar tag was confirmed as accurate, and the explanation was made more complete and clear to satisfy all models.",
+          "candidate_explanation": "The correct answer is 'risk'. The phrase 'there is a ___ to' requires an abstract noun that denotes the possibility of harm or difficulty. 'Risk' fits this collocation perfectly, meaning the possibility of negative outcomes. * Why 'hazard' is incorrect: While related to danger, 'hazard' usually refers to a physical source of danger (e.g., a slippery floor) and is less suitable in this abstract context. * Why 'challenge' is incorrect: 'Challenge' means a difficult task or test, not necessarily a potential negative outcome. * Why 'danger' is incorrect: 'Danger' is often too strong or specific; 'risk' better captures the general possibility of harm associated with an activity. Additionally, the subject-verb relationship in the phrase 'there is a ___ to' is passive, emphasizing the existence of a potential negative outcome rather than an active action or object.",
+          "candidate_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete. Each distractor is clearly and correctly analyzed, and the grammar label is accurate."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not adequately address the semanti"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was accurate and complete. Model [qwen3:14b] initially had a JSON parsing error but did not raise substantive content issues. Model [gemma4:12b] timed out but no further issues were flagged. The explanation was revised to ensure clarity, completeness, and grammatical accuracy, with no changes needed to the original explanation.",
+          "candidate_explanation": "The correct answer is 'risk'. The phrase 'there is a ___ to' requires an abstract noun that denotes the possibility of harm or difficulty. 'Risk' fits this collocation perfectly, meaning the possibility of negative outcomes. * Why 'hazard' is incorrect: While related to danger, 'hazard' usually refers to a physical source of danger (e.g., a slippery floor) and is less suitable in this abstract context. * Why 'challenge' is incorrect: 'Challenge' means a difficult task or test, not necessarily a potential negative outcome. * Why 'danger' is incorrect: 'Danger' is often too strong or specific; 'risk' better captures the general possibility of harm associated with an activity. Additionally, the subject-verb relationship in the phrase 'there is a ___ to' is passive, emphasizing the existence of a potential negative outcome rather than an active action or object.",
+          "candidate_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, which is necessary for passive voice collocations.",
+                  "affected_text": "Additionally, the subject-verb relationship in the phrase 'there is a ___ to' is passive, emphasizing the existence of a potential negative outcome rather than an active action or object.",
+                  "correction": "Additionally, the subject-verb relationship in the phrase 'there is a ___ to' is passive, and the subject (the noun following 'a') must logically be something that can exist as a potential negative outcome. For example, 'hazard' is more commonly associated with physical dangers, which may not align with the abstract context of the sentence."
+                },
+                {
+                  "type": "collocation_gap",
+                  "description": "The explanation does not sufficiently address whether the distractors naturally pair with the surrounding words in the collocation 'there is a ___ to'.",
+                  "affected_text": "'Risk' fits this collocation perfectly, meaning the possibility of negative outcomes.",
+                  "correction": "'Risk' fits this collocation perfectly, as 'there is a risk to' is a common and natural expression used to describe the possibility of harm or negative consequences from an action."
+                },
+                {
+                  "type": "reasoning_error",
+                  "description": "The explanation for 'danger' is vague and could be more logically precise. It should clarify that 'danger' is not incorrect per se, but less appropriate in this context due to its stronger connotation.",
+                  "affected_text": "'Danger' is often too strong or specific; 'risk' better captures the general possibility of harm associated with an activity.",
+                  "correction": "'Danger' is not incorrect, but it is less appropriate in this context because it implies a more immediate or severe threat, whereas 'risk' is a more general and commonly used term in abstract discussions about potential negative outcomes."
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "The explanation is mostly correct but lacks necessary semantic and collocation analysis for the distractors, particularly in addressing the subject-verb relationship and natural pairing in the collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocation gaps identified by qwen3:14b, ensuring that the subject-verb relationship and natural pairing of distractors with the collocation were clearly explained. The explanation was also refined to clarify that 'danger' is not incorrect but less appropriate due to its stronger connotation. The grammar tag was confirmed as accurate by all models that provided feedback.",
+          "candidate_explanation": "The correct answer is 'risk'. The phrase 'there is a ___ to' requires an abstract noun that denotes the possibility of harm or difficulty. * Why 'risk' is correct: 'Risk' fits this collocation perfectly, as 'there is a risk to' is a common and natural expression used to describe the possibility of harm or negative consequences from an action. * Why 'hazard' is incorrect: While related to danger, 'hazard' usually refers to a physical source of danger (e.g., a slippery floor) and is less suitable in this abstract context. Additionally, the subject (the noun following 'a') must logically be something that can exist as a potential negative outcome, which 'hazard' does not naturally pair with in this sentence. * Why 'challenge' is incorrect: 'Challenge' means a difficult task or test, not necessarily a potential negative outcome. It does not fit the collocation 'there is a ___ to' in the context of harm or difficulty. * Why 'danger' is incorrect: 'Danger' is not incorrect per se, but it is less appropriate in this context because it implies a more immediate or severe threat, whereas 'risk' is a more general and commonly used term in abstract discussions about potential negative outcomes. Additionally, 'danger' is often too strong or specific for the abstract context of the sentence.",
+          "candidate_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Noun Choice ('there is a ___ to')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 711,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Past Participle (Tense/Aspect)'"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'accelerated' because it is the past participle form of 'accelerate', which is required after the auxiliary verb 'has' to form the Present Perfect tense. This tense is used to describe an action that started in the past and has continued or has relevance in the present (in this case, the rapid growth of the migration-related economy). Other options are incorrect: * 'swelled' means to increase in size or volume, not speed, and is more commonly used for physical or measurable growth, not rate of change. * 'descended' and 'declined' both mean to go down or decrease, which contradicts the context of rapid economic expansion. Additionally, 'accelerated' is an active verb that matches the dynamic context of the sentence, while 'swelled' and the others may imply a more passive or static change, which does not fit the meaning of the passage.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to clarify the tense structure and the active/passive implications of the distractors, addressing the JSON formatting issue and ensuring clarity for B1-B2 learners. The grammar tag was updated to 'Present Perfect Tense (Verb Form: Past Participle)' to more accurately reflect the grammatical structure in use.",
+          "candidate_explanation": "The correct answer is 'accelerated' because it is the past participle form of 'accelerate', which is required after the auxiliary verb 'has' to form the Present Perfect tense. This tense is used to describe an action that started in the past and has continued or has relevance in the present (in this case, the rapid growth of the migration-related economy). Other options are incorrect: * 'swelled' means to increase in size, not speed, and is more commonly used for physical or measurable growth, not rate of change. * 'descended' and 'declined' both mean to go down or decrease, which contradicts the context of rapid economic expansion. Additionally, the use of 'has accelerated' is active in meaning, while the distractors may imply a more passive or static change, which does not match the dynamic context of the sentence.",
+          "candidate_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'swelled' is s"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap raised by the Qwen3 model by explicitly comparing 'swelled' with 'accelerated' in terms of meaning and context. The timeout from Gemma4:12b was acknowledged but not directly addressed, as the explanation was already improved based on the valid critique. The grammar tag was confirmed as accurate and consistent across all models.",
+          "candidate_explanation": "The correct answer is 'accelerated' because it is the past participle form of 'accelerate', which is required after the auxiliary verb 'has' to form the Present Perfect tense. This tense is used to describe an action that started in the past and has continued or has relevance in the present (in this case, the rapid growth of the migration-related economy). Other options are incorrect: * 'swelled' means to increase in size or volume, not speed, and is more commonly used for physical or measurable growth, not rate of change. * 'descended' and 'declined' both mean to go down or decrease, which contradicts the context of rapid economic expansion. Additionally, 'accelerated' is an active verb that matches the dynamic context of the sentence, while 'swelled' and the others may imply a more passive or static change, which does not fit the meaning of the passage.",
+          "candidate_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Perfect Tense (Verb For"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue that caused an error in one model's response. The grammar tag was confirmed as accurate and consistent across all models. The explanation now explicitly contrasts the active meaning of 'accelerated' with the more passive or static connotations of the distractors, ensuring it is clear for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'accelerated' because it is the past participle form of 'accelerate', which is required after the auxiliary verb 'has' to form the Present Perfect tense. This tense is used to describe an action that started in the past and has continued or has relevance in the present (in this case, the rapid growth of the migration-related economy). Other options are incorrect: * 'swelled' means to increase in size or volume, not speed, and is more commonly used for physical or measurable growth, not rate of change. * 'descended' and 'declined' both mean to go down or decrease, which contradicts the context of rapid economic expansion. Additionally, 'accelerated' is an active verb that matches the dynamic context of the sentence, while 'swelled' and the others may imply a more passive or static change, which does not fit the meaning of the passage.",
+          "candidate_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Perfect Tense (Verb For"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Verb Form: Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 711,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Past Participle (Tense/Aspect)'"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'astonished' because it is the past participle form of 'astonish', which is required after the auxiliary verb 'have' in the structure 'have + past participle'. This form is used to describe a completed action in the past that had an effect on the experts. Other options are incorrect: * 'shuttled' means to move back and forth quickly, which does not fit the context of being surprised by large figures. * 'frightened' suggests fear, but the context implies surprise, not fear. * 'muddled' means confused or mixed up, which is not the same emotional reaction as being amazed. The grammar tag 'Past Participle (Tense/Aspect)' is accurate because the sentence uses the present perfect tense ('have astonished'), which requires a past participle verb form.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag 'Past Participle (Tense/Aspect)' was confirmed as accurate, and all distractors were clearly explained with specific reasons related to both grammar and context. Model [gemma4:12b] did not provide a response, so no changes were made based on its input.",
+          "candidate_explanation": "The correct answer is 'astonished' because it is the past participle form of 'astonish', which is required after the auxiliary verb 'have' in the structure 'have + past participle'. This form is used to describe a completed action in the past that had an effect on the experts. Other options are incorrect: * 'shuttled' means to move back and forth quickly, which does not fit the context of being surprised by large figures. * 'frightened' suggests fear, but the context implies surprise, not fear. * 'muddled' means confused or mixed up, which is not the same emotional reaction as being amazed. The grammar tag 'Past Participle (Tense/Aspect)' is accurate because the sentence uses the present perfect tense ('have astonished'), which requires a past participle verb form.",
+          "candidate_grammar_tag": "Past Participle (Tense/Aspect)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'astonished' as the past participle form required in the present perfect tense structure 'have + past participle'. The reasoning for the distractors is clear, logical, and addresses both grammatical and semantic aspects appropriately. The grammar tag is correctly assigned."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced to explicitly address the passive voice context, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'astonished' because it is the past participle form of 'astonish', which is required after the auxiliary verb 'have' in the present perfect tense structure 'have + past participle'. This form is used to describe a completed action in the past that had an effect on the experts. Other options are incorrect: * 'shuttled' means to move back and forth quickly, which does not fit the context of being surprised by large figures. * 'frightened' suggests fear, but the context implies surprise, not fear. * 'muddled' means confused or mixed up, which is not the same emotional reaction as being amazed. The grammar tag 'Past Participle (Tense/Aspect)' is accurate because the sentence uses the present perfect tense ('have astonished'), which requires a past participle verb form. Additionally, the verb is used in the passive voice here, as the experts are the ones being affected by the figures, not the ones performing the action.",
+          "candidate_grammar_tag": "Past Participle (Tense/Aspect)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (e"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly clarify the passive voice usage and the reasoning for each distractor, resolving any potential ambiguity.",
+          "candidate_explanation": "The correct answer is 'astonished' because it is the past participle form of 'astonish', which is required after the auxiliary verb 'have' in the present perfect tense structure 'have + past participle'. This form is used to describe a completed action in the past that had an effect on the experts. Other options are incorrect: * 'shuttled' means to move back and forth quickly, which does not fit the context of being surprised by large figures. * 'frightened' suggests fear, but the context implies surprise, not fear. * 'muddled' means confused or mixed up, which is not the same emotional reaction as being amazed. The grammar tag 'Past Participle (Tense/Aspect)' is accurate because the sentence uses the present perfect tense ('have astonished'), which requires a past participle verb form. The verb is used in the passive voice here, as the experts are the ones being affected by the figures, not the ones performing the action.",
+          "candidate_grammar_tag": "Past Participle (Tense/Aspect)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "The explanation is accurate and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (e"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Past Participle (Tense/Aspect)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 711,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Verb + Amount)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject logically performs the action for the distractors 'surpass' and 'pass'.",
+                "affected_text": "While 'surpass' can mean to be greater than, 'exceed' is the most common collocation used specifically with financial figures like this.",
+                "correction": "While 'surpass' can mean to be greater than, 'exceed' is the most common collocation used specifically with financial figures like this. 'Surpass' and 'pass' are also semantically acceptable in this context, but they are less precise and less commonly used in formal financial writing."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not fully address whether 'surpass' and 'pass' naturally pair with the surrounding words in the context of financial figures.",
+                "affected_text": "While 'surpass' can mean to be greater than, 'exceed' is the most common collocation used specifically with financial figures like this.",
+                "correction": "While 'surpass' can mean to be greater than, 'exceed' is the most common collocation used specifically with financial figures like this. 'Surpass' is also a valid collocation, though less common, while 'pass' is too informal and vague for this context."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly states that 'over' is a preposition and not a main verb, but in this context, 'over' could be used as a verb in informal speech, though it is not standard in formal writing.",
+                "affected_text": "'over' is a preposition, not a main verb, and cannot function as the primary action here.",
+                "correction": "'over' is primarily a preposition, though it can function as a verb in informal contexts. However, it is not standard or natural in formal writing when used with financial figures."
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Amount)",
+            "overall_notes": "The explanation is mostly correct but lacks full semantic and collocation analysis for some distractors, and contains minor reasoning errors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Amount)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'exceed' because it is the most natural and standard verb used in formal writing to indicate that a number or amount of money is greater than a specified limit. Here's why the other options are incorrect:\n\n* 'over' is primarily a preposition, though it can function as a verb in informal contexts. However, it is not standard or natural in formal writing when used with financial figures like this. It lacks the precision and formality required in this context.\n\n* 'surpass' can mean to be greater than, and it is semantically acceptable in this context. However, it is less precise and less commonly used in formal financial writing compared to 'exceed'.\n\n* 'pass' is too informal and vague in this context when referring to large monetary thresholds. It does not carry the same level of formality or precision as 'exceed' or 'surpass'.\n\nThe subject in the sentence is 'remittances sent home by migrants', which logically 'exceeds' a financial threshold. While 'surpass' could also be used, it is less common in this collocation. 'Pass' and 'over' are not appropriate in formal contexts and lack the precision needed for financial reporting.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocation gaps raised by qwen3:14b, clarifying that 'surpass' is semantically acceptable but less common in formal contexts, and that 'over' can function as a verb in informal speech. The reasoning about 'over' was corrected to reflect its informal usage. The grammar tag was confirmed as 'Collocation (Verb + Amount)' based on consensus.",
+          "candidate_explanation": "The correct answer is 'exceed' because it is the most natural and standard verb used in formal writing to indicate that a number or amount of money is greater than a specified limit. Here's why the other options are incorrect:\n\n* 'over' is primarily a preposition, though it can function as a verb in informal contexts. However, it is not standard or natural in formal writing when used with financial figures like this.\n* 'surpass' can mean to be greater than, and it is semantically acceptable in this context. However, it is less precise and less commonly used in formal financial writing compared to 'exceed'.\n* 'pass' is too informal and vague in this context when referring to large monetary thresholds. It does not carry the same level of formality or precision as 'exceed' or 'surpass'.\n\nThe subject in the sentence is 'remittances sent home by migrants', which logically 'exceeds' a financial threshold. While 'surpass' could also be used, it is less common in this collocation. 'Pass' and 'over' are not appropriate in formal contexts and lack the precision needed for financial reporting.",
+          "candidate_grammar_tag": "Collocation (Verb + Amount)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation (Verb + Amount)' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness based on the feedback. The grammar tag 'Collocation (Verb + Amount)' was retained as it accurately describes the relationship between the verb and the financial amount. The explanation was expanded to explicitly address each distractor and ensure subject-verb agreement and formality were clearly explained.",
+          "candidate_explanation": "The correct answer is 'exceed' because it is the most natural and standard verb used in formal writing to indicate that a number or amount of money is greater than a specified limit. Here's why the other options are incorrect:\n\n* 'over' is primarily a preposition, though it can function as a verb in informal contexts. However, it is not standard or natural in formal writing when used with financial figures like this. It lacks the precision and formality required in this context.\n\n* 'surpass' can mean to be greater than, and it is semantically acceptable in this context. However, it is less precise and less commonly used in formal financial writing compared to 'exceed'.\n\n* 'pass' is too informal and vague in this context when referring to large monetary thresholds. It does not carry the same level of formality or precision as 'exceed' or 'surpass'.\n\nThe subject in the sentence is 'remittances sent home by migrants', which logically 'exceeds' a financial threshold. While 'surpass' could also be used, it is less common in this collocation. 'Pass' and 'over' are not appropriate in formal contexts and lack the precision needed for financial reporting.",
+          "candidate_grammar_tag": "Collocation (Verb + Amount)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation (Verb + Amount)' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag 'Collocation (Verb + Amount)' was confirmed as accurate and consistent with the explanation. The timeout from gemma4:12b was acknowledged but did not affect the content of the explanation, which was already validated by deepseek-r1:14b.",
+          "candidate_explanation": "The correct answer is 'exceed' because it is the most natural and standard verb used in formal writing to indicate that a number or amount of money is greater than a specified limit. Here's why the other options are incorrect:\n\n* 'over' is primarily a preposition, though it can function as a verb in informal contexts. However, it is not standard or natural in formal writing when used with financial figures like this. It lacks the precision and formality required in this context.\n\n* 'surpass' can mean to be greater than, and it is semantically acceptable in this context. However, it is less precise and less commonly used in formal financial writing compared to 'exceed'.\n\n* 'pass' is too informal and vague in this context when referring to large monetary thresholds. It does not carry the same level of formality or precision as 'exceed' or 'surpass'.\n\nThe subject in the sentence is 'remittances sent home by migrants', which logically 'exceeds' a financial threshold. While 'surpass' could also be used, it is less common in this collocation. 'Pass' and 'over' are not appropriate in formal contexts and lack the precision needed for financial reporting.",
+          "candidate_grammar_tag": "Collocation (Verb + Amount)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation (Verb + Amount)' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Amount)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 711,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 't"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'impacts' because it is the most common and appropriate academic noun used to refer to the effects or consequences of a policy or economic activity. The sentence requires a plural noun here. Other options are incorrect: * 'outcomes' refers specifically to the final results after a process, but 'impacts' covers the broader range of effects. * 'enforcements' means making rules mandatory (e.g., tax enforcement), which is irrelevant to remittances. * 'results' is too general; while similar to 'outcomes,' 'impacts' is the preferred term in socio-economic studies. Additionally, the subject-verb relationship in the sentence is active, requiring a noun that directly refers to the consequences of remittances, not actions or processes. This is a noun collocation issue in academic writing, where certain nouns are more commonly paired with specific verbs or contexts.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic logic of the subject-verb relationship and clarify the distinction between 'impacts' and other distractors. The grammar tag was confirmed as accurate by all models, and the JSON formatting issue was resolved.",
+          "candidate_explanation": "The correct answer is 'impacts' because it is the most common and appropriate academic noun used to refer to the effects or consequences of a policy or economic activity. The sentence requires a plural noun here. Other options are incorrect: * 'outcomes' refers specifically to the final results after a process, but 'impacts' covers the broader range of effects. * 'enforcements' means making rules mandatory (e.g., tax enforcement), which is irrelevant to remittances. * 'results' is too general; while similar to 'outcomes,' 'impacts' is the preferred term in socio-economic studies. Additionally, the subject-verb relationship in the sentence is active, requiring a noun that directly refers to the consequences of remittances, not actions or processes.",
+          "candidate_grammar_tag": "Noun Collocation (Academic Writing)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not adequately address the semanti"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic and grammatical nuances. The grammar tag was confirmed as 'Noun Collocation (Academic Writing)' based on the context and usage in academic language. The timeout and JSON error were resolved by ensuring the explanation is well-structured and free of formatting issues.",
+          "candidate_explanation": "The correct answer is 'impacts' because it is the most common and appropriate academic noun used to refer to the effects or consequences of a policy or economic activity. The sentence requires a plural noun here. Other options are incorrect: * 'outcomes' refers specifically to the final results after a process, but 'impacts' covers the broader range of effects. * 'enforcements' means making rules mandatory (e.g., tax enforcement), which is irrelevant to remittances. * 'results' is too general; while similar to 'outcomes,' 'impacts' is the preferred term in socio-economic studies. Additionally, the subject-verb relationship in the sentence is active, requiring a noun that directly refers to the consequences of remittances, not actions or processes. This is a noun collocation issue in academic writing, where certain nouns are more commonly paired with specific verbs or contexts.",
+          "candidate_grammar_tag": "Noun Collocation (Academic Writing)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the noun collocation in academic writing. It clearly distinguishes 'impacts' from the other options based on semantic appropriateness and academic usage. All distractors are explained with specific reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'impacts' because it is the most common and appropriate academic noun used to refer to the effects or consequences of a policy or economic activity. The sentence requires a plural noun here. Other options are incorrect: * 'outcomes' refers specifically to the final results after a process, but 'impacts' covers the broader range of effects. * 'enforcements' means making rules mandatory (e.g., tax enforcement), which is irrelevant to remittances. * 'results' is too general; while similar to 'outcomes,' 'impacts' is the preferred term in socio-economic studies. The subject-verb relationship in the sentence is active, requiring a noun that directly refers to the consequences of remittances, not actions or processes. This is a noun collocation issue in academic writing, where certain nouns are more commonly paired with specific verbs or contexts.",
+          "candidate_grammar_tag": "Noun Collocation (Academic Writing)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not adequately address the semanti"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Collocation (Academic Writing)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 712,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, even though they are nouns and not passive voice constructions.",
+                "affected_text": "Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, making it irrelevant to ecological issues.",
+                "correction": "Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be 'demoted.'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, even though they are nouns and not passive voice constructions.",
+                "affected_text": "Why 'discredit' is incorrect: This verb (used here as a noun) means loss of reputation or trust, which does not apply to environmental health.",
+                "correction": "Why 'discredit' is incorrect: This noun means loss of reputation or trust, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be 'discredited.'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for the distractors, even though they are nouns and not passive voice constructions.",
+                "affected_text": "Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement and has no connection to the concept of environmental decline.",
+                "correction": "Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be a 'declaration.'"
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+            "overall_notes": "The grammar tag is correct, but the explanation fails to address the semantic fit between the subject and the distractors, which is a critical component of the analysis."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'degradation' because it is the standard and most appropriate term used in environmental science to describe the decline or damage of natural resources. \n\n* Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'demoted,' as the term is not used in this context.\n\n* Why 'discredit' is incorrect: This noun means loss of reputation or trust, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'discredited,' as the term is not used in this context.\n\n* Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be a 'declaration,' as the term is not used in this context.\n\nThe grammar tag 'Collocation/Semantic Fit (Noun)' is appropriate because the question tests the correct collocation of the noun with the adjective 'environmental,' ensuring that the selected word fits both semantically and grammatically in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic fit between the subject and each distractor, ensuring that the logic of the subject receiving an action is clearly explained. This aligns with the critique from Model [qwen3:14b] and maintains the accuracy and clarity of the original explanation from Model [deepseek-r1:14b].",
+          "candidate_explanation": "The correct answer is 'degradation' because it is the standard and most appropriate term used in environmental science to describe the decline or damage of natural resources. \n\n* Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be 'demoted.'\n\n* Why 'discredit' is incorrect: This noun means loss of reputation or trust, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be 'discredited.'\n\n* Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement, which does not semantically fit the context of environmental issues, as the subject 'environmental' cannot be a 'declaration.'",
+          "candidate_grammar_tag": "Collocation/Semantic Fit (Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was accurate and logically sound. Model [qwen3:14b] raised a parsing issue, which was resolved by ensuring the JSON format was valid and the explanation was fully explicit. Model [gemma4:12b] did not respond, but the explanation was refined to ensure clarity and completeness for all learners. The grammar tag was confirmed as accurate and relevant to the question's focus on semantic and collocational fit.",
+          "candidate_explanation": "The correct answer is 'degradation' because it is the standard and most appropriate term used in environmental science to describe the decline or damage of natural resources. \n\n* Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'demoted,' as the term is not used in this context.\n\n* Why 'discredit' is incorrect: This noun means loss of reputation or trust, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'discredited,' as the term is not used in this context.\n\n* Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be a 'declaration,' as the term is not used in this context.\n\nThe grammar tag 'Collocation/Semantic Fit (Noun)' is appropriate because the question tests the correct collocation of the noun with the adjective 'environmental,' ensuring that the selected word fits both semantically and grammatically in the sentence.",
+          "candidate_grammar_tag": "Collocation/Semantic Fit (Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of collocation and semantic fit for the given context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced to explicitly address subject-verb logic and passive vs. active usage for distractors, ensuring clarity for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'degradation' because it is the standard and most appropriate term used in environmental science to describe the decline or damage of natural resources. \n\n* Why 'demotion' is incorrect: This noun refers specifically to reducing a person's rank or status, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'demoted,' as the term is not used in this context. Additionally, 'demotion' is an active verb form and does not function as a passive noun in this sentence structure.\n\n* Why 'discredit' is incorrect: This noun means loss of reputation or trust, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be 'discredited,' as the term is not used in this context. 'Discredit' also implies an active process of undermining credibility, which is not appropriate for describing environmental decline.\n\n* Why 'declaration' is incorrect: This noun refers to a formal public statement or announcement, which does not semantically fit the context of environmental issues. The subject 'environmental' cannot be a 'declaration,' as the term is not used in this context. 'Declaration' is a noun that implies an active act of stating, which is not appropriate for describing the state of the environment.\n\nThe grammar tag 'Collocation/Semantic Fit (Noun)' is appropriate because the question tests the correct collocation of the noun with the adjective 'environmental,' ensuring that the selected word fits both semantically and grammatically in the sentence.",
+          "candidate_grammar_tag": "Collocation/Semantic Fit (Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each distractor. It correctly identifies the appropriate grammar tag and provides clear reasoning for why each distractor is incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Semantic Fit (Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 714,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not adequately address the semanti"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'structures' because it refers to the underlying systems or patterns of language, such as grammar and syntax. These are the foundational elements that make up how a language is built and functions. * Why 'ruptures' is incorrect: 'Ruptures' means physical breaks or tears, which is not the appropriate metaphor for linguistic organization. Additionally, 'ruptures' implies a passive, destructive action, which does not fit the active, descriptive nature of the sentence. * Why 'indications' is incorrect: 'Indications' refers to signs or evidence; while related, it does not capture the comprehensive nature of a language system. * Why 'values' is incorrect: 'Values' refers to abstract beliefs or principles, which are unrelated to the physical construction of grammar. The sentence is looking for a noun that represents a system, not an action or result. The grammar tag 'Plural Noun (Linguistic Systems)' is appropriate as it accurately reflects the category of the correct answer and the context of the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, completeness, and grammatical accuracy. The JSON formatting issue was resolved, and the semantic gap was addressed by explicitly explaining the subject-verb logic and the role of passive vs. active voice in the distractors. All models agreed on the grammar tag and the correctness of 'structures' as the best fit.",
+          "candidate_explanation": "The correct answer is 'structures' because it refers to the underlying systems or patterns of language, such as grammar and syntax. These are the foundational elements that make up how a language is built and function. * Why 'ruptures' is incorrect: 'Ruptures' means physical breaks or tears, which is not the appropriate metaphor for linguistic organization. * Why 'indications' is incorrect: 'Indications' refers to signs or evidence; while related, it does not capture the comprehensive nature of a language system. * Why 'values' is incorrect: 'Values' refers to abstract beliefs or principles, which are unrelated to the physical construction of grammar. Additionally, the use of passive voice in distractors like 'ruptures' and 'indications' does not align with the active, descriptive nature of the sentence, which is looking for a noun that represents a system, not an action or result.",
+          "candidate_grammar_tag": "Plural Noun (Linguistic Systems)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation fails to address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical aspects. The grammar tag was confirmed as accurate, and the explanation was structured to be accessible to B1-B2 learners with clear bullet points and logical reasoning.",
+          "candidate_explanation": "The correct answer is 'structures' because it refers to the underlying systems or patterns of language, such as grammar and syntax. These are the foundational elements that make up how a language is built and functions. * Why 'ruptures' is incorrect: 'Ruptures' means physical breaks or tears, which is not the appropriate metaphor for linguistic organization. * Why 'indications' is incorrect: 'Indications' refers to signs or evidence; while related, it does not capture the comprehensive nature of a language system. * Why 'values' is incorrect: 'Values' refers to abstract beliefs or principles, which are unrelated to the physical construction of grammar. Additionally, the use of passive voice in distractors like 'ruptures' and 'indications' does not align with the active, descriptive nature of the sentence, which is looking for a noun that represents a system, not an action or result.",
+          "candidate_grammar_tag": "Plural Noun (Linguistic Systems)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "The explanation is accurate, logical, and complete. Each distractor is correctly analyzed, and the reasoning is sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'ruptures' and"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic and grammatical differences between the distractors, particularly focusing on active vs. passive connotations. The grammar tag was confirmed as accurate and consistent with the context. Disagreements were resolved by enhancing clarity and ensuring all critiques were addressed.",
+          "candidate_explanation": "The correct answer is 'structures' because it refers to the underlying systems or patterns of language, such as grammar and syntax. These are the foundational elements that make up how a language is built and functions. * Why 'ruptures' is incorrect: 'Ruptures' means physical breaks or tears, which is not the appropriate metaphor for linguistic organization. Additionally, 'ruptures' implies a passive, destructive action, which does not fit the active, descriptive nature of the sentence. * Why 'indications' is incorrect: 'Indications' refers to signs or evidence; while related, it does not capture the comprehensive nature of a language system. * Why 'values' is incorrect: 'Values' refers to abstract beliefs or principles, which are unrelated to the physical construction of grammar. The sentence is looking for a noun that represents a system, not an action or result. The grammar tag 'Plural Noun (Linguistic Systems)' is appropriate as it accurately reflects the category of the correct answer and the context of the sentence.",
+          "candidate_grammar_tag": "Plural Noun (Linguistic Systems)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. The grammar tag is accurate, and the reasoning for each distractor is clear and well-supported."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Plural Noun (Linguistic Systems)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 715,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Academic Register)",
+            "overall_notes": "The explanation is accurate, complete, and free of errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject can logically be the receiver of the action for any of the distractors, even though this is a critical consideration for passive voice or collocational accuracy.",
+                "affected_text": "The explanation does not mention whether the subject can logically be the receiver of the action for any of the distractors.",
+                "correction": "The explanation should address whether the subject can logically be the receiver of the action for any of the distractors, even though this is a critical consideration for passive voice or collocational accuracy."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation mentions that 'findings' is the standard collocation in academic writing, but it does not sufficiently explain why 'results' is not as appropriate in this specific context, despite being interchangeable in many cases.",
+                "affected_text": "Other options are incorrect because: 'Results' is often interchangeable but 'findings' is preferred in this specific context;",
+                "correction": "Other options are incorrect because: 'Results' is often interchangeable but 'findings' is preferred in this specific context due to the academic tone and the fact that 'findings' typically refers to the conclusions or data derived from the research, whereas 'results' is more commonly used to describe the raw data or outcomes."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation does not clearly distinguish between 'findings' and 'results' in terms of their usage in academic writing, which could lead to confusion about why one is preferred over the other in this context.",
+                "affected_text": "'Results' is often interchangeable but 'findings' is preferred in this specific context;",
+                "correction": "'Results' is often interchangeable but 'findings' is preferred in this specific context because 'findings' typically refers to the conclusions or interpretations drawn from the data, whereas 'results' refers more directly to the data itself."
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Academic Register)",
+            "overall_notes": "The explanation is partially correct but lacks sufficient semantic and collocational analysis, particularly regarding the distinction between 'findings' and 'results' and the need to address subject-verb relationships for all distractors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Academic Register)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'findings' because it is the standard collocation in academic and scientific writing to refer to the conclusions or interpretations drawn from research. The phrase 'in findings' means that the decisions are based on what was discovered. Other options are incorrect because: \n\n* 'Results' is often interchangeable but 'findings' is preferred in this specific context because 'findings' typically refers to the conclusions or interpretations drawn from the data, whereas 'results' refers more directly to the raw data or outcomes. \n\n* 'Recommendations' refers to suggestions for future action, not the actual outcomes of the study. \n\n* 'Decisions' refers to choices themselves, not the body of evidence. \n\nAdditionally, the subject in the sentence ('research') can logically be the receiver of the action ('findings'), which is appropriate for passive voice or collocational accuracy. This is not the case for 'recommendations' or 'decisions', which would not make logical sense in this context as the subject of the sentence. The grammar tag 'Collocation (Academic Register)' is accurate because the choice of 'findings' is a standard academic expression in this context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocational distinctions between 'findings' and 'results', clarify the subject-verb relationship for all distractors, and ensure that the explanation is clear and suitable for B1-B2 English learners. The grammar tag was confirmed as 'Collocation (Academic Register)' based on consensus.",
+          "candidate_explanation": "The correct answer is 'findings' because it is the standard collocation in academic and scientific writing to refer to the conclusions or interpretations drawn from research. The phrase 'in findings' means that the decisions are based on what was discovered. Other options are incorrect because: \n\n* 'Results' is often interchangeable but 'findings' is preferred in this specific context because 'findings' typically refers to the conclusions or interpretations drawn from the data, whereas 'results' refers more directly to the raw data or outcomes. \n\n* 'Recommendations' refers to suggestions for future action, not the actual outcomes of the study. \n\n* 'Decisions' refers to choices themselves, not the body of evidence. \n\nAdditionally, the subject in the sentence ('research') can logically be the receiver of the action ('findings'), which is appropriate for passive voice or collocational accuracy. This is not the case for 'recommendations' or 'decisions', which would not make logical sense in this context as the subject of the sentence.",
+          "candidate_grammar_tag": "Collocation (Academic Register)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying 'findings' as the appropriate collocation in an academic context."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic gap noted by Model [qwen3:14b] by explicitly explaining the subject-verb relationship and the academic register context. The timeout from Model [gemma4:12b] was acknowledged but did not affect the reconciliation, as Model [deepseek-r1:14b] confirmed the explanation's accuracy. The grammar tag was confirmed as 'Collocation (Academic Register)' based on consensus.",
+          "candidate_explanation": "The correct answer is 'findings' because it is the standard collocation in academic and scientific writing to refer to the conclusions or interpretations drawn from research. The phrase 'in findings' means that the decisions are based on what was discovered. Other options are incorrect because: \n\n* 'Results' is often interchangeable but 'findings' is preferred in this specific context because 'findings' typically refers to the conclusions or interpretations drawn from the data, whereas 'results' refers more directly to the raw data or outcomes. \n\n* 'Recommendations' refers to suggestions for future action, not the actual outcomes of the study. \n\n* 'Decisions' refers to choices themselves, not the body of evidence. \n\nAdditionally, the subject in the sentence ('research') can logically be the receiver of the action ('findings'), which is appropriate for passive voice or collocational accuracy. This is not the case for 'recommendations' or 'decisions', which would not make logical sense in this context as the subject of the sentence. The grammar tag 'Collocation (Academic Register)' is accurate because the choice of 'findings' is a standard academic expression in this context.",
+          "candidate_grammar_tag": "Collocation (Academic Register)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'findings' as the appropriate collocation in academic writing and provides clear reasoning for why the other options are incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was refined to ensure clarity, logical consistency, and explicit subject-verb alignment for passive constructions.",
+          "candidate_explanation": "The correct answer is 'findings' because it is the standard academic collocation used to describe the conclusions or interpretations drawn from research. The phrase 'in findings' means that the decisions are based on what was discovered. Other options are incorrect because:\n\n* 'Results' refers more directly to the raw data or outcomes, not the interpretations or conclusions, which makes it less precise in this context.\n* 'Recommendations' refers to suggestions for future action, not the actual outcomes of the study.\n* 'Decisions' refers to choices themselves, not the body of evidence or conclusions drawn from the research.\n\nThe subject in the sentence ('research') can logically be the receiver of the action ('findings'), which is appropriate for passive voice or collocational accuracy. This is not the case for 'recommendations' or 'decisions', which would not make logical sense in this context as the subject of the sentence. The grammar tag 'Collocation (Academic Register)' is accurate because the choice of 'findings' is a standard academic expression in this context.",
+          "candidate_grammar_tag": "Collocation (Academic Register)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'findings' as the appropriate academic collocation and explains why the other options are semantically and contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Academic Register)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 715,
+      "blank_index": 6,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'we' logically performs the action of 'take,' 'act,' or 'hold' decisions.",
+                "affected_text": "Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*); 'act' requires different prepositions; and 'hold' relates to possession.",
+                "correction": "Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*), but it does not logically fit with 'decisions' as the subject 'we' are not typically said to 'take decisions'; 'act' requires different prepositions and does not naturally pair with 'decisions'; and 'hold' relates to possession, which is not semantically appropriate for the context of making decisions."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not sufficiently address whether the collocation 'make decisions' is the only natural pairing in this context, or if other collocations could also be possible.",
+                "affected_text": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.'",
+                "correction": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.' This collocation is widely used in academic and scientific contexts to describe the process of choosing or determining a course of action, which fits the semantic context of the passage."
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "The grammar tag is correct, but the explanation lacks sufficient semantic and collocation analysis for the distractors, leading to an incomplete and logically flawed explanation."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Verb + Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.' This phrase is widely used in academic and scientific contexts to describe the process of choosing or determining a course of action, which fits the semantic context of the passage. Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*), but it does not logically fit with 'decisions' as the subject 'we' are not typically said to 'take decisions'; 'act' requires different prepositions and does not naturally pair with 'decisions'; and 'hold' relates to possession, which is not semantically appropriate for the context of making decisions.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocation gaps identified by Model [qwen3:14b], ensuring that the logic of the subject-verb pairing is clearly explained for all distractors. Model [deepseek-r1:14b] confirmed the accuracy of the original explanation, and the grammar tag was retained as it was factually verified.",
+          "candidate_explanation": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.' This phrase is widely used in academic and scientific contexts to describe the process of choosing or determining a course of action, which fits the semantic context of the passage. Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*), but it does not logically fit with 'decisions' as the subject 'we' are not typically said to 'take decisions'; 'act' requires different prepositions and does not naturally pair with 'decisions'; and 'hold' relates to possession, which is not semantically appropriate for the context of making decisions.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of collocation, semantics, and grammar for each option. It clearly explains why 'make' is the correct choice and why the other options are semantically and collocatively inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Collocation (Verb + Noun)' across all models, and the explanation was enhanced to explicitly address subject-verb agreement and semantic logic for clarity.",
+          "candidate_explanation": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.' This phrase is widely used in academic and scientific contexts to describe the process of choosing or determining a course of action, which fits the semantic context of the passage. Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*), but it does not logically fit with 'decisions' as the subject 'we' are not typically said to 'take decisions'; 'act' requires different prepositions and does not naturally pair with 'decisions'; and 'hold' relates to possession, which is not semantically appropriate for the context of making decisions. Additionally, the verb 'make' is active and directly reflects the subject's role in initiating the decision-making process, which is crucial for the meaning of the sentence.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of collocation, semantics, and grammar for each option. It clearly explains why 'make' is the correct choice and why the other options are semantically and grammatically inappropriate in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Collocation (Verb + Noun)' was confirmed as accurate and consistent across the models. The explanation was refined to ensure clarity for B1-B2 learners, with explicit emphasis on subject-verb semantics and active vs. passive usage.",
+          "candidate_explanation": "The correct answer is 'make' because it forms the standard and natural English collocation: 'to make decisions.' This phrase is widely used in academic and scientific contexts to describe the process of choosing or determining a course of action, which fits the semantic context of the passage. Other options are incorrect because: 'take' is often used for physical actions or specific types of choices (e.g., *take advice*), but it does not logically fit with 'decisions' as the subject 'we' are not typically said to 'take decisions'; 'act' requires different prepositions and does not naturally pair with 'decisions'; and 'hold' relates to possession, which is not semantically appropriate for the context of making decisions. Additionally, the verb 'make' is active and directly reflects the subject's role in initiating the decision-making process, which is crucial for the meaning of the sentence. The use of 'make' emphasizes the active role of the subject in the process, unlike passive or less direct verbs, which would not convey the same meaning clearly.",
+          "candidate_grammar_tag": "Collocation (Verb + Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of collocation, semantics, and grammar for each option. It clearly explains why 'make' is the correct choice and why the other options are semantically and grammatically inappropriate in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Verb + Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 722,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Base Form Verb (Infinitive)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Base Form Verb (Infinitive)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Infinitive)' is"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Base Form Verb (Infinitive)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'collaborate' because it is a verb meaning to work together. The sentence structure requires a base form verb after 'to', which is the infinitive form. This structure is used to express purpose or intention, as in 'to collaborate'.\n\n* Why 'separate' is incorrect: It means to divide, which contradicts the idea of two departments joining forces.\n* Why 'participate' is incorrect: While it means taking part, 'collaborate' specifically emphasizes working together on shared goals, making it a better fit for academic departments.\n* Why 'cooperative' is incorrect: This word is an adjective (describing a noun), but the sentence requires a verb after 'to'. Additionally, 'cooperative' would not fit grammatically in this context, as it cannot function as the main verb in the sentence.\n\nThe grammar tag 'Base Form Verb (Infinitive)' is correct because the sentence uses the structure 'to + base verb', which is the infinitive form of the verb. This is a common structure in English for expressing purpose or intention, especially after verbs like 'be' or 'want'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure valid JSON formatting and to clarify the grammar tag. The grammar tag 'Base Form Verb (Infinitive)' was confirmed as accurate by all models after resolving the JSON formatting issue. The explanation was also expanded for clarity and completeness, addressing all distractors and the correct answer with clear reasoning.",
+          "candidate_explanation": "The correct answer is 'collaborate' because it is a verb meaning to work together. The sentence structure requires a base form verb after 'to', which is the infinitive form. \n\n* Why 'separate' is incorrect: It means to divide, which contradicts the idea of two departments joining forces. \n* Why 'participate' is incorrect: While it means taking part, 'collaborate' specifically emphasizes working together on shared goals, making it a better fit for academic departments. \n* Why 'cooperative' is incorrect: This word is an adjective (describing a noun), but the sentence requires a verb after 'to'. \n\nThe grammar tag 'Base Form Verb (Infinitive)' is correct because the sentence uses the structure 'to + base verb', which is the infinitive form of the verb.",
+          "candidate_grammar_tag": "Base Form Verb (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Infinitive)' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:12b]. The grammar tag was confirmed as correct, and the explanation was expanded to better support B1-B2 learners with explicit grammar and semantic explanations.",
+          "candidate_explanation": "The correct answer is 'collaborate' because it is a verb meaning to work together. The sentence structure requires a base form verb after 'to', which is the infinitive form. \n\n* Why 'separate' is incorrect: It means to divide, which contradicts the idea of two departments joining forces. \n* Why 'participate' is incorrect: While it means taking part, 'collaborate' specifically emphasizes working together on shared goals, making it a better fit for academic departments. \n* Why 'cooperative' is incorrect: This word is an adjective (describing a noun), but the sentence requires a verb after 'to'. \n\nThe grammar tag 'Base Form Verb (Infinitive)' is correct because the sentence uses the structure 'to + base verb', which is the infinitive form of the verb. This structure is commonly used after verbs like 'be' or 'want' to express purpose or intention.",
+          "candidate_grammar_tag": "Base Form Verb (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Infinitive)' is"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as correct, and the explanation was expanded to explicitly address the semantic logic and grammatical roles of each option, ensuring it is accessible to B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'collaborate' because it is a verb meaning to work together. The sentence structure requires a base form verb after 'to', which is the infinitive form. This structure is used to express purpose or intention, as in 'to collaborate'.\n\n* Why 'separate' is incorrect: It means to divide, which contradicts the idea of two departments joining forces.\n* Why 'participate' is incorrect: While it means taking part, 'collaborate' specifically emphasizes working together on shared goals, making it a better fit for academic departments.\n* Why 'cooperative' is incorrect: This word is an adjective (describing a noun), but the sentence requires a verb after 'to'. Additionally, 'cooperative' would not fit grammatically in this context, as it cannot function as the main verb in the sentence.\n\nThe grammar tag 'Base Form Verb (Infinitive)' is correct because the sentence uses the structure 'to + base verb', which is the infinitive form of the verb. This is a common structure in English for expressing purpose or intention, especially after verbs like 'be' or 'want'.",
+          "candidate_grammar_tag": "Base Form Verb (Infinitive)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and logical, and the explanation addresses both grammatical and semantic considerations appropriately."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Infinitive)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 726,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Past Participle)"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'fortified' because the sentence uses a passive structure: 'the supplements are ___ with vitamins and minerals.' This means the action (adding nutrients) is done *to* the supplements. We need the past participle form of the verb. \n\n* Why 'supplied' is incorrect: While related, 'fortified' specifically means having nutrients added to improve health, which is the precise meaning needed here. 'Supplied' is too general and less technical. \n\n* Why 'interacted' is incorrect: This verb does not mean adding vitamins; it refers to interaction between elements. \n\n* Why 'teemed' is incorrect: 'Teemed' means overflowing or being full of something, which is the wrong meaning in this context. \n\nThe grammar tag 'Passive Voice (Past Participle)' is correct because the sentence structure shows an action being done to the subject (supplements), and the verb must be in the past participle form to match the auxiliary verb 'are.'",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to clarify the grammar tag and ensure the passive voice structure was explicitly explained. The JSON formatting issue was corrected, and the explanation was made more precise and learner-friendly to address all models' concerns.",
+          "candidate_explanation": "The correct answer is 'fortified' because the sentence uses a passive structure: 'the supplements are ___ with vitamins and minerals.' This means the action (adding nutrients) is done *to* the supplements. We need the past participle form of the verb. \n\n* Why 'supplied' is incorrect: While related, 'fortified' specifically means having nutrients added to improve health, which is the precise meaning needed here. 'Supplied' is too general and less technical. \n\n* Why 'interacted' is incorrect: This verb does not mean adding vitamins; it refers to interaction between elements. \n\n* Why 'teemed' is incorrect: 'Teemed' means overflowing or being full of something, which is the wrong meaning in this context. \n\nThe grammar tag 'Passive Voice (Past Participle)' is correct because the sentence structure shows an action being done to the subject (supplements), and the verb must be in the past participle form to match the auxiliary verb 'are.'",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. The grammar tag is accurate, and each distractor is clearly and correctly explained."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was that one model (gemma4:12b) did not respond, but no disagreement was raised by the models that did respond. The explanation was found to be accurate, clear, and complete, with proper grammar and semantic explanations.",
+          "candidate_explanation": "The correct answer is 'fortified' because the sentence uses a passive structure: 'the supplements are ___ with vitamins and minerals.' This means the action (adding nutrients) is done *to* the supplements. We need the past participle form of the verb. \n\n* Why 'supplied' is incorrect: While related, 'fortified' specifically means having nutrients added to improve health, which is the precise meaning needed here. 'Supplied' is too general and less technical. \n\n* Why 'interacted' is incorrect: This verb does not mean adding vitamins; it refers to interaction between elements. \n\n* Why 'teemed' is incorrect: 'Teemed' means overflowing or being full of something, which is the wrong meaning in this context. \n\nThe grammar tag 'Passive Voice (Past Participle)' is correct because the sentence structure shows an action being done to the subject (supplements), and the verb must be in the past participle form to match the auxiliary verb 'are.' In passive voice, the subject receives the action, and the verb is in the past participle form to show this relationship clearly.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'fortified' as the past participle in a passive construction and explains why the other options are semantically and grammatically inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. Model gemma4:12b did not respond, but the other two models confirmed the explanation was accurate, logical, and complete. No discrepancies were found, so the original explanation and grammar tag were retained.",
+          "candidate_explanation": "The correct answer is 'fortified' because the sentence uses a passive structure: 'the supplements are ___ with vitamins and minerals.' This means the action (adding nutrients) is done *to* the supplements. We need the past participle form of the verb. \n\n* Why 'supplied' is incorrect: While related, 'fortified' specifically means having nutrients added to improve health, which is the precise meaning needed here. 'Supplied' is too general and less technical. \n\n* Why 'interacted' is incorrect: This verb does not mean adding vitamins; it refers to interaction between elements. \n\n* Why 'teemed' is incorrect: 'Teemed' means overflowing or being full of something, which is the wrong meaning in this context. \n\nThe grammar tag 'Passive Voice (Past Participle)' is correct because the sentence structure shows an action being done to the subject (supplements), and the verb must be in the past participle form to match the auxiliary verb 'are.' In passive voice, the subject receives the action, and the verb is in the past participle form to show this relationship clearly.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar label is correct, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'fortified' as the past participle in a passive construction and explains why the other options are semantically and grammatically inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

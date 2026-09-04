@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.114
+- **Phase**: Release V1.8.115
 
 ## Instructions
 
@@ -134,7 +134,11 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.115`
+- **Next Version**: `V1.8.116`
+
+- **Deployed Session Tagging Protocol (`(D)`)**:
+  - Whenever a session/conversation concludes with a production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
+  - If a conversation marked with `(D)` is resumed later, after answering the user's prompt, automatically strip the `(D) ` prefix by running `python scripts/session_tagger.py remove-deployed`.
 
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).

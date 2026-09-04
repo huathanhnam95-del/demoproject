@@ -7837,6 +7837,36 @@ textarea:focus {
    Read Aloud — Unified Card Style
    ============================================ */
 
+/* ============================================
+   Speaking practice — focus width
+   ============================================
+   The 1100px reading column is right for prose and wrong for a practice
+   workbench: Read Aloud needs a passage and its coach side by side, and neither
+   breathes inside it. Practice modes widen the container instead of breaking
+   out of it with negative-margin full-bleed hacks, so `.mode-panel`'s
+   overflow-x: clip and box-sizing stay intact. Toggled by the ⛶ button in the
+   controller's primary row; on by default. */
+body.spc-focus .container {
+  max-width: min(1560px, 100vw - 32px);
+  padding: 0 24px 24px;
+  margin-top: 20px;
+}
+
+/* Wide layout also means less standing chrome above the fold. */
+body.spc-focus .main-header {
+  margin-bottom: 12px;
+}
+
+body.spc-focus .main-header h1 {
+  font-size: 1.4rem;
+}
+
+@media (max-width: 900px) {
+  body.spc-focus .container {
+    padding: 0 14px 20px;
+  }
+}
+
 .ra-card {
   background: var(--bg-card, #fff);
   border: 1px solid var(--border-light, #dadce0);
@@ -19134,97 +19164,417 @@ body.readingjourney-active #readingjourney-root {
   overflow-x: clip;
 }
 
-#mode-read-aloud .ra-prompt-box {
-  min-width: 0 !important;
-  flex-basis: 0 !important;
-  flex-grow: 1 !important;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
+/* ============================================
+   Read Aloud — practice workbench
+   ============================================
+   The passage and its Speech Coach share one row so a marked word and the card
+   explaining it stay in one line of sight. Everything measures from the same
+   .spc-shell-grid the controller uses, which is what fixes the three competing
+   column widths the page used to stack. */
 
-#mode-read-aloud #ra-prompt-card-header {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-#mode-read-aloud #ra-prompt-guides-group {
-  max-width: 100%;
-  box-sizing: border-box;
-  flex-wrap: wrap;
-}
-
-#mode-read-aloud #ra-connected-speech-group {
-  max-width: 100%;
-  box-sizing: border-box;
-  flex-wrap: wrap;
-}
-
-#mode-read-aloud #ra-connected-speech-box {
-  max-width: 100%;
-  box-sizing: border-box;
+.ra-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 18px auto 0;
   min-width: 0;
 }
 
-#mode-read-aloud #ra-connected-speech-list {
+.ra-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ── Guide bar ─────────────────────────────────────────────────────────── */
+
+.ra-guidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.ra-guide-chips,
+.ra-guide-chip-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.ra-guide-chips {
+  padding: 4px;
+  border-radius: 20px;
+  background: var(--ra-guide-track, rgba(37, 99, 235, 0.08));
+}
+
+/* The active colour used to be painted imperatively from JS on every render.
+   Each guide owns a hue so the chip, the annotation in the passage and the
+   coach card that explains it read as one family. */
+.ra-guide-chip {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ra-guide-chip-fg, #1f2937);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.ra-guide-chip:hover:not([aria-pressed="true"]):not(:disabled) {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.ra-guide-chip[aria-pressed="true"],
+.ra-guide-chip[aria-checked="true"] {
+  color: #fff;
+  background: var(--ra-guide-accent, var(--coach-linking-strong));
+  box-shadow: 0 1px 3px var(--ra-guide-shadow, rgba(37, 99, 235, 0.25));
+}
+
+.ra-guide-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ra-guide-chip--chunking,
+.ra-guide-chip--linking {
+  --ra-guide-accent: var(--coach-linking-strong);
+  --ra-guide-shadow: rgba(37, 99, 235, 0.25);
+}
+
+.ra-guide-chip--reduced {
+  --ra-guide-accent: var(--coach-reduced-strong);
+  --ra-guide-shadow: rgba(217, 119, 6, 0.25);
+}
+
+.ra-guide-chip--sound {
+  --ra-guide-accent: var(--coach-sound-strong);
+  --ra-guide-shadow: rgba(180, 83, 9, 0.25);
+}
+
+.ra-guidebar-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* Accuracy used to be a 2.5rem centred number in a card of its own. As a stat
+   beside the guides it stays legible without owning a band of the page. */
+.ra-accuracy-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ra-accuracy-readout[hidden] {
+  display: none;
+}
+
+.ra-accuracy-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.ra-accuracy-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--success, #059669);
+  line-height: 1;
+}
+
+.ra-guide-instruction {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-muted);
   min-width: 0;
+}
+
+/* ── Split: passage stage + coach rail ─────────────────────────────────── */
+
+.ra-split {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  min-width: 0;
+}
+
+.ra-stage {
+  flex: 1 1 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ra-prompt-stage {
+  position: relative;
+  min-height: 120px;
+  padding-top: 8px;
+  padding-bottom: 24px;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.ra-prompt-stage #ra-text-prompt {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.ra-linking-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ra-connected-speech-badges {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.ra-linking-fallback-list {
+  display: none !important;
+}
+
+.ra-results-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ra-results-block .ra-feedback-text {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  position: relative;
+}
+
+.ra-show-advanced-container {
+  text-align: center;
+}
+
+.ra-show-advanced-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--brand-primary, #2563eb);
+  background: #fff;
+  color: var(--brand-primary, #2563eb);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.ra-show-advanced-btn:hover {
+  background: var(--brand-primary, #2563eb);
+  color: #fff;
+}
+
+.ra-status-msg {
+  font-weight: 500;
+  color: var(--text-muted);
+  min-height: 24px;
+}
+
+/* ── Speech Coach rail ─────────────────────────────────────────────────── */
+
+.ra-rail {
+  flex: 1 1 340px;
+  max-width: 460px;
+  min-width: 0;
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 24px;
+  border-left: 1px solid var(--border-light, #e2e8f0);
+  box-sizing: border-box;
+}
+
+.ra-rail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ra-rail-titles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ra-rail-title,
+.ra-rail-meta {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.ra-rail-meta {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--coach-linking-tint);
+  color: var(--coach-linking-text);
+}
+
+.ra-rail-toggle {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light, #d1d5db);
+  background: #fff;
+  color: var(--text-secondary, #4b5563);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ra-rail-summary {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #374151);
+}
+
+/* Kept in the DOM for the a11y summary the coach writes into it. The annotated
+   passage itself is no longer duplicated here — results annotate the one
+   passage the learner is already reading, up in .ra-prompt-stage. */
+.ra-rail-paragraph:empty {
+  display: none;
+}
+
+.ra-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Below the split breakpoint the rail stops being a rail: it stacks under the
+   stage, loses its divider, and the coach renders its compact single-card
+   variant (see isCompactConnectedSpeechGuideLayout). */
+@media (max-width: 940px) {
+  .ra-split {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .ra-stage,
+  .ra-rail {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ra-rail {
+    position: static;
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--border-light, #e2e8f0);
+  }
+}
+
+@media (max-width: 640px) {
+  .ra-guidebar {
+    align-items: stretch;
+  }
+
+  .ra-guide-chips,
+  .ra-guide-chip-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ra-guidebar-meta {
+    margin-left: 0;
+  }
+
+  .ra-prompt-stage {
+    font-size: 1.05rem;
+  }
+}
+
+/* ── Action controls source ────────────────────────────────────────────── */
+/* Declared in the panel, adopted into the SPC sticky footer at runtime. When
+   adoption has not run (or has been restored) this block stays out of the way
+   rather than rendering a loose pile of buttons mid-page. */
+.ra-zone-actions-source {
+  display: contents;
+}
+
+.ra-timer-box {
+  text-align: center;
+  line-height: 1.15;
+}
+
+.ra-timer-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ra-timer-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-primary, #2563eb);
+}
+
+.ra-timer-box--record .ra-timer-value {
+  color: var(--danger, #ef4444);
+}
+
+#mode-read-aloud #ra-read-aloud-controls {
+  width: auto;
+  display: flex;
+  justify-content: flex-end;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+  margin-bottom: 0;
 }
 
 #mode-read-aloud #ra-practice-target-drawer[hidden] {
   display: none !important;
-}
-
-@media (max-width: 640px) {
-  #mode-read-aloud .question-selector>div {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  #mode-read-aloud #ra-question-select,
-  #mode-read-aloud #ra-practice-target-toggle {
-    width: 100%;
-  }
-
-  #mode-read-aloud #ra-prompt-layout {
-    flex-direction: column !important;
-  }
-
-  #mode-read-aloud .ra-prompt-box,
-  #mode-read-aloud #ra-connected-speech-box {
-    min-width: 0 !important;
-    width: 100% !important;
-    flex-basis: auto !important;
-  }
-
-  #mode-read-aloud #ra-prompt-card-header,
-  #mode-read-aloud #ra-prompt-guides-group,
-  #mode-read-aloud #ra-connected-speech-group,
-  #mode-read-aloud #ra-read-aloud-controls .control-toolbar,
-  #mode-read-aloud .function-group {
-    width: 100%;
-  }
-
-  #mode-read-aloud #ra-prompt-card-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  #mode-read-aloud #ra-prompt-guides-group,
-  #mode-read-aloud #ra-connected-speech-group,
-  #mode-read-aloud #ra-read-aloud-controls .control-toolbar,
-  #mode-read-aloud .function-group {
-    justify-content: flex-start !important;
-  }
-
-  #mode-read-aloud #ra-connected-speech-box {
-    margin-top: 0.25rem;
-  }
 }
 
 /* ============================================
@@ -19511,6 +19861,162 @@ body.readingjourney-active #readingjourney-root {
   font-size: 0.90rem;
   color: #374151;
   line-height: 1.5;
+}
+
+/* ── Result detail rows ────────────────────────────────────────────────────
+   The IPA row, the reason line and the "how to fix" note were built from
+   inline style attributes with a full success palette and a full error palette
+   written out twice. The card already declares which it is via
+   .sc-border--success / --error / --mixed, so the variant scopes from there
+   and the values come from --coach-status-* tokens. */
+.sc-instance--detail {
+  padding-top: 10px;
+}
+
+.sc-detail-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 4px;
+}
+
+.sc-border--success .sc-detail-label {
+  color: var(--coach-status-success);
+}
+
+.sc-instance-feedback--error {
+  color: #991b1b;
+  font-weight: 500;
+}
+
+.sc-ipa-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.sc-border--success .sc-ipa-row {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.sc-ipa-chip {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--coach-status-error);
+  background: var(--coach-status-error-tint);
+}
+
+.sc-border--success .sc-ipa-chip {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.sc-ipa-part {
+  color: var(--text-secondary, #4b5563);
+}
+
+/* Reduced-word IPA pairs shown inline on a card's accordion label. */
+.sc-inline-ipa {
+  font-size: 0.75rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 500;
+  color: var(--coach-status-success);
+}
+
+.sc-ipa-strong {
+  font-size: 0.68rem;
+  color: var(--text-muted, #9ca3af);
+  text-decoration: line-through;
+}
+
+.sc-ipa-weak {
+  font-weight: 600;
+  color: var(--coach-status-success);
+}
+
+.sc-section-time {
+  font-size: 0.72rem;
+  color: var(--text-muted, #9ca3af);
+  white-space: nowrap;
+}
+
+.sc-ipa-arrow,
+.sc-ipa-result {
+  color: var(--coach-status-error);
+}
+
+.sc-ipa-arrow {
+  margin: 0 4px;
+}
+
+.sc-ipa-result {
+  font-size: 0.88rem;
+}
+
+.sc-border--success .sc-ipa-arrow,
+.sc-border--success .sc-ipa-result {
+  color: var(--coach-status-success);
+}
+
+.sc-fix-note {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 0;
+  border-left: 2px solid var(--danger, #ef4444);
+  background: #fff5f5;
+  font-size: 0.84rem;
+  color: var(--text-primary, #374151);
+}
+
+.sc-border--success .sc-fix-note {
+  border-left-color: #10b981;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+/* Header parts. The word title and IPA badge each had a success and an error
+   inline copy; one rule plus a variant replaces both. */
+.sc-accordion-label {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  cursor: pointer;
+}
+
+.sc-border--success .sc-word-title {
+  color: #065f46;
+}
+
+.sc-ipa-badge {
+  font-size: 0.78rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: var(--coach-status-error);
+  background: var(--coach-status-error-tint);
+}
+
+.sc-border--success .sc-ipa-badge {
+  color: var(--coach-status-success);
+  background: var(--coach-status-success-tint);
 }
 
 /* ── Status Badges ── */
@@ -19917,7 +20423,10 @@ body.readingjourney-active #readingjourney-root {
   flex-shrink: 0;
 }
 
-/* ── Two-column Results Grid ── */
+/* ── Results groups ──
+   Was a two-column auto-fit grid, which put a finding and the word it refers to
+   on opposite sides of the page. Inside the rail the findings are one ordered
+   column beside the passage instead. */
 .sc-grid-left,
 .sc-grid-right {
   display: flex;
@@ -19927,10 +20436,10 @@ body.readingjourney-active #readingjourney-root {
 }
 
 #ra-connected-speech-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
-  gap: 24px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .ra-feedback-mode-hint {
@@ -19987,16 +20496,171 @@ body.readingjourney-active #readingjourney-root {
 
 .ra-feedback-mode-hint__tooltip[hidden] { display: none !important; }
 
-.sc-guide-item {
+/* ── Speech Coach cards ──────────────────────────────────────────────────
+   These used to be built entirely from inline style attributes inside JS
+   template strings, with six hardcoded hexes for the family palette. The card
+   is one component now: a hairline surface with a family-coloured left edge,
+   keyed to the same --coach-* tokens the guide chips and passage use. */
+.sc-card {
   box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-left: 3px solid var(--sc-card-accent, var(--coach-linking-strong));
+  border-radius: 0 8px 8px 0;
+  background: #fff;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.sc-card--linking {
+  --sc-card-accent: var(--coach-linking-strong);
+  --sc-card-tint: var(--coach-linking-tint);
+  --sc-card-text: var(--coach-linking-text);
+  --sc-card-surface: var(--coach-linking-surface);
+}
+
+.sc-card--reduced {
+  --sc-card-accent: var(--coach-reduced-strong);
+  --sc-card-tint: var(--coach-reduced-tint);
+  --sc-card-text: var(--coach-reduced-text);
+  --sc-card-surface: var(--coach-reduced-surface);
+}
+
+.sc-card--sound {
+  --sc-card-accent: var(--coach-sound-strong);
+  --sc-card-tint: var(--coach-sound-tint);
+  --sc-card-text: var(--coach-sound-text);
+  --sc-card-surface: var(--coach-sound-surface);
+}
+
+.sc-card:hover {
+  border-color: var(--sc-card-accent, var(--coach-linking-strong));
+  background: var(--sc-card-surface, #fff);
+}
+
+.sc-card[data-selected="true"] {
+  background: var(--sc-card-surface, #fff);
+  border-color: var(--sc-card-accent, var(--coach-linking-strong));
+  box-shadow: 0 0 0 2px var(--sc-card-tint, rgba(37, 99, 235, 0.12));
+}
+
+.sc-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sc-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sc-card-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
   min-width: 0;
 }
 
-@media (max-width: 768px) {
-  #ra-connected-speech-list {
-    grid-template-columns: 1fr;
-  }
+.sc-card-word {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
 }
+
+.sc-card-ipa {
+  font-size: 0.84rem;
+  color: var(--sc-card-text, var(--coach-reduced-text));
+}
+
+.sc-card-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--sc-card-tint, var(--coach-linking-tint));
+  color: var(--sc-card-text, var(--coach-linking-text));
+}
+
+.sc-card-tip {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--text-secondary, #4b5563);
+}
+
+.sc-card-audio {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.sc-empty-note {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--coach-sound-tint);
+  background: var(--coach-sound-surface);
+  color: var(--coach-sound-text);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* ── Compact rail (below the split breakpoint) ─────────────────────────── */
+
+.sc-compact,
+.sc-compact-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sc-compact-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sc-compact-toggle {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light, #d1d5db);
+  background: #fff;
+  color: var(--text-primary, #1f2937);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.sc-compact-toggle:hover {
+  background: var(--bg-main, #f8fafc);
+}
+
 
 /* ── Prompt guide layers (composable) ──────────────────────────────
    Reduced words and sound changes can be active at the same time, and a

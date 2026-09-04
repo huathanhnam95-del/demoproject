@@ -331,6 +331,7 @@ async function generateChapterStudyNotes(db, bookId, sectionIndex, options = {})
         throw new Error(`No text chunks found for section "${sectionData.title || sectionIndex}" (pages ${pageStart}-${pageEnd}). The book may need re-ingestion.`);
     }
 
+    chapterChunks.sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0));
     const chunksToUse = chapterChunks;
 
     const models = getModels();

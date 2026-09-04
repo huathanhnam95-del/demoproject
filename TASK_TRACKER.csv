@@ -1924,3 +1924,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 930,2026-09-04,Debug and improve Entrance Test word-sound timing accuracy using V4 pronunciation segmentation,In Progress,
 931,2026-09-04,Fix CRM Student Courses 401 Unauthorized teaching sessions student ID and student modal title and deploy V1.8.112 to production,Done,2026-09-04
 932,2026-09-04,Implement 3-layout visualizer toggle and natural Vietnamese copy for Guided Essay Step 1,In Progress,
+933,2026-09-04,Deploy CRM Books study notes 1GiB memory fix and revision-aware routes to production V1.8.113,In Progress,

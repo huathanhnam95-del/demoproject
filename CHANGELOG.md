@@ -1,3 +1,16 @@
+## [V1.8.113] - 2026-09-04
+
+### Fixed & Enhanced
+- **CRM Books Study Notes Cloud Function Memory Limit & OOM Fix**:
+  - Allocated `memory: '1GiB'` and `timeoutSeconds: 300` for Cloud Run `api` Cloud Function in `functions/src/index.js`, fixing container crashes (`Memory limit of 256 MiB exceeded with 260 MiB used`) on large books (e.g. *The Practice of English Language Teaching*, 459 pages).
+  - In `functions/src/crm/book-summary-service.js`, added field projection `.select('index', 'text', 'charCount', 'pageStart', 'pageEnd')` when querying chapter chunks to omit heavy 768-dimensional float embedding vectors from heap memory.
+  - Enforced chronological chunk ordering via `chapterChunks.sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0))`.
+  - Wired `activeTextRevisionId` support so chunk queries and storage properly scope to the active book revision.
+- **Revision-Aware Study Notes Routes & Artifact Resolution**:
+  - In `functions/src/routes/admin/books.js`, updated GET and POST `/books/:bookId/sections/:sectionIndex/study-notes` to check `textRevisions/:activeRevId/sections/:sectionIndex/artifacts/study_notes` before fallback, preventing redundant LLM regenerations and guaranteeing revision parity.
+- **CRM Books Workspace Error Messaging**:
+  - Enhanced error toast handlers in `public/js/crm/books-workspace.js` to surface detailed backend error messages (`err?.payload?.message`) rather than generic error fallbacks.
+
 ## [V1.8.112] - 2026-09-04
 
 ### Fixed & Enhanced

@@ -240,6 +240,112 @@ async function main() {
     check('Linking word tokens do not show flat bottom underlines',
       recognizedVerification.linkingTokensCount > 0 && recognizedVerification.linkingWithoutUnderlineCount === recognizedVerification.linkingTokensCount);
 
+    // 3. User Issue 1 verification: omitted words do not produce green linking arcs in recognized transcript
+    const omissionCheckResult = await page.evaluate(async () => {
+      const ra = window.ReadAloudMode;
+      const testWords = [
+        { word: 'It', accuracyScore: 90, errorType: 'None', startMs: 0, endMs: 200 },
+        { word: 'is', accuracyScore: 92, errorType: 'None', startMs: 220, endMs: 380 },
+        { word: 'important', accuracyScore: 88, errorType: 'None', startMs: 400, endMs: 800 },
+        { word: 'to', accuracyScore: 0, errorType: 'Omission', startMs: null, endMs: null },
+        { word: 'give', accuracyScore: 0, errorType: 'Omission', startMs: null, endMs: null },
+        { word: 'a', accuracyScore: 0, errorType: 'Omission', startMs: null, endMs: null },
+        { word: 'clear', accuracyScore: 0, errorType: 'Omission', startMs: null, endMs: null }
+      ];
+      // Linking events crossing omitted words
+      const linkingEvents = [
+        { eventId: 'l-0-1', startWordIndex: 0, endWordIndex: 1, coachMode: 'linking', family: 'catenation', status: 'detected' },
+        { eventId: 'l-1-2', startWordIndex: 1, endWordIndex: 2, coachMode: 'linking', family: 'catenation', status: 'detected' },
+        { eventId: 'l-2-3', startWordIndex: 2, endWordIndex: 3, coachMode: 'linking', family: 'catenation', status: 'detected' }, // crosses into omission
+        { eventId: 'l-3-4', startWordIndex: 3, endWordIndex: 4, coachMode: 'linking', family: 'catenation', status: 'detected' }, // both omitted
+        { eventId: 'l-4-5', startWordIndex: 4, endWordIndex: 5, coachMode: 'linking', family: 'catenation', status: 'detected' }, // both omitted
+        { eventId: 'l-5-6', startWordIndex: 5, endWordIndex: 6, coachMode: 'linking', family: 'catenation', status: 'detected' }  // both omitted
+      ];
+
+      ra.renderRecognizedTranscript(testWords, 'It is important to give a clear', linkingEvents);
+      const transcript = document.getElementById('ra-merged-recognized-transcript');
+      const paths = Array.from(transcript?.querySelectorAll('.ra-recognized-linking-overlay path') || []);
+      const greenOmittedPaths = paths.filter((p) => {
+        const stroke = p.getAttribute('stroke');
+        const evIdx = Number(p.dataset.eventIndex);
+        const ev = linkingEvents[evIdx];
+        const touchesOmission = ev && (ev.startWordIndex >= 3 || ev.endWordIndex >= 3);
+        return stroke === '#10b981' && touchesOmission;
+      });
+      return {
+        totalPaths: paths.length,
+        greenOmittedCount: greenOmittedPaths.length
+      };
+    });
+    check('Omitted words never receive green (#10b981) linking arcs in recognized transcript', omissionCheckResult.greenOmittedCount === 0);
+
+    // 4. User Issue 2 verification: words like "significance", "attending" are NOT highlighted for reduced words
+    const reducedIsolationResult = await page.evaluate(async () => {
+      const ra = window.ReadAloudMode;
+      const testWords = [
+        { word: 'the', accuracyScore: 85, errorType: 'None', startMs: 0, endMs: 150 },
+        { word: 'significance', accuracyScore: 92, errorType: 'None', startMs: 200, endMs: 800 },
+        { word: 'of', accuracyScore: 82, errorType: 'None', startMs: 850, endMs: 980 },
+        { word: 'attending', accuracyScore: 95, errorType: 'None', startMs: 1000, endMs: 1500 }
+      ];
+      // Weak form events for "the" (index 0) and "of" (index 2)
+      const weakEvents = [
+        { eventId: 'w-the', startWordIndex: 0, endWordIndex: 0, phrase: 'the', coachMode: 'reduced_words', family: 'weak_form_reduction', status: 'detected' },
+        { eventId: 'w-of', startWordIndex: 2, endWordIndex: 2, phrase: 'of', coachMode: 'reduced_words', family: 'weak_form_reduction', status: 'detected' }
+      ];
+
+      ra.renderRecognizedTranscript(testWords, 'the significance of attending', weakEvents);
+      const transcript = document.getElementById('ra-merged-recognized-transcript');
+      const sigToken = transcript?.querySelector('.ra-word-token[data-word-index="1"]');
+      const attToken = transcript?.querySelector('.ra-word-token[data-word-index="3"]');
+      const theToken = transcript?.querySelector('.ra-word-token[data-word-index="0"]');
+      const ofToken = transcript?.querySelector('.ra-word-token[data-word-index="2"]');
+
+      return {
+        theIsReduced: theToken?.classList.contains('ra-word-token--reduced') && theToken?.classList.contains('sc-token-bg--success'),
+        ofIsReduced: ofToken?.classList.contains('ra-word-token--reduced') && ofToken?.classList.contains('sc-token-bg--success'),
+        sigIsReduced: sigToken?.classList.contains('ra-word-token--reduced') || /sc-token-bg--/.test(sigToken?.className || ''),
+        attIsReduced: attToken?.classList.contains('ra-word-token--reduced') || /sc-token-bg--/.test(attToken?.className || '')
+      };
+    });
+    check('Weak forms "the" and "of" are highlighted in recognized transcript', reducedIsolationResult.theIsReduced && reducedIsolationResult.ofIsReduced);
+    check('Content words "significance" and "attending" are NOT highlighted as reduced words', !reducedIsolationResult.sigIsReduced && !reducedIsolationResult.attIsReduced);
+
+    // 5. User Issue 3 verification: sound changes hover displays tooltip stably without split-second animation dismiss
+    await page.evaluate(() => {
+      const ra = window.ReadAloudMode;
+      ra.state = 'RECORDING';
+      ra.applyConnectedSpeechModes(['sound_changes'], { persist: true });
+      const stage = document.getElementById('ra-prompt-stage');
+      const probe = document.createElement('div');
+      probe.id = 'sc-hover-probe-container';
+      probe.innerHTML = '<span id="sc-probe-word" class="ra-sound-change-word" data-guide-target="boundary-probe-test" data-sound-change-subtype="n_bilabial_assimilation" role="button" tabindex="0">on</span> <span class="ra-sound-change-word" data-guide-target="boundary-probe-test" data-sound-change-subtype="n_bilabial_assimilation" role="button" tabindex="0">pottery</span>';
+      stage.appendChild(probe);
+    });
+
+    const soundWord = page.locator('#sc-probe-word');
+    await soundWord.hover();
+    await page.waitForTimeout(300); // wait longer than the 100ms grace period and the 180ms CSS animation
+
+    const soundChangeHoverCheck = await page.evaluate(() => {
+      const tooltip = document.getElementById('ra-sound-change-tooltip');
+      const isVisible = tooltip && getComputedStyle(tooltip).display !== 'none' && tooltip.getAttribute('aria-hidden') === 'false';
+      const arrowText = tooltip?.querySelector('.ra-sound-change-tooltip__transform')?.textContent || '';
+      return {
+        isVisible,
+        arrowText,
+        activeId: window.ReadAloudMode.activeSoundChangeTooltipId
+      };
+    });
+
+    check('Sound changes hover opens floating explanation and remains visible without split-second disappearance',
+      soundChangeHoverCheck.isVisible && soundChangeHoverCheck.activeId === 'boundary-probe-test');
+    check('Sound changes tooltip displays correct transform formula',
+      soundChangeHoverCheck.arrowText.includes('→'));
+
+    // Clean up probe
+    await page.evaluate(() => document.getElementById('sc-hover-probe-container')?.remove());
+
     // Take screenshot of results
     await page.screenshot({
       path: path.join(screenshotDir, 'read-aloud-linking-and-reduced-results.png'),

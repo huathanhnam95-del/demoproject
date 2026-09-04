@@ -169,9 +169,21 @@ module.exports = function registerBookRoutes(router, deps) {
                 return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or section index.');
             }
 
-            const docSnap = await db.collection(CRM_BOOKS).doc(bookId)
-                .collection('sections').doc(sectionIndex)
-                .collection('artifacts').doc('study_notes').get();
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            const activeRevId = bookSnap.data()?.activeTextRevisionId;
+            let docSnap = null;
+            if (activeRevId) {
+                const revSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                    .collection('textRevisions').doc(activeRevId)
+                    .collection('sections').doc(sectionIndex)
+                    .collection('artifacts').doc('study_notes').get();
+                if (revSnap.exists) docSnap = revSnap;
+            }
+            if (!docSnap) {
+                docSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                    .collection('sections').doc(sectionIndex)
+                    .collection('artifacts').doc('study_notes').get();
+            }
 
             if (!docSnap.exists) {
                 return sendSuccess(res, { studyNotes: null });
@@ -192,10 +204,23 @@ module.exports = function registerBookRoutes(router, deps) {
                 return sendError(res, 400, 'INVALID_PARAMS', 'Missing book or section index.');
             }
 
+            const bookSnap = await db.collection(CRM_BOOKS).doc(bookId).get();
+            const activeRevId = bookSnap.data()?.activeTextRevisionId;
+
             if (!force) {
-                const existing = await db.collection(CRM_BOOKS).doc(bookId)
-                    .collection('sections').doc(sectionIndex)
-                    .collection('artifacts').doc('study_notes').get();
+                let existing = null;
+                if (activeRevId) {
+                    const revSnap = await db.collection(CRM_BOOKS).doc(bookId)
+                        .collection('textRevisions').doc(activeRevId)
+                        .collection('sections').doc(sectionIndex)
+                        .collection('artifacts').doc('study_notes').get();
+                    if (revSnap.exists) existing = revSnap;
+                }
+                if (!existing) {
+                    existing = await db.collection(CRM_BOOKS).doc(bookId)
+                        .collection('sections').doc(sectionIndex)
+                        .collection('artifacts').doc('study_notes').get();
+                }
                 if (existing.exists) {
                     return sendSuccess(res, { studyNotes: existing.data() }, 'Study notes already exist. Use force:true to regenerate.');
                 }
@@ -206,7 +231,7 @@ module.exports = function registerBookRoutes(router, deps) {
                 return sendError(res, 429, 'BUDGET_EXCEEDED', 'Monthly CRM Books budget exceeded. Admin approval required.');
             }
 
-            const studyNotes = await generateChapterStudyNotes(db, bookId, sectionIndex);
+            const studyNotes = await generateChapterStudyNotes(db, bookId, sectionIndex, { textRevisionId: activeRevId });
 
             await writeAuditLog?.({
                 action: 'book.section_study_notes_generated',

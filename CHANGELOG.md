@@ -8,11 +8,12 @@
   - **Scannable Pedagogical Briefing**: Integrated `<details>` accordions with severity filter chips, line clamping toggles, and checklist styling for homework items.
   - **Typography & Theme Polish**: Embedded Google Font `Be Vietnam Pro` in the typography stack for clean Vietnamese diacritics, and tuned Mermaid `base` theme styling.
   - **Gemini Files API Transport**: Switched large lesson audio uploads from base64 payload transport to the Gemini Files API, significantly reducing latency and memory pressure.
-- **Guided Write Essay Step 1 Whiteboard & Layout Selector**:
-  - **Dynamic POS-PEEL Structure**: Interactive whiteboard outlines with live argument and evidence planning for PTE Write Essay questions.
-  - **Stance Exclusivity & Prompt Recap**: Clear prompt understanding with stance-specific idea starters and vocabulary hints.
-  - **Layout Comparison Selector**: Side-by-side template preview and layout selection with responsive switching.
-  - **Native Vietnamese LLM Essay Enrichment**: Updated essay support packs (q0001–q0025) with high-scoring collocations, grammar patterns, and native Vietnamese explanations.
+- **Guided Write Essay Step 1 Whiteboard & Pre-Start Studio Overhaul**:
+  - **Dynamic POS & PEEL 4-Paragraph Outline**: Connected paragraph planning directly to the student's chosen stance and selected idea chips. Đoạn 1: Mở bài (POS: Paraphrase + Opinion + Signpost); Đoạn 2 & 3: Thân bài 1 & 2 (PEEL: Point + Explanation + Example + Link); Đoạn 4: Kết bài đúc kết 2 luận điểm then chốt.
+  - **Mutually Exclusive Stance Selection & Prompt Recap**: Added prominent question prompt recap callout (`.essay-wb-prompt-recap-box`) at the top of Part 2. Enforced single-stance exclusivity: active stance is highlighted with `✓ Phe đang chọn`, while the opposite stance is greyed out (52% opacity, dashed border) and can be toggled with a single click.
+  - **Pre-Start Single-Card Focused Detail & Natural Vietnamese Terminology**: Renamed the 4 modes to everyday Vietnamese (`Sơ đồ tư duy`, `Học từng phần`, `Lướt nhanh 20s`, `Đọc truyền thống`). Clicking any card opens a focused single-card detail box (`#essay-prestart-active-detail`) with *"Bạn muốn..."* and *"Hợp với bạn khi..."*. Added secondary *"💡 Xem bảng so sánh cả 4 kiểu"* button for on-demand 4-row matrix expansion.
+  - **Clamped Widths on High-Resolution Displays**: Clamped interactive quiz and gap-fill containers to `max-width: 920px` (sentences to `820px`), eliminating awkward horizontal stretching on 1440px+ screens while maintaining responsiveness on mobile.
+  - **Native Vietnamese LLM Essay Enrichment & Calque Filter**: Integrated 2-tier deterministic regex and Qwen 3 translation filter into the local enrichment pipeline, regenerating all 25 essay support packs (q0001–q0025) with 0 calque violations.
 
 ## [V1.8.121] - 2026-09-05
 

@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.write_essay_support.pipeline import (  # noqa: E402
+    MODELS,
     AuditEngine,
     build_manifest,
     run_batch,
@@ -52,7 +53,7 @@ class DependencyAuditClient(FakeModelClient):
             self.audit_round += 1
             if self.audit_round <= 3:
                 verdicts = {component: "PASS" for component in COMPONENTS}
-                if model != "gemma4:latest": verdicts["promptBreakdown"] = "FAIL"
+                if model != MODELS["gm"]: verdicts["promptBreakdown"] = "FAIL"
             else:
                 verdicts = {component: "PASS" for component in COMPONENTS}
             return {"components": {component: {"verdict": verdict} for component, verdict in verdicts.items()}}
@@ -65,7 +66,7 @@ class DependencyAuditClient(FakeModelClient):
 
 class WriteEssaySupportPipelineTest(unittest.TestCase):
     def test_audit_engine_records_three_independent_votes_and_majority_status(self):
-        client = FakeModelClient(fail_model="gemma4:latest")
+        client = FakeModelClient(fail_model=MODELS["gm"])
         source = load_question_sources(ROOT)
         engine = AuditEngine(client)
         result = engine.audit(source.questions["1"], {"questionId": "1", "common": {}, "levels": {}})

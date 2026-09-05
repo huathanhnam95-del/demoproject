@@ -1,5 +1,30 @@
 # Latest Session Work
 
+## Completed Package: Release V1.8.122 (Task 958, Task 959, Task 960, Task 961, Task 962, Task 963)
+
+- **Status**: Completed & Empirically Verified. Ready for Production Deployment.
+- **Core Deliverables**:
+  1. **Step 1 Whiteboard & Pre-Start Studio Overhaul (Task 958, Task 960, Task 961)**:
+     - **Dynamic POS & PEEL 4-Paragraph Outline**: Real-time paragraph blueprint generated directly from active stance and chosen idea chips (Đoạn 1 POS Intro, Đoạn 2 & 3 PEEL Body 1 & 2, Đoạn 4 Synthesis Conclusion).
+     - **Mutually Exclusive Stance Selection**: Highlighted active stance (`.is-active-stance` with `✓ Phe đang chọn` badge) and greyed out opposite stance (`.is-greyed-out` with 52% opacity, dashed border) with 1-click stance switching.
+     - **Recited Question Prompt**: Prominent `.essay-wb-prompt-recap-box` at the top of Step 1 Part 2 so students never lose sight of the prompt while planning.
+     - **Focused Pre-Start Single-Card Detail**: Mode cards renamed to natural Vietnamese (`Sơ đồ tư duy`, `Học từng phần`, `Lướt nhanh 20s`, `Đọc truyền thống`) with single-card focused preview (`#essay-prestart-active-detail`) showing *"Bạn muốn..."* and *"Hợp với bạn khi..."*. Secondary button expands the full 4-row comparison table on demand. Default support language set to Vietnamese (`vi`).
+     - **Clamped Layout Sizing**: Constrained `.essay-guided-interactive-quiz` and `.essay-guided-gapfill-box` to `max-width: 920px` (sentences to `820px`), eliminating awkward horizontal stretching on 1440px+ screens.
+     - **Native Vietnamese Natural Language Filter**: 2-tier deterministic regex and Qwen 3 translation filter deployed to ensure 0 calque violations across all 25 essay packs (q0001–q0025).
+  2. **Teaching Session Viewer Round 2 Quality & Sizing Fixes (Task 959, Task 962)**:
+     - **Bidirectional Schema Harmonization**: Harmonized schema aliases between `lesson_summary` ↔ `summary`, `student_error` ↔ `student_error_quote`, `concept_or_rule` ↔ `concept`, and `homework_items` ↔ `homework_list`.
+     - **Mermaid Diagram Auto-Fit & Pan/Zoom**: Resolved SVG replaced-element 300px × 124px miniature collapse bug by explicitly resolving viewBox dimensions and applying scale floor ≥ 90%.
+     - **Docked Audio Bar & Interactive Jumps**: Persistent docked audio player with responsive timestamps (`▸ ~MM:SS`) seeking with 3-second context lead-in.
+- **Empirical Verification**:
+  - `node tests/browser/verify-and-screenshot-final-result.js`: 100% passed (Briefing, Mindmap auto-fit, Flowchart auto-fit, Fullscreen mode).
+  - `node tests/browser/write-essay-guided-support-browser-check.js`: 100% passed.
+  - `node tests/browser/write-essay-samples-browser-check.js`: 100% passed.
+  - `python tests/write_essay_support_pipeline.test.py`: 6/6 passed.
+  - `python tests/write_essay_support_contract.test.py`: 9/9 passed.
+  - `node tests/write-essay-support-runtime.test.mjs`: 3/3 passed.
+  - `npm run verify:crm`: 100% passed.
+- **Release Version**: `V1.8.122` (Asset cache buster: `20260905-v1.8.122`).
+
 ## Completed Package: Guided Write Essay Steps 3–5 Visual Overhaul (Task 955)
 
 - **Status**: Completed & Empirically Verified (100% Passing E2E Browser Tests).

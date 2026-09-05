@@ -1970,3 +1970,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 975,2026-09-05,Precise pronunciation scoring hover tooltip with syllable breakdown and degree of mispronunciation,Done,2026-09-05
 976,2026-09-05,Document GPT-6 Astra evaluation token efficiency and prompt guidelines,Done,2026-09-05
 977,2026-09-05,Fix Python 3.10 f-string backslash syntax in pronunciation audit script to resolve GitHub Actions CI failure,Done,2026-09-05
+978,2026-09-05,Upgrade Step 1 Understand into 4 dedicated visual paradigms with mobile scrolling and state decoupling,Done,2026-09-05

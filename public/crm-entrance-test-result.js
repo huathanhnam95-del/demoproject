@@ -418,7 +418,8 @@
           endMs: Number(w.endMs),
           nextStartMs: nextStart,
           accuracyScore: (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Math.round(Number(w.accuracyScore)) : null,
-          errorType: (typeof w === 'object' && w != null && w.errorType) ? String(w.errorType) : 'None'
+          errorType: (typeof w === 'object' && w != null && w.errorType) ? String(w.errorType) : 'None',
+          syllables: (typeof w === 'object' && w != null && Array.isArray(w.syllables)) ? w.syllables : null
         };
       }).filter(w => w.text.length > 0);
     } else if (transcriptText) {
@@ -428,7 +429,8 @@
         endMs: null,
         nextStartMs: null,
         accuracyScore: null,
-        errorType: 'None'
+        errorType: 'None',
+        syllables: null
       }));
     }
 
@@ -449,13 +451,16 @@
         scoreTooltip += ` [${err}]`;
       }
 
+      const accAttr = acc != null ? ` data-accuracy="${acc}"` : '';
+      const sylAttr = ` data-syllables='${escapeHtml(JSON.stringify(wObj.syllables || []))}'`;
+
       if (isPlayable) {
         const nextStartAttr = Number.isFinite(wObj.nextStartMs) ? ` data-next-start-ms="${wObj.nextStartMs}"` : '';
         const titleText = `Click to hear '${wObj.text}' (${formatTimeSec(wObj.startMs)})${scoreTooltip}`;
-        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}"${nextStartAttr} data-playable="true" title="${escapeHtml(titleText)}">${text}</button>`;
+        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}"${nextStartAttr}${accAttr}${sylAttr} data-playable="true" title="${escapeHtml(titleText)}">${text}</button>`;
       }
       const titleText = `'${wObj.text}'${scoreTooltip}`;
-      return `<span class="crm-word-token ${typeClass}" data-playable="false"${scoreTooltip ? ` title="${escapeHtml(titleText)}"` : ''}>${text}</span>`;
+      return `<span class="crm-word-token ${typeClass}" data-playable="false"${accAttr}${sylAttr}${scoreTooltip ? ` title="${escapeHtml(titleText)}"` : ''}>${text}</span>`;
     }
 
     function getMatchedTokenClass(wObj) {
@@ -807,10 +812,167 @@
     });
   }
 
+  let activeTooltipToken = null;
+  let wordTooltipEl = null;
+
+  function ensureWordTooltip() {
+    if (!wordTooltipEl) {
+      wordTooltipEl = document.getElementById('crm-word-tooltip');
+      if (!wordTooltipEl) {
+        wordTooltipEl = document.createElement('div');
+        wordTooltipEl.id = 'crm-word-tooltip';
+        wordTooltipEl.className = 'crm-word-tooltip';
+        wordTooltipEl.style.display = 'none';
+        document.body.appendChild(wordTooltipEl);
+      }
+    }
+    return wordTooltipEl;
+  }
+
+  function hideWordTooltip() {
+    activeTooltipToken = null;
+    if (wordTooltipEl) {
+      wordTooltipEl.style.display = 'none';
+    }
+  }
+
+  function positionWordTooltip(token, tooltip) {
+    if (!token || !tooltip) return;
+    const rect = token.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
+
+    let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+    let top = rect.top - tipRect.height - 8;
+
+    const padding = 8;
+    if (left + tipRect.width > window.innerWidth - padding) {
+      left = window.innerWidth - tipRect.width - padding;
+    }
+    if (left < padding) left = padding;
+
+    if (top < padding) {
+      top = rect.bottom + 8;
+    }
+    if (top + tipRect.height > window.innerHeight - padding) {
+      top = Math.max(padding, window.innerHeight - tipRect.height - padding);
+    }
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+    tooltip.style.visibility = 'visible';
+  }
+
+  function showWordTooltip(token) {
+    if (!token) return;
+    const tooltip = ensureWordTooltip();
+    activeTooltipToken = token;
+
+    const wordText = token.textContent.trim();
+    const rawAcc = token.dataset.accuracy;
+    const acc = (rawAcc !== undefined && rawAcc !== '' && !Number.isNaN(Number(rawAcc))) ? Number(rawAcc) : null;
+
+    let syllables = [];
+    try {
+      if (token.dataset.syllables) {
+        syllables = JSON.parse(token.dataset.syllables);
+      }
+    } catch (_) {
+      syllables = [];
+    }
+
+    let badgeClass = 'syl-green';
+    if (acc != null) {
+      if (acc < 60) badgeClass = 'syl-red';
+      else if (acc < 80) badgeClass = 'syl-amber';
+    }
+
+    const badgeHtml = acc != null
+      ? `<span class="crm-tooltip-badge ${badgeClass}">${acc}%</span>`
+      : '';
+
+    let syllablesHtml = '';
+    if (Array.isArray(syllables) && syllables.length > 1) {
+      const chips = syllables.map((s) => {
+        const score = Math.round(Number(s.accuracyScore ?? 0));
+        let chipClass = 'syl-green';
+        if (score < 60) chipClass = 'syl-red';
+        else if (score < 80) chipClass = 'syl-amber';
+        const sText = escapeHtml(s.text || s.ipa || '');
+        return `<span class="crm-syl-chip ${chipClass}"><span class="crm-syl-text">${sText}</span> <span class="crm-syl-score">${score}%</span></span>`;
+      }).join('');
+      syllablesHtml = `<div class="crm-tooltip-syllables">${chips}</div>`;
+    }
+
+    const hintHtml = token.dataset.playable === 'true'
+      ? '<div class="crm-tooltip-hint">Click to listen</div>'
+      : '';
+
+    tooltip.innerHTML = `
+      <div class="crm-tooltip-header">
+        <span class="crm-tooltip-word">${escapeHtml(wordText)}</span>
+        ${badgeHtml}
+      </div>
+      ${syllablesHtml}
+      ${hintHtml}
+    `;
+
+    tooltip.style.display = 'flex';
+    tooltip.style.visibility = 'hidden';
+
+    positionWordTooltip(token, tooltip);
+  }
+
   function bindSpeakingWordInteractions(rootEl) {
     if (!rootEl) return;
     if (rootEl.dataset.crmSpeakingInteractionsBound === 'true') return;
     rootEl.dataset.crmSpeakingInteractionsBound = 'true';
+
+    rootEl.addEventListener('mouseover', (e) => {
+      const token = e.target.closest('.crm-word-token[data-playable="true"], .crm-word-token[data-accuracy]');
+      if (!token) return;
+      if (token === activeTooltipToken) return;
+      showWordTooltip(token);
+    });
+
+    rootEl.addEventListener('mouseout', (e) => {
+      const token = e.target.closest('.crm-word-token');
+      if (!token) return;
+      const related = e.relatedTarget;
+      if (related && token.contains(related)) return;
+      if (token === activeTooltipToken) {
+        hideWordTooltip();
+      }
+    });
+
+    rootEl.addEventListener('focusin', (e) => {
+      const token = e.target.closest('.crm-word-token[data-playable="true"], .crm-word-token[data-accuracy]');
+      if (!token) return;
+      showWordTooltip(token);
+    });
+
+    rootEl.addEventListener('focusout', (e) => {
+      const token = e.target.closest('.crm-word-token');
+      if (!token) return;
+      if (token === activeTooltipToken) {
+        hideWordTooltip();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideWordTooltip();
+      }
+    });
+
+    window.addEventListener('scroll', () => {
+      if (!activeTooltipToken || !wordTooltipEl || wordTooltipEl.style.display === 'none') return;
+      const rect = activeTooltipToken.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        hideWordTooltip();
+      } else {
+        positionWordTooltip(activeTooltipToken, wordTooltipEl);
+      }
+    }, { passive: true });
 
     rootEl.addEventListener('click', async (e) => {
       const alignBtn = e.target.closest('.crm-align-words-btn');
@@ -1162,6 +1324,7 @@
     const detailsHtml = buildSectionsHtml({ test, session, audioUrls, ...scoreData });
 
     stopActiveWordPlayback({ pause: true });
+    hideWordTooltip();
 
     elements.root.innerHTML = `
       <div class="crm-result-grid">

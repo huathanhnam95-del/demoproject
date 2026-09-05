@@ -148,9 +148,7 @@ async function main() {
     pageErrors.push(err);
   });
   page.on('console', (msg) => {
-    if (msg.type() === 'error') {
-      console.error('[BROWSER CONSOLE ERROR]', msg.text());
-    }
+    console.log('[BROWSER]', msg.text());
   });
 
   const targetUrl = `${baseUrl}/crm-entrance-test-result.html?testId=${TEST_ID}`;
@@ -204,7 +202,64 @@ async function main() {
   assert.ok(accBtnTextDeco.includes('underline'), 'Q2 "accurately" must have underline');
   assert.ok(accBtnTextDeco.includes('wavy'), 'Q2 "accurately" must have wavy underline');
 
-  // 3. Verify Q3 uncertain token (e.g., "truly" or similar)
+  // 3. Test hovering over "accurately" and inspect interactive floating tooltip & syllable chips
+  console.log('[Browser Test] Testing hover on "accurately" for floating tooltip & syllable breakdown...');
+  await accBtn.hover();
+  await page.waitForTimeout(250);
+
+  const tooltipLocator = page.locator('#crm-word-tooltip');
+  await tooltipLocator.waitFor({ state: 'visible', timeout: 3000 });
+
+  const tipWord = await tooltipLocator.locator('.crm-tooltip-word').textContent();
+  const tipBadge = await tooltipLocator.locator('.crm-tooltip-badge').textContent();
+  const tipBadgeClass = await tooltipLocator.locator('.crm-tooltip-badge').getAttribute('class');
+  const sylChips = tooltipLocator.locator('.crm-syl-chip');
+  const chipCount = await sylChips.count();
+
+  console.log('  Tooltip word:', tipWord);
+  console.log('  Tooltip badge:', tipBadge);
+  console.log('  Tooltip badge class:', tipBadgeClass);
+  console.log('  Tooltip syllable chips count:', chipCount);
+
+  assert.strictEqual(tipWord, 'accurately', 'Tooltip word must be "accurately"');
+  assert.strictEqual(tipBadge, '18%', 'Tooltip badge must show 18%');
+  assert.ok(tipBadgeClass.includes('syl-red'), 'Tooltip badge for 18% must be syl-red');
+  assert.strictEqual(chipCount, 4, '"accurately" must have 4 syllable chips');
+
+  const chip1Text = await sylChips.nth(0).textContent();
+  const chip1Class = await sylChips.nth(0).getAttribute('class');
+  console.log('  Chip 1:', chip1Text, 'class:', chip1Class);
+  assert.ok(chip1Text.includes('ac'), 'Chip 1 must contain "ac"');
+  assert.ok(chip1Class.includes('syl-red'), 'Chip 1 must have syl-red');
+
+  // Capture screenshot of the syllable tooltip
+  const resultsDir = path.join(__dirname, '..', '..', 'test-results');
+  if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true });
+  const tooltipScreenshotPath = path.join(resultsDir, 'crm-entrance-test-word-tooltip.png');
+  await page.screenshot({ path: tooltipScreenshotPath });
+  console.log('[Browser Test] Tooltip screenshot captured to:', tooltipScreenshotPath);
+
+  // Test hovering on "indicators" in Q2 (multi-syllabic with green/amber breakdown)
+  console.log('[Browser Test] Testing hover on "indicators" for syllable breakdown...');
+  const indBtn = await page.locator('.crm-result-question:nth-of-type(2) button.crm-word-token:has-text("indicators")').first();
+  if (await indBtn.count() > 0) {
+    await indBtn.hover();
+    await page.waitForTimeout(250);
+    const indWord = await tooltipLocator.locator('.crm-tooltip-word').textContent();
+    const indChips = tooltipLocator.locator('.crm-syl-chip');
+    const indChipCount = await indChips.count();
+    console.log('  Indicators word:', indWord, 'chips count:', indChipCount);
+    assert.strictEqual(indWord, 'indicators');
+    assert.ok(indChipCount >= 3, 'indicators should have multiple syllables');
+    const indChip1Class = await indChips.nth(0).getAttribute('class');
+    console.log('  Indicators first chip class:', indChip1Class);
+    assert.ok(indChip1Class.includes('syl-green'), 'first syllable of indicators should be syl-green');
+    const indLastChipClass = await indChips.nth(chipCount - 1).getAttribute('class');
+    console.log('  Indicators last chip class:', indLastChipClass);
+    assert.ok(indLastChipClass.includes('syl-amber'), 'last syllable of indicators ("tors" 74%) should be syl-amber');
+  }
+
+  // 4. Verify Q3 uncertain token (e.g., "truly" or similar)
   console.log('[Browser Test] Verifying Q3 uncertain token...');
   const uncertainToken = await page.locator('.crm-result-question:nth-of-type(3) .crm-transcript-uncertain').first();
   if (await uncertainToken.count() > 0) {
@@ -213,9 +268,28 @@ async function main() {
     console.log('  Q3 uncertain title:', uncTitle);
     console.log('  Q3 uncertain color:', uncColor);
     assert.strictEqual(uncColor, 'rgb(245, 158, 11)', 'Uncertain token must be amber rgb(245, 158, 11)');
+
+    // Hover over uncertain token to verify amber tooltip badge
+    await uncertainToken.hover();
+    await page.waitForTimeout(200);
+    const uncTipBadgeClass = await tooltipLocator.locator('.crm-tooltip-badge').getAttribute('class');
+    console.log('  Uncertain tooltip badge class:', uncTipBadgeClass);
+    assert.ok(uncTipBadgeClass.includes('syl-amber'), 'Uncertain tooltip badge must be syl-amber');
+
+    // Test Escape key dismissal
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+    const isEscHidden = await tooltipLocator.evaluate((el) => el.style.display === 'none');
+    assert.ok(isEscHidden, 'Tooltip must hide when Escape key is pressed');
   }
 
-  // 4. Test clicking word tokens
+  // 5. Move mouse away to test tooltip hiding
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(200);
+  const isHidden = await tooltipLocator.evaluate((el) => el.style.display === 'none');
+  assert.ok(isHidden, 'Tooltip must hide when mouse leaves token');
+
+  // 6. Test clicking word tokens
   console.log('[Browser Test] Testing click interaction on word tokens...');
   await getBtn.click();
   await page.waitForTimeout(200);
@@ -225,12 +299,10 @@ async function main() {
   // Ensure no unhandled browser page errors
   assert.strictEqual(pageErrors.length, 0, `Browser page had unhandled errors: ${pageErrors.map(e => e.message).join('; ')}`);
 
-  // 5. Screenshot verification
-  const resultsDir = path.join(__dirname, '..', '..', 'test-results');
-  if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true });
+  // 7. Full page screenshot verification
   const screenshotPath = path.join(resultsDir, 'crm-entrance-test-word-scoring.png');
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  console.log('[Browser Test] Screenshot captured to:', screenshotPath);
+  console.log('[Browser Test] Full page screenshot captured to:', screenshotPath);
 
   await browser.close();
   server.close();

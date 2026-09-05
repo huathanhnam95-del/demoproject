@@ -1967,3 +1967,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 972,2026-09-05,Audit debug and optimize CRM Student Courses scheduling and attendance workflow,Done,2026-09-05
 973,2026-09-05,Fix Entrance Test Speaking Alignment Pronunciation Assessment & UI Word Coloring,Done,2026-09-05
 974,2026-09-05,Teaching Session Viewer Round 3: Modern design overhaul natural language filter and diagram quality,Done,2026-09-05
+975,2026-09-05,Precise pronunciation scoring hover tooltip with syllable breakdown and degree of mispronunciation,Done,2026-09-05
+976,2026-09-05,Document GPT-6 Astra evaluation token efficiency and prompt guidelines,Done,2026-09-05

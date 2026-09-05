@@ -126,6 +126,16 @@ async function rescoreTestB0ee() {
     }
     console.log(`[Q2 PASS] "accurately" has accuracy ${accWord.accuracyScore}% and errorType "${accWord.errorType}" (< 60 / Mispronunciation -> red)!`);
 
+    // Verify Q2 syllables
+    if (!Array.isArray(accWord.syllables) || accWord.syllables.length !== 4) {
+        throw new Error(`FATAL: "accurately" must have 4 syllables, got: ${JSON.stringify(accWord.syllables)}`);
+    }
+    const indWord = q2Words.find((w) => w.word.toLowerCase() === 'indicators');
+    if (!indWord || !Array.isArray(indWord.syllables) || indWord.syllables.length < 3) {
+        throw new Error(`FATAL: "indicators" must have multi-syllables, got: ${JSON.stringify(indWord?.syllables)}`);
+    }
+    console.log(`[Q2 PASS] "accurately" (4 syllables) and "indicators" (${indWord.syllables.length} syllables) verified!`);
+
     // Verify Q3
     const q3Words = updatedData.speaking?.speaking_q3?.words || [];
     console.log(`\n[Q3 Check] Q3 has ${q3Words.length} aligned words.`);

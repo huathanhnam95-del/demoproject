@@ -179,7 +179,7 @@ function cleanHallucinatedLoops(text, options = {}) {
  * @param {Buffer} audioBuffer - Audio data
  * @param {string} referenceText - Target text to align against (candidate transcript or expected passage)
  * @param {string} [contentType] - Input MIME type
- * @returns {Promise<Array<{word: string, startMs: number, endMs: number, accuracyScore: number, errorType: string}>|null>}
+ * @returns {Promise<Array<{word: string, startMs: number, endMs: number, accuracyScore: number, errorType: string, syllables?: Array<{text: string, ipa: string, accuracyScore: number}>|null}>|null>}
  */
 async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
     const { key, region } = getAzureSpeechCredentials();
@@ -222,7 +222,7 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
     const config = {
         ReferenceText: cleanRef,
         GradingSystem: 'HundredMark',
-        Granularity: 'Word',
+        Granularity: 'Phoneme',
         Dimension: 'Comprehensive',
         PhonemeAlphabet: 'IPA',
         EnableMiscue: true
@@ -259,12 +259,20 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
             const startMs = Number.isFinite(rawOffset) && rawOffset >= 0 ? Math.round(rawOffset / 10000) : null;
             const durMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.round(rawDuration / 10000) : null;
             const endMs = startMs != null && durMs != null ? startMs + durMs : null;
+            const syllables = Array.isArray(w.Syllables) && w.Syllables.length > 0
+                ? w.Syllables.map(s => ({
+                    text: String(s.Grapheme || s.Syllable || '').trim(),
+                    ipa: String(s.Syllable || '').trim(),
+                    accuracyScore: Math.round(Number(s.AccuracyScore ?? s.PronunciationAssessment?.AccuracyScore ?? 0))
+                })).filter(s => s.text.length > 0)
+                : null;
             return {
                 word: String(w.Word || '').trim(),
                 startMs,
                 endMs,
                 accuracyScore: Math.round(Number((w.AccuracyScore ?? w.PronunciationAssessment?.AccuracyScore)) || 0),
-                errorType: String((w.ErrorType ?? w.PronunciationAssessment?.ErrorType) || 'None')
+                errorType: String((w.ErrorType ?? w.PronunciationAssessment?.ErrorType) || 'None'),
+                syllables
             };
         }).filter(w => w.word.length > 0 && w.startMs != null && w.endMs != null && w.endMs > w.startMs);
 

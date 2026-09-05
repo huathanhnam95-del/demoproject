@@ -1,3 +1,17 @@
+## [V1.8.126] - 2026-09-05
+
+### Enhanced & Fixed
+- **Entrance Test Speaking Pronunciation Assessment & Syllable-Level Breakdown**:
+  - **Reference-Constrained Acoustic Alignment**: Configured Azure Speech Pronunciation Assessment (`Granularity: 'Phoneme'`) to align audio directly against reference text (`expectedText`) for Read Aloud questions, eliminating unconstrained Gemini STT hallucinations (e.g. "give them a shout") from omitting valid candidate words like "get" (scored 97% green).
+  - **Comprehensive Acoustic Pronunciation Metrics**: Extracted top-level and nested `AccuracyScore` and `ErrorType` from Azure Speech REST API, capturing acoustic mispronunciations like "accurately" (scored 18% red) instead of relying on pure string equality.
+  - **Degree of Mispronunciation & Floating Hover Tooltip**:
+    - Created an interactive floating tooltip (`#crm-word-tooltip`) appended to `document.body` that appears instantly on word hover/focus.
+    - Displays exact word accuracy score percentage (Green $\ge 80$, Amber $60-79$, Red $< 60$).
+    - For multi-syllabic words, renders color-coded syllable chips (`.syl-green`, `.syl-amber`, `.syl-red`) with grapheme text and individual accuracy scores (e.g. "indicators" showing `in` 99% green, `di` 100% green, `ca` 100% green, `tors` 74% amber).
+    - Added 4-way viewport boundary clamping, focus/blur listeners, and WCAG 2.1 SC 1.4.13 `Escape` key dismissal.
+  - **Zero Incremental Cost**: Re-used existing Azure Cognitive Services infrastructure with a compact Firestore schema (`{ text, ipa, accuracyScore }`), adding zero API cost and $< 1.5\%$ document payload overhead.
+  - **Cache-Busting & Live Production Rescoring**: Updated cache-busting tokens and no-cache headers for `crm-entrance-test-result.*`, and rescored test `b0ee5b86...` in Firestore.
+
 ## [V1.8.125] - 2026-09-05
 
 ### Enhanced & Overhauled

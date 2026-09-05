@@ -51,6 +51,18 @@ if (fs.existsSync(crmHtmlPath)) {
   console.log('Updated public/crm-admin.html cache-busting tokens.');
 }
 
+// 2b. Update public/crm-entrance-test-result.html
+const crmResultHtmlPath = path.join(__dirname, '..', 'public', 'crm-entrance-test-result.html');
+if (fs.existsSync(crmResultHtmlPath)) {
+  let content = fs.readFileSync(crmResultHtmlPath, 'utf8');
+  const updated = content.replace(
+    /\?v=\d{8}-v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?/g,
+    `?v=${crmVersion}`
+  );
+  fs.writeFileSync(crmResultHtmlPath, updated, 'utf8');
+  console.log('Updated public/crm-entrance-test-result.html cache-busting tokens.');
+}
+
 // 3. Update tests/crm/crm-shell-static.test.js
 const testPath = path.join(__dirname, '..', 'tests', 'crm', 'crm-shell-static.test.js');
 if (fs.existsSync(testPath)) {

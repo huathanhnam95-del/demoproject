@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.125</div>
+  <div id="version-indicator" class="version-indicator">V1.8.126</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4644,25 +4644,25 @@
                     </label>
                   </div>
                   <div class="essay-prestart-layout-cards" id="essay-prestart-layout-cards" role="radiogroup" aria-label="Chọn cách xem đề Bước 1">
-                    <button type="button" class="essay-prestart-layout-card is-active" data-layout="whiteboard" role="radio" aria-checked="true" title="Bạn muốn nhìn toàn cảnh đề bài và sơ đồ ý tưởng">
+                    <button type="button" class="essay-prestart-layout-card is-active" data-layout="mindmap" role="radio" aria-checked="true" title="Cây ý tưởng tỏa tròn từ câu hỏi đến 2 phe đối lập">
                       <span class="essay-prestart-layout-icon">🗺️</span>
                       <strong class="essay-prestart-layout-name">Sơ đồ tư duy</strong>
-                      <span class="essay-prestart-layout-tag">Bạn muốn sơ đồ trực quan</span>
+                      <span class="essay-prestart-layout-tag">Cây ý tưởng tỏa tròn</span>
                     </button>
-                    <button type="button" class="essay-prestart-layout-card" data-layout="stations" role="radio" aria-checked="false" title="Bạn muốn học từng phần, không phải cuộn trang">
-                      <span class="essay-prestart-layout-icon">🏛️</span>
-                      <strong class="essay-prestart-layout-name">Học từng phần</strong>
-                      <span class="essay-prestart-layout-tag">Bạn không muốn cuộn trang</span>
+                    <button type="button" class="essay-prestart-layout-card" data-layout="flowchart" role="radio" aria-checked="false" title="Dây chuyền quy trình tuần tự từ phân tích vế đến POS & PEEL">
+                      <span class="essay-prestart-layout-icon">🔄</span>
+                      <strong class="essay-prestart-layout-name">Sơ đồ quy trình</strong>
+                      <span class="essay-prestart-layout-tag">Quy trình POS-PEEL</span>
                     </button>
-                    <button type="button" class="essay-prestart-layout-card" data-layout="hud" role="radio" aria-checked="false" title="Bạn cần lướt nhanh dàn ý và mẹo trong 20 giây">
-                      <span class="essay-prestart-layout-icon">⚡</span>
-                      <strong class="essay-prestart-layout-name">Lướt nhanh 20s</strong>
-                      <span class="essay-prestart-layout-tag">Bạn cần tóm tắt 20 giây</span>
+                    <button type="button" class="essay-prestart-layout-card" data-layout="table" role="radio" aria-checked="false" title="Ma trận đối chiếu trực diện 2 quan điểm qua 5 tiêu chí">
+                      <span class="essay-prestart-layout-icon">⚖️</span>
+                      <strong class="essay-prestart-layout-name">Bảng so sánh</strong>
+                      <span class="essay-prestart-layout-tag">Đối chiếu 2 quan điểm</span>
                     </button>
-                    <button type="button" class="essay-prestart-layout-card" data-layout="list" role="radio" aria-checked="false" title="Bạn muốn đọc một mạch như tài liệu bài học">
+                    <button type="button" class="essay-prestart-layout-card" data-layout="cards" role="radio" aria-checked="false" title="Đọc bài học tuần tự như giáo trình, tập trung nội dung chữ">
                       <span class="essay-prestart-layout-icon">📋</span>
-                      <strong class="essay-prestart-layout-name">Đọc truyền thống</strong>
-                      <span class="essay-prestart-layout-tag">Bạn muốn đọc như bài học</span>
+                      <strong class="essay-prestart-layout-name">Thẻ trực quan</strong>
+                      <span class="essay-prestart-layout-tag">Đọc bài học tập trung</span>
                     </button>
                   </div>
 
@@ -4690,53 +4690,53 @@
                           <tr>
                             <td class="essay-compare-col-name">
                               <strong>🗺️ Sơ đồ tư duy</strong>
-                              <span class="essay-compare-badge essay-compare-badge--primary">Mặc định</span>
+                              <span class="essay-compare-badge essay-compare-badge--primary">Trực quan</span>
                             </td>
                             <td>
-                              • <strong>Bạn muốn nhìn toàn cảnh</strong> đề bài và sơ đồ ý tưởng 2 phe cùng lúc.<br>
-                              • <strong>Bạn muốn bấm thử từng luận điểm</strong> và xem ngay dàn ý 4 đoạn gợi ý chi tiết (POS &amp; PEEL).
+                              • <strong>Cây ý niệm tỏa tròn</strong>: Nhìn thấy câu hỏi trung tâm liên kết trực tiếp tới 2 phe đối lập và các luận điểm nhánh.<br>
+                              • <strong>Bấm chọn trực quan</strong>: Bấm chọn các nhánh luận điểm để kích hoạt mạch tư duy.
                             </td>
                             <td>
-                              Bạn thích học qua hình ảnh trực quan, muốn nghiền ngẫm kỹ đề bài và tự do thử nghiệm các hướng lập luận trước khi viết.
+                              Bạn thích học bằng sơ đồ tư duy tỏa tròn, cần kích hoạt ý tưởng nhanh bằng hình ảnh trực quan trước khi viết.
                             </td>
                           </tr>
                           <tr>
                             <td class="essay-compare-col-name">
-                              <strong>🏛️ Học từng phần</strong>
-                              <span class="essay-compare-badge essay-compare-badge--accent">Không cuộn trang</span>
+                              <strong>🔄 Sơ đồ quy trình</strong>
+                              <span class="essay-compare-badge essay-compare-badge--accent">Quy trình POS-PEEL</span>
                             </td>
                             <td>
-                              • <strong>Bạn muốn học gọn từng phần một</strong> mà không phải cuộn trang lên xuống.<br>
-                              • <strong>Bạn muốn đi theo lộ trình 3 bước</strong>: Trạm 1 (Khung bài) ➔ Trạm 2 (Chọn phe) ➔ Trạm 3 (Mẹo &amp; Luyện tập).
+                              • <strong>Dây chuyền sản xuất bài viết</strong>: Phân tích vế đề ➔ Cổng chọn lập trường (Stance Gate) ➔ Cây mở bài POS ➔ Quy trình thân bài PEEL ➔ Đúc kết Kết bài.<br>
+                              • <strong>Mũi tên &amp; Nhãn chuyển tiếp</strong>: Từng bước lập luận có hướng dẫn cụ thể ("Vì sao?", "Dẫn chứng...").
                             </td>
                             <td>
-                              Bạn dùng laptop hoặc màn hình vừa/nhỏ, ngại cuộn chuột dài; bạn thích học dứt điểm từng phần rồi mới sang phần tiếp theo.
+                              Bạn thích phong cách tuần tự mạch lạc, muốn hiểu rõ quy trình triển khai từng đoạn theo chuẩn PTE.
                             </td>
                           </tr>
                           <tr>
                             <td class="essay-compare-col-name">
-                              <strong>⚡ Lướt nhanh 20s</strong>
-                              <span class="essay-compare-badge essay-compare-badge--speed">Siêu tốc 20s</span>
+                              <strong>⚖️ Bảng so sánh</strong>
+                              <span class="essay-compare-badge essay-compare-badge--speed">Ma trận 5 tiêu chí</span>
                             </td>
                             <td>
-                              • <strong>Bạn cần xem nhanh mạch 4 đoạn</strong> trên sơ đồ băng chuyền ngắn gọn.<br>
-                              • <strong>Bạn cần đối chiếu ngay bảng</strong> "NÊN LÀM ✓" vs "NÊN TRÁNH ✕" để tránh các bẫy đề thi dễ mất điểm.
+                              • <strong>Ma trận đối chiếu 2 phe</strong>: Đặt song song phe Đồng ý vs Phản đối qua 5 tiêu chí: Định hướng, Luận điểm, Dẫn chứng, Phản biện, và Trọng số điểm.<br>
+                              • <strong>Chọn phe tương tác</strong>: Bấm chọn các thẻ luận điểm và đổi phe viết trực tiếp ngay trên bảng.
                             </td>
                             <td>
-                              Bạn đã nắm vững cấu trúc bài viết, chuẩn bị bấm giờ làm bài và chỉ cần liếc mắt 20 giây để chốt chiến thuật.
+                              Bạn đang phân vân giữa 2 hướng đi, cần so sánh trực diện độ mạnh yếu của từng phe để chọn hướng an toàn và dễ ghi điểm nhất.
                             </td>
                           </tr>
                           <tr>
                             <td class="essay-compare-col-name">
-                              <strong>📋 Đọc truyền thống</strong>
-                              <span class="essay-compare-badge essay-compare-badge--text">Truyền thống</span>
+                              <strong>📋 Thẻ trực quan</strong>
+                              <span class="essay-compare-badge essay-compare-badge--text">Tập trung chữ</span>
                             </td>
                             <td>
-                              • <strong>Bạn muốn đọc một mạch từ trên xuống dưới</strong> như một tài liệu bài học quen thuộc.<br>
-                              • <strong>Bạn muốn tập trung vào nội dung chữ</strong>, không cần sơ đồ hay thao tác bấm chọn qua lại.
+                              • <strong>Đọc tài liệu liền mạch</strong>: Đọc một mạch từ trên xuống dưới dạng tài liệu bài học, hoàn toàn không có đồ họa phân tâm.<br>
+                              • <strong>Đầy đủ dữ kiện</strong>: Nhận diện dạng bài, 3 tiêu chí chấm điểm, các bẫy thường gặp và câu hỏi củng cố.
                             </td>
                             <td>
-                              Bạn thích phong cách đọc truyền thống, thích sự tối giản và không muốn bị phân tâm bởi hình khối đồ họa.
+                              Bạn thích phong cách đọc giáo trình truyền thống, cần tài liệu súc tích, rõ ràng và không muốn bị phân tâm.
                             </td>
                           </tr>
                         </tbody>
@@ -6344,7 +6344,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.125"></script>
+  <script src="/read-aloud-mode.js?v=1.8.126"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

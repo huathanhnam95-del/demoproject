@@ -1,3 +1,10 @@
+## [V1.8.127] - 2026-09-05
+
+### Fixed & Resolved
+- **CI / GitHub Actions Compatibility**:
+  - **Python 3.10 f-string Backslash Syntax**: Resolved `SyntaxError: f-string expression part cannot include a backslash` in `scripts/audit/pronunciation-reference-audit.py` by extracting `table_rows_str = "\n".join(table_rows)` before markdown template formatting.
+  - Ensures full cross-version compatibility across Python 3.10 CI runners (`RFIB Verify` GitHub Actions workflow) and local development environments.
+
 ## [V1.8.126] - 2026-09-05
 
 ### Enhanced & Fixed

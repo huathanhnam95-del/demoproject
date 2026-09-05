@@ -690,6 +690,7 @@ def aggregate_reports(manifest_path: str, aggregate_through: int, output_report_
                     f"| Cohort {c_idx} | {len(c_rows)} | {coverage*100:.2f}% | {fallback_rate*100:.2f}% | {conflict_rate*100:.2f}% | {quarantine_rate*100:.2f}% | {corroboration_rate*100:.2f}% |"
                 )
                 
+    table_rows_str = "\n".join(table_rows)
     summary_md_content = f"""# Pronunciation Audit Campaign Summary
 
 **Manifest Hash:** `{manifest_hash}`
@@ -698,7 +699,7 @@ def aggregate_reports(manifest_path: str, aggregate_through: int, output_report_
 
 | Cohort | Sample Size | Coverage | Fallback Rate | Conflict Rate | Graph Quarantine Rate | CMU Corroboration Rate |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-{"\n".join(table_rows)}
+{table_rows_str}
 
 *Generated at: {time.strftime("%Y-%m-%d %H:%M:%S GMT", time.gmtime())}*
 """

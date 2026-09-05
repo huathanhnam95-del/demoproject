@@ -33,6 +33,12 @@ window.CrmStudentModal = (function () {
                 content.classList.toggle('active', isMatch);
             });
 
+            if (tabId !== 'courses') {
+                if (window.CrmStudentCourses && typeof window.CrmStudentCourses.destroyAvailabilityMatrix === 'function') {
+                    window.CrmStudentCourses.destroyAvailabilityMatrix();
+                }
+            }
+
             if (tabId === 'finance' && modalState.studentId) {
                 refreshStudentFinance().catch((error) => {
                     console.error('[CRM Admin] Failed to refresh student finance:', error);
@@ -81,6 +87,10 @@ window.CrmStudentModal = (function () {
             modalState.createdTestLinks = new Map();
             modalState.leadCreatedTestLinks = new Map();
             modalState.classroomMatches = [];
+
+            if (window.CrmStudentCourses && typeof window.CrmStudentCourses.destroy === 'function') {
+                window.CrmStudentCourses.destroy();
+            }
 
             switchStudentTab('info');
 

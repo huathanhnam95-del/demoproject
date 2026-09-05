@@ -1,3 +1,24 @@
+## [V1.8.125] - 2026-09-05
+
+### Enhanced & Overhauled
+- **Teaching Session Viewer Round 3 (Modern Design Overhaul & Micro-Interactions)**:
+  - **Animated Line Clamping**: Replaced static `-webkit-line-clamp` on `.crm-knowledge-rule.is-clamped` with CSS `max-height: 4.65em` (clamped) and `max-height: 1000px` (expanded) utilizing a `cubic-bezier(0.16, 1, 0.3, 1)` transition for smooth layout expansion and contraction without layout-shift or abrupt snapping.
+  - **Audio Playing State Synchronization**: Attached native `pause` and `ended` listeners to the docked audio player to automatically clear the `.is-playing` state from timestamp chips (`.crm-timestamp-chip`) whenever playback stops.
+  - **Modern Surfaces & Visual Polish**: Verified ambient gradient surfaces, 20px container radii, layered drop shadows, frosted glass navigation tabs, custom scrollbars, and concept-centric causal diagrams.
+- **Smooth Mode Transitions with Motion Blur & Zero Flicker**:
+  - Implemented seamless animated transitions across practice modes with directional motion blur and hardware-accelerated transforms, eliminating blank screen flashes and layout jank.
+- **CRM Student Courses 1-on-1 Scheduling, Attendance Lifecycle & Deep Code Optimization**:
+  - Provisioned automated 1-on-1 synthetic classroom workflows and session generation with schedule availability matrices.
+  - Implemented the Push-Forward cascade engine, enabling seamless session rescheduling that preserves contracted hours and extends end dates without database race conditions.
+  - Added live cascade preview (`previewOnly`) and inline attendance outcome tracking (`Excused Absence`, `Rescheduled`, `Delivered`).
+  - **Memory & Race Condition Hardening**: Eliminated availability matrix memory leaks on Screen B when navigating away during in-flight teacher loading; resolved `TypeError` in `CrmScheduleAvailability.destroy()` and added defensive post-destroy guards.
+  - **Status Badge & Reset Integrity**: Corrected push-forward reset lifecycle so clearing a rescheduled session resets `isPushedForward: false` and reverts badges to `⏳ Scheduled`.
+  - **Submission Locks & Navigation Guards**: Added re-entrancy button locks on Screen B & C forms and local timezone formatting for upcoming Monday calculations.
+  - **Expanded Verification**: Expanded automated Playwright UI test suite to 16 comprehensive browser test cases.
+- **Entrance Test Speaking Pronunciation Assessment & UI Word Coloring**:
+  - Integrated Azure ASR word-level confidence and acoustic alignment scoring.
+  - Added UI transcript diff highlighting with semantic accuracy colors (`crm-transcript-correct`, `crm-transcript-uncertain`, `crm-transcript-error`) and interactive pronunciation diagnostic tooltips.
+
 ## [V1.8.124] - 2026-09-05
 
 ### Enhanced & Fixed

@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.123</div>
+  <div id="version-indicator" class="version-indicator">V1.8.125</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4581,8 +4581,13 @@
               <span class="essay-kicker">Essay prompt</span>
               <div id="essay-prompt-meta-badges" class="essay-prompt-meta-badges"></div>
             </div>
-            <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
-              <p>Prompt will appear here...</p>
+            <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview is-loading" aria-live="polite">
+              <div class="essay-prompt-skeleton" aria-hidden="true">
+                <span class="essay-skeleton-line" style="width: 92%;"></span>
+                <span class="essay-skeleton-line" style="width: 100%;"></span>
+                <span class="essay-skeleton-line" style="width: 78%;"></span>
+              </div>
+              <p class="sr-only">Loading essay prompt…</p>
             </div>
             <div class="essay-practice-choice" id="essay-practice-choice" aria-label="Choose essay practice">
               <span class="essay-practice-choice-label">Practice mode<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="practice-mode" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></span>
@@ -4594,8 +4599,9 @@
                 <input type="radio" name="essay-practice-kind" value="guided">
                 <span>Guided Practice <small>support + count-up timer</small></span>
               </label>
-              <div id="essay-guided-preferences" class="essay-guided-preferences" hidden>
-                <div class="essay-guided-pref-group">
+              <div id="essay-guided-preferences" class="essay-guided-preferences" aria-hidden="true">
+                <div class="essay-guided-preferences-inner">
+                  <div class="essay-guided-pref-group">
                   <label for="essay-guided-level">Support level<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="support-level" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></label>
                   <select id="essay-guided-level" aria-label="Guided support level">
                     <option value="a2_b1">A2–B1</option>
@@ -4736,6 +4742,7 @@
                         </tbody>
                       </table>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -6337,7 +6344,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.123"></script>
+  <script src="/read-aloud-mode.js?v=1.8.125"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

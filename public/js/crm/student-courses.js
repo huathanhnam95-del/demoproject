@@ -14,6 +14,9 @@
     let currentStudent = null;
     let cachedEnrollments = [];
     let activeAvailabilityInstance = null;
+    let currentScreenId = 0;
+    let activeRefreshStudentId = null;
+    let refreshSequence = 0;
 
     function escapeHtml(str) {
         return (str == null ? '' : String(str)).replace(/[&<>"']/g, (c) => ({
@@ -24,10 +27,21 @@
 
     function addDaysToDateString(dateStr, days) {
         if (!dateStr || !Number.isFinite(days)) return dateStr;
-        const [y, m, d] = dateStr.split('-').map(Number);
+        const clean = String(dateStr).split('T')[0];
+        const [y, m, d] = clean.split('-').map(Number);
+        if (!y || !m || !d) return dateStr;
         const dt = new Date(Date.UTC(y, m - 1, d));
+        if (!Number.isFinite(dt.getTime())) return dateStr;
         dt.setUTCDate(dt.getUTCDate() + days);
         return dt.toISOString().split('T')[0];
+    }
+
+    function formatLocalDateYMD(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
     }
 
     function getUpcomingMondayDateString() {
@@ -35,18 +49,21 @@
         const day = today.getDay();
         const diff = (day === 0 ? 1 : (8 - day)); // Days until next Monday
         today.setDate(today.getDate() + (day === 1 ? 0 : diff));
-        return today.toISOString().split('T')[0];
+        return formatLocalDateYMD(today);
     }
 
     function formatHours(minutes) {
-        const h = (Number(minutes) || 0) / 60;
+        const h = Math.max(0, Number(minutes) || 0) / 60;
         return Number.isInteger(h) ? String(h) : h.toFixed(1);
     }
 
     function formatFriendlyDate(dateStr, timeStr) {
         if (!dateStr) return 'Not scheduled';
-        const [y, m, d] = dateStr.split('-').map(Number);
+        const clean = String(dateStr).split('T')[0];
+        const [y, m, d] = clean.split('-').map(Number);
+        if (!y || !m || !d) return String(dateStr);
         const dt = new Date(Date.UTC(y, m - 1, d));
+        if (!Number.isFinite(dt.getTime())) return String(dateStr);
         const dateFormatted = dt.toLocaleDateString('en-US', {
             weekday: 'short',
             month: 'short',
@@ -97,8 +114,9 @@
 
     /** Compute progress metrics from enrollment summary and course delivery template. */
     function computeCourseProgress(summary, deliveryTemplate) {
-        const totalMins = summary.contractedMinutesTotal || (deliveryTemplate?.totalInstructionMinutes) || 0;
-        const deliveredMins = summary.contractedMinutesDelivered || 0;
+        const sum = summary || {};
+        const totalMins = sum.contractedMinutesTotal || (deliveryTemplate?.totalInstructionMinutes) || 0;
+        const deliveredMins = sum.contractedMinutesDelivered || 0;
         const remainingMins = Math.max(totalMins - deliveredMins, 0);
         const pct = totalMins > 0 ? Math.min(Math.round((deliveredMins / totalMins) * 100), 100) : 0;
         return {
@@ -202,6 +220,7 @@
     // SCREEN A: Enrolments Overview List
     // ==========================================
     function renderScreenA(containerEl, enrollments) {
+        currentScreenId += 1;
         destroyAvailabilityMatrix();
 
         containerEl.innerHTML = `
@@ -249,11 +268,29 @@
             const progress = computeCourseProgress(summary, course.deliveryTemplate);
 
             // Find next upcoming scheduled session
-            const nowIsoDate = new Date().toISOString().split('T')[0];
-            const nextSession = sessions.find((s) => s.scheduledLocalDate >= nowIsoDate && s.status === 'scheduled');
-            const nextLessonStr = nextSession
-                ? formatFriendlyDate(nextSession.scheduledLocalDate, nextSession.scheduledLocalTime)
-                : (sessions.length > 0 ? 'All scheduled sessions completed' : 'No sessions scheduled');
+            const todayLocalDate = formatLocalDateYMD(new Date());
+            const scheduledSessions = sessions.filter((s) => s.status === 'scheduled');
+            const upcomingScheduled = scheduledSessions
+                .filter((s) => s.scheduledLocalDate && s.scheduledLocalDate >= todayLocalDate)
+                .sort((a, b) => {
+                    const da = String(a.scheduledLocalDate).localeCompare(String(b.scheduledLocalDate));
+                    if (da !== 0) return da;
+                    return String(a.scheduledLocalTime || '').localeCompare(String(b.scheduledLocalTime || ''));
+                });
+            const nextSession = upcomingScheduled[0] || null;
+            let nextLessonStr = 'No sessions scheduled';
+            if (nextSession) {
+                nextLessonStr = formatFriendlyDate(nextSession.scheduledLocalDate, nextSession.scheduledLocalTime);
+            } else if (scheduledSessions.length > 0) {
+                const overdueSession = scheduledSessions
+                    .filter((s) => s.scheduledLocalDate)
+                    .sort((a, b) => String(a.scheduledLocalDate).localeCompare(String(b.scheduledLocalDate)))[0];
+                nextLessonStr = overdueSession
+                    ? `Overdue: ${formatFriendlyDate(overdueSession.scheduledLocalDate, overdueSession.scheduledLocalTime)}`
+                    : 'Scheduled sessions pending';
+            } else if (sessions.length > 0) {
+                nextLessonStr = 'All scheduled sessions completed';
+            }
 
             return `
                 <div class="crm-student-course-card" data-enrollment-id="${escapeHtml(enr.id || enr.enrollmentId)}">
@@ -310,6 +347,7 @@
     // SCREEN B: Add Course Takeover View
     // ==========================================
     async function renderScreenB(containerEl) {
+        const screenId = ++currentScreenId;
         destroyAvailabilityMatrix();
 
         containerEl.innerHTML = `
@@ -419,19 +457,33 @@
             }
         } catch (e) {
             console.error('[StudentCourses] Error loading courses:', e);
+            if (errorBox) {
+                errorBox.textContent = `Error loading courses: ${e.message || 'Network error'}`;
+                errorBox.style.display = 'block';
+            }
+        }
+
+        if (currentScreenId !== screenId || !containerEl.isConnected) {
+            return;
         }
 
         // Load teachers
         try {
             if (global.ClassroomAPI && typeof global.ClassroomAPI.fetchTeachers === 'function') {
                 const teachers = await global.ClassroomAPI.fetchTeachers();
-                teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>` + teachers.map((t) => {
-                    const name = t.displayName || t.name || t.email || t.uid;
-                    return `<option value="${escapeHtml(t.uid)}">${escapeHtml(name)}</option>`;
-                }).join('');
+                if (currentScreenId === screenId && teacherSelect.isConnected) {
+                    teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>` + teachers.map((t) => {
+                        const name = t.displayName || t.name || t.email || t.uid;
+                        return `<option value="${escapeHtml(t.uid)}">${escapeHtml(name)}</option>`;
+                    }).join('');
+                }
             }
         } catch (e) {
             console.warn('[StudentCourses] Error loading teachers:', e);
+        }
+
+        if (currentScreenId !== screenId || !containerEl.isConnected) {
+            return;
         }
 
         function filterAndPopulateCourses() {
@@ -457,11 +509,13 @@
         filterAndPopulateCourses();
 
         // Initialize availability matrix
-        activeAvailabilityInstance = global.CrmScheduleAvailability.create(matrixContainer, {
-            defaultLessonMinutes: 120,
-            timezone: 'Asia/Ho_Chi_Minh',
-            onChange: () => updateComparisonBar()
-        });
+        if (global.CrmScheduleAvailability && typeof global.CrmScheduleAvailability.create === 'function') {
+            activeAvailabilityInstance = global.CrmScheduleAvailability.create(matrixContainer, {
+                defaultLessonMinutes: 120,
+                timezone: 'Asia/Ho_Chi_Minh',
+                onChange: () => updateComparisonBar()
+            });
+        }
 
         function getSelectedCourse() {
             const id = courseSelect.value;
@@ -471,6 +525,11 @@
         function updateDatesAndMatrix() {
             const course = getSelectedCourse();
             if (!course) {
+                endDateInput.value = '';
+                if (endDateHelper) {
+                    endDateHelper.className = 'crm-muted';
+                    endDateHelper.innerHTML = '(auto-calculated)';
+                }
                 comparisonBar.innerHTML = `<span>Select a course to view contract requirements</span>`;
                 return;
             }
@@ -484,7 +543,7 @@
 
             // Update default lesson minutes
             const defaultMins = course.deliveryTemplate?.defaultSessionMinutes || 120;
-            if (activeAvailabilityInstance) {
+            if (activeAvailabilityInstance && typeof activeAvailabilityInstance.setDefaultLessonMinutes === 'function') {
                 activeAvailabilityInstance.setDefaultLessonMinutes(defaultMins);
             }
 
@@ -499,11 +558,12 @@
             const weeklyMinutes = state.summary?.totalMinutes || 0;
             const weeklyHoursStr = state.summary ? formatHours(weeklyMinutes) : '0';
             const lessonCount = state.summary?.totalLessons || 0;
+            const lessonWord = lessonCount === 1 ? 'lesson' : 'lessons';
 
             if (!course) {
                 comparisonBar.innerHTML = `
                     <span>Select a course to calculate schedule alignment</span>
-                    <span>Weekly scheduled: <strong>${lessonCount} lessons · ${weeklyHoursStr} hrs</strong></span>
+                    <span>Weekly scheduled: <strong>${lessonCount} ${lessonWord} · ${weeklyHoursStr} hrs</strong></span>
                 `;
                 return;
             }
@@ -532,7 +592,7 @@
 
             comparisonBar.innerHTML = `
                 <span>Contract: <strong>${totalHoursStr} hrs</strong></span>
-                <span>Scheduled: <strong>${lessonCount} lessons</strong> · ${alignmentHtml}</span>
+                <span>Scheduled: <strong>${lessonCount} ${lessonWord}</strong> · ${alignmentHtml}</span>
             `;
         }
 
@@ -574,9 +634,8 @@
         };
 
         // Changing start date updates end date instantly (User requirement!)
-        startDateInput.onchange = () => {
-            setAutoEndDate();
-        };
+        startDateInput.addEventListener('input', setAutoEndDate);
+        startDateInput.addEventListener('change', setAutoEndDate);
 
         // Form Submission
         btnSubmit.onclick = async () => {
@@ -597,6 +656,13 @@
                 return;
             }
 
+            const endDate = endDateInput.value;
+            if (endDate && endDate < startDate) {
+                errorBox.textContent = 'End date cannot be earlier than start date.';
+                errorBox.style.display = 'block';
+                return;
+            }
+
             const slots = activeAvailabilityInstance ? activeAvailabilityInstance.getSlots() : [];
             if (!slots || slots.length === 0) {
                 errorBox.textContent = 'Please add at least one weekly lesson slot to the availability schedule.';
@@ -606,17 +672,25 @@
 
             const validation = activeAvailabilityInstance.validate();
             if (!validation.valid) {
-                errorBox.textContent = 'Please fix errors in the availability schedule before submitting.';
+                const firstErrMsg = validation.errors && validation.errors[0]
+                    ? (validation.errors[0].message || validation.errors[0])
+                    : 'Please fix errors in the availability schedule before submitting.';
+                errorBox.textContent = firstErrMsg;
                 errorBox.style.display = 'block';
                 return;
             }
 
+            const studentIdAtStart = currentStudentId;
+            const screenIdAtStart = screenId;
+
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'Enrolling & Seeding Schedule…';
+            if (btnBack) btnBack.disabled = true;
+            if (btnCancel) btnCancel.disabled = true;
 
             try {
                 const payload = {
-                    studentId: currentStudentId,
+                    studentId: studentIdAtStart,
                     studentName: currentStudent?.name || null,
                     studentEmail: currentStudent?.email || null,
                     courseId: course.courseId || course.id,
@@ -629,6 +703,10 @@
 
                 await submitEnrollment(payload);
 
+                if (currentScreenId !== screenIdAtStart || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                    return;
+                }
+
                 if (typeof global.showToast === 'function') {
                     global.showToast('Student enrolled and schedule seeded successfully!', 'success');
                 } else {
@@ -636,15 +714,26 @@
                 }
 
                 // Refresh enrollments and return to Screen A
-                cachedEnrollments = await fetchStudentEnrollments(currentStudentId);
+                const freshEnrollments = await fetchStudentEnrollments(studentIdAtStart);
+                if (currentScreenId !== screenIdAtStart || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                    return;
+                }
+                cachedEnrollments = freshEnrollments;
                 renderScreenA(containerEl, cachedEnrollments);
             } catch (err) {
+                if (currentScreenId !== screenIdAtStart || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                    return;
+                }
                 console.error('[StudentCourses] Submit error:', err);
                 errorBox.textContent = err.message || 'Failed to enrol student.';
                 errorBox.style.display = 'block';
             } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Enrol Student & Seed Schedule';
+                if (btnSubmit.isConnected) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Enrol Student & Seed Schedule';
+                }
+                if (btnBack && btnBack.isConnected) btnBack.disabled = false;
+                if (btnCancel && btnCancel.isConnected) btnCancel.disabled = false;
             }
         };
     }
@@ -653,6 +742,8 @@
     // SCREEN C: Lessons & Attendance View with Inline Expansion
     // ==========================================
     function renderScreenC(containerEl, enrollment) {
+        const screenId = ++currentScreenId;
+        const studentIdAtStart = currentStudentId;
         destroyAvailabilityMatrix();
 
         const course = enrollment.course || {};
@@ -672,7 +763,8 @@
 
         const attendedCount = sessions.filter((s) => s.sessionOutcome === 'completed').length;
         const penalizedCount = sessions.filter((s) => s.sessionOutcome === 'absent_counted').length;
-        const rescheduledCount = sessions.filter((s) => s.contractCountState === 'does_not_count' && s.sessionOutcome === 'absent_makeup').length;
+        const rescheduledCount = sessions.filter((s) => s.attendanceState === 'finalized' && (s.attendanceStatus === 'rescheduled' || s.isPushedForward || (s.contractCountState === 'does_not_count' && s.sessionOutcome !== 'absent_makeup'))).length;
+        const absentCount = sessions.filter((s) => s.attendanceState === 'finalized' && (s.sessionOutcome === 'absent_makeup' || s.attendanceStatus === 'absent') && s.attendanceStatus !== 'rescheduled' && !s.isPushedForward).length;
 
         containerEl.innerHTML = `
             <div class="crm-attendance-container">
@@ -699,6 +791,7 @@
                         <span>${attendedCount} attended</span>
                         <span>${penalizedCount} penalized</span>
                         <span>${rescheduledCount} rescheduled</span>
+                        ${absentCount > 0 ? `<span>${absentCount} excused</span>` : ''}
                     </div>
                     ${renderProgressBarHtml(progress)}
                 </div>
@@ -748,10 +841,12 @@
                 badgeHtml = `<span class="crm-session-status-badge status-attended">✓ Attended</span>`;
             } else if (s.sessionOutcome === 'absent_counted') {
                 badgeHtml = `<span class="crm-session-status-badge status-penalized">! Penalized</span>`;
-            } else if (s.contractCountState === 'does_not_count' || s.attendanceStatus === 'rescheduled') {
+            } else if (s.attendanceStatus === 'rescheduled' || (s.isPushedForward && s.attendanceState === 'finalized')) {
                 badgeHtml = `<span class="crm-session-status-badge status-rescheduled">↻ Rescheduled</span>`;
-            } else if (s.sessionOutcome === 'absent_makeup') {
+            } else if (s.sessionOutcome === 'absent_makeup' || s.attendanceStatus === 'absent') {
                 badgeHtml = `<span class="crm-session-status-badge status-absent">○ Absent</span>`;
+            } else if (s.contractCountState === 'does_not_count' && s.attendanceState === 'finalized') {
+                badgeHtml = `<span class="crm-session-status-badge status-rescheduled">↻ Rescheduled</span>`;
             } else {
                 badgeHtml = `<span class="crm-session-status-badge status-scheduled">⏳ Scheduled</span>`;
             }
@@ -807,7 +902,7 @@
                                 Attendance & Action for Session #${escapeHtml(sessionObj.contractUnitIndex || '')} — ${escapeHtml(formatFriendlyDate(sessionObj.scheduledLocalDate, sessionObj.scheduledLocalTime))}
                             </h4>
 
-                            <div class="crm-inline-radio-group">
+                            <div class="crm-inline-radio-group" role="radiogroup" aria-label="Attendance options">
                                 <label class="crm-inline-radio-label">
                                     <input type="radio" name="inline-att-${escapeHtml(sId)}" value="attended" checked>
                                     <span><strong>✓ Attended</strong> <span class="crm-radio-desc">— student attended lesson (hours deducted)</span></span>
@@ -854,21 +949,32 @@
                 const btnCancel = inlineTr.querySelector('.btn-inline-cancel');
                 const btnConfirm = inlineTr.querySelector('.btn-inline-confirm');
 
+                // Accessibility: focus first radio
+                const firstRadio = inlineTr.querySelector(`input[name="inline-att-${sId}"]`);
+                if (firstRadio) firstRadio.focus();
+
                 btnCancel.onclick = () => {
                     inlineTr.remove();
                     tr.classList.remove('is-expanded');
                     btn.setAttribute('aria-expanded', 'false');
+                    btn.focus();
                 };
 
-                // Radio changes
+                // Radio changes with stale-request tracking
+                let previewRequestId = 0;
                 radios.forEach((r) => {
                     r.onchange = async () => {
                         if (r.value === 'push-forward') {
+                            const reqId = ++previewRequestId;
                             previewBox.style.display = 'flex';
                             previewShift.textContent = 'Calculating shift cascade…';
                             previewDate.textContent = '';
                             try {
                                 const previewData = await submitPushForward(sId, { previewOnly: true });
+                                if (reqId !== previewRequestId || !previewBox.isConnected) return;
+                                const currentRadio = inlineTr.querySelector(`input[name="inline-att-${sId}"]:checked`);
+                                if (!currentRadio || currentRadio.value !== 'push-forward') return;
+
                                 if (previewData.previewSummary) {
                                     previewShift.textContent = `Shift: ${previewData.previewSummary}`;
                                     previewDate.textContent = `Course now ends ${previewData.newEndDateFormatted || previewData.newEndDate} (was ${previewData.prevEndDateFormatted || previewData.prevEndDate})`;
@@ -876,9 +982,11 @@
                                     previewShift.textContent = 'Shift preview ready.';
                                 }
                             } catch (e) {
+                                if (reqId !== previewRequestId || !previewBox.isConnected) return;
                                 previewShift.textContent = `Error previewing shift: ${e.message}`;
                             }
                         } else {
+                            previewRequestId += 1;
                             previewBox.style.display = 'none';
                         }
                     };
@@ -886,11 +994,18 @@
 
                 // Confirm action
                 btnConfirm.onclick = async () => {
+                    if (btnConfirm.disabled) return;
                     const checkedRadio = inlineTr.querySelector(`input[name="inline-att-${sId}"]:checked`);
                     const choice = checkedRadio ? checkedRadio.value : 'attended';
 
+                    const btnBackToScreenA = containerEl.querySelector('#btn-back-to-screen-a');
+                    if (btnBackToScreenA) btnBackToScreenA.disabled = true;
+
                     btnConfirm.disabled = true;
                     btnConfirm.textContent = 'Saving…';
+                    btnCancel.disabled = true;
+                    radios.forEach((r) => { r.disabled = true; });
+                    tbody.querySelectorAll('.btn-expand-attendance').forEach((b) => { b.disabled = true; });
 
                     try {
                         if (choice === 'push-forward') {
@@ -905,6 +1020,10 @@
                             }
                         }
 
+                        if (currentScreenId !== screenId || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                            return;
+                        }
+
                         const unitLabel = sessionObj.contractUnitIndex ? `Session ${sessionObj.contractUnitIndex}` : 'Session';
                         const announceMsg = choice === 'push-forward'
                             ? `${unitLabel} pushed forward and future lessons shifted.`
@@ -913,7 +1032,11 @@
                                 : `${unitLabel} marked as ${choice}.`);
 
                         // Refetch enrollments and re-render Screen C
-                        cachedEnrollments = await fetchStudentEnrollments(currentStudentId);
+                        const freshEnrollments = await fetchStudentEnrollments(studentIdAtStart);
+                        if (currentScreenId !== screenId || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                            return;
+                        }
+                        cachedEnrollments = freshEnrollments;
                         const updatedEnr = cachedEnrollments.find((e) => (e.id || e.enrollmentId) === (enrollment.id || enrollment.enrollmentId));
                         if (updatedEnr) {
                             renderScreenC(containerEl, updatedEnr);
@@ -925,9 +1048,21 @@
                             renderScreenA(containerEl, cachedEnrollments);
                         }
                     } catch (err) {
-                        alert(err.message || 'Failed to save attendance.');
+                        if (btnBackToScreenA && btnBackToScreenA.isConnected) btnBackToScreenA.disabled = false;
+                        if (currentScreenId !== screenId || currentStudentId !== studentIdAtStart || !containerEl.isConnected) {
+                            return;
+                        }
+                        const errMsg = err.message || 'Failed to save attendance.';
+                        if (typeof global.showToast === 'function') {
+                            global.showToast(errMsg, 'error');
+                        } else {
+                            alert(errMsg);
+                        }
                         btnConfirm.disabled = false;
                         btnConfirm.textContent = 'Confirm';
+                        btnCancel.disabled = false;
+                        radios.forEach((r) => { r.disabled = false; });
+                        tbody.querySelectorAll('.btn-expand-attendance').forEach((b) => { b.disabled = false; });
                     }
                 };
             };
@@ -938,7 +1073,9 @@
     // Public Controller API
     // ==========================================
     async function refresh(studentId, studentProfile) {
+        const seq = ++refreshSequence;
         currentStudentId = studentId;
+        activeRefreshStudentId = studentId;
         currentStudent = studentProfile || currentStudent;
         const containerEl = document.getElementById('student-courses');
         if (!containerEl) return;
@@ -950,9 +1087,16 @@
         `;
 
         try {
-            cachedEnrollments = await fetchStudentEnrollments(studentId);
+            const enrollments = await fetchStudentEnrollments(studentId);
+            if (seq !== refreshSequence || activeRefreshStudentId !== studentId) {
+                return;
+            }
+            cachedEnrollments = enrollments;
             renderScreenA(containerEl, cachedEnrollments);
         } catch (err) {
+            if (seq !== refreshSequence || activeRefreshStudentId !== studentId) {
+                return;
+            }
             console.error('[StudentCourses] Failed to fetch enrollments:', err);
             containerEl.innerHTML = `
                 <div class="crm-student-courses-container">
@@ -965,6 +1109,8 @@
     }
 
     function destroy() {
+        refreshSequence += 1;
+        activeRefreshStudentId = null;
         destroyAvailabilityMatrix();
         currentStudentId = null;
         currentStudent = null;
@@ -974,6 +1120,7 @@
     global.CrmStudentCourses = {
         refresh,
         destroy,
+        destroyAvailabilityMatrix,
         renderScreenA,
         renderScreenB,
         renderScreenC,

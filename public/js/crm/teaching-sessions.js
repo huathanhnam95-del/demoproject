@@ -1521,6 +1521,17 @@ window.CrmTeachingSessions = (function () {
             });
         }
 
+        // Clear active timestamp chip when audio stops or ends
+        const audioPlayer = document.getElementById('teaching-session-audio-player');
+        if (audioPlayer) {
+            const clearPlayingChips = () => {
+                const el = document.getElementById('teaching-session-report-html');
+                if (el) el.querySelectorAll('.crm-timestamp-chip.is-playing').forEach(c => c.classList.remove('is-playing'));
+            };
+            audioPlayer.addEventListener('pause', clearPlayingChips);
+            audioPlayer.addEventListener('ended', clearPlayingChips);
+        }
+
         // Two-Stage Escape Key Handling: 1st exits fullscreen, 2nd closes modal
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape') return;

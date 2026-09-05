@@ -5,9 +5,26 @@
  */
 const { db, admin } = require('../../src/utils/firebase');
 const { alignAudioWithAzure } = require('../../functions/src/entrance-test/asr-service');
+const { TEST_36PLUS } = require('../../functions/src/entrance-test/test36plus');
+
+function getExpectedText(questionId, entry = null) {
+    if (entry?.expectedText && String(entry.expectedText).trim()) {
+        return String(entry.expectedText).trim();
+    }
+    const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
+    const cleanId = String(questionId || '').trim();
+    const promptNum = cleanId.replace(/^speaking_q?|^q/, '');
+    const q = speaking?.questions?.find((x) => (
+        x.id === cleanId
+        || x.id === `speaking_${cleanId}`
+        || (promptNum && String(x.promptNumber) === promptNum)
+    ));
+    return q?.expectedText ? String(q.expectedText).trim() : null;
+}
 
 async function backfillAllTests({ limit = 50 } = {}) {
-    console.log('[Batch Backfill] Querying entrance tests needing word timestamp alignment...');
+    const force = process.argv.includes('--force') || process.argv.includes('-f');
+    console.log(`[Batch Backfill] Querying entrance tests needing word timestamp alignment (force=${force})...`);
     const snap = await db.collection('entranceTests').get();
     console.log(`Found ${snap.size} total entrance tests in Firestore.`);
 
@@ -16,8 +33,8 @@ async function backfillAllTests({ limit = 50 } = {}) {
         const d = doc.data();
         const sp = d.speaking || {};
         const hasAudio = Object.values(sp).some((q) => q.audio && q.audio.storagePath);
-        const hasWords = Object.values(sp).some((q) => Array.isArray(q.words) && q.words.length > 0);
-        if (hasAudio && !hasWords) {
+        const hasWordsWithScores = Object.values(sp).some((q) => Array.isArray(q.words) && q.words.length > 0 && q.words.some(w => w.accuracyScore != null));
+        if (hasAudio && (!hasWordsWithScores || force)) {
             testsToProcess.push({ id: doc.id, speaking: sp });
         }
     });
@@ -41,13 +58,15 @@ async function backfillAllTests({ limit = 50 } = {}) {
             const qData = item.speaking[qId];
             if (!qData || !qData.audio || !qData.audio.storagePath) continue;
 
+            const expectedText = getExpectedText(qId, qData);
             const transcript = String(qData.transcript || '').trim();
-            if (!transcript) continue;
+            const alignTarget = expectedText || transcript;
+            if (!alignTarget) continue;
 
             try {
                 const bucket = admin.storage().bucket(qData.audio.bucketName);
                 const [audioBuffer] = await bucket.file(qData.audio.storagePath).download();
-                const alignedWords = await alignAudioWithAzure(audioBuffer, transcript, qData.audio.contentType);
+                const alignedWords = await alignAudioWithAzure(audioBuffer, alignTarget, qData.audio.contentType);
 
                 if (Array.isArray(alignedWords) && alignedWords.length > 0) {
                     updates[`speaking.${qId}.words`] = alignedWords;

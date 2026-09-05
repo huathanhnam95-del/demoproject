@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.124
+- **Phase**: Release V1.8.125
 
 ## Instructions
 
@@ -78,6 +78,15 @@ When a new task is created, immediately classify it:
 4. **Verify** — Confirm the issue is resolved with proof
 5. Mark done
 
+**Complex Task (Auto-Boost Flow - MANDATORY):**
+
+1. **Auto-Announcement**: Immediately announce the trigger:
+   `🚀 [Auto-Boost Activated]: Classified as Complex Task (<Trigger Reason>). Engaging multi-agent reasoning, architectural evaluation, and empirical verification pipeline.`
+2. **Multi-Perspective Trade-Offs**: Propose and evaluate at least 2 viable architectural options with explicit pros/cons before touching code.
+3. **Subagent Orchestration**: Proactively invoke specialist subagents (`invoke_subagent` with `DeepCoder`, `DeepInvestigator`, or `self`) for parallel research, deep verification, or isolated tasks.
+4. **Plan & Gate**: Write `implementation_plan.md` with `RequestFeedback: true` and pause for approval before executing.
+5. **Empirical Verification Gate**: Validate with concrete proof (browser automation or terminal test suites) before claiming completion.
+
 ### GSD Core Rules (Always Enforced)
 
 - 🔒 **No code without a plan** — For Features, state the plan before writing any code. Even a 2-line inline plan counts.
@@ -134,7 +143,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.125`
+- **Next Version**: `V1.8.126`
 
 - **Deployed Session Tagging Protocol (`(D)`)**:
   - Whenever a session/conversation concludes with a production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.

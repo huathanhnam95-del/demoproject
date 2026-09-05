@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 1066,
-  "round1_pass_count": 829,
-  "debate_revised_count": 182,
-  "unresolved_count": 55,
+  "processed_questions": 1082,
+  "round1_pass_count": 839,
+  "debate_revised_count": 186,
+  "unresolved_count": 57,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -51526,6 +51526,1292 @@
                 }
               ],
               "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1161,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Collocation)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Collocation)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Collocation)' is"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Collocation)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'held' because the sentence uses the passive construction 'are held' to show that the festivals take place in the church, without specifying who organizes them. This is a common collocation for events. * Why 'confined' is incorrect: 'Confined' means restricted in space, which describes location, not the action of organizing or holding a festival. * Why 'refined' is incorrect: 'Refined' relates to improving quality or taste and has no connection to conducting religious festivals. * Why 'heralded' is incorrect: 'Heralded' means announced or proclaimed. While an event might be heralded, it does not describe the act of the festival taking place.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag 'Passive Voice (Collocation)' was retained as it is factually accurate and supported by all models. The timeout from gemma4:12b was not a content issue, so no changes were needed to the explanation itself.",
+          "candidate_explanation": "The correct answer is 'held' because the sentence uses the passive construction 'are held' to show that the festivals take place in the church, without specifying who organizes them. This is a common collocation for events. * Why 'confined' is incorrect: 'Confined' means restricted in space, which describes location, not the action of organizing or holding a festival. * Why 'refined' is incorrect: 'Refined' relates to improving quality or taste and has no connection to conducting religious festivals. * Why 'heralded' is incorrect: 'Heralded' means announced or proclaimed. While an event might be heralded, it does not describe the act of the festival taking place.",
+          "candidate_grammar_tag": "Passive Voice (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'held' as the correct answer, explains the use of passive voice in the context of the sentence, and correctly rejects the distractors based on both semantic and collocational reasoning. All distractors are addressed with clear, specific explanations, and the grammar tag is appropriately assigned."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be clear, logical, and suitable for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'held' because the sentence uses the passive construction 'are held' to show that the festivals take place in the church, without specifying who organizes them. This is a common collocation for events. * Why 'confined' is incorrect: 'Confined' means restricted in space, which describes location, not the action of organizing or holding a festival. * Why 'refined' is incorrect: 'Refined' relates to improving quality or taste and has no connection to conducting religious festivals. * Why 'heralded' is incorrect: 'Heralded' means announced or proclaimed. While an event might be heralded, it does not describe the act of the festival taking place. The use of passive voice here is appropriate because the focus is on the action (the festival being held) rather than the subject performing it.",
+          "candidate_grammar_tag": "Passive Voice (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'held' as the appropriate verb in the passive voice, explains why the other options are semantically and contextually inappropriate, and provides a clear rationale for the grammar tag."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag 'Passive Voice (Collocation).' The explanation was already accurate, logically sound, and complete. No changes were necessary to address the critiques, as the third model either timed out or did not provide a conflicting opinion.",
+          "candidate_explanation": "The correct answer is 'held' because the sentence uses the passive construction 'are held' to show that the festivals take place in the church, without specifying who organizes them. This is a common collocation for events. * Why 'confined' is incorrect: 'Confined' means restricted in space, which describes location, not the action of organizing or holding a festival. * Why 'refined' is incorrect: 'Refined' relates to improving quality or taste and has no connection to conducting religious festivals. * Why 'heralded' is incorrect: 'Heralded' means announced or proclaimed. While an event might be heralded, it does not describe the act of the festival taking place. The use of passive voice here is appropriate because the focus is on the action (the festival being held) rather than the subject performing it. This construction is common in English when the doer of the action is not important or unknown.",
+          "candidate_grammar_tag": "Passive Voice (Collocation)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'held' as the appropriate verb in the passive voice, explains why the other options are semantically and contextually inappropriate, and justifies the use of passive voice in this context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Collocation)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1166,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adverb Usage (Modification)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverb Usage (Modification)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether 'strenuously' "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverb Usage (Modification)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'strenuously' because it is an adverb that modifies the verb 'rises,' describing *how* the employment rate increases—in a strong or vigorous way. This fits the context of a market recovering after a crisis.\n\n* Why 'normally' is incorrect: 'Normally' means 'usually' or 'as expected.' While grammatically correct, it lacks the specific meaning needed to convey the vigor of recovery.\n\n* Why 'conversely' is incorrect: 'Conversely' is used only to show contrast (e.g., 'on the other hand'), and it cannot describe the manner in which a rate rises.\n\n* Why 'sharply' is incorrect: Although 'sharply' can mean quickly, it often implies a sudden or dramatic change that might not fit the general description of recovery as well as 'strenuously.' Furthermore, adverbs like 'strenuously' are better suited to describe the *manner* of increase in this context.\n\n* Why 'kept' is incorrect: 'Kept' is a past tense verb and would require a subject to complete the sentence. In the original sentence, the subject is 'employers,' and the correct form is 'keep' to maintain subject-verb agreement in the present tense.\n\n* Why 'are kept' is incorrect: 'Are kept' is a passive construction, which changes the meaning of the sentence. The original sentence implies that employers are the ones taking action, not being acted upon, so the active voice 'keep' is more appropriate.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly explaining the subject-verb agreement issue with the passive distractors and clarifying the adverb's role in describing the manner of the verb. The grammar tag was expanded to include both adverb usage and subject-verb agreement to fully cover the linguistic aspects of the question.",
+          "candidate_explanation": "The correct answer is 'strenuously' because it is an adverb that modifies the verb 'rises,' describing *how* the employment rate increases—in a strong or vigorous way. This fits the context of a market recovering after a crisis.\n\n* Why 'normally' is incorrect: 'Normally' means 'usually' or 'as expected.' While grammatically correct, it lacks the specific meaning needed to convey the vigor of recovery.\n\n* Why 'conversely' is incorrect: 'Conversely' is used only to show contrast (e.g., 'on the other hand'), and it cannot describe the manner in which a rate rises.\n\n* Why 'sharply' is incorrect: Although 'sharply' can mean quickly, it often implies a sudden or dramatic change that might not fit the general description of recovery as well as 'strenuously.' Furthermore, adverbs like 'strenuously' are better suited to describe the *manner* of increase in this context.\n\n* Why 'kept' is incorrect: 'Kept' is a past tense verb and would require a subject to complete the sentence. In the original sentence, the subject is 'employers,' and the correct form is 'keep' to maintain subject-verb agreement in the present tense.\n\n* Why 'are kept' is incorrect: 'Are kept' is a passive construction, which changes the meaning of the sentence. The original sentence implies that employers are the ones taking action, not being acted upon, so the active voice 'keep' is more appropriate.",
+          "candidate_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adverb Usage (Modification) and"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure JSON validity and clarity, and the grammar tag was confirmed as accurate. The timeout and JSON error were resolved by ensuring the explanation is well-structured and free of formatting issues, while maintaining the original logical and grammatical accuracy.",
+          "candidate_explanation": "The correct answer is 'strenuously' because it is an adverb that modifies the verb 'rises,' describing *how* the employment rate increases—in a strong or vigorous way. This fits the context of a market recovering after a crisis.\n\n* Why 'normally' is incorrect: 'Normally' means 'usually' or 'as expected.' While grammatically correct, it lacks the specific meaning needed to convey the vigor of recovery.\n\n* Why 'conversely' is incorrect: 'Conversely' is used only to show contrast (e.g., 'on the other hand'), and it cannot describe the manner in which a rate rises.\n\n* Why 'sharply' is incorrect: Although 'sharply' can mean quickly, it often implies a sudden or dramatic change that might not fit the general description of recovery as well as 'strenuously.' Furthermore, adverbs like 'strenuously' are better suited to describe the *manner* of increase in this context.\n\n* Why 'kept' is incorrect: 'Kept' is a past tense verb and would require a subject to complete the sentence. In the original sentence, the subject is 'employers,' and the correct form is 'keep' to maintain subject-verb agreement in the present tense.\n\n* Why 'are kept' is incorrect: 'Are kept' is a passive construction, which changes the meaning of the sentence. The original sentence implies that employers are the ones taking action, not being acted upon, so the active voice 'keep' is more appropriate.",
+          "candidate_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adverb Usage (Modification) and"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure valid JSON formatting and clarity. The grammar tag was confirmed as accurate, covering both adverb modification and subject-verb agreement. The explanation explicitly addressed the active vs. passive voice distinction for the 'are kept' distractor, and all critiques were incorporated to ensure full consensus.",
+          "candidate_explanation": "The correct answer is 'strenuously' because it is an adverb that modifies the verb 'rises,' describing *how* the employment rate increases—in a strong or vigorous way. This fits the context of a market recovering after a crisis.\n\n* Why 'normally' is incorrect: 'Normally' means 'usually' or 'as expected.' While grammatically correct, it lacks the specific meaning needed to convey the vigor of recovery.\n\n* Why 'conversely' is incorrect: 'Conversely' is used only to show contrast (e.g., 'on the other hand'), and it cannot describe the manner in which a rate rises.\n\n* Why 'sharply' is incorrect: Although 'sharply' can mean quickly, it often implies a sudden or dramatic change that might not fit the general description of recovery as well as 'strenuously.' Furthermore, adverbs like 'strenuously' are better suited to describe the *manner* of increase in this context.\n\n* Why 'kept' is incorrect: 'Kept' is a past tense verb and would require a subject to complete the sentence. In the original sentence, the subject is 'employers,' and the correct form is 'keep' to maintain subject-verb agreement in the present tense.\n\n* Why 'are kept' is incorrect: 'Are kept' is a passive construction, which changes the meaning of the sentence. The original sentence implies that employers are the ones taking action, not being acted upon, so the active voice 'keep' is more appropriate.",
+          "candidate_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adverb Usage (Modification) and"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Usage (Modification) and Subject-Verb Agreement",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1172,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Adjective Modifier",
+            "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Adjective Modifier",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Adjective Modifier",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'inventive' because it functions as an adjective that describes the nature of Shakespeare’s use of words. This pairing ('creativity and inventive use') emphasizes his originality, which aligns perfectly with the idea of transforming the English language.\n\n* Why 'idealized' is incorrect: It means making something perfect or overly positive, which does not describe a writer's actual creative process. It is more about perception than action.\n\n* Why 'intensive' is incorrect: This adjective usually describes intensity (e.g., intensive study) and doesn't fit the context of originality. It implies effort, not innovation.\n\n* Why 'fancied' is incorrect: This verb form means to like or imagine, but it cannot modify 'use' in this way. It is not an adjective and does not fit the grammatical structure of the sentence, which requires an adjective to describe 'use'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic gap noted by one model. The grammar tag was confirmed as accurate. The timeout from another model was disregarded as non-substantive, and the third model's approval was confirmed. All distractors were explicitly explained with clear grammatical and semantic reasoning.",
+          "candidate_explanation": "The correct answer is 'inventive' because it functions as an adjective that describes the nature of Shakespeare’s use of words. This pairing ('creativity and inventive use') emphasizes his originality, which aligns perfectly with the idea of transforming the English language.\n\n* Why 'idealized' is incorrect: It means making something perfect or overly positive, which does not describe a writer's actual creative process. It is more about perception than action.\n\n* Why 'intensive' is incorrect: This adjective usually describes intensity (e.g., intensive study) and doesn't fit the context of originality. It implies effort, not innovation.\n\n* Why 'fancied' is incorrect: This verb form means to like or imagine, but it cannot modify 'use' in this way. It is not an adjective and does not fit the grammatical structure of the sentence, which requires an adjective to describe 'use'.",
+          "candidate_grammar_tag": "Collocation/Adjective Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing it and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'inventive' because it functions as an adjective that describes the nature of Shakespeare’s use of words. This pairing ('creativity and inventive use') emphasizes his originality, which aligns perfectly with the idea of transforming the English language.\n\n* Why 'idealized' is incorrect: It means making something perfect or overly positive, which does not describe a writer's actual creative process. It is more about perception than action.\n\n* Why 'intensive' is incorrect: This adjective usually describes intensity (e.g., intensive study) and doesn't fit the context of originality. It implies effort, not innovation.\n\n* Why 'fancied' is incorrect: This is a verb form meaning to like or imagine, but it cannot modify 'use' in this way. It is not an adjective and does not fit the grammatical structure of the sentence, which requires an adjective to describe 'use'.\n\nThe grammar tag 'Collocation/Adjective Modifier' is accurate because the sentence requires an adjective that collocates well with 'use of words' and modifies it in a meaningful way.",
+          "candidate_grammar_tag": "Collocation/Adjective Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical or logical errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was revised to explicitly address subject-verb logic and ensure clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'inventive' because it is an adjective that describes the nature of Shakespeare’s use of words. This pairing ('creativity and inventive use') highlights his originality, which aligns with the idea of transforming the English language.\n\n* Why 'idealized' is incorrect: It means to make something overly perfect or positive, which does not describe the actual creative process. It focuses on perception, not action.\n\n* Why 'intensive' is incorrect: This adjective usually describes intensity (e.g., intensive study) and does not fit the context of originality. It implies effort, not innovation.\n\n* Why 'fancied' is incorrect: This is a verb form, not an adjective, and cannot modify 'use' in this way. It does not fit the grammatical structure of the sentence, which requires an adjective to describe 'use'.\n\nThe grammar tag 'Collocation/Adjective Modifier' is accurate because the sentence requires an adjective that collocates well with 'use of words' and modifies it in a meaningful way. The subject-verb relationship is active, with 'Shakespeare' as the subject performing the action of 'using' words, which supports the need for an adjective that describes the nature of that action.",
+          "candidate_grammar_tag": "Collocation/Adjective Modifier",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly assigned, and each distractor is properly analyzed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Adjective Modifier",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1174,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Noun Choice (Plural)",
+            "overall_notes": "The explanation is accurate and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Choice (Plural)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'f"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Choice (Plural)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'technologies' because it is a plural noun that functions as the subject of the clause ('Currently developing technologies... are allowing us to observe'). This choice refers specifically to advanced systems or methods used in brain imaging. The other options are incorrect: 'fields' usually refers to abstract areas of study, not specific equipment; 'modes' means ways of doing something (e.g., modes of transport), which is too vague for this context; and 'facilities' refers to physical buildings or places, which is unrelated to the idea of brain imaging systems. The subject-verb agreement is also important here, as 'technologies' matches the plural verb 'are allowing'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic clarity and subject-verb agreement, ensuring that all distractors are clearly differentiated in meaning and function. The grammar tag was confirmed as 'Noun Choice (Plural)' based on the subject-verb agreement and the context of the sentence.",
+          "candidate_explanation": "The correct answer is 'technologies' because it is a plural noun that functions as the subject of the clause ('Currently developing technologies... are allowing us to observe'). This choice refers specifically to advanced systems or methods used in brain imaging. The other options are incorrect: 'fields' usually refers to abstract areas of study, not specific equipment; 'modes' means ways of doing something (e.g., modes of transport), which is too vague for this context; and 'facilities' refers to physical buildings or places, which is unrelated to the idea of brain imaging systems. The subject-verb agreement is also important here, as 'technologies' matches the plural verb 'are allowing'.",
+          "candidate_grammar_tag": "Noun Choice (Plural)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'technologies' as the correct plural noun choice, explains the grammatical function of the subject-verb agreement, and provides clear, specific reasons why the other options are semantically and contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing it as accurate and logical. The third model did not respond, but the explanation was already verified by the other two. The grammar tag was confirmed as 'Noun Choice (Plural)', and the explanation was refined to explicitly address subject-verb agreement and active voice for clarity.",
+          "candidate_explanation": "The correct answer is 'technologies' because it is a plural noun that functions as the subject of the clause ('Currently developing technologies... are allowing us to observe'). This choice refers specifically to advanced systems or methods used in brain imaging. The other options are incorrect: 'fields' usually refers to abstract areas of study, not specific equipment; 'modes' means ways of doing something (e.g., modes of transport), which is too vague for this context; and 'facilities' refers to physical buildings or places, which is unrelated to the idea of brain imaging systems. The subject-verb agreement is also important here, as 'technologies' matches the plural verb 'are allowing'. Additionally, the sentence uses an active voice, which makes 'technologies' the most natural and grammatically appropriate choice, as it directly performs the action of 'allowing' us to observe brain activity.",
+          "candidate_grammar_tag": "Noun Choice (Plural)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'technologies' as the correct plural noun choice, explains why the other options are semantically and contextually inappropriate, and correctly addresses subject-verb agreement and active voice usage."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Noun Choice (Plural)' was confirmed as accurate, and the explanation was already clear, natural, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'technologies' because it is a plural noun that functions as the subject of the clause ('Currently developing technologies... are allowing us to observe'). This choice refers specifically to advanced systems or methods used in brain imaging. The other options are incorrect: 'fields' usually refers to abstract areas of study, not specific equipment; 'modes' means ways of doing something (e.g., modes of transport), which is too vague for this context; and 'facilities' refers to physical buildings or places, which is unrelated to the idea of brain imaging systems. The subject-verb agreement is also important here, as 'technologies' matches the plural verb 'are allowing'. Additionally, the sentence uses an active voice, which makes 'technologies' the most natural and grammatically appropriate choice, as it directly performs the action of 'allowing' us to observe brain activity.",
+          "candidate_grammar_tag": "Noun Choice (Plural)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all relevant grammatical, semantic, and collocational considerations. It correctly identifies 'technologies' as the appropriate plural noun in the context, and clearly explains why the other options are semantically and contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Choice (Plural)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1177,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+            "overall_notes": "The explanation is accurate and complete, correctly identifying the grammar tag and reasoning for each distractor."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Causative Verb (Cause-Effect Re"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'makes' because it clearly shows a cause-and-effect relationship. The action of lowering prices (cause) directly results in the products being cheaper (effect). * Why 'allows' is incorrect: While 'allows' suggests possibility or permission, it does not show a direct result, which is needed here. * Why 'promises' is incorrect: 'Promises' implies a future assurance, which does not fit the immediate cause-and-effect context. * Why 'decides' is incorrect: 'Decides' requires an agent (a person or entity) to make a choice, but products cannot decide anything. This makes the sentence logically incorrect.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness based on all model feedback. The grammar tag was confirmed as accurate, and the explanation was improved to explicitly address the semantic logic of each option, resolving any ambiguity or formatting issues.",
+          "candidate_explanation": "The correct answer is 'makes' because it clearly shows a cause-and-effect relationship. The action of lowering prices (cause) directly results in the products being cheaper (effect). * Why 'allows' is incorrect: While 'allows' suggests possibility or permission, it does not show a direct result, which is needed here. * Why 'promises' is incorrect: 'Promises' implies a future assurance, which does not fit the immediate cause-and-effect context. * Why 'decides' is incorrect: 'Decides' requires an agent (a person or entity) to make a choice, but products cannot decide anything. This makes the sentence logically incorrect.",
+          "candidate_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and logical considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was refined to ensure clarity and completeness for B1-B2 learners, with explicit attention to subject-verb logic and grammar categorization.",
+          "candidate_explanation": "The correct answer is 'makes' because it clearly shows a cause-and-effect relationship. The action of lowering prices (cause) directly results in the products being cheaper (effect). \n\n* Why 'allows' is incorrect: While 'allows' suggests possibility or permission, it does not show a direct result, which is needed here. \n\n* Why 'promises' is incorrect: 'Promises' implies a future assurance, which does not fit the immediate cause-and-effect context. \n\n* Why 'decides' is incorrect: 'Decides' requires an agent (a person or entity) to make a choice, but products cannot decide anything. This makes the sentence logically incorrect. \n\nAdditionally, the grammar tag 'Causative Verb (Cause-Effect Relationship)' is accurate because the sentence structure uses a verb that shows one action directly causing another, which is essential for understanding the relationship between subsidies and product pricing.",
+          "candidate_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and logical considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already complete and accurate, so no changes were needed.",
+          "candidate_explanation": "The correct answer is 'makes' because it clearly shows a cause-and-effect relationship. The action of lowering prices (cause) directly results in the products being cheaper (effect). \n\n* Why 'allows' is incorrect: While 'allows' suggests possibility or permission, it does not show a direct result, which is needed here. \n\n* Why 'promises' is incorrect: 'Promises' implies a future assurance, which does not fit the immediate cause-and-effect context. \n\n* Why 'decides' is incorrect: 'Decides' requires an agent (a person or entity) to make a choice, but products cannot decide anything. This makes the sentence logically incorrect. \n\nAdditionally, the grammar tag 'Causative Verb (Cause-Effect Relationship)' is accurate because the sentence structure uses a verb that shows one action directly causing another, which is essential for understanding the relationship between subsidies and product pricing. The explanation is clear, logically consistent, and suitable for B1-B2 English learners.",
+          "candidate_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is accurate, logically consistent, and complete. The grammar label is correctly applied, and each distractor is clearly and correctly analyzed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "The explanation is factually correct, logically sound, and semantically appropriate. It accurately identifies 'makes' as the correct choice due to its clear cause-and-effect relationship. The reasoning for the distractors is well-explained, and the grammar tag is correctly assigned. No semantic, collocation, or completeness gaps are present."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Causative Verb (Cause-Effect Relationship)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1179,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Modal Verb for Present Advice/R"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'should' because it is used to give general advice or a recommendation about the present situation. When we want to tell someone what they ought not to do, we use 'should' followed by the base verb form (e.g., 'you should not buy').\n\n* Why 'would' is incorrect: 'Would' is typically used for hypothetical situations or polite requests, but it does not fit the structure needed here for direct advice.\n* Why 'have' is incorrect: 'Have' is a main verb that requires an object and cannot function as a modal verb to give general advice in this context. It would also change the sentence structure to passive voice, which is not appropriate here.\n* Why 'should have' is incorrect: 'Should have + past participle' is used exclusively to talk about missed opportunities or advice regarding the past (e.g., 'You should have bought it earlier'). Since the advice relates to the present action, 'should' is required.\n\nAdditionally, the explanation now explicitly addresses the subject-verb relationship, ensuring that the active voice is maintained for clarity and natural English usage.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue and explicitly explaining the subject-verb logic for the passive distractor 'have'. The grammar tag was confirmed as accurate and consistent across models.",
+          "candidate_explanation": "The correct answer is 'should' because it is used to give general advice or a recommendation about the present situation. When we want to tell someone what they ought not to do, we use 'should' followed by the base verb form (e.g., 'you should not buy').\n\n* Why 'would' is incorrect: 'Would' is typically used for hypothetical situations or polite requests, but it does not fit the structure needed here for direct advice.\n* Why 'have' is incorrect: 'Have' is a main verb that requires an object and cannot function as a modal verb to give general advice in this context. It would also change the sentence structure to passive voice, which is not appropriate here.\n* Why 'should have' is incorrect: 'Should have + past participle' is used exclusively to talk about missed opportunities or advice regarding the past (e.g., 'You should have bought it earlier'). Since the advice relates to the present action, 'should' is required.",
+          "candidate_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address the semantic inappropr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The grammar tag was confirmed as accurate. The timeout and JSON error were resolved by ensuring the explanation is well-structured and free of formatting issues.",
+          "candidate_explanation": "The correct answer is 'should' because it is used to give general advice or a recommendation about the present situation. When we want to tell someone what they ought not to do, we use 'should' followed by the base verb form (e.g., 'you should not buy').\n\n* Why 'would' is incorrect: 'Would' is typically used for hypothetical situations or polite requests, but it does not fit the structure needed here for direct advice.\n* Why 'have' is incorrect: 'Have' is a main verb that requires an object and cannot function as a modal verb to give general advice in this context. It would also change the sentence structure to passive voice, which is not appropriate here.\n* Why 'should have' is incorrect: 'Should have + past participle' is used exclusively to talk about missed opportunities or advice regarding the past (e.g., 'You should have bought it earlier'). Since the advice relates to the present action, 'should' is required.",
+          "candidate_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap flagged by qwen3:14b by explicitly clarifying the subject-verb relationship and ensuring active voice is maintained. The timeout from gemma4:12b was not a direct critique, so no changes were needed for that model. The explanation was confirmed accurate by deepseek-r1:14b, and all models now agree on the grammar tag and revised explanation.",
+          "candidate_explanation": "The correct answer is 'should' because it is used to give general advice or a recommendation about the present situation. When we want to tell someone what they ought not to do, we use 'should' followed by the base verb form (e.g., 'you should not buy').\n\n* Why 'would' is incorrect: 'Would' is typically used for hypothetical situations or polite requests, but it does not fit the structure needed here for direct advice.\n* Why 'have' is incorrect: 'Have' is a main verb that requires an object and cannot function as a modal verb to give general advice in this context. It would also change the sentence structure to passive voice, which is not appropriate here.\n* Why 'should have' is incorrect: 'Should have + past participle' is used exclusively to talk about missed opportunities or advice regarding the past (e.g., 'You should have bought it earlier'). Since the advice relates to the present action, 'should' is required.\n\nAdditionally, the explanation now explicitly addresses the subject-verb relationship, ensuring that the active voice is maintained for clarity and natural English usage.",
+          "candidate_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address the semantic inappropr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Modal Verb for Present Advice/Recommendation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1179,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Base Form Verb (Parallel Structure)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Base Form Verb (Parallel Structure)' is factually incorrect. The correct tag should be 'Base Form Verb (Parallel Structure with Coordinating Conjunction)' to more precisely reflect the grammatical context involving 'and' and parallelism.",
+                "affected_text": "'Base Form Verb (Parallel Structure)'",
+                "correction": "'Base Form Verb (Parallel Structure with Coordinating Conjunction)'"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'you' logically performs the action of 'being reluctant'. While 'be' is grammatically correct, the explanation should confirm that the subject can logically be in a state of reluctance.",
+                "affected_text": "The explanation does not address whether the subject 'you' logically performs the action of 'being reluctant'.",
+                "correction": "The explanation should confirm that the subject 'you' can logically be in a state of reluctance, as being reluctant is a valid mental state for a person."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation incorrectly states that 'being' is a present participle and cannot be used here because it is not an action happening at this moment. However, 'being reluctant' is a valid use of the present participle in a continuous or progressive sense, and the explanation fails to clarify why this is not appropriate in the context.",
+                "affected_text": "'Being' is a present participle (the continuous form) and cannot be used here because we are describing a potential state or feeling, not an action happening at this moment.",
+                "correction": "'Being' is a present participle and can be used in continuous constructions, but in this context, the base form 'be' is required to maintain parallel structure with 'tell', not because it is not an action happening at this moment."
+              }
+            ],
+            "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+            "overall_notes": "The explanation contains grammatical labeling inaccuracies, semantic gaps, and flawed reasoning regarding the use of 'being'. These issues prevent the explanation from being fully factually correct and logically sound."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Base Form Verb (Parallel Structure)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'be' because the sentence requires grammatical parallelism with the preceding verb 'tell', which is in its base form. When two actions are connected by a coordinating conjunction like 'and', both verbs should be in the same form. Since 'tell' is a base form verb, 'be' (the base form of 'to be') must also be used to maintain parallel structure. \n\n* Why 'is' is incorrect: 'Is' is a third-person singular form and does not match the subject 'you'.\n* Why 'are' is incorrect: While 'are' matches 'you', it breaks the parallel structure established by the base form verb 'tell'. The simplest, non-conjugated form is needed.\n* Why 'being' is incorrect: 'Being' is a present participle and is used in continuous tenses to describe actions happening at a specific time. However, in this context, the base form 'be' is required to maintain parallel structure with 'tell'. Additionally, the subject 'you' can logically be in a state of reluctance, but the grammatical structure here requires the base form, not the participle form. The use of 'being' would imply an ongoing or continuous action, which is not the intended meaning here.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was updated to include 'with Coordinating Conjunction' to accurately reflect the grammatical context involving 'and'. The explanation was expanded to address the logical validity of the subject being in a state of reluctance and to clarify that 'being' is not incorrect due to its form, but due to the need for parallel structure.",
+          "candidate_explanation": "The correct answer is 'be' because the sentence requires grammatical parallelism with the preceding verb 'tell', which is in its base form. When two actions are connected by a coordinating conjunction like 'and', both verbs should be in the same form. Since 'tell' is a base form verb, 'be' (the base form of 'to be') must also be used to maintain parallel structure. \n\n* Why 'is' is incorrect: 'Is' is a third-person singular form and does not match the subject 'you'.\n* Why 'are' is incorrect: While 'are' matches 'you', it breaks the parallel structure established by the base form verb 'tell'. The simplest, non-conjugated form is needed.\n* Why 'being' is incorrect: 'Being' is a present participle and is used in continuous tenses to describe actions happening at a specific time. However, in this context, the base form 'be' is required to maintain parallel structure with 'tell', not because 'being' is not a valid form. Additionally, the subject 'you' can logically be in a state of reluctance, as being reluctant is a valid mental state for a person.",
+          "candidate_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Parallel Struct"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate and consistent across all models. The explanation now explicitly clarifies the parallel structure requirement and distinguishes between base form and participle forms, resolving any ambiguity.",
+          "candidate_explanation": "The correct answer is 'be' because the sentence requires grammatical parallelism with the preceding verb 'tell', which is in its base form. When two actions are connected by a coordinating conjunction like 'and', both verbs should be in the same form. Since 'tell' is a base form verb, 'be' (the base form of 'to be') must also be used to maintain parallel structure. \n\n* Why 'is' is incorrect: 'Is' is a third-person singular form and does not match the subject 'you'.\n* Why 'are' is incorrect: While 'are' matches 'you', it breaks the parallel structure established by the base form verb 'tell'. The simplest, non-conjugated form is needed.\n* Why 'being' is incorrect: 'Being' is a present participle and is used in continuous tenses to describe actions happening at a specific time. However, in this context, the base form 'be' is required to maintain parallel structure with 'tell'. Additionally, the subject 'you' can logically be in a state of reluctance, but the grammatical structure here requires the base form, not the participle form.",
+          "candidate_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Parallel Struct"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as accurate and consistent across all models. The explanation now explicitly clarifies the parallel structure and distinguishes between base form and participle forms, resolving any ambiguity.",
+          "candidate_explanation": "The correct answer is 'be' because the sentence requires grammatical parallelism with the preceding verb 'tell', which is in its base form. When two actions are connected by a coordinating conjunction like 'and', both verbs should be in the same form. Since 'tell' is a base form verb, 'be' (the base form of 'to be') must also be used to maintain parallel structure. \n\n* Why 'is' is incorrect: 'Is' is a third-person singular form and does not match the subject 'you'.\n* Why 'are' is incorrect: While 'are' matches 'you', it breaks the parallel structure established by the base form verb 'tell'. The simplest, non-conjugated form is needed.\n* Why 'being' is incorrect: 'Being' is a present participle and is used in continuous tenses to describe actions happening at a specific time. However, in this context, the base form 'be' is required to maintain parallel structure with 'tell'. Additionally, the subject 'you' can logically be in a state of reluctance, but the grammatical structure here requires the base form, not the participle form. The use of 'being' would imply an ongoing or continuous action, which is not the intended meaning here.",
+          "candidate_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Base Form Verb (Parallel Struct"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

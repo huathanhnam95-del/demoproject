@@ -48,6 +48,8 @@
     let guidedFontFamily = 'be-vietnam-pro';
     let guidedFontScale = 1.0;
     let guidedPack = null;
+    let currentGuidedPackPromise = null;
+    let preloadedEntryId = null;
     let guidedSection = 'understand';
     let guidedHintDepth = 2;
     let guidedSelectedVariantId = null;
@@ -817,6 +819,8 @@
         lastArchiveSavePromise = null;
         essayElapsedSeconds = 0;
         guidedPack = null;
+        currentGuidedPackPromise = null;
+        preloadedEntryId = null;
         guidedSection = 'understand';
         guidedHintDepth = 2;
         guidedSelectedVariantId = null;
@@ -1432,11 +1436,20 @@
 
     function updatePracticeChoiceUI() {
         const guided = practiceKind === 'guided';
-        if (el.guidedPreferences) el.guidedPreferences.hidden = !guided;
+        if (el.guidedPreferences) {
+            el.guidedPreferences.classList.toggle('is-open', guided);
+            el.guidedPreferences.setAttribute('aria-hidden', guided ? 'false' : 'true');
+            if (guided) {
+                el.guidedPreferences.removeAttribute('hidden');
+            }
+        }
         if (el.practiceChoice) el.practiceChoice.dataset.mode = practiceKind;
         const selected = document.querySelector(`input[name="essay-practice-kind"][value="${practiceKind}"]`);
         if (selected) selected.checked = true;
-        if (guided) syncPrestartLayoutCards();
+        if (guided) {
+            syncPrestartLayoutCards();
+            loadGuidedPack({ silent: true });
+        }
     }
 
     function getGuidedLevelData() {
@@ -2069,29 +2082,59 @@
         if (el.guidedContent) el.guidedContent.innerHTML = '';
     }
 
-    async function loadGuidedPack({ force = false } = {}) {
-        if (practiceKind !== 'guided' || !currentEntry || !window.WriteEssaySupport?.loadPack) return null;
-        const requestId = ++guidedPackRequestId;
-        guidedPack = null;
-        if (el.guidedUnavailable) { el.guidedUnavailable.hidden = true; el.guidedUnavailable.innerHTML = ''; }
-        renderGuidedSupport();
-        try {
-            const pack = await window.WriteEssaySupport.loadPack(currentEntry.id, { force });
-            if (requestId !== guidedPackRequestId || !currentEntry) return null;
-            guidedPack = pack;
-            guidedSelectedVariantId = getGuidedLevelData()?.plans?.[0]?.variantId || null;
-            const levelData = getGuidedLevelData();
-            // Chips in the Language kit are keyed by term, so seed the selection
-            // the same way or the counter reads 2/6 with nothing highlighted.
-            guidedSelectedTargetIds = (levelData?.coreTargets || []).slice(0, 2).map(guidedTargetKey);
-            renderGuidedSupport();
-            return pack;
-        } catch (error) {
-            if (error?.name === 'AbortError') return null;
-            if (requestId !== guidedPackRequestId) return null;
-            renderGuidedUnavailable(error?.message);
-            return null;
+    async function loadGuidedPack({ force = false, silent = false } = {}) {
+        if (!currentEntry || !window.WriteEssaySupport?.loadPack) return null;
+        if (practiceKind !== 'guided') return null;
+        if (guidedPack && preloadedEntryId === currentEntry.id && !force) {
+            if (!silent && el.practiceArea?.style.display === 'block') {
+                renderGuidedSupport();
+            }
+            return guidedPack;
         }
+        if (currentGuidedPackPromise && preloadedEntryId === currentEntry.id && !force) {
+            if (!silent && !guidedPack && el.practiceArea?.style.display === 'block') {
+                renderGuidedSupport();
+            }
+            return currentGuidedPackPromise;
+        }
+        const requestId = ++guidedPackRequestId;
+        preloadedEntryId = currentEntry.id;
+        if (!silent) {
+            guidedPack = null;
+            if (el.guidedUnavailable) { el.guidedUnavailable.hidden = true; el.guidedUnavailable.innerHTML = ''; }
+            if (el.practiceArea?.style.display === 'block') {
+                renderGuidedSupport();
+            }
+        }
+        const promise = (async () => {
+            try {
+                const pack = await window.WriteEssaySupport.loadPack(currentEntry.id, { force });
+                if (requestId !== guidedPackRequestId || !currentEntry || currentEntry.id !== preloadedEntryId) return null;
+                guidedPack = pack;
+                guidedSelectedVariantId = getGuidedLevelData()?.plans?.[0]?.variantId || null;
+                const levelData = getGuidedLevelData();
+                // Chips in the Language kit are keyed by term, so seed the selection
+                // the same way or the counter reads 2/6 with nothing highlighted.
+                guidedSelectedTargetIds = (levelData?.coreTargets || []).slice(0, 2).map(guidedTargetKey);
+                if (el.practiceArea?.style.display === 'block') {
+                    renderGuidedSupport();
+                }
+                return pack;
+            } catch (error) {
+                if (error?.name === 'AbortError') return null;
+                if (requestId !== guidedPackRequestId) return null;
+                if (!silent && el.practiceArea?.style.display === 'block') {
+                    renderGuidedUnavailable(error?.message);
+                }
+                return null;
+            } finally {
+                if (currentGuidedPackPromise === promise) {
+                    currentGuidedPackPromise = null;
+                }
+            }
+        })();
+        currentGuidedPackPromise = promise;
+        return promise;
     }
 
     function renderGuidedNav() {
@@ -2282,11 +2325,7 @@
         renderGuidedRecycle(levelData);
 
         if (shouldRenderMindMapSVG()) {
-            requestAnimationFrame(() => {
-                renderGuidedMindMapSVGLines();
-                setTimeout(renderGuidedMindMapSVGLines, 60);
-                setTimeout(renderGuidedMindMapSVGLines, 220);
-            });
+            requestAnimationFrame(renderGuidedMindMapSVGLines);
         }
     }
 
@@ -6263,6 +6302,10 @@
         if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
             window.PTEAttemptArchive.updateHistoryUI('essay', currentEntry?.id);
         }
+
+        if (practiceKind === 'guided' && currentEntry) {
+            loadGuidedPack({ silent: true });
+        }
     }
 
     function getCurrentRouteQuestionId() {
@@ -6291,12 +6334,20 @@
         if (!el.promptPreview) return;
         const prompt = String(currentEntry?.prompt || '').trim();
         if (!prompt) {
-            el.promptPreview.innerHTML = '<p>Prompt will appear here...</p>';
+            el.promptPreview.classList.add('is-loading');
+            el.promptPreview.innerHTML = `
+                <div class="essay-prompt-skeleton" aria-hidden="true">
+                    <span class="essay-skeleton-line" style="width: 92%;"></span>
+                    <span class="essay-skeleton-line" style="width: 100%;"></span>
+                    <span class="essay-skeleton-line" style="width: 78%;"></span>
+                </div>
+                <p class="sr-only">Loading essay prompt…</p>`;
             el.promptPreview.style.display = 'block';
             if (el.promptMetaBadges) el.promptMetaBadges.innerHTML = '';
             if (el.writeMetaBadges) el.writeMetaBadges.innerHTML = '';
             return;
         }
+        el.promptPreview.classList.remove('is-loading');
         el.promptPreview.innerHTML = `<div class="essay-prompt-text">${escapeHtml(prompt)}</div>`;
         el.promptPreview.style.display = 'block';
 
@@ -6319,16 +6370,11 @@
             guidedLanguage = el.guidedLanguage?.value === 'vi' ? 'vi' : 'en';
             persistGuidedPreferences();
         }
-        el.practiceArea.style.display = 'block';
-        el.stepResults.style.display = 'none';
-        if (el.promptCard) el.promptCard.style.display = 'none';
-        const headerCard = document.querySelector('#mode-essay .essay-header-card');
-        if (headerCard) headerCard.style.display = 'none';
-
         const mp = getModePanelEl();
         if (mp) mp.classList.add('essay-writing-active');
         if (practiceKind === 'guided') {
-            // Guided Walkthrough Phase: Editor is completely removed/hidden during steps 1-6
+            _applyFullscreen(true);
+            _persistFullscreenPref(true);
             if (mp) {
                 mp.classList.add('essay-guided-mode');
                 mp.classList.remove('essay-writing-phase');
@@ -6338,8 +6384,6 @@
             if (el.guidedDraftContainer) el.guidedDraftContainer.style.display = 'none';
             if (el.fullscreenBtn) el.fullscreenBtn.style.display = '';
             if (el.railFullscreenBtn) el.railFullscreenBtn.style.display = '';
-            _applyFullscreen(true);
-            _persistFullscreenPref(true);
         } else {
             // Exam Practice: Standard exam editor
             if (mp) {
@@ -6352,6 +6396,12 @@
             if (el.fullscreenBtn) el.fullscreenBtn.style.display = 'none';
             if (el.railFullscreenBtn) el.railFullscreenBtn.style.display = 'none';
         }
+
+        el.practiceArea.style.display = 'block';
+        el.stepResults.style.display = 'none';
+        if (el.promptCard) el.promptCard.style.display = 'none';
+        const headerCard = document.querySelector('#mode-essay .essay-header-card');
+        if (headerCard) headerCard.style.display = 'none';
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';
@@ -6387,8 +6437,12 @@
             if (el.guidedNav) el.guidedNav.hidden = false;
             if (el.requestGuidedBtn) el.requestGuidedBtn.hidden = true;
             guidedSection = 'understand';
-            renderGuidedSupport();
-            await loadGuidedPack();
+            if (guidedPack && preloadedEntryId === currentEntry?.id) {
+                renderGuidedSupport();
+            } else {
+                renderGuidedSupport();
+                await loadGuidedPack();
+            }
         } else {
             if (el.guidedRail) el.guidedRail.hidden = false;
             if (el.guidedNav) el.guidedNav.hidden = true;
@@ -7680,6 +7734,7 @@
         stopTimer();
         closePicker();
         navHistory = [];
+        _applyFullscreen(false);
         reset();
     }
 

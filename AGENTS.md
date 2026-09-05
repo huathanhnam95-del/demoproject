@@ -81,11 +81,11 @@ The project uses three explicit Codex workflow routes. Existing project-specific
 
 ### Route selection
 
-- **Light route**: default when the user does not select a route. Work directly, load only relevant context, and do not spawn subagents.
+- **Auto-Boost Mode (AUTOMATIC OVERRIDE FOR COMPLEX TASKS)**: Whenever a task is classified as **Complex** per [.agent/rules/auto_boost_protocol.md](.agent/rules/auto_boost_protocol.md) (touches $\ge 3$ files, cross-layer architecture, concurrency, core engine/scoring, audio/ASR pipelines, or persistent bugs), the agent **MUST automatically activate Auto-Boost Mode**, overriding the Light route default. The agent is required to announce the Auto-Boost banner, perform multi-perspective trade-off analysis, and orchestrate specialist subagents (`invoke_subagent`).
+- **Light route**: default for simple, non-complex tasks when the user does not select a route. Work directly, load only relevant context, and do not spawn subagents.
 - **Medium route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/medium_route.md`, and perform the work directly without subagents.
 - **Heavy route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/heavy_route.md`, and coordinate the installed specialist subagents.
-- **Auto-Boost Mode**: Triggered automatically when a task is classified as **Complex** per [.agent/rules/auto_boost_protocol.md](.agent/rules/auto_boost_protocol.md). Enables multi-perspective architectural analysis, specialist subagent orchestration, and isolated verification without manual route or `/boost` invocation.
-- Keep the selected route for the session until the user switches it or ends the session. Do not infer Medium or Heavy automatically.
+- Outside of automatic Auto-Boost for Complex tasks, keep the selected route for the session until the user switches it or ends the session. Do not infer Medium or Heavy automatically.
 
 ### Project documentation framework
 

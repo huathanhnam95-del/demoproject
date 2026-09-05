@@ -334,15 +334,42 @@
   font-size: .78rem;
 }
 #mode-essay .essay-guided-preferences {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transition: grid-template-rows 280ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 220ms ease,
+              visibility 280ms;
+  width: 100%;
+}
+#mode-essay .essay-guided-preferences.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  overflow: visible;
+}
+#mode-essay .essay-guided-preferences-inner {
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px 18px;
   width: 100%;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0px dashed transparent;
+  transition: margin-top 280ms cubic-bezier(0.16, 1, 0.3, 1),
+              padding-top 280ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 280ms ease;
+}
+#mode-essay .essay-guided-preferences.is-open .essay-guided-preferences-inner {
+  margin-top: 10px;
   padding-top: 10px;
   border-top: 1px dashed var(--essay-border-soft);
 }
-#mode-essay .essay-guided-preferences[hidden] { display: none; }
 #mode-essay .essay-guided-pref-group {
   display: inline-flex;
   align-items: center;
@@ -3443,6 +3470,38 @@
   text-rendering: optimizeLegibility;
 }
 
+#mode-essay .essay-prompt-display.essay-prompt-preview.is-loading {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#mode-essay .essay-prompt-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+#mode-essay .essay-skeleton-line {
+  display: block;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(154, 87, 34, 0.08) 25%, rgba(154, 87, 34, 0.18) 50%, rgba(154, 87, 34, 0.08) 75%);
+  background-size: 200% 100%;
+  animation: essaySkeletonShimmer 1.4s infinite ease-in-out;
+}
+
+@keyframes essaySkeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* ══ FREEZE ZONE 2 — prompt, timer and live word count while typing ═══════ */
 #mode-essay .essay-write-sticky {
   background: var(--essay-paper);
@@ -3845,7 +3904,10 @@
 }
 @media (prefers-reduced-motion: reduce) {
   #mode-essay .essay-guided-help,
-  #mode-essay .essay-guided-group-chevron { transition: none; }
+  #mode-essay .essay-guided-group-chevron,
+  #mode-essay .essay-guided-preferences,
+  #mode-essay .essay-guided-preferences-inner { transition: none !important; }
+  #mode-essay .essay-skeleton-line { animation: none !important; background: rgba(154, 87, 34, 0.1) !important; }
 }
 
 /* Below the two-column breakpoint nothing is frozen: the rail and the editor

@@ -7,6 +7,22 @@ const path = require('path');
 const fs = require('fs');
 const { db, admin } = require('../../src/utils/firebase');
 const { alignAudioWithAzure } = require('../../functions/src/entrance-test/asr-service');
+const { TEST_36PLUS } = require('../../functions/src/entrance-test/test36plus');
+
+function getExpectedText(questionId, entry = null) {
+    if (entry?.expectedText && String(entry.expectedText).trim()) {
+        return String(entry.expectedText).trim();
+    }
+    const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
+    const cleanId = String(questionId || '').trim();
+    const promptNum = cleanId.replace(/^speaking_q?|^q/, '');
+    const q = speaking?.questions?.find((x) => (
+        x.id === cleanId
+        || x.id === `speaking_${cleanId}`
+        || (promptNum && String(x.promptNumber) === promptNum)
+    ));
+    return q?.expectedText ? String(q.expectedText).trim() : null;
+}
 
 const TARGET_TEST_ID = process.argv[2] || '5726ca5178ece2a551cbd2709366e02dcfd73cad19bd3b81d3db4c44ef685740';
 
@@ -29,21 +45,23 @@ async function backfillTest(testId) {
             continue;
         }
 
+        const expectedText = getExpectedText(qId, qData);
         const transcript = String(qData.transcript || '').trim();
-        if (!transcript) {
-            console.log(`[Backfill] Skipping ${qId}: No transcript.`);
+        const alignTarget = expectedText || transcript;
+        if (!alignTarget) {
+            console.log(`[Backfill] Skipping ${qId}: No transcript or expected text.`);
             continue;
         }
 
         console.log(`\n=== Processing ${qId} ===`);
-        console.log(`Transcript: "${transcript.slice(0, 80)}..."`);
+        console.log(`Target: "${alignTarget.slice(0, 80)}..."`);
         console.log(`Previous words count: ${Array.isArray(qData.words) ? qData.words.length : 0}`);
 
         const bucket = admin.storage().bucket(qData.audio.bucketName);
         const [audioBuffer] = await bucket.file(qData.audio.storagePath).download();
         console.log(`Downloaded ${audioBuffer.length} bytes from storage.`);
 
-        const alignedWords = await alignAudioWithAzure(audioBuffer, transcript, qData.audio.contentType);
+        const alignedWords = await alignAudioWithAzure(audioBuffer, alignTarget, qData.audio.contentType);
         if (!alignedWords || alignedWords.length === 0) {
             console.warn(`[Backfill] Warning: No aligned words returned for ${qId}.`);
             continue;

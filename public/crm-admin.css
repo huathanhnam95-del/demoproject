@@ -11951,13 +11951,13 @@ mark.crm-highlight:hover {
   color: var(--crm-text-main);
   line-height: 1.55;
   margin: 0;
+  overflow: hidden;
+  max-height: 1000px;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .crm-knowledge-rule.is-clamped {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-height: 4.65em;
 }
 
 .crm-btn-clamp-toggle {

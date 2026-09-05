@@ -1457,12 +1457,40 @@
     return getModeMeta(mode)?.label || mode;
   }
 
+  let skillSwitchToken = 0;
+  function animatePracticeSkillSwitch() {
+    const grid = document.querySelector('#panel-tutorials .tutorial-grid');
+    if (!grid || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      renderPracticeLauncher();
+      return;
+    }
+    const token = ++skillSwitchToken;
+    grid.classList.remove('skill-grid-fading-in');
+    grid.classList.add('skill-grid-fading-out');
+    setTimeout(() => {
+      if (token !== skillSwitchToken) return;
+      renderPracticeLauncher();
+      grid.classList.remove('skill-grid-fading-out');
+      grid.classList.add('skill-grid-fading-in');
+      setTimeout(() => {
+        if (token !== skillSwitchToken) return;
+        grid.classList.remove('skill-grid-fading-in');
+      }, 200);
+    }, 100);
+  }
+
   function setSelectedPracticeSkill(skill, { render = true } = {}) {
     if (!PRACTICE_SKILL_ORDER.includes(skill)) return false;
     const changed = selectedPracticeSkill !== skill;
     selectedPracticeSkill = skill;
 
-    if (render) renderPracticeLauncher();
+    if (render) {
+      if (changed) {
+        animatePracticeSkillSwitch();
+      } else {
+        renderPracticeLauncher();
+      }
+    }
     return changed;
   }
 
@@ -1892,20 +1920,42 @@
     if (leavingMode === 'rop') window.ROPMode?.onExit?.();
 
     modeTransitionToken += 1;
+    const exitToken = modeTransitionToken;
+    const isCurrentTransition = () => exitToken === modeTransitionToken;
     if (leavingMode && window.SpeakingPracticeController?.unmount) {
       window.SpeakingPracticeController.unmount(leavingMode);
     }
 
-    // Hide all mode panels
-    document.querySelectorAll('.mode-panel').forEach(panel => {
-      panel.classList.remove('active');
-      panel.style.display = 'none';
-    });
-    
-    // Show the dashboard again
+    // Stage transition out from current mode to dashboard
+    const activePanel = document.querySelector('.mode-panel.active') || (leavingMode ? document.getElementById('mode-' + leavingMode) : null);
     const dashboard = document.querySelector('.dashboard-modern-container');
-    if (dashboard) {
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
+    if (activePanel && dashboard && !prefersReducedMotion) {
+      activePanel.classList.add('stage-fade-blur-out');
+      await new Promise(resolve => setTimeout(resolve, 160));
+      if (!isCurrentTransition()) {
+        activePanel.classList.remove('stage-fade-blur-out');
+        return false;
+      }
+      activePanel.classList.remove('stage-fade-blur-out');
+      document.querySelectorAll('.mode-panel').forEach(panel => {
+        panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+        panel.style.display = 'none';
+      });
       dashboard.style.display = 'block';
+      dashboard.classList.add('stage-fade-blur-in');
+      setTimeout(() => {
+        dashboard.classList.remove('stage-fade-blur-in');
+      }, 260);
+    } else {
+      document.querySelectorAll('.mode-panel').forEach(panel => {
+        panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+        panel.style.display = 'none';
+      });
+      if (dashboard) {
+        dashboard.style.display = 'block';
+      }
     }
     
     // Hide indicator and back button
@@ -2114,26 +2164,56 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       tabBtn.classList.add('active');
 
-      // 2. Hide all mode panels. Speaking modes stay hidden until their async
-      // initialization and shared controller have both completed so a legacy
-      // panel cannot flash before the new controller is mounted.
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const outgoingStage = (leavingMode && leavingMode !== mode ? document.getElementById('mode-' + leavingMode) : null)
+        || (document.querySelector('.mode-panel.active') !== modePanel ? document.querySelector('.mode-panel.active') : null)
+        || (document.querySelector('.dashboard-modern-container')?.style.display !== 'none' ? document.querySelector('.dashboard-modern-container') : null);
+
       const deferSelectedPanelReveal = speakingModes.includes(mode);
-      document.querySelectorAll('.mode-panel').forEach(panel => {
-        panel.classList.remove('active');
-        panel.style.display = 'none';
-        delete panel.dataset.modePreparing;
-      });
+
       if (deferSelectedPanelReveal) {
         modePanel.dataset.modePreparing = 'true';
+        modePanel.style.display = 'none';
+        document.querySelectorAll('.mode-panel').forEach(panel => {
+          if (panel !== modePanel && panel !== outgoingStage) {
+            panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+            panel.style.display = 'none';
+            delete panel.dataset.modePreparing;
+          }
+        });
       } else {
+        if (outgoingStage && !prefersReducedMotion) {
+          outgoingStage.classList.add('stage-fade-blur-out');
+          await new Promise(resolve => setTimeout(resolve, 160));
+          if (!isCurrentTransition()) {
+            outgoingStage.classList.remove('stage-fade-blur-out');
+            return false;
+          }
+          outgoingStage.classList.remove('stage-fade-blur-out');
+        }
+
+        document.querySelectorAll('.mode-panel').forEach(panel => {
+          if (panel !== modePanel) {
+            panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+            panel.style.display = 'none';
+            delete panel.dataset.modePreparing;
+          }
+        });
+        const dashboard = document.querySelector('.dashboard-modern-container');
+        if (dashboard) {
+          dashboard.style.display = 'none';
+          dashboard.classList.remove('stage-fade-blur-out');
+        }
+        if (outgoingStage && outgoingStage !== dashboard) {
+          outgoingStage.style.display = 'none';
+        }
+
         modePanel.classList.add('active');
         modePanel.style.display = 'block';
-      }
-
-      // 2.1 Hide Dashboard so it doesn't overlap
-      const dashboard = document.querySelector('.dashboard-modern-container');
-      if (dashboard) {
-        dashboard.style.display = 'none';
+        if (!prefersReducedMotion) {
+          modePanel.classList.add('stage-fade-blur-in');
+          setTimeout(() => modePanel.classList.remove('stage-fade-blur-in'), 260);
+        }
       }
 
       // 3. Update mode-switch-btn active states in Learning Center
@@ -2254,14 +2334,48 @@
         }
       }
 
-      if (!isCurrentTransition()) return false;
+      if (!isCurrentTransition()) {
+        outgoingStage?.classList.remove('stage-fade-blur-out');
+        return false;
+      }
 
       syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
 
       if (deferSelectedPanelReveal) {
+        if (outgoingStage && !prefersReducedMotion) {
+          outgoingStage.classList.add('stage-fade-blur-out');
+          await new Promise(resolve => setTimeout(resolve, 160));
+          if (!isCurrentTransition()) {
+            outgoingStage.classList.remove('stage-fade-blur-out');
+            return false;
+          }
+          outgoingStage.classList.remove('stage-fade-blur-out');
+        }
+
+        const dashboard = document.querySelector('.dashboard-modern-container');
+        if (dashboard) {
+          dashboard.style.display = 'none';
+          dashboard.classList.remove('stage-fade-blur-out');
+        }
+        if (outgoingStage && outgoingStage !== dashboard) {
+          outgoingStage.style.display = 'none';
+        }
+
+        document.querySelectorAll('.mode-panel').forEach(panel => {
+          if (panel !== modePanel) {
+            panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+            panel.style.display = 'none';
+            delete panel.dataset.modePreparing;
+          }
+        });
+
         modePanel.classList.add('active');
         modePanel.style.display = 'block';
         delete modePanel.dataset.modePreparing;
+        if (!prefersReducedMotion) {
+          modePanel.classList.add('stage-fade-blur-in');
+          setTimeout(() => modePanel.classList.remove('stage-fade-blur-in'), 260);
+        }
       }
 
       // 5. Check if this is the first time using this mode - trigger tutorial
@@ -2286,10 +2400,11 @@
       // This ensures that even if some other script tries to show a panel, we force hide it
       setTimeout(() => {
         if (!isCurrentTransition()) return;
+        if (deferSelectedPanelReveal && modePanel.dataset.modePreparing === 'true') return;
         document.querySelectorAll('.mode-panel').forEach(panel => {
           if (panel.id !== panelId) {
             panel.style.display = 'none';
-            panel.classList.remove('active');
+            panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
           } else {
             panel.style.display = 'block';
             panel.classList.add('active');

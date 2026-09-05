@@ -90,7 +90,7 @@
             }
         };
 
-        const onChangeCallback = typeof options.onChange === 'function' ? options.onChange : null;
+        let onChangeCallback = typeof options.onChange === 'function' ? options.onChange : null;
         let summaryDebounceTimer = null;
         let isDestroyed = false;
 
@@ -210,12 +210,14 @@
         }
 
         function renderAllRows() {
+            if (isDestroyed || !matrixEl) return;
             matrixEl.innerHTML = DAY_KEYS.map((dayKey) => renderDaySection(dayKey)).join('');
             validate();
             updateSummary();
         }
 
         function renderSingleDay(dayKey) {
+            if (isDestroyed || !matrixEl) return;
             const section = matrixEl.querySelector(`.crm-availability-day-section[data-day="${dayKey}"]`);
             if (section) {
                 section.outerHTML = renderDaySection(dayKey);
@@ -382,6 +384,9 @@
 
         function validate() {
             const errors = [];
+            if (isDestroyed || !matrixEl) {
+                return { valid: true, errors: [] };
+            }
 
             DAY_KEYS.forEach((dayKey) => {
                 const intervals = state.days[dayKey] || [];
@@ -433,6 +438,10 @@
         }
 
         function updateSummary() {
+            if (isDestroyed) {
+                return { totalLessons: 0, totalMinutes: 0, totalHours: 0 };
+            }
+
             let totalLessons = 0;
             let totalMinutes = 0;
 
@@ -476,6 +485,7 @@
         }
 
         function getSlots() {
+            if (isDestroyed) return [];
             const slots = [];
             DAY_KEYS.forEach((dayKey) => {
                 const meta = DAY_META[dayKey];
@@ -500,6 +510,19 @@
         }
 
         function getState() {
+            if (isDestroyed) {
+                return {
+                    repeat: state.repeat,
+                    defaultLessonMinutes: state.defaultLessonMinutes,
+                    durationStepMinutes: state.durationStepMinutes,
+                    timezone: state.timezone,
+                    days: {},
+                    slots: [],
+                    summary: { totalLessons: 0, totalMinutes: 0, totalHours: 0 },
+                    isValid: true,
+                    errors: []
+                };
+            }
             const validation = validate();
             const summary = updateSummary();
             return {
@@ -516,6 +539,7 @@
         }
 
         function setDefaultLessonMinutes(newMinutes) {
+            if (isDestroyed || !matrixEl) return;
             const mins = Number(newMinutes);
             if (!Number.isFinite(mins) || mins <= 0) return;
             state.defaultLessonMinutes = mins;
@@ -536,7 +560,7 @@
         }
 
         function setDays(newDays) {
-            if (!newDays || typeof newDays !== 'object') return;
+            if (isDestroyed || !matrixEl || !newDays || typeof newDays !== 'object') return;
             DAY_KEYS.forEach((dayKey) => {
                 if (Array.isArray(newDays[dayKey])) {
                     state.days[dayKey] = newDays[dayKey].map((item) => ({
@@ -552,7 +576,7 @@
         }
 
         function setSlots(newSlots) {
-            if (!Array.isArray(newSlots)) return;
+            if (isDestroyed || !matrixEl || !Array.isArray(newSlots)) return;
             DAY_KEYS.forEach((dayKey) => {
                 state.days[dayKey] = [];
             });
@@ -589,6 +613,7 @@
             if (containerEl) {
                 containerEl.innerHTML = '';
             }
+            onChangeCallback = null;
             matrixEl = null;
             summaryTextEl = null;
             containerEl = null;

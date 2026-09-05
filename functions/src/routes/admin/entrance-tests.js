@@ -31,11 +31,20 @@ function cleanOptionalString(value) {
     return normalized || null;
 }
 
-function getSpeakingQuestionExpectedText(questionId) {
+function getSpeakingQuestionExpectedText(questionId, entry = null) {
+    const fromEntry = cleanOptionalString(entry?.expectedText);
+    if (fromEntry) return fromEntry;
+
     const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
-    const q = speaking?.questions?.find((x) => x.id === questionId) || null;
+    const cleanId = String(questionId || '').trim();
+    const promptNum = cleanId.replace(/^speaking_q?|^q/, '');
+    const q = speaking?.questions?.find((x) => (
+        x.id === cleanId
+        || x.id === `speaking_${cleanId}`
+        || (promptNum && String(x.promptNumber) === promptNum)
+    )) || null;
     const expected = q?.expectedText ? String(q.expectedText) : '';
-    return expected.trim() || null;
+    return cleanOptionalString(expected);
 }
 
 function resolveStorageBucket(preferredBucketName) {
@@ -495,7 +504,9 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 const entry = speaking[questionId] || null;
                 const storagePath = entry?.audio?.storagePath || null;
                 const transcript = String(entry?.transcript || '').trim();
-                if (!storagePath || !transcript) continue;
+                const expectedText = getSpeakingQuestionExpectedText(questionId, entry);
+                const alignTarget = expectedText || transcript;
+                if (!storagePath || !alignTarget) continue;
 
                 const bucketName = cleanOptionalString(entry?.audio?.bucketName);
                 const targetBucket = resolveStorageBucket(bucketName) || bucket;
@@ -503,7 +514,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
 
                 try {
                     const [audioBuffer] = await targetBucket.file(storagePath).download();
-                    const words = await alignAudioWithAzure(audioBuffer, transcript, contentType);
+                    const words = await alignAudioWithAzure(audioBuffer, alignTarget, contentType);
                     if (Array.isArray(words) && words.length > 0) {
                         updates[`speaking.${questionId}.words`] = words;
                         updates[`speaking.${questionId}.wordsAlignedAt`] = serverTimestamp();

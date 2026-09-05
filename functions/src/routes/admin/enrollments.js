@@ -389,7 +389,7 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     sessionStatus = 'scheduled';
                     break;
                 default:
-                    return sendError(res, 400, 'VALIDATION_ERROR', `Invalid attendance status: "${status}". Valid statuses are: attended, penalized, absent, scheduled.`);
+                    return sendError(res, 400, 'VALIDATION_ERROR', `Invalid attendance status: "${status}". Valid statuses are: attended, penalized, absent, reset, scheduled.`);
             }
 
             const patch = {
@@ -397,6 +397,8 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                 sessionOutcome,
                 contractCountState,
                 attendanceState,
+                attendanceStatus: (status === 'reset' || status === 'scheduled') ? null : status,
+                isPushedForward: false,
                 attendanceNotes: notes,
                 updatedAt: serverTimestamp ? serverTimestamp() : new Date(),
                 updatedBy: req.user?.uid || null

@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Auto-Boost Protocol for Complex Tasks
 
 This rule automatically engages the deep multi-agent reasoning, architectural evaluation, and empirical verification capabilities of `/boost` whenever a task is classified as **Complex**, without requiring the user to manually invoke `/boost`.

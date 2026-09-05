@@ -416,7 +416,9 @@
           text: typeof w === 'string' ? w : String(w.word || w.text || ''),
           startMs: Number(w.startMs),
           endMs: Number(w.endMs),
-          nextStartMs: nextStart
+          nextStartMs: nextStart,
+          accuracyScore: (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Math.round(Number(w.accuracyScore)) : null,
+          errorType: (typeof w === 'object' && w != null && w.errorType) ? String(w.errorType) : 'None'
         };
       }).filter(w => w.text.length > 0);
     } else if (transcriptText) {
@@ -424,7 +426,9 @@
         text,
         startMs: null,
         endMs: null,
-        nextStartMs: null
+        nextStartMs: null,
+        accuracyScore: null,
+        errorType: 'None'
       }));
     }
 
@@ -434,11 +438,37 @@
     function renderToken(wObj, typeClass) {
       const isPlayable = Number.isFinite(wObj.startMs) && Number.isFinite(wObj.endMs) && wObj.endMs > wObj.startMs;
       const text = escapeHtml(wObj.text);
+      const acc = wObj.accuracyScore;
+      const err = wObj.errorType;
+
+      let scoreTooltip = '';
+      if (acc != null) {
+        scoreTooltip += ` (Accuracy: ${acc}%)`;
+      }
+      if (err && String(err).toLowerCase() !== 'none') {
+        scoreTooltip += ` [${err}]`;
+      }
+
       if (isPlayable) {
         const nextStartAttr = Number.isFinite(wObj.nextStartMs) ? ` data-next-start-ms="${wObj.nextStartMs}"` : '';
-        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}"${nextStartAttr} data-playable="true" title="Click to hear '${text}' (${formatTimeSec(wObj.startMs)})">${text}</button>`;
+        const titleText = `Click to hear '${wObj.text}' (${formatTimeSec(wObj.startMs)})${scoreTooltip}`;
+        return `<button type="button" class="crm-word-token ${typeClass}" data-start-ms="${wObj.startMs}" data-end-ms="${wObj.endMs}"${nextStartAttr} data-playable="true" title="${escapeHtml(titleText)}">${text}</button>`;
       }
-      return `<span class="crm-word-token ${typeClass}" data-playable="false">${text}</span>`;
+      const titleText = `'${wObj.text}'${scoreTooltip}`;
+      return `<span class="crm-word-token ${typeClass}" data-playable="false"${scoreTooltip ? ` title="${escapeHtml(titleText)}"` : ''}>${text}</span>`;
+    }
+
+    function getMatchedTokenClass(wObj) {
+      if (!wObj || wObj.accuracyScore == null) {
+        return 'crm-transcript-correct';
+      }
+      if (wObj.accuracyScore < 60 || String(wObj.errorType || '').toLowerCase() === 'mispronunciation') {
+        return 'crm-transcript-error';
+      }
+      if (wObj.accuracyScore < 80) {
+        return 'crm-transcript-uncertain';
+      }
+      return 'crm-transcript-correct';
     }
 
     if (aLen === 0) {
@@ -511,7 +541,8 @@
 
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && isMatch(aWords[i - 1], bWords[j - 1])) {
-        result.unshift(renderToken(bWords[j - 1], 'crm-transcript-correct'));
+        const tokenClass = getMatchedTokenClass(bWords[j - 1]);
+        result.unshift(renderToken(bWords[j - 1], tokenClass));
         i--;
         j--;
       } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {

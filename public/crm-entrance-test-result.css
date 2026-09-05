@@ -548,6 +548,20 @@
   font-weight: 700;
 }
 
+.crm-transcript-uncertain {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.crm-transcript-error {
+  color: #ef4444;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #ef4444;
+  text-underline-offset: 3px;
+}
+
 .crm-transcript-added {
   color: #ef4444;
   font-weight: 700;
@@ -579,6 +593,14 @@
 
 .crm-word-token:hover:not([data-playable="false"]) {
   background: #e0f2fe;
+}
+
+.crm-word-token.crm-transcript-uncertain:hover:not([data-playable="false"]) {
+  background: #fef3c7;
+}
+
+.crm-word-token.crm-transcript-error:hover:not([data-playable="false"]) {
+  background: #fee2e2;
 }
 
 .crm-word-token:focus-visible {

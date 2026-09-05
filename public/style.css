@@ -3023,11 +3023,106 @@ h1 {
 
 .mode-panel.active {
   display: block !important;
-  opacity: 1 !important;
-  animation: fadeIn 0.4s ease-out;
+  opacity: 1;
   overflow-x: clip;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Scoped Stage Transition Orchestrator (Smooth Blur & Motion)
+   ========================================================================== */
+.stage-fade-blur-out {
+  opacity: 0 !important;
+  filter: blur(3px) !important;
+  transform: translateY(-6px) !important;
+  transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1),
+              filter 160ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 160ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none !important;
+  will-change: opacity, filter, transform;
+}
+
+.stage-fade-blur-in {
+  animation: stageFadeBlurIn 240ms cubic-bezier(0, 0, 0.2, 1) forwards !important;
+  will-change: opacity, filter, transform;
+}
+
+@keyframes stageFadeBlurIn {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0);
+  }
+}
+
+/* Tutorial Grid Filter Transition */
+.tutorial-grid {
+  transition: opacity 100ms ease, filter 100ms ease, transform 100ms ease;
+  will-change: opacity, filter, transform;
+}
+
+#panel-tutorials .tutorial-grid {
+  min-height: 750px;
+}
+
+@media (max-width: 900px) {
+  #panel-tutorials .tutorial-grid {
+    min-height: unset;
+  }
+}
+
+.tutorial-grid.skill-grid-fading-out {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+.tutorial-grid.skill-grid-fading-in {
+  animation: skillGridFadeIn 180ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@keyframes skillGridFadeIn {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-fade-blur-out {
+    opacity: 0 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: opacity 80ms linear !important;
+  }
+  .stage-fade-blur-in {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  .tutorial-grid,
+  .tutorial-grid.skill-grid-fading-out,
+  .tutorial-grid.skill-grid-fading-in {
+    transition: none !important;
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 /* Tab System (Restored for Utility/Compatibility) */
@@ -13148,26 +13243,6 @@ body.spc-focus .main-header h1 {
   font-size: 1.2rem;
 }
 
-.dashboard-panel {
-  display: none;
-  animation: slideDown 0.3s ease-out;
-}
-
-.dashboard-panel.active {
-  display: block;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* Tutorial Grid Adjustments for Panel */
 .tutorial-card-content {

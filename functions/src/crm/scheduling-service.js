@@ -63,7 +63,8 @@ function addMinutesToLocalDateTime(dateStr, timeStr, minutesToAdd) {
 
 function addDays(dateStr, days) {
     if (!dateStr || typeof dateStr !== 'string') return null;
-    const date = new Date(`${dateStr}T00:00:00`);
+    const clean = String(dateStr).split('T')[0];
+    const date = new Date(`${clean}T00:00:00`);
     if (isNaN(date.getTime())) return null;
     date.setDate(date.getDate() + Number(days || 0));
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -71,7 +72,8 @@ function addDays(dateStr, days) {
 
 function getWeekdayNumber(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return 0;
-    const date = new Date(`${dateStr}T00:00:00`);
+    const clean = String(dateStr).split('T')[0];
+    const date = new Date(`${clean}T00:00:00`);
     return isNaN(date.getTime()) ? 0 : date.getDay();
 }
 
@@ -416,10 +418,16 @@ const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug
 const WEEKDAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function formatShortLocalDate(dateStr) {
-    const parts = parseLocalDateTime(dateStr, '00:00');
-    const dayName = WEEKDAY_NAMES_SHORT[getWeekdayNumber(dateStr)];
-    const monthName = MONTH_NAMES_SHORT[parts.month - 1];
-    return `${dayName} ${pad(parts.day)} ${monthName}`;
+    if (!dateStr) return '';
+    try {
+        const clean = String(dateStr).split('T')[0];
+        const parts = parseLocalDateTime(clean, '00:00');
+        const dayName = WEEKDAY_NAMES_SHORT[getWeekdayNumber(clean)] || '';
+        const monthName = MONTH_NAMES_SHORT[parts.month - 1] || '';
+        return `${dayName} ${pad(parts.day)} ${monthName}`.trim();
+    } catch (_err) {
+        return String(dateStr);
+    }
 }
 
 function findNextTrailingSlot(lastLocalDate, lastLocalTime, slots) {
@@ -721,10 +729,14 @@ function buildPushForwardPlan({ sessions, fromSessionId, slots = [], timezone = 
         sessionOutcome: 'absent_makeup',
         contractCountState: 'does_not_count',
         attendanceState: 'finalized',
+        attendanceStatus: 'rescheduled',
+        isPushedForward: true,
         patch: {
             sessionOutcome: 'absent_makeup',
             contractCountState: 'does_not_count',
-            attendanceState: 'finalized'
+            attendanceState: 'finalized',
+            attendanceStatus: 'rescheduled',
+            isPushedForward: true
         }
     };
 

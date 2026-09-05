@@ -223,6 +223,7 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         ReferenceText: cleanRef,
         GradingSystem: 'HundredMark',
         Granularity: 'Word',
+        Dimension: 'Comprehensive',
         PhonemeAlphabet: 'IPA',
         EnableMiscue: true
     };
@@ -255,15 +256,15 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         const mappedWords = rawWords.map(w => {
             const rawOffset = Number(w.Offset);
             const rawDuration = Number(w.Duration);
-            const startMs = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.round(rawOffset / 10000) : null;
+            const startMs = Number.isFinite(rawOffset) && rawOffset >= 0 ? Math.round(rawOffset / 10000) : null;
             const durMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.round(rawDuration / 10000) : null;
             const endMs = startMs != null && durMs != null ? startMs + durMs : null;
             return {
                 word: String(w.Word || '').trim(),
                 startMs,
                 endMs,
-                accuracyScore: Math.round(Number(w.PronunciationAssessment?.AccuracyScore) || 0),
-                errorType: String(w.PronunciationAssessment?.ErrorType || 'None')
+                accuracyScore: Math.round(Number((w.AccuracyScore ?? w.PronunciationAssessment?.AccuracyScore)) || 0),
+                errorType: String((w.ErrorType ?? w.PronunciationAssessment?.ErrorType) || 'None')
             };
         }).filter(w => w.word.length > 0 && w.startMs != null && w.endMs != null && w.endMs > w.startMs);
 
@@ -373,7 +374,9 @@ async function transcribeAudio(audioBuffer, contentType, options = {}) {
                 if (cleaned) {
                     let words = null;
                     try {
-                        words = await alignAudioWithAzure(audioBuffer, cleaned, contentType);
+                        const trimmedExpected = options.expectedText ? String(options.expectedText).trim() : '';
+                        const targetText = trimmedExpected || cleaned;
+                        words = await alignAudioWithAzure(audioBuffer, targetText, contentType);
                     } catch (alignErr) {
                         console.warn('[EntranceTest ASR] Azure alignment attempt failed:', alignErr?.message || alignErr);
                     }

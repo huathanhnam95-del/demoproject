@@ -246,6 +246,71 @@ async function testPushForwardPreviewOnly() {
     console.log('✓ Test 5 passed: POST /sessions/:sessionId/push-forward previewOnly generates preview without mutating DB');
 }
 
+async function testAttendanceContractAndValidationEdgeCases() {
+    const { db, router, createdClassId } = await testAutoProvision1on1EnrollmentAndSeedSessions();
+    const firstSessionDocKey = Array.from(db.docs.keys()).find((k) => k.startsWith(`${CRM_SCHEDULED_SESSIONS}/`) && db.docs.get(k)?.classId === createdClassId);
+    const firstSessionId = firstSessionDocKey.slice(`${CRM_SCHEDULED_SESSIONS}/`.length);
+
+    // 1. Invalid status rejection
+    const resInvalid = await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'invalid_status' }
+    });
+    assert.strictEqual(resInvalid._status, 400);
+    assert(resInvalid._json.message.includes('reset'));
+
+    // 2. Mark attended records attendanceStatus: 'attended'
+    await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'attended' }
+    });
+    const sessionAttended = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${firstSessionId}`);
+    assert.strictEqual(sessionAttended.attendanceStatus, 'attended');
+
+    // 3. Reset to scheduled clears attendanceStatus
+    await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'reset' }
+    });
+    const sessionReset = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${firstSessionId}`);
+    assert.strictEqual(sessionReset.attendanceStatus, null);
+    assert.strictEqual(sessionReset.status, 'scheduled');
+    assert.strictEqual(sessionReset.attendanceState, 'none');
+
+    // 4. Mark absent records attendanceStatus: 'absent'
+    await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'absent' }
+    });
+    const sessionAbsent = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${firstSessionId}`);
+    assert.strictEqual(sessionAbsent.attendanceStatus, 'absent');
+    assert.strictEqual(sessionAbsent.sessionOutcome, 'absent_makeup');
+
+    // 5. Reset again and push forward -> verify attendanceStatus: 'rescheduled' and isPushedForward: true
+    await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'reset' }
+    });
+    const resPush = await callRoute(router, '/sessions/:sessionId/push-forward', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { slots: [{ weekday: 1, startTime: '14:00', durationMinutes: 120 }] }
+    });
+    assert.strictEqual(resPush._status, 200);
+    const sessionPushed = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${firstSessionId}`);
+    // 6. Reset again after push-forward -> verify isPushedForward is cleared and attendanceStatus is null
+    await callRoute(router, '/sessions/:sessionId/attendance', 'POST', {
+        params: { sessionId: firstSessionId },
+        body: { status: 'reset' }
+    });
+    const sessionResetAfterPush = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${firstSessionId}`);
+    assert.strictEqual(sessionResetAfterPush.attendanceStatus, null);
+    assert.strictEqual(sessionResetAfterPush.isPushedForward, false);
+    assert.strictEqual(sessionResetAfterPush.status, 'scheduled');
+    assert.strictEqual(sessionResetAfterPush.attendanceState, 'none');
+
+    console.log('✓ Test 6 passed: attendanceStatus lifecycle, reset clearing, and push-forward metadata contracts');
+}
+
 (async function runAll() {
     try {
         console.log('Running 1-on-1 Enrollment & Scheduling Backend Tests...');
@@ -254,6 +319,7 @@ async function testPushForwardPreviewOnly() {
         await testPushForwardSessionEndpoint();
         await testAttendanceUpdateEndpoint();
         await testPushForwardPreviewOnly();
+        await testAttendanceContractAndValidationEdgeCases();
         console.log('\nAll 1-on-1 Enrollment & Scheduling Backend Tests PASSED!');
     } catch (err) {
         console.error('Test failure:', err);

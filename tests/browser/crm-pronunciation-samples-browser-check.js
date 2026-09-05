@@ -5,10 +5,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
-// Use a non-local hostname so the browser exercises the same capability-nav
-// initialization path as production instead of the local Dev Tools path.
 const BASE_ORIGIN = 'https://betterenglishlearning.test';
-const PRONUNCIATION_SAMPLES_URL = `${BASE_ORIGIN}/crm-admin.html#pronunciation-samples`;
 
 function makeWavBuffer() {
   const dataSize = 32000;
@@ -103,36 +100,29 @@ function serveLocalAsset(route, url) {
 }
 
 async function main() {
-  const requestLog = [];
-  const consoleErrors = [];
-  const pageErrors = [];
-
   const browser = await chromium.launch({
     headless: true,
-    channel: 'chrome',
-    args: [
-      '--use-fake-ui-for-media-stream',
-      '--use-fake-device-for-media-stream'
-    ]
+    args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']
   });
 
   try {
     const context = await browser.newContext({
-      viewport: { width: 1600, height: 1200 },
-      locale: 'en-US',
+      viewport: { width: 1440, height: 960 },
       permissions: ['microphone']
     });
-    await context.addInitScript(() => { window.__CRM_BROWSER_TEST__ = true; });
 
-    await context.route('**/*', async (route) => {
+    const pageErrors = [];
+    const consoleErrors = [];
+    const requestLog = [];
+
+    await context.route(/^https?:\/\//, async (route) => {
       const url = new URL(route.request().url());
-      console.log('INTERCEPTED REQUEST:', route.request().method(), route.request().url());
 
-      if (url.hostname === 'betterenglishlearning.test') {
+      if (url.origin === BASE_ORIGIN) {
+        const { pathname } = url;
         const method = route.request().method();
-        const pathname = url.pathname;
 
-        if (pathname.startsWith('/api/')) {
+        if (pathname.startsWith('/api/') || pathname.startsWith('/admin/')) {
           requestLog.push({ method, path: pathname, url: url.toString() });
 
           if (pathname === '/api/config' && method === 'GET') {
@@ -143,10 +133,10 @@ async function main() {
                 success: true,
                 config: {
                   apiKey: 'mock-apiKey',
-                  authDomain: 'mock-authDomain',
-                  projectId: 'mock-projectId',
-                  storageBucket: 'mock-storageBucket',
-                  messagingSenderId: 'mock-messagingSenderId',
+                  authDomain: 'mock-project.firebaseapp.com',
+                  projectId: 'mock-project',
+                  storageBucket: 'mock-project.appspot.com',
+                  messagingSenderId: '000000000000',
                   appId: 'mock-appId'
                 }
               })
@@ -167,62 +157,101 @@ async function main() {
             });
           }
 
-          if (pathname === '/api/admin/sync-from-prod/collections' && method === 'GET') {
-            return route.fulfill({
-              status: 200,
-              contentType: 'application/json; charset=utf-8',
-              body: JSON.stringify({ success: true, collections: [] })
-            });
-          }
-
-          if (pathname === '/api/admin/sync-from-prod/jobs/latest' && method === 'GET') {
-            return route.fulfill({
-              status: 200,
-              contentType: 'application/json; charset=utf-8',
-              body: JSON.stringify({ success: true, job: null })
-            });
-          }
-
-          if (pathname === '/api/admin/dev/save-corpus-sample' && method === 'POST') {
+          if (pathname === '/api/pronunciation-assessment/option-a' && method === 'POST') {
             return route.fulfill({
               status: 200,
               contentType: 'application/json; charset=utf-8',
               body: JSON.stringify({
                 success: true,
-                sampleId: 'photograph-clean-l1-vn-01-temp',
-                sample: { sourceHash: 'a1b2c3d4e5f6g7h8i9j0' }
+                engine: 'option-a',
+                targetWord: 'photograph',
+                referenceIpa: 'ˈfoʊ.tə.ɡræf',
+                prosodySource: 'praat-fusion',
+                azureScores: { accuracy: 94, fluency: 90, completeness: 100, pronScore: 92 },
+                detectedStressedIndex: 0,
+                stressedSyllableNumber: 1,
+                syllables: [
+                  {
+                    syllableNumber: 1,
+                    nucleusPhoneme: 'oʊ',
+                    startTime: 0.12,
+                    endTime: 0.32,
+                    vowelDuration: 0.20,
+                    maxPitch: 225.4,
+                    meanPitch: 218.0,
+                    peakIntensity: 78.2,
+                    meanIntensity: 74.0,
+                    prominence: 0.95,
+                    isStressed: true,
+                    reduction: { isReduced: false, phoneme: 'oʊ', verdict: 'Full vowel [oʊ] maintained' }
+                  },
+                  {
+                    syllableNumber: 2,
+                    nucleusPhoneme: 'ə',
+                    startTime: 0.40,
+                    endTime: 0.49,
+                    vowelDuration: 0.09,
+                    maxPitch: 165.2,
+                    meanPitch: 160.0,
+                    peakIntensity: 66.5,
+                    meanIntensity: 62.0,
+                    prominence: 0.45,
+                    isStressed: false,
+                    reduction: { isReduced: true, phoneme: 'ə', verdict: 'Weak reduction to [ə] detected' }
+                  },
+                  {
+                    syllableNumber: 3,
+                    nucleusPhoneme: 'æ',
+                    startTime: 0.58,
+                    endTime: 0.72,
+                    vowelDuration: 0.14,
+                    maxPitch: 175.0,
+                    meanPitch: 170.0,
+                    peakIntensity: 71.0,
+                    meanIntensity: 68.0,
+                    prominence: 0.62,
+                    isStressed: false,
+                    reduction: { isReduced: false, phoneme: 'æ', verdict: 'Full vowel [æ] maintained' }
+                  }
+                ],
+                phonemes: [
+                  { index: 0, phoneme: 'f', startTime: 0.05, endTime: 0.12, accuracyScore: 95, isVowel: false },
+                  { index: 1, phoneme: 'oʊ', startTime: 0.12, endTime: 0.32, accuracyScore: 93, isVowel: true },
+                  { index: 2, phoneme: 't', startTime: 0.32, endTime: 0.40, accuracyScore: 91, isVowel: false },
+                  { index: 3, phoneme: 'ə', startTime: 0.40, endTime: 0.49, accuracyScore: 89, isVowel: true },
+                  { index: 4, phoneme: 'ɡ', startTime: 0.49, endTime: 0.53, accuracyScore: 96, isVowel: false },
+                  { index: 5, phoneme: 'r', startTime: 0.53, endTime: 0.58, accuracyScore: 92, isVowel: false },
+                  { index: 6, phoneme: 'æ', startTime: 0.58, endTime: 0.72, accuracyScore: 94, isVowel: true },
+                  { index: 7, phoneme: 'f', startTime: 0.72, endTime: 0.80, accuracyScore: 95, isVowel: false }
+                ],
+                summary: { totalSyllables: 3, detectedStressed: 0, stressedSyllableNumber: 1, stressConfidence: 0.95 }
               })
             });
           }
 
-          if (pathname === '/api/admin/dev/corpus-samples' && method === 'GET') {
+          if ((pathname === '/api/pronunciation-assessment/option-b' || pathname === '/analyze/option-b') && method === 'POST') {
             return route.fulfill({
               status: 200,
               contentType: 'application/json; charset=utf-8',
               body: JSON.stringify({
                 success: true,
-                samples: [{
-                  id: 'busy-clean-l1-vn-01-saved',
-                  sampleId: 'busy-clean-l1-vn-01-saved',
-                  targetWord: 'busy',
-                  category: 'clean',
-                  targetSyllableCount: 2,
-                  expectedObservedCount: 2,
-                  needsRerecording: true,
-                  rerecordReason: 'low_audio_energy',
-                  durationSeconds: 2.65,
-                  audioUrl: 'https://storage.test/busy.wav'
-                }]
+                engine: 'option-b',
+                targetWord: 'photograph',
+                referenceIpa: 'ˈfoʊ.tə.ɡræf',
+                duration: 0.85,
+                detectedStressedIndex: 0,
+                syllables: [
+                  { syllable: 1, startTime: 0.05, endTime: 0.35, duration: 0.30, vowelDuration: 0.19, maxPitch: 228.0, avgPitch: 219.0, intensity: 78.5, isStressed: true, prominence: 0.96 },
+                  { syllable: 2, startTime: 0.35, endTime: 0.52, duration: 0.17, vowelDuration: 0.08, maxPitch: 162.0, avgPitch: 158.0, intensity: 65.0, isStressed: false, prominence: 0.42 },
+                  { syllable: 3, startTime: 0.52, endTime: 0.82, duration: 0.30, vowelDuration: 0.13, maxPitch: 172.0, avgPitch: 168.0, intensity: 70.0, isStressed: false, prominence: 0.60 }
+                ],
+                v4Syllabification: {
+                  ruleVersion: 'pronunciation-syllabification-v1/en-US-weight-first-max-onset-v1',
+                  displaySyllabification: '/ˈfoʊ.tə.ɡræf/',
+                  syllable_count: 3
+                },
+                summary: { syllableCount: 3, detectedStressed: 0, stressedSyllableNumber: 1 }
               })
-            });
-          }
-
-          if (/^\/api\/admin\/dev\/corpus-samples\/[^/]+\/audio$/.test(pathname) && method === 'GET') {
-            return route.fulfill({
-              status: 200,
-              contentType: 'audio/wav',
-              headers: { 'Cache-Control': 'no-store' },
-              body: makeWavBuffer()
             });
           }
 
@@ -245,30 +274,25 @@ async function main() {
         });
       }
 
-      if (url.hostname.includes('praat-api-') && url.pathname === '/analyze/v3') {
+      // Route localhost:8081 calls to the same mock
+      if (url.port === '8081' && url.pathname === '/analyze/option-b') {
         requestLog.push({ method: route.request().method(), path: url.pathname, url: url.toString() });
         return route.fulfill({
           status: 200,
           contentType: 'application/json; charset=utf-8',
           body: JSON.stringify({
-            analysisVersion: 'pronunciation-analysis-v3',
-            verification: {
-              status: 'verified',
-              count: { expected: 2, observed: 2, status: 'verified', confidence: 0.98, reasons: [] },
-              primary_stress: {
-                applicable: true,
-                expected: 0,
-                matches_expected: true,
-                status: 'verified',
-                confidence: 0.96,
-                pitch_evidence: [
-                  { index: 0, f0_median: 120 },
-                  { index: 1, f0_median: 90 }
-                ],
-                reasons: []
-              },
-              model_revision: 'test-revision'
-            }
+            success: true,
+            engine: 'option-b',
+            targetWord: 'photograph',
+            referenceIpa: 'ˈfoʊ.tə.ɡræf',
+            duration: 0.85,
+            detectedStressedIndex: 0,
+            syllables: [
+              { syllable: 1, startTime: 0.05, endTime: 0.35, duration: 0.30, vowelDuration: 0.19, maxPitch: 228.0, avgPitch: 219.0, intensity: 78.5, isStressed: true, prominence: 0.96 },
+              { syllable: 2, startTime: 0.35, endTime: 0.52, duration: 0.17, vowelDuration: 0.08, maxPitch: 162.0, avgPitch: 158.0, intensity: 65.0, isStressed: false, prominence: 0.42 },
+              { syllable: 3, startTime: 0.52, endTime: 0.82, duration: 0.30, vowelDuration: 0.13, maxPitch: 172.0, avgPitch: 168.0, intensity: 70.0, isStressed: false, prominence: 0.60 }
+            ],
+            summary: { syllableCount: 3, detectedStressed: 0, stressedSyllableNumber: 1 }
           })
         });
       }
@@ -282,7 +306,6 @@ async function main() {
       pageErrors.push(error.message);
     });
     page.on('console', (message) => {
-      console.log(`[BROWSER CONSOLE] ${message.type().toUpperCase()}: ${message.text()}`);
       if (message.type() === 'error') {
         consoleErrors.push(message.text());
       }
@@ -290,174 +313,107 @@ async function main() {
 
     // 1. Load the main CRM Admin page
     await page.goto(`${BASE_ORIGIN}/crm-admin.html`, { waitUntil: 'domcontentloaded' });
-    
-    // 2. Wait for the Pronunciation Samples sidebar nav to become active (capability confirmed)
+
+    // 2. Wait for the Pronunciation Samples sidebar nav to become active
     await page.waitForSelector('#nav-pronunciation-samples-container', { state: 'attached' });
     await page.waitForFunction(() => {
       const el = document.getElementById('nav-pronunciation-samples-container');
       return el && el.style.display !== 'none';
     });
 
-    // 3. Click the nav button (hovering More dropdown if nested) to navigate to the pronunciation-samples panel
+    // 3. Click the nav button (hovering More dropdown if nested) to navigate to pronunciation-samples panel
     if (await page.locator('.crm-nav-more-dropdown').count() > 0) {
       await page.hover('.crm-nav-more-dropdown');
     }
     await page.click('#nav-pronunciation-samples-container button');
-    if (await page.locator('#pv-tab-samples').count() > 0) {
-      await page.click('#pv-tab-samples');
-    }
 
-    await page.waitForSelector('#corpus-saved-samples .crm-stack-item', { state: 'visible', timeout: 5000 });
-    const savedSamplesText = await page.textContent('#corpus-saved-samples');
-    assert.match(savedSamplesText, /busy.*clean.*2\.65s/i, 'Production-shaped corpus list response should render the saved sample.');
+    // 4. Verify that the new Dual Arena is mounted in the panel
+    await page.waitForSelector('.dual-arena-root', { state: 'visible', timeout: 5000 });
+    const arenaTitle = await page.textContent('.dual-arena-title');
+    assert.match(arenaTitle, /Option A vs\. Option B Comparison/i, 'Dual Arena title should be visible.');
 
-    const analyzeButton = page.locator('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .btn-corpus-analyze');
-    await analyzeButton.waitFor({ state: 'visible', timeout: 5000 });
-    await analyzeButton.click();
-    const analysisResult = page.locator('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result');
-    await analysisResult.waitFor({ state: 'visible', timeout: 15_000 });
-    try {
-      await page.waitForFunction(() => /Verified: 2 syllables; primary stress verified on syllable 1\./i.test(document.querySelector('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result')?.textContent || ''), null, { timeout: 20_000 });
-    } catch (error) {
-      console.error('Analysis result text:', await analysisResult.textContent());
-      throw error;
-    }
-    await expectText(analysisResult, /Verified: 2 syllables; primary stress verified on syllable 1\./i);
-    assert.doesNotMatch(await analysisResult.textContent(), /strongest detected|\b0Hz\b/i);
-    assert.ok(requestLog.some((r) => r.path === '/api/admin/dev/corpus-samples/busy-clean-l1-vn-01-saved/audio' && r.method === 'GET'));
-    assert.ok(requestLog.some((r) => r.path === '/analyze/v3' && r.method === 'POST'));
-    assert.ok(!requestLog.some((r) => r.path === '/analyze/v2'), 'CRM re-analysis must not fall back to V2.');
-    
-    // 4. Select target word 'photograph'
-    if (await page.locator('#pv-tab-record').count() > 0) {
-      await page.click('#pv-tab-record');
-    }
-    await page.waitForSelector('.corpus-word-btn[data-word="photograph"]', { state: 'visible' });
-    await page.locator('#corpus-sample-filter').selectOption('all');
-    const photographButton = page.locator('.corpus-word-btn[data-word="photograph"]');
-    await photographButton.dispatchEvent('click');
+    // 5. Test Backend Toggle (Local vs Cloud Run)
+    const localPill = page.locator('.dual-arena-pill[data-backend="local"]');
+    const cloudPill = page.locator('.dual-arena-pill[data-backend="cloud"]');
+    assert.strictEqual(await localPill.isVisible(), true);
+    assert.strictEqual(await cloudPill.isVisible(), true);
 
-    // Verify Display updates
-    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'photograph', null, { timeout: 5000 });
-    const displayWordText = await page.textContent('#corpus-display-word');
-    assert.strictEqual(displayWordText.trim(), 'photograph');
-    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*photograph.*naturally and clearly/i);
-    assert.strictEqual(await page.locator('#corpus-category').isDisabled(), true);
-    assert.strictEqual(await page.locator('#corpus-expected-observed-count').getAttribute('readonly'), '');
+    await cloudPill.click();
+    assert.strictEqual(await cloudPill.evaluate(el => el.classList.contains('is-active')), true);
+    await localPill.click();
+    assert.strictEqual(await localPill.evaluate(el => el.classList.contains('is-active')), true);
 
-    await page.click('#btn-corpus-next-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /omit exactly one syllable/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
-    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '2');
+    // 6. Test Preset Dropdown Selection
+    const presetSelect = page.locator('#dual-arena-preset-select');
+    await presetSelect.selectOption({ label: "re'cord (verb) [rɪˈkɔːrd]" });
+    const wordVal = await page.inputValue('#dual-arena-word-input');
+    const ipaVal = await page.inputValue('#dual-arena-ipa-input');
+    assert.strictEqual(wordVal, 'record');
+    assert.strictEqual(ipaVal, 'rɪˈkɔːrd');
 
-    await page.click('#btn-corpus-next-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 3 of 5.*Insertion/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /add exactly one extra syllable/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'insertion');
-    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '4');
+    // Revert to photograph preset
+    await presetSelect.selectOption({ label: "'photograph (3 syl) [ˈfoʊ.tə.ɡræf]" });
 
-    await page.click('#btn-corpus-next-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 4 of 5.*Accented/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /stress a different syllable/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'accented');
-    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '3');
+    // 7. Test Audio File Upload
+    const fakeWavPath = path.join(__dirname, 'test-temp.wav');
+    fs.writeFileSync(fakeWavPath, makeWavBuffer());
+    await page.setInputFiles('#dual-arena-file-input', fakeWavPath);
 
-    await page.click('#btn-corpus-next-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 5 of 5.*Unrateable/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /silence, heavy background noise, or unintelligible/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'unrateable');
-    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '0');
+    // Run Dual Analysis button should become enabled
+    const runBtn = page.locator('#dual-arena-btn-run');
+    await runBtn.waitFor({ state: 'visible' });
+    assert.strictEqual(await runBtn.isDisabled(), false, 'Run Dual Analysis button should be enabled after audio is uploaded.');
 
-    await page.click('#btn-corpus-prev-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 4 of 5.*Accented/i);
-    await page.click('#btn-corpus-prev-version');
-    await page.click('#btn-corpus-prev-version');
-    await page.click('#btn-corpus-prev-version');
-    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
+    // 8. Click "Run Dual Analysis" and verify side-by-side card rendering
+    await runBtn.click();
 
-    // Verify filter-locked version preservation and instruction matching on filter change & word click
-    await page.locator('#corpus-sample-filter').selectOption('missing_omission');
-    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'photograph', null, { timeout: 5000 });
-    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*photograph.*omit exactly one syllable/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+    // Verify Option A card displays metrics
+    await page.waitForSelector('#dual-arena-card-a .card-inner-results', { state: 'visible', timeout: 8000 });
+    const cardAText = await page.textContent('#dual-arena-card-a');
+    assert.match(cardAText, /Syllable 1/i, 'Option A should detect Syllable 1 stress');
+    assert.match(cardAText, /Weak reduction to \[ə\] detected/i, 'Option A should detect /ə/ reduction');
 
-    const bananaButton = page.locator('.corpus-word-btn[data-word="banana"]');
-    await bananaButton.dispatchEvent('click');
-    await page.waitForFunction(() => document.querySelector('#corpus-display-word')?.textContent?.trim() === 'banana', null, { timeout: 5000 });
-    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
-    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*banana.*omit exactly one syllable/i);
-    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+    // Verify Option B card displays metrics
+    await page.waitForSelector('#dual-arena-card-b .card-inner-results', { state: 'visible', timeout: 8000 });
+    const cardBText = await page.textContent('#dual-arena-card-b');
+    assert.match(cardBText, /Syllable 1/i, 'Option B should detect Syllable 1 stress');
+    assert.match(cardBText, /V4 Syllabification Structure/i, 'Option B should display V4 structure');
 
-    await page.locator('#corpus-sample-filter').selectOption('all');
-    await photographButton.dispatchEvent('click');
+    // Verify benchmark evaluation panel is displayed
+    await page.waitForSelector('#dual-arena-benchmark-panel', { state: 'visible', timeout: 5000 });
 
-    // 5. Start Recording
-    await page.click('#btn-corpus-record');
-    
-    // Wait for Recording status to update
-    await page.waitForFunction(() => {
-      const status = document.getElementById('corpus-mic-status')?.textContent;
-      return status && status.includes('Recording');
-    });
+    // 9. Test Manual Rating & Saving to Benchmark
+    const ratingBtnA = page.locator('.rating-btn[data-winner="option-a"]');
+    await ratingBtnA.click();
+    assert.strictEqual(await ratingBtnA.evaluate(el => el.classList.contains('is-selected')), true);
 
-    // Let fake mic run for 500ms
-    await page.waitForTimeout(500);
+    await page.fill('#dual-arena-notes', 'Option A properly detected the schwa reduction on syllable 2.');
+    const saveRatingBtn = page.locator('#dual-arena-btn-save-rating');
+    assert.strictEqual(await saveRatingBtn.isDisabled(), false);
+    await saveRatingBtn.click();
 
-    // 6. Stop Recording. A V2-only response must fail closed instead of
-    // creating a green verification or automatic save.
-    await page.click('#btn-corpus-stop');
+    const counterText = await page.textContent('#benchmark-counter');
+    assert.match(counterText, /1 Comparisons Saved/i, 'Benchmark counter should increment to 1.');
 
-    await page.waitForFunction(() => /Unrateable Audio/i.test(document.querySelector('#corpus-mic-status')?.textContent || ''), null, { timeout: 30_000 });
-    assert.strictEqual(
-      requestLog.some(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST'),
-      false,
-      'A V2 fallback response must not auto-save as verified.'
-    );
+    // 10. Test Standalone Unauthenticated Runner Page
+    await page.goto(`${BASE_ORIGIN}/pronunciation-visual-comparison.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.dual-arena-root', { state: 'visible', timeout: 5000 });
+    const standaloneTitle = await page.textContent('.standalone-title');
+    assert.match(standaloneTitle, /Pronunciation Assessment Dual Arena/i, 'Standalone runner header should load.');
+    assert.strictEqual(await page.locator('#dual-arena-btn-record').isVisible(), true);
 
-    // Corpus capture remains possible through the explicit admin save action.
-    await page.click('#btn-corpus-save');
-    await page.waitForSelector('.crm-toast.success', { state: 'visible' });
-    const saveRequest = requestLog.find(r => r.path === '/api/admin/dev/save-corpus-sample' && r.method === 'POST');
-    assert.ok(saveRequest, 'POST request to /api/admin/dev/save-corpus-sample should be sent after explicit admin save.');
-
-
-    // 8. Test Next Word button navigation
-    const nextWordBtn = page.locator('#btn-corpus-next-word');
-    assert.strictEqual(await nextWordBtn.isDisabled(), false, 'Next Word button should be enabled for navigation.');
-    await nextWordBtn.click();
-    await expectText(page.locator('#corpus-display-word'), /photography/i);
-
-    // Click Next Word again: photography -> banana
-    await nextWordBtn.click();
-    await expectText(page.locator('#corpus-display-word'), /banana/i);
-
-    // Click Next Word again: banana -> camera
-    await nextWordBtn.click();
-    await expectText(page.locator('#corpus-display-word'), /camera/i);
-
-    // Click Next Word again: camera -> university
-    await nextWordBtn.click();
-    await expectText(page.locator('#corpus-display-word'), /university/i);
-
-    await page.selectOption('#corpus-sample-filter', 'needs_rerecord');
-    await expectText(page.locator('#corpus-page-status'), /1 words/i);
-    assert.strictEqual(await page.locator('.corpus-word-btn[data-word="busy"]').isVisible(), true);
-
+    // Verify no fatal page or console errors occurred
     assert.strictEqual(pageErrors.length, 0, `Unexpected page errors:\n${pageErrors.join('\n')}`);
     assert.strictEqual(consoleErrors.length, 0, `Unexpected console errors:\n${consoleErrors.join('\n')}`);
 
-    console.log('crm pronunciation samples browser check passed');
+    console.log('crm pronunciation samples dual arena browser check passed successfully!');
   } finally {
+    const fakeWavPath = path.join(__dirname, 'test-temp.wav');
+    if (fs.existsSync(fakeWavPath)) {
+      try { fs.unlinkSync(fakeWavPath); } catch (_) {}
+    }
     await browser.close();
   }
-}
-
-async function expectText(locator, pattern) {
-  const text = await locator.textContent();
-  assert.match(text || '', pattern);
 }
 
 main().catch((error) => {

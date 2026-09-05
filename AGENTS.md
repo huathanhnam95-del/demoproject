@@ -6,6 +6,16 @@
 - Use a human-readable Vietnam Time format (e.g., `Wednesday, May 20, 2026, 05:23:10 AM`) instead of ISO 8601 string representation.
 - Apply this as a default workspace behavior for all tasks unless a higher-priority instruction overrides it.
 
+## Deployed Session Tagging Protocol (`(D)`)
+
+- **Active Development Rule**: Active development sessions (planning, bug fixes, feature work, code edits, audits, test runs) **MUST NEVER** retain the `(D) ` prefix in their title.
+- **Automatic Removal on Resume / New Task**: Whenever a conversation with `(D) ` is resumed with new instructions or feedback, or when a task is started (`Status: In Progress`), the agent MUST immediately strip the `(D) ` prefix in its first response turn as part of its initial tool calls:
+  `python scripts/session_tagger.py remove-deployed`
+  - *Never defer this to after answering*. Run it immediately during turn startup.
+  - Running it is completely safe, idempotent, and fast (exits 0 with `noop` if not tagged).
+- **Tagging on Deployment**: Only when an approved production deployment has been concluded, tag the session with:
+  `python scripts/session_tagger.py mark-deployed`
+
 ## Browser Testing Credentials
 
 - For any browser testing plan or browser test execution that requires login, first read `C:\Cursor AI\.local\browser-test-credentials.md`.
@@ -48,9 +58,8 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 
 - **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.
 - **Production Deployment Session Naming (`(D)`)**:
-  - Whenever a conversation or session is ended with a production deployment, change its name to `(D) <title>` to mark it as deployed.
-  - To automate this, run: `python scripts/session_tagger.py mark-deployed`.
-  - If a deployed conversation continues later, after answering the user's initial prompt, automatically rename it to remove the `(D) ` prefix by running: `python scripts/session_tagger.py remove-deployed`.
+  - Whenever a conversation or session is ended with an approved production deployment, change its name to `(D) <title>` to mark it as deployed: `python scripts/session_tagger.py mark-deployed`.
+  - Whenever development resumes or a new task is started in a `(D)` session, immediately remove the prefix during initial tool calls: `python scripts/session_tagger.py remove-deployed` (see Deployed Session Tagging Protocol above). Never defer to after answering.
 
 ## Implementation Plan Approval Rule
 

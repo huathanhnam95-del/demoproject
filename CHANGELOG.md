@@ -1,3 +1,15 @@
+## [V1.8.132] - 2026-09-06
+
+### Added & Enhanced
+- **Entrance Test Pronunciation Assessment & Precision Scoring Overhaul**:
+  - **Dual-Metric Semantic Separation**: Decoupled whole-word communicative intelligibility (`Word Intelligibility: 97%`) from syllable-level acoustic precision (`af 71%`, `ter 75%`), resolving the scoring paradox without falsely penalizing intelligible ESL learners.
+  - **Spoken Phoneme Diagnosis via Azure `NBestPhonemes` ($0.00 Extra Cost)**: Surfaced candidate phoneme rankings directly from audio frames to explain what the student actually articulated (e.g. L1 Vietnamese unreleased stop coda `/t/` in `after` instead of fricative `/f/`).
+  - **Strict Oxford American IPA Standardization**: Standardized all learner-facing and diagnostic IPA strings through `Phonetics.normalizeIPA()` (converting turned-r `ɹ -> r`, `/ɚ/ -> /ər/`, `/ɝ/ -> /ɜːr/`, `/ɛ/ -> /e/`, stripping tie bars and diacritics, and converting flap `ɾ -> t`).
+  - **Natural & Casual Articulatory Coaching Tips**: Added conversational observations and intuitive physical coaching cues (smiling for `/iː/`, teeth-to-lip positioning for `/f/`, tongue curling for American `/r/`, jaw drop for `/æ/`, tongue-between-teeth for `/θ/`).
+  - **Interactive Syllable Audio Playback**: Preserved millisecond boundaries on syllable chips, enabling single-click isolated audio snippet playback via WebAudio anti-bleed gain envelopes.
+  - **Enlarged Tooltip UI & Readability**: Scaled tooltip card dimensions (min-width 280px, max-width 420px) and typography (word title 17px, chips 13px, diagnosis 12.5px) with hover delay debounce protection.
+  - **Comprehensive Backward Scan Across Firestore**: Rescored and backfilled 55 speaking questions across 21 entrance tests created/submitted since August 1, 2026 in Firestore.
+
 ## [V1.8.131] - 2026-09-06
 
 ### Added & Overhauled

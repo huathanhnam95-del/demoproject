@@ -540,8 +540,17 @@
 }
 
 #mode-essay .essay-prestart-layout-icon {
-  font-size: 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   margin-bottom: 5px;
+  color: var(--essay-muted, #7c6855);
+}
+
+#mode-essay .essay-prestart-layout-card.is-active .essay-prestart-layout-icon {
+  color: var(--essay-accent, #9a5722);
 }
 
 #mode-essay .essay-prestart-layout-name {
@@ -3435,9 +3444,7 @@
 }
 
 #mode-essay .essay-prompt-card .essay-kicker::before {
-  content: '📝';
-  font-size: 1.05rem;
-  line-height: 1;
+  content: none;
 }
 
 /* Hero prompt preview card on setup screen */

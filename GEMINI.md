@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.8.131
+- **Phase**: Release V1.8.132
 
 ## Instructions
 
@@ -20,6 +20,7 @@ This file guides the agent's understanding of the project structure and context.
 ## AI Task Tracking (CRITICAL)
 
 - **Continuous Tracking Rule**: You MUST automatically check and update a `TASK_TRACKER.csv` file located in the **root directory of the current active workspace**.
+- **Session Tag Hygiene (MANDATORY)**: Whenever starting a task (setting Current Status to 'In Progress') or when resuming a conversation that currently starts with `(D) `, you MUST immediately strip the `(D) ` prefix in your initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. An active development session MUST NEVER retain the `(D) ` prefix.
 - **When to update**: Only update the CSV when a task is **created** and when it is **completed**. Do NOT update the CSV at each stage of working, or when it's edited/fixed, unless the user explicitly types `#update`.
 - **Starting a task**: Read the CSV in the current workspace, append a new line with the incremented Task No., current Created Date, a concise Task Description (avoiding commas), and set Current Status to 'In Progress'. Format: `TaskNo,CreatedDate,Description,Status,DoneDate`
 - **Completing a task**: Update the existing row's Current Status to 'Done' and set the Done Date in the CSV.
@@ -35,6 +36,7 @@ This file guides the agent's understanding of the project structure and context.
 5. **Calculate TaskNo by scanning ALL rows**: When appending a new task, find the maximum TaskNo across the entire file — do NOT just read the last line. Out-of-order or deleted rows can cause duplicates if you only check the bottom.
 6. **Preserve line endings**: Match the existing file's line ending style (`\r\n` on Windows). Mixed line endings cause git to flag every line as changed and make targeted edits unreliable.
 7. **Verify after editing**: After any edit to TASK_TRACKER.csv, re-read the affected lines to confirm: (a) no duplicate TaskNos exist, (b) no duplicate rows were introduced, (c) the row count has not unexpectedly increased.
+8. **Strip `(D)` prefix on resume / task start**: Before or when updating TASK_TRACKER.csv with an 'In Progress' task, if the current session title starts with `(D) `, immediately run `python scripts/session_tagger.py remove-deployed`. Never leave `(D) ` on an active development session.
 
 ## GSD Auto-Integration (MANDATORY)
 
@@ -43,6 +45,9 @@ Every task MUST follow the GSD (Get Stuff Done) methodology automatically. This 
 ### Step 1: Classify the Task
 
 When a new task is created, immediately classify it:
+
+> [!IMPORTANT]
+> **Active Session Title Check**: If the current session title starts with `(D) `, run `python scripts/session_tagger.py remove-deployed` immediately during your first tool calls. Development sessions must never retain `(D)`.
 
 | Type | Examples | GSD Flow |
 |------|----------|----------|
@@ -143,11 +148,11 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.8.132`
+- **Next Version**: `V1.8.133`
 
 - **Deployed Session Tagging Protocol (`(D)`)**:
-  - Whenever a session/conversation concludes with a production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
-  - If a conversation marked with `(D)` is resumed later, after answering the user's prompt, automatically strip the `(D) ` prefix by running `python scripts/session_tagger.py remove-deployed`.
+  - Whenever a session/conversation concludes with an approved production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
+  - Whenever a conversation marked with `(D)` is resumed or new development starts, the agent MUST immediately strip the `(D) ` prefix during its initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. Never wait until after answering.
 
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).

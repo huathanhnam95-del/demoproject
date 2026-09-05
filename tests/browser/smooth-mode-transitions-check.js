@@ -140,7 +140,10 @@ const assert = require('assert');
 
     // Verify workspace is visible and loading spinner is bypassed or immediately renders
     await page.waitForSelector('#essay-guided-workspace', { timeout: 4000 });
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => {
+      const el = document.getElementById('essay-guided-content');
+      return el && el.textContent.trim().length > 50;
+    }, null, { timeout: 8000 });
 
     const guidedContentText = await page.locator('#essay-guided-content').textContent();
     assert.ok(guidedContentText.length > 50, 'Step 1 guided content should be populated');

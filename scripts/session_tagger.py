@@ -381,7 +381,8 @@ def remove_deployed(
     if not title:
         return {"status": "error", "message": f"Conversation {cid} not found in index."}
 
-    if not title.startswith("(D) "):
+    match = re.match(r"^\(D\)\s*", title)
+    if not match:
         return {
             "status": "noop",
             "message": "Title is not currently marked with (D).",
@@ -390,7 +391,7 @@ def remove_deployed(
             "is_deployed": False,
         }
 
-    new_title = title[4:].strip()
+    new_title = title[match.end() :].strip()
     rpc_ok = update_via_rpc(cid, new_title)
     pb_ok = update_pb_title(cid, new_title, pb_path=pb_path)
     annot_ok = update_annotation_file(cid, new_title, annotations_dir=annotations_dir)
@@ -421,21 +422,161 @@ def get_status(
         "status": "ok",
         "cid": cid,
         "title": title,
-        "is_deployed": title.startswith("(D) "),
+        "is_deployed": bool(re.match(r"^\(D\)\s*", title)),
+    }
+
+
+def list_deployed(
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+    pb_path: str = DEFAULT_PB_PATH,
+):
+    """List all conversations marked with (D)."""
+    deployed = []
+    seen = set()
+
+    pattern = os.path.join(annotations_dir, "*.pbtxt")
+    for f in glob.glob(pattern):
+        try:
+            with open(f, "r", encoding="utf-8", errors="ignore") as fp:
+                content = fp.read()
+            m = re.search(r'title\s*:\s*"([^"]+)"', content)
+            if m and re.match(r"^\(D\)\s*", m.group(1)):
+                cid = os.path.splitext(os.path.basename(f))[0]
+                deployed.append({"cid": cid, "title": m.group(1), "source": "annotation"})
+                seen.add(cid)
+        except Exception:
+            pass
+
+    if os.path.exists(pb_path):
+        try:
+            with open(pb_path, "rb") as f:
+                data = f.read()
+            root_fields = parse_raw_fields(data)
+            for _, _, conv_bytes in root_fields:
+                if isinstance(conv_bytes, bytes):
+                    conv_fields = parse_raw_fields(conv_bytes)
+                    cid_val = None
+                    for fnum, _, val in conv_fields:
+                        if fnum == 1 and isinstance(val, bytes):
+                            cid_val = val.decode("utf-8", errors="ignore")
+                    if cid_val and cid_val not in seen:
+                        for fnum, _, val in conv_fields:
+                            if fnum == 2 and isinstance(val, bytes):
+                                sfields = parse_raw_fields(val)
+                                for sfnum, _, tval in sfields:
+                                    if sfnum == 1 and isinstance(tval, bytes):
+                                        title_str = tval.decode("utf-8", errors="ignore")
+                                        if re.match(r"^\(D\)\s*", title_str):
+                                            deployed.append({"cid": cid_val, "title": title_str, "source": "proto"})
+                                            seen.add(cid_val)
+        except Exception:
+            pass
+
+    return deployed
+
+
+def audit_deployed(
+    clean_stale: bool = False,
+    annotations_dir: str = DEFAULT_ANNOTATIONS_DIR,
+    pb_path: str = DEFAULT_PB_PATH,
+    conv_dir: str = DEFAULT_CONV_DIR,
+):
+    """Audit all deployed sessions to see if new user messages arrived after deployment."""
+    deployed = list_deployed(annotations_dir=annotations_dir, pb_path=pb_path)
+    results = []
+
+    brain_dir = os.path.expanduser(r"~\.gemini\antigravity\brain")
+
+    for item in deployed:
+        cid = item["cid"]
+        title = item["title"]
+        tpath = os.path.join(brain_dir, cid, ".system_generated", "logs", "transcript.jsonl")
+
+        last_deploy_step = -1
+        last_user_step = -1
+        last_user_content = ""
+
+        if os.path.exists(tpath):
+            try:
+                with open(tpath, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        obj = json.loads(line)
+                        s_idx = obj.get("step_index", 0)
+                        if "mark-deployed" in str(obj):
+                            last_deploy_step = s_idx
+                        if obj.get("type") == "USER_INPUT":
+                            last_user_step = s_idx
+                            last_user_content = obj.get("content", "").strip().replace("\n", " ")[:120]
+            except Exception:
+                pass
+
+        is_stale = (last_deploy_step != -1 and last_user_step > last_deploy_step) or (
+            last_deploy_step == -1 and last_user_step > 0
+        )
+
+        entry = {
+            "cid": cid,
+            "title": title,
+            "last_deploy_step": last_deploy_step,
+            "last_user_step": last_user_step,
+            "last_user_content": last_user_content,
+            "is_stale": is_stale,
+        }
+
+        if is_stale and clean_stale:
+            res = remove_deployed(cid, pb_path=pb_path, conv_dir=conv_dir, annotations_dir=annotations_dir)
+            entry["cleaned"] = res.get("status") == "success"
+            entry["new_title"] = res.get("new_title")
+
+        results.append(entry)
+
+    return {
+        "status": "ok",
+        "total_deployed": len(deployed),
+        "stale_count": sum(1 for r in results if r["is_stale"]),
+        "cleaned": clean_stale,
+        "sessions": results,
     }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Manage production deployment markers for conversation titles.")
-    parser.add_argument("action", choices=["mark-deployed", "remove-deployed", "status"], help="Action to execute")
+    parser.add_argument(
+        "action",
+        choices=["mark-deployed", "remove-deployed", "status", "list-deployed", "audit-all"],
+        help="Action to execute",
+    )
     parser.add_argument("--cid", type=str, default=None, help="Target conversation UUID. Defaults to current active.")
     parser.add_argument("--pb-path", type=str, default=DEFAULT_PB_PATH, help="Path to agyhub_summaries_proto.pb")
     parser.add_argument("--conv-dir", type=str, default=DEFAULT_CONV_DIR, help="Path to conversations directory")
     parser.add_argument(
         "--annotations-dir", type=str, default=DEFAULT_ANNOTATIONS_DIR, help="Path to annotations directory"
     )
+    parser.add_argument(
+        "--clean-stale",
+        action="store_true",
+        help="Automatically strip (D) from stale sessions during audit-all",
+    )
 
     args = parser.parse_args()
+
+    if args.action == "list-deployed":
+        res = {
+            "status": "ok",
+            "sessions": list_deployed(annotations_dir=args.annotations_dir, pb_path=args.pb_path),
+        }
+        print(json.dumps(res, indent=2))
+        return
+
+    if args.action == "audit-all":
+        res = audit_deployed(
+            clean_stale=args.clean_stale,
+            annotations_dir=args.annotations_dir,
+            pb_path=args.pb_path,
+            conv_dir=args.conv_dir,
+        )
+        print(json.dumps(res, indent=2))
+        return
 
     cid = args.cid
     if not cid:
@@ -475,3 +616,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

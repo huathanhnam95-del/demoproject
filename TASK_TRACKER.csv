@@ -1990,4 +1990,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 995,2026-09-06,Promote 1105 audited RFIB explanations with distractor contrast UI and resolve 23 edge cases,In Progress,
 996,2026-09-06,Audit debug and refactor Teaching Session Viewer Round 4 implementation,Done,2026-09-06
 997,2026-09-06,Release V1.8.131: Deploy Teaching Session Viewer Round 4 and audit hardening to production,Done,2026-09-06
-998,2026-09-06,Fix and enforce automatic removal of (D) session tag when new development resumes,In Progress,
+998,2026-09-06,Fix and enforce automatic removal of (D) session tag when new development resumes,Done,2026-09-06
+999,2026-09-06,Backward scan and rescore entrance tests since August 2026 and deploy V1.8.132 to production,Done,2026-09-06
+1000,2026-09-06,Guided Write Essay: remove trap notes strip AI emojis and refine Vietnamese phrasing across UI and support pack,Done,2026-09-06

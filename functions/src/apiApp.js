@@ -19,6 +19,7 @@ const { createVoiceCloningAdminRouter } = require('./voice-cloning/admin-routes'
 const readAloudRoutes = require('./routes/read-aloud');
 const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
+const pronunciationComparisonRoutes = require('./routes/pronunciation-comparison');
 const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
 const {
     practiceAttemptsLimiterByUid,
@@ -388,6 +389,7 @@ app.use('/api/echo-forge/assess', createEchoForgeOriginGuard({ environment: proc
 app.use('/api/echo-forge/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/vowel-hint', optionalAuthMiddleware, azureAssessmentRateLimiter);
+app.use('/api/pronunciation-assessment', optionalAuthMiddleware, azureAssessmentRateLimiter, pronunciationComparisonRoutes);
 app.use('/api', optionalAuthMiddleware, readAloudRoutes);
 app.use('/api', optionalAuthMiddleware, createEchoForgeRouter());
 app.use('/api', optionalAuthMiddleware, pronunciationTestRoutes);

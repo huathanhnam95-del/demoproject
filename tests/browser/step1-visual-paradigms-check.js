@@ -159,7 +159,7 @@ const crypto = require('crypto');
     assert.ok(await mmKeywords.count() > 0, 'Clause cards must render core keyword chips');
 
     const mmTraps = mmAnalyzer.locator('.essay-clause-trap');
-    assert.ok(await mmTraps.count() > 0, 'Clause cards must render interpretation traps');
+    assert.strictEqual(await mmTraps.count(), 0, 'Clause cards must NOT render trap boxes (removed per requirement)');
 
     // Check Prompt Tension Banner
     const mmTensionBanner = mmAnalyzer.locator('.essay-prompt-tension-banner');
@@ -238,7 +238,7 @@ const crypto = require('crypto');
     assert.ok(await fcKeywords.count() > 0, 'Flowchart cards must render core keyword chips');
 
     const fcTraps = clauseFlowchart.locator('.essay-clause-trap');
-    assert.ok(await fcTraps.count() > 0, 'Flowchart cards must render interpretation traps');
+    assert.strictEqual(await fcTraps.count(), 0, 'Flowchart cards must NOT render trap boxes (removed per requirement)');
 
     const fcTensionBanner = flowchartLayout.locator('.essay-flowchart-stage .essay-prompt-tension-banner');
     assert.strictEqual(await fcTensionBanner.isVisible(), true, 'Flowchart Stage 1 must include prompt tension banner');
@@ -311,7 +311,7 @@ const crypto = require('crypto');
     assert.ok(await cardsKeywords.count() > 0, 'Cards mode clause cards must render keyword chips');
 
     const cardsTraps = clauseGrid.locator('.essay-clause-trap');
-    assert.ok(await cardsTraps.count() > 0, 'Cards mode clause cards must render traps');
+    assert.strictEqual(await cardsTraps.count(), 0, 'Cards mode clause cards must NOT render traps (removed per requirement)');
 
     // Verify Mindmap Leak is completely eliminated: canvas must NOT exist in cards mode
     const leakedCanvas = await page.locator('#essay-prompt-mindmap-canvas').count();

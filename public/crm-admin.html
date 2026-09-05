@@ -6,17 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260906-v1.8.131">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260906-v1.8.132">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
+    content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 http://localhost:8081 http://127.0.0.1:8081 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260906-v1.8.131&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260906-v1.8.131&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260906-v1.8.132&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260906-v1.8.132&bgm=v2" />
 </head>
 
 <body>
@@ -208,413 +208,10 @@
         </div>
       </section>
 
-      <!-- Pronunciation Samples Recording Tool (Admin Only) -->
+      <!-- Pronunciation Dual Comparison Arena (Option A vs. Option B) -->
       <section class="crm-panel" data-panel="pronunciation-samples" style="display: none;">
-        <div class="pv-page-header">
-          <div class="pv-page-title-row">
-            <h2>Pronunciation Verification</h2>
-            <p class="crm-muted">Record, review, and manage pronunciation corpus samples.</p>
-          </div>
-          <nav class="pv-sub-tabs" role="tablist" aria-label="Pronunciation verification sections">
-            <button class="pv-sub-tab is-active" data-pv-tab="record" role="tab" aria-selected="true" aria-controls="pv-panel-record" id="pv-tab-record" type="button">Record</button>
-            <button class="pv-sub-tab" data-pv-tab="queue" role="tab" aria-selected="false" aria-controls="pv-panel-queue" id="pv-tab-queue" type="button">Queue</button>
-            <button class="pv-sub-tab" data-pv-tab="samples" role="tab" aria-selected="false" aria-controls="pv-panel-samples" id="pv-tab-samples" type="button">Samples</button>
-            <button class="pv-sub-tab" data-pv-tab="study" role="tab" aria-selected="false" aria-controls="pv-panel-study" id="pv-tab-study" type="button">Study</button>
-          </nav>
-        </div>
-
-        <!-- TAB 1: Record -->
-        <div class="pv-tab-panel is-active" id="pv-panel-record" data-pv-panel="record" role="tabpanel" aria-labelledby="pv-tab-record">
-          <div id="corpus-step-guidance" class="pv-step-guidance" role="status" aria-live="polite">Step 1: Select a target word to begin.</div>
-
-          <div class="corpus-progress-dashboard" id="corpus-progress-dashboard">
-            <div class="corpus-stat">
-              <span class="corpus-stat-value" id="corpus-total-count">0</span>
-              <span class="corpus-stat-label">/ 120 total</span>
-            </div>
-            <div class="corpus-stat">
-              <span class="corpus-stat-value" id="corpus-clean-count">0</span>
-              <span class="corpus-stat-label">/ 60 clean</span>
-            </div>
-            <div class="corpus-stat">
-              <span class="corpus-stat-value" id="corpus-adversarial-count">0</span>
-              <span class="corpus-stat-label">/ 30 adversarial</span>
-            </div>
-            <div class="corpus-stat">
-              <span class="corpus-stat-value" id="corpus-accented-count">0</span>
-              <span class="corpus-stat-label">/ 30 accented</span>
-            </div>
-            <div class="corpus-progress-bar-track">
-              <div class="corpus-progress-bar-fill" id="corpus-progress-fill" style="width: 0%;"></div>
-            </div>
-          </div>
-
-          <div class="pv-record-layout">
-            <!-- Left Column: Word navigation -->
-            <div class="pv-word-sidebar">
-              <h3 class="pv-sidebar-title">Select Target Word</h3>
-              <label for="corpus-sample-filter" class="pv-filter-label">Show tests:</label>
-              <select id="corpus-sample-filter" class="crm-input pv-full-width">
-                <option value="all">All words</option>
-                <option value="missing">Missing any version (&lt; 5/5)</option>
-                <option value="missing_clean">Missing Version 1: Clean</option>
-                <option value="missing_omission">Missing Version 2: Omission</option>
-                <option value="missing_insertion">Missing Version 3: Insertion</option>
-                <option value="missing_accented">Missing Version 4: Accented</option>
-                <option value="missing_unrateable">Missing Version 5: Unrateable</option>
-                <option value="needs_rerecord">Needs re-recording</option>
-                <option value="needs_review">Needs manual review</option>
-                <option value="auto_unrateable">Auto-unrateable</option>
-                <option value="recorded">Complete (5/5 versions)</option>
-              </select>
-
-              <input type="text" id="corpus-word-search" class="crm-input pv-full-width" placeholder="Search words…" />
-              <div class="pv-pagination">
-                <button id="btn-corpus-page-prev" class="crm-btn crm-btn-secondary" type="button">Previous</button>
-                <span id="corpus-page-status" class="crm-muted pv-page-status">Page 1</span>
-                <button id="btn-corpus-page-next" class="crm-btn crm-btn-secondary" type="button">Next</button>
-              </div>
-              <ul id="corpus-word-list" class="pv-word-list">
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn active" data-word="busy" data-ipa="ˈbɪz.i" data-count="2">busy (2)</button></li>
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="photograph" data-ipa="ˈfoʊ.tə.ɡræf" data-count="3">photograph (3)</button></li>
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="photography" data-ipa="fəˈtɑː.ɡrə.fi" data-count="4">photography (4)</button></li>
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="banana" data-ipa="bəˈnæn.ə" data-count="3">banana (3)</button></li>
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="camera" data-ipa="ˈkæm.rə" data-count="2">camera (2)</button></li>
-                <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="university" data-ipa="ˌjuː.nɪˈvɜːr.sə.t̬i" data-count="5">university (5)</button></li>
-              </ul>
-              <p id="corpus-word-list-status" class="crm-muted pv-word-list-status">Loading the Oxford 5000 test list…</p>
-
-              <div class="pv-custom-word-section" style="display: none;">
-                <label for="corpus-custom-word" class="pv-field-label">Or Custom Word:</label>
-                <input type="text" id="corpus-custom-word" placeholder="e.g. photography" class="crm-input pv-full-width" />
-                <div class="pv-custom-ipa-row">
-                  <input type="text" id="corpus-custom-ipa" placeholder="IPA" class="crm-input pv-flex-fill" />
-                  <input type="number" id="corpus-custom-count" placeholder="Syllables" class="crm-input pv-syllable-input" min="1" />
-                </div>
-                <button id="btn-corpus-use-custom" class="crm-btn crm-btn-secondary pv-full-width pv-btn-small">Use Custom Word</button>
-              </div>
-            </div>
-
-            <!-- Right Column: Recording Console -->
-            <div class="pv-console-column">
-              <!-- Metadata form -->
-              <div class="pv-card">
-                <h3 class="pv-card-title">Attempt Metadata</h3>
-                <div class="pv-metadata-grid">
-                  <div>
-                    <label class="pv-field-label">Target Word:</label>
-                    <span id="corpus-display-word" class="pv-display-word">busy</span>
-                  </div>
-                  <div>
-                    <label class="pv-field-label">Target IPA & Syllables:</label>
-                    <span id="corpus-display-ipa-count" class="pv-display-ipa">/ˈbɪz.i/ (2 syllables)</span>
-                  </div>
-                  <div>
-                    <label for="corpus-category" class="pv-field-label">Category:</label>
-                    <select id="corpus-category" class="crm-input pv-full-width" disabled aria-describedby="corpus-test-instruction">
-                      <option value="clean">clean (correct pronunciation)</option>
-                      <option value="omission">omission (missed syllables)</option>
-                      <option value="insertion">insertion (extra syllables)</option>
-                      <option value="accented">accented (accented pronunciation)</option>
-                      <option value="unrateable">unrateable (unclear/noise)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="corpus-expected-observed-count" class="pv-field-label">Expected Observed Count:</label>
-                    <input type="number" id="corpus-expected-observed-count" value="2" class="crm-input pv-full-width" min="0" readonly aria-describedby="corpus-test-instruction" />
-                  </div>
-                  <div>
-                    <label for="corpus-speaker-cohort" class="pv-field-label">Deidentified Speaker Cohort:</label>
-                    <select id="corpus-speaker-cohort" class="crm-input pv-full-width" aria-describedby="corpus-test-instruction">
-                      <option value="native-us">native-us (American English)</option>
-                      <option value="l1-vn-01" selected>l1-vn-01 (Vietnamese L1)</option>
-                      <option value="l1-zh-01">l1-zh-01 (Chinese L1)</option>
-                      <option value="l1-ja-01">l1-ja-01 (Japanese L1)</option>
-                      <option value="l1-ko-01">l1-ko-01 (Korean L1)</option>
-                      <option value="l1-hi-01">l1-hi-01 (Hindi L1)</option>
-                      <option value="custom">Custom…</option>
-                    </select>
-                    <div id="corpus-cohort-custom-row">
-                      <input type="text" id="corpus-cohort-custom-input" class="crm-input pv-full-width" placeholder="e.g. l1-es-01" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="pv-field-label">Generated Sample ID:</label>
-                    <span id="corpus-sample-id" class="pv-sample-id">busy-clean-l1-vn-01-...</span>
-                  </div>
-                </div>
-                <div id="corpus-test-instruction" class="pv-test-instruction" role="note">
-                  <strong id="corpus-version-status">Version 1 of 5 · Clean</strong>
-                  <div id="corpus-test-instruction-text" class="pv-instruction-text">Say "busy" once, naturally and clearly. Do not repeat it or add another word.</div>
-                </div>
-              </div>
-
-              <!-- Audio Capture -->
-              <div class="pv-card">
-                <h3 class="pv-card-title">Audio Capture</h3>
-                <div class="pv-capture-center">
-                  <canvas id="corpus-visualizer" class="pv-visualizer" width="500" height="80"></canvas>
-                  <div class="pv-mic-status" id="corpus-mic-status">Status: Microphone Ready</div>
-                  <span class="corpus-recording-timer" id="corpus-recording-timer"><span class="corpus-recording-dot"></span> <span id="corpus-timer-value">0.0s</span></span>
-
-                  <div class="pv-record-buttons">
-                    <button id="btn-corpus-record" class="crm-btn crm-btn-primary pv-btn-record">Record</button>
-                    <button id="btn-corpus-stop" class="crm-btn crm-btn-secondary pv-btn-action" disabled>Stop</button>
-                    <button id="btn-corpus-redo" class="crm-btn crm-btn-secondary pv-btn-action" disabled>Redo</button>
-                  </div>
-
-                  <div id="corpus-stream-banner" class="corpus-stream-banner">
-                    <span>Rapid Stream Mode:</span>
-                    <span id="corpus-stream-countdown-text">Ready to speak in 3...</span>
-                    <button id="btn-corpus-pause-stream" type="button" class="crm-btn pv-btn-stream-pause">Pause (Space)</button>
-                  </div>
-
-                  <div class="corpus-hotkey-legend" id="corpus-hotkey-legend">
-                    <span class="corpus-hotkey"><kbd>R</kbd> Record</span>
-                    <span class="corpus-hotkey"><kbd>Space</kbd> Pause/Stop</span>
-                    <span class="corpus-hotkey"><kbd>Enter</kbd> Save</span>
-                    <span class="corpus-hotkey"><kbd>Backspace</kbd> Redo</span>
-                    <span class="corpus-hotkey"><kbd>←</kbd><kbd>→</kbd> Version</span>
-                    <span class="corpus-hotkey"><kbd>N</kbd> Next Word</span>
-                  </div>
-                  <div class="pv-options-row">
-                    <label class="corpus-auto-advance">
-                      <input type="checkbox" id="corpus-auto-advance-toggle" checked />
-                      Auto-advance after save
-                    </label>
-                    <label class="corpus-auto-advance pv-rapid-stream-label">
-                      <input type="checkbox" id="corpus-rapid-stream-toggle" />
-                      Rapid Stream (Hands-Free VAD)
-                    </label>
-                  </div>
-
-                  <div id="corpus-playback-container" class="pv-playback-container">
-                    <audio id="corpus-audio-player" controls class="pv-audio-player"></audio>
-                  </div>
-                </div>
-
-                <div class="pv-action-bar">
-                  <span id="corpus-console-output" class="crm-muted pv-console-output">No changes pending.</span>
-                  <button id="btn-corpus-save" class="crm-btn" disabled>Save Attempt</button>
-                  <button id="btn-corpus-prev-version" class="crm-btn crm-btn-secondary pv-btn-nav" type="button" disabled>← Prev</button>
-                  <button id="btn-corpus-next-version" class="crm-btn crm-btn-primary pv-btn-nav" type="button" disabled>Next →</button>
-                  <button id="btn-corpus-next-word" class="crm-btn crm-btn-primary pv-btn-nav" type="button">Next Word →</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB 2: Queue -->
-        <div class="pv-tab-panel" id="pv-panel-queue" data-pv-panel="queue" role="tabpanel" aria-labelledby="pv-tab-queue">
-          <section id="reference-audio-queue" class="reference-audio-queue" aria-labelledby="reference-audio-queue-heading">
-            <div class="reference-audio-queue-header">
-              <div>
-                <h3 id="reference-audio-queue-heading">Reference Audio Queue</h3>
-                <p class="crm-muted">Missing, conflicting, and acoustically unrateable dictionary variants awaiting a verified replacement.</p>
-              </div>
-              <div class="reference-audio-queue-counts" aria-label="Reference audio queue counts">
-                <span><strong id="reference-audio-waiting-count">0</strong> Waiting</span>
-                <span><strong id="reference-audio-generated-count">0</strong> Generated</span>
-              </div>
-            </div>
-            <div class="reference-audio-queue-controls">
-              <input id="reference-audio-search" class="crm-input" type="search" placeholder="Search word or IPA" aria-label="Search reference audio queue" />
-              <select id="reference-audio-pos-filter" class="crm-input" aria-label="Filter reference audio by part of speech">
-                <option value="">All parts of speech</option>
-              </select>
-              <select id="reference-audio-reason-filter" class="crm-input" aria-label="Filter reference audio by reason">
-                <option value="">All reasons</option>
-                <option value="missing_source_audio">Missing source audio</option>
-                <option value="source_variant_conflict">Source variant conflict</option>
-                <option value="acoustic_unrateable">Acoustic unrateable</option>
-              </select>
-              <button id="btn-reference-audio-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh queue</button>
-              <button id="btn-reference-audio-export" class="crm-btn crm-btn-secondary" type="button">Export pending manifest</button>
-            </div>
-            <div class="crm-table-container reference-audio-table-wrap">
-              <table class="crm-table">
-                <thead><tr><th>Word / form</th><th>IPA / stress</th><th>Reason</th><th>Status</th><th>Last seen</th><th>Audio</th></tr></thead>
-                <tbody id="reference-audio-queue-items"><tr><td colspan="6" class="crm-muted">Queue not loaded yet.</td></tr></tbody>
-              </table>
-            </div>
-            <audio id="reference-audio-preview" preload="none" hidden></audio>
-          </section>
-        </div>
-
-        <!-- TAB 3: Samples -->
-        <div class="pv-tab-panel" id="pv-panel-samples" data-pv-panel="samples" role="tabpanel" aria-labelledby="pv-tab-samples">
-          <div class="pv-samples-header">
-            <div>
-              <h3>Saved Samples</h3>
-              <p class="crm-muted">Cloud-stored recordings available for later verification.</p>
-            </div>
-            <button id="btn-corpus-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
-          </div>
-          <div id="corpus-saved-samples" class="crm-stack-list">
-            <div class="crm-muted">No samples loaded yet.</div>
-          </div>
-        </div>
-
-        <!-- TAB 4: Study -->
-        <div class="pv-tab-panel" id="pv-panel-study" data-pv-panel="study" role="tabpanel" aria-labelledby="pv-tab-study">
-        <section id="segmentation-study-workspace" class="segmentation-study-workspace" aria-labelledby="segmentation-study-title">
-          <div class="segmentation-study-header">
-            <div class="segmentation-study-header-main">
-              <h3 id="segmentation-study-title">Segmentation Study</h3>
-              <nav class="segmentation-study-modes" aria-label="Segmentation study mode">
-                <button type="button" class="segmentation-study-mode is-active" data-study-mode="record">Record &amp; review</button>
-                <button type="button" class="segmentation-study-mode" data-study-mode="previous">Previous samples</button>
-              </nav>
-            </div>
-            <div class="segmentation-study-identity">
-              <label for="segmentation-study-operator">Reviewer</label>
-              <input id="segmentation-study-operator" class="crm-input" type="text" autocomplete="name" placeholder="Enter your name" />
-              <span id="segmentation-study-identity-status" class="crm-muted" role="status" aria-live="polite"></span>
-            </div>
-          </div>
-
-          <ol id="segmentation-study-steps" class="segmentation-study-steps" aria-label="Review progress">
-            <li class="segmentation-study-stepitem" data-step="claim"><span class="segmentation-study-step-index">1</span><span class="segmentation-study-step-label">Claim</span><span class="segmentation-study-step-note"></span></li>
-            <li class="segmentation-study-stepitem" data-step="record"><span class="segmentation-study-step-index">2</span><span class="segmentation-study-step-label">Record</span><span class="segmentation-study-step-note"></span></li>
-            <li class="segmentation-study-stepitem" data-step="analyze"><span class="segmentation-study-step-index">3</span><span class="segmentation-study-step-label">Analyze</span><span class="segmentation-study-step-note"></span></li>
-            <li class="segmentation-study-stepitem" data-step="compare"><span class="segmentation-study-step-index">4</span><span class="segmentation-study-step-label">Compare</span><span class="segmentation-study-step-note"></span></li>
-            <li class="segmentation-study-stepitem" data-step="mark"><span class="segmentation-study-step-index">5</span><span class="segmentation-study-step-label">Mark &amp; save</span><span class="segmentation-study-step-note"></span></li>
-          </ol>
-
-          <div class="segmentation-study-task-heading">
-            <div class="segmentation-study-task-identity">
-              <h4 id="segmentation-study-word">No word claimed</h4>
-              <p id="segmentation-study-reference" class="segmentation-study-reference">The selected word and IPA will appear here.</p>
-            </div>
-            <div class="segmentation-study-task-meta">
-              <span id="segmentation-study-claim-status" class="segmentation-study-claim-status">Not reserved</span>
-              <button id="segmentation-study-claim" class="crm-btn crm-btn-primary" type="button">Claim next word</button>
-              <button id="segmentation-study-release" class="crm-btn crm-btn-secondary" type="button" disabled>Skip / release word</button>
-              <button id="segmentation-study-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
-            </div>
-          </div>
-          <p id="segmentation-study-step" class="segmentation-study-step-hint crm-muted">Step 1 · Claim a word</p>
-          <p id="segmentation-study-status" class="segmentation-study-status crm-muted" role="status" aria-live="polite">Enter your name to join the study.</p>
-
-          <details id="segmentation-study-queue-details" class="segmentation-study-queue-details">
-            <summary>Study queue <span id="segmentation-study-queue-count" class="crm-muted">(0 available)</span></summary>
-            <div class="segmentation-study-stats" aria-label="Segmentation study progress">
-              <span><strong id="segmentation-study-available">0</strong> available</span>
-              <span><strong id="segmentation-study-reserved">0</strong> reserved</span>
-              <span><strong id="segmentation-study-completed">0</strong> completed</span>
-              <span><strong id="segmentation-study-uncertain">0</strong> uncertain</span>
-              <span><strong id="segmentation-study-failed">0</strong> failed</span>
-            </div>
-            <p class="crm-muted">The shared queue reserves one word at a time. Previous samples are listed here after you choose that mode.</p>
-            <ol id="segmentation-study-queue" class="segmentation-study-queue" aria-label="Segmentation study words"></ol>
-          </details>
-
-          <div id="segmentation-study-transport" class="segmentation-study-transport">
-            <div class="segmentation-study-transport-group">
-              <button id="segmentation-study-record" class="crm-btn crm-btn-primary" type="button" disabled>● Record</button>
-              <button id="segmentation-study-stop" class="crm-btn crm-btn-secondary" type="button" disabled>■ Stop</button>
-              <button id="segmentation-study-redo" class="crm-btn crm-btn-secondary" type="button" disabled>↻ Redo</button>
-            </div>
-            <div class="segmentation-study-transport-group">
-              <button id="segmentation-study-play" class="crm-btn crm-btn-secondary" type="button" disabled>▶ Play</button>
-              <button id="segmentation-study-loop" class="crm-btn crm-btn-secondary segmentation-study-toggle" type="button" aria-pressed="false" disabled>🔁 Loop</button>
-              <label class="segmentation-study-speed">Speed
-                <select id="segmentation-study-playback-speed" aria-label="Playback speed">
-                  <option value="0.25">0.25×</option>
-                  <option value="0.35">0.35×</option>
-                  <option value="0.5">0.5×</option>
-                  <option value="0.75">0.75×</option>
-                  <option value="1" selected>1×</option>
-                  <option value="1.25">1.25×</option>
-                </select>
-              </label>
-              <label class="segmentation-study-speed">Loop gap
-                <select id="segmentation-study-loop-gap" aria-label="Silence between loop repeats">
-                  <option value="0">0 ms</option>
-                  <option value="150">150 ms</option>
-                  <option value="300" selected>300 ms</option>
-                  <option value="500">500 ms</option>
-                </select>
-              </label>
-            </div>
-            <div class="segmentation-study-transport-group segmentation-study-ab">
-              <span id="segmentation-study-ab-readout" class="crm-muted">A–B · drag across the waveform to select a slice</span>
-              <button id="segmentation-study-ab-clear" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" disabled>Clear A–B</button>
-            </div>
-            <audio id="segmentation-study-audio" controls preload="metadata" hidden></audio>
-          </div>
-
-          <div class="segmentation-study-capture-row">
-            <label class="segmentation-study-playback-confirm"><input id="segmentation-study-playback-confirmed" type="checkbox" /> I listened to the saved recording</label>
-            <span id="segmentation-study-record-status" class="crm-muted" role="status" aria-live="polite">No recording yet.</span>
-            <span id="segmentation-study-capture-status" class="crm-muted" role="status" aria-live="polite">Capture settings unavailable.</span>
-          </div>
-
-          <div class="segmentation-study-analysis-actions">
-            <button id="segmentation-study-analyze" class="crm-btn crm-btn-secondary" type="button" disabled>Analyze V2/V3/V4</button>
-            <span id="segmentation-study-analysis-status" class="crm-muted" role="status" aria-live="polite">Analysis is required before review.</span>
-          </div>
-
-
-
-          <div class="segmentation-study-tabs" role="tablist" aria-label="Automatic and manual boundaries">
-            <button id="segmentation-study-tab-v2" class="segmentation-study-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="segmentation-study-panel-v2" data-study-version="v2">V2</button>
-            <button id="segmentation-study-tab-v3" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v3" data-study-version="v3">V3</button>
-            <button id="segmentation-study-tab-v4" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-v4" data-study-version="v4">V4</button>
-            <button id="segmentation-study-tab-manual" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-manual" data-study-version="manual">Manual review</button>
-            <button id="segmentation-study-tab-compare" class="segmentation-study-tab" type="button" role="tab" aria-selected="false" aria-controls="segmentation-study-panel-compare" data-study-version="compare" hidden>Compare all</button>
-          </div>
-
-          <div id="segmentation-study-timeline" class="segmentation-study-timeline" aria-label="Aligned waveform and spectrogram" tabindex="0">
-            <div class="segmentation-study-waveform-stack">
-              <div id="segmentation-study-waveform" class="segmentation-study-waveform"></div>
-              <div id="segmentation-study-ghosts" class="segmentation-study-ghosts" aria-hidden="true"></div>
-            </div>
-            <div id="segmentation-study-time-ruler" class="segmentation-study-time-ruler" aria-hidden="true"></div>
-            <div id="segmentation-study-spectrogram" class="segmentation-study-spectrogram"></div>
-            <div id="segmentation-study-timeline-empty" class="segmentation-study-timeline-empty crm-muted">Record or load a sample to see its waveform and spectrogram.</div>
-          </div>
-
-          <div class="segmentation-study-lanes-header">
-            <span class="segmentation-study-lanes-title">Boundary comparison</span>
-            <label class="segmentation-study-ghost-toggle"><input id="segmentation-study-ghost-toggle" type="checkbox" checked /> Show reference lines</label>
-          </div>
-          <div id="segmentation-study-lanes" class="segmentation-study-lanes" aria-label="Version boundary comparison"></div>
-
-          <div class="segmentation-study-version-panels">
-            <div id="segmentation-study-panel-v2" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v2"></div>
-            <div id="segmentation-study-panel-v3" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v3" hidden></div>
-            <div id="segmentation-study-panel-v4" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-v4" hidden></div>
-            <div id="segmentation-study-panel-manual" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-manual" hidden>
-              <p id="segmentation-study-manual-instructions">Mark the start, each shared internal boundary, and the end of the word.</p>
-              <p class="crm-muted">Keyboard: use ←/→ for 5 ms steps; hold Shift for 1 ms fine steps. Focus the timeline first.</p>
-              <p id="segmentation-study-manual-summary" class="crm-muted" aria-live="polite">No manual segments marked yet.</p>
-              <div class="segmentation-study-manual-controls">
-                <button id="segmentation-study-manual-undo" class="crm-btn crm-btn-secondary" type="button" disabled>Undo</button>
-                <button id="segmentation-study-manual-clear" class="crm-btn crm-btn-secondary" type="button" disabled>Clear</button>
-                <label><input id="segmentation-study-manual-certainty" type="radio" name="segmentation-study-certainty" value="certain" /> Certain</label>
-                <label><input type="radio" name="segmentation-study-certainty" value="uncertain" /> Unsure</label>
-                <span id="segmentation-study-manual-count" class="crm-muted">0 boundaries</span>
-              </div>
-            </div>
-            <div id="segmentation-study-panel-compare" class="segmentation-study-version-panel" role="tabpanel" aria-labelledby="segmentation-study-tab-compare" hidden></div>
-          </div>
-
-          <!-- Not aria-live: this table is rebuilt on every boundary edit, and
-               announcing it each time would bury the status messages. -->
-          <div id="segmentation-study-deltas" class="segmentation-study-deltas" aria-label="Automatic boundaries compared with your manual boundaries"></div>
-          <div class="segmentation-study-summary" id="segmentation-study-summary" role="status" aria-live="polite"></div>
-
-          <div class="segmentation-study-actions">
-            <ul id="segmentation-study-checklist" class="segmentation-study-checklist" aria-label="Requirements before saving"></ul>
-            <div class="segmentation-study-action-buttons">
-              <button id="segmentation-study-save" class="crm-btn crm-btn-primary" type="button" disabled>Save sample</button>
-              <button id="segmentation-study-next" class="crm-btn crm-btn-secondary" type="button" disabled>Next word</button>
-            </div>
-          </div>
-        </section>
-        </div>
+        <div id="pronunciation-dual-arena-mount"></div>
+        <select id="pv-samples-filter-status" style="display:none;" hidden aria-hidden="true"><option value="auto_unrateable">Auto-unrateable</option></select>
       </section>
 
       <!-- Voice Cloning Studio (Local Mel-Flow Matching + Cloud Profiles) -->
@@ -2942,62 +2539,63 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260906-v1.8.131"></script>
-  <script src="js/classroom-api.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/utils.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/state.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/dom.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/courses.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/schedule-availability.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/students.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/student-360.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/student-courses.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/classrooms.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/leads.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/activities.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/enrollments.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/attendance.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/finance-workflow.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/finance.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/communications.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/staff-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/student-finance.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/live-delivery.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/classroom-modal.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/student-modal.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/course-modal.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/lead-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/communications-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/books-workspace.js?v=20260906-v1.8.131&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/dashboard.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/governance.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/index.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/devtools-access.js?v=20260906-v1.8.131&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260906-v1.8.131"></script>
-  <script src="arpabet-ipa-map.js?v=20260906-v1.8.131"></script>
-  <script src="phonetics.js?v=20260906-v1.8.131"></script>
+  <script src="js/auth-session-guard.js?v=20260906-v1.8.132"></script>
+  <script src="js/classroom-api.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/utils.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/state.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/dom.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/courses.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/schedule-availability.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/students.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/student-360.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/student-courses.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/classrooms.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/leads.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/activities.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/enrollments.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/attendance.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/finance-workflow.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/finance.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/communications.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/staff-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/student-finance.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/live-delivery.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/classroom-modal.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/student-modal.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/course-modal.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/lead-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/communications-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/books-workspace.js?v=20260906-v1.8.132&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/dashboard.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/governance.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/index.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/devtools-access.js?v=20260906-v1.8.132&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260906-v1.8.132"></script>
+  <script src="arpabet-ipa-map.js?v=20260906-v1.8.132"></script>
+  <script src="phonetics.js?v=20260906-v1.8.132"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-session-mindmap.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/teaching-session-pdf.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260906-v1.8.131"></script>
-  <script src="crm-admin.js?v=20260906-v1.8.131"></script>
-  <script src="js/crm/segmentation-study.js?v=20260906-v1.8.131" defer></script>
+  <script src="js/crm/teaching-session-mindmap.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/teaching-session-pdf.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/teaching-sessions.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/pronunciation-dual-arena.js?v=20260906-v1.8.132"></script>
+  <script src="crm-admin.js?v=20260906-v1.8.132"></script>
+  <script src="js/crm/segmentation-study.js?v=20260906-v1.8.132" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

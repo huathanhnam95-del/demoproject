@@ -169,6 +169,37 @@ class TestV4LogitAlignment(unittest.TestCase):
         self.assertFalse(result.aligned)
         self.assertEqual(result.reason, "V4_TOKEN_SEQUENCE_MISMATCH")
 
+    def test_vowel_nucleus_timing_exposed_on_v4_syllable(self):
+        from backend.phoneme_service.v4_syllabification import align_v4_reference
+
+        symbols = ["<pad>", "k", "æ", "m", "ə", "r"]
+        probabilities = np.full((11, len(symbols)), 0.01, dtype=float)
+        sequence = [0, 1, 1, 2, 2, 3, 0, 4, 4, 5, 0]
+        for frame, token_id in enumerate(sequence):
+            probabilities[frame, token_id] = 0.9
+        result = align_v4_reference(
+            np.log(probabilities),
+            "/ˈkæmərə/",
+            symbols,
+            blank_id=0,
+            sample_count=1760,
+            sample_rate=16000,
+        )
+
+        self.assertTrue(result.aligned)
+        syl1 = result.syllables[0]
+        self.assertIsNotNone(syl1.vowel_start_time)
+        self.assertIsNotNone(syl1.vowel_end_time)
+        self.assertIsNotNone(syl1.vowel_duration)
+        self.assertGreater(syl1.vowel_duration, 0)
+        # Check serialization in to_dict()
+        data = syl1.to_dict()
+        self.assertIn("vowel_duration", data)
+        self.assertIn("vowelDuration", data)
+        self.assertIn("vowelStartTime", data)
+        self.assertIn("vowelEndTime", data)
+        self.assertEqual(data["vowelDuration"], syl1.vowel_duration)
+
 
 if __name__ == "__main__":
     unittest.main()

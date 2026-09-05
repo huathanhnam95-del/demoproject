@@ -5248,6 +5248,199 @@ def analyze_vowel():
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
+@app.route('/analyze-nucleus-prosody', methods=['POST'])
+def analyze_nucleus_prosody():
+    """
+    Measure Praat pitch (F0) and intensity over specific vowel nucleus intervals.
+    Used by Option A (Azure Speech + Praat Prosody Fusion).
+    """
+    if 'audio' not in request.files and not request.json:
+        return jsonify({'error': 'No audio provided'}), 400
+
+    intervals_raw = request.form.get('intervals')
+    if not intervals_raw and request.json:
+        intervals_raw = request.json.get('intervals')
+    
+    intervals = []
+    if isinstance(intervals_raw, str):
+        try:
+            intervals = json.loads(intervals_raw)
+        except Exception:
+            intervals = []
+    elif isinstance(intervals_raw, list):
+        intervals = intervals_raw
+
+    tmp_path = None
+    try:
+        if 'audio' in request.files:
+            audio_file = request.files['audio']
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                audio_file.save(tmp.name)
+                tmp_path = tmp.name
+        elif request.json and request.json.get('audioBase64'):
+            import base64
+            audio_data = base64.b64decode(request.json['audioBase64'])
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                tmp.write(audio_data)
+                tmp_path = tmp.name
+        else:
+            return jsonify({'error': 'Missing audio file or audioBase64'}), 400
+
+        sound = parselmouth.Sound(tmp_path)
+        duration = float(sound.duration)
+        pitch = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
+        intensity = sound.to_intensity(minimum_pitch=75, time_step=0.01)
+
+        enriched = []
+        for idx, item in enumerate(intervals):
+            start_t = float(item.get('startTime', item.get('start_time', 0.0)))
+            end_t = float(item.get('endTime', item.get('end_time', start_t)))
+            start_t = max(0.0, min(duration, start_t))
+            end_t = max(start_t, min(duration, end_t))
+            interval_dur = max(0.0, end_t - start_t)
+
+            step = 0.01
+            sample_times = np.arange(start_t, max(start_t + step, end_t), step) if interval_dur > 0 else [start_t]
+            
+            p_vals = []
+            for t in sample_times:
+                pv = pitch.get_value_at_time(float(t))
+                if not np.isnan(pv) and pv > 0:
+                    p_vals.append(float(pv))
+
+            int_vals = []
+            for t in sample_times:
+                iv = intensity.get_value(float(t))
+                if not np.isnan(iv) and iv > 0:
+                    int_vals.append(float(iv))
+
+            max_pitch = round(float(max(p_vals)), 1) if p_vals else 0.0
+            mean_pitch = round(float(np.mean(p_vals)), 1) if p_vals else 0.0
+            peak_intensity = round(float(max(int_vals)), 1) if int_vals else 0.0
+            mean_intensity = round(float(np.mean(int_vals)), 1) if int_vals else 0.0
+
+            enriched.append({
+                'id': item.get('id', idx),
+                'phoneme': item.get('phoneme', ''),
+                'startTime': round(start_t, 4),
+                'endTime': round(end_t, 4),
+                'vowelDuration': round(interval_dur, 4),
+                'maxPitch': max_pitch,
+                'meanPitch': mean_pitch,
+                'peakIntensity': peak_intensity,
+                'meanIntensity': mean_intensity,
+                'voicedRatio': round(len(p_vals) / max(1, len(sample_times)), 2),
+            })
+
+        return jsonify({
+            'success': True,
+            'duration': round(duration, 4),
+            'sampleRate': int(sound.sampling_frequency),
+            'intervals': enriched,
+        })
+    except Exception as e:
+        logger.exception(f"analyze_nucleus_prosody error: {e}")
+        return jsonify({'error': str(e), 'success': False}), 500
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+@app.route('/analyze/option-b', methods=['POST'])
+def analyze_option_b():
+    """
+    Option B: Repaired Self-Hosted V4 Syllabification + Praat Native Analysis.
+    Combines Praat multi-cue boundary detection, vowel duration measurement,
+    and repaired lexical stress determination (normalized by max_vowel_dur).
+    """
+    if 'audio' not in request.files and not request.json:
+        return jsonify({'error': 'No audio file provided'}), 400
+
+    target_word = request.form.get('target_word') or request.form.get('word') or (request.json.get('word') if request.json else '')
+    reference_ipa = request.form.get('reference_ipa') or (request.json.get('reference_ipa') if request.json else '')
+    expected_syllables = request.form.get('expected_syllables', type=int) if request.form else (request.json.get('expected_syllables') if request.json else None)
+
+    tmp_path = None
+    try:
+        if 'audio' in request.files:
+            audio_file = request.files['audio']
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                audio_file.save(tmp.name)
+                tmp_path = tmp.name
+        elif request.json and request.json.get('audioBase64'):
+            import base64
+            audio_data = base64.b64decode(request.json['audioBase64'])
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                tmp.write(audio_data)
+                tmp_path = tmp.name
+        else:
+            return jsonify({'error': 'Missing audio file or audioBase64'}), 400
+
+        # 1. Run native Praat analysis
+        praat_res = analyze_audio(tmp_path, expected_syllables=expected_syllables)
+        syllables = praat_res.get('syllables') or []
+
+        # 2. Ensure each syllable has vowelDuration measured
+        sound = parselmouth.Sound(tmp_path)
+        pitch_obj = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
+        for s in syllables:
+            if 'vowelDuration' not in s or s.get('vowelDuration', 0) <= 0:
+                s_start = float(s.get('startTime', 0))
+                s_end = float(s.get('endTime', s_start))
+                v_dur = measure_vowel_duration(sound, s_start, s_end, pitch_obj)
+                s['vowelDuration'] = round(v_dur, 3)
+                s['vowel_duration'] = s['vowelDuration']
+
+        # 3. Detect stressed syllable with repaired phonetic corrections & vowel normalization
+        detected_idx = find_stressed_with_corrections(syllables) if syllables else 0
+        normalized_pattern = normalize_syllable_pattern(syllables)
+
+        # 4. Compute prominence per syllable
+        max_vowel_dur = max((s.get('vowelDuration', 0) for s in syllables), default=1.0) or 1.0
+        max_pitch = max((s.get('maxPitch', 0) or s.get('avgPitch', 0) for s in syllables), default=1.0) or 1.0
+        max_int = max((s.get('intensity', 0) for s in syllables), default=1.0) or 1.0
+
+        for i, s in enumerate(syllables):
+            s['isStressed'] = (i == detected_idx)
+            p_score = (s.get('maxPitch', 0) or s.get('avgPitch', 0)) / max_pitch
+            d_score = s.get('vowelDuration', 0) / max_vowel_dur
+            i_score = s.get('intensity', 0) / max_int
+            s['prominence'] = round(0.50 * p_score + 0.30 * d_score + 0.20 * i_score, 3)
+
+        # 5. Add V4 syllabification if reference IPA is available
+        v4_data = None
+        if reference_ipa:
+            try:
+                from backend.phoneme_service.v4_syllabification import syllabify_reference_ipa
+                v4_data = syllabify_reference_ipa(reference_ipa).to_dict()
+            except Exception as v4_err:
+                logger.debug(f"V4 syllabification hint failed: {v4_err}")
+
+        return jsonify({
+            'success': True,
+            'engine': 'option-b',
+            'targetWord': target_word,
+            'referenceIpa': reference_ipa,
+            'duration': praat_res.get('duration', round(sound.duration, 3)),
+            'syllables': syllables,
+            'detectedStressedIndex': detected_idx,
+            'normalizedPattern': normalized_pattern,
+            'pitch': praat_res.get('pitch', {}),
+            'intensity': praat_res.get('intensity', {}),
+            'v4Syllabification': v4_data,
+            'summary': {
+                'syllableCount': len(syllables),
+                'detectedStressed': detected_idx,
+                'stressedSyllableNumber': detected_idx + 1 if syllables else 1,
+            }
+        })
+    except Exception as e:
+        logger.exception(f"analyze_option_b error: {e}")
+        return jsonify({'error': str(e), 'success': False}), 500
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
 def analyze_audio(audio_path, expected_syllables=None, allow_expected_adjustment=True):
     """Main analysis using Parselmouth/Praat"""
     
@@ -6203,12 +6396,16 @@ def normalize_syllable_pattern(syllables):
         return []
     
     max_pitch = max(s.get('maxPitch', 0) or s.get('avgPitch', 1) for s in syllables) or 1
-    max_dur = max(s.get('duration', 0) for s in syllables) or 1
+    has_vowel_dur = any((s.get('vowel_duration') or s.get('vowelDuration')) for s in syllables)
+    if has_vowel_dur:
+        max_dur = max((s.get('vowel_duration', 0) or s.get('vowelDuration', 0) or s.get('duration', 0)) for s in syllables) or 1
+    else:
+        max_dur = max(s.get('duration', 0) for s in syllables) or 1
     max_int = max(s.get('intensity', 0) for s in syllables) or 1
     
     return [{
         'pitch_rel': (s.get('maxPitch', 0) or s.get('avgPitch', 0)) / max_pitch,
-        'dur_rel': s.get('duration', 0) / max_dur,
+        'dur_rel': ((s.get('vowel_duration') or s.get('vowelDuration') or s.get('duration', 0)) if has_vowel_dur else s.get('duration', 0)) / max_dur,
         'int_rel': s.get('intensity', 0) / max_int
     } for s in syllables]
 
@@ -6314,7 +6511,11 @@ def find_stressed_with_corrections(syllables):
     
     n = len(syllables)
     max_pitch = max(s.get('maxPitch', 0) or s.get('avgPitch', 1) for s in syllables) or 1
-    max_dur = max(s.get('duration', 0) for s in syllables) or 1
+    has_vowel_dur = any((s.get('vowel_duration') or s.get('vowelDuration')) for s in syllables)
+    if has_vowel_dur:
+        max_dur = max((s.get('vowel_duration', 0) or s.get('vowelDuration', 0) or s.get('duration', 0)) for s in syllables) or 1
+    else:
+        max_dur = max(s.get('duration', 0) for s in syllables) or 1
     max_int = max(s.get('intensity', 0) for s in syllables) or 1
     
     best_idx = 0
@@ -6322,7 +6523,8 @@ def find_stressed_with_corrections(syllables):
     
     for i, s in enumerate(syllables):
         p_score = (s.get('maxPitch', 0) or s.get('avgPitch', 0)) / max_pitch
-        d_score = s.get('duration', 0) / max_dur
+        dur_val = (s.get('vowel_duration') or s.get('vowelDuration') or s.get('duration', 0)) if has_vowel_dur else s.get('duration', 0)
+        d_score = dur_val / max_dur
         i_score = s.get('intensity', 0) / max_int
         
         # === PHONETIC CORRECTIONS ===

@@ -172,6 +172,11 @@ class V4Syllable:
     end_time: float | None = None
     partition_start_time: float | None = None
     partition_end_time: float | None = None
+    vowel_start_frame: int | None = None
+    vowel_end_frame: int | None = None
+    vowel_start_time: float | None = None
+    vowel_end_time: float | None = None
+    vowel_duration: float | None = None
     ambiguity: dict[str, Any] = field(default_factory=lambda: {
         "status": "deterministic",
         "candidates": [],
@@ -230,6 +235,7 @@ class V4Syllable:
         for name in (
             "start_frame", "end_frame", "partition_start_frame", "partition_end_frame",
             "confidence", "start_time", "end_time", "partition_start_time", "partition_end_time",
+            "vowel_start_frame", "vowel_end_frame", "vowel_start_time", "vowel_end_time", "vowel_duration",
         ):
             value = getattr(self, name)
             if value is not None:
@@ -246,6 +252,16 @@ class V4Syllable:
             payload["partitionStartFrame"] = self.partition_start_frame
         if self.partition_end_frame is not None:
             payload["partitionEndFrame"] = self.partition_end_frame
+        if self.vowel_start_time is not None:
+            payload["vowelStartTime"] = self.vowel_start_time
+        if self.vowel_end_time is not None:
+            payload["vowelEndTime"] = self.vowel_end_time
+        if self.vowel_duration is not None:
+            payload["vowelDuration"] = self.vowel_duration
+        if self.vowel_start_frame is not None:
+            payload["vowelStartFrame"] = self.vowel_start_frame
+        if self.vowel_end_frame is not None:
+            payload["vowelEndFrame"] = self.vowel_end_frame
         return payload
 
 
@@ -752,13 +768,26 @@ def align_v4_reference(
             syllable.start_frame = min(int(item["start_frame"]) for item in selected)
             syllable.end_frame = max(int(item["end_frame"]) for item in selected)
             syllable.confidence = round(float(np.mean([item.get("confidence", 0.0) for item in selected])), 6)
-        # One contiguous partition boundary is shared by adjacent syllables.
+
+            vowel_token_idx = next(
+                (idx for idx in range(syllable.token_start, syllable.token_end) if tokenization.tokens[idx].is_nucleus),
+                None
+            )
+            if vowel_token_idx is not None and vowel_token_idx < len(token_spans):
+                vowel_span = token_spans[vowel_token_idx]
+                syllable.vowel_start_frame = int(vowel_span["start_frame"])
+                syllable.vowel_end_frame = int(vowel_span["end_frame"])
+            else:
+                syllable.vowel_start_frame = syllable.start_frame
+                syllable.vowel_end_frame = syllable.end_frame
+
+        # Contiguous partition boundary between adjacent syllables aligns to phone token boundaries
         partitions = [result_syllables[0].start_frame or 0]
         for current, following in zip(result_syllables, result_syllables[1:]):
-            raw = ((current.end_frame or 0) + (following.start_frame or 0)) / 2.0
+            candidate = current.end_frame or 0
             lower = current.start_frame or 0
             upper = following.end_frame or lower
-            candidate = int(math.floor(min(upper, max(lower, raw)) + 0.5))
+            candidate = min(upper, max(lower, candidate))
             candidate = max(partitions[-1], candidate)
             partitions.append(candidate)
         partitions.append(result_syllables[-1].end_frame or partitions[-1])
@@ -770,6 +799,10 @@ def align_v4_reference(
                 syllable.end_time = _time_from_frame(syllable.end_frame or 0, frame_count, sample_count, sample_rate)
                 syllable.partition_start_time = _time_from_frame(syllable.partition_start_frame or 0, frame_count, sample_count, sample_rate)
                 syllable.partition_end_time = _time_from_frame(syllable.partition_end_frame or 0, frame_count, sample_count, sample_rate)
+                if syllable.vowel_start_frame is not None and syllable.vowel_end_frame is not None:
+                    syllable.vowel_start_time = _time_from_frame(syllable.vowel_start_frame, frame_count, sample_count, sample_rate)
+                    syllable.vowel_end_time = _time_from_frame(syllable.vowel_end_frame, frame_count, sample_count, sample_rate)
+                    syllable.vowel_duration = round(max(0.0, syllable.vowel_end_time - syllable.vowel_start_time), 6)
         return V4Alignment(
             True,
             tuple(result_syllables),

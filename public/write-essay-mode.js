@@ -103,20 +103,20 @@
 
     const PRESTART_LAYOUT_METAS = Object.freeze({
         mindmap: {
-            icon: '🗺️',
+            icon: '',
             nameEn: 'Mind Map',
             nameVi: 'Sơ đồ tư duy',
-            tagEn: 'Radiating idea tree',
-            tagVi: 'Cây ý tưởng tỏa tròn',
-            badgeEn: 'Visual • Radiating Tree',
+            tagEn: 'Idea tree',
+            tagVi: 'Sơ đồ ý tưởng',
+            badgeEn: 'Visual • Idea Tree',
             badgeVi: 'Khuyên dùng • Trực quan',
             wantsEn: '• See central prompt question radiating directly into two opposing stances and argument leaves.\n• Click argument chips to explore underlying mechanisms and build your essay outline.',
-            wantsVi: '• Nhìn toàn cảnh câu hỏi trung tâm tỏa nhánh trực tiếp sang 2 phe đối lập và các luận điểm then chốt.\n• Bấm thử từng luận điểm để xem cơ chế lập luận và xây dựng dàn ý 4 đoạn.',
+            wantsVi: '• Nhìn toàn cảnh câu hỏi trung tâm liên kết trực tiếp sang 2 phe đối lập và các luận điểm then chốt.\n• Bấm thử từng luận điểm để xem cơ chế lập luận và xây dựng dàn ý 4 đoạn.',
             fitsEn: 'Ideal for visual thinkers who want an intuitive idea map connecting prompt to arguments before writing.',
-            fitsVi: 'Bạn thích học qua hình ảnh trực quan, muốn bao quát toàn cảnh mạch ý tưởng tỏa tròn trước khi viết.'
+            fitsVi: 'Bạn thích học qua hình ảnh trực quan, muốn bao quát toàn cảnh sơ đồ ý tưởng trước khi viết.'
         },
         flowchart: {
-            icon: '🔄',
+            icon: '',
             nameEn: 'Flowchart',
             nameVi: 'Sơ đồ quy trình',
             tagEn: 'POS-PEEL Assembly Line',
@@ -129,7 +129,7 @@
             fitsVi: 'Bạn thích phong cách tuần tự mạch lạc, muốn nắm chắc từng bước triển khai bài viết theo quy chuẩn chấm điểm PTE.'
         },
         table: {
-            icon: '⚖️',
+            icon: '',
             nameEn: 'Comparison Matrix',
             nameVi: 'Bảng so sánh',
             tagEn: '5-Dimension Matrix',
@@ -142,7 +142,7 @@
             fitsVi: 'Bạn đang phân vân giữa 2 hướng đi, cần so sánh trực diện độ mạnh yếu của từng phe để chọn hướng an toàn và dễ ghi điểm nhất.'
         },
         cards: {
-            icon: '📋',
+            icon: '',
             nameEn: 'Visual Cards',
             nameVi: 'Thẻ trực quan',
             tagEn: 'Textbook layout',
@@ -156,20 +156,20 @@
         },
         // Backwards-compatible aliases
         whiteboard: {
-            icon: '🗺️',
+            icon: '',
             nameEn: 'Mind Map',
             nameVi: 'Sơ đồ tư duy',
-            tagEn: 'Radiating idea tree',
-            tagVi: 'Cây ý tưởng tỏa tròn',
-            badgeEn: 'Visual • Radiating Tree',
+            tagEn: 'Idea tree',
+            tagVi: 'Sơ đồ ý tưởng',
+            badgeEn: 'Visual • Idea Tree',
             badgeVi: 'Khuyên dùng • Trực quan',
             wantsEn: '• See central prompt question radiating directly into two opposing stances and argument leaves.',
-            wantsVi: '• Nhìn toàn cảnh câu hỏi trung tâm tỏa nhánh trực tiếp sang 2 phe đối lập và các luận điểm then chốt.',
+            wantsVi: '• Nhìn toàn cảnh câu hỏi trung tâm liên kết trực tiếp sang 2 phe đối lập và các luận điểm then chốt.',
             fitsEn: 'Ideal for visual thinkers who want an intuitive idea map connecting prompt to arguments before writing.',
-            fitsVi: 'Bạn thích học qua hình ảnh trực quan, muốn bao quát toàn cảnh mạch ý tưởng tỏa tròn trước khi viết.'
+            fitsVi: 'Bạn thích học qua hình ảnh trực quan, muốn bao quát toàn cảnh sơ đồ ý tưởng trước khi viết.'
         },
         stations: {
-            icon: '🔄',
+            icon: '',
             nameEn: 'Flowchart',
             nameVi: 'Sơ đồ quy trình',
             tagEn: 'POS-PEEL Assembly Line',
@@ -182,7 +182,7 @@
             fitsVi: 'Bạn thích phong cách tuần tự mạch lạc theo chuẩn PTE.'
         },
         hud: {
-            icon: '⚖️',
+            icon: '',
             nameEn: 'Comparison Matrix',
             nameVi: 'Bảng so sánh',
             tagEn: '5-Dimension Matrix',
@@ -195,7 +195,7 @@
             fitsVi: 'Bạn cần so sánh trực diện độ mạnh yếu của từng phe.'
         },
         list: {
-            icon: '📋',
+            icon: '',
             nameEn: 'Visual Cards',
             nameVi: 'Thẻ trực quan',
             tagEn: 'Textbook layout',
@@ -1198,7 +1198,7 @@
                 } else {
                     el.layoutCompareDrawer.setAttribute('hidden', '');
                     el.layoutCompareToggleBtn.setAttribute('aria-expanded', 'false');
-                    el.layoutCompareToggleBtn.textContent = isVi ? '💡 Xem bảng so sánh cả 4 kiểu' : '💡 Compare all 4 layout types';
+                    el.layoutCompareToggleBtn.textContent = isVi ? 'Xem bảng so sánh cả 4 kiểu' : 'Compare all 4 layout types';
                 }
             });
         }
@@ -1481,11 +1481,11 @@
                 </div>
                 <div class="essay-prestart-detail-body">
                     <div class="essay-prestart-detail-section">
-                        <span class="essay-prestart-detail-label">🎯 ${isVi ? 'Bạn muốn:' : 'You want:'}</span>
+                        <span class="essay-prestart-detail-label">${isVi ? 'Bạn muốn:' : 'You want:'}</span>
                         <div class="essay-prestart-detail-text">${wantsFormatted}</div>
                     </div>
                     <div class="essay-prestart-detail-section">
-                        <span class="essay-prestart-detail-label">💡 ${isVi ? 'Hợp với bạn khi:' : 'Best suited when:'}</span>
+                        <span class="essay-prestart-detail-label">${isVi ? 'Hợp với bạn khi:' : 'Best suited when:'}</span>
                         <p class="essay-prestart-detail-text">${escapeHtml(fits)}</p>
                     </div>
                 </div>
@@ -1529,7 +1529,7 @@
             return `
             <tr>
                 <td class="essay-compare-col-name">
-                    <strong>${meta.icon} ${escapeHtml(name)}</strong>
+                    <strong>${meta.icon ? meta.icon + ' ' : ''}${escapeHtml(name)}</strong>
                     <span class="essay-compare-badge ${badgeClass}">${escapeHtml(badge)}</span>
                 </td>
                 <td>
@@ -1563,7 +1563,7 @@
 
         const titleEl = document.querySelector('.essay-prestart-layout-title');
         if (titleEl) {
-            titleEl.textContent = isVi ? '🎯 Cách xem Bước 1 phù hợp với bạn:' : '🎯 Choose your Step 1 viewing mode:';
+            titleEl.textContent = isVi ? 'Cách xem Bước 1 phù hợp với bạn:' : 'Choose your Step 1 viewing mode:';
         }
         const subEl = document.querySelector('.essay-prestart-layout-sub');
         if (subEl) {
@@ -1595,7 +1595,7 @@
             if (isExpanded) {
                 el.layoutCompareToggleBtn.textContent = isVi ? '✕ Đóng bảng so sánh cả 4 kiểu' : '✕ Close 4-layout comparison table';
             } else {
-                el.layoutCompareToggleBtn.textContent = isVi ? '💡 Xem bảng so sánh cả 4 kiểu' : '💡 Compare all 4 layout types';
+                el.layoutCompareToggleBtn.textContent = isVi ? 'Xem bảng so sánh cả 4 kiểu' : 'Compare all 4 layout types';
             }
         }
 
@@ -1659,11 +1659,11 @@
     */
 
     const GUIDED_SECTIONS = Object.freeze([
-        { id: 'understand', icon: '🔍', en: 'Understand the prompt', vi: 'Hiểu đề bài' },
-        { id: 'direction', icon: '🧭', en: 'Choose a direction', vi: 'Chọn hướng đi' },
-        { id: 'language', icon: '🧰', en: 'Language kit', vi: 'Bộ ngôn ngữ' },
-        { id: 'plan', icon: '🗂️', en: 'Make a plan', vi: 'Lập dàn ý' },
-        { id: 'further', icon: '✍️', en: 'Sentence builder', vi: 'Xây dựng câu' },
+        { id: 'understand', icon: '', en: 'Understand the prompt', vi: 'Hiểu đề bài' },
+        { id: 'direction', icon: '', en: 'Choose a direction', vi: 'Chọn hướng đi' },
+        { id: 'language', icon: '', en: 'Language kit', vi: 'Bộ ngôn ngữ' },
+        { id: 'plan', icon: '', en: 'Make a plan', vi: 'Lập dàn ý' },
+        { id: 'further', icon: '', en: 'Sentence builder', vi: 'Xây dựng câu' },
     ]);
 
     const GUIDED_MAX_TARGETS = 6;
@@ -2633,7 +2633,7 @@
                     fixEn: "Explicitly separate institutional schooling (standardized syllabus, tests) from intrinsic learning (self-driven curiosity), then debate whether school structures hinder or nurture that curiosity.",
                     fixVi: "Tách bạch rõ ràng: 'Trường lớp' là kỷ luật và thi cử, còn 'Học hỏi' là niềm vui tự khám phá. Sau đó bàn xem quy tắc trường học đang cản trở hay chắp cánh cho sự tò mò.",
                     en: "Conflating Schooling with Learning: Treating 'education' and 'learning' as synonyms leads to praising schools generally, missing Einstein's core claim that rigid curricula suppress natural curiosity. Better approach: Distinguish institutional schooling from intrinsic curiosity.",
-                    vi: "Đồng nhất trường lớp với việc học: Xem trường học và học hỏi là một sẽ dẫn đến việc chỉ khen trường lớp chung chung, bỏ qua ý Einstein rằng thi cử gò bó bóp nghẹt tính tò mò. Cách viết chuẩn: Phân biệt rõ kỷ luật trường học với niềm đam mê tự học."
+                    vi: "Đồng nhất trường lớp với việc học: Xem trường học và học hỏi là một sẽ dẫn đến việc chỉ khen trường lớp chung chung, bỏ qua ý Einstein rằng thi cử gò bó làm thui chột tính tò mò. Cách viết chuẩn: Phân biệt rõ kỷ luật trường học với niềm đam mê tự học."
                 },
                 {
                     titleEn: "Writing an Einstein Biography Instead of an Essay",
@@ -2791,7 +2791,7 @@
                 typeKey: 'comparative_opinion',
                 titleEn: 'Comparative Opinion Essay',
                 titleVi: 'Dạng bài: So sánh cái nào quan trọng hơn',
-                icon: '⚖️',
+                icon: '',
                 badgeClass: 'is-comparative',
                 triggerPhraseEn: text.includes('more important for keeping fit than exercise') ? '“more important for keeping fit than exercise... To what extent do you agree?”' : '“...is more important than... To what extent do you agree?”',
                 triggerPhraseVi: 'Cụm so sánh: “...is more important than... To what extent do you agree?”',
@@ -2812,7 +2812,7 @@
                 typeKey: 'advantages_disadvantages',
                 titleEn: 'Advantages & Disadvantages Essay',
                 titleVi: 'Dạng bài: Lợi và Hại (Ưu & Nhược điểm)',
-                icon: '⚡',
+                icon: '',
                 badgeClass: 'is-adv-disadv',
                 triggerPhraseEn: '“Do you think the advantages outweigh the disadvantages?” or “Discuss advantages and disadvantages”',
                 triggerPhraseVi: 'Cụm từ hai mặt: “advantages / disadvantages” hoặc “outweigh”',
@@ -2833,7 +2833,7 @@
                 typeKey: 'problem_solution',
                 titleEn: 'Problem & Solution Essay',
                 titleVi: 'Dạng bài: Vấn đề & Cách giải quyết',
-                icon: '🔧',
+                icon: '',
                 badgeClass: 'is-problem-solution',
                 triggerPhraseEn: '“What are the causes and what solutions can be proposed?”',
                 triggerPhraseVi: 'Hỏi nguyên nhân & cách xử lý: “causes / solutions”',
@@ -2853,7 +2853,7 @@
             typeKey: 'agree_disagree',
             titleEn: 'Agree or Disagree / Opinion Essay',
             titleVi: 'Dạng bài: Đồng ý hay Phản đối (Agree / Disagree)',
-            icon: '💡',
+            icon: '',
             badgeClass: 'is-agree-disagree',
             triggerPhraseEn: text.includes('do you think he is correct') ? '“What did he mean by that? Do you think he is correct?”' : '“Do you agree or disagree?” or “To what extent do you agree?”',
             triggerPhraseVi: text.includes('do you think he is correct') ? 'Hỏi thẳng ý kiến: “What did he mean by that? Do you think he is correct?”' : 'Hỏi lập trường: “Do you agree or disagree?” hoặc “To what extent do you agree?”',
@@ -3048,20 +3048,16 @@
             <div class="essay-guided-view-toggle-bar">
                 <span class="essay-guided-view-toggle-label">${guidedText('Layout Mode:', 'Cách xem:')}</span>
                 <div class="essay-guided-view-toggle" role="group" aria-label="${guidedText('Select view mode', 'Chọn cách xem')}">
-                    <button type="button" class="essay-view-toggle-btn${currentLayout === 'mindmap' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="mindmap" title="${guidedText('Mind Map: Radiating idea tree', 'Sơ đồ tư duy: Cây ý tưởng tỏa tròn')}">
-                        <span class="essay-view-toggle-icon">🗺️</span>
+                    <button type="button" class="essay-view-toggle-btn${currentLayout === 'mindmap' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="mindmap" title="${guidedText('Mind Map: Structured idea tree', 'Sơ đồ tư duy: Sơ đồ ý tưởng')}">
                         <span>${guidedText('Mind Map', 'Sơ đồ tư duy')}</span>
                     </button>
                     <button type="button" class="essay-view-toggle-btn${currentLayout === 'flowchart' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="flowchart" title="${guidedText('Flowchart: Step-by-step POS-PEEL assembly line', 'Sơ đồ quy trình: Quy trình tuần tự POS-PEEL')}">
-                        <span class="essay-view-toggle-icon">🔄</span>
                         <span>${guidedText('Flowchart', 'Sơ đồ quy trình')}</span>
                     </button>
                     <button type="button" class="essay-view-toggle-btn${currentLayout === 'table' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="table" title="${guidedText('Comparison Matrix: 5-dimension dialectical matrix', 'Bảng so sánh: Ma trận đối chiếu 2 quan điểm')}">
-                        <span class="essay-view-toggle-icon">⚖️</span>
                         <span>${guidedText('Comparison Table', 'Bảng so sánh')}</span>
                     </button>
                     <button type="button" class="essay-view-toggle-btn${currentLayout === 'cards' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="cards" title="${guidedText('Visual Cards: Clean textbook reading', 'Thẻ trực quan: Đọc bài học tập trung')}">
-                        <span class="essay-view-toggle-icon">📋</span>
                         <span>${guidedText('Visual Cards', 'Thẻ trực quan')}</span>
                     </button>
                 </div>
@@ -3073,11 +3069,9 @@
             <span class="essay-guided-view-toggle-label">${guidedText('Ideation View:', 'Góc nhìn tư duy:')}</span>
             <div class="essay-guided-view-toggle" role="group" aria-label="${guidedText('Select view mode', 'Chọn chế độ xem')}">
                 <button type="button" class="essay-view-toggle-btn${guidedViewMode === 'mindmap' ? ' is-active' : ''}" data-guided-action="set-guided-view-mode" data-view-mode="mindmap" aria-pressed="${guidedViewMode === 'mindmap' ? 'true' : 'false'}">
-                    <span class="essay-view-toggle-icon">🗺️</span>
                     <span>${guidedText('Mind Map', 'Sơ đồ tư duy')}</span>
                 </button>
                 <button type="button" class="essay-view-toggle-btn${guidedViewMode === 'list' ? ' is-active' : ''}" data-guided-action="set-guided-view-mode" data-view-mode="list" aria-pressed="${guidedViewMode === 'list' ? 'true' : 'false'}">
-                    <span class="essay-view-toggle-icon">📋</span>
                     <span>${guidedText('Compact List', 'Danh sách')}</span>
                 </button>
             </div>
@@ -3224,7 +3218,7 @@
 
             let roleTitleEn = seg.roleTitleEn || 'Prompt Component';
             let roleTitleVi = seg.roleTitleVi || 'Thành phần đề bài';
-            let roleIcon = '💡';
+            let roleIcon = '';
             let meaningEn = seg.meaningEn || '';
             let meaningVi = seg.meaningVi || '';
             let takeawayEn = seg.takeawayEn || '';
@@ -3238,7 +3232,7 @@
                 if (idx === 0 || lower.includes('interferes') || lower.includes('einstein') || lower.includes('barrier')) {
                     roleTitleEn = 'The Quote & Paradox';
                     roleTitleVi = 'Câu nhận định & Nghịch lý';
-                    roleIcon = '📌';
+                    roleIcon = '';
                     meaningEn = 'Argues that rigid, standardized schooling ("education") can actually stifle a person\'s natural curiosity and authentic discovery ("learning").';
                     meaningVi = 'Nhận định rằng trường lớp gò bó và áp lực điểm số dễ làm mất đi niềm vui tự học và tính tò mò tự nhiên của người học.';
                     takeawayEn = 'Core contrast: Formal schooling ("education") vs. self-driven curiosity ("learning").';
@@ -3247,13 +3241,13 @@
                     trapVi = 'Tránh sa đà vào việc kể tiểu sử Einstein; trọng tâm là bàn về nghịch lý giữa trường lớp quy chuẩn và tự học.';
                     keywords = [
                         { term: 'education', enGloss: 'standardized schooling', viGloss: 'giáo dục trường quy, thi cử' },
-                        { term: 'interferes / barrier', enGloss: 'hinders or stifles', viGloss: 'cản trở, bóp nghẹt' },
+                        { term: 'interferes / barrier', enGloss: 'hinders or stifles', viGloss: 'cản trở, làm thui chột' },
                         { term: 'learning', enGloss: 'intrinsic curiosity & discovery', viGloss: 'sự tự học, tò mò tự nhiên' }
                     ];
                 } else if (lower.includes('what did he mean') || lower.includes('explain')) {
                     roleTitleEn = 'Interpretation Task';
                     roleTitleVi = 'Giải thích ý câu nói';
-                    roleIcon = '🔍';
+                    roleIcon = '';
                     meaningEn = 'Asks you to unpack the underlying rationale: why and how do traditional school structures restrict independent creative thought?';
                     meaningVi = 'Đề muốn bạn chỉ ra cơ chế: vì sao cách dạy rập khuôn ở trường lại cản trở tư duy độc lập và sự sáng tạo?';
                     takeawayEn = 'Explain the underlying mechanism of why schooling can hinder creative development.';
@@ -3267,7 +3261,7 @@
                 } else {
                     roleTitleEn = 'Your Judgment & Stance';
                     roleTitleVi = 'Chọn lập trường của bạn';
-                    roleIcon = '⚖️';
+                    roleIcon = '';
                     meaningEn = 'Asks for your decisive personal position: Do you agree that schooling stifles learning, or do you believe structured education is essential for foundation?';
                     meaningVi = 'Bạn thấy nhận định này đúng hay sai? Đồng ý, phản đối, hay thấy cả hai bên đều có lý?';
                     takeawayEn = 'Form a clear judgment: Agree, Disagree, or Balanced perspective.';
@@ -3285,7 +3279,7 @@
                 if (idx === 0 || lower.includes('exercise') || lower.includes('diet')) {
                     roleTitleEn = 'The Core Comparative Debate';
                     roleTitleVi = 'Chủ đề so sánh trực diện';
-                    roleIcon = '🥗';
+                    roleIcon = '';
                     meaningEn = 'Presents a common health debate: comparing regular physical workouts directly against strict dietary regimens.';
                     meaningVi = 'Đề đặt việc ăn uống lành mạnh lên bàn cân so sánh với việc chăm chỉ tập thể dục.';
                     takeawayEn = 'Direct comparison: Physical exercise vs. nutritional control.';
@@ -3300,7 +3294,7 @@
                 } else if (lower.includes('extent do you agree') || lower.includes('agree or disagree') || lower.includes('opinion')) {
                     roleTitleEn = 'Your Position';
                     roleTitleVi = 'Chọn lập trường';
-                    roleIcon = '⚖️';
+                    roleIcon = '';
                     meaningEn = 'Asks where you stand: is exercise truly more vital, is nutrition more fundamental, or must both work in synergy?';
                     meaningVi = 'Bạn nghiêng về bên nào hơn: ăn uống quyết định tất cả, tập luyện quan trọng hơn, hay cả hai phải đi đôi?';
                     takeawayEn = 'Take a clear side or argue that health requires an integrated combination.';
@@ -3314,7 +3308,7 @@
                 } else {
                     roleTitleEn = 'Evidence Requirement';
                     roleTitleVi = 'Đưa dẫn chứng thực tế';
-                    roleIcon = '💡';
+                    roleIcon = '';
                     meaningEn = 'Reminds you to back up your claims with realistic facts, scientific logic, or everyday observations.';
                     meaningVi = 'Đừng nói suông, hãy dùng ví dụ thực tế hoặc dẫn chứng đời thường để bảo vệ ý kiến.';
                     takeawayEn = 'Ground your opinions in believable real-world examples.';
@@ -3331,7 +3325,7 @@
                 if (lower.includes('advantages and disadvantages') || lower.includes('pros and cons') || idx === 0) {
                     roleTitleEn = 'Two-Sided Evaluation';
                     roleTitleVi = 'Phân tích hai mặt';
-                    roleIcon = '🧗';
+                    roleIcon = '';
                     meaningEn = 'Asks you to examine high-risk sports (skydiving, rock climbing, big-wave surfing): evaluating both positive thrills and dangerous drawbacks.';
                     meaningVi = 'Nêu cả hai mặt của thể thao mạo hiểm: cảm giác phấn khích, thử thách bản thân vs nguy hiểm tính mạng.';
                     takeawayEn = 'Must examine both positive thrills and physical perils objectively.';
@@ -3346,7 +3340,7 @@
                 } else if (lower.includes('why do you think') || lower.includes('why')) {
                     roleTitleEn = 'Psychological Drivers';
                     roleTitleVi = 'Động lực tâm lý & Thôi thúc';
-                    roleIcon = '🧠';
+                    roleIcon = '';
                     meaningEn = 'Unpack why humans seek danger: adrenaline rush, escaping routine, self-actualization, and conquering fear.';
                     meaningVi = 'Giải thích vì sao con người lại tìm đến mạo hiểm: cảm giác hưng phấn (adrenaline), vượt qua nỗi sợ và khẳng định bản thân.';
                     takeawayEn = 'Identify psychological motivations behind high-risk decisions.';
@@ -3360,7 +3354,7 @@
                 } else {
                     roleTitleEn = 'Evidence & Substantiation';
                     roleTitleVi = 'Dẫn chứng thực tế';
-                    roleIcon = '💡';
+                    roleIcon = '';
                     meaningEn = 'Substantiate both the benefits and risks with realistic scenarios and clear explanations.';
                     meaningVi = 'Dùng các môn quen thuộc (nhảy dù, leo núi...) làm ví dụ minh họa cho lập luận của bạn.';
                     takeawayEn = 'Illustrate both advantages and risks with concrete real-world contexts.';
@@ -3378,7 +3372,7 @@
                 if (isQuote || (!text.includes('?') && idx === 0)) {
                     roleTitleEn = isQuote ? 'Quote / Central Premise' : 'Background Topic Premise';
                     roleTitleVi = isQuote ? 'Nhận định gốc' : 'Chủ đề chính của đề';
-                    roleIcon = '📌';
+                    roleIcon = '';
                     meaningEn = `Introduces the primary subject of discussion: "${text.replace(/[“”"–-]/g, '').trim()}".`;
                     meaningVi = `Chủ đề chính cần bàn: "${text.replace(/[“”"–-]/g, '').trim()}".`;
                     takeawayEn = 'Understand the underlying context and key concept being debated.';
@@ -3388,7 +3382,7 @@
                 } else if (lower.includes('what did he mean') || lower.includes('what do you mean') || lower.includes('explain')) {
                     roleTitleEn = 'Meaning & Interpretation';
                     roleTitleVi = 'Giải thích ý nghĩa';
-                    roleIcon = '🔍';
+                    roleIcon = '';
                     meaningEn = 'Asks you to clarify the deeper meaning, underlying mechanism, or rationale behind the statement.';
                     meaningVi = 'Làm rõ: vì sao tác giả lại đưa ra nhận định như vậy?';
                     takeawayEn = 'Unpack the "why" and "how" behind the prompt statement.';
@@ -3398,7 +3392,7 @@
                 } else if (lower.includes('agree or disagree') || lower.includes('extent do you agree') || lower.includes('do you agree') || lower.includes('correct?')) {
                     roleTitleEn = 'Personal Stance Request';
                     roleTitleVi = 'Chọn phe của bạn';
-                    roleIcon = '⚖️';
+                    roleIcon = '';
                     meaningEn = 'Directly checks where you stand: whether you support the prompt claim, oppose it, or take a balanced view.';
                     meaningVi = 'Bạn đồng ý hay phản đối nhận định này? Hãy chọn rõ ràng ngay từ đầu.';
                     takeawayEn = 'Establish a clear, consistent personal position.';
@@ -3408,7 +3402,7 @@
                 } else if (lower.includes('cause') || lower.includes('solution') || lower.includes('problem') || lower.includes('measure')) {
                     roleTitleEn = 'Problem Analysis & Remedies';
                     roleTitleVi = 'Nguyên nhân & Giải pháp';
-                    roleIcon = '🔧';
+                    roleIcon = '';
                     meaningEn = 'Asks you to examine why this social problem exists and identify concrete measures to solve or mitigate it.';
                     meaningVi = 'Tìm lý do vì sao vấn đề xảy ra và đề xuất cách xử lý thực tế.';
                     takeawayEn = 'Connect underlying root causes with realistic, actionable solutions.';
@@ -3418,7 +3412,7 @@
                 } else if (lower.includes('example') || lower.includes('experience') || lower.includes('reasons')) {
                     roleTitleEn = 'Supporting Evidence';
                     roleTitleVi = 'Lý lẽ & Ví dụ';
-                    roleIcon = '💡';
+                    roleIcon = '';
                     meaningEn = 'Reminds you that all arguments must be supported by sound reasoning and believable real-world examples.';
                     meaningVi = 'Củng cố quan điểm bằng lập luận logic và ví dụ thực tế đời thường.';
                     takeawayEn = 'Back up every assertion with logical explanations and examples.';
@@ -3428,7 +3422,7 @@
                 } else {
                     roleTitleEn = 'Task Directive';
                     roleTitleVi = 'Yêu cầu của đề';
-                    roleIcon = '🎯';
+                    roleIcon = '';
                     meaningEn = `Focuses your attention on this specific requirement: "${text}".`;
                     meaningVi = `Tập trung vào nhiệm vụ này: "${text}".`;
                     takeawayEn = 'Make sure this requirement is clearly understood.';
@@ -3478,7 +3472,7 @@
                 titleEn: 'Core Dialectical Tension & Paradox',
                 titleVi: 'Mâu thuẫn then chốt & Nghịch lý của đề bài',
                 descEn: 'The clash between rigid institutional schooling ("education") and authentic self-driven curiosity ("learning"). You must evaluate whether formal schooling is an essential foundation or a restrictive barrier that stifles creative genius.',
-                descVi: 'Xung đột giữa khuôn mẫu trường lớp gò bó ("education") và bản năng tự học khám phá ("learning"). Cần làm rõ trường học là bệ phóng kiến thức nền tảng hay là rào cản bóp nghẹt tư duy sáng tạo.'
+                descVi: 'Xung đột giữa khuôn mẫu trường lớp gò bó ("education") và bản năng tự học khám phá ("learning"). Cần làm rõ trường học là bệ phóng kiến thức nền tảng hay là rào cản làm thui chột tư duy sáng tạo.'
             };
         }
         if (pLower.includes('exercise') && pLower.includes('diet')) {
@@ -3537,8 +3531,8 @@
         <div class="essay-guided-prompt-hero">
             <div class="essay-guided-prompt-hero-head">
                 <div class="essay-prompt-hero-title-group">
-                    <span class="essay-prompt-hero-badge">📌 ${guidedText('Deconstructed Question Prompt', 'Đề bài tách theo từng vế')}</span>
-                    <span class="essay-prompt-hero-hint">${guidedText('Click any highlighted clause to inspect its meaning and traps below', 'Bấm vào từng vế màu bên dưới để xem giải nghĩa & lưu ý tránh bẫy')}</span>
+                    <span class="essay-prompt-hero-badge">${guidedText('Deconstructed Question Prompt', 'Đề bài tách theo từng vế')}</span>
+                    <span class="essay-prompt-hero-hint">${guidedText('Click any highlighted clause to inspect its meaning below', 'Bấm vào từng vế màu bên dưới để xem phân tích chi tiết')}</span>
                 </div>
                 ${guidedHelpBtn('clauses')}
             </div>
@@ -3557,7 +3551,6 @@
         if (!tensionData || (!tensionData.titleEn && !tensionData.titleVi)) return '';
         return `
         <div class="essay-prompt-tension-banner" role="region" aria-label="${escapeHtml(guidedText(tensionData.titleEn, tensionData.titleVi))}">
-            <div class="essay-tension-icon" aria-hidden="true">⚡</div>
             <div class="essay-tension-content">
                 <span class="essay-tension-label">${escapeHtml(guidedText(tensionData.titleEn, tensionData.titleVi))}</span>
                 <p class="essay-tension-text">${escapeHtml(guidedText(tensionData.descEn, tensionData.descVi))}</p>
@@ -3585,7 +3578,7 @@
                     }
                     const keywordsHtml = (item.keywords && item.keywords.length > 0) ? `
                         <div class="essay-clause-keywords">
-                            <span class="essay-clause-label">🔑 ${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
+                            <span class="essay-clause-label">${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
                             <div class="essay-clause-kw-tags">
                                 ${item.keywords.map(kw => `
                                     <span class="essay-clause-kw-tag">
@@ -3594,11 +3587,6 @@
                                     </span>
                                 `).join('')}
                             </div>
-                        </div>` : '';
-                    const trapHtml = (item.trapEn || item.trapVi) ? `
-                        <div class="essay-clause-trap">
-                            <span class="essay-clause-trap-lbl">⚠️ ${guidedText('Trap to avoid:', 'Lưu ý tránh bẫy:')}</span>
-                            <p>${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
                         </div>` : '';
 
                     return `
@@ -3613,14 +3601,13 @@
                         <div class="essay-clause-quote">${escapeHtml(formattedQuote)}</div>
                         ${keywordsHtml}
                         <div class="essay-clause-meaning">
-                            <span class="essay-clause-label">📖 ${guidedText('What this means in plain terms', 'Ý đơn giản là:')}</span>
+                            <span class="essay-clause-label">${guidedText('What this means in plain terms', 'Ý đơn giản là:')}</span>
                             <p class="essay-clause-text">${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
                         </div>
                         <div class="essay-clause-takeaway">
-                            <span class="essay-clause-takeaway-label">💡 ${guidedText('Key concept', 'Điểm mấu chốt:')}</span>
+                            <span class="essay-clause-takeaway-label">${guidedText('Key concept', 'Điểm mấu chốt:')}</span>
                             <p class="essay-clause-takeaway-text">${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
                         </div>
-                        ${trapHtml}
                     </div>
                 </div>`;
                 }).join('')}
@@ -3640,7 +3627,7 @@
                 const isSelected = item.isSegSelected;
                 const keywordsHtml = (item.keywords && item.keywords.length > 0) ? `
                     <div class="essay-clause-keywords">
-                        <span class="essay-cards-clause-lbl">🔑 ${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
+                        <span class="essay-cards-clause-lbl">${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
                         <div class="essay-clause-kw-tags">
                             ${item.keywords.map(kw => `
                                 <span class="essay-clause-kw-tag">
@@ -3650,29 +3637,23 @@
                             `).join('')}
                         </div>
                     </div>` : '';
-                const trapHtml = (item.trapEn || item.trapVi) ? `
-                    <div class="essay-clause-trap">
-                        <span class="essay-clause-trap-lbl">⚠️ ${guidedText('Trap to avoid:', 'Lưu ý tránh bẫy:')}</span>
-                        <p>${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
-                    </div>` : '';
 
                 return `
                 <div class="essay-cards-clause-card card-${item.index}${isSelected ? ' is-selected' : ''}" id="clause-card-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" aria-pressed="${isSelected ? 'true' : 'false'}">
                     <div class="essay-cards-clause-head">
-                        <span class="essay-cards-clause-badge">${item.roleIcon} ${guidedText('Clause', 'Vế')} ${item.index}</span>
+                        <span class="essay-cards-clause-badge">${guidedText('Clause', 'Vế')} ${item.index}</span>
                         <strong class="essay-cards-clause-role">${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}</strong>
                     </div>
                     <div class="essay-cards-clause-quote">${escapeHtml(formattedQuote)}</div>
                     ${keywordsHtml}
                     <div class="essay-cards-clause-meaning">
-                        <span class="essay-cards-clause-lbl">📖 ${guidedText('Plain meaning:', 'Giải nghĩa nhanh:')}</span>
+                        <span class="essay-cards-clause-lbl">${guidedText('Plain meaning:', 'Giải nghĩa nhanh:')}</span>
                         <p>${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
                     </div>
                     <div class="essay-cards-clause-takeaway">
-                        <span class="essay-cards-clause-lbl">💡 ${guidedText('Key focus:', 'Điểm mấu chốt:')}</span>
+                        <span class="essay-cards-clause-lbl">${guidedText('Key focus:', 'Điểm mấu chốt:')}</span>
                         <p>${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
                     </div>
-                    ${trapHtml}
                 </div>`;
             }).join('')}
         </div>`;
@@ -3703,11 +3684,11 @@
         <div class="essay-guided-type-card ${essayTypeInfo.badgeClass}">
             <div class="essay-type-card-top">
                 <div class="essay-type-badge-row">
-                    <span class="essay-type-badge">${essayTypeInfo.icon} ${escapeHtml(guidedText(essayTypeInfo.titleEn, essayTypeInfo.titleVi))}</span>
+                    <span class="essay-type-badge">${escapeHtml(guidedText(essayTypeInfo.titleEn, essayTypeInfo.titleVi))}</span>
                     <span class="essay-type-tag">PTE Standard</span>
                 </div>
                 <div class="essay-type-trigger-row">
-                    <span class="essay-type-trigger-label">🔍 ${guidedText('Trigger in prompt:', 'Từ khóa nhận biết:')}</span>
+                    <span class="essay-type-trigger-label">${guidedText('Trigger in prompt:', 'Từ khóa nhận biết:')}</span>
                     <code class="essay-type-trigger-code">${escapeHtml(guidedText(essayTypeInfo.triggerPhraseEn, essayTypeInfo.triggerPhraseVi))}</code>
                 </div>
                 <div class="essay-type-reasoning">
@@ -3716,7 +3697,7 @@
                 </div>
             </div>
             <div class="essay-type-blueprint">
-                <span class="essay-blueprint-title">📐 ${guidedText('PTE 4-Paragraph Blueprint for this type:', 'Dàn ý chuẩn 4 đoạn cho dạng này:')}</span>
+                <span class="essay-blueprint-title">${guidedText('PTE 4-Paragraph Blueprint for this type:', 'Dàn ý chuẩn 4 đoạn cho dạng này:')}</span>
                 <div class="essay-blueprint-grid">
                     ${essayTypeInfo.blueprint.map((b, bIdx) => `
                         <div class="essay-blueprint-step">
@@ -3736,7 +3717,7 @@
         const reqsHtml = reqs.length ? `
             <div class="essay-guided-req-guide">
                 <div class="essay-guided-req-head">
-                    <span class="essay-guided-req-badge">📋 ${guidedText('PTE Mandatory Scoring Criteria', '3 yêu cầu cần có trong bài')}</span>
+                    <span class="essay-guided-req-badge">${guidedText('PTE Mandatory Scoring Criteria', '3 yêu cầu cần có trong bài')}</span>
                     <p class="essay-guided-req-subtext">${guidedText('Core criteria required by PTE official scoring rubrics (Content, Form & Development):', 'Để giám khảo chấm trọn điểm nội dung (Content), bài của bạn cần có:')}</p>
                 </div>
                 <div class="essay-guided-req-list">
@@ -3770,23 +3751,23 @@
                             return `
                             <div class="essay-guided-mistake-card">
                                 <div class="essay-guided-mistake-head">
-                                    <span class="essay-guided-mistake-badge">⚠️ ${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
+                                    <span class="essay-guided-mistake-badge">${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
                                     <h4 class="essay-guided-mistake-title">${escapeHtml(title)}</h4>
                                 </div>
                                 <div class="essay-guided-mistake-body">
                                     ${mistake ? `
                                     <div class="essay-guided-mistake-row is-mistake">
-                                        <span class="essay-guided-mistake-tag">🛑 ${guidedText('The Mistake', 'Nhầm lẫn phổ biến')}</span>
+                                        <span class="essay-guided-mistake-tag">${guidedText('The Mistake', 'Nhầm lẫn phổ biến')}</span>
                                         <p class="essay-guided-mistake-desc">${escapeHtml(mistake)}</p>
                                     </div>` : ''}
                                     ${why ? `
                                     <div class="essay-guided-mistake-row is-why">
-                                        <span class="essay-guided-mistake-tag">💥 ${guidedText('Why It Fails', 'Tại sao mất điểm')}</span>
+                                        <span class="essay-guided-mistake-tag">${guidedText('Why It Fails', 'Tại sao mất điểm')}</span>
                                         <p class="essay-guided-mistake-desc">${escapeHtml(why)}</p>
                                     </div>` : ''}
                                     ${fix ? `
                                     <div class="essay-guided-mistake-row is-fix">
-                                        <span class="essay-guided-mistake-tag">💡 ${guidedText('Better Approach', 'Cách viết chuẩn')}</span>
+                                        <span class="essay-guided-mistake-tag">${guidedText('Better Approach', 'Cách viết chuẩn')}</span>
                                         <p class="essay-guided-mistake-desc">${escapeHtml(fix)}</p>
                                     </div>` : ''}
                                 </div>
@@ -3797,7 +3778,7 @@
                         return `
                         <div class="essay-guided-mistake-card">
                             <div class="essay-guided-mistake-head">
-                                <span class="essay-guided-mistake-badge">⚠️ ${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
+                                <span class="essay-guided-mistake-badge">${guidedText('Mistake', 'Lỗi')} #${idx + 1}</span>
                                 <h4 class="essay-guided-mistake-title">${escapeHtml(title)}</h4>
                             </div>
                             <div class="essay-guided-mistake-body">
@@ -3821,13 +3802,13 @@
         });
 
         const stanceLabels = {
-            agree: { en: 'Stance 1: Agree (Support)', vi: 'Phe 1: Đồng ý (Agree)', icon: '👍', tone: 'agree' },
-            disagree: { en: 'Stance 2: Disagree (Alternative)', vi: 'Phe 2: Phản đối (Disagree)', icon: '👎', tone: 'disagree' },
-            positive: { en: 'Stance 1: More Benefits', vi: 'Phe 1: Nghiêng về mặt tốt', icon: '✨', tone: 'agree' },
-            negative: { en: 'Stance 2: More Drawbacks', vi: 'Phe 2: Nghiêng về mặt hại', icon: '⚠️', tone: 'disagree' },
-            advantage: { en: 'Advantages / Positive Aspects', vi: 'Mặt tốt / Thuận lợi', icon: '✨', tone: 'agree' },
-            disadvantage: { en: 'Disadvantages / Negative Aspects', vi: 'Mặt hại / Rủi ro', icon: '⚠️', tone: 'disagree' },
-            general: { en: 'Key Perspectives', vi: 'Các góc nhìn trọng tâm', icon: '🎯', tone: 'general' }
+            agree: { en: 'Stance 1: Agree (Support)', vi: 'Phe 1: Đồng ý (Agree)', icon: '', tone: 'agree' },
+            disagree: { en: 'Stance 2: Disagree (Alternative)', vi: 'Phe 2: Phản đối (Disagree)', icon: '', tone: 'disagree' },
+            positive: { en: 'Stance 1: More Benefits', vi: 'Phe 1: Nghiêng về mặt tốt', icon: '', tone: 'agree' },
+            negative: { en: 'Stance 2: More Drawbacks', vi: 'Phe 2: Nghiêng về mặt hại', icon: '', tone: 'disagree' },
+            advantage: { en: 'Advantages / Positive Aspects', vi: 'Mặt tốt / Thuận lợi', icon: '', tone: 'agree' },
+            disadvantage: { en: 'Disadvantages / Negative Aspects', vi: 'Mặt hại / Rủi ro', icon: '', tone: 'disagree' },
+            general: { en: 'Key Perspectives', vi: 'Các góc nhìn trọng tâm', icon: '', tone: 'general' }
         };
 
         let anglesHtml = '';
@@ -3836,17 +3817,17 @@
             anglesHtml = `
             <div class="essay-guided-approaches-box">
                 <div class="essay-guided-approaches-head">
-                    <span class="essay-guided-approaches-badge">⚖️ ${guidedText('Comparative Approaches (Side-by-Side)', 'Gợi ý 2 hướng viết')}</span>
+                    <span class="essay-guided-approaches-badge">${guidedText('Comparative Approaches (Side-by-Side)', 'Gợi ý 2 hướng viết')}</span>
                     <p class="essay-guided-approaches-sub">${guidedText('Compare both stances side-by-side to choose the most convincing direction for your essay:', 'Xem nhanh 2 phe để chọn hướng bạn thấy dễ viết nhất:')}</p>
                 </div>
                 <div class="essay-guided-stance-columns">
                     ${stanceKeys.map(key => {
-                        const meta = stanceLabels[key] || { en: `Approach: ${key.toUpperCase()}`, vi: `Hướng tiếp cận: ${key.toUpperCase()}`, icon: '📌', tone: 'general' };
+                        const meta = stanceLabels[key] || { en: `Approach: ${key.toUpperCase()}`, vi: `Hướng tiếp cận: ${key.toUpperCase()}`, icon: '', tone: 'general' };
                         const items = grouped[key];
                         return `
                         <div class="essay-guided-stance-col is-${meta.tone}">
                             <div class="essay-guided-stance-head">
-                                <span class="essay-guided-stance-badge">${meta.icon} ${escapeHtml(guidedText(meta.en, meta.vi))}</span>
+                                <span class="essay-guided-stance-badge">${escapeHtml(guidedText(meta.en, meta.vi))}</span>
                                 <span class="essay-guided-stance-count">${items.length} ${guidedText('ideas', 'ý')}</span>
                             </div>
                             <ul class="essay-guided-bullet-list">
@@ -3973,7 +3954,7 @@
         const mcqHtml = `
         <div class="essay-guided-interactive-quiz">
             <div class="essay-guided-quiz-head">
-                <span class="essay-guided-quiz-badge">💡 ${guidedText('Comprehension Check 1: Core Prompt Task', 'Câu hỏi nhanh: Bạn hiểu đề bài thế nào?')}</span>
+                <span class="essay-guided-quiz-badge">${guidedText('Comprehension Check 1: Core Prompt Task', 'Câu hỏi nhanh: Bạn hiểu đề bài thế nào?')}</span>
                 <p class="essay-guided-quiz-question">${escapeHtml(guidedText(mcq.questionEn, mcq.questionVi))}</p>
             </div>
             <div class="essay-guided-quiz-options">
@@ -4170,7 +4151,7 @@
         <div class="essay-guided-gapfill-box">
             <div class="essay-guided-gapfill-head">
                 <div class="essay-guided-gapfill-title-wrap">
-                    <span class="essay-guided-gapfill-badge">🧩 ${guidedText('Comprehension Check 2: Core Strategy Blueprint', 'Ghép từ: Chốt nhanh chiến lược làm bài')}</span>
+                    <span class="essay-guided-gapfill-badge">${guidedText('Comprehension Check 2: Core Strategy Blueprint', 'Ghép từ: Chốt nhanh chiến lược làm bài')}</span>
                     ${Object.keys(guidedComprehensionGapSlots).length > 0 ? `<button type="button" class="essay-guided-gapfill-reset" data-guided-action="reset-gap-fill">${guidedText('↺ Reset', '↺ Làm lại')}</button>` : ''}
                 </div>
                 <p class="essay-guided-gapfill-instructions">${escapeHtml(guidedText(gapFill.instructionsEn || 'Select the correct strategic blocks below to lock in the core essay execution plan:', gapFill.instructionsVi || 'Bấm chọn các mảnh ghép để hoàn thành kế hoạch viết bài:'))}</p>
@@ -4180,7 +4161,7 @@
             </div>
             ${allSlotsFilled && allSlotsCorrect ? `
                 <div class="essay-guided-gapfill-success">
-                    <span>🎉 ${guidedText('Outstanding! You have mastered the core essay strategy and are ready to select your arguments.', 'Tuyệt vời! Bạn đã nắm chắc hướng làm bài rồi đấy.')}</span>
+                    <span>${guidedText('Outstanding! You have mastered the core essay strategy and are ready to select your arguments.', 'Tuyệt vời! Bạn đã nắm chắc hướng làm bài rồi đấy.')}</span>
                 </div>
             ` : `
                 <div class="essay-guided-gapfill-slots">
@@ -4200,7 +4181,7 @@
                                     </button>`;
                                 }).join('')}
                             </div>
-                            ${chosenOpt && chosenOpt.hintEn && chosenOpt.id !== slot.correctId ? `<span class="essay-guided-gap-hint">⚠️ ${escapeHtml(guidedText(chosenOpt.hintEn, chosenOpt.hintVi))}</span>` : ''}
+                            ${chosenOpt && chosenOpt.hintEn && chosenOpt.id !== slot.correctId ? `<span class="essay-guided-gap-hint">${escapeHtml(guidedText(chosenOpt.hintEn, chosenOpt.hintVi))}</span>` : ''}
                         </div>`;
                     }).join('')}
                 </div>
@@ -4360,7 +4341,7 @@
         }
 
         const activeStanceItems = grouped[guidedStep1ActiveStance] || [];
-        const activeMeta = stanceLabels[guidedStep1ActiveStance] || { en: 'Selected Stance', vi: 'Phe đã chọn', icon: '🎯' };
+        const activeMeta = stanceLabels[guidedStep1ActiveStance] || { en: 'Selected Stance', vi: 'Phe đã chọn', icon: '' };
         const stanceTitle = guidedLanguage === 'vi' ? activeMeta.vi : activeMeta.en;
         const isToneAgree = ['agree', 'positive', 'advantage'].includes(guidedStep1ActiveStance);
 
@@ -4520,7 +4501,7 @@
                             </div>
                             <div class="essay-flowchart-node is-conclusion-node is-remark">
                                 <div class="essay-flowchart-node-lead">
-                                    <span class="essay-pos-peel-pill pos-p">💡 ${guidedText('Final Remark', 'Mở rộng')}</span>
+                                    <span class="essay-pos-peel-pill pos-p">${guidedText('Final Remark', 'Mở rộng')}</span>
                                     <strong>${guidedText('Final Thought (Optional):', 'Lời bình / Mở rộng (tuỳ chọn):')}</strong>
                                 </div>
                                 <div class="essay-flowchart-callout callout-blue">
@@ -4553,7 +4534,7 @@
         return `
         <div class="essay-wb-pipeline-box">
             <div class="essay-wb-section-head">
-                <span class="essay-wb-section-badge">🏛️ ${guidedText('Dynamic 4-Paragraph Outline (POS & PEEL)', 'Dàn ý 4 đoạn gợi ý theo lựa chọn của bạn (POS & PEEL)')}</span>
+                <span class="essay-wb-section-badge">${guidedText('Dynamic 4-Paragraph Outline (POS & PEEL)', 'Dàn ý 4 đoạn gợi ý theo lựa chọn của bạn (POS & PEEL)')}</span>
                 <p class="essay-wb-section-sub">${guidedText('Click each paragraph tab to view its POS (Intro) & PEEL (Body) structure customized to your chosen arguments:', 'Bấm vào từng đoạn để xem chi tiết cấu trúc POS (Mở bài) & PEEL (Thân bài) được cá nhân hóa theo các ý bạn đã chọn:')}</p>
             </div>
             <div class="essay-wb-pipeline-stepper" role="tablist" aria-label="${guidedText('Essay Paragraph Outline Tabs', 'Các đoạn trong dàn ý bài viết')}">
@@ -4569,7 +4550,7 @@
                         <div class="essay-wb-pipe-role">${escapeHtml(guidedText(s.roleEn, s.roleVi))}</div>
                         <div class="essay-wb-pipe-footer">
                             <span class="essay-wb-pipe-tag">${s.tag}</span>
-                            ${isActive ? `<span class="essay-wb-pipe-trap-badge">${guidedText('⚠️ Note', '⚠️ Lưu ý')}</span>` : ''}
+                            ${isActive ? `<span class="essay-wb-pipe-trap-badge">${guidedText('Note', 'Lưu ý')}</span>` : ''}
                         </div>
                     </button>`;
                 }).join('')}
@@ -4577,7 +4558,7 @@
 
             <div class="essay-wb-pipeline-drawer" id="essay-wb-pipeline-drawer" role="tabpanel">
                 <div class="essay-wb-drawer-head">
-                    <span class="essay-wb-drawer-pill">🎯 ${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeDynamicStep.partEn, activeDynamicStep.partVi))}</span>
+                    <span class="essay-wb-drawer-pill">${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeDynamicStep.partEn, activeDynamicStep.partVi))}</span>
                 </div>
                 <div class="essay-wb-drawer-content">
                     <div class="essay-pos-peel-body">
@@ -4585,7 +4566,7 @@
                     </div>
                     ${stepTrap ? `
                     <div class="essay-wb-drawer-trap">
-                        <span class="essay-wb-drawer-trap-icon">⚠️</span>
+                        <span class="essay-wb-drawer-trap-icon">!</span>
                         <div class="essay-wb-drawer-trap-text">
                             <strong>${guidedText('Watch out:', 'Lưu ý tránh mất điểm:')}</strong>
                             <span>${escapeHtml(guidedText(stepTrap.mistakeEn || stepTrap.en, stepTrap.mistakeVi || stepTrap.vi))}</span>
@@ -4620,26 +4601,25 @@
                 ${renderPromptTensionBanner(tensionData)}
             </div>
 
-            <!-- Stage 2: Radiating Idea Tree & Stance Selection -->
+            <!-- Stage 2: Idea Tree & Stance Selection -->
             <div class="essay-step1-stage-header">
                 <span class="essay-step1-stage-pill">${guidedText('Part 2: Choose Stance & Arguments', 'Phần 2: Chọn phe & Luận điểm')}</span>
-                <h3 class="essay-step1-stage-title">${guidedText('2. Radiating Stance Tree & Arguments', '2. Cây ý tưởng tỏa tròn: Chọn phe & Luận điểm then chốt')}</h3>
+                <h3 class="essay-step1-stage-title">${guidedText('2. Idea Tree & Stance Selection', '2. Sơ đồ ý tưởng: Chọn phe & Luận điểm then chốt')}</h3>
             </div>
             <div class="essay-mindmap-canvas" id="essay-prompt-mindmap-canvas">
                 <svg class="essay-mindmap-svg" id="essay-prompt-mindmap-svg" aria-hidden="true"></svg>
 
                 <!-- Central Question Core Hub -->
                 <div class="essay-mindmap-core" id="mm-prompt-core">
-                    <div class="essay-mindmap-core-spark">💡</div>
                     <div class="essay-mindmap-core-badge">${guidedText('Core Question & Premise', 'Nhận định trọng tâm')}</div>
                     <div class="essay-mindmap-core-title">“${escapeHtml(formattedMainQuote)}”</div>
-                    <div class="essay-mindmap-core-hint">${guidedText('Radiating Idea Tree — Select your stance and pick core supporting claims below', 'Cây ý tưởng tỏa tròn — Chọn phe và nhặt luận điểm then chốt')}</div>
+                    <div class="essay-mindmap-core-hint">${guidedText('Idea Diagram — Select your stance and pick core supporting claims below', 'Sơ đồ ý tưởng — Chọn phe và nhặt luận điểm then chốt')}</div>
                 </div>
 
                 <!-- Radiating Stance Branches -->
                 <div class="essay-mm-branches-container">
                     ${stanceKeys.map(sideKey => {
-                        const meta = stanceLabels[sideKey] || { en: `Stance: ${sideKey}`, vi: `Phe: ${sideKey}`, icon: '📌', tone: 'general' };
+                        const meta = stanceLabels[sideKey] || { en: `Stance: ${sideKey}`, vi: `Phe: ${sideKey}`, icon: '', tone: 'general' };
                         const items = grouped[sideKey] || [];
                         const isActiveStance = guidedStep1ActiveStance === sideKey;
                         let pickedCount = 0;
@@ -4651,7 +4631,7 @@
                         <div class="essay-mm-branch is-${meta.tone}${isActiveStance ? ' is-active-stance' : ' is-inactive-stance'}">
                             <!-- Stance Hub Node -->
                             <div class="essay-mm-stance-hub" data-guided-action="switch-stance" data-stance="${sideKey}" role="button" tabindex="0">
-                                <span class="essay-mm-stance-icon">${meta.icon}</span>
+                                ${meta.icon ? `<span class="essay-mm-stance-icon">${meta.icon}</span>` : ''}
                                 <div class="essay-mm-stance-meta">
                                     <span class="essay-mm-stance-badge">${isActiveStance ? `✓ ${guidedText('Active Stance', 'Phe đang chọn')}` : guidedText('Click to select', 'Bấm để chọn phe')}</span>
                                     <strong class="essay-mm-stance-title">${escapeHtml(guidedText(meta.en, meta.vi))}</strong>
@@ -4703,8 +4683,8 @@
 
         const side1Key = stanceKeys[0] || 'agree';
         const side2Key = stanceKeys[1] || 'disagree';
-        const meta1 = stanceLabels[side1Key] || { en: 'Stance 1', vi: 'Phe 1', icon: '👍', tone: 'agree' };
-        const meta2 = stanceLabels[side2Key] || { en: 'Stance 2', vi: 'Phe 2', icon: '👎', tone: 'disagree' };
+        const meta1 = stanceLabels[side1Key] || { en: 'Stance 1', vi: 'Phe 1', icon: '', tone: 'agree' };
+        const meta2 = stanceLabels[side2Key] || { en: 'Stance 2', vi: 'Phe 2', icon: '', tone: 'disagree' };
         const isSide1Active = guidedStep1ActiveStance === side1Key;
         const isSide2Active = guidedStep1ActiveStance === side2Key;
 
@@ -4734,19 +4714,19 @@
             <!-- Stage 2: Stance Decision Gate -->
             <div class="essay-flowchart-stance-gate">
                 <div class="essay-flowchart-gate-header">
-                    <span class="essay-flowchart-gate-badge">⚖️ ${guidedText('Stance Decision Gate', 'Quyết định lập trường bài viết')}</span>
+                    <span class="essay-flowchart-gate-badge">${guidedText('Stance Decision Gate', 'Quyết định lập trường bài viết')}</span>
                     <p class="essay-flowchart-gate-sub">${guidedText('Choose your stance to feed your arguments into the 4-paragraph assembly line below:', 'Chọn phe bạn sẽ bảo vệ để nạp vào dây chuyền dàn ý POS-PEEL bên dưới:')}</p>
                 </div>
                 <div class="essay-flowchart-gate-options">
                     <button type="button" class="essay-flowchart-gate-opt is-${meta1.tone}${isSide1Active ? ' is-active' : ''}" data-guided-action="switch-stance" data-stance="${side1Key}">
-                        <span class="gate-opt-icon">${meta1.icon}</span>
+                        ${meta1.icon ? `<span class="gate-opt-icon">${meta1.icon}</span>` : ''}
                         <div class="gate-opt-info">
                             <strong class="gate-opt-title">${escapeHtml(guidedText(meta1.en, meta1.vi))}</strong>
                             <span class="gate-opt-status">${isSide1Active ? `✓ ${guidedText('Selected Stance', 'Đang chọn')}` : guidedText('Click to select', 'Bấm để chọn')}</span>
                         </div>
                     </button>
                     <button type="button" class="essay-flowchart-gate-opt is-${meta2.tone}${isSide2Active ? ' is-active' : ''}" data-guided-action="switch-stance" data-stance="${side2Key}">
-                        <span class="gate-opt-icon">${meta2.icon}</span>
+                        ${meta2.icon ? `<span class="gate-opt-icon">${meta2.icon}</span>` : ''}
                         <div class="gate-opt-info">
                             <strong class="gate-opt-title">${escapeHtml(guidedText(meta2.en, meta2.vi))}</strong>
                             <span class="gate-opt-status">${isSide2Active ? `✓ ${guidedText('Selected Stance', 'Đang chọn')}` : guidedText('Click to select', 'Bấm để chọn')}</span>
@@ -4996,8 +4976,8 @@
 
         const side1Key = stanceKeys[0] || 'agree';
         const side2Key = stanceKeys[1] || 'disagree';
-        const meta1 = stanceLabels[side1Key] || { en: 'Stance 1', vi: 'Phe 1', icon: '👍', tone: 'agree' };
-        const meta2 = stanceLabels[side2Key] || { en: 'Stance 2', vi: 'Phe 2', icon: '👎', tone: 'disagree' };
+        const meta1 = stanceLabels[side1Key] || { en: 'Stance 1', vi: 'Phe 1', icon: '', tone: 'agree' };
+        const meta2 = stanceLabels[side2Key] || { en: 'Stance 2', vi: 'Phe 2', icon: '', tone: 'disagree' };
         const items1 = grouped[side1Key] || [];
         const items2 = grouped[side2Key] || [];
 
@@ -5028,17 +5008,17 @@
             <!-- Stance Selection Ribbon -->
             <div class="essay-table-stance-bar">
                 <div class="essay-table-stance-info">
-                    <span class="essay-table-stance-label">⚖️ ${guidedText('Choose Your Writing Stance:', 'Chọn phe bạn sẽ viết:')}</span>
+                    <span class="essay-table-stance-label">${guidedText('Choose Your Writing Stance:', 'Chọn phe bạn sẽ viết:')}</span>
                     <span class="essay-table-stance-hint">${guidedText('Click either stance button to set your active direction', 'Bấm nút để chọn hướng viết bạn tự tin nhất')}</span>
                 </div>
                 <div class="essay-table-stance-toggles">
                     <button type="button" class="essay-matrix-stance-btn is-${meta1.tone}${isSide1Active ? ' is-active' : ''}" data-guided-action="switch-stance" data-stance="${side1Key}">
-                        <span class="essay-matrix-stance-icon">${meta1.icon}</span>
+                        ${meta1.icon ? `<span class="essay-matrix-stance-icon">${meta1.icon}</span>` : ''}
                         <span>${escapeHtml(guidedText(meta1.en, meta1.vi))}</span>
                         ${isSide1Active ? `<span class="essay-matrix-stance-pill">✓ ${guidedText('Active', 'Đang chọn')}</span>` : ''}
                     </button>
                     <button type="button" class="essay-matrix-stance-btn is-${meta2.tone}${isSide2Active ? ' is-active' : ''}" data-guided-action="switch-stance" data-stance="${side2Key}">
-                        <span class="essay-matrix-stance-icon">${meta2.icon}</span>
+                        ${meta2.icon ? `<span class="essay-matrix-stance-icon">${meta2.icon}</span>` : ''}
                         <span>${escapeHtml(guidedText(meta2.en, meta2.vi))}</span>
                         ${isSide2Active ? `<span class="essay-matrix-stance-pill">✓ ${guidedText('Active', 'Đang chọn')}</span>` : ''}
                     </button>
@@ -5047,7 +5027,7 @@
 
             <!-- Mobile Horizontal Scroll Hint -->
             <div class="essay-matrix-scroll-hint" aria-hidden="true">
-                <span>${guidedText('👉 Scroll horizontally to compare both sides', '👉 Cuộn ngang bảng để đối chiếu 2 phe')}</span>
+                <span>${guidedText('Scroll horizontally to compare both sides', 'Cuộn ngang bảng để đối chiếu 2 phe')}</span>
             </div>
 
             <!-- 5-Dimension Dialectical Matrix -->
@@ -5058,13 +5038,13 @@
                             <th class="col-criteria">${guidedText('Evaluation Criteria', 'Tiêu chí so sánh')}</th>
                             <th class="col-side is-${meta1.tone}${isSide1Active ? ' is-active-col' : ''}">
                                 <div class="essay-matrix-th-content">
-                                    <span>${meta1.icon} ${escapeHtml(guidedText(meta1.en, meta1.vi))}</span>
+                                    <span>${meta1.icon ? meta1.icon + ' ' : ''}${escapeHtml(guidedText(meta1.en, meta1.vi))}</span>
                                     ${isSide1Active ? `<span class="essay-matrix-col-badge">✓ ${guidedText('Selected Stance', 'Phe đang chọn')}</span>` : ''}
                                 </div>
                             </th>
                             <th class="col-side is-${meta2.tone}${isSide2Active ? ' is-active-col' : ''}">
                                 <div class="essay-matrix-th-content">
-                                    <span>${meta2.icon} ${escapeHtml(guidedText(meta2.en, meta2.vi))}</span>
+                                    <span>${meta2.icon ? meta2.icon + ' ' : ''}${escapeHtml(guidedText(meta2.en, meta2.vi))}</span>
                                     ${isSide2Active ? `<span class="essay-matrix-col-badge">✓ ${guidedText('Selected Stance', 'Phe đang chọn')}</span>` : ''}
                                 </div>
                             </th>
@@ -5356,7 +5336,6 @@
 
                     <!-- Active Stance Focal Hub -->
                     <div class="essay-brainstorm-stance-core" id="mm-stance-core">
-                        <div class="essay-brainstorm-stance-icon">⚖️</div>
                         <div class="essay-brainstorm-stance-badge">${guidedText('Chosen Stance Direction', 'Lập trường đang chọn')}</div>
                         <strong class="essay-brainstorm-stance-title">${escapeHtml(activePlanLabel)}</strong>
                         <div class="essay-brainstorm-stance-sub">${guidedText('Branching into 2 Body Paragraphs • Click idea bubbles below to assign', 'Phân nhánh 2 đoạn thân bài • Bấm chọn 2 bóng ý tưởng bên dưới')}</div>
@@ -5953,7 +5932,7 @@
                 </div>
                 ${isViOpen ? `
                 <div class="essay-guided-toolbelt-tip-box">
-                    <span class="essay-guided-toolbelt-tip-label">💡 ${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
+                    <span class="essay-guided-toolbelt-tip-label">${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
                     <p class="essay-guided-toolbelt-tip-text">${escapeHtml(writingTip)}</p>
                 </div>` : ''}
             </div>`;
@@ -5983,7 +5962,7 @@
                 </div>
                 ${isColloViOpen ? `
                 <div class="essay-guided-toolbelt-tip-box">
-                    <span class="essay-guided-toolbelt-tip-label">💡 ${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
+                    <span class="essay-guided-toolbelt-tip-label">${guidedText('Writing Strategy in Vietnamese', 'Mẹo triển khai vào bài viết')}</span>
                     <p class="essay-guided-toolbelt-tip-text">${escapeHtml(writingTip)}</p>
                 </div>` : ''}
             </div>`;
@@ -6120,23 +6099,23 @@
                 ${guidedText('All Tools', 'Tất cả')}
             </button>
             <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'vocab' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="vocab">
-                🎯 ${guidedText('Vocabulary', 'Từ vựng cốt lõi')} (${vocabulary.length})
+                ${guidedText('Vocabulary', 'Từ vựng cốt lõi')} (${vocabulary.length})
             </button>
             <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'collo' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="collo">
-                ✨ ${guidedText('Collocations', 'Cụm từ ghi điểm')} (${collocations.length})
+                ${guidedText('Collocations', 'Cụm từ ghi điểm')} (${collocations.length})
             </button>
             <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'grammar' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="grammar">
-                📐 ${guidedText('Sentence Models', 'Mẫu câu chuẩn')} (${grammarPatterns.length})
+                ${guidedText('Sentence Models', 'Mẫu câu chuẩn')} (${grammarPatterns.length})
             </button>
             <button type="button" class="essay-guided-toolbelt-tab${guidedLanguageKitTab === 'cohesion' ? ' is-active' : ''}" data-guided-action="set-language-kit-tab" data-tab="cohesion">
-                🔗 ${guidedText('Roadmap', 'Từ nối 4 chặng')} (${linkingStages.length})
+                ${guidedText('Roadmap', 'Từ nối 4 chặng')} (${linkingStages.length})
             </button>
         </div>`;
 
         const commitMeterHtml = `
         <div class="essay-guided-meter-bar${used >= GUIDED_MAX_TARGETS ? ' is-full' : ''}">
             <div class="essay-guided-meter-info">
-                <span>🎯 ${guidedText('Target words to use in your essay:', 'Từ khóa bạn chọn dùng vào bài viết:')}</span>
+                <span>${guidedText('Target words to use in your essay:', 'Từ khóa bạn chọn dùng vào bài viết:')}</span>
                 <strong>${used}/${GUIDED_MAX_TARGETS}</strong>
             </div>
             <div class="essay-guided-meter-track">
@@ -6148,7 +6127,7 @@
         if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'vocab') {
             sectionsHtml += `<div class="essay-guided-toolbelt-section">
                 <div class="essay-guided-toolbelt-sec-head">
-                    <strong>🎯 ${guidedText('Core Vocabulary', 'Từ vựng cốt lõi theo trình độ')}</strong>
+                    <strong>${guidedText('Core Vocabulary', 'Từ vựng cốt lõi theo trình độ')}</strong>
                     <span>${guidedText('Select up to 3 words to commit to using in your essay draft.', 'Chọn tối đa 3 từ tâm đắc để cam kết sử dụng vào bài viết.')}</span>
                 </div>
                 ${vocabHtml}
@@ -6157,7 +6136,7 @@
         if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'collo') {
             sectionsHtml += `<div class="essay-guided-toolbelt-section">
                 <div class="essay-guided-toolbelt-sec-head">
-                    <strong>✨ ${guidedText('Academic Collocations', 'Cụm từ ghi điểm học thuật')}</strong>
+                    <strong>${guidedText('Academic Collocations', 'Cụm từ ghi điểm học thuật')}</strong>
                     <span>${guidedText('Natural combinations to impress examiners and boost Lexical Resource.', 'Các cụm từ đi liền tự nhiên giúp bài viết uyển chuyển và đúng chuẩn.')}</span>
                 </div>
                 ${colloHtml}
@@ -6166,7 +6145,7 @@
         if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'grammar') {
             sectionsHtml += `<div class="essay-guided-toolbelt-section">
                 <div class="essay-guided-toolbelt-sec-head">
-                    <strong>📐 ${guidedText('Complex Sentence Models', 'Mẫu câu phức ghi điểm')}</strong>
+                    <strong>${guidedText('Complex Sentence Models', 'Mẫu câu phức ghi điểm')}</strong>
                 </div>
                 ${grammarHtml}
             </div>`;
@@ -6174,7 +6153,7 @@
         if (guidedLanguageKitTab === 'all' || guidedLanguageKitTab === 'cohesion') {
             sectionsHtml += `<div class="essay-guided-toolbelt-section">
                 <div class="essay-guided-toolbelt-sec-head">
-                    <strong>🔗 ${guidedText('Cohesive Linking Roadmap', 'Từ nối theo 4 chặng bài viết')}</strong>
+                    <strong>${guidedText('Cohesive Linking Roadmap', 'Từ nối theo 4 chặng bài viết')}</strong>
                 </div>
                 ${cohesionHtml}
             </div>`;
@@ -6260,13 +6239,13 @@
                         <strong class="essay-plan-step-title">${escapeHtml(guidedText(node.labelEn, node.labelVi))}</strong>
                     </div>
                     <button type="button" class="essay-plan-tip-toggle${isExpanded ? ' is-open' : ''}" data-guided-action="toggle-plan-node" data-node-index="${idx}" title="${isExpanded ? guidedText('Hide tip', 'Thu gọn mẹo') : guidedText('Show writing strategy', 'Xem bí kíp viết đoạn')}">
-                        <span>${isExpanded ? '▲ ' + guidedText('Hide tip', 'Thu gọn') : '💡 ' + guidedText('Writing strategy', 'Bí kíp viết')}</span>
+                        <span>${isExpanded ? '▲ ' + guidedText('Hide tip', 'Thu gọn') : guidedText('Writing strategy', 'Bí kíp viết')}</span>
                     </button>
                 </div>
                 <p class="essay-plan-node-text">${escapeHtml(node.text)}</p>
                 ${isExpanded ? `
                 <div class="essay-plan-strategy-tip">
-                    <span class="essay-plan-strategy-label">💡 ${guidedText('How to write this paragraph:', 'Cách phát triển đoạn này:')}</span>
+                    <span class="essay-plan-strategy-label">${guidedText('How to write this paragraph:', 'Cách phát triển đoạn này:')}</span>
                     <p class="essay-plan-strategy-content">${escapeHtml(guidedText(node.tipEn, node.tipVi))}</p>
                 </div>` : ''}
             </div>
@@ -6283,7 +6262,7 @@
                 ${nodesHtml}
             </div>
             <div class="essay-guided-inline-actions">
-                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">📋 ${guidedText('Copy outline', 'Sao chép toàn bộ dàn ý')}</button>
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(copyText)}">${guidedText('Copy outline', 'Sao chép toàn bộ dàn ý')}</button>
                 <span class="essay-guided-source-note">${guidedText('Stance:', 'Lập trường:')} <strong>${escapeHtml(plan.title || plan.stance || 'Balanced')}</strong></span>
             </div>
         </section>`;
@@ -6471,8 +6450,8 @@
         return `
         <div class="essay-guided-frame is-interactive">
             <div class="essay-guided-frame-head">
-                <span class="essay-guided-reveal-label">✏️ ${guidedText('Assemble your sentence', 'Ghép câu của bạn')}${guidedHelpBtn('frame')}</span>
-                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">📋 ${guidedText('Copy sentence', 'Sao chép câu')}</button>
+                <span class="essay-guided-reveal-label">${guidedText('Assemble your sentence', 'Ghép câu của bạn')}${guidedHelpBtn('frame')}</span>
+                <button type="button" class="essay-guided-ghost-btn" data-guided-action="copy" data-copy-text="${escapeHtml(assembledRaw)}">${guidedText('Copy sentence', 'Sao chép câu')}</button>
             </div>
             ${inputsHtml}
         </div>`;
@@ -6510,7 +6489,7 @@
 
         const workflowGuideHtml = `
         <div class="essay-guided-scaffold-guide-compact">
-            <span class="essay-guided-scaffold-guide-pill">💡 ${guidedText('Sentence Construction Studio', 'Xưởng ghép câu hoàn chỉnh')}</span>
+            <span class="essay-guided-scaffold-guide-pill">${guidedText('Sentence Construction Studio', 'Xưởng ghép câu hoàn chỉnh')}</span>
             <span class="essay-guided-scaffold-guide-text">${guidedText('Draft sentences below and click "Add to draft" to transfer directly into your final essay.', 'Ghép câu theo gợi ý bên dưới và bấm "Đưa câu vào bài" để hoàn thiện bài luận từng bước.')}</span>
         </div>`;
 
@@ -6574,7 +6553,7 @@
                 ${frame}${model}
                 <div class="essay-guided-sentence-actions">
                     ${reveal}
-                    <button type="button" class="essay-guided-transfer-btn" data-guided-action="transfer-sentence" data-sentence-id="${escapeHtml(sId)}">📝 ${guidedText('Add to draft', 'Đưa câu vào bài')}</button>
+                    <button type="button" class="essay-guided-transfer-btn" data-guided-action="transfer-sentence" data-sentence-id="${escapeHtml(sId)}">${guidedText('Add to draft', 'Đưa câu vào bài')}</button>
                     <button type="button" class="essay-guided-ghost-btn${selected ? ' is-selected' : ''}" data-guided-action="target" data-target-id="${escapeHtml(sId)}" aria-pressed="${selected ? 'true' : 'false'}"${full ? ' disabled' : ''}>${selected ? '✓ ' + guidedText('Target set', 'Đã chọn mục tiêu') : '+ ' + guidedText('Track as target', 'Chọn làm mục tiêu')}</button>
                     ${guidedHelpBtn('targets')}
                 </div>
